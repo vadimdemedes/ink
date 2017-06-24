@@ -227,11 +227,38 @@ test('render different root components', t => {
 		}
 	}
 
-	const initialTree = render(<A/>);
-	t.is(renderToString(initialTree), 'A');
+	// component -> component
+	t.is(renderToString(render(<A/>, render(<B/>))), 'A');
 
-	const finalTree = render(<B/>, initialTree);
-	t.is(renderToString(finalTree), 'B');
+	// string -> component
+	t.is(renderToString(render(<A/>, render('text'))), 'A');
+
+	// number -> component
+	t.is(renderToString(render(<A/>, render(10))), 'A');
+
+	// boolean -> component
+	t.is(renderToString(render(<A/>, render(false))), 'A');
+
+	// component -> string
+	t.is(renderToString(render('text', render(<A/>))), 'text');
+
+	// component -> number
+	t.is(renderToString(render(10, render(<A/>))), '10');
+
+	// component -> boolean
+	t.is(renderToString(render(false, render(<A/>))), '');
+
+	// string -> number
+	t.is(renderToString(render(10, render('text'))), '10');
+
+	// string -> boolean
+	t.is(renderToString(render(false, render('text'))), '');
+
+	// number -> string
+	t.is(renderToString(render('text', render(10))), 'text');
+
+	// number -> boolean
+	t.is(renderToString(render(false, render('text'))), '');
 });
 
 test('render with initial state', t => {
