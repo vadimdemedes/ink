@@ -4,7 +4,7 @@ const logUpdate = require('log-update');
 const StringComponent = require('./lib/string-component');
 const Component = require('./lib/component');
 const renderToString = require('./lib/render-to-string');
-const unmount = require('./lib/unmount');
+const callTree = require('./lib/call-tree');
 const diff = require('./lib/diff');
 const h = require('./lib/h');
 const Newline = require('./lib/components/newline');
@@ -25,8 +25,19 @@ const noop = () => {};
 exports.diff = diff;
 exports.renderToString = renderToString;
 
-const render = (nextTree, prevTree, onUpdate = noop, context = {}) => {
-	return diff(prevTree, nextTree, onUpdate, context);
+const unmount = tree => callTree(tree, 'unmount');
+const didMount = tree => callTree(tree, 'didMount');
+const didUpdate = tree => callTree(tree, 'didUpdate');
+
+const render = (nextTree, prevTree, onUpdate = noop, context = {}, autoLifecycle = true) => {
+	const reconciledTree = diff(prevTree, nextTree, onUpdate, context);
+
+	if (autoLifecycle) {
+		didMount(reconciledTree);
+		didUpdate(reconciledTree);
+	}
+
+	return reconciledTree;
 };
 
 exports.render = render;
@@ -43,13 +54,18 @@ exports.mount = (tree, stream) => {
 			return;
 		}
 
-		const nextTree = render(tree, currentTree, onUpdate, context);
+		const nextTree = render(tree, currentTree, onUpdate, context, false);
 		log(renderToString(nextTree));
+		didMount(nextTree);
+		didUpdate(nextTree);
+
 		currentTree = nextTree;
 	};
 
-	currentTree = render(tree, null, onUpdate, context);
+	currentTree = render(tree, null, onUpdate, context, false);
 	log(renderToString(currentTree));
+	didMount(currentTree);
+	didUpdate(currentTree);
 
 	return () => {
 		if (isUnmounted) {
