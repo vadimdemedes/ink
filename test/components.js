@@ -227,37 +227,37 @@ test('render different root components', t => {
 		}
 	}
 
-	// component -> component
+	// Component -> Component
 	t.is(renderToString(render(<A/>, render(<B/>))), 'A');
 
-	// string -> component
+	// String -> Component
 	t.is(renderToString(render(<A/>, render('text'))), 'A');
 
-	// number -> component
+	// Number -> Component
 	t.is(renderToString(render(<A/>, render(10))), 'A');
 
-	// boolean -> component
+	// Boolean -> Component
 	t.is(renderToString(render(<A/>, render(false))), 'A');
 
-	// component -> string
+	// Component -> String
 	t.is(renderToString(render('text', render(<A/>))), 'text');
 
-	// component -> number
+	// Component -> Number
 	t.is(renderToString(render(10, render(<A/>))), '10');
 
-	// component -> boolean
+	// Component -> Boolean
 	t.is(renderToString(render(false, render(<A/>))), '');
 
-	// string -> number
+	// String -> Number
 	t.is(renderToString(render(10, render('text'))), '10');
 
-	// string -> boolean
+	// String -> Boolean
 	t.is(renderToString(render(false, render('text'))), '');
 
-	// number -> string
+	// Number -> String
 	t.is(renderToString(render('text', render(10))), 'text');
 
-	// number -> boolean
+	// Number -> Boolean
 	t.is(renderToString(render(false, render('text'))), '');
 });
 
