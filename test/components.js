@@ -357,6 +357,50 @@ test('store next state and set it only on rerender', t => {
 	t.is(renderToString(secondTree), 'Goodbye');
 });
 
+test('state callbacks', t => {
+	let component;
+
+	class A extends Component {
+		constructor(props) {
+			super(props);
+
+			this.state = {
+				message: 'Hello'
+			};
+
+			component = this;
+		}
+
+		render(props, state) {
+			return state.message;
+		}
+	}
+
+	spy(A.prototype, 'componentDidUpdate');
+
+	const firstTree = render(<A/>);
+	t.is(renderToString(firstTree), 'Hello');
+
+	const callback = spy(() => {
+		component.setState({
+			message: 'Ciao'
+		});
+	});
+
+	component.setState({
+		message: 'Bonjour'
+	}, callback);
+
+	const secondTree = render(<A/>, firstTree);
+	t.is(renderToString(secondTree), 'Bonjour');
+	t.true(callback.calledOnce);
+	t.true(callback.calledAfter(A.prototype.componentDidUpdate));
+
+	const thirdTree = render(<A/>, secondTree);
+	t.is(renderToString(thirdTree), 'Ciao');
+	t.true(callback.calledOnce);
+});
+
 test('force render', t => {
 	let component;
 	let renders = 0;
