@@ -52,6 +52,10 @@ exports.mount = (tree, stream) => {
 	log(renderToString(currentTree));
 
 	return () => {
+		if (isUnmounted) {
+			return;
+		}
+
 		isUnmounted = true;
 		unmount(currentTree);
 		log.done();
