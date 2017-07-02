@@ -10,7 +10,7 @@ const h = require('./lib/h');
 const Newline = require('./lib/components/newline');
 const Indent = require('./lib/components/indent');
 const Group = require('./lib/components/group');
-const Colors = require('./lib/components/colors');
+const Text = require('./lib/components/text');
 
 exports.StringComponent = StringComponent;
 exports.Component = Component;
@@ -18,7 +18,7 @@ exports.h = h;
 exports.Newline = Newline;
 exports.Indent = Indent;
 exports.Group = Group;
-Object.assign(exports, Colors);
+exports.Text = Text;
 
 const noop = () => {};
 
