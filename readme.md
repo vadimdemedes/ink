@@ -15,20 +15,22 @@ $ npm install --save ink
 ## Usage
 
 ```jsx
-const {h, mount, Component, Green} = require('ink');
+const {h, mount, Component, Text} = require('ink');
 
 class Counter extends Component {
 	constructor() {
 		super();
 
-		this.state = {i: 0};
+		this.state = {
+			i: 0
+		};
 	}
 
 	render() {
 		return (
-			<Green>
+			<Text green>
 				{this.state.i} tests passed
-			</Green>
+			</Text>
 		);
 	}
 
