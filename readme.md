@@ -8,7 +8,7 @@ Build and test your CLI output using components.
 ## Install
 
 ```
-$ npm install --save vadimdemedes/ink
+$ npm install --save ink
 ```
 
 
