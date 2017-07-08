@@ -32,14 +32,15 @@ class ProgressApp extends Component {
 
 	componentDidMount() {
 		const promises = Array.from({length: TASKS}, () =>
-			delay(Math.floor(Math.random()*1500))
+			delay(Math.floor(Math.random() * 1500))
 				.then(() => {
-					this.setState(state => ({ done: state.done + 1 }));
+					this.setState(state => ({done: state.done + 1}));
 				})
 		);
 
 		Promise.all(promises)
 			.then(() => delay(50))
+			// eslint-disable-next-line unicorn/no-process-exit
 			.then(() => process.exit(0));
 	}
 }
