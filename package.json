@@ -14,7 +14,7 @@
   },
   "scripts": {
     "test": "xo && ava",
-    "example:progress": "babel-node --presets react examples/progress.js"
+    "example:progress": "babel-node examples/progress.js"
   },
   "files": [
     "lib",
