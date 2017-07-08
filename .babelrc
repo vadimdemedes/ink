@@ -1,7 +1,15 @@
 {
-	"presets": ["react"],
-	"plugins": [
-		["transform-react-jsx", {"pragma": "h"}]
-	]
+  "presets": ["babel-preset-react"],
+  "env": {
+    "development": {
+      "plugins": [
+        [
+          "transform-react-jsx",
+          {
+            "pragma": "h"
+          }
+        ]
+      ]
+    }
+  }
 }
-

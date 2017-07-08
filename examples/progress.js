@@ -1,6 +1,8 @@
 /* @jsx h */
 const {h, mount, Component, Text, Bar} = require('../');
 
+const MAX = 20;
+
 class ProgressApp extends Component {
 	constructor() {
 		super();
@@ -19,7 +21,7 @@ class ProgressApp extends Component {
 				</Text>
 				<Bar
 					left={text.length}
-					percent={this.state.i / 100}
+					percent={this.state.i / MAX}
 					/>
 			</div>
 		);
@@ -27,8 +29,11 @@ class ProgressApp extends Component {
 
 	componentDidMount() {
 		this.timer = setInterval(() => {
-			this.setState({
-				i: this.state.i + 1
+			const i = this.state.i + 1;
+			this.setState({i}, () => {
+				if (i === MAX) {
+					process.exit();
+				}
 			});
 		}, 100);
 	}
