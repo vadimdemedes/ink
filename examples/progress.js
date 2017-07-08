@@ -1,14 +1,16 @@
 /* @jsx h */
 const {h, mount, Component, Text, ProgressBar} = require('../');
 
-const MAX = 20;
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const TASKS = 30;
 
 class ProgressApp extends Component {
 	constructor() {
 		super();
 
 		this.state = {
-			i: 0
+			done: 0
 		};
 	}
 
@@ -22,26 +24,23 @@ class ProgressApp extends Component {
 				<ProgressBar
 					blue
 					left={text.length}
-					percent={this.state.i / MAX}
+					percent={this.state.done / TASKS}
 					/>
 			</div>
 		);
 	}
 
 	componentDidMount() {
-		this.timer = setInterval(() => {
-			const i = this.state.i + 1;
-			this.setState({i}, () => {
-				if (i === MAX) {
-					// eslint-disable-next-line unicorn/no-process-exit
-					process.exit();
-				}
-			});
-		}, 100);
-	}
+		const promises = Array.from({length: TASKS}, () =>
+			delay(Math.floor(Math.random()*1500))
+				.then(() => {
+					this.setState(state => ({ done: state.done + 1 }));
+				})
+		);
 
-	componentWillUnmount() {
-		clearInterval(this.timer);
+		Promise.all(promises)
+			.then(() => delay(50))
+			.then(() => process.exit(0));
 	}
 }
 
