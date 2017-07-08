@@ -1,11 +1,13 @@
-The Bar component represents progress. See examples/progress.js for an example app.
+# ProgressBar
+
+The ProgressBar component represents progress. See examples/progress.js for an example app.
 
 ## Usage
 
 ```js
-const {h, Text, Bar} = require('ink');
+const {h, Text, ProgressBar} = require('ink');
 
-<Bar
+<ProgressBar
 	char="x"
 	progress={0.5}
 	left={5}
@@ -18,15 +20,15 @@ const {h, Text, Bar} = require('ink');
 
 ### char
 
-The character to use for each item in the Bar. Defaults to █ (block).
+The character to use for each item in the ProgressBar. Defaults to █ (block).
 
 ### progress
 
-The percentage (between 0 and 1) of progress in the Bar.
+The percentage (between 0 and 1) of progress in the ProgressBar.
 
 ### left/right
 
-The number of characters to subtract from each side of the Bar. examples/progress.js demonstrates this. Commonly used if you want text before/after the progress bar on the same line.
+The number of characters to subtract from each side of the ProgressBar. examples/progress.js demonstrates this. Commonly used if you want text before/after the progress bar on the same line.
 
 
 ### {color}
