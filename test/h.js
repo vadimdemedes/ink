@@ -163,3 +163,15 @@ test.failing('don\'t merge children of components', t => {
 
 	t.deepEqual(node.props.children, ['x', 'y']);
 });
+
+test('warns on invalid type', t => {
+	const ce = console.error;
+	let errored = false;
+	console.error = () => {
+		errored = true;
+	};
+	h(undefined);
+	t.is(errored, true);
+	console.error = ce;
+});
+
