@@ -1,8 +1,8 @@
 import test from 'ava';
 
-const Bar = require('../lib/components/bar.js');
+const ProgressBar = require('../lib/components/progress-bar.js');
 
-const run = (columns, left, right) => Bar.prototype.getString.call({
+const run = (columns, left, right) => ProgressBar.prototype.getString.call({
 	props: {columns, left, right, char: 'x'}
 });
 

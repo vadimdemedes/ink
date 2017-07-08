@@ -1,5 +1,5 @@
 /* @jsx h */
-const {h, mount, Component, Text, Bar} = require('../');
+const {h, mount, Component, Text, ProgressBar} = require('../');
 
 const MAX = 20;
 
@@ -19,7 +19,7 @@ class ProgressApp extends Component {
 				<Text green>
 					{text}
 				</Text>
-				<Bar
+				<ProgressBar
 					blue
 					left={text.length}
 					percent={this.state.i / MAX}
