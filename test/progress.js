@@ -2,7 +2,7 @@ import test from 'ava';
 
 const Bar = require('../lib/components/bar.js');
 
-const run = (columns, left, right) => Bar.prototype.renderString.call({
+const run = (columns, left, right) => Bar.prototype.getString.call({
 	props: {columns, left, right, char: 'x'}
 });
 

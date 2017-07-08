@@ -20,6 +20,7 @@ class ProgressApp extends Component {
 					{text}
 				</Text>
 				<Bar
+					blue
 					left={text.length}
 					percent={this.state.i / MAX}
 					/>
@@ -32,6 +33,7 @@ class ProgressApp extends Component {
 			const i = this.state.i + 1;
 			this.setState({i}, () => {
 				if (i === MAX) {
+					// eslint-disable-next-line unicorn/no-process-exit
 					process.exit();
 				}
 			});
