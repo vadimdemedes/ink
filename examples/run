@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./node_modules/.bin/babel-node --presets react examples/$1.js
+
