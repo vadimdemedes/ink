@@ -20,7 +20,7 @@ class ProgressApp extends Component {
 				<Bar
 					left={text.length}
 					percent={this.state.i / 100}
-				/>
+					/>
 			</div>
 		);
 	}

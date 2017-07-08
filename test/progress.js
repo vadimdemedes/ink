@@ -1,9 +1,10 @@
 import test from 'ava';
+
 const Bar = require('../lib/components/bar.js');
 
 const run = (columns, left, right) => Bar.prototype.renderString.call({
-	props: {columns, left, right, char: 'x'},
-})
+	props: {columns, left, right, char: 'x'}
+});
 
 test(`has correct length`, t => {
 	const str = run(50, 0, 0);
