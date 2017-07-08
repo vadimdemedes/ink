@@ -18,7 +18,7 @@ const {h, Text, ProgressBar} = require('ink');
 
 ## Props
 
-### char
+### character
 
 The character to use for each item in the ProgressBar. Defaults to █ (block).
 
