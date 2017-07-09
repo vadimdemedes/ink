@@ -165,13 +165,8 @@ test.failing('don\'t merge children of components', t => {
 });
 
 test('warns on invalid type', t => {
-	const ce = console.error;
-	let errored = false;
-	console.error = () => {
-		errored = true;
-	};
-	h(undefined);
-	t.is(errored, true);
-	console.error = ce;
+	t.throws(() => {
+		h(undefined);
+	});
 });
 
