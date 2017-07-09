@@ -2,6 +2,10 @@ import test from 'ava';
 import VNode from '../lib/vnode';
 import {h} from '..';
 
+test('throws on missing component', t => {
+	t.throws(() => h(), 'Expected component to be a function, but received undefined. You may have forgotten to export a component.');
+});
+
 test('return a VNode', t => {
 	const node = h('a');
 
