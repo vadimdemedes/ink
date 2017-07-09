@@ -1,8 +1,14 @@
-# Ink [![Build Status](https://travis-ci.org/vadimdemedes/ink.svg?branch=master)](https://travis-ci.org/vadimdemedes/ink)
+<h1 align="center">
+  <br>
+  <img width="192" src="media/logo.png">
+  <br>
+  <br>
+  <br>
+</h1>
 
-> React for CLIs
+> React for CLIs. Build and test your CLI output using components.
 
-Build and test your CLI output using components.
+[![Build Status](https://travis-ci.org/vadimdemedes/ink.svg?branch=master)](https://travis-ci.org/vadimdemedes/ink)
 
 
 ## Install
