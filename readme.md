@@ -53,6 +53,13 @@ mount(<Counter/>, process.stdout);
 <img src="media/demo.gif" width="428" height="232">
 
 
+## Useful Components
+
+- [ink-redux](https://github.com/vadimdemedes/ink-redux) - Redux bindings.
+- [ink-text-input](https://github.com/vadimdemedes/ink-text-input) - Text input component.
+- [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Configurable component for rendering progress bars.
+
+
 ## Guide
 
 - [Getting Started](#getting-started)
