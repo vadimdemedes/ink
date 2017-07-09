@@ -357,6 +357,43 @@ test('store next state and set it only on rerender', t => {
 	t.is(renderToString(secondTree), 'Goodbye');
 });
 
+test('merge pending states', t => {
+	let component;
+
+	class A extends Component {
+		constructor() {
+			super();
+
+			this.state = {
+				first: 'Hello',
+				second: 'Joe'
+			};
+
+			component = this;
+		}
+
+		render(props, state) {
+			return `${state.first} ${state.second}`;
+		}
+	}
+
+	const firstTree = render(<A/>, null);
+	t.is(renderToString(firstTree), 'Hello Joe');
+
+	const firstCallback = spy();
+	const secondCallback = spy();
+
+	component.setState({first: 'Bye'}, firstCallback);
+	component.setState({second: 'Ross'}, secondCallback);
+
+	const secondTree = render(<A/>, firstTree);
+	t.is(renderToString(secondTree), 'Bye Ross');
+
+	t.true(firstCallback.calledOnce);
+	t.true(secondCallback.calledOnce);
+	t.true(firstCallback.calledBefore(secondCallback));
+});
+
 test('state callbacks', t => {
 	let component;
 
