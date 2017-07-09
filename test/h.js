@@ -165,6 +165,6 @@ test.failing('don\'t merge children of components', t => {
 });
 
 test('throws on missing component', t => {
-	t.throws(() => h(undefined), 'Expected component to be a function, but received "undefined". You may have forgotten to export a component.');
+	t.throws(() => h(undefined), 'Expected component to be a function, but received undefined. You may have forgotten to export a component.');
 });
 
