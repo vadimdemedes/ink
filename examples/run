@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./node_modules/.bin/babel-node examples/$1.js
+

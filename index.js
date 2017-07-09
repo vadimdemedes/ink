@@ -11,6 +11,7 @@ const Newline = require('./lib/components/newline');
 const Indent = require('./lib/components/indent');
 const Group = require('./lib/components/group');
 const Text = require('./lib/components/text');
+const ProgressBar = require('./lib/components/progress-bar');
 
 exports.StringComponent = StringComponent;
 exports.Component = Component;
@@ -19,6 +20,7 @@ exports.Newline = Newline;
 exports.Indent = Indent;
 exports.Group = Group;
 exports.Text = Text;
+exports.ProgressBar = ProgressBar;
 
 const noop = () => {};
 
