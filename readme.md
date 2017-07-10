@@ -81,7 +81,7 @@ mount(<Counter/>, process.stdout);
 
 Ink's goal is to provide the same component-based UI building experience that React provides, but for CLI. That's why it tries to implement the minimum required functionality of React. If you are already familiar with React (or Preact, since Ink borrows a few ideas from it), you already know Ink.
 
-They key difference you have to remember is that the rendering result isn't a DOM, but a string, which Ink writes to output.
+The key difference you have to remember is that the rendering result isn't a DOM, but a string, which Ink writes to output.
 
 ### Getting Started
 
