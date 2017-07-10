@@ -1,9 +1,9 @@
 <h1 align="center">
-  <br>
-  <img width="192" alt="Ink" src="media/logo.png">
-  <br>
-  <br>
-  <br>
+	<br>
+	<img width="192" alt="Ink" src="media/logo.png">
+	<br>
+	<br>
+	<br>
 </h1>
 
 > React for CLIs. Build and test your CLI output using components.
@@ -14,7 +14,7 @@
 ## Install
 
 ```
-$ npm install --save ink
+$ npm install ink
 ```
 
 
@@ -79,14 +79,13 @@ mount(<Counter/>, process.stdout);
 - [Stateless Function Components](#stateless-function-components)
 - [Built-in Components](#built-in-components)
 
-Ink's goal is to provide the same component-based UI building experience that React provides, but for CLI. That's why it tries to implement the minimum required functionality of React. If you are already familiar with React (or Preact, since Ink borrows a few ideas from it), you already know Ink.
+Ink's goal is to provide the same component-based UI building experience that React provides, but for command-line apps. That's why it tries to implement the minimum required functionality of React. If you are already familiar with React (or Preact, since Ink borrows a few ideas from it), you already know Ink.
 
-The key difference you have to remember is that the rendering result isn't a DOM, but a string, which Ink writes to output.
+The key difference you have to remember is that the rendering result isn't a DOM, but a string, which Ink writes to the output.
 
 ### Getting Started
 
-To ensure all examples work and you can begin your adventure with Ink, make sure to set up a JSX transpiler and set JSX pragma to `h`.
-Don' forget to import `h` into every file that contains JSX.
+To ensure all examples work and you can begin your adventure with Ink, make sure to set up a JSX transpiler and set JSX pragma to `h`. Don' forget to import `h` into every file that contains JSX.
 
 ```jsx
 const {h} = require('ink');
@@ -142,14 +141,14 @@ class Counter extends Component {
 const unmount = mount(<Counter/>);
 
 setTimeout(() => {
-	// enough counting
+	// Enough counting
 	unmount();
 }, 1000);
 ```
 
 #### renderToString(tree)
 
-Render a previously generated VDOM to a string, which you can flush to output.
+Render a previously generated VDOM to a string, which you can flush to the output.
 
 #### render(tree, [prevTree])
 
@@ -167,9 +166,7 @@ process.stdout.write(renderToString(tree));
 
 ### Components
 
-Similarly to React, there are 2 kinds of components: Stateful components (next, "component") and stateless function components.
-You can create a component by extending `Component` class.
-Unlike stateless function components, they have access to state, context, lifecycle methods and they can be accessed via refs.
+Similarly to React, there are two kinds of components: Stateful components (next, "component") and stateless function components. You can create a component by extending `Component` class. Unlike stateless function components, they have access to state, context, lifecycle methods and they can be accessed via refs.
 
 ```js
 class Demo extends Component {
@@ -193,7 +190,7 @@ constructor(props, context) {
 		i: 0
 	};
 
-	// other initialization
+	// Other initialization
 }
 ```
 
@@ -252,15 +249,15 @@ Component is about to rerender.
 
 ##### componentDidUpdate()
 
-Component was rerendered and was written to output.
+Component was rerendered and was written to the output.
 
 #### State
 
 Each component can have its local state accessible via `this.state`.
-Whenever a state updates, component is rerendered.
+Whenever a state updates, the component is rerendered.
 
 To set the initial state, extend the constructor and assign an object to `this.state`.
-Anywhere in the component state is accessible via `this.state`, and it's also passed to `render()` as a second argument.
+The state is accessible via `this.state` anywhere in the component, and it's also passed to `render()` as a second argument.
 
 ```js
 class Demo extends Component {
@@ -282,7 +279,7 @@ class Demo extends Component {
 
 ###### nextState
 
-Type: `Object`, `Function`
+Type: `Object` `Function`
 Default: `{}`
 
 Set a new state and update the output.
@@ -431,7 +428,7 @@ Using stateless function components:
 const Demo = (props, context) => 'Hello World';
 ```
 
-As you may have noticed, stateless function component still get access to props and context.
+As you may have noticed, stateless function components still get access to props and context.
 
 #### Built-in Components
 

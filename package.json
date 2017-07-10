@@ -1,77 +1,77 @@
 {
-  "name": "ink",
-  "version": "0.1.2",
-  "description": "React for CLI",
-  "license": "MIT",
-  "repository": "vadimdemedes/ink",
-  "author": {
-    "name": "vdemedes",
-    "email": "vdemedes@gmail.com",
-    "url": "github.com/vadimdemedes"
-  },
-  "engines": {
-    "node": ">= 4"
-  },
-  "scripts": {
-    "test": "xo && ava"
-  },
-  "files": [
-    "lib",
-    "index.js"
-  ],
-  "keywords": [
-    "react",
-    "cli"
-  ],
-  "dependencies": {
-    "arrify": "^1.0.1",
-    "chalk": "^2.0.1",
-    "indent-string": "^3.1.0",
-    "lodash.flattendeep": "^4.4.0",
-    "lodash.isequal": "^4.5.0",
-    "log-update": "^1.0.2"
-  },
-  "devDependencies": {
-    "ava": "^0.19.1",
-    "babel-plugin-transform-react-jsx": "^6.24.1",
-    "babel-register": "^6.24.1",
-    "eslint-config-xo-react": "^0.12.0",
-    "eslint-plugin-react": "^7.1.0",
-    "sinon": "^2.3.4",
-    "xo": "^0.18.2"
-  },
-  "ava": {
-    "require": [
-      "babel-register"
-    ],
-    "babel": {
-      "presets": [
-        "@ava/stage-4"
-      ],
-      "plugins": [
-        [
-          "transform-react-jsx",
-          {
-            "pragma": "h"
-          }
-        ]
-      ]
-    }
-  },
-  "xo": {
-    "extends": [
-      "xo-react"
-    ],
-    "plugins": [
-      "react"
-    ],
-    "rules": {
-      "react/prop-types": 0
-    },
-    "settings": {
-      "react": {
-        "pragma": "h"
-      }
-    }
-  }
+	"name": "ink",
+	"version": "0.1.2",
+	"description": "React for CLI",
+	"license": "MIT",
+	"repository": "vadimdemedes/ink",
+	"author": {
+		"name": "vdemedes",
+		"email": "vdemedes@gmail.com",
+		"url": "github.com/vadimdemedes"
+	},
+	"engines": {
+		"node": ">=4"
+	},
+	"scripts": {
+		"test": "xo && ava"
+	},
+	"files": [
+		"lib",
+		"index.js"
+	],
+	"keywords": [
+		"react",
+		"cli"
+	],
+	"dependencies": {
+		"arrify": "^1.0.1",
+		"chalk": "^2.0.1",
+		"indent-string": "^3.1.0",
+		"lodash.flattendeep": "^4.4.0",
+		"lodash.isequal": "^4.5.0",
+		"log-update": "^1.0.2"
+	},
+	"devDependencies": {
+		"ava": "^0.19.1",
+		"babel-plugin-transform-react-jsx": "^6.24.1",
+		"babel-register": "^6.24.1",
+		"eslint-config-xo-react": "^0.12.0",
+		"eslint-plugin-react": "^7.1.0",
+		"sinon": "^2.3.4",
+		"xo": "^0.18.2"
+	},
+	"ava": {
+		"require": [
+			"babel-register"
+		],
+		"babel": {
+			"presets": [
+				"@ava/stage-4"
+			],
+			"plugins": [
+				[
+					"transform-react-jsx",
+					{
+						"pragma": "h"
+					}
+				]
+			]
+		}
+	},
+	"xo": {
+		"extends": [
+			"xo-react"
+		],
+		"plugins": [
+			"react"
+		],
+		"rules": {
+			"react/prop-types": 0
+		},
+		"settings": {
+			"react": {
+				"pragma": "h"
+			}
+		}
+	}
 }
