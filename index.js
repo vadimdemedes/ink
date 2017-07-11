@@ -22,14 +22,11 @@ exports.Text = Text;
 
 const noop = () => {};
 
-exports.diff = diff;
-exports.renderToString = renderToString;
-
 const unmount = tree => callTree(tree, 'unmount');
 const didMount = tree => callTree(tree, 'didMount');
 const didUpdate = tree => callTree(tree, 'didUpdate');
 
-const render = (nextTree, prevTree, onUpdate = noop, context = {}, autoLifecycle = true) => {
+const build = (nextTree, prevTree, onUpdate = noop, context = {}, autoLifecycle = true) => {
 	const reconciledTree = diff(prevTree, nextTree, onUpdate, context);
 
 	if (autoLifecycle) {
@@ -40,21 +37,20 @@ const render = (nextTree, prevTree, onUpdate = noop, context = {}, autoLifecycle
 	return reconciledTree;
 };
 
-exports.render = render;
+exports.build = build;
+exports.diff = diff;
 
-exports.mount = (tree, stream) => {
-	const log = logUpdate.create(stream || process.stdout);
+exports.renderToString = (...args) => renderToString(build(...args));
 
+exports.render = (tree, stream = process.stdout) => {
+	const log = logUpdate.create(stream);
+
+	const context = {};
 	let isUnmounted = false;
 	let currentTree;
-	const context = {};
 
-	const onUpdate = () => {
-		if (isUnmounted) {
-			return;
-		}
-
-		const nextTree = render(tree, currentTree, onUpdate, context, false);
+	const update = () => {
+		const nextTree = build(tree, currentTree, onUpdate, context, false); // eslint-disable-line no-use-before-define
 		log(renderToString(nextTree));
 		didMount(nextTree);
 		didUpdate(nextTree);
@@ -62,10 +58,15 @@ exports.mount = (tree, stream) => {
 		currentTree = nextTree;
 	};
 
-	currentTree = render(tree, null, onUpdate, context, false);
-	log(renderToString(currentTree));
-	didMount(currentTree);
-	didUpdate(currentTree);
+	const onUpdate = () => {
+		if (isUnmounted) {
+			return;
+		}
+
+		update();
+	};
+
+	update();
 
 	return () => {
 		if (isUnmounted) {

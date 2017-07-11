@@ -48,6 +48,7 @@
 		"eslint-config-xo-react": "^0.13.0",
 		"eslint-plugin-react": "^7.1.0",
 		"sinon": "^2.3.4",
+		"strip-ansi": "^4.0.0",
 		"xo": "^0.18.2"
 	},
 	"ava": {

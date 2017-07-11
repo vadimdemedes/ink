@@ -1,6 +1,7 @@
 import {spy} from 'sinon';
 import test from 'ava';
-import {h, render, renderToString, Component, Group} from '..';
+import {h, build, Component, Group} from '..';
+import renderToString from '../lib/render-to-string';
 import {rerender} from '../lib/render-queue';
 
 test('render text', t => {
@@ -10,7 +11,7 @@ test('render text', t => {
 		}
 	}
 
-	t.is(renderToString(render(<A/>)), 'Hello');
+	t.is(renderToString(build(<A/>)), 'Hello');
 });
 
 test('receive props', t => {
@@ -20,7 +21,7 @@ test('receive props', t => {
 		}
 	}
 
-	t.is(renderToString(render(<A message="Hello"/>)), 'Hello');
+	t.is(renderToString(build(<A message="Hello"/>)), 'Hello');
 });
 
 test('receive props in render arguments', t => {
@@ -30,7 +31,7 @@ test('receive props in render arguments', t => {
 		}
 	}
 
-	t.is(renderToString(render(<A message="Hello"/>)), 'Hello');
+	t.is(renderToString(build(<A message="Hello"/>)), 'Hello');
 });
 
 test('rerender on new props', t => {
@@ -40,10 +41,10 @@ test('rerender on new props', t => {
 		}
 	}
 
-	const initialTree = render(<Hi name="John"/>);
+	const initialTree = build(<Hi name="John"/>);
 	t.is(renderToString(initialTree), 'Hello, John');
 
-	const finalTree = render(<Hi name="Michael"/>, initialTree);
+	const finalTree = build(<Hi name="Michael"/>, initialTree);
 	t.is(renderToString(finalTree), 'Hello, Michael');
 });
 
@@ -60,7 +61,7 @@ test('render nested component', t => {
 		}
 	}
 
-	t.is(renderToString(render(<A/>)), 'Hello');
+	t.is(renderToString(build(<A/>)), 'Hello');
 });
 
 test('rerender nested components', t => {
@@ -83,10 +84,10 @@ test('rerender nested components', t => {
 		}
 	}
 
-	const initialTree = render(<A component="B"/>);
+	const initialTree = build(<A component="B"/>);
 	t.is(renderToString(initialTree), 'B');
 
-	const finalTree = render(<A component="C"/>, initialTree);
+	const finalTree = build(<A component="C"/>, initialTree);
 	t.is(renderToString(finalTree), 'C');
 });
 
@@ -113,7 +114,7 @@ test('render children', t => {
 		}
 	}
 
-	const tree = render((
+	const tree = build((
 		<HelloWorld>
 			<Hello/>
 			<World/>
@@ -142,7 +143,7 @@ test('update children', t => {
 		}
 	}
 
-	const firstTree = render((
+	const firstTree = build((
 		<Group>
 			<A/>
 			<B/>
@@ -151,7 +152,7 @@ test('update children', t => {
 
 	t.is(renderToString(firstTree), 'AB');
 
-	const secondTree = render((
+	const secondTree = build((
 		<Group>
 			<A/>
 			<B/>
@@ -161,7 +162,7 @@ test('update children', t => {
 
 	t.is(renderToString(secondTree), 'ABC');
 
-	const thirdTree = render((
+	const thirdTree = build((
 		<Group>
 			<A/>
 		</Group>
@@ -177,7 +178,7 @@ test('render component with missing children', t => {
 		}
 	}
 
-	t.is(renderToString(render(<A/>)), '');
+	t.is(renderToString(build(<A/>)), '');
 });
 
 test('render optional children', t => {
@@ -204,13 +205,13 @@ test('render optional children', t => {
 		}
 	}
 
-	const firstTree = render(<Root a b/>);
+	const firstTree = build(<Root a b/>);
 	t.is(renderToString(firstTree), 'AB');
 
-	const secondTree = render(<Root a/>, firstTree);
+	const secondTree = build(<Root a/>, firstTree);
 	t.is(renderToString(secondTree), 'A');
 
-	const thirdTree = render(<Root/>, secondTree);
+	const thirdTree = build(<Root/>, secondTree);
 	t.is(renderToString(thirdTree), '');
 });
 
@@ -228,37 +229,37 @@ test('render different root components', t => {
 	}
 
 	// Component -> Component
-	t.is(renderToString(render(<A/>, render(<B/>))), 'A');
+	t.is(renderToString(build(<A/>, build(<B/>))), 'A');
 
 	// String -> Component
-	t.is(renderToString(render(<A/>, render('text'))), 'A');
+	t.is(renderToString(build(<A/>, build('text'))), 'A');
 
 	// Number -> Component
-	t.is(renderToString(render(<A/>, render(10))), 'A');
+	t.is(renderToString(build(<A/>, build(10))), 'A');
 
 	// Boolean -> Component
-	t.is(renderToString(render(<A/>, render(false))), 'A');
+	t.is(renderToString(build(<A/>, build(false))), 'A');
 
 	// Component -> String
-	t.is(renderToString(render('text', render(<A/>))), 'text');
+	t.is(renderToString(build('text', build(<A/>))), 'text');
 
 	// Component -> Number
-	t.is(renderToString(render(10, render(<A/>))), '10');
+	t.is(renderToString(build(10, build(<A/>))), '10');
 
 	// Component -> Boolean
-	t.is(renderToString(render(false, render(<A/>))), '');
+	t.is(renderToString(build(false, build(<A/>))), '');
 
 	// String -> Number
-	t.is(renderToString(render(10, render('text'))), '10');
+	t.is(renderToString(build(10, build('text'))), '10');
 
 	// String -> Boolean
-	t.is(renderToString(render(false, render('text'))), '');
+	t.is(renderToString(build(false, build('text'))), '');
 
 	// Number -> String
-	t.is(renderToString(render('text', render(10))), 'text');
+	t.is(renderToString(build('text', build(10))), 'text');
 
 	// Number -> Boolean
-	t.is(renderToString(render(false, render('text'))), '');
+	t.is(renderToString(build(false, build('text'))), '');
 });
 
 test('render with initial state', t => {
@@ -276,7 +277,7 @@ test('render with initial state', t => {
 		}
 	}
 
-	t.is(renderToString(render(<A/>)), 'Hello');
+	t.is(renderToString(build(<A/>)), 'Hello');
 });
 
 test('receive state in render arguments', t => {
@@ -294,7 +295,7 @@ test('receive state in render arguments', t => {
 		}
 	}
 
-	t.is(renderToString(render(<A name="Joe"/>)), 'Hello to Joe');
+	t.is(renderToString(build(<A name="Joe"/>)), 'Hello to Joe');
 });
 
 test('rerender when state updates', t => {
@@ -317,14 +318,14 @@ test('rerender when state updates', t => {
 	}
 
 	const onUpdate = spy();
-	const firstTree = render(<A/>, null, onUpdate);
+	const firstTree = build(<A/>, null, onUpdate);
 	t.is(renderToString(firstTree), 'Hello');
 
 	component.setState({message: 'Goodbye'});
 	rerender();
 	t.true(onUpdate.calledOnce);
 
-	const secondTree = render(<A/>, firstTree);
+	const secondTree = build(<A/>, firstTree);
 	t.is(renderToString(secondTree), 'Goodbye');
 });
 
@@ -347,13 +348,13 @@ test('store next state and set it only on rerender', t => {
 		}
 	}
 
-	const firstTree = render(<A/>, null);
+	const firstTree = build(<A/>, null);
 	t.is(renderToString(firstTree), 'Hello');
 
 	component.setState({message: 'Goodbye'});
 	t.is(renderToString(firstTree), 'Hello');
 
-	const secondTree = render(<A/>, firstTree);
+	const secondTree = build(<A/>, firstTree);
 	t.is(renderToString(secondTree), 'Goodbye');
 });
 
@@ -377,7 +378,7 @@ test('merge pending states', t => {
 		}
 	}
 
-	const firstTree = render(<A/>, null);
+	const firstTree = build(<A/>, null);
 	t.is(renderToString(firstTree), 'Hello Joe');
 
 	const firstCallback = spy();
@@ -386,7 +387,7 @@ test('merge pending states', t => {
 	component.setState({first: 'Bye'}, firstCallback);
 	component.setState({second: 'Ross'}, secondCallback);
 
-	const secondTree = render(<A/>, firstTree);
+	const secondTree = build(<A/>, firstTree);
 	t.is(renderToString(secondTree), 'Bye Ross');
 
 	t.true(firstCallback.calledOnce);
@@ -415,7 +416,7 @@ test('state callbacks', t => {
 
 	spy(A.prototype, 'componentDidUpdate');
 
-	const firstTree = render(<A/>);
+	const firstTree = build(<A/>);
 	t.is(renderToString(firstTree), 'Hello');
 
 	const callback = spy(() => {
@@ -428,12 +429,12 @@ test('state callbacks', t => {
 		message: 'Bonjour'
 	}, callback);
 
-	const secondTree = render(<A/>, firstTree);
+	const secondTree = build(<A/>, firstTree);
 	t.is(renderToString(secondTree), 'Bonjour');
 	t.true(callback.calledOnce);
 	t.true(callback.calledAfter(A.prototype.componentDidUpdate));
 
-	const thirdTree = render(<A/>, secondTree);
+	const thirdTree = build(<A/>, secondTree);
 	t.is(renderToString(thirdTree), 'Ciao');
 	t.true(callback.calledOnce);
 });
@@ -458,10 +459,10 @@ test('force render', t => {
 
 	let tree; // eslint-disable-line prefer-const
 	const onUpdate = spy(() => {
-		render(<A/>, tree, onUpdate);
+		build(<A/>, tree, onUpdate);
 	});
 
-	tree = render(<A/>, null, onUpdate);
+	tree = build(<A/>, null, onUpdate);
 	t.is(renders, 1);
 
 	component.forceUpdate();
@@ -483,39 +484,39 @@ test('dont render falsey values', t => {
 		}
 	}
 
-	t.is(renderToString(render(<A/>)), ',,,0,NaN');
+	t.is(renderToString(build(<A/>)), ',,,0,NaN');
 });
 
 test('dont render null', t => {
-	t.is(renderToString(render(null)), '');
+	t.is(renderToString(build(null)), '');
 });
 
 test('dont render undefined', t => {
-	t.is(renderToString(render(undefined)), '');
+	t.is(renderToString(build(undefined)), '');
 });
 
 test('dont render boolean', t => {
-	t.is(renderToString(render(false)), '');
-	t.is(renderToString(render(true)), '');
+	t.is(renderToString(build(false)), '');
+	t.is(renderToString(build(true)), '');
 });
 
 test('render NaN as text', t => {
-	t.is(renderToString(render(NaN)), 'NaN');
+	t.is(renderToString(build(NaN)), 'NaN');
 });
 
 test('render numbers as text', t => {
-	t.is(renderToString(render(0)), '0');
-	t.is(renderToString(render(1)), '1');
+	t.is(renderToString(build(0)), '0');
+	t.is(renderToString(build(1)), '1');
 });
 
 test('render string', t => {
-	t.is(renderToString(render('A')), 'A');
+	t.is(renderToString(build('A')), 'A');
 });
 
 test('render functional component', t => {
 	const A = () => 'A';
 
-	t.is(renderToString(render(<A/>)), 'A');
+	t.is(renderToString(build(<A/>)), 'A');
 });
 
 test('render nested functional components', t => {
@@ -523,7 +524,7 @@ test('render nested functional components', t => {
 	const B = () => <A/>;
 	const C = () => <B/>;
 
-	t.is(renderToString(render(<C/>)), 'A');
+	t.is(renderToString(build(<C/>)), 'A');
 });
 
 test('receive props in functional component', t => {
@@ -531,5 +532,5 @@ test('receive props in functional component', t => {
 		return `Hi, ${name}`;
 	};
 
-	t.is(renderToString(render(<Hi name="John"/>)), 'Hi, John');
+	t.is(renderToString(build(<Hi name="John"/>)), 'Hi, John');
 });

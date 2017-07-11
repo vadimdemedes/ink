@@ -1,6 +1,7 @@
 import {spy} from 'sinon';
 import test from 'ava';
-import {h, render, renderToString, Component, Group} from '..';
+import {h, build, Component, Group} from '..';
+import renderToString from '../lib/render-to-string';
 
 const methods = [
 	'_constructor',
@@ -43,7 +44,7 @@ test('componentWillUpdate - dont call on initial render', t => {
 	}
 
 	spyOn(A);
-	render(<A/>);
+	build(<A/>);
 
 	t.false(A.prototype.componentWillUpdate.called);
 });
@@ -84,14 +85,14 @@ test('componentWillUpdate - call on rerender with new props from parent', t => {
 
 	spyOn(Inner);
 
-	const tree = render(<Outer/>);
+	const tree = build(<Outer/>);
 	t.false(Inner.prototype.componentWillUpdate.called);
 
 	outer.setState({
 		i: 1
 	});
 
-	render(<Outer/>, tree);
+	build(<Outer/>, tree);
 	t.true(Inner.prototype.componentWillUpdate.calledOnce);
 });
 
@@ -118,14 +119,14 @@ test('componentWillUpdate - call on new state', t => {
 
 	spyOn(A);
 
-	const tree = render(<A/>, null);
+	const tree = build(<A/>, null);
 	t.false(A.prototype.componentWillUpdate.called);
 
 	component.setState({
 		i: 1
 	});
 
-	render(<A/>, tree);
+	build(<A/>, tree);
 	t.true(A.prototype.componentWillUpdate.calledOnce);
 });
 
@@ -139,7 +140,7 @@ test('componentWillReceiveProps - dont call on initial render', t => {
 	}
 
 	spyOn(A);
-	render(<A/>);
+	build(<A/>);
 
 	t.false(A.prototype.componentWillReceiveProps.called);
 });
@@ -182,7 +183,7 @@ test('componentWillReceiveProps - call on rerender with new props from parent', 
 
 	spyOn(Inner);
 
-	const tree = render(<Outer/>);
+	const tree = build(<Outer/>);
 	t.true(Inner.prototype.componentWillMount.calledOnce);
 	t.false(Inner.prototype.componentWillReceiveProps.called);
 
@@ -190,7 +191,7 @@ test('componentWillReceiveProps - call on rerender with new props from parent', 
 		i: 1
 	});
 
-	render(<Outer/>, tree);
+	build(<Outer/>, tree);
 	t.true(Inner.prototype.componentWillMount.calledOnce);
 	t.true(Inner.prototype.componentWillReceiveProps.calledOnce);
 });
@@ -226,12 +227,12 @@ test('componentWillReceiveProps - call in the right order', t => {
 
 	spyOn(Inner);
 
-	const tree = render(<Outer/>);
+	const tree = build(<Outer/>);
 	outer.setState({
 		i: 1
 	});
 
-	render(<Outer/>, tree);
+	build(<Outer/>, tree);
 
 	t.true(Inner.prototype.componentWillReceiveProps.calledBefore(Inner.prototype.componentWillUpdate));
 	t.true(Inner.prototype.componentWillUpdate.calledBefore(Inner.prototype.componentDidUpdate));
@@ -251,14 +252,14 @@ test('componentWillUnmount', t => {
 	spyOn(A);
 	spyOn(B);
 
-	const firstTree = render(<A/>);
+	const firstTree = build(<A/>);
 	t.true(A.prototype.componentDidMount.calledOnce);
 
-	const secondTree = render(<B/>, firstTree);
+	const secondTree = build(<B/>, firstTree);
 	t.true(A.prototype.componentWillUnmount.calledOnce);
 	t.true(B.prototype.componentDidMount.calledOnce);
 
-	render(<A/>, secondTree);
+	build(<A/>, secondTree);
 	t.true(B.prototype.componentWillUnmount.calledOnce);
 	t.true(A.prototype.componentDidMount.calledTwice);
 });
@@ -328,7 +329,7 @@ const resetAll = () => {
 
 test.serial('nested components - enabled updates - initial render', t => {
 	resetAll();
-	render(<Outer/>);
+	build(<Outer/>);
 
 	t.true(Outer.prototype._constructor.calledOnce);
 	t.true(Outer.prototype.componentWillMount.calledOnce);
@@ -352,9 +353,9 @@ test.serial('nested components - enabled updates - initial render', t => {
 
 test.serial('nested components - enabled updates - unmount child', t => {
 	resetAll();
-	const tree = render(<Outer/>);
+	const tree = build(<Outer/>);
 	outer.setState({showInner: false});
-	render(<Outer/>, tree);
+	build(<Outer/>, tree);
 
 	t.true(Outer.prototype.componentWillUpdate.calledOnce);
 	t.true(Outer.prototype.componentDidUpdate.calledOnce);
@@ -366,11 +367,11 @@ test.serial('nested components - enabled updates - unmount child', t => {
 
 test.serial('nested components - enabled updates - mount child', t => {
 	resetAll();
-	let tree = render(<Outer/>);
+	let tree = build(<Outer/>);
 	outer.setState({showInner: false});
-	tree = render(<Outer/>, tree);
+	tree = build(<Outer/>, tree);
 	outer.setState({showInner: true});
-	render(<Outer/>, tree);
+	build(<Outer/>, tree);
 
 	t.true(Outer.prototype._constructor.calledOnce);
 	t.true(Outer.prototype.componentWillUpdate.calledTwice);
@@ -391,11 +392,11 @@ test.serial('nested components - enabled updates - mount child', t => {
 
 test.serial('nested components - enabled updates - update children', t => {
 	resetAll();
-	let tree = render(<Outer/>);
+	let tree = build(<Outer/>);
 	t.is(renderToString(tree), 'InnerMost 0');
 
 	outer.setState({i: 1});
-	tree = render(<Outer/>, tree);
+	tree = build(<Outer/>, tree);
 	t.is(renderToString(tree), 'InnerMost 1');
 
 	t.true(Outer.prototype.componentWillUpdate.calledOnce);
@@ -427,7 +428,7 @@ test.serial('nested components - enabled updates - update children', t => {
 test.serial('nested components - disabled updates - initial render', t => {
 	shouldComponentUpdate = false;
 	resetAll();
-	render(<Outer/>);
+	build(<Outer/>);
 
 	t.true(Outer.prototype._constructor.calledOnce);
 	t.true(Outer.prototype.componentWillMount.calledOnce);
@@ -451,9 +452,9 @@ test.serial('nested components - disabled updates - initial render', t => {
 
 test.serial('nested components - disabled updates - unmount child', t => {
 	resetAll();
-	const tree = render(<Outer/>);
+	const tree = build(<Outer/>);
 	outer.setState({showInner: false});
-	render(<Outer/>, tree);
+	build(<Outer/>, tree);
 
 	t.true(Outer.prototype.componentWillUpdate.calledOnce);
 	t.true(Outer.prototype.componentDidUpdate.calledOnce);
@@ -465,11 +466,11 @@ test.serial('nested components - disabled updates - unmount child', t => {
 
 test.serial('nested components - disabled updates - mount child', t => {
 	resetAll();
-	let tree = render(<Outer/>);
+	let tree = build(<Outer/>);
 	outer.setState({showInner: false});
-	tree = render(<Outer/>, tree);
+	tree = build(<Outer/>, tree);
 	outer.setState({showInner: true});
-	render(<Outer/>, tree);
+	build(<Outer/>, tree);
 
 	t.true(Outer.prototype._constructor.calledOnce);
 	t.true(Outer.prototype.componentWillUpdate.calledTwice);
@@ -490,11 +491,11 @@ test.serial('nested components - disabled updates - mount child', t => {
 
 test.serial('nested components - disabled updates - update children', t => {
 	resetAll();
-	let tree = render(<Outer/>);
+	let tree = build(<Outer/>);
 	t.is(renderToString(tree), 'InnerMost 0');
 
 	outer.setState({i: 1});
-	tree = render(<Outer/>, tree);
+	tree = build(<Outer/>, tree);
 	t.is(renderToString(tree), 'InnerMost 0');
 
 	t.true(Outer.prototype.componentWillUpdate.calledOnce);
@@ -583,15 +584,15 @@ test.serial('nested components - disabled updates - update stateful child', t =>
 	spyOn(Inner);
 	spyOn(InnerMost);
 
-	let tree = render(<Outer/>);
+	let tree = build(<Outer/>);
 	t.is(renderToString(tree), 'InnerMost 0 0');
 
 	outer.setState({i: 1});
-	tree = render(<Outer/>, tree);
+	tree = build(<Outer/>, tree);
 	t.is(renderToString(tree), 'InnerMost 0 0');
 
 	innerMost.setState({k: 1});
-	tree = render(<Outer/>, tree);
+	tree = build(<Outer/>, tree);
 	t.is(renderToString(tree), 'InnerMost 0 1');
 
 	t.true(Outer.prototype.componentWillUpdate.calledTwice);

@@ -1,6 +1,6 @@
 import {spy} from 'sinon';
 import test from 'ava';
-import {h, render, Component} from '..';
+import {h, build, Component} from '..';
 
 test('receive ref when component mounts', t => {
 	class A extends Component {
@@ -20,7 +20,7 @@ test('receive ref when component mounts', t => {
 		ref = _ref;
 	});
 
-	render(<A ref={onRef}/>);
+	build(<A ref={onRef}/>);
 
 	t.true(onRef.calledOnce);
 	t.true(A.prototype.componentDidMount.calledOnce);
@@ -45,10 +45,10 @@ test('clear ref when component unmounts', t => {
 
 	const onRef = spy();
 
-	const tree = render(<A ref={onRef}/>);
+	const tree = build(<A ref={onRef}/>);
 	t.true(onRef.calledOnce);
 
-	render(<B/>, tree);
+	build(<B/>, tree);
 	t.true(onRef.calledTwice);
 	t.is(onRef.secondCall.args[0], null);
 });
@@ -59,8 +59,8 @@ test('disabled on functional components', t => {
 
 	const onRef = spy();
 
-	const tree = render(<A ref={onRef}/>);
-	render(<B/>, tree);
+	const tree = build(<A ref={onRef}/>);
+	build(<B/>, tree);
 
 	t.false(onRef.called);
 });

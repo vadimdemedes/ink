@@ -96,7 +96,7 @@ const Demo = () => <div/>;
 
 ### Core API
 
-#### mount(tree, stream)
+#### render(tree, stream)
 
 Mount a component, listen for updates and update the output.
 This method is used for interactive UIs, where you need state, user input or lifecycle methods.
@@ -139,7 +139,7 @@ class Counter extends Component {
 	}
 }
 
-const unmount = mount(<Counter/>);
+const unmount = render(<Counter/>);
 
 setTimeout(() => {
 	// Enough counting
@@ -147,22 +147,17 @@ setTimeout(() => {
 }, 1000);
 ```
 
-#### renderToString(tree)
+#### renderToString(tree, [prevTree])
 
-Render a previously generated VDOM to a string, which you can flush to the output.
-
-#### render(tree, [prevTree])
-
-Build a VDOM representation of components.
+Render a component to a string and return it.
 Useful if you don't intend to use state or lifecycle methods and just want to render the UI once and exit.
 
 ```jsx
-const {h, render, renderToString} = require('ink');
+const {h, renderToString} = require('ink');
 
 const Hello = () => 'Hello World';
 
-const tree = render(<Hello/>);
-process.stdout.write(renderToString(tree));
+process.stdout.write(renderToString(<Hello/>));
 ```
 
 ### Components

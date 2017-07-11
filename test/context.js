@@ -1,5 +1,5 @@
 import test from 'ava';
-import {h, render, renderToString, Component} from '..';
+import {h, renderToString, Component} from '..';
 
 test('empty context', t => {
 	class Outer extends Component {
@@ -14,7 +14,7 @@ test('empty context', t => {
 		}
 	}
 
-	t.is(renderToString(render(<Outer/>)), '{}');
+	t.is(renderToString(<Outer/>), '{}');
 });
 
 test('assigned context', t => {
@@ -36,7 +36,7 @@ test('assigned context', t => {
 		}
 	}
 
-	t.is(renderToString(render(<Outer/>)), 'Rachel');
+	t.is(renderToString(<Outer/>), 'Rachel');
 });
 
 test('nested context assignments', t => {
@@ -70,7 +70,7 @@ test('nested context assignments', t => {
 		}
 	}
 
-	t.is(renderToString(render(<Outer/>)), 'Rachel and Ross');
+	t.is(renderToString(<Outer/>), 'Rachel and Ross');
 });
 
 test('receive context in render arguments', t => {
@@ -92,7 +92,7 @@ test('receive context in render arguments', t => {
 		}
 	}
 
-	t.is(renderToString(render(<Outer/>)), 'Monica');
+	t.is(renderToString(<Outer/>), 'Monica');
 });
 
 test('receive context in a component that assigned it', t => {
@@ -108,7 +108,7 @@ test('receive context in a component that assigned it', t => {
 		}
 	}
 
-	t.is(renderToString(render(<A/>)), 'Chandler');
+	t.is(renderToString(<A/>), 'Chandler');
 });
 
 test('receive context in a functional component', t => {
@@ -126,5 +126,5 @@ test('receive context in a functional component', t => {
 
 	const Inner = (props, context) => context.name;
 
-	t.is(renderToString(render(<Outer/>)), 'Phoebe');
+	t.is(renderToString(<Outer/>), 'Phoebe');
 });
