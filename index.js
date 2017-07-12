@@ -1,5 +1,6 @@
 'use strict';
 
+const readline = require('readline');
 const logUpdate = require('log-update');
 const StringComponent = require('./lib/string-component');
 const Component = require('./lib/component');
@@ -42,12 +43,26 @@ exports.diff = diff;
 
 exports.renderToString = (...args) => renderToString(build(...args));
 
-exports.render = (tree, stream = process.stdout) => {
-	const log = logUpdate.create(stream);
+exports.render = (tree, options) => {
+	if (options && typeof options.write === 'function') {
+		options = {
+			stdout: options
+		};
+	}
+
+	const {stdin, stdout} = Object.assign({
+		stdin: process.stdin,
+		stdout: process.stdout
+	}, options);
+
+	const log = logUpdate.create(stdout);
 
 	const context = {};
 	let isUnmounted = false;
 	let currentTree;
+
+	readline.emitKeypressEvents(stdin);
+	stdin.setRawMode(true);
 
 	const update = () => {
 		const nextTree = build(tree, currentTree, onUpdate, context, false); // eslint-disable-line no-use-before-define
@@ -72,6 +87,8 @@ exports.render = (tree, stream = process.stdout) => {
 		if (isUnmounted) {
 			return;
 		}
+
+		stdin.setRawMode(false);
 
 		isUnmounted = true;
 		unmount(currentTree);
