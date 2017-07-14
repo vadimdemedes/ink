@@ -27,9 +27,40 @@ test('set up stdin to emit keypress events', t => {
 
 	t.true(stdin.setRawMode.calledOnce);
 	t.deepEqual(stdin.setRawMode.firstCall.args, [true]);
-	t.deepEqual(stdin.eventNames(), ['newListener']);
+	t.deepEqual(stdin.eventNames().sort(), ['data', 'keypress'].sort());
 
 	unmount();
+
+	t.true(stdin.setRawMode.calledTwice);
+	t.deepEqual(stdin.setRawMode.secondCall.args, [false]);
+});
+
+test('exit on esc', t => {
+	const Test = () => 'Test';
+
+	const stdin = createStdin();
+	const stdout = createStdout();
+	render(<Test/>, {stdin, stdout});
+
+	stdin.emit('keypress', '', {
+		name: 'escape'
+	});
+
+	t.true(stdin.setRawMode.calledTwice);
+	t.deepEqual(stdin.setRawMode.secondCall.args, [false]);
+});
+
+test('exit on ctrl+c', t => {
+	const Test = () => 'Test';
+
+	const stdin = createStdin();
+	const stdout = createStdout();
+	render(<Test/>, {stdin, stdout});
+
+	stdin.emit('keypress', 'c', {
+		name: 'c',
+		ctrl: true
+	});
 
 	t.true(stdin.setRawMode.calledTwice);
 	t.deepEqual(stdin.setRawMode.secondCall.args, [false]);

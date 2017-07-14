@@ -83,15 +83,26 @@ exports.render = (tree, options) => {
 
 	update();
 
-	return () => {
+	const onKeyPress = (ch, key) => {
+		if (key.name === 'escape' || (key.ctrl && key.name === 'c')) {
+			exit(); // eslint-disable-line no-use-before-define
+		}
+	};
+
+	stdin.on('keypress', onKeyPress);
+
+	const exit = () => {
 		if (isUnmounted) {
 			return;
 		}
 
 		stdin.setRawMode(false);
+		stdin.removeListener('keypress', onKeyPress);
 
 		isUnmounted = true;
 		unmount(currentTree);
 		log.done();
 	};
+
+	return exit;
 };
