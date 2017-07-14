@@ -21,7 +21,7 @@ $ npm install ink
 ## Usage
 
 ```jsx
-const {h, mount, Component, Text} = require('ink');
+const {h, render, Component, Text} = require('ink');
 
 class Counter extends Component {
 	constructor() {
@@ -53,7 +53,7 @@ class Counter extends Component {
 	}
 }
 
-mount(<Counter/>, process.stdout);
+render(<Counter/>);
 ```
 
 <img src="media/demo.gif" width="428" height="232">
@@ -113,7 +113,7 @@ Type: `Stream`<br>
 Default: `process.stdout`
 
 ```jsx
-const {h, mount, Component} = require('ink');
+const {h, render, Component} = require('ink');
 
 class Counter extends Component {
 	constructor() {
