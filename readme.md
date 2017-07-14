@@ -101,6 +101,8 @@ const Demo = () => <div/>;
 Mount a component, listen for updates and update the output.
 This method is used for interactive UIs, where you need state, user input or lifecycle methods.
 
+It automatically enables `keypress` events on `process.stdin`. Since it requires [raw mode](https://davidwalsh.name/node-raw-mode) to be enabled, Ink handles default behavior for you, like exiting with <kbd>Ctrl</kbd>+<kbd>C</kbd>.
+
 ##### tree
 
 Type: `VNode`
