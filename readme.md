@@ -226,6 +226,21 @@ Test.defaultProps = {
 // <Test/> => "Hello World"
 ```
 
+##### Prop Types
+
+Ink supports prop types out-of-the-box. All you have to do is set them in the same way you would in React:
+
+```js
+const PropTypes = require('prop-types');
+
+Test.propTypes = {
+	first: PropTypes.string.isRequired,
+	second: PropTypes.string
+};
+```
+
+**Note**: Prop types are only checked when `NODE_ENV` isn't `'production'`.
+
 #### Lifecycle Methods
 
 Lifecycle methods are component methods that are called whenever a certain event happens related to that specific component. All lifecycle methods are called from top to down, meaning that components on top receive those events earlier than their children.

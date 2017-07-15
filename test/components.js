@@ -1,4 +1,5 @@
-import {spy} from 'sinon';
+import PropTypes from 'prop-types';
+import {spy, stub} from 'sinon';
 import test from 'ava';
 import {h, build, Component, Group} from '..';
 import renderToString from '../lib/render-to-string';
@@ -63,6 +64,37 @@ test('rerender on new props', t => {
 
 	const finalTree = build(<Hi name="Michael"/>, initialTree);
 	t.is(renderToString(finalTree), 'Hello, Michael');
+});
+
+test.serial('check prop types', t => {
+	stub(console, 'error');
+
+	const Child = () => '';
+	const Parent = () => '';
+
+	Parent.defaultProps = {
+		message: 'Test'
+	};
+
+	Parent.propTypes = {
+		message: PropTypes.string,
+		children: PropTypes.node
+	};
+
+	build((
+		<Parent>
+			<Child/>
+		</Parent>
+	));
+
+	t.false(console.error.called);
+
+	build(<Parent message={123}/>);
+
+	t.true(console.error.calledOnce);
+	t.is(console.error.firstCall.args[0], 'Warning: Failed prop type: Invalid prop `message` of type `number` supplied to `Parent`, expected `string`.');
+
+	console.error.restore();
 });
 
 test('render nested component', t => {
