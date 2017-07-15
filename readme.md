@@ -213,6 +213,19 @@ class Parent extends Component {
 }
 ```
 
+To set default props on specific component, use `defaultProps`:
+
+```js
+const Test = ({first, second}) => `${first} ${second}`;
+
+Test.defaultProps = {
+	first: 'Hello',
+	second: 'World'
+};
+
+// <Test/> => "Hello World"
+```
+
 #### Lifecycle Methods
 
 Lifecycle methods are component methods that are called whenever a certain event happens related to that specific component. All lifecycle methods are called from top to down, meaning that components on top receive those events earlier than their children.

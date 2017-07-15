@@ -34,6 +34,23 @@ test('receive props in render arguments', t => {
 	t.is(renderToString(build(<A message="Hello"/>)), 'Hello');
 });
 
+test('receive props with default props', t => {
+	class Test extends Component {
+		render(props) {
+			return `${props.a} ${props.b} ${props.c}`;
+		}
+	}
+
+	Test.defaultProps = {
+		a: 'a',
+		b: 'b'
+	};
+
+	const tree = build(<Test b="z" c="c"/>);
+	t.is(renderToString(tree), 'a z c');
+	t.is(renderToString(build(<Test c="c"/>, tree)), 'a b c');
+});
+
 test('rerender on new props', t => {
 	class Hi extends Component {
 		render(props) {
