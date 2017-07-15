@@ -10,6 +10,7 @@ const stripOutput = str => stripAnsi(str).trim();
 const createStdin = () => {
 	const events = new EventEmitter();
 	events.setRawMode = spy();
+	events.pause = spy();
 
 	return events;
 };
@@ -31,6 +32,7 @@ test.serial('set up stdin to emit keypress events', t => {
 
 	unmount();
 
+	t.true(stdin.pause.calledOnce);
 	t.true(stdin.setRawMode.calledTwice);
 	t.deepEqual(stdin.setRawMode.secondCall.args, [false]);
 });

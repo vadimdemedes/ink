@@ -115,6 +115,7 @@ exports.render = (tree, options) => {
 
 		stdin.setRawMode(false);
 		stdin.removeListener('keypress', onKeyPress);
+		stdin.pause();
 
 		isUnmounted = true;
 		unmount(currentTree);
