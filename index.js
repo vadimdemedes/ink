@@ -91,6 +91,23 @@ exports.render = (tree, options) => {
 
 	stdin.on('keypress', onKeyPress);
 
+	const consoleMethods = ['dir', 'log', 'info', 'warn', 'error'];
+
+	consoleMethods.forEach(method => {
+		const originalFn = console[method];
+
+		console[method] = (...args) => {
+			log.clear();
+			log.done();
+			originalFn.apply(console, args);
+			update();
+		};
+
+		console[method].restore = () => {
+			console[method] = originalFn;
+		};
+	});
+
 	const exit = () => {
 		if (isUnmounted) {
 			return;
@@ -102,6 +119,8 @@ exports.render = (tree, options) => {
 		isUnmounted = true;
 		unmount(currentTree);
 		log.done();
+
+		consoleMethods.forEach(method => console[method].restore());
 	};
 
 	return exit;
