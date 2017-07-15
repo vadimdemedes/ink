@@ -65,6 +65,7 @@ render(<Counter/>);
 - [ink-text-input](https://github.com/vadimdemedes/ink-text-input) - Text input.
 - [ink-password-input](https://github.com/vadimdemedes/ink-password-input) - Password input.
 - [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Configurable component for rendering progress bars.
+- [ink-spinner](https://github.com/vadimdemedes/ink-spinner) - Spinner.
 
 
 ## Guide
