@@ -1,7 +1,9 @@
 import PropTypes from 'prop-types';
 import {spy, stub} from 'sinon';
+import ansiStyles from 'ansi-styles';
+import chalk from 'chalk';
 import test from 'ava';
-import {h, build, Component} from '..';
+import {h, build, Text, Component} from '..';
 import renderToString from '../lib/render-to-string';
 import {rerender} from '../lib/render-queue';
 
@@ -594,4 +596,18 @@ test('render span', t => {
 
 test('render div', t => {
 	t.is(renderToString(build(<div>Test</div>)), 'Test\n');
+});
+
+test('render styled text', t => {
+	const styles = Object.keys(ansiStyles);
+
+	for (const style of styles) {
+		const props = {
+			[style]: true
+		};
+
+		t.is(renderToString(build(<Text {...props}>Test</Text>)), chalk[style]('Test'));
+	}
+
+	t.is(renderToString(build(<Text rgb={[40, 42, 54]}>Test</Text>)), chalk.rgb(40, 42, 54)('Test'));
 });

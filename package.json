@@ -43,6 +43,7 @@
 		"prop-types": "^15.5.10"
 	},
 	"devDependencies": {
+		"ansi-styles": "^3.1.0",
 		"ava": "^0.20.0",
 		"babel-plugin-transform-react-jsx": "^6.24.1",
 		"babel-register": "^6.24.1",
