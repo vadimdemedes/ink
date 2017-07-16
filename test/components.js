@@ -3,7 +3,7 @@ import {spy, stub} from 'sinon';
 import ansiStyles from 'ansi-styles';
 import chalk from 'chalk';
 import test from 'ava';
-import {h, build, Text, Component} from '..';
+import {h, build, Indent, Text, Component} from '..';
 import renderToString from '../lib/render-to-string';
 import {rerender} from '../lib/render-queue';
 
@@ -610,4 +610,9 @@ test('render styled text', t => {
 	}
 
 	t.is(renderToString(build(<Text rgb={[40, 42, 54]}>Test</Text>)), chalk.rgb(40, 42, 54)('Test'));
+});
+
+test('indent text', t => {
+	t.is(renderToString(build(<Indent size={2}>Test</Indent>)), '  Test');
+	t.is(renderToString(build(<Indent size={2} indent="_">Test</Indent>)), '__Test');
 });
