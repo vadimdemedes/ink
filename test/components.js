@@ -142,6 +142,21 @@ test('rerender nested components', t => {
 	t.is(renderToString(finalTree), 'C');
 });
 
+// Regression test for crash caused by <div> returning an array
+// of children and a newline, e.g. [[A, B], '\n']
+test('render deeply nested components', t => {
+	const A = () => 'A';
+	const B = () => 'B';
+	const Test = () => (
+		<div>
+			<A/>
+			<B/>
+		</div>
+	);
+
+	t.is(renderToString(build(<Test/>)), 'AB\n');
+});
+
 test('render children', t => {
 	class World extends Component {
 		render() {
