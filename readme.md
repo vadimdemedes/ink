@@ -460,7 +460,8 @@ As you may have noticed, stateless function components still get access to props
 #### Built-in Components
 
 Surprise, surprise, our favorite `<div>` and `<span>` can be used in Ink components!
-They contain zero functionality, but are useful for grouping elements, since JSX doesn't allow multiple elements without a parent.
+They are useful for grouping elements, since JSX doesn't allow multiple elements without a parent.
+The only difference between `<div>` and `<span>` is that `<div>` inserts a newline after children.
 
 This won't work:
 
