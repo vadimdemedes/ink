@@ -1,6 +1,6 @@
 import {spy} from 'sinon';
 import test from 'ava';
-import {h, build, Component, Group} from '..';
+import {h, build, Component} from '..';
 import renderToString from '../lib/render-to-string';
 
 const methods = [
@@ -304,9 +304,9 @@ class Inner extends LifecycleTestComponent {
 
 	render() {
 		return (
-			<Group>
+			<span>
 				<InnerMost i={this.props.i}/>
-			</Group>
+			</span>
 		);
 	}
 }
@@ -557,9 +557,9 @@ test.serial('nested components - disabled updates - update stateful child', t =>
 
 		render() {
 			return (
-				<Group>
+				<span>
 					<InnerMost i={this.props.i}/>
-				</Group>
+				</span>
 			);
 		}
 	}

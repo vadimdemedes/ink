@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import {spy, stub} from 'sinon';
 import test from 'ava';
-import {h, build, Component, Group} from '..';
+import {h, build, Component} from '..';
 import renderToString from '../lib/render-to-string';
 import {rerender} from '../lib/render-queue';
 
@@ -156,9 +156,9 @@ test('render children', t => {
 	class HelloWorld extends Component {
 		render(props) {
 			return (
-				<Group>
+				<span>
 					{props.children}
-				</Group>
+				</span>
 			);
 		}
 	}
@@ -193,28 +193,28 @@ test('update children', t => {
 	}
 
 	const firstTree = build((
-		<Group>
+		<span>
 			<A/>
 			<B/>
-		</Group>
+		</span>
 	));
 
 	t.is(renderToString(firstTree), 'AB');
 
 	const secondTree = build((
-		<Group>
+		<span>
 			<A/>
 			<B/>
 			<C/>
-		</Group>
+		</span>
 	), firstTree);
 
 	t.is(renderToString(secondTree), 'ABC');
 
 	const thirdTree = build((
-		<Group>
+		<span>
 			<A/>
-		</Group>
+		</span>
 	), secondTree);
 
 	t.is(renderToString(thirdTree), 'A');
@@ -246,10 +246,10 @@ test('render optional children', t => {
 	class Root extends Component {
 		render(props) {
 			return (
-				<Group>
+				<span>
 					{props.a && <A/>}
 					{props.b && <B/>}
-				</Group>
+				</span>
 			);
 		}
 	}
@@ -526,9 +526,9 @@ test('dont render falsey values', t => {
 	class A extends Component {
 		render() {
 			return (
-				<Group>
+				<span>
 					{null},{undefined},{false},{0},{NaN}
-				</Group>
+				</span>
 			);
 		}
 	}
@@ -582,4 +582,16 @@ test('receive props in functional component', t => {
 	};
 
 	t.is(renderToString(build(<Hi name="John"/>)), 'Hi, John');
+});
+
+test('render br', t => {
+	t.is(renderToString(build(<br/>)), '\n');
+});
+
+test('render span', t => {
+	t.is(renderToString(build(<span>Test</span>)), 'Test');
+});
+
+test('render div', t => {
+	t.is(renderToString(build(<div>Test</div>)), 'Test\n');
 });
