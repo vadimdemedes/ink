@@ -44,7 +44,7 @@
 	},
 	"devDependencies": {
 		"ansi-styles": "^3.1.0",
-		"ava": "^0.20.0",
+		"ava": "^0.21.0",
 		"babel-plugin-transform-react-jsx": "^6.24.1",
 		"babel-register": "^6.24.1",
 		"eslint-config-xo-react": "^0.13.0",
