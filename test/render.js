@@ -8,16 +8,19 @@ import {rerender} from '../lib/render-queue';
 const stripOutput = str => stripAnsi(str).trim();
 
 const createStdin = () => {
-	const events = new EventEmitter();
-	events.setRawMode = spy();
-	events.pause = spy();
+	const stdin = new EventEmitter();
+	stdin.setRawMode = spy();
+	stdin.pause = spy();
 
-	return events;
+	return stdin;
 };
 
-const createStdout = () => ({
-	write: spy()
-});
+const createStdout = () => {
+	const stdout = new EventEmitter();
+	stdout.write = spy();
+
+	return stdout;
+};
 
 test.serial('set up stdin to emit keypress events', t => {
 	const Test = () => 'Test';
@@ -199,4 +202,28 @@ test.serial('ignore updates when unmounted', t => {
 
 		console[method].restore();
 	});
+});
+
+test.serial('rerender on resize', t => {
+	let i = 0;
+
+	const Test = () => String(i++);
+
+	const stdin = createStdin();
+	const stdout = createStdout();
+
+	const unmount = render(<Test/>, {stdin, stdout});
+
+	t.is(stdout.listenerCount('resize'), 1);
+	t.true(stdout.write.calledOnce);
+	t.is(stripOutput(stdout.write.getCall(0).args[0]), '0');
+
+	stdout.emit('resize');
+
+	t.true(stdout.write.calledTwice);
+	t.is(stripOutput(stdout.write.getCall(1).args[0]), '1');
+
+	unmount();
+
+	t.is(stdout.listenerCount('resize'), 0);
 });

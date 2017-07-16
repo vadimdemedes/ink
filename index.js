@@ -86,6 +86,7 @@ exports.render = (tree, options) => {
 	};
 
 	stdin.on('keypress', onKeyPress);
+	stdout.on('resize', update);
 
 	const consoleMethods = ['dir', 'log', 'info', 'warn', 'error'];
 
@@ -112,6 +113,7 @@ exports.render = (tree, options) => {
 		stdin.setRawMode(false);
 		stdin.removeListener('keypress', onKeyPress);
 		stdin.pause();
+		stdout.removeListener('resize', update);
 
 		isUnmounted = true;
 		unmount(currentTree);
