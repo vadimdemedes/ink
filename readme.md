@@ -66,6 +66,7 @@ render(<Counter/>);
 - [ink-password-input](https://github.com/vadimdemedes/ink-password-input) - Password input.
 - [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Configurable component for rendering progress bars.
 - [ink-spinner](https://github.com/vadimdemedes/ink-spinner) - Spinner.
+- [ink-console](https://github.com/ForbesLindesay/ink-console) - Render output from `console[method]` calls in a scrollable panel.
 
 
 ## Guide
