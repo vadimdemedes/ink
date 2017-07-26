@@ -89,7 +89,7 @@ The key difference you have to remember is that the rendering result isn't a DOM
 
 ### Getting Started
 
-To ensure all examples work and you can begin your adventure with Ink, make sure to set up a JSX transpiler and set JSX pragma to `h`. Don' forget to import `h` into every file that contains JSX.
+To ensure all examples work and you can begin your adventure with Ink, make sure to set up a JSX transpiler and set JSX pragma to `h`. Don't forget to import `h` into every file that contains JSX.
 
 ```jsx
 const {h} = require('ink');
