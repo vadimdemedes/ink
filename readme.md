@@ -89,18 +89,20 @@ The key difference you have to remember is that the rendering result isn't a DOM
 
 ### Getting Started
 
-To ensure all examples work and you can begin your adventure with Ink, make sure to set up a JSX transpiler and set JSX pragma to `h`. You can use [`babel-plugin-transform-react-jsx`](https://babeljs.io/docs/plugins/transform-react-jsx/) to do this. For example, in `.babelrc`:
+To ensure all examples work and you can begin your adventure with Ink, make sure to set up a JSX transpiler and set JSX pragma to `h`. You can use [`babel-plugin-transform-react-jsx`](https://babeljs.io/docs/plugins/transform-react-jsx/) to do this. For example, in `package.json`:
 
 ```json
 {
-  "plugins": [
-    [
-      "transform-react-jsx",
-      {
-        "pragma": "h"
-      }
-    ]
-  ]
+	"babel": {
+		"plugins": [
+			[
+				"transform-react-jsx",
+				{
+				  "pragma": "h"
+				}
+			]
+		]
+	}
 }
 ```
 
