@@ -39,7 +39,7 @@
 		"indent-string": "^3.1.0",
 		"lodash.flattendeep": "^4.4.0",
 		"lodash.isequal": "^4.5.0",
-		"log-update": "^1.0.2",
+		"log-update": "^2.1.0",
 		"prop-types": "^15.5.10"
 	},
 	"devDependencies": {
