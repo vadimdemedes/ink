@@ -68,6 +68,7 @@ render(<Counter/>);
 - [ink-spinner](https://github.com/vadimdemedes/ink-spinner) - Spinner.
 - [ink-console](https://github.com/ForbesLindesay/ink-console) - Render output from `console[method]` calls in a scrollable panel.
 - [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
+- [ink-checkbox-list](https://github.com/MaxMEllon/ink-checkbox-list) - Checkbox.
 
 
 ## Guide
