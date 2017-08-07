@@ -395,6 +395,41 @@ test('rerender when state updates', t => {
 	t.is(renderToString(secondTree), 'Goodbye');
 });
 
+test('set state accepts a function', t => {
+	let component;
+
+	class A extends Component {
+		constructor(props, context) {
+			super(props, context);
+
+			this.state = {
+				message: 'Hello'
+			};
+
+			component = this;
+		}
+
+		render(props, state) {
+			return state.message;
+		}
+	}
+
+	const onUpdate = spy();
+	const firstTree = build(<A value="message"/>, null, onUpdate);
+	t.is(renderToString(firstTree), 'Hello');
+
+	component.setState((oldState, props) => {
+		t.is(oldState.message, 'Hello');
+		t.is(props.value, 'message');
+		return {message: 'Goodbye'};
+	});
+	rerender();
+	t.true(onUpdate.calledOnce);
+
+	const secondTree = build(<A/>, firstTree);
+	t.is(renderToString(secondTree), 'Goodbye');
+});
+
 test('store next state and set it only on rerender', t => {
 	let component;
 
