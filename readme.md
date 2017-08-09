@@ -70,6 +70,7 @@ render(<Counter/>);
 - [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
 - [ink-confirm-input](https://github.com/kevva/ink-confirm-input) - Yes/No confirmation input.
 - [ink-checkbox-list](https://github.com/MaxMEllon/ink-checkbox-list) - Checkbox.
+- [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
 
 
 ## Guide
