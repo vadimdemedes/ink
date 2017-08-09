@@ -56,7 +56,7 @@ class Counter extends Component {
 render(<Counter/>);
 ```
 
-<img src="media/demo.gif" width="428" height="232">
+<img src="media/demo.gif" width="516">
 
 
 ## Useful Components
