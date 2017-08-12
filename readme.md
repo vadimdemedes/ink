@@ -519,6 +519,28 @@ const Demo = (
 );
 ```
 
+The `<Text>` compoment is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api) it supports all of the listed
+chalk methods as `props`.
+
+```jsx
+import { Text } from "ink"
+
+<Text
+  hex=
+  hsl=
+  hsv=
+  hwb=
+  rgb=
+  keyword=
+  bgHex=
+  bgHsl=
+  bgHsv=
+  bgHwb=
+  bgRgb=
+  bgKeyword=
+>Hello!</Text>
+```
+
 ## License
 
 MIT © [Vadim Demedes](https://github.com/vadimdemedes)
