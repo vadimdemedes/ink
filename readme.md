@@ -72,6 +72,7 @@ render(<Counter/>);
 - [ink-checkbox-list](https://github.com/MaxMEllon/ink-checkbox-list) - Checkbox.
 - [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
 - [ink-select](https://github.com/maticzav/ink-select.git) - Select (autocomplete) input.
+- [ink-table](https://github.com/maticzav/ink-table.git) - Table component for Ink.
 
 
 ## Guide
