@@ -526,19 +526,14 @@ chalk methods as `props`.
 import { Text } from "ink"
 
 <Text
-  hex=
-  hsl=
-  hsv=
-  hwb=
-  rgb=
-  keyword=
-  bgHex=
-  bgHsl=
-  bgHsv=
-  bgHwb=
-  bgRgb=
-  bgKeyword=
+  rgb={[255, 255, 255]}
+  bgKeyword="magenta"
 >Hello!</Text>
+
+<Text
+  hex={"#000000"}
+  bgHex={"#FFFFFF"}
+>Hey there</Text>
 ```
 
 ## License
