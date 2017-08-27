@@ -522,17 +522,15 @@ const Demo = (
 The `<Text>` compoment is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api) it supports all of the chalk methods as `props`.
 
 ```jsx
-import { Text } from "ink"
+import {Text} from "ink"
 
-<Text
-  rgb={[255, 255, 255]}
-  bgKeyword="magenta"
->Hello!</Text>
+<Text rgb={[255, 255, 255]} bgKeyword="magenta">
+	Hello!
+</Text>
 
-<Text
-  hex={"#000000"}
-  bgHex={"#FFFFFF"}
->Hey there</Text>
+<Text hex="#000000" bgHex="#FFFFFF">
+	Hey there
+</Text>
 ```
 
 ## License
