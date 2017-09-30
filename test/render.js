@@ -11,6 +11,7 @@ const createStdin = () => {
 	const stdin = new EventEmitter();
 	stdin.setRawMode = spy();
 	stdin.pause = spy();
+	stdin.isTTY = spy();
 
 	return stdin;
 };
