@@ -58,7 +58,10 @@ exports.render = (tree, options) => {
 	let currentTree;
 
 	readline.emitKeypressEvents(stdin);
-	stdin.setRawMode(true);
+
+	if (stdin.isTTY) {
+		stdin.setRawMode(true);
+	}
 
 	const update = () => {
 		const nextTree = build(tree, currentTree, onUpdate, context, false); // eslint-disable-line no-use-before-define
@@ -85,8 +88,10 @@ exports.render = (tree, options) => {
 		}
 	};
 
-	stdin.on('keypress', onKeyPress);
-	stdout.on('resize', update);
+	if (stdin.isTTY) {
+		stdin.on('keypress', onKeyPress);
+		stdout.on('resize', update);
+	}
 
 	const consoleMethods = ['dir', 'log', 'info', 'warn', 'error'];
 
@@ -110,10 +115,12 @@ exports.render = (tree, options) => {
 			return;
 		}
 
-		stdin.setRawMode(false);
-		stdin.removeListener('keypress', onKeyPress);
-		stdin.pause();
-		stdout.removeListener('resize', update);
+		if (stdin.isTTY) {
+			stdin.setRawMode(false);
+			stdin.removeListener('keypress', onKeyPress);
+			stdin.pause();
+			stdout.removeListener('resize', update);
+		}
 
 		isUnmounted = true;
 		unmount(currentTree);
