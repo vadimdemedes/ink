@@ -85,6 +85,7 @@ render(<Counter/>);
 - [Context](#context)
 - [Stateless Function Components](#stateless-function-components)
 - [Built-in Components](#built-in-components)
+- [Creating a New Application](#creating-a-new-application)
 
 Ink's goal is to provide the same component-based UI building experience that React provides, but for command-line apps. That's why it tries to implement the minimum required functionality of React. If you are already familiar with React (or Preact, since Ink borrows a few ideas from it), you already know Ink.
 
@@ -532,6 +533,24 @@ import {Text} from "ink"
 	Hey there
 </Text>
 ```
+
+#### Creating a New Application
+
+You can quickly scaffold out a project using either one of the following two [Yeoman Generators](yeoman.io/generators/):
+
+[Ink CLI](https://github.com/vadimdemedes/generator-ink-cli ) - Generator to scaffold out a CLI program using ink
+
+```
+$ npm install --global yo generator-ink-cli
+```
+
+[Ink Component](https://github.com/vadimdemedes/generator-ink-component) - Generator to scaffold out an Ink Component
+
+```
+$ npm install --global yo generator-ink-component
+```
+
+Happy Coding!
 
 ## License
 
