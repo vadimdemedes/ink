@@ -117,7 +117,8 @@ const {h} = require('ink');
 const Demo = () => <div/>;
 ```
 
-To get you started, you can quickly scaffold out a project using either one of the following two tools [Ink CLI](https://github.com/vadimdemedes/generator-ink-cli ) and [Ink Component](https://github.com/vadimdemedes/generator-ink-component).
+To get started, quickly scaffold out a project using [Ink CLI](https://github.com/vadimdemedes/generator-ink-cli) Yeoman generator. To create a new component that you intend to publish, you can use [Ink Component](https://github.com/vadimdemedes/generator-ink-component) generator.
+
 
 ### Core API
 
