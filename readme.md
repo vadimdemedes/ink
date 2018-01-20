@@ -56,7 +56,7 @@ class Counter extends Component {
 render(<Counter/>);
 ```
 
-<img src="https://cdn.rawgit.com/marionebl/9e517f0503892a1ce85df2abfc0f6c0a/raw/aca44ad5092d50bd250cf871595f02567cf2b4b6/demo.svg" width="1200">
+<img src="https://cdn.rawgit.com/marionebl/ink/587b517/media/demo.svg" width="1200">
 
 ## Useful Components
 
