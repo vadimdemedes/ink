@@ -451,6 +451,7 @@ test.serial('nested components - disabled updates - initial render', t => {
 });
 
 test.serial('nested components - disabled updates - unmount child', t => {
+	shouldComponentUpdate = false;
 	resetAll();
 	const tree = build(<Outer/>);
 	outer.setState({showInner: false});
@@ -465,6 +466,7 @@ test.serial('nested components - disabled updates - unmount child', t => {
 });
 
 test.serial('nested components - disabled updates - mount child', t => {
+	shouldComponentUpdate = false;
 	resetAll();
 	let tree = build(<Outer/>);
 	outer.setState({showInner: false});
@@ -490,6 +492,7 @@ test.serial('nested components - disabled updates - mount child', t => {
 });
 
 test.serial('nested components - disabled updates - update children', t => {
+	shouldComponentUpdate = false;
 	resetAll();
 	let tree = build(<Outer/>);
 	t.is(renderToString(tree), 'InnerMost 0');
@@ -510,7 +513,7 @@ test.serial('nested components - disabled updates - update children', t => {
 
 	t.true(InnerMost.prototype._constructor.calledOnce);
 	t.true(InnerMost.prototype.shouldComponentUpdate.calledOnce);
-	t.false(InnerMost.prototype.componentWillReceiveProps.called);
+	t.true(InnerMost.prototype.componentWillReceiveProps.called);
 
 	// TODO: don't call update methods on a child when parent has disabled updates
 	// t.false(InnerMost.prototype.componentWillUpdate.called);
@@ -600,14 +603,14 @@ test.serial('nested components - disabled updates - update stateful child', t =>
 
 	t.true(Inner.prototype._constructor.calledOnce);
 	t.true(Inner.prototype.shouldComponentUpdate.calledTwice);
-	t.true(Inner.prototype.componentWillReceiveProps.calledOnce);
+	t.true(Inner.prototype.componentWillReceiveProps.calledTwice);
 	t.true(Inner.prototype.componentWillReceiveProps.calledAfter(Inner.prototype.shouldComponentUpdate));
 	t.false(Inner.prototype.componentWillUpdate.called);
 	t.false(Inner.prototype.componentDidUpdate.called);
 
 	t.true(InnerMost.prototype._constructor.calledOnce);
 	t.true(InnerMost.prototype.shouldComponentUpdate.calledTwice);
-	t.false(InnerMost.prototype.componentWillReceiveProps.called);
+	t.true(InnerMost.prototype.componentWillReceiveProps.calledTwice);
 	t.true(InnerMost.prototype.componentWillUpdate.calledTwice);
 	t.true(InnerMost.prototype.componentDidUpdate.calledTwice);
 });

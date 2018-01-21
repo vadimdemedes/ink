@@ -95,7 +95,7 @@ test.serial('update output', t => {
 
 	const stdin = createStdin();
 	const stdout = createStdout();
-	render(<Test ref={setRef}/>, {stdin, stdout});
+	render(<Test ref={setRef}/>, {stdin, stdout}); // eslint-disable-line react/jsx-no-bind
 
 	t.true(stdout.write.calledOnce);
 	t.is(stripOutput(stdout.write.firstCall.args[0]), '0');

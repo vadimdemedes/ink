@@ -1,4 +1,6 @@
 import test from 'ava';
+import Span from '../lib/components/span';
+import Div from '../lib/components/div';
 import VNode from '../lib/vnode';
 import {h} from '..';
 
@@ -7,10 +9,10 @@ test('throws on missing component', t => {
 });
 
 test('return a VNode', t => {
-	const node = h('a');
+	const node = h('span');
 
 	t.true(node instanceof VNode);
-	t.is(node.component, 'a');
+	t.is(node.component, Span);
 	t.deepEqual(node.props, {children: []});
 	t.deepEqual(node.children, []);
 });
@@ -22,104 +24,104 @@ test('preserve raw props', t => {
 		func: () => {}
 	};
 
-	const node = h('a', props);
+	const node = h('span', props);
 
 	t.deepEqual(node.props, Object.assign({children: []}, props));
 });
 
 test('children', t => {
-	const node = h('a', null, h('b'), h('c'));
+	const node = h('div', null, h('span'), h('div'));
 
 	t.is(node.props.children.length, 2);
 
-	t.is(node.props.children[0].component, 'b');
+	t.is(node.props.children[0].component, Span);
 	t.deepEqual(node.props.children[0].props, {children: []});
 	t.deepEqual(node.props.children[0].children, []);
 
-	t.is(node.props.children[1].component, 'c');
+	t.is(node.props.children[1].component, Div);
 	t.deepEqual(node.props.children[1].props, {children: []});
 	t.deepEqual(node.props.children[1].children, []);
 });
 
 test('children - children given as arg list', t => {
-	const node = h('a', null, h('b'), h('c', null, h('d')));
+	const node = h('div', null, h('span'), h('div', null, h('span')));
 
 	t.is(node.props.children.length, 2);
 
-	t.is(node.props.children[0].component, 'b');
+	t.is(node.props.children[0].component, Span);
 	t.deepEqual(node.props.children[0].props, {children: []});
 	t.deepEqual(node.props.children[0].children, []);
 
-	t.is(node.props.children[1].component, 'c');
+	t.is(node.props.children[1].component, Div);
 	t.deepEqual(node.props.children[1].children, []);
 	t.is(node.props.children[1].props.children.length, 1);
-	t.is(node.props.children[1].props.children[0].component, 'd');
+	t.is(node.props.children[1].props.children[0].component, Span);
 	t.deepEqual(node.props.children[1].props.children[0].props, {children: []});
 	t.deepEqual(node.props.children[1].props.children[0].children, []);
 });
 
 test('children - children given as an array', t => {
-	const node = h('a', null, [h('b'), h('c', null, h('d'))]);
+	const node = h('div', null, [h('span'), h('div', null, h('span'))]);
 
 	t.is(node.props.children.length, 2);
 
-	t.is(node.props.children[0].component, 'b');
+	t.is(node.props.children[0].component, Span);
 	t.deepEqual(node.props.children[0].props, {children: []});
 	t.deepEqual(node.props.children[0].children, []);
 
-	t.is(node.props.children[1].component, 'c');
+	t.is(node.props.children[1].component, Div);
 	t.deepEqual(node.props.children[1].children, []);
 	t.is(node.props.children[1].props.children.length, 1);
-	t.is(node.props.children[1].props.children[0].component, 'd');
+	t.is(node.props.children[1].props.children[0].component, Span);
 	t.deepEqual(node.props.children[1].props.children[0].props, {children: []});
 	t.deepEqual(node.props.children[1].props.children[0].children, []);
 });
 
 test('children - flatten one layer as needed', t => {
-	const node = h('a', null, h('b'), [h('c', null, h('d'))]);
+	const node = h('div', null, h('span'), [h('div', null, h('span'))]);
 
 	t.is(node.props.children.length, 2);
 
-	t.is(node.props.children[0].component, 'b');
+	t.is(node.props.children[0].component, Span);
 	t.deepEqual(node.props.children[0].props, {children: []});
 	t.deepEqual(node.props.children[0].children, []);
 
-	t.is(node.props.children[1].component, 'c');
+	t.is(node.props.children[1].component, Div);
 	t.deepEqual(node.props.children[1].children, []);
 	t.is(node.props.children[1].props.children.length, 1);
-	t.is(node.props.children[1].props.children[0].component, 'd');
+	t.is(node.props.children[1].props.children[0].component, Span);
 	t.deepEqual(node.props.children[1].props.children[0].props, {children: []});
 	t.deepEqual(node.props.children[1].props.children[0].children, []);
 });
 
 test('nested children', t => {
-	let node = h('a', null, h('b'), [h('c'), h('d'), h('e')]);
-	t.deepEqual(node.props.children.map(child => child.component), ['b', 'c', 'd', 'e']);
+	let node = h('div', null, h('span'), [h('span'), h('div'), h('span')]);
+	t.deepEqual(node.props.children.map(child => child.component), [Span, Span, Div, Span]);
 
-	node = h('a', null, [h('b'), [h('c'), h('d'), h('e')]]);
-	t.deepEqual(node.props.children.map(child => child.component), ['b', 'c', 'd', 'e']);
+	node = h('div', null, [h('span'), [h('span'), h('div'), h('span')]]);
+	t.deepEqual(node.props.children.map(child => child.component), [Span, Span, Div, Span]);
 
-	node = h('a', {children: [h('b'), [h('c'), h('d'), h('e')]]});
-	t.deepEqual(node.props.children.map(child => child.component), ['b', 'c', 'd', 'e']);
+	node = h('div', {children: [h('span'), [h('span'), h('div'), h('span')]]});
+	t.deepEqual(node.props.children.map(child => child.component), [Span, Span, Div, Span]);
 
-	node = h('a', {children: [[h('b'), [h('c'), h('d'), h('e')]]]});
-	t.deepEqual(node.props.children.map(child => child.component), ['b', 'c', 'd', 'e']);
+	node = h('div', {children: [[h('span'), [h('span'), h('div'), h('span')]]]});
+	t.deepEqual(node.props.children.map(child => child.component), [Span, Span, Div, Span]);
 });
 
 test('text children', t => {
-	const node = h('a', null, 'helloworld');
+	const node = h('span', null, 'helloworld');
 
 	t.deepEqual(node.props.children, ['helloworld']);
 });
 
 test('merge adjacent text children', t => {
-	const node = h('a', null, [
+	const node = h('span', null, [
 		'one',
 		'two',
-		h('b'),
+		h('span'),
 		'three',
-		h('c'),
-		h('d'),
+		h('div'),
+		h('span'),
 		'four',
 		null,
 		'five',
@@ -128,15 +130,15 @@ test('merge adjacent text children', t => {
 
 	t.is(node.props.children.length, 6);
 	t.is(node.props.children[0], 'onetwo');
-	t.is(node.props.children[1].component, 'b');
+	t.is(node.props.children[1].component, Span);
 	t.is(node.props.children[2], 'three');
-	t.is(node.props.children[3].component, 'c');
-	t.is(node.props.children[4].component, 'd');
+	t.is(node.props.children[3].component, Div);
+	t.is(node.props.children[4].component, Span);
 	t.is(node.props.children[5], 'fourfivesix');
 });
 
 test('merge nested adjacent text children', t => {
-	const node = h('a', null, [
+	const node = h('span', null, [
 		'one',
 		['two', null, 'three'],
 		null,
@@ -149,7 +151,7 @@ test('merge nested adjacent text children', t => {
 });
 
 test('don\'t merge children that are boolean', t => {
-	const node = h('a', null, [
+	const node = h('span', null, [
 		null,
 		'one',
 		true,
