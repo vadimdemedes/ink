@@ -71,6 +71,8 @@ render(<Counter/>);
 - [ink-confirm-input](https://github.com/kevva/ink-confirm-input) - Yes/No confirmation input.
 - [ink-checkbox-list](https://github.com/MaxMEllon/ink-checkbox-list) - Checkbox.
 - [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
+- [ink-autocomplete](https://github.com/maticzav/ink-autocomplete) - Autocomplete.
+- [ink-table](https://github.com/maticzav/ink-table) - Table component.
 
 
 ## Guide
