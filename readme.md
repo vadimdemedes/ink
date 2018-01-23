@@ -71,6 +71,8 @@ render(<Counter/>);
 - [ink-confirm-input](https://github.com/kevva/ink-confirm-input) - Yes/No confirmation input.
 - [ink-checkbox-list](https://github.com/MaxMEllon/ink-checkbox-list) - Checkbox.
 - [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
+- [ink-autocomplete](https://github.com/maticzav/ink-autocomplete) - Autocomplete.
+- [ink-table](https://github.com/maticzav/ink-table) - Table component.
 - [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
 
 
@@ -117,6 +119,9 @@ const {h} = require('ink');
 
 const Demo = () => <div/>;
 ```
+
+To get started, quickly scaffold out a project using [Ink CLI](https://github.com/vadimdemedes/generator-ink-cli) Yeoman generator. To create a new component that you intend to publish, you can use [Ink Component](https://github.com/vadimdemedes/generator-ink-component) generator.
+
 
 ### Core API
 

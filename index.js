@@ -5,7 +5,6 @@ const logUpdate = require('log-update');
 const StringComponent = require('./lib/string-component');
 const Component = require('./lib/component');
 const renderToString = require('./lib/render-to-string');
-const callTree = require('./lib/call-tree');
 const diff = require('./lib/diff');
 const h = require('./lib/h');
 const Indent = require('./lib/components/indent');
@@ -19,19 +18,8 @@ exports.Text = Text;
 
 const noop = () => {};
 
-const unmount = tree => callTree(tree, 'unmount');
-const didMount = tree => callTree(tree, 'didMount');
-const didUpdate = tree => callTree(tree, 'didUpdate');
-
-const build = (nextTree, prevTree, onUpdate = noop, context = {}, autoLifecycle = true) => {
-	const reconciledTree = diff(prevTree, nextTree, onUpdate, context);
-
-	if (autoLifecycle) {
-		didMount(reconciledTree);
-		didUpdate(reconciledTree);
-	}
-
-	return reconciledTree;
+const build = (nextTree, prevTree, onUpdate = noop, context = {}) => {
+	return diff(prevTree, nextTree, onUpdate, context);
 };
 
 exports.build = build;
@@ -58,13 +46,14 @@ exports.render = (tree, options) => {
 	let currentTree;
 
 	readline.emitKeypressEvents(stdin);
-	stdin.setRawMode(true);
+
+	if (stdin.isTTY) {
+		stdin.setRawMode(true);
+	}
 
 	const update = () => {
-		const nextTree = build(tree, currentTree, onUpdate, context, false); // eslint-disable-line no-use-before-define
+		const nextTree = build(tree, currentTree, onUpdate, context); // eslint-disable-line no-use-before-define
 		log(renderToString(nextTree));
-		didMount(nextTree);
-		didUpdate(nextTree);
 
 		currentTree = nextTree;
 	};
@@ -85,8 +74,10 @@ exports.render = (tree, options) => {
 		}
 	};
 
-	stdin.on('keypress', onKeyPress);
-	stdout.on('resize', update);
+	if (stdin.isTTY) {
+		stdin.on('keypress', onKeyPress);
+		stdout.on('resize', update);
+	}
 
 	const consoleMethods = ['dir', 'log', 'info', 'warn', 'error'];
 
@@ -110,13 +101,15 @@ exports.render = (tree, options) => {
 			return;
 		}
 
-		stdin.setRawMode(false);
-		stdin.removeListener('keypress', onKeyPress);
-		stdin.pause();
-		stdout.removeListener('resize', update);
+		if (stdin.isTTY) {
+			stdin.setRawMode(false);
+			stdin.removeListener('keypress', onKeyPress);
+			stdin.pause();
+			stdout.removeListener('resize', update);
+		}
 
 		isUnmounted = true;
-		unmount(currentTree);
+		build(null, currentTree, onUpdate, context); // eslint-disable-line no-use-before-define
 		log.done();
 
 		consoleMethods.forEach(method => console[method].restore());
