@@ -13,7 +13,8 @@
 		"node": ">=6"
 	},
 	"scripts": {
-		"test": "xo && ava"
+		"test": "xo && ava",
+		"cast": "svg-term --command 'node media/demo.js' --out media/demo.svg --from=100 --window --width=50 --height=8 --term=iterm2 --profile=Snazzy"
 	},
 	"files": [
 		"lib",
@@ -51,6 +52,7 @@
 		"eslint-plugin-react": "^7.1.0",
 		"sinon": "^2.3.4",
 		"strip-ansi": "^4.0.0",
+		"svg-term-cli": "^2.1.1",
 		"xo": "^0.18.2"
 	},
 	"ava": {
