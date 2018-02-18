@@ -57,7 +57,7 @@ render(<Counter/>);
 ```
 
 <p align="center">
-  <img src="https://cdn.rawgit.com/marionebl/ink/587b517/media/demo.svg" width="600">
+  <img src="./media/demo.svg" width="600">
 </p>
 
 ## Useful Components
