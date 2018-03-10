@@ -57,7 +57,7 @@ render(<Counter/>);
 ```
 
 <p align="center">
-  <img src="./media/demo.svg" width="600">
+  <img src="media/demo.svg" width="600">
 </p>
 
 ## Useful Components
