@@ -8,223 +8,223 @@ import {rerender} from '../lib/render-queue';
 const stripOutput = str => stripAnsi(str).trim();
 
 const createStdin = () => {
-	const stdin = new EventEmitter();
-	stdin.setRawMode = spy();
-	stdin.pause = spy();
-	stdin.isTTY = spy();
+  const stdin = new EventEmitter();
+  stdin.setRawMode = spy();
+  stdin.pause = spy();
+  stdin.isTTY = spy();
 
-	return stdin;
+  return stdin;
 };
 
 const createStdout = () => {
-	const stdout = new EventEmitter();
-	stdout.write = spy();
+  const stdout = new EventEmitter();
+  stdout.write = spy();
 
-	return stdout;
+  return stdout;
 };
 
 test.serial('set up stdin to emit keypress events', t => {
-	const Test = () => 'Test';
+  const Test = () => 'Test';
 
-	const stdin = createStdin();
-	const stdout = createStdout();
-	const unmount = render(<Test/>, {stdin, stdout});
+  const stdin = createStdin();
+  const stdout = createStdout();
+  const unmount = render(<Test/>, {stdin, stdout});
 
-	t.true(stdin.setRawMode.calledOnce);
-	t.deepEqual(stdin.setRawMode.firstCall.args, [true]);
-	t.deepEqual(stdin.eventNames().sort(), ['data', 'keypress'].sort());
+  t.true(stdin.setRawMode.calledOnce);
+  t.deepEqual(stdin.setRawMode.firstCall.args, [true]);
+  t.deepEqual(stdin.eventNames().sort(), ['data', 'keypress'].sort());
 
-	unmount();
+  unmount();
 
-	t.true(stdin.pause.calledOnce);
-	t.true(stdin.setRawMode.calledTwice);
-	t.deepEqual(stdin.setRawMode.secondCall.args, [false]);
+  t.true(stdin.pause.calledOnce);
+  t.true(stdin.setRawMode.calledTwice);
+  t.deepEqual(stdin.setRawMode.secondCall.args, [false]);
 });
 
 test.serial('exit on esc', t => {
-	const Test = () => 'Test';
+  const Test = () => 'Test';
 
-	const stdin = createStdin();
-	const stdout = createStdout();
-	render(<Test/>, {stdin, stdout});
+  const stdin = createStdin();
+  const stdout = createStdout();
+  render(<Test/>, {stdin, stdout});
 
-	stdin.emit('keypress', '', {
-		name: 'escape'
-	});
+  stdin.emit('keypress', '', {
+    name: 'escape'
+  });
 
-	t.true(stdin.setRawMode.calledTwice);
-	t.deepEqual(stdin.setRawMode.secondCall.args, [false]);
+  t.true(stdin.setRawMode.calledTwice);
+  t.deepEqual(stdin.setRawMode.secondCall.args, [false]);
 });
 
 test.serial('exit on ctrl+c', t => {
-	const Test = () => 'Test';
+  const Test = () => 'Test';
 
-	const stdin = createStdin();
-	const stdout = createStdout();
-	render(<Test/>, {stdin, stdout});
+  const stdin = createStdin();
+  const stdout = createStdout();
+  render(<Test/>, {stdin, stdout});
 
-	stdin.emit('keypress', 'c', {
-		name: 'c',
-		ctrl: true
-	});
+  stdin.emit('keypress', 'c', {
+    name: 'c',
+    ctrl: true
+  });
 
-	t.true(stdin.setRawMode.calledTwice);
-	t.deepEqual(stdin.setRawMode.secondCall.args, [false]);
+  t.true(stdin.setRawMode.calledTwice);
+  t.deepEqual(stdin.setRawMode.secondCall.args, [false]);
 });
 
 test.serial('update output', t => {
-	class Test extends Component {
-		constructor(props) {
-			super(props);
+  class Test extends Component {
+    constructor(props) {
+      super(props);
 
-			this.state = {
-				i: 0
-			};
-		}
+      this.state = {
+        i: 0
+      };
+    }
 
-		render(props, state) {
-			return String(state.i);
-		}
-	}
+    render(props, state) {
+      return String(state.i);
+    }
+  }
 
-	let component;
+  let component;
 
-	const setRef = ref => {
-		component = ref;
-	};
+  const setRef = ref => {
+    component = ref;
+  };
 
-	const stdin = createStdin();
-	const stdout = createStdout();
-	render(<Test ref={setRef}/>, {stdin, stdout}); // eslint-disable-line react/jsx-no-bind
+  const stdin = createStdin();
+  const stdout = createStdout();
+  render(<Test ref={setRef}/>, {stdin, stdout}); // eslint-disable-line react/jsx-no-bind
 
-	t.true(stdout.write.calledOnce);
-	t.is(stripOutput(stdout.write.firstCall.args[0]), '0');
+  t.true(stdout.write.calledOnce);
+  t.is(stripOutput(stdout.write.firstCall.args[0]), '0');
 
-	component.setState({
-		i: 1
-	});
+  component.setState({
+    i: 1
+  });
 
-	rerender();
+  rerender();
 
-	t.true(stdout.write.calledTwice);
-	t.is(stripOutput(stdout.write.secondCall.args[0]), '1');
+  t.true(stdout.write.calledTwice);
+  t.is(stripOutput(stdout.write.secondCall.args[0]), '1');
 });
 
 test.serial('unmount', t => {
-	class Test extends Component {
-		constructor(props) {
-			super(props);
+  class Test extends Component {
+    constructor(props) {
+      super(props);
 
-			this.state = {
-				i: 0
-			};
-		}
+      this.state = {
+        i: 0
+      };
+    }
 
-		render(props, state) {
-			return String(state.i);
-		}
-	}
+    render(props, state) {
+      return String(state.i);
+    }
+  }
 
-	spy(Test.prototype, 'componentWillUnmount');
+  spy(Test.prototype, 'componentWillUnmount');
 
-	const stdin = createStdin();
-	const stdout = createStdout();
-	const unmount = render(<Test/>, {stdin, stdout});
+  const stdin = createStdin();
+  const stdout = createStdout();
+  const unmount = render(<Test/>, {stdin, stdout});
 
-	t.true(stdout.write.calledOnce);
-	t.is(stripOutput(stdout.write.firstCall.args[0]), '0');
+  t.true(stdout.write.calledOnce);
+  t.is(stripOutput(stdout.write.firstCall.args[0]), '0');
 
-	unmount();
+  unmount();
 
-	t.true(Test.prototype.componentWillUnmount.calledOnce);
+  t.true(Test.prototype.componentWillUnmount.calledOnce);
 });
 
 test.serial('ignore updates when unmounted', t => {
-	let component;
+  let component;
 
-	class Test extends Component {
-		constructor(props) {
-			super(props);
+  class Test extends Component {
+    constructor(props) {
+      super(props);
 
-			this.state = {
-				i: 0
-			};
+      this.state = {
+        i: 0
+      };
 
-			component = this;
-		}
+      component = this;
+    }
 
-		render(props, state) {
-			return String(state.i);
-		}
-	}
+    render(props, state) {
+      return String(state.i);
+    }
+  }
 
-	const stdin = createStdin();
-	const stdout = createStdout();
-	const unmount = render(<Test/>, {stdin, stdout});
+  const stdin = createStdin();
+  const stdout = createStdout();
+  const unmount = render(<Test/>, {stdin, stdout});
 
-	t.true(stdout.write.calledOnce);
-	t.is(stripOutput(stdout.write.firstCall.args[0]), '0');
+  t.true(stdout.write.calledOnce);
+  t.is(stripOutput(stdout.write.firstCall.args[0]), '0');
 
-	unmount();
+  unmount();
 
-	component.setState({
-		i: 1
-	});
+  component.setState({
+    i: 1
+  });
 
-	rerender();
+  rerender();
 
-	t.true(stdout.write.calledOnce);
+  t.true(stdout.write.calledOnce);
 });
 
 ['dir', 'log', 'info', 'warn', 'error'].forEach(method => {
-	test.serial(`handle console.${method}() and move output below`, t => {
-		stub(console, method);
+  test.serial(`handle console.${method}() and move output below`, t => {
+    stub(console, method);
 
-		const Test = () => 'Test';
+    const Test = () => 'Test';
 
-		const stdin = createStdin();
-		const stdout = createStdout();
-		const unmount = render(<Test/>, {stdin, stdout});
+    const stdin = createStdin();
+    const stdout = createStdout();
+    const unmount = render(<Test/>, {stdin, stdout});
 
-		t.true(stdout.write.calledOnce);
-		t.is(stripOutput(stdout.write.getCall(0).args[0]), 'Test');
+    t.true(stdout.write.calledOnce);
+    t.is(stripOutput(stdout.write.getCall(0).args[0]), 'Test');
 
-		console[method]('Console');
-		unmount();
+    console[method]('Console');
+    unmount();
 
-		t.true(stdout.write.calledThrice);
-		t.is(stripOutput(stdout.write.getCall(1).args[0]), '');
-		t.is(stripOutput(stdout.write.getCall(2).args[0]), 'Test');
+    t.true(stdout.write.calledThrice);
+    t.is(stripOutput(stdout.write.getCall(1).args[0]), '');
+    t.is(stripOutput(stdout.write.getCall(2).args[0]), 'Test');
 
-		t.true(console[method].calledOnce);
-		t.is(console[method].getCall(0).args[0], 'Console');
-		t.true(console[method].getCall(0).calledAfter(stdout.write.getCall(1)));
-		t.true(console[method].getCall(0).calledBefore(stdout.write.getCall(2)));
+    t.true(console[method].calledOnce);
+    t.is(console[method].getCall(0).args[0], 'Console');
+    t.true(console[method].getCall(0).calledAfter(stdout.write.getCall(1)));
+    t.true(console[method].getCall(0).calledBefore(stdout.write.getCall(2)));
 
-		console[method].restore();
-	});
+    console[method].restore();
+  });
 });
 
 test.serial('rerender on resize', t => {
-	let i = 0;
+  let i = 0;
 
-	const Test = () => String(i++);
+  const Test = () => String(i++);
 
-	const stdin = createStdin();
-	const stdout = createStdout();
+  const stdin = createStdin();
+  const stdout = createStdout();
 
-	const unmount = render(<Test/>, {stdin, stdout});
+  const unmount = render(<Test/>, {stdin, stdout});
 
-	t.is(stdout.listenerCount('resize'), 1);
-	t.true(stdout.write.calledOnce);
-	t.is(stripOutput(stdout.write.getCall(0).args[0]), '0');
+  t.is(stdout.listenerCount('resize'), 1);
+  t.true(stdout.write.calledOnce);
+  t.is(stripOutput(stdout.write.getCall(0).args[0]), '0');
 
-	stdout.emit('resize');
+  stdout.emit('resize');
 
-	t.true(stdout.write.calledTwice);
-	t.is(stripOutput(stdout.write.getCall(1).args[0]), '1');
+  t.true(stdout.write.calledTwice);
+  t.is(stripOutput(stdout.write.getCall(1).args[0]), '1');
 
-	unmount();
+  unmount();
 
-	t.is(stdout.listenerCount('resize'), 0);
+  t.is(stdout.listenerCount('resize'), 0);
 });
