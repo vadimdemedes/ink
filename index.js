@@ -19,7 +19,7 @@ exports.Text = Text;
 const noop = () => {};
 
 const build = (nextTree, prevTree, onUpdate = noop, context = {}) => {
-	return diff(prevTree, nextTree, onUpdate, context);
+  return diff(prevTree, nextTree, onUpdate, context);
 };
 
 exports.build = build;
@@ -28,92 +28,92 @@ exports.diff = diff;
 exports.renderToString = (...args) => renderToString(build(...args));
 
 exports.render = (tree, options) => {
-	if (options && typeof options.write === 'function') {
-		options = {
-			stdout: options
-		};
-	}
+  if (options && typeof options.write === 'function') {
+    options = {
+      stdout: options
+    };
+  }
 
-	const {stdin, stdout} = Object.assign({
-		stdin: process.stdin,
-		stdout: process.stdout
-	}, options);
+  const {stdin, stdout} = Object.assign({
+    stdin: process.stdin,
+    stdout: process.stdout
+  }, options);
 
-	const log = logUpdate.create(stdout);
+  const log = logUpdate.create(stdout);
 
-	const context = {};
-	let isUnmounted = false;
-	let currentTree;
+  const context = {};
+  let isUnmounted = false;
+  let currentTree;
 
-	readline.emitKeypressEvents(stdin);
+  readline.emitKeypressEvents(stdin);
 
-	if (stdin.isTTY) {
-		stdin.setRawMode(true);
-	}
+  if (stdin.isTTY) {
+    stdin.setRawMode(true);
+  }
 
-	const update = () => {
-		const nextTree = build(tree, currentTree, onUpdate, context); // eslint-disable-line no-use-before-define
-		log(renderToString(nextTree));
+  const update = () => {
+    const nextTree = build(tree, currentTree, onUpdate, context); // eslint-disable-line no-use-before-define
+    log(renderToString(nextTree));
 
-		currentTree = nextTree;
-	};
+    currentTree = nextTree;
+  };
 
-	const onUpdate = () => {
-		if (isUnmounted) {
-			return;
-		}
+  const onUpdate = () => {
+    if (isUnmounted) {
+      return;
+    }
 
-		update();
-	};
+    update();
+  };
 
-	update();
+  update();
 
-	const onKeyPress = (ch, key) => {
-		if (key.name === 'escape' || (key.ctrl && key.name === 'c')) {
-			exit(); // eslint-disable-line no-use-before-define
-		}
-	};
+  const onKeyPress = (ch, key) => {
+    if (key.name === 'escape' || (key.ctrl && key.name === 'c')) {
+      exit(); // eslint-disable-line no-use-before-define
+    }
+  };
 
-	if (stdin.isTTY) {
-		stdin.on('keypress', onKeyPress);
-		stdout.on('resize', update);
-	}
+  if (stdin.isTTY) {
+    stdin.on('keypress', onKeyPress);
+    stdout.on('resize', update);
+  }
 
-	const consoleMethods = ['dir', 'log', 'info', 'warn', 'error'];
+  const consoleMethods = ['dir', 'log', 'info', 'warn', 'error'];
 
-	consoleMethods.forEach(method => {
-		const originalFn = console[method];
+  consoleMethods.forEach(method => {
+    const originalFn = console[method];
 
-		console[method] = (...args) => {
-			log.clear();
-			log.done();
-			originalFn.apply(console, args);
-			update();
-		};
+    console[method] = (...args) => {
+      log.clear();
+      log.done();
+      originalFn.apply(console, args);
+      update();
+    };
 
-		console[method].restore = () => {
-			console[method] = originalFn;
-		};
-	});
+    console[method].restore = () => {
+      console[method] = originalFn;
+    };
+  });
 
-	const exit = () => {
-		if (isUnmounted) {
-			return;
-		}
+  const exit = () => {
+    if (isUnmounted) {
+      return;
+    }
 
-		if (stdin.isTTY) {
-			stdin.setRawMode(false);
-			stdin.removeListener('keypress', onKeyPress);
-			stdin.pause();
-			stdout.removeListener('resize', update);
-		}
+    if (stdin.isTTY) {
+      stdin.setRawMode(false);
+      stdin.removeListener('keypress', onKeyPress);
+      stdin.pause();
+      stdout.removeListener('resize', update);
+    }
 
-		isUnmounted = true;
-		build(null, currentTree, onUpdate, context); // eslint-disable-line no-use-before-define
-		log.done();
+    isUnmounted = true;
+    build(null, currentTree, onUpdate, context); // eslint-disable-line no-use-before-define
+    log.done();
 
-		consoleMethods.forEach(method => console[method].restore());
-	};
+    consoleMethods.forEach(method => console[method].restore());
+  };
 
-	return exit;
+  return exit;
 };
