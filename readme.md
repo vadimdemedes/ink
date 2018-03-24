@@ -74,8 +74,9 @@ render(<Counter/>);
 - [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
 - [ink-autocomplete](https://github.com/maticzav/ink-autocomplete) - Autocomplete.
 - [ink-table](https://github.com/maticzav/ink-table) - Table component.
-- [ink-broadcast](https://github.com/jimmed/ink-broadcast) - Implementation of react-broadcast for Ink
-- [ink-router](https://github.com/jimmed/ink-router) - Implementation of react-router for Ink
+- [ink-broadcast](https://github.com/jimmed/ink-broadcast) - Implementation of react-broadcast for Ink.
+- [ink-router](https://github.com/jimmed/ink-router) - Implementation of react-router for Ink.
+- [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
 
 
 ## Guide
