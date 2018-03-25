@@ -77,6 +77,7 @@ render(<Counter/>);
 - [ink-broadcast](https://github.com/jimmed/ink-broadcast) - Implementation of react-broadcast for Ink.
 - [ink-router](https://github.com/jimmed/ink-router) - Implementation of react-router for Ink.
 - [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
+- [ink-link](https://github.com/sindresorhus/ink-link) - Link component.
 
 
 ## Guide
