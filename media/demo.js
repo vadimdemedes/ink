@@ -18,17 +18,16 @@ class Counter extends Component {
 			h('div', {}, [
 				h(Text, {red: true}, 'λ '),
 				h(Text, {green: true}, 'node '),
-				h(Text, {}, 'media/example'),
+				h(Text, {}, 'media/example')
 			]),
 			h(Text, {green: true}, `${this.state.i} tests passed`)
-		])
-
+		]);
 	}
 
 	componentDidMount() {
 		this.timer = setInterval(() => {
 			if (this.state.i === 50) {
-				process.exit(0);
+				process.exit(0); // eslint-disable-line unicorn/no-process-exit
 			}
 
 			this.setState({
