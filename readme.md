@@ -78,6 +78,8 @@ render(<Counter/>);
 - [ink-router](https://github.com/jimmed/ink-router) - Implementation of react-router for Ink.
 - [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
 - [ink-link](https://github.com/sindresorhus/ink-link) - Link component.
+- [ink-select](https://github.com/karaggeorge/ink-select) - Select component.
+- [ink-scrollbar](https://github.com/karaggeorge/ink-scrollbar) - Scrollbar component.
 
 
 ## Guide
