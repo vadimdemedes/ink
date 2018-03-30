@@ -80,6 +80,7 @@ render(<Counter/>);
 - [ink-link](https://github.com/sindresorhus/ink-link) - Link component.
 - [ink-select](https://github.com/karaggeorge/ink-select) - Select component.
 - [ink-scrollbar](https://github.com/karaggeorge/ink-scrollbar) - Scrollbar component.
+- [ink-boxen](https://github.com/yardnsm/ink-boxen) - Box component.
 
 
 ## Guide
