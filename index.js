@@ -16,6 +16,7 @@ exports.Component = Component;
 exports.h = h;
 exports.Indent = Indent;
 exports.Text = Text;
+exports.Renderer = Renderer;
 
 const noop = () => {};
 
