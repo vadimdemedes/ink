@@ -81,6 +81,10 @@ render(<Counter/>);
 - [ink-select](https://github.com/karaggeorge/ink-select) - Select component.
 - [ink-scrollbar](https://github.com/karaggeorge/ink-scrollbar) - Scrollbar component.
 
+## Built with Ink
+
+- [emoj](https://github.com/sindresorhus/emoj) - Find relevant emoji on the command-line.
+- [emma](https://github.com/maticzav/emma-cli) - Terminal assistant to find and install npm packages.
 
 ## Guide
 
