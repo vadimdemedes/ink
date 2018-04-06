@@ -540,7 +540,7 @@ const Demo = (
 The `<Color>` compoment is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api) it supports all of the chalk methods as `props`.
 
 ```jsx
-import {Color} from "ink"
+import {Color} from 'ink';
 
 <Color rgb={[255, 255, 255]} bgKeyword="magenta">
 	Hello!
@@ -554,7 +554,7 @@ import {Color} from "ink"
 The `<Bold>` and `<Underline>` components render their children bolded and underlined respectively.
 
 ```jsx
-import {Bold, Underline} from "ink"
+import {Bold, Underline} from 'ink';
 
 <Bold>
 	I am bold
