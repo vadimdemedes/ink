@@ -80,6 +80,8 @@ render(<Counter/>);
 - [ink-link](https://github.com/sindresorhus/ink-link) - Link component.
 - [ink-select](https://github.com/karaggeorge/ink-select) - Select component.
 - [ink-scrollbar](https://github.com/karaggeorge/ink-scrollbar) - Scrollbar component.
+- [ink-box](https://github.com/sindresorhus/ink-box) - Box component.
+- [ink-text-animation](https://github.com/yardnsm/ink-text-animation) - Text animation component.
 
 ## Built with Ink
 
@@ -567,19 +569,32 @@ To use the Fragments make sure you have `pragmaFrag` in your configuration:
 
 You will also need [Babel v7.0.0-beta.31](https://github.com/babel/babel/releases/tag/v7.0.0-beta.31) or above, which means you will also need to upgrade any other tools that use Babel to their compatible versions, like [@babel/plugin-transform-react-jsx](https://www.npmjs.com/package/@babel/plugin-transform-react-jsx) and [@babel/core](https://www.npmjs.com/package/@babel/core).
 
-
-The `<Text>` compoment is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api) it supports all of the chalk methods as `props`.
+The `<Color>` compoment is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api) it supports all of the chalk methods as `props`.
 
 ```jsx
-import {Text} from "ink"
+import {Color} from 'ink';
 
-<Text rgb={[255, 255, 255]} bgKeyword="magenta">
+<Color rgb={[255, 255, 255]} bgKeyword="magenta">
 	Hello!
-</Text>
+</Color>
 
-<Text hex="#000000" bgHex="#FFFFFF">
+<Color hex="#000000" bgHex="#FFFFFF">
 	Hey there
-</Text>
+</Color>
+```
+
+The `<Bold>` and `<Underline>` components render their children bolded and underlined respectively.
+
+```jsx
+import {Bold, Underline} from 'ink';
+
+<Bold>
+	I am bold
+</Bold>
+
+<Underline>
+	I am underlined
+</Underline>
 ```
 
 ## License

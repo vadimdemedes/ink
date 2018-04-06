@@ -3,7 +3,7 @@ import {spy, stub} from 'sinon';
 import ansiStyles from 'ansi-styles';
 import chalk from 'chalk';
 import test from 'ava';
-import {h, build, Indent, Text, Component} from '..';
+import {h, build, Indent, Color, Underline, Bold, Component} from '..';
 import renderToString from '../lib/render-to-string';
 import {rerender} from '../lib/render-queue';
 
@@ -656,10 +656,18 @@ test('render styled text', t => {
 			[style]: true
 		};
 
-		t.is(renderToString(build(<Text {...props}>Test</Text>)), chalk[style]('Test'));
+		t.is(renderToString(build(<Color {...props}>Test</Color>)), chalk[style]('Test'));
 	}
 
-	t.is(renderToString(build(<Text rgb={[40, 42, 54]}>Test</Text>)), chalk.rgb(40, 42, 54)('Test'));
+	t.is(renderToString(build(<Color rgb={[40, 42, 54]}>Test</Color>)), chalk.rgb(40, 42, 54)('Test'));
+});
+
+test('render bold text', t => {
+	t.is(renderToString(build(<Bold>Test</Bold>)), chalk.bold('Test'));
+});
+
+test('render underlined text', t => {
+	t.is(renderToString(build(<Underline>Test</Underline>)), chalk.underline('Test'));
 });
 
 test('indent text', t => {

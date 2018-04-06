@@ -8,13 +8,17 @@ const renderToString = require('./lib/render-to-string');
 const diff = require('./lib/diff');
 const h = require('./lib/h');
 const Indent = require('./lib/components/indent');
-const Text = require('./lib/components/text');
+const Color = require('./lib/components/color');
+const Bold = require('./lib/components/bold');
+const Underline = require('./lib/components/underline');
 
 exports.StringComponent = StringComponent;
 exports.Component = Component;
 exports.h = h;
 exports.Indent = Indent;
-exports.Text = Text;
+exports.Color = Color;
+exports.Underline = Underline;
+exports.Bold = Bold;
 
 const noop = () => {};
 
