@@ -82,6 +82,7 @@ render(<Counter/>);
 - [ink-scrollbar](https://github.com/karaggeorge/ink-scrollbar) - Scrollbar component.
 - [ink-box](https://github.com/sindresorhus/ink-box) - Box component.
 - [ink-text-animation](https://github.com/yardnsm/ink-text-animation) - Text animation component.
+- [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color component.
 
 ## Built with Ink
 
