@@ -530,8 +530,6 @@ Ink also supports Fragments for returning multiple children from a component's r
 ```jsx
 const {h, Fragment} = require('ink');
 
-// ...
-
 render(
 	<Fragment>
 		<A/>
@@ -545,8 +543,6 @@ Or using the shorthand syntax:
 
 ```jsx
 const {h} = require('ink');
-
-// ...
 
 render(
 	<>
