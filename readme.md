@@ -528,18 +528,26 @@ const Demo = (
 Ink also supports Fragments for returning multiple children from a component's render method.
 
 ```jsx
+const {h, Fragment} = require('ink');
+
+// ...
+
 render(
-	<h.Fragment>
-		<A/>
-		<B/>
-		<C/>
-	</h.Fragment>
+	<Fragment>
+		<A />
+		<B />
+		<C />
+	</Fragment>
 );
 ```
 
 Or using the shorthand syntax:
 
 ```jsx
+const {h} = require('ink');
+
+// ...
+
 render(
 	<>
 		<A/>
