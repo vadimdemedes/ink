@@ -57,7 +57,7 @@ render(<Counter/>);
 ```
 
 <p align="center">
-  <img src="media/demo.svg" width="600">
+	<img src="media/demo.svg" width="600">
 </p>
 
 ## Useful Components
@@ -118,7 +118,7 @@ To ensure all examples work and you can begin your adventure with Ink, make sure
 			[
 				"transform-react-jsx",
 				{
-				  "pragma": "h"
+					"pragma": "h"
 				}
 			]
 		]
@@ -502,20 +502,8 @@ As you may have noticed, stateless function components still get access to props
 #### Built-in Components
 
 Surprise, surprise, our favorite `<div>` and `<span>` can be used in Ink components!
-They are useful for grouping elements, since JSX doesn't allow multiple elements without a parent.
+They are useful for grouping elements
 The only difference between `<div>` and `<span>` is that `<div>` inserts a newline after children.
-
-This won't work:
-
-```jsx
-const Demo = (
-	<A/>
-	<B/>
-	<C/>
-);
-```
-
-This will:
 
 ```jsx
 const Demo = (
@@ -538,6 +526,54 @@ const Demo = (
 	</div>
 );
 ```
+
+Ink also supports Fragments for returning multiple children from a component's render method.
+
+```jsx
+const {h, Fragment} = require('ink');
+
+render(
+	<Fragment>
+		<A/>
+		<B/>
+		<C/>
+	</Fragment>
+);
+```
+
+Or using the shorthand syntax:
+
+```jsx
+const {h} = require('ink');
+
+render(
+	<>
+		<A/>
+		<B/>
+		<C/>
+	</>
+);
+```
+
+To use the Fragments make sure you have `pragmaFrag` in your configuration:
+
+```json
+{
+	"babel": {
+		"plugins": [
+			[
+				"@babel/plugin-transform-react-jsx",
+				{
+					"pragma": "h",
+					"pragmaFrag": "h.Fragment"
+				}
+			]
+		]
+	}
+}
+```
+
+You will also need [Babel v7.0.0-beta.31](https://github.com/babel/babel/releases/tag/v7.0.0-beta.31) or above, which means you will also need to upgrade any other tools that use Babel to their compatible versions, like [@babel/plugin-transform-react-jsx](https://www.npmjs.com/package/@babel/plugin-transform-react-jsx) and [@babel/core](https://www.npmjs.com/package/@babel/core).
 
 The `<Color>` compoment is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api) it supports all of the chalk methods as `props`.
 

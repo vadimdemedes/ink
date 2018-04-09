@@ -16,6 +16,7 @@ const Underline = require('./lib/components/underline');
 exports.StringComponent = StringComponent;
 exports.Component = Component;
 exports.h = h;
+exports.Fragment = h.Fragment;
 exports.Indent = Indent;
 exports.Renderer = Renderer;
 exports.Color = Color;

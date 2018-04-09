@@ -44,10 +44,12 @@
 		"prop-types": "^15.5.10"
 	},
 	"devDependencies": {
+		"@babel/core": "^7.0.0-beta.44",
+		"@babel/plugin-transform-react-jsx": "^7.0.0-beta.44",
+		"@babel/register": "^7.0.0-beta.44",
 		"ansi-styles": "^3.1.0",
-		"ava": "^0.21.0",
-		"babel-plugin-transform-react-jsx": "^6.24.1",
-		"babel-register": "^6.24.1",
+		"ava": "^1.0.0-beta.3",
+		"babel-eslint": "^8.2.2",
 		"eslint-config-xo-react": "^0.13.0",
 		"eslint-plugin-react": "^7.1.0",
 		"sinon": "^2.3.4",
@@ -57,20 +59,23 @@
 	},
 	"ava": {
 		"require": [
-			"babel-register"
+			"@babel/register"
 		],
 		"babel": {
-			"presets": [
-				"@ava/stage-4"
-			],
-			"plugins": [
-				[
-					"transform-react-jsx",
-					{
-						"pragma": "h"
-					}
+			"testOptions": {
+				"presets": [
+					"@ava/stage-4"
+				],
+				"plugins": [
+					[
+						"@babel/plugin-transform-react-jsx",
+						{
+							"pragma": "h",
+							"pragmaFrag": "h.Fragment"
+						}
+					]
 				]
-			]
+			}
 		}
 	},
 	"xo": {
@@ -79,14 +84,17 @@
 		],
 		"settings": {
 			"react": {
-				"pragma": "h"
+				"pragma": "h",
+				"pragmaFrag": "h.Fragment"
 			}
 		},
+		"parser": "babel-eslint",
 		"overrides": [
 			{
 				"files": "test/*.js",
 				"rules": {
-					"react/prop-types": 0
+					"react/prop-types": 0,
+					"quotes": 0
 				}
 			}
 		]

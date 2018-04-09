@@ -674,3 +674,13 @@ test('indent text', t => {
 	t.is(renderToString(build(<Indent size={2}>Test</Indent>)), '  Test');
 	t.is(renderToString(build(<Indent size={2} indent="_">Test</Indent>)), '__Test');
 });
+
+test('render fragments', t => {
+	t.is(renderToString(build(
+		<>
+			<span>one</span>
+			<span>two</span>
+			<span>three</span>
+		</>
+	)), 'onetwothree');
+});
