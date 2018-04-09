@@ -534,9 +534,9 @@ const {h, Fragment} = require('ink');
 
 render(
 	<Fragment>
-		<A />
-		<B />
-		<C />
+		<A/>
+		<B/>
+		<C/>
 	</Fragment>
 );
 ```
