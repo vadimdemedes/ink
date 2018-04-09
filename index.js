@@ -8,6 +8,7 @@ const renderToString = require('./lib/render-to-string');
 const diff = require('./lib/diff');
 const h = require('./lib/h');
 const Indent = require('./lib/components/indent');
+const Renderer = require('./lib/renderer');
 const Color = require('./lib/components/color');
 const Bold = require('./lib/components/bold');
 const Underline = require('./lib/components/underline');
@@ -16,6 +17,7 @@ exports.StringComponent = StringComponent;
 exports.Component = Component;
 exports.h = h;
 exports.Indent = Indent;
+exports.Renderer = Renderer;
 exports.Color = Color;
 exports.Underline = Underline;
 exports.Bold = Bold;
@@ -45,32 +47,15 @@ exports.render = (tree, options) => {
 
 	const log = logUpdate.create(stdout);
 
-	const context = {};
-	let isUnmounted = false;
-	let currentTree;
-
 	readline.emitKeypressEvents(stdin);
 
 	if (stdin.isTTY) {
 		stdin.setRawMode(true);
 	}
 
-	const update = () => {
-		const nextTree = build(tree, currentTree, onUpdate, context); // eslint-disable-line no-use-before-define
-		log(renderToString(nextTree));
-
-		currentTree = nextTree;
-	};
-
-	const onUpdate = () => {
-		if (isUnmounted) {
-			return;
-		}
-
-		update();
-	};
-
-	update();
+	const currentTree = new Renderer(tree);
+	currentTree.on('update', log);
+	currentTree.update();
 
 	const onKeyPress = (ch, key) => {
 		if (key.name === 'escape' || (key.ctrl && key.name === 'c')) {
@@ -80,7 +65,7 @@ exports.render = (tree, options) => {
 
 	if (stdin.isTTY) {
 		stdin.on('keypress', onKeyPress);
-		stdout.on('resize', update);
+		stdout.on('resize', currentTree.update);
 	}
 
 	const consoleMethods = ['dir', 'log', 'info', 'warn', 'error'];
@@ -92,7 +77,7 @@ exports.render = (tree, options) => {
 			log.clear();
 			log.done();
 			originalFn.apply(console, args);
-			update();
+			currentTree.update();
 		};
 
 		console[method].restore = () => {
@@ -101,19 +86,14 @@ exports.render = (tree, options) => {
 	});
 
 	const exit = () => {
-		if (isUnmounted) {
-			return;
-		}
-
 		if (stdin.isTTY) {
 			stdin.setRawMode(false);
 			stdin.removeListener('keypress', onKeyPress);
 			stdin.pause();
-			stdout.removeListener('resize', update);
+			stdout.removeListener('resize', currentTree.update);
 		}
 
-		isUnmounted = true;
-		build(null, currentTree, onUpdate, context); // eslint-disable-line no-use-before-define
+		currentTree.unmount();
 		log.done();
 
 		consoleMethods.forEach(method => console[method].restore());
