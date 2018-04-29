@@ -21,7 +21,7 @@ $ npm install ink
 ## Usage
 
 ```jsx
-const {h, render, Component, Text} = require('ink');
+const {h, render, Component, Color } = require('ink');
 
 class Counter extends Component {
 	constructor() {
@@ -34,9 +34,9 @@ class Counter extends Component {
 
 	render() {
 		return (
-			<Text green>
+			<Color green>
 				{this.state.i} tests passed
-			</Text>
+			</Color>
 		);
 	}
 
