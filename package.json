@@ -89,6 +89,9 @@
 			}
 		},
 		"parser": "babel-eslint",
+		"rules": {
+			"react/no-deprecated": 0
+		},
 		"overrides": [
 			{
 				"files": "test/*.js",
