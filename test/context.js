@@ -128,3 +128,31 @@ test('receive context in a functional component', t => {
 
 	t.is(renderToString(<Outer/>), 'Phoebe');
 });
+
+test('receive context in constructor arguments', t => {
+	class Outer extends Component {
+		render() {
+			return <Inner/>;
+		}
+
+		getChildContext() {
+			return {
+				name: 'Joey'
+			};
+		}
+	}
+
+	class Inner extends Component {
+		constructor(...args) {
+			super(...args);
+
+			this.name = this.context.name;
+		}
+
+		render() {
+			return this.name;
+		}
+	}
+
+	t.is(renderToString(<Outer/>), 'Joey');
+});
