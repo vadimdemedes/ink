@@ -228,3 +228,28 @@ test.serial('rerender on resize', t => {
 
 	t.is(stdout.listenerCount('resize'), 0);
 });
+
+test.serial('rerenders for sequential state updates', t => {
+	let component;
+	class Test extends Component {
+		constructor(props) {
+			super(props);
+
+			this.state = {
+				i: []
+			};
+		}
+
+		render(props, state) {
+			return String(state.i.join(","));
+		}
+	}
+	const setRef = ref => {
+		component = ref;
+	};
+	render(<Test ref={setRef}/>); // eslint-disable-line react/jsx-no-bind
+	component.setState(prevState => ({i: prevState.i.concat([1])}));
+	component.setState(prevState => ({i: prevState.i.concat([2])}));
+	rerender();
+	t.deepEqual(component.state.i, [1, 2]);
+});
