@@ -10,6 +10,7 @@ const h = require('./lib/h');
 const Indent = require('./lib/components/indent');
 const Renderer = require('./lib/renderer');
 const Color = require('./lib/components/color');
+const Text = require('./lib/components/text');
 const Bold = require('./lib/components/bold');
 const Underline = require('./lib/components/underline');
 
@@ -20,6 +21,7 @@ exports.Fragment = h.Fragment;
 exports.Indent = Indent;
 exports.Renderer = Renderer;
 exports.Color = Color;
+exports.Text = Text;
 exports.Underline = Underline;
 exports.Bold = Bold;
 

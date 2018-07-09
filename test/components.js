@@ -3,7 +3,7 @@ import {spy, stub} from 'sinon';
 import ansiStyles from 'ansi-styles';
 import chalk from 'chalk';
 import test from 'ava';
-import {h, build, Indent, Color, Underline, Bold, Component} from '..';
+import {h, build, Indent, Text, Color, Underline, Bold, Component} from '..';
 import renderToString from '../lib/render-to-string';
 import {rerender} from '../lib/render-queue';
 
@@ -660,6 +660,20 @@ test('render styled text', t => {
 	}
 
 	t.is(renderToString(build(<Color rgb={[40, 42, 54]}>Test</Color>)), chalk.rgb(40, 42, 54)('Test'));
+});
+
+test('expose <Text> for backwards compatibility', t => {
+	const styles = Object.keys(ansiStyles);
+
+	for (const style of styles) {
+		const props = {
+			[style]: true
+		};
+
+		t.is(renderToString(build(<Text {...props}>Test</Text>)), chalk[style]('Test'));
+	}
+
+	t.is(renderToString(build(<Text rgb={[40, 42, 54]}>Test</Text>)), chalk.rgb(40, 42, 54)('Test'));
 });
 
 test('render bold text', t => {
