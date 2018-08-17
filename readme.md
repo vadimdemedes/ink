@@ -345,14 +345,18 @@ class Demo extends Component {
 }
 ```
 
-##### setState(nextState)
+##### setState(nextState, [callback])
 
 ###### nextState
 
 Type: `Object` `Function`
 Default: `{}`
 
-Set a new state and update the output.
+###### callback
+
+Type: `Function`
+
+Set a new state and update the output. Call callback when state is updated, if it is provided.
 
 **Note**: `setState()` works by **extending** the state via `Object.assign()`, not replacing it with a new object. Therefore you can pass only changed values.
 
