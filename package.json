@@ -49,7 +49,7 @@
     "string-length": "^2.0.0",
     "undom": "^0.4.0",
     "widest-line": "^2.0.0",
-    "yoga-layout": "^1.9.3"
+    "yoga-layout-prebuilt": "^1.9.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.1.2",

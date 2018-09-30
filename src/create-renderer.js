@@ -1,4 +1,4 @@
-import Yoga from 'yoga-layout';
+import Yoga from 'yoga-layout-prebuilt';
 import widestLine from 'widest-line';
 import applyStyles from './apply-styles';
 import Output from './output';

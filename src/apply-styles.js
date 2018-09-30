@@ -1,4 +1,4 @@
-import Yoga from 'yoga-layout';
+import Yoga from 'yoga-layout-prebuilt';
 
 const applyMarginStyles = (node, style) => {
 	if (style.margin) {
