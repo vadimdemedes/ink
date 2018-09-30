@@ -19,14 +19,12 @@ export const render = (node, options = {}) => {
 		};
 	}
 
-	options = Object.assign(
-		{
-			stdout: process.stdout,
-			stdin: process.stdin,
-			debug: false
-		},
-		options
-	);
+	options = {
+		stdout: process.stdout,
+		stdin: process.stdin,
+		debug: false,
+		...options
+	}
 
 	const document = undom();
 	const render = createRenderer({

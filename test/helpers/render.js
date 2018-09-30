@@ -1,4 +1,4 @@
-import {render} from '../..'
+import {render} from '../..';
 
 export default (node, stream) => {
 	return render(node, {
