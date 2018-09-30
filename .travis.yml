@@ -3,3 +3,11 @@ node_js:
   - lts
   - 10
   - 8
+
+addons:
+  apt:
+    sources:
+      - llvm-toolchain-trusty-6.0
+      - ubuntu-toolchain-r-test
+    packages:
+      - clang-6.0
