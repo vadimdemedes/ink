@@ -24,7 +24,7 @@ export const render = (node, options = {}) => {
 		stdin: process.stdin,
 		debug: false,
 		...options
-	}
+	};
 
 	const document = undom();
 	const render = createRenderer({

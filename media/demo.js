@@ -35,7 +35,7 @@ class Counter extends React.PureComponent {
 
 			this.setState(prevState => ({
 				i: prevState.i + 1
-			}))
+			}));
 		}, 100);
 	}
 
