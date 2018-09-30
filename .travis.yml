@@ -10,4 +10,4 @@ addons:
       - llvm-toolchain-trusty-6.0
       - ubuntu-toolchain-r-test
     packages:
-      - clang-6.0
+      - g++-5
