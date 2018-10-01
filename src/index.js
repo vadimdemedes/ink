@@ -54,5 +54,9 @@ export const render = (node, options = {}) => {
 		</App>
 	);
 
-	return reconciler.updateContainer(tree, options.stdout._inkContainer);
+	reconciler.updateContainer(tree, options.stdout._inkContainer);
+
+	return () => {
+		reconciler.updateContainer(null, options.stdout._inkContainer);
+	}
 };
