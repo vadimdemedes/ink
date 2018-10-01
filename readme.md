@@ -1,6 +1,6 @@
 <h1 align="center">
 	<br>
-	<img width="192" alt="Ink" src="media/logo.png">
+	<img width="300" alt="Ink" src="media/logo.png">
 	<br>
 	<br>
 	<br>
@@ -21,7 +21,8 @@ $ npm install ink
 ## Usage
 
 ```jsx
-const {h, render, Component, Color } = require('ink');
+import React, {Component} from 'react';
+import {render, Color} from 'ink';
 
 class Counter extends Component {
 	constructor() {
@@ -60,6 +61,7 @@ render(<Counter/>);
 	<img src="media/demo.svg" width="600">
 </p>
 
+
 ## Useful Components
 
 - [ink-redux](https://github.com/vadimdemedes/ink-redux) - Redux bindings.
@@ -87,78 +89,91 @@ render(<Counter/>);
 - [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
 - [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider component.
 
+
 ## Built with Ink
 
 - [emoj](https://github.com/sindresorhus/emoj) - Find relevant emoji on the command-line.
 - [emma](https://github.com/maticzav/emma-cli) - Terminal assistant to find and install npm packages.
 
+
 ## Guide
 
 - [Getting Started](#getting-started)
-- [Core API](#core-api)
-- [Components](#components)
-- [Props](#props)
-- [Lifecycle Methods](#lifecycle-methods)
-- [State](#state)
-- [Refs](#refs)
-- [Context](#context)
-- [Stateless Function Components](#stateless-function-components)
+- [API](#api)
+- [Building Layouts](#building-layouts)
 - [Built-in Components](#built-in-components)
 
-Ink's goal is to provide the same component-based UI building experience that React provides, but for command-line apps. That's why it tries to implement the minimum required functionality of React. If you are already familiar with React (or Preact, since Ink borrows a few ideas from it), you already know Ink.
+Ink's goal is to provide the same component-based UI building experience that React provides, but for command-line apps. It uses [yoga-layout](https://github.com/facebook/yoga) to allow Flexbox layouts in the terminal. If you are already familiar with React, you already know Ink.
 
 The key difference you have to remember is that the rendering result isn't a DOM, but a string, which Ink writes to the output.
 
+
 ### Getting Started
 
-To ensure all examples work and you can begin your adventure with Ink, make sure to set up a JSX transpiler and set JSX pragma to `h`. You can use [`babel-plugin-transform-react-jsx`](https://babeljs.io/docs/plugins/transform-react-jsx/) to do this. For example, in `package.json`:
+To ensure all examples work and you can begin your adventure with Ink, make sure to set up Babel with a React preset. After [installing Babel](https://babeljs.io/docs/en/usage), configure it in `package.json`:
 
 ```json
 {
 	"babel": {
-		"plugins": [
-			[
-				"transform-react-jsx",
-				{
-					"pragma": "h"
-				}
-			]
+		"presets": [
+			"@babel/preset-react"
 		]
 	}
 }
 ```
 
-Don't forget to import `h` into every file that contains JSX:
+Don't forget to import `React` into every file that contains JSX:
 
 ```jsx
-const {h} = require('ink');
+import React from 'react';
+import {Box} from 'ink';
 
-const Demo = () => <div/>;
+const Demo = () => <Box/>;
 ```
 
 To get started, quickly scaffold out a project using [Ink CLI](https://github.com/vadimdemedes/generator-ink-cli) Yeoman generator. To create a new component that you intend to publish, you can use [Ink Component](https://github.com/vadimdemedes/generator-ink-component) generator.
 
 
-### Core API
+### API
 
-#### render(tree, stream)
+Since Ink is a React renderer, it means that all of React is supported.
+Head over to [React](https://reactjs.org/) website for documentation on how to use it.
+In this readme only Ink's methods will be documented.
 
-Mount a component, listen for updates and update the output.
-This method is used for interactive UIs, where you need state, user input or lifecycle methods.
+#### render(tree, options)
 
-It automatically enables `keypress` events on `process.stdin`. Since it requires [raw mode](https://davidwalsh.name/node-raw-mode) to be enabled, Ink handles default behavior for you, like exiting with <kbd>Ctrl</kbd>+<kbd>C</kbd>.
+Mount a component and render the output.
 
 ##### tree
 
 Type: `VNode`
 
-##### stream
+##### options
+
+###### stdout
 
 Type: `Stream`<br>
 Default: `process.stdout`
 
+Output stream where app will be rendered.
+
+###### stdin
+
+Type: `Stream`<br>
+Default: `process.stdin`
+
+Input stream where app will listen for input.
+
+###### debug
+
+Type: `Boolean`<br>
+Default: `false`
+
+If `true`, each update will be rendered as a separate output, without replacing the previous one.
+
 ```jsx
-const {h, render, Component} = require('ink');
+import React, {Component} from 'react';
+import {render, Box} from 'ink';
 
 class Counter extends Component {
 	constructor() {
@@ -169,8 +184,12 @@ class Counter extends Component {
 		};
 	}
 
-	render(props, state) {
-		return `Iteration #${state.i}`;
+	render() {
+		return (
+			<Box>
+				Iteration #${this.state.i}
+			</Box>
+		);
 	}
 
 	componentDidMount() {
@@ -194,398 +213,279 @@ setTimeout(() => {
 }, 1000);
 ```
 
-#### renderToString(tree, [prevTree])
-
-Render a component to a string and return it.
-Useful if you don't intend to use state or lifecycle methods and just want to render the UI once and exit.
+There's also a shortcut to avoid passing `options` object:
 
 ```jsx
-const {h, renderToString} = require('ink');
-
-const Hello = () => 'Hello World';
-
-process.stdout.write(renderToString(<Hello/>));
+render(<Counter>, process.stdout);
 ```
 
-### Components
 
-Similarly to React, there are two kinds of components: Stateful components (next, "component") and stateless function components. You can create a component by extending `Component` class. Unlike stateless function components, they have access to state, context, lifecycle methods and they can be accessed via refs.
+### Building Layouts
+
+Ink uses [Yoga](https://github.com/facebook/yoga) - a Flexbox layout engine to build great user interfaces for your CLIs.
+It's important to remember that each element is a Flexbox container.
+Think of it as if each `<div>` in the browser had `display: flex`.
+See `<Box>` built-in component below for documentation on how to use Flexbox layouts in Ink.
+
+
+### Built-in Components
+
+#### <Box>
+
+`<Box>` it's an essential Ink component to build your layout. It's like a `<div>` in a browser.
+
+Import:
 
 ```js
-class Demo extends Component {
-	render(props, state, context) {
-		// props === this.props
-		// state === this.state
-		// context === this.context
-
-		return 'Hello World';
-	}
-}
+import {Box} from 'ink';
 ```
 
-If you need to extend the constructor to set the initial state or for other purposes, make sure to call `super()` with `props` and `context`:
+##### Padding
 
-```js
-constructor(props, context) {
-	super(props, context);
+###### paddingTop
 
-	this.state = {
-		i: 0
-	};
+Type: `number`<br>
+Default: `0`
 
-	// Other initialization
-}
-```
+###### paddingBottom
 
-#### Props
+Type: `number`<br>
+Default: `0`
 
-Props are basically arguments for components.
-Every parent component can pass props to their children.
+###### paddingLeft
+
+Type: `number`<br>
+Default: `0`
+
+###### paddingRight
+
+Type: `number`<br>
+Default: `0`
+
+###### paddingX
+
+Type: `number`<br>
+Default: `0`
+
+###### paddingY
+
+Type: `number`<br>
+Default: `0`
+
+###### padding
+
+Type: `number`<br>
+Default: `0`
 
 ```jsx
-class Child extends Component {
-	render(props) {
-		// props === this.props
-
-		return `Hello, ${props.name}`;
-	}
-}
-
-class Parent extends Component {
-	render() {
-		return <Child name="Joe"/>;
-	}
-}
+<Box paddingTop={2}>Top</Box>
+<Box paddingBottom={2}>Bottom</Box>
+<Box paddingLeft={2}>Left</Box>
+<Box paddingRight={2}>Right</Box>
+<Box paddingX={2}>Left and right</Box>
+<Box paddingY={2}>Top and bottom</Box>
+<Box padding={2}>Top, bottom, left and right</Box>
 ```
 
-To set default props on specific component, use `defaultProps`:
+##### Margin
 
-```js
-const Test = ({first, second}) => `${first} ${second}`;
+###### marginTop
 
-Test.defaultProps = {
-	first: 'Hello',
-	second: 'World'
-};
+Type: `number`<br>
+Default: `0`
 
-// <Test/> => "Hello World"
-```
+###### marginBottom
 
-##### Prop Types
+Type: `number`<br>
+Default: `0`
 
-Ink supports prop types out-of-the-box. All you have to do is set them in the same way you would in React:
+###### marginLeft
 
-```js
-const PropTypes = require('prop-types');
+Type: `number`<br>
+Default: `0`
 
-Test.propTypes = {
-	first: PropTypes.string.isRequired,
-	second: PropTypes.string
-};
-```
+###### marginRight
 
-**Note**: Prop types are only checked when `NODE_ENV` isn't `'production'`.
+Type: `number`<br>
+Default: `0`
 
-#### Lifecycle Methods
+###### marginX
 
-Lifecycle methods are component methods that are called whenever a certain event happens related to that specific component. All lifecycle methods are called from top to down, meaning that components on top receive those events earlier than their children.
+Type: `number`<br>
+Default: `0`
 
-##### componentWillMount()
+###### marginY
 
-Component is initialized and is about to be rendered and written to the output.
+Type: `number`<br>
+Default: `0`
 
-##### componentDidMount()
+###### margin
 
-Component is rendered and written to the output.
-
-##### componentWillUnmount()
-
-Component is about to be unmounted and component instance is going to be destroyed.
-This is the place to clean up timers, cancel HTTP requests, etc.
-
-##### componentWillReceiveProps(nextProps, nextState)
-
-Component is going to receive new props or state.
-At this point `this.props` and `this.state` contain previous props and state.
-
-##### shouldComponentUpdate(nextProps, nextState)
-
-Determines whether to rerender component for the next props and state.
-Return `false` to skip rerendering of component's children.
-By default, returns `true`, so component is always rerendered on update.
-
-##### componentWillUpdate(nextProps, nextState)
-
-Component is about to rerender.
-
-##### componentDidUpdate()
-
-Component was rerendered and was written to the output.
-
-#### State
-
-Each component can have its local state accessible via `this.state`.
-Whenever a state updates, the component is rerendered.
-
-To set the initial state, extend the constructor and assign an object to `this.state`.
-The state is accessible via `this.state` anywhere in the component, and it's also passed to `render()` as a second argument.
-
-```js
-class Demo extends Component {
-	constructor(props, context) {
-		super(props, context);
-
-		this.state = {
-			i: 0
-		}
-	}
-
-	render(props, state) {
-		return `Iteration ${state.i}`;
-	}
-}
-```
-
-##### setState(nextState, [callback])
-
-###### nextState
-
-Type: `Object` `Function`
-Default: `{}`
-
-###### callback
-
-Type: `Function`
-
-Set a new state and update the output. Call callback when state is updated, if it is provided.
-
-**Note**: `setState()` works by **extending** the state via `Object.assign()`, not replacing it with a new object. Therefore you can pass only changed values.
-
-```js
-class Demo extends Component {
-	constructor(props, context) {
-		super(props, context);
-
-		this.state = {
-			i: 0
-		}
-	}
-
-	render(props, state) {
-		return `Iteration ${state.i}`;
-	}
-
-	componentDidMount() {
-		this.setState({
-			i: this.state.i + 1
-		});
-	}
-}
-```
-
-The above example will increment the `i` state property and render `Iteration 1` as a result.
-
-`setState()` also accepts a function, which receives the current state as an argument.
-The same effect of incrementing `i` could be achieved in a following way:
-
-```js
-this.setState(state => {
-	return {
-		i: state.i + 1
-	}
-});
-```
-
-This is useful when `setState()` calls are batched to ensure that you update the state in a stable way.
-
-#### Refs
-
-Refs can be used to get a direct reference to a component instance.
-This is useful, if you want to access its methods, for example.
-
-Refs work by setting a special `ref` prop on a component.
-Prop's value must be a function, which receives a reference to a component as an argument or `null` when the wanted component is unmounted.
-
-**Note**: You can't get refs to stateless function components.
+Type: `number`<br>
+Default: `0`
 
 ```jsx
-class Child extends Component {
-	render() {
-		return null;
-	}
-
-	hello() {
-		return 'Hello World';
-	}
-}
-
-class Parent extends Component {
-	constructor(props, context) {
-		super(props, context);
-
-		this.state = {
-			message: 'Ink is awesome'
-		};
-	}
-
-	render(props, state) {
-		const setChildRef = ref => {
-			this.childRef = ref;
-		};
-
-		return (
-			<div>
-				{message}
-
-				<Child ref={setChildRef}/>
-			</div>
-		)
-	}
-
-	componentDidMount() {
-		this.setState({
-			message: this.childRef.hello()
-		});
-	}
-}
+<Box marginTop={2}>Top</Box>
+<Box marginBottom={2}>Bottom</Box>
+<Box marginLeft={2}>Left</Box>
+<Box marginRight={2}>Right</Box>
+<Box marginX={2}>Left and right</Box>
+<Box marginY={2}>Top and bottom</Box>
+<Box margin={2}>Top, bottom, left and right</Box>
 ```
 
-#### Context
+##### Flex
 
-Context is like a global state for all components.
-Every component can access context either via `this.context` or inside `render()`:
+###### flexGrow
+
+Type: `number`
+
+See [flex-grow](https://css-tricks.com/almanac/properties/f/flex-grow/).
+
+```jsx
+<Box>
+	Label:
+	<Box flexGrow={1}>
+		Fills all remaining space
+	</Box>
+</Box>
+```
+
+###### flexShrink
+
+Type: `number`
+
+See [flex-shrink](https://css-tricks.com/almanac/properties/f/flex-shrink/).
+
+```jsx
+<Box width={20}>
+	<Box flexShrink={2} width={10}>
+		Will be 1/4
+	</Box>
+	<Box width={10}>
+		Will be 3/4
+	</Box>
+</Box>
+```
+
+###### flexDirection
+
+Type: `string`<br>
+Allowed values: `row`, `row-reverse`, `column` and `column-reverse`
+
+See [flex-direction](https://css-tricks.com/almanac/properties/f/flex-direction/).
+
+```jsx
+<Box>
+	<Box marginRight={1}>X</Box>
+	<Box>Y</Box>
+</Box>
+// X Y
+
+<Box flexDirection="row-reverse">
+	<Box>X</Box>
+	<Box marginRight={1}>Y</Box>
+</Box>
+// Y X
+
+<Box flexDirection="column">
+	<Box>X</Box>
+	<Box>Y</Box>
+</Box>
+// X
+// Y
+
+<Box flexDirection="column-reverse">
+	<Box>X</Box>
+	<Box>Y</Box>
+</Box>
+// Y
+// X
+```
+
+###### alignItems
+
+Type: `string`<br>
+Allowed values: `flex-start`, `center` and `flex-end`
+
+See [align-items](https://css-tricks.com/almanac/properties/f/align-items/).
+
+```jsx
+<Box alignItems="flex-start">
+	<Box marginRight={1}>X</Box>
+	<Box>{`A\nB\nC`}</Box>
+</Box>
+// X A
+//   B
+//   C
+
+<Box alignItems="center">
+	<Box marginRight={1}>X</Box>
+	<Box>{`A\nB\nC`}</Box>
+</Box>
+//   A
+// X B
+//   C
+
+<Box alignItems="flex-end">
+	<Box marginRight={1}>X</Box>
+	<Box>{`A\nB\nC`}</Box>
+</Box>
+//   A
+//   B
+// X C
+```
+
+###### justifyContent
+
+Type: `string`<br>
+Allowed values: `flex-start`, `center`, `flex-end`, `space-between` and `space-around`.
+
+See [justify-content](https://css-tricks.com/almanac/properties/f/justify-content/).
+
+```jsx
+<Box justifyContent="flex-start">
+	<Box>X</Box>
+</Box>
+// [X      ]
+
+<Box justifyContent="center">
+	<Box>X</Box>
+</Box>
+// [   X   ]
+
+<Box justifyContent="flex-end">
+	<Box>X</Box>
+</Box>
+// [      X]
+
+<Box justifyContent="space-between">
+	<Box>X</Box>
+	<Box>Y</Box>
+</Box>
+// [X      Y]
+
+<Box justifyContent="space-around">
+	<Box>X</Box>
+	<Box>Y</Box>
+</Box>
+// [  X   Y  ]
+```
+
+#### <Color>
+
+The `<Color>` compoment is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api).
+It supports all of the chalk's methods as `props`.
+
+Import:
 
 ```js
-render(props, state, context) {
-	// context === this.context
-}
-```
-
-To add new entries to context, add `getChildContext()` method to your component:
-
-```js
-class Child extends Component {
-	render() {
-		return this.context.message;
-	}
-}
-
-class Parent extends Component {
-	getChildContext() {
-		return {
-			message: 'Hello World'
-		};
-	}
-
-	render() {
-		return <Child/>;
-	}
-}
-```
-
-#### Stateless Function Components
-
-If you don't need state, lifecycle methods, context and refs, it's best to use stateless function components for their small amount of code and readability.
-
-Using stateful components:
-
-```js
-class Demo extends Component {
-	render(props, state, context) {
-		return 'Hello World';
-	}
-}
-```
-
-Using stateless function components:
-
-```js
-const Demo = (props, context) => 'Hello World';
-```
-
-As you may have noticed, stateless function components still get access to props and context.
-
-#### Built-in Components
-
-Surprise, surprise, our favorite `<div>` and `<span>` can be used in Ink components!
-They are useful for grouping elements
-The only difference between `<div>` and `<span>` is that `<div>` inserts a newline after children.
-
-```jsx
-const Demo = (
-	<div>
-		<A/>
-		<B/>
-		<C/>
-	</div>
-);
-```
-
-There's also `<br/>`, which serves the same purpose as on the web - a newline.
-
-```jsx
-const Demo = (
-	<div>
-		Line 1
-		<br/>
-		Line 2
-	</div>
-);
-```
-
-Ink also supports Fragments for returning multiple children from a component's render method.
-
-```jsx
-const {h, Fragment} = require('ink');
-
-render(
-	<Fragment>
-		<A/>
-		<B/>
-		<C/>
-	</Fragment>
-);
-```
-
-Or using the shorthand syntax:
-
-```jsx
-const {h} = require('ink');
-
-render(
-	<>
-		<A/>
-		<B/>
-		<C/>
-	</>
-);
-```
-
-To use the Fragments make sure you have `pragmaFrag` in your configuration:
-
-```json
-{
-	"babel": {
-		"plugins": [
-			[
-				"@babel/plugin-transform-react-jsx",
-				{
-					"pragma": "h",
-					"pragmaFrag": "h.Fragment"
-				}
-			]
-		]
-	}
-}
-```
-
-You will also need [Babel v7.0.0-beta.31](https://github.com/babel/babel/releases/tag/v7.0.0-beta.31) or above, which means you will also need to upgrade any other tools that use Babel to their compatible versions, like [@babel/plugin-transform-react-jsx](https://www.npmjs.com/package/@babel/plugin-transform-react-jsx) and [@babel/core](https://www.npmjs.com/package/@babel/core).
-
-The `<Color>` compoment is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api) it supports all of the chalk methods as `props`.
-
-```jsx
 import {Color} from 'ink';
+```
 
+Usage:
+
+```jsx
 <Color rgb={[255, 255, 255]} bgKeyword="magenta">
 	Hello!
 </Color>
@@ -593,20 +493,119 @@ import {Color} from 'ink';
 <Color hex="#000000" bgHex="#FFFFFF">
 	Hey there
 </Color>
+
+<Color blue>
+	I'm blue
+</Color>
 ```
 
-The `<Bold>` and `<Underline>` components render their children bolded and underlined respectively.
+#### <Text>
+
+This component can change the style of the text, make it bold, underline, italic or strikethrough.
+
+Import:
+
+```js
+import {Text} from 'ink';
+```
+
+##### bold
+
+Type: `boolean`<br>
+Default: `false`
+
+##### italic
+
+Type: `boolean`<br>
+Default: `false`
+
+##### underline
+
+Type: `boolean`<br>
+Default: `false`
+
+##### strikethrough
+
+Type: `boolean`<br>
+Default: `false`
+
+Usage:
 
 ```jsx
-import {Bold, Underline} from 'ink';
+<Text bold>I am bold</Text>
+<Text italic>I am italic</Text>
+<Text underline>I am underline</Text>
+<Text strikethrough>I am strikethrough</Text>
+```
 
-<Bold>
-	I am bold
-</Bold>
+#### <StdinContext>
 
-<Underline>
-	I am underlined
-</Underline>
+`<StdinContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes several props.
+
+Import:
+
+```js
+import {StdinContext} from 'ink';
+```
+
+##### stdin
+
+Type: `Stream`<br>
+Default: `process.stdin`
+
+Stdin stream passed to `render()` in `options.stdin` or `process.stdin` by default.
+Useful if your app needs to handle user input.
+
+Usage:
+
+```jsx
+<StdinContext.Consumer>
+	{({ stdin }) => (
+		<MyComponent stdin={stdin}/>
+	)}
+</StdinContext.Consumer>
+```
+
+##### setRawMode
+
+Type: `function`<br>
+
+See [setRawMode](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode).
+Ink exposes this function via own `<StdinContext>` to be able to handle <kbd>Ctrl</kbd>+<kbd>C</kbd>, that's why you should use Ink's `setRawMode` instead of `process.stdin.setRawMode`.
+
+Usage:
+
+```jsx
+<StdinContext.Consumer>
+	{({ setRawMode }) => (
+		<MyComponent setRawMode={setRawMode}/>
+	)}
+</StdinContext.Consumer>
+```
+
+#### <StdoutContext>
+
+`<StdoutContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes stdout stream, where Ink renders your app.
+
+Import:
+
+```js
+import {StdoutContext} from 'ink';
+```
+
+##### stdout
+
+Type: `Stream`<br>
+Default: `process.stdout`
+
+Usage:
+
+```jsx
+<StdoutContext.Consumer>
+	{({ stdout }) => (
+		<MyComponent stdout={stdout}/>
+	)}
+</StdoutContext.Consumer>
 ```
 
 ## License
