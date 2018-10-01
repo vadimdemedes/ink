@@ -1,5 +1,6 @@
 <h1 align="center">
 	<br>
+	<br>
 	<img width="300" alt="Ink" src="media/logo.png">
 	<br>
 	<br>
@@ -57,9 +58,7 @@ class Counter extends Component {
 render(<Counter/>);
 ```
 
-<p align="center">
-	<img src="media/demo.svg" width="600">
-</p>
+<img src="media/demo.svg" width="600">
 
 
 ## Useful Components
@@ -146,7 +145,7 @@ Mount a component and render the output.
 
 ##### tree
 
-Type: `VNode`
+Type: `ReactElement`
 
 ##### options
 
