@@ -9,13 +9,13 @@
 
 > React for CLIs. Build and test your CLI output using components.
 
-[![Build Status](https://travis-ci.org/vadimdemedes/ink.svg?branch=master)](https://travis-ci.org/vadimdemedes/ink)
+[![Build Status](https://travis-ci.org/vadimdemedes/ink.svg?branch=next)](https://travis-ci.org/vadimdemedes/ink)
 
 
 ## Install
 
 ```
-$ npm install ink
+$ npm install ink@next
 ```
 
 
