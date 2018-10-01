@@ -58,5 +58,5 @@ export const render = (node, options = {}) => {
 
 	return () => {
 		reconciler.updateContainer(null, options.stdout._inkContainer);
-	}
+	};
 };
