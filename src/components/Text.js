@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import chalk from 'chalk';
+import Box from './Box';
 
 const Text = ({bold, italic, underline, strikethrough, children}) => {
 	const transformChildren = children => {
@@ -23,7 +24,7 @@ const Text = ({bold, italic, underline, strikethrough, children}) => {
 		return children;
 	};
 
-	return <div unstable__transformChildren={transformChildren}>{children}</div>;
+	return <Box unstable__transformChildren={transformChildren}>{children}</Box>;
 };
 
 Text.propTypes = {

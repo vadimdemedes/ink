@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import arrify from 'arrify';
 import chalk from 'chalk';
+import Box from './Box';
 
 const methods = [
 	'hex',
@@ -33,7 +34,7 @@ const Color = ({children, ...colorProps}) => {
 		return children;
 	};
 
-	return <div unstable__transformChildren={transformChildren}>{children}</div>;
+	return <Box unstable__transformChildren={transformChildren}>{children}</Box>;
 };
 
 Color.propTypes = {

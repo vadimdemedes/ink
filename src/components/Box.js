@@ -29,20 +29,6 @@ export default class Box extends PureComponent {
 	};
 
 	static defaultProps = {
-		margin: 0,
-		marginX: 0,
-		marginY: 0,
-		marginTop: 0,
-		marginBottom: 0,
-		marginLeft: 0,
-		marginRight: 0,
-		padding: 0,
-		paddingX: 0,
-		paddingY: 0,
-		paddingTop: 0,
-		paddingBottom: 0,
-		paddingLeft: 0,
-		paddingRight: 0,
 		flexDirection: 'row'
 	}
 
