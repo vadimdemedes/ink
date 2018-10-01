@@ -46,6 +46,10 @@ export default (document, onRender) => {
 			parent.appendChild(child);
 			onRender();
 		},
+		removeChildFromContainer: (parent, child) => {
+			parent.removeChild(child);
+			onRender();
+		},
 		prepareUpdate: () => true,
 		commitUpdate: (element, updatePayload, type, oldProps, newProps) => {
 			for (const [key, value] of Object.entries(newProps)) {
