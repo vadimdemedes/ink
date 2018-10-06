@@ -73,5 +73,5 @@ test('transform children', t => {
 		stream
 	);
 
-	t.is(stream.get(), '[{test}]\n');
+	t.is(stream.get(), '[{t}][{e}][{s}][{t}]\n');
 });

@@ -7,10 +7,6 @@ export default class Output {
 	}
 
 	write(x, y, text, {transformers}) {
-		transformers.forEach(transformer => {
-			text = transformer(text);
-		});
-
 		const lines = text.split('\n');
 		let offsetY = 0;
 
@@ -22,7 +18,13 @@ export default class Output {
 					this.output[y + offsetY] = [];
 				}
 
-				this.output[y + offsetY][x + offsetX] = sliceAnsi(line, offsetX, offsetX + 1);
+				let char = sliceAnsi(line, offsetX, offsetX + 1);
+
+				for (const transformer of transformers) {
+					char = transformer(char);
+				}
+
+				this.output[y + offsetY][x + offsetX] = char;
 			}
 
 			offsetY++;
