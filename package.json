@@ -41,6 +41,7 @@
     "arrify": "^1.0.1",
     "chalk": "^2.4.1",
     "cli-cursor": "^2.1.0",
+    "debounce-fn": "^1.0.0",
     "log-update": "^2.3.0",
     "prop-types": "^15.6.2",
     "react": "^16.4.2",

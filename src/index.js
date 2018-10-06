@@ -1,6 +1,7 @@
 import React from 'react';
 import undom from 'undom';
 import logUpdate from 'log-update';
+import debounce from 'debounce-fn';
 import createReconciler from './create-reconciler';
 import createRenderer from './create-renderer';
 import App from './components/App';
@@ -33,7 +34,7 @@ export const render = (node, options = {}) => {
 
 	const log = logUpdate.create(options.stdout);
 
-	const reconciler = createReconciler(document, () => {
+	const onRender = () => {
 		const output = render(document.body);
 
 		if (options.debug) {
@@ -42,7 +43,10 @@ export const render = (node, options = {}) => {
 		}
 
 		log(output);
-	});
+	};
+
+	const debouncedRender = options.debug ? onRender : debounce(onRender, {wait: 16});
+	const reconciler = createReconciler(document, debouncedRender);
 
 	if (!options.stdout._inkContainer) {
 		options.stdout._inkContainer = reconciler.createContainer(document.body, false);
