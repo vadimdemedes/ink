@@ -44,6 +44,7 @@ export default class App extends PureComponent {
 	handleSetRawMode = isEnabled => {
 		const {stdin} = this.props;
 
+		stdin.setEncoding('utf8');
 		stdin.setRawMode(isEnabled);
 
 		if (isEnabled) {
@@ -53,11 +54,9 @@ export default class App extends PureComponent {
 		}
 	};
 
-	handleInput = data => {
-		const s = String(data);
-
+	handleInput = input => {
 		// Exit on Ctrl+C
-		if (s === '\x03') { // eslint-disable-line unicorn/no-hex-escape
+		if (input === '\x03') { // eslint-disable-line unicorn/no-hex-escape
 			process.exit(0); // eslint-disable-line unicorn/no-process-exit
 		}
 	};
