@@ -21,7 +21,7 @@ $ npm install ink
 ## Usage
 
 ```jsx
-const {h, render, Component, Color } = require('ink');
+const {h, render, Component, Color} = require('ink');
 
 class Counter extends Component {
 	constructor() {
