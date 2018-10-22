@@ -98,9 +98,19 @@ const renderElement = (element, output, offsetX = 0, offsetY = 0, {transformers}
 export default ({terminalWidth}) => {
 	const config = Yoga.Config.create();
 
+	// Used to free up memory used by last node tree
+	let lastNode;
+
 	return element => {
+		if (lastNode) {
+			lastNode.freeRecursive();
+		}
+
 		const node = buildElement(element, {config, terminalWidth}).yogaNode;
 		node.calculateLayout(Yoga.UNDEFINED, Yoga.UNDEFINED, Yoga.DIRECTION_LTR);
+
+		// Save current node tree to free up memory later
+		lastNode = node;
 
 		const output = new Output({
 			height: node.getComputedHeight()
