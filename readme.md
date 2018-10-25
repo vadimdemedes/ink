@@ -86,6 +86,7 @@ render(<Counter/>);
 - [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color component.
 - [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
 - [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider component.
+- [ink-aligned](https://github.com/karaggeorge/ink-aligned) - Align components horizontally.
 
 ## Built with Ink
 
