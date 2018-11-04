@@ -1,83 +1,69 @@
 import React from 'react';
 import test from 'ava';
-import {Box} from '..';
-import Stream from './helpers/stream';
-import render from './helpers/render';
+import {Box, renderToString} from '..';
 
 test('padding', t => {
-	const stream = new Stream();
-	render(<Box padding={2}>X</Box>, stream);
+	const output = renderToString(<Box padding={2}>X</Box>);
 
-	t.is(stream.get(), '\n\n  X\n\n\n');
+	t.is(output, '\n\n  X\n\n\n');
 });
 
 test('padding X', t => {
-	const stream = new Stream();
-	render(
+	const output = renderToString(
 		<Box>
 			<Box paddingX={2}>X</Box>Y
-		</Box>,
-		stream
+		</Box>
 	);
 
-	t.is(stream.get(), '  X  Y\n');
+	t.is(output, '  X  Y\n');
 });
 
 test('padding Y', t => {
-	const stream = new Stream();
-	render(<Box paddingY={2}>X</Box>, stream);
+	const output = renderToString(<Box paddingY={2}>X</Box>);
 
-	t.is(stream.get(), '\n\nX\n\n\n');
+	t.is(output, '\n\nX\n\n\n');
 });
 
 test('padding top', t => {
-	const stream = new Stream();
-	render(<Box paddingTop={2}>X</Box>, stream);
+	const output = renderToString(<Box paddingTop={2}>X</Box>);
 
-	t.is(stream.get(), '\n\nX\n');
+	t.is(output, '\n\nX\n');
 });
 
 test('padding bottom', t => {
-	const stream = new Stream();
-	render(<Box paddingBottom={2}>X</Box>, stream);
+	const output = renderToString(<Box paddingBottom={2}>X</Box>);
 
-	t.is(stream.get(), 'X\n\n\n');
+	t.is(output, 'X\n\n\n');
 });
 
 test('padding left', t => {
-	const stream = new Stream();
-	render(<Box paddingLeft={2}>X</Box>, stream);
+	const output = renderToString(<Box paddingLeft={2}>X</Box>);
 
-	t.is(stream.get(), '  X\n');
+	t.is(output, '  X\n');
 });
 
 test('padding right', t => {
-	const stream = new Stream();
-	render(
+	const output = renderToString(
 		<Box>
 			<Box paddingRight={2}>X</Box>Y
-		</Box>,
-		stream
+		</Box>
 	);
 
-	t.is(stream.get(), 'X  Y\n');
+	t.is(output, 'X  Y\n');
 });
 
 test('nested padding', t => {
-	const stream = new Stream();
-	render(
+	const output = renderToString(
 		<Box padding={2}>
 			<Box padding={2}>X</Box>
-		</Box>,
-		stream
+		</Box>
 	);
 
-	t.is(stream.get(), '\n\n\n\n    X\n\n\n\n\n');
+	t.is(output, '\n\n\n\n    X\n\n\n\n\n');
 });
 
 test('padding with multiline string', t => {
-	const stream = new Stream();
-	render(<Box padding={2}>{'A\nB'}</Box>, stream);
+	const output = renderToString(<Box padding={2}>{'A\nB'}</Box>);
 
-	t.is(stream.get(), '\n\n  A\n  B\n\n\n');
+	t.is(output, '\n\n  A\n  B\n\n\n');
 });

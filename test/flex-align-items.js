@@ -1,53 +1,43 @@
 import React from 'react';
 import test from 'ava';
-import {Box} from '..';
-import Stream from './helpers/stream';
-import render from './helpers/render';
+import {Box, renderToString} from '..';
 
 test('row - align text to center', t => {
-	const stream = new Stream();
-	render(
+	const output = renderToString(
 		<Box alignItems="center" height={3}>
 			Test
-		</Box>,
-		stream
+		</Box>
 	);
 
-	t.is(stream.get(), '\nTest\n\n');
+	t.is(output, '\nTest\n\n');
 });
 
 test('row - align text to bottom', t => {
-	const stream = new Stream();
-	render(
+	const output = renderToString(
 		<Box alignItems="flex-end" height={3}>
 			Test
-		</Box>,
-		stream
+		</Box>
 	);
 
-	t.is(stream.get(), '\n\nTest\n');
+	t.is(output, '\n\nTest\n');
 });
 
 test('column - align text to center', t => {
-	const stream = new Stream();
-	render(
+	const output = renderToString(
 		<Box flexDirection="column" alignItems="center" width={10}>
 			Test
-		</Box>,
-		stream
+		</Box>
 	);
 
-	t.is(stream.get(), '   Test\n');
+	t.is(output, '   Test\n');
 });
 
 test('column - align text to right', t => {
-	const stream = new Stream();
-	render(
+	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-end" width={10}>
 			Test
-		</Box>,
-		stream
+		</Box>
 	);
 
-	t.is(stream.get(), '      Test\n');
+	t.is(output, '      Test\n');
 });

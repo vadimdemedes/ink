@@ -1,57 +1,47 @@
 import React from 'react';
 import test from 'ava';
-import {Box} from '..';
-import Stream from './helpers/stream';
-import render from './helpers/render';
+import {Box, renderToString} from '..';
 
 test('direction row', t => {
-	const stream = new Stream();
-	render(
+	const output = renderToString(
 		<Box flexDirection="row">
 			<Box>A</Box>
 			<Box>B</Box>
-		</Box>,
-		stream
+		</Box>
 	);
 
-	t.is(stream.get(), 'AB\n');
+	t.is(output, 'AB\n');
 });
 
 test('direction row reverse', t => {
-	const stream = new Stream();
-	render(
+	const output = renderToString(
 		<Box flexDirection="row-reverse" width={4}>
 			<Box>A</Box>
 			<Box>B</Box>
-		</Box>,
-		stream
+		</Box>
 	);
 
-	t.is(stream.get(), '  BA\n');
+	t.is(output, '  BA\n');
 });
 
 test('direction column', t => {
-	const stream = new Stream();
-	render(
+	const output = renderToString(
 		<Box flexDirection="column">
 			<Box>A</Box>
 			<Box>B</Box>
-		</Box>,
-		stream
+		</Box>
 	);
 
-	t.is(stream.get(), 'A\nB\n');
+	t.is(output, 'A\nB\n');
 });
 
 test('direction column reverse', t => {
-	const stream = new Stream();
-	render(
+	const output = renderToString(
 		<Box flexDirection="column-reverse" height={4}>
 			<Box>A</Box>
 			<Box>B</Box>
-		</Box>,
-		stream
+		</Box>
 	);
 
-	t.is(stream.get(), '\n\nB\nA\n');
+	t.is(output, '\n\nB\nA\n');
 });

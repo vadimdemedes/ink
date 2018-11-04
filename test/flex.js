@@ -1,38 +1,31 @@
 import React from 'react';
 import test from 'ava';
-import {Box} from '..';
-import Stream from './helpers/stream';
-import render from './helpers/render';
+import {Box, renderToString} from '..';
 
 test('grow equally', t => {
-	const stream = new Stream();
-	render(
+	const output = renderToString(
 		<Box width={6}>
 			<Box flexGrow={1}>A</Box>
 			<Box flexGrow={1}>B</Box>
-		</Box>,
-		stream
+		</Box>
 	);
 
-	t.is(stream.get(), 'A  B\n');
+	t.is(output, 'A  B\n');
 });
 
 test('grow one element', t => {
-	const stream = new Stream();
-	render(
+	const output = renderToString(
 		<Box width={6}>
 			<Box flexGrow={1}>A</Box>
 			<Box>B</Box>
-		</Box>,
-		stream
+		</Box>
 	);
 
-	t.is(stream.get(), 'A    B\n');
+	t.is(output, 'A    B\n');
 });
 
 test('dont shrink', t => {
-	const stream = new Stream();
-	render(
+	const output = renderToString(
 		<Box width={10}>
 			<Box flexShrink={0} width={6}>
 				A
@@ -41,16 +34,14 @@ test('dont shrink', t => {
 				B
 			</Box>
 			<Box>C</Box>
-		</Box>,
-		stream
+		</Box>
 	);
 
-	t.is(stream.get(), 'A     B     C\n');
+	t.is(output, 'A     B     C\n');
 });
 
 test('shrink equally', t => {
-	const stream = new Stream();
-	render(
+	const output = renderToString(
 		<Box width={10}>
 			<Box flexShrink={1} width={6}>
 				A
@@ -59,9 +50,8 @@ test('shrink equally', t => {
 				B
 			</Box>
 			<Box>C</Box>
-		</Box>,
-		stream
+		</Box>
 	);
 
-	t.is(stream.get(), 'A    B   C\n');
+	t.is(output, 'A    B   C\n');
 });
