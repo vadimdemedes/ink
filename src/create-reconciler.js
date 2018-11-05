@@ -36,7 +36,18 @@ export default (document, onRender) => {
 			return element;
 		},
 		createTextInstance: text => document.createTextNode(text),
-		resetTextContent: () => {},
+		resetTextContent: element => {
+			if (element.textContent) {
+				element.textContent = ''
+			}
+
+			if (element.childNodes.length > 0) {
+				for (const childNode of element.childNodes) {
+					childNode.yogaNode.free();
+					element.removeChild(childNode);
+				}
+			}
+		},
 		getPublicInstance: instance => instance,
 		appendInitialChild: (parent, child) => parent.appendChild(child),
 		appendChild: (parent, child) => parent.appendChild(child),
