@@ -36,6 +36,7 @@ export default (document, onRender) => {
 			return element;
 		},
 		createTextInstance: text => document.createTextNode(text),
+		resetTextContent: () => {},
 		getPublicInstance: instance => instance,
 		appendInitialChild: (parent, child) => parent.appendChild(child),
 		appendChild: (parent, child) => parent.appendChild(child),
