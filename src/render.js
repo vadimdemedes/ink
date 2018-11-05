@@ -47,9 +47,11 @@ export default (node, options = {}) => {
 	};
 
 	const debouncedRender = options.debug ? onRender : debounce(onRender);
-	const reconciler = createReconciler(document, debouncedRender);
+	const reconciler = options.stdout._inkReconciler || createReconciler(document, debouncedRender);
 
-	if (!options.stdout._inkContainer) {
+	if (!options.stdout._ink) {
+		options.stdout._ink = true;
+		options.stdout._inkReconciler = reconciler;
 		options.stdout._inkContainer = reconciler.createContainer(document.body, false);
 	}
 
