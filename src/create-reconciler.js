@@ -28,6 +28,8 @@ export default (document, onRender) => {
 					Object.assign(element.style, value);
 				} else if (key === 'unstable__transformChildren') {
 					element.unstable__transformChildren = value; // eslint-disable-line camelcase
+				} else if (key === 'static') {
+					element.static = true;
 				} else {
 					element.setAttribute(key, value);
 				}
@@ -38,7 +40,7 @@ export default (document, onRender) => {
 		createTextInstance: text => document.createTextNode(text),
 		resetTextContent: element => {
 			if (element.textContent) {
-				element.textContent = ''
+				element.textContent = '';
 			}
 
 			if (element.childNodes.length > 0) {
@@ -73,6 +75,8 @@ export default (document, onRender) => {
 					Object.assign(element.style, value);
 				} else if (key === 'unstable__transformChildren') {
 					element.unstable__transformChildren = value; // eslint-disable-line camelcase
+				} else if (key === 'static') {
+					element.static = true;
 				} else {
 					element.setAttribute(key, value);
 				}

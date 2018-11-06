@@ -4,6 +4,7 @@ import logUpdate from 'log-update';
 import debounce from 'debounce-fn';
 import createReconciler from './create-reconciler';
 import createRenderer from './create-renderer';
+import diffString from './diff-string';
 import App from './components/App';
 
 export default (node, options = {}) => {
@@ -31,16 +32,29 @@ export default (node, options = {}) => {
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	let ignoreRender = false;
 
+	// Store last <Static> output to only rerender when needed
+	let lastStaticOutput = '';
+
 	const onRender = () => {
 		if (ignoreRender) {
 			return;
 		}
 
-		const output = render(document.body);
+		const {output, staticOutput} = render(document.body);
 
 		if (options.debug) {
-			options.stdout.write(output);
+			options.stdout.write((staticOutput || '') + output);
 			return;
+		}
+
+		// If <Static> part of the output has changed, calculate the difference
+		// between the last <Static> output and log it to stdout.
+		// To ensure static output is cleanly rendered before main output, clear main output first
+		if (staticOutput && staticOutput !== lastStaticOutput) {
+			log.clear();
+			options.stdout.write(diffString(lastStaticOutput, staticOutput));
+
+			lastStaticOutput = staticOutput;
 		}
 
 		log(output);
