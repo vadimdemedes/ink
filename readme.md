@@ -186,15 +186,15 @@ class Counter extends Component {
 	render() {
 		return (
 			<Box>
-				Iteration #${this.state.i}
+				Iteration #{this.state.i}
 			</Box>
 		);
 	}
 
 	componentDidMount() {
 		this.timer = setInterval(() => {
-			this.setState({
-				i: this.state.i + 1
+			this.setState(prevState => ({
+				i: prevState.i + 1
 			});
 		}, 100);
 	}
@@ -229,7 +229,7 @@ See `<Box>` built-in component below for documentation on how to use Flexbox lay
 
 ### Built-in Components
 
-#### <Box>
+#### &lt;Box&gt;
 
 `<Box>` it's an essential Ink component to build your layout. It's like a `<div>` in a browser.
 
@@ -471,7 +471,7 @@ See [justify-content](https://css-tricks.com/almanac/properties/f/justify-conten
 // [  X   Y  ]
 ```
 
-#### <Color>
+#### &lt;Color&gt;
 
 The `<Color>` compoment is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api).
 It supports all of the chalk's methods as `props`.
@@ -498,7 +498,7 @@ Usage:
 </Color>
 ```
 
-#### <Text>
+#### &lt;Text&gt;
 
 This component can change the style of the text, make it bold, underline, italic or strikethrough.
 
@@ -537,7 +537,7 @@ Usage:
 <Text strikethrough>I am strikethrough</Text>
 ```
 
-#### <Static>
+#### &lt;Static&gt;
 
 `<Static>` component allows permanently rendering output to stdout and preserving it across renders.
 Components passed to `<Static>` as children will be written to stdout only once and will never be rerendered.
@@ -564,7 +564,7 @@ Jest continuosuly writes the list of completed tests to the output, while updati
 </Fragment>
 ```
 
-#### <StdinContext>
+#### &lt;StdinContext&gt;
 
 `<StdinContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes several props.
 
@@ -609,7 +609,7 @@ Usage:
 </StdinContext.Consumer>
 ```
 
-#### <StdoutContext>
+#### &lt;StdoutContext&gt;
 
 `<StdoutContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes stdout stream, where Ink renders your app.
 
