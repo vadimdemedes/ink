@@ -2,6 +2,7 @@ import React from 'react';
 import undom from 'undom';
 import logUpdate from 'log-update';
 import debounce from 'debounce-fn';
+import throttle from 'lodash.throttle';
 import createReconciler from './create-reconciler';
 import createRenderer from './create-renderer';
 import diffString from './diff-string';
@@ -60,7 +61,10 @@ export default (node, options = {}) => {
 		log(output);
 	};
 
-	const debouncedRender = options.debug ? onRender : debounce(onRender);
+	const debouncedRender = options.debug ? onRender : throttle(onRender, 50, {
+		leading: true,
+		trailing: true
+	});
 	const reconciler = options.stdout._inkReconciler || createReconciler(document, debouncedRender);
 
 	if (!options.stdout._ink) {

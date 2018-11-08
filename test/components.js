@@ -1,4 +1,4 @@
-import React, {Fragment} from 'react';
+import React from 'react';
 import test from 'ava';
 import {Box, Static, renderToString} from '..';
 
@@ -65,20 +65,20 @@ test('transform children', t => {
 
 test('static output', t => {
 	const output = renderToString(
-		<Fragment>
-			<Box marginTop={1}>
-				X
-			</Box>
-
+		<Box>
 			<Static>
-				<Box flexDirection="column">
+				<Box paddingBottom={1} flexDirection="column">
 					<Box>A</Box>
 					<Box>B</Box>
 					<Box>C</Box>
 				</Box>
 			</Static>
-		</Fragment>
+
+			<Box marginTop={1}>
+				X
+			</Box>
+		</Box>
 	);
 
-	t.is(output, 'A\nB\nC\n\nX\n');
+	t.is(output, 'A\nB\nC\n\n\nX\n');
 });
