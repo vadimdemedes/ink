@@ -20,7 +20,7 @@ const buildElement = (element, {config, terminalWidth, skipStaticElements}) => {
 			});
 
 			for (const [index, childNode] of Object.entries(childNodes)) {
-				const {yogaNode} = buildElement(childNode, {config, terminalWidth});
+				const {yogaNode} = buildElement(childNode, {config, terminalWidth, skipStaticElements});
 				node.insertChild(yogaNode, index);
 			}
 		}
@@ -69,7 +69,7 @@ const buildElement = (element, {config, terminalWidth, skipStaticElements}) => {
 		});
 
 		for (const [index, childNode] of Object.entries(childNodes)) {
-			const {yogaNode} = buildElement(childNode, {config, terminalWidth});
+			const {yogaNode} = buildElement(childNode, {config, terminalWidth, skipStaticElements});
 			node.insertChild(yogaNode, index);
 		}
 	}

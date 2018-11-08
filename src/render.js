@@ -1,7 +1,6 @@
 import React from 'react';
 import undom from 'undom';
 import logUpdate from 'log-update';
-import debounce from 'debounce-fn';
 import throttle from 'lodash.throttle';
 import createReconciler from './create-reconciler';
 import createRenderer from './create-renderer';
