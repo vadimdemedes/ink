@@ -44,7 +44,6 @@
     "lodash.throttle": "^4.1.1",
     "log-update": "^2.3.0",
     "prop-types": "^15.6.2",
-    "react": "^16.4.2",
     "react-reconciler": "^0.17.0",
     "slice-ansi": "^1.0.0",
     "string-length": "^2.0.0",
@@ -62,6 +61,7 @@
     "babel-eslint": "^10.0.1",
     "eslint-config-xo-react": "^0.17.0",
     "eslint-plugin-react": "^7.11.1",
+    "react": "^16.6.1",
     "strip-ansi": "^4.0.0",
     "svg-term-cli": "^2.1.1",
     "xo": "^0.23.0"
