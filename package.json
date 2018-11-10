@@ -45,7 +45,7 @@
     "log-update": "^2.3.0",
     "prop-types": "^15.6.2",
     "react": "^16.4.2",
-    "react-reconciler": "^0.12.0",
+    "react-reconciler": "^0.17.0",
     "slice-ansi": "^1.0.0",
     "string-length": "^2.0.0",
     "undom": "^0.4.0",
