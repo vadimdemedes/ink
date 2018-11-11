@@ -25,7 +25,7 @@ export default class Box extends PureComponent {
 		alignItems: PropTypes.oneOf(['flex-start', 'center', 'flex-end']),
 		justifyContent: PropTypes.oneOf(['flex-start', 'center', 'flex-end', 'space-between', 'space-around']),
 		unstable__transformChildren: PropTypes.func, // eslint-disable-line camelcase
-		children: PropTypes.node.isRequired
+		children: PropTypes.node
 	};
 
 	static defaultProps = {
