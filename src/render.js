@@ -8,6 +8,7 @@ import {createNode} from './dom';
 import App from './components/App';
 
 export default (node, options = {}) => {
+	// Stream was passed instead of `options` object
 	if (typeof options.write === 'function') {
 		options = {
 			stdout: options,

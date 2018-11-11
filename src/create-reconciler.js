@@ -45,7 +45,7 @@ export default onRender => {
 
 			return node;
 		},
-		createTextInstance: text => createTextNode(text),
+		createTextInstance: createTextNode,
 		resetTextContent: node => {
 			if (node.textContent) {
 				node.textContent = '';

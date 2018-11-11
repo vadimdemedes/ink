@@ -11,6 +11,7 @@ const measureText = text => {
 	return {width, height};
 };
 
+// Traverse the node tree, create Yoga nodes and assign styles to each Yoga node
 const buildLayout = (node, options) => {
 	const {config, terminalWidth, skipStaticElements} = options;
 	const yogaNode = Yoga.Node.create(config);
@@ -80,6 +81,7 @@ const buildLayout = (node, options) => {
 	return node;
 };
 
+// After nodes are laid out, render each to output object, which later gets rendered to terminal
 const renderNodeToOutput = (node, output, offsetX = 0, offsetY = 0, {transformers, skipStaticElements}) => {
 	if (node.static && skipStaticElements) {
 		return;
@@ -92,6 +94,7 @@ const renderNodeToOutput = (node, output, offsetX = 0, offsetY = 0, {transformer
 	const y = offsetY + yogaNode.getComputedTop();
 
 	// Transformers are functions that transform final text output of each component
+	// See Output class for logic that applies transformers
 	let newTransformers = transformers;
 	if (node.unstable__transformChildren) {
 		newTransformers = [node.unstable__transformChildren, ...transformers];
@@ -115,6 +118,7 @@ const renderNodeToOutput = (node, output, offsetX = 0, offsetY = 0, {transformer
 	}
 };
 
+// Since <Static> components can be placed anywhere in the tree, this helper finds and returns them
 const getStaticNodes = element => {
 	const staticNodes = [];
 
@@ -131,10 +135,11 @@ const getStaticNodes = element => {
 	return staticNodes;
 };
 
+// Build layout, apply styles, build text output of all nodes and return it
 export default ({terminalWidth}) => {
 	const config = Yoga.Config.create();
 
-	// Used to free up memory used by last node tree
+	// Used to free up memory used by last Yoga node tree
 	let lastYogaNode;
 	let lastStaticYogaNode;
 
@@ -154,6 +159,7 @@ export default ({terminalWidth}) => {
 			}
 		}
 
+		// <Static> component must be built and rendered separately, so that the layout of the other output is unaffected
 		let staticOutput;
 		if (staticElements.length === 1) {
 			const rootNode = createNode('root');
