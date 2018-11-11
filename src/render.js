@@ -1,10 +1,10 @@
 import React from 'react';
-import undom from 'undom';
 import logUpdate from 'log-update';
 import throttle from 'lodash.throttle';
 import createReconciler from './create-reconciler';
 import createRenderer from './create-renderer';
 import diffString from './diff-string';
+import {createNode} from './dom';
 import App from './components/App';
 
 export default (node, options = {}) => {
@@ -22,7 +22,7 @@ export default (node, options = {}) => {
 		...options
 	};
 
-	const document = undom();
+	const rootNode = createNode('root');
 	const render = createRenderer({
 		terminalWidth: options.stdout.columns
 	});
@@ -32,7 +32,8 @@ export default (node, options = {}) => {
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	let ignoreRender = false;
 
-	// Store last <Static> output to only rerender when needed
+	// Store last output to only rerender when needed
+	let lastOutput = '';
 	let lastStaticOutput = '';
 
 	const onRender = () => {
@@ -40,7 +41,7 @@ export default (node, options = {}) => {
 			return;
 		}
 
-		const {output, staticOutput} = render(document.body);
+		const {output, staticOutput} = render(rootNode);
 
 		if (options.debug) {
 			options.stdout.write((staticOutput || '') + output);
@@ -53,23 +54,28 @@ export default (node, options = {}) => {
 		if (staticOutput && staticOutput !== lastStaticOutput) {
 			log.clear();
 			options.stdout.write(diffString(lastStaticOutput, staticOutput));
+			log(output);
 
 			lastStaticOutput = staticOutput;
 		}
 
-		log(output);
+		if (output !== lastOutput) {
+			log(output);
+			lastOutput = output;
+		}
 	};
 
-	const debouncedRender = options.debug ? onRender : throttle(onRender, 50, {
+	const throttledRender = options.debug ? onRender : throttle(onRender, 50, {
 		leading: true,
 		trailing: true
 	});
-	const reconciler = options.stdout._inkReconciler || createReconciler(document, debouncedRender);
+
+	const reconciler = options.stdout._inkReconciler || createReconciler(throttledRender);
 
 	if (!options.stdout._ink) {
 		options.stdout._ink = true;
 		options.stdout._inkReconciler = reconciler;
-		options.stdout._inkContainer = reconciler.createContainer(document.body, false);
+		options.stdout._inkContainer = reconciler.createContainer(rootNode, false);
 	}
 
 	const tree = (
@@ -81,8 +87,8 @@ export default (node, options = {}) => {
 	reconciler.updateContainer(tree, options.stdout._inkContainer);
 
 	return () => {
-		if (typeof debouncedRender.cancel === 'function') {
-			debouncedRender.cancel();
+		if (typeof throttledRender.cancel === 'function') {
+			throttledRender.cancel();
 			onRender();
 			log.done();
 		}

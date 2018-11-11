@@ -1,6 +1,14 @@
 import ReactReconciler from 'react-reconciler';
+import {
+	createNode,
+	createTextNode,
+	appendChildNode,
+	insertBeforeNode,
+	removeChildNode,
+	setAttribute
+} from './dom';
 
-export default (document, onRender) => {
+export default onRender => {
 	const rootHostContext = {};
 	const childHostContext = {};
 
@@ -14,82 +22,87 @@ export default (document, onRender) => {
 			return typeof props.children === 'string' || typeof props.children === 'number';
 		},
 		createInstance: (type, newProps) => {
-			const element = document.createElement(type);
+			const node = createNode(type);
 
 			for (const [key, value] of Object.entries(newProps)) {
 				if (key === 'children') {
 					if (typeof value === 'string' || typeof value === 'number') {
 						// Text node must be wrapped in another node, so that text can be aligned within container
-						const textElement = document.createElement('span');
+						const textElement = createNode('span');
 						textElement.textContent = value;
-						element.appendChild(textElement);
+						appendChildNode(node, textElement);
 					}
 				} else if (key === 'style') {
-					Object.assign(element.style, value);
+					Object.assign(node.style, value);
 				} else if (key === 'unstable__transformChildren') {
-					element.unstable__transformChildren = value; // eslint-disable-line camelcase
+					node.unstable__transformChildren = value; // eslint-disable-line camelcase
 				} else if (key === 'static') {
-					element.static = true;
+					node.static = true;
 				} else {
-					element.setAttribute(key, value);
+					setAttribute(node, key, value);
 				}
 			}
 
-			return element;
+			return node;
 		},
-		createTextInstance: text => document.createTextNode(text),
-		resetTextContent: element => {
-			if (element.textContent) {
-				element.textContent = '';
+		createTextInstance: text => createTextNode(text),
+		resetTextContent: node => {
+			if (node.textContent) {
+				node.textContent = '';
 			}
 
-			if (element.childNodes.length > 0) {
-				for (const childNode of element.childNodes) {
+			if (node.childNodes.length > 0) {
+				for (const childNode of node.childNodes) {
 					childNode.yogaNode.free();
-					element.removeChild(childNode);
+					removeChildNode(node, childNode);
 				}
 			}
 		},
 		getPublicInstance: instance => instance,
-		appendInitialChild: (parent, child) => parent.appendChild(child),
-		appendChild: (parent, child) => parent.appendChild(child),
-		insertBefore: (parent, child, beforeChild) => parent.insertBefore(child, beforeChild),
+		appendInitialChild: appendChildNode,
+		appendChild: appendChildNode,
+		insertBefore: insertBeforeNode,
 		finalizeInitialChildren: () => {},
 		supportsMutation: true,
-		appendChildToContainer: (parent, child) => {
-			parent.appendChild(child);
+		appendChildToContainer: (parentNode, childNode) => {
+			appendChildNode(parentNode, childNode);
 			onRender();
 		},
-		removeChildFromContainer: (parent, child) => {
-			parent.removeChild(child);
+		removeChildFromContainer: (parentNode, childNode) => {
+			removeChildNode(parentNode, childNode);
 			onRender();
 		},
 		prepareUpdate: () => true,
-		commitUpdate: (element, updatePayload, type, oldProps, newProps) => {
+		commitUpdate: (node, updatePayload, type, oldProps, newProps) => {
 			for (const [key, value] of Object.entries(newProps)) {
 				if (key === 'children') {
 					if (typeof value === 'string' || typeof value === 'number') {
-						element.childNodes[0].textContent = value;
+						node.childNodes[0].textContent = value;
 					}
 				} else if (key === 'style') {
-					Object.assign(element.style, value);
+					Object.assign(node.style, value);
 				} else if (key === 'unstable__transformChildren') {
-					element.unstable__transformChildren = value; // eslint-disable-line camelcase
+					node.unstable__transformChildren = value; // eslint-disable-line camelcase
 				} else if (key === 'static') {
-					element.static = true;
+					node.static = true;
 				} else {
-					element.setAttribute(key, value);
+					setAttribute(node, key, value);
 				}
 			}
 
 			onRender();
 		},
-		commitTextUpdate: (element, oldText, newText) => {
-			element.textContent = newText;
+		commitTextUpdate: (node, oldText, newText) => {
+			if (node.nodeName === '#text') {
+				node.nodeValue = newText;
+			} else {
+				node.textContent = newText;
+			}
+
 			onRender();
 		},
-		removeChild: (parent, child) => {
-			parent.removeChild(child);
+		removeChild: (parentNode, childNode) => {
+			removeChildNode(parentNode, childNode);
 			onRender();
 		}
 	};
