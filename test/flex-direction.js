@@ -10,7 +10,7 @@ test('direction row', t => {
 		</Box>
 	);
 
-	t.is(output, 'AB\n');
+	t.is(output, 'AB');
 });
 
 test('direction row reverse', t => {
@@ -21,7 +21,7 @@ test('direction row reverse', t => {
 		</Box>
 	);
 
-	t.is(output, '  BA\n');
+	t.is(output, '  BA');
 });
 
 test('direction column', t => {
@@ -32,7 +32,7 @@ test('direction column', t => {
 		</Box>
 	);
 
-	t.is(output, 'A\nB\n');
+	t.is(output, 'A\nB');
 });
 
 test('direction column reverse', t => {
@@ -43,5 +43,5 @@ test('direction column reverse', t => {
 		</Box>
 	);
 
-	t.is(output, '\n\nB\nA\n');
+	t.is(output, '\n\nB\nA');
 });

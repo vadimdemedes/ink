@@ -9,7 +9,7 @@ test('row - align text to center', t => {
 		</Box>
 	);
 
-	t.is(output, '\nTest\n\n');
+	t.is(output, '\nTest\n');
 });
 
 test('row - align text to bottom', t => {
@@ -19,7 +19,7 @@ test('row - align text to bottom', t => {
 		</Box>
 	);
 
-	t.is(output, '\n\nTest\n');
+	t.is(output, '\n\nTest');
 });
 
 test('column - align text to center', t => {
@@ -29,7 +29,7 @@ test('column - align text to center', t => {
 		</Box>
 	);
 
-	t.is(output, '   Test\n');
+	t.is(output, '   Test');
 });
 
 test('column - align text to right', t => {
@@ -39,5 +39,5 @@ test('column - align text to right', t => {
 		</Box>
 	);
 
-	t.is(output, '      Test\n');
+	t.is(output, '      Test');
 });

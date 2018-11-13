@@ -9,7 +9,7 @@ test('row - align text to center', t => {
 		</Box>
 	);
 
-	t.is(output, '   Test\n');
+	t.is(output, '   Test');
 });
 
 test('row - align text to right', t => {
@@ -19,7 +19,7 @@ test('row - align text to right', t => {
 		</Box>
 	);
 
-	t.is(output, '      Test\n');
+	t.is(output, '      Test');
 });
 
 test('row - align two text nodes on the edges', t => {
@@ -30,7 +30,7 @@ test('row - align two text nodes on the edges', t => {
 		</Box>
 	);
 
-	t.is(output, 'A  B\n');
+	t.is(output, 'A  B');
 });
 
 test('row - align two text nodes with equal space around them', t => {
@@ -41,7 +41,7 @@ test('row - align two text nodes with equal space around them', t => {
 		</Box>
 	);
 
-	t.is(output, ' A B\n');
+	t.is(output, ' A B');
 });
 
 test('column - align text to center', t => {
@@ -51,7 +51,7 @@ test('column - align text to center', t => {
 		</Box>
 	);
 
-	t.is(output, '\nTest\n\n');
+	t.is(output, '\nTest\n');
 });
 
 test('column - align text to bottom', t => {
@@ -61,7 +61,7 @@ test('column - align text to bottom', t => {
 		</Box>
 	);
 
-	t.is(output, '\n\nTest\n');
+	t.is(output, '\n\nTest');
 });
 
 test('column - align two text nodes on the edges', t => {
@@ -72,7 +72,7 @@ test('column - align two text nodes on the edges', t => {
 		</Box>
 	);
 
-	t.is(output, 'A\n\n\nB\n');
+	t.is(output, 'A\n\n\nB');
 });
 
 test('column - align two text nodes with equal space around them', t => {
@@ -83,5 +83,5 @@ test('column - align two text nodes with equal space around them', t => {
 		</Box>
 	);
 
-	t.is(output, '\nA\n\nB\n\n');
+	t.is(output, '\nA\n\nB\n');
 });

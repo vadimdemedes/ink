@@ -5,13 +5,13 @@ import {Box, Static, renderToString} from '..';
 test('text', t => {
 	const output = renderToString(<Box>Hello World</Box>);
 
-	t.is(output, 'Hello World\n');
+	t.is(output, 'Hello World');
 });
 
 test('text with variable', t => {
 	const output = renderToString(<Box>Count: {1}</Box>);
 
-	t.is(output, 'Count: 1\n');
+	t.is(output, 'Count: 1');
 });
 
 test('multiple text nodes', t => {
@@ -22,7 +22,7 @@ test('multiple text nodes', t => {
 		</Box>
 	);
 
-	t.is(output, 'Hello World\n');
+	t.is(output, 'Hello World');
 });
 
 test('text with component', t => {
@@ -34,7 +34,7 @@ test('text with component', t => {
 		</Box>
 	);
 
-	t.is(output, 'Hello World\n');
+	t.is(output, 'Hello World');
 });
 
 test('text with fragment', t => {
@@ -44,13 +44,13 @@ test('text with fragment', t => {
 		</Box>
 	);
 
-	t.is(output, 'Hello World\n');
+	t.is(output, 'Hello World');
 });
 
 test('fragment', t => {
 	const output = renderToString(<React.Fragment>Hello World</React.Fragment>);
 
-	t.is(output, 'Hello World\n');
+	t.is(output, 'Hello World');
 });
 
 test('transform children', t => {
@@ -60,7 +60,7 @@ test('transform children', t => {
 		</Box>
 	);
 
-	t.is(output, '[{t}][{e}][{s}][{t}]\n');
+	t.is(output, '[{test}]');
 });
 
 test('static output', t => {
@@ -80,5 +80,5 @@ test('static output', t => {
 		</Box>
 	);
 
-	t.is(output, 'A\nB\nC\n\n\nX\n');
+	t.is(output, 'A\nB\nC\n\n\nX');
 });

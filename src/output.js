@@ -11,57 +11,38 @@ import sliceAnsi from 'slice-ansi';
  */
 
 export default class Output {
-	constructor({height}) {
+	constructor({width, height}) {
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
-		this.output = new Array(height);
+		const output = [];
+
+		for (let y = 0; y < height; y++) {
+			output.push(' '.repeat(width));
+		}
+
+		this.output = output;
 	}
 
 	write(x, y, text, {transformers}) {
 		const lines = text.split('\n');
 		let offsetY = 0;
 
-		for (const line of lines) {
+		for (let line of lines) {
 			const length = stringLength(line);
+			const currentLine = this.output[y + offsetY];
 
-			for (let offsetX = 0; offsetX < length; offsetX++) {
-				if (!Array.isArray(this.output[y + offsetY])) {
-					this.output[y + offsetY] = [];
-				}
-
-				// Since number of characters displayed visually isn't equal to actual number of characters
-				// because of ANSI escapes, use `sliceAnsi` module to retrieve actual character along with
-				// ANSI escapes that wrap it and apply transformations to it
-				//
-				// It results in a lot more ANSI escapes in the output, but it produces correct output
-				let char = sliceAnsi(line, offsetX, offsetX + 1);
-
-				for (const transformer of transformers) {
-					char = transformer(char);
-				}
-
-				this.output[y + offsetY][x + offsetX] = char;
+			for (const transformer of transformers) {
+				line = transformer(line);
 			}
+
+			this.output[y + offsetY] = sliceAnsi(currentLine, 0, x) + line + sliceAnsi(currentLine, x + length);
 
 			offsetY++;
 		}
 	}
 
 	get() {
-		let ret = '';
-
-		const rows = this.output.length;
-		for (let y = 0; y < rows; y++) {
-			if (this.output[y]) {
-				const columns = this.output[y].length;
-				for (let x = 0; x < columns; x++) {
-					// Treat empty columns as spaces
-					ret += this.output[y][x] || ' ';
-				}
-			}
-
-			ret += '\n';
-		}
-
-		return ret;
+		return this.output
+			.map(line => line.trimRight())
+			.join('\n');
 	}
 }

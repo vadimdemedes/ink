@@ -100,21 +100,19 @@ const renderNodeToOutput = (node, output, offsetX = 0, offsetY = 0, {transformer
 		newTransformers = [node.unstable__transformChildren, ...transformers];
 	}
 
-	const newOptions = {
-		transformers: newTransformers,
-		skipStaticElements
-	};
-
 	// Text nodes
 	const text = node.textContent || node.nodeValue;
 	if (text) {
-		output.write(x, y, text, newOptions);
+		output.write(x, y, text, {transformers: newTransformers});
 		return;
 	}
 
 	// Nodes that have other nodes as children
 	for (const childNode of node.childNodes) {
-		renderNodeToOutput(childNode, output, x, y, newOptions);
+		renderNodeToOutput(childNode, output, x, y, {
+			transformers: newTransformers,
+			skipStaticElements
+		});
 	}
 };
 
@@ -177,6 +175,7 @@ export default ({terminalWidth}) => {
 			lastStaticYogaNode = staticYogaNode;
 
 			staticOutput = new Output({
+				width: staticYogaNode.getComputedWidth(),
 				height: staticYogaNode.getComputedHeight()
 			});
 
@@ -198,6 +197,7 @@ export default ({terminalWidth}) => {
 		lastYogaNode = yogaNode;
 
 		const output = new Output({
+			width: yogaNode.getComputedWidth(),
 			height: yogaNode.getComputedHeight()
 		});
 
@@ -208,7 +208,7 @@ export default ({terminalWidth}) => {
 
 		return {
 			output: output.get(),
-			staticOutput: staticOutput ? staticOutput.get() : undefined
+			staticOutput: staticOutput ? `${staticOutput.get()}\n` : undefined
 		};
 	};
 };

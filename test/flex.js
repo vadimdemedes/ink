@@ -10,7 +10,7 @@ test('grow equally', t => {
 		</Box>
 	);
 
-	t.is(output, 'A  B\n');
+	t.is(output, 'A  B');
 });
 
 test('grow one element', t => {
@@ -21,7 +21,7 @@ test('grow one element', t => {
 		</Box>
 	);
 
-	t.is(output, 'A    B\n');
+	t.is(output, 'A    B');
 });
 
 test('dont shrink', t => {
@@ -37,7 +37,7 @@ test('dont shrink', t => {
 		</Box>
 	);
 
-	t.is(output, 'A     B     C\n');
+	t.is(output, 'A     B     C');
 });
 
 test('shrink equally', t => {
@@ -53,5 +53,5 @@ test('shrink equally', t => {
 		</Box>
 	);
 
-	t.is(output, 'A    B   C\n');
+	t.is(output, 'A    B   C');
 });

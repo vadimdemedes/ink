@@ -5,7 +5,7 @@ import {Box, renderToString} from '..';
 test('margin', t => {
 	const output = renderToString(<Box margin={2}>X</Box>);
 
-	t.is(output, '\n\n  X\n\n\n');
+	t.is(output, '\n\n  X\n\n');
 });
 
 test('margin X', t => {
@@ -15,31 +15,31 @@ test('margin X', t => {
 		</Box>
 	);
 
-	t.is(output, '  X  Y\n');
+	t.is(output, '  X  Y');
 });
 
 test('margin Y', t => {
 	const output = renderToString(<Box marginY={2}>X</Box>);
 
-	t.is(output, '\n\nX\n\n\n');
+	t.is(output, '\n\nX\n\n');
 });
 
 test('margin top', t => {
 	const output = renderToString(<Box marginTop={2}>X</Box>);
 
-	t.is(output, '\n\nX\n');
+	t.is(output, '\n\nX');
 });
 
 test('margin bottom', t => {
 	const output = renderToString(<Box marginBottom={2}>X</Box>);
 
-	t.is(output, 'X\n\n\n');
+	t.is(output, 'X\n\n');
 });
 
 test('margin left', t => {
 	const output = renderToString(<Box marginLeft={2}>X</Box>);
 
-	t.is(output, '  X\n');
+	t.is(output, '  X');
 });
 
 test('margin right', t => {
@@ -49,7 +49,7 @@ test('margin right', t => {
 		</Box>
 	);
 
-	t.is(output, 'X  Y\n');
+	t.is(output, 'X  Y');
 });
 
 test('nested margin', t => {
@@ -59,11 +59,11 @@ test('nested margin', t => {
 		</Box>
 	);
 
-	t.is(output, '\n\n\n\n    X\n\n\n\n\n');
+	t.is(output, '\n\n\n\n    X\n\n\n\n');
 });
 
 test('margin with multiline string', t => {
 	const output = renderToString(<Box margin={2}>{'A\nB'}</Box>);
 
-	t.is(output, '\n\n  A\n  B\n\n\n');
+	t.is(output, '\n\n  A\n  B\n\n');
 });
