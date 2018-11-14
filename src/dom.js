@@ -31,7 +31,8 @@ export const setAttribute = (node, key, value) => {
 	node.attributes[key] = value;
 };
 
-export const createTextNode = text => ({
-	nodeName: '#text',
-	nodeValue: text
-});
+export const createTextNode = text => {
+	const textNode = createNode('span');
+	textNode.textContent = text;
+	return textNode;
+};

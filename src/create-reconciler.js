@@ -10,14 +10,7 @@ import {
 
 const applyProps = (node, props) => {
 	for (const [key, value] of Object.entries(props)) {
-		if (key === 'children') {
-			if (typeof value === 'string' || typeof value === 'number') {
-				// Text node must be wrapped in another node, so that text can be aligned within container
-				const textElement = createNode('span');
-				textElement.textContent = value;
-				appendChildNode(node, textElement);
-			}
-		} else if (key === 'style') {
+		if (key === 'style') {
 			Object.assign(node.style, value);
 		} else if (key === 'unstable__transformChildren') {
 			node.unstable__transformChildren = value; // eslint-disable-line camelcase
@@ -39,9 +32,7 @@ export default onRender => {
 		prepareForCommit: () => {},
 		resetAfterCommit: () => {},
 		getChildHostContext: () => childHostContext,
-		shouldSetTextContent: (type, props) => {
-			return typeof props.children === 'string' || typeof props.children === 'number';
-		},
+		shouldSetTextContent: () => false,
 		createInstance: (type, newProps) => {
 			const node = createNode(type);
 			applyProps(node, newProps);
