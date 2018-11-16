@@ -70,6 +70,27 @@ const applyPaddingStyles = (node, style) => {
 	}
 };
 
+const applyBorderStyles = (node, style) => {
+	if (style.borderTop) {
+		node.setBorder(Yoga.EDGE_TOP, style.borderTop);
+	}
+	if (style.borderRight) {
+		node.setBorder(Yoga.EDGE_RIGHT, style.borderRight);
+	}
+	if (style.borderBottom) {
+		node.setBorder(Yoga.EDGE_BOTTOM, style.borderBottom);
+	}
+	if (style.borderLeft) {
+		node.setBorder(Yoga.EDGE_LEFT, style.borderLeft);
+	}
+	if (style.border) {
+		node.setBorder(Yoga.EDGE_TOP, style.border);
+		node.setBorder(Yoga.EDGE_RIGHT, style.border);
+		node.setBorder(Yoga.EDGE_BOTTOM, style.border);
+		node.setBorder(Yoga.EDGE_LEFT, style.border);
+	}
+};
+
 const applyFlexStyles = (node, style) => {
 	if (style.flexGrow) {
 		node.setFlexGrow(style.flexGrow);
@@ -137,5 +158,6 @@ const applyFlexStyles = (node, style) => {
 export default (node, style = {}) => {
 	applyMarginStyles(node, style);
 	applyPaddingStyles(node, style);
+	applyBorderStyles(node, style);
 	applyFlexStyles(node, style);
 };

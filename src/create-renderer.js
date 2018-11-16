@@ -93,6 +93,60 @@ const renderNodeToOutput = (node, output, offsetX = 0, offsetY = 0, {transformer
 	const x = offsetX + yogaNode.getComputedLeft();
 	const y = offsetY + yogaNode.getComputedTop();
 
+	const width = yogaNode.getComputedWidth();
+	const padding = yogaNode.getComputedPadding(0);
+	const margin = yogaNode.getComputedMargin(0);
+	const borderTop = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
+	const borderRight = yogaNode.getComputedBorder(Yoga.EDGE_RIGHT);
+	const borderBottom = yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
+	const borderLeft = yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
+	const layout = yogaNode.getComputedLayout();
+
+	const border = {
+		top: borderTop,
+		right: borderRight,
+		bottom: borderBottom,
+		left: borderLeft
+	};
+
+	if (borderTop > 0) {
+		output.write(x, layout.top, "-".repeat(width), {
+			transformers
+		});
+	}
+	if (borderBottom > 0) {
+		output.write(x, y + layout.height, "-".repeat(width), {
+			transformers
+		});
+	}
+	if (borderLeft > 0) {
+		output.write(
+			x,
+			y,
+			"|"
+				.repeat(layout.height)
+				.split("")
+				.join("\n"),
+			{
+				transformers
+			}
+		);
+	}
+
+	if (borderRight > 0) {
+		output.write(
+			x + width,
+			y,
+			"|"
+				.repeat(layout.height)
+				.split("")
+				.join("\n"),
+			{
+				transformers
+			}
+		);
+	}
+
 	// Transformers are functions that transform final text output of each component
 	// See Output class for logic that applies transformers
 	let newTransformers = transformers;
