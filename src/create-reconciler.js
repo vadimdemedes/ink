@@ -8,27 +8,6 @@ import {
 	setAttribute
 } from './dom';
 
-const applyProps = (node, props) => {
-	for (const [key, value] of Object.entries(props)) {
-		if (key === 'children') {
-			if (typeof value === 'string' || typeof value === 'number') {
-				// Text node must be wrapped in another node, so that text can be aligned within container
-				const textElement = createNode('span');
-				textElement.textContent = value;
-				appendChildNode(node, textElement);
-			}
-		} else if (key === 'style') {
-			Object.assign(node.style, value);
-		} else if (key === 'unstable__transformChildren') {
-			node.unstable__transformChildren = value; // eslint-disable-line camelcase
-		} else if (key === 'static') {
-			node.static = true;
-		} else {
-			setAttribute(node, key, value);
-		}
-	}
-};
-
 export default onRender => {
 	const rootHostContext = {};
 	const childHostContext = {};
@@ -44,7 +23,25 @@ export default onRender => {
 		},
 		createInstance: (type, newProps) => {
 			const node = createNode(type);
-			applyProps(node, newProps);
+
+			for (const [key, value] of Object.entries(newProps)) {
+				if (key === 'children') {
+					if (typeof value === 'string' || typeof value === 'number') {
+						// Text node must be wrapped in another node, so that text can be aligned within container
+						const textElement = createNode('span');
+						textElement.textContent = value;
+						appendChildNode(node, textElement);
+					}
+				} else if (key === 'style') {
+					Object.assign(node.style, value);
+				} else if (key === 'unstable__transformChildren') {
+					node.unstable__transformChildren = value; // eslint-disable-line camelcase
+				} else if (key === 'static') {
+					node.static = true;
+				} else {
+					setAttribute(node, key, value);
+				}
+			}
 
 			return node;
 		},
@@ -77,7 +74,22 @@ export default onRender => {
 		},
 		prepareUpdate: () => true,
 		commitUpdate: (node, updatePayload, type, oldProps, newProps) => {
-			applyProps(node, newProps);
+			for (const [key, value] of Object.entries(newProps)) {
+				if (key === 'children') {
+					if (typeof value === 'string' || typeof value === 'number') {
+						node.childNodes[0].textContent = value;
+					}
+				} else if (key === 'style') {
+					Object.assign(node.style, value);
+				} else if (key === 'unstable__transformChildren') {
+					node.unstable__transformChildren = value; // eslint-disable-line camelcase
+				} else if (key === 'static') {
+					node.static = true;
+				} else {
+					setAttribute(node, key, value);
+				}
+			}
+
 			onRender();
 		},
 		commitTextUpdate: (node, oldText, newText) => {
