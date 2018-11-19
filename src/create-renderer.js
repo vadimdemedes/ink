@@ -110,7 +110,7 @@ const renderNodeToOutput = (node, output, offsetX = 0, offsetY = 0, {transformer
 	};
 
 	if (borderTop > 0) {
-		output.write(x, layout.top, "-".repeat(width), {
+		output.write(x, y, "-".repeat(width), {
 			transformers
 		});
 	}
