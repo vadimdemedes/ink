@@ -1,9 +1,9 @@
 <h1 align="center">
-	<br>
-	<img width="192" alt="Ink" src="media/logo.png">
-	<br>
-	<br>
-	<br>
+  <br>
+  <img width="192" alt="Ink" src="media/logo.png">
+  <br>
+  <br>
+  <br>
 </h1>
 
 > React for CLIs. Build and test your CLI output using components.
@@ -21,43 +21,43 @@ $ npm install ink
 ## Usage
 
 ```jsx
-const {h, render, Component, Color } = require('ink');
+const {h, render, Component, Color} = require('ink');
 
 class Counter extends Component {
-	constructor() {
-		super();
+  constructor() {
+    super();
 
-		this.state = {
-			i: 0
-		};
-	}
+    this.state = {
+      i: 0
+    };
+  }
 
-	render() {
-		return (
-			<Color green>
-				{this.state.i} tests passed
-			</Color>
-		);
-	}
+  render() {
+    return (
+      <Color green>
+        {this.state.i} tests passed
+      </Color>
+    );
+  }
 
-	componentDidMount() {
-		this.timer = setInterval(() => {
-			this.setState({
-				i: this.state.i + 1
-			});
-		}, 100);
-	}
+  componentDidMount() {
+    this.timer = setInterval(() => {
+      this.setState({
+        i: this.state.i + 1
+      });
+    }, 100);
+  }
 
-	componentWillUnmount() {
-		clearInterval(this.timer);
-	}
+  componentWillUnmount() {
+    clearInterval(this.timer);
+  }
 }
 
 render(<Counter/>);
 ```
 
 <p align="center">
-	<img src="media/demo.svg" width="600">
+  <img src="media/demo.svg" width="600">
 </p>
 
 ## Useful Components
@@ -115,16 +115,16 @@ To ensure all examples work and you can begin your adventure with Ink, make sure
 
 ```json
 {
-	"babel": {
-		"plugins": [
-			[
-				"transform-react-jsx",
-				{
-					"pragma": "h"
-				}
-			]
-		]
-	}
+  "babel": {
+    "plugins": [
+      [
+        "transform-react-jsx",
+        {
+          "pragma": "h"
+        }
+      ]
+    ]
+  }
 }
 ```
 
@@ -161,36 +161,36 @@ Default: `process.stdout`
 const {h, render, Component} = require('ink');
 
 class Counter extends Component {
-	constructor() {
-		super();
+  constructor() {
+    super();
 
-		this.state = {
-			i: 0
-		};
-	}
+    this.state = {
+      i: 0
+    };
+  }
 
-	render(props, state) {
-		return `Iteration #${state.i}`;
-	}
+  render(props, state) {
+    return `Iteration #${state.i}`;
+  }
 
-	componentDidMount() {
-		this.timer = setInterval(() => {
-			this.setState({
-				i: this.state.i + 1
-			});
-		}, 100);
-	}
+  componentDidMount() {
+    this.timer = setInterval(() => {
+      this.setState({
+        i: this.state.i + 1
+      });
+    }, 100);
+  }
 
-	componentWillUnmount() {
-		clearInterval(this.timer);
-	}
+  componentWillUnmount() {
+    clearInterval(this.timer);
+  }
 }
 
 const unmount = render(<Counter/>);
 
 setTimeout(() => {
-	// Enough counting
-	unmount();
+  // Enough counting
+  unmount();
 }, 1000);
 ```
 
@@ -213,13 +213,13 @@ Similarly to React, there are two kinds of components: Stateful components (next
 
 ```js
 class Demo extends Component {
-	render(props, state, context) {
-		// props === this.props
-		// state === this.state
-		// context === this.context
+  render(props, state, context) {
+    // props === this.props
+    // state === this.state
+    // context === this.context
 
-		return 'Hello World';
-	}
+    return 'Hello World';
+  }
 }
 ```
 
@@ -227,13 +227,13 @@ If you need to extend the constructor to set the initial state or for other purp
 
 ```js
 constructor(props, context) {
-	super(props, context);
+  super(props, context);
 
-	this.state = {
-		i: 0
-	};
+  this.state = {
+    i: 0
+  };
 
-	// Other initialization
+  // Other initialization
 }
 ```
 
@@ -244,17 +244,17 @@ Every parent component can pass props to their children.
 
 ```jsx
 class Child extends Component {
-	render(props) {
-		// props === this.props
+  render(props) {
+    // props === this.props
 
-		return `Hello, ${props.name}`;
-	}
+    return `Hello, ${props.name}`;
+  }
 }
 
 class Parent extends Component {
-	render() {
-		return <Child name="Joe"/>;
-	}
+  render() {
+    return <Child name="Joe"/>;
+  }
 }
 ```
 
@@ -264,8 +264,8 @@ To set default props on specific component, use `defaultProps`:
 const Test = ({first, second}) => `${first} ${second}`;
 
 Test.defaultProps = {
-	first: 'Hello',
-	second: 'World'
+  first: 'Hello',
+  second: 'World'
 };
 
 // <Test/> => "Hello World"
@@ -279,8 +279,8 @@ Ink supports prop types out-of-the-box. All you have to do is set them in the sa
 const PropTypes = require('prop-types');
 
 Test.propTypes = {
-	first: PropTypes.string.isRequired,
-	second: PropTypes.string
+  first: PropTypes.string.isRequired,
+  second: PropTypes.string
 };
 ```
 
@@ -332,17 +332,17 @@ The state is accessible via `this.state` anywhere in the component, and it's als
 
 ```js
 class Demo extends Component {
-	constructor(props, context) {
-		super(props, context);
+  constructor(props, context) {
+    super(props, context);
 
-		this.state = {
-			i: 0
-		}
-	}
+    this.state = {
+      i: 0
+    }
+  }
 
-	render(props, state) {
-		return `Iteration ${state.i}`;
-	}
+  render(props, state) {
+    return `Iteration ${state.i}`;
+  }
 }
 ```
 
@@ -363,23 +363,23 @@ Set a new state and update the output. Call callback when state is updated, if i
 
 ```js
 class Demo extends Component {
-	constructor(props, context) {
-		super(props, context);
+  constructor(props, context) {
+    super(props, context);
 
-		this.state = {
-			i: 0
-		}
-	}
+    this.state = {
+      i: 0
+    }
+  }
 
-	render(props, state) {
-		return `Iteration ${state.i}`;
-	}
+  render(props, state) {
+    return `Iteration ${state.i}`;
+  }
 
-	componentDidMount() {
-		this.setState({
-			i: this.state.i + 1
-		});
-	}
+  componentDidMount() {
+    this.setState({
+      i: this.state.i + 1
+    });
+  }
 }
 ```
 
@@ -390,9 +390,9 @@ The same effect of incrementing `i` could be achieved in a following way:
 
 ```js
 this.setState(state => {
-	return {
-		i: state.i + 1
-	}
+  return {
+    i: state.i + 1
+  }
 });
 ```
 
@@ -410,43 +410,43 @@ Prop's value must be a function, which receives a reference to a component as an
 
 ```jsx
 class Child extends Component {
-	render() {
-		return null;
-	}
+  render() {
+    return null;
+  }
 
-	hello() {
-		return 'Hello World';
-	}
+  hello() {
+    return 'Hello World';
+  }
 }
 
 class Parent extends Component {
-	constructor(props, context) {
-		super(props, context);
+  constructor(props, context) {
+    super(props, context);
 
-		this.state = {
-			message: 'Ink is awesome'
-		};
-	}
+    this.state = {
+      message: 'Ink is awesome'
+    };
+  }
 
-	render(props, state) {
-		const setChildRef = ref => {
-			this.childRef = ref;
-		};
+  render(props, state) {
+    const setChildRef = ref => {
+      this.childRef = ref;
+    };
 
-		return (
-			<div>
-				{message}
+    return (
+      <div>
+        {message}
 
-				<Child ref={setChildRef}/>
-			</div>
-		)
-	}
+        <Child ref={setChildRef}/>
+      </div>
+    )
+  }
 
-	componentDidMount() {
-		this.setState({
-			message: this.childRef.hello()
-		});
-	}
+  componentDidMount() {
+    this.setState({
+      message: this.childRef.hello()
+    });
+  }
 }
 ```
 
@@ -457,7 +457,7 @@ Every component can access context either via `this.context` or inside `render()
 
 ```js
 render(props, state, context) {
-	// context === this.context
+  // context === this.context
 }
 ```
 
@@ -465,21 +465,21 @@ To add new entries to context, add `getChildContext()` method to your component:
 
 ```js
 class Child extends Component {
-	render() {
-		return this.context.message;
-	}
+  render() {
+    return this.context.message;
+  }
 }
 
 class Parent extends Component {
-	getChildContext() {
-		return {
-			message: 'Hello World'
-		};
-	}
+  getChildContext() {
+    return {
+      message: 'Hello World'
+    };
+  }
 
-	render() {
-		return <Child/>;
-	}
+  render() {
+    return <Child/>;
+  }
 }
 ```
 
@@ -491,9 +491,9 @@ Using stateful components:
 
 ```js
 class Demo extends Component {
-	render(props, state, context) {
-		return 'Hello World';
-	}
+  render(props, state, context) {
+    return 'Hello World';
+  }
 }
 ```
 
@@ -513,11 +513,11 @@ The only difference between `<div>` and `<span>` is that `<div>` inserts a newli
 
 ```jsx
 const Demo = (
-	<div>
-		<A/>
-		<B/>
-		<C/>
-	</div>
+  <div>
+    <A/>
+    <B/>
+    <C/>
+  </div>
 );
 ```
 
@@ -525,11 +525,11 @@ There's also `<br/>`, which serves the same purpose as on the web - a newline.
 
 ```jsx
 const Demo = (
-	<div>
-		Line 1
-		<br/>
-		Line 2
-	</div>
+  <div>
+    Line 1
+    <br/>
+    Line 2
+  </div>
 );
 ```
 
@@ -539,11 +539,11 @@ Ink also supports Fragments for returning multiple children from a component's r
 const {h, Fragment} = require('ink');
 
 render(
-	<Fragment>
-		<A/>
-		<B/>
-		<C/>
-	</Fragment>
+  <Fragment>
+    <A/>
+    <B/>
+    <C/>
+  </Fragment>
 );
 ```
 
@@ -553,11 +553,11 @@ Or using the shorthand syntax:
 const {h} = require('ink');
 
 render(
-	<>
-		<A/>
-		<B/>
-		<C/>
-	</>
+  <>
+    <A/>
+    <B/>
+    <C/>
+  </>
 );
 ```
 
@@ -565,17 +565,17 @@ To use the Fragments make sure you have `pragmaFrag` in your configuration:
 
 ```json
 {
-	"babel": {
-		"plugins": [
-			[
-				"@babel/plugin-transform-react-jsx",
-				{
-					"pragma": "h",
-					"pragmaFrag": "h.Fragment"
-				}
-			]
-		]
-	}
+  "babel": {
+    "plugins": [
+      [
+        "@babel/plugin-transform-react-jsx",
+        {
+          "pragma": "h",
+          "pragmaFrag": "h.Fragment"
+        }
+      ]
+    ]
+  }
 }
 ```
 
@@ -587,11 +587,11 @@ The `<Color>` compoment is a simple wrapper around [the `chalk` API](https://git
 import {Color} from 'ink';
 
 <Color rgb={[255, 255, 255]} bgKeyword="magenta">
-	Hello!
+  Hello!
 </Color>
 
 <Color hex="#000000" bgHex="#FFFFFF">
-	Hey there
+  Hey there
 </Color>
 ```
 
@@ -601,11 +601,11 @@ The `<Bold>` and `<Underline>` components render their children bolded and under
 import {Bold, Underline} from 'ink';
 
 <Bold>
-	I am bold
+  I am bold
 </Bold>
 
 <Underline>
-	I am underlined
+  I am underlined
 </Underline>
 ```
 
