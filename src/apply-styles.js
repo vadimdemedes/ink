@@ -37,36 +37,36 @@ const applyMarginStyles = (node, style) => {
 
 const applyPaddingStyles = (node, style) => {
 	if (style.padding) {
-		node.setMargin(Yoga.EDGE_TOP, style.padding);
-		node.setMargin(Yoga.EDGE_BOTTOM, style.padding);
-		node.setMargin(Yoga.EDGE_LEFT, style.padding);
-		node.setMargin(Yoga.EDGE_RIGHT, style.padding);
+		node.setPadding(Yoga.EDGE_TOP, style.padding);
+		node.setPadding(Yoga.EDGE_BOTTOM, style.padding);
+		node.setPadding(Yoga.EDGE_LEFT, style.padding);
+		node.setPadding(Yoga.EDGE_RIGHT, style.padding);
 	}
 
 	if (style.paddingX) {
-		node.setMargin(Yoga.EDGE_LEFT, style.paddingX);
-		node.setMargin(Yoga.EDGE_RIGHT, style.paddingX);
+		node.setPadding(Yoga.EDGE_LEFT, style.paddingX);
+		node.setPadding(Yoga.EDGE_RIGHT, style.paddingX);
 	}
 
 	if (style.paddingY) {
-		node.setMargin(Yoga.EDGE_TOP, style.paddingY);
-		node.setMargin(Yoga.EDGE_BOTTOM, style.paddingY);
+		node.setPadding(Yoga.EDGE_TOP, style.paddingY);
+		node.setPadding(Yoga.EDGE_BOTTOM, style.paddingY);
 	}
 
 	if (style.paddingTop) {
-		node.setMargin(Yoga.EDGE_TOP, style.paddingTop);
+		node.setPadding(Yoga.EDGE_TOP, style.paddingTop);
 	}
 
 	if (style.paddingBottom) {
-		node.setMargin(Yoga.EDGE_BOTTOM, style.paddingBottom);
+		node.setPadding(Yoga.EDGE_BOTTOM, style.paddingBottom);
 	}
 
 	if (style.paddingLeft) {
-		node.setMargin(Yoga.EDGE_LEFT, style.paddingLeft);
+		node.setPadding(Yoga.EDGE_LEFT, style.paddingLeft);
 	}
 
 	if (style.paddingRight) {
-		node.setMargin(Yoga.EDGE_RIGHT, style.paddingRight);
+		node.setPadding(Yoga.EDGE_RIGHT, style.paddingRight);
 	}
 };
 

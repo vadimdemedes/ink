@@ -102,20 +102,13 @@ const renderNodeToOutput = (node, output, offsetX = 0, offsetY = 0, {transformer
 	const borderLeft = yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
 	const layout = yogaNode.getComputedLayout();
 
-	const border = {
-		top: borderTop,
-		right: borderRight,
-		bottom: borderBottom,
-		left: borderLeft
-	};
-
 	if (borderTop > 0) {
-		output.write(x, y, "-".repeat(width), {
+		output.write(x, y, '-'.repeat(width), {
 			transformers
 		});
 	}
 	if (borderBottom > 0) {
-		output.write(x, y + layout.height, "-".repeat(width), {
+		output.write(x, y + layout.height - 1, '-'.repeat(width), {
 			transformers
 		});
 	}
@@ -123,10 +116,10 @@ const renderNodeToOutput = (node, output, offsetX = 0, offsetY = 0, {transformer
 		output.write(
 			x,
 			y,
-			"|"
+			'|'
 				.repeat(layout.height)
-				.split("")
-				.join("\n"),
+				.split('')
+				.join('\n'),
 			{
 				transformers
 			}
@@ -137,10 +130,10 @@ const renderNodeToOutput = (node, output, offsetX = 0, offsetY = 0, {transformer
 		output.write(
 			x + width,
 			y,
-			"|"
+			'|'
 				.repeat(layout.height)
-				.split("")
-				.join("\n"),
+				.split('')
+				.join('\n'),
 			{
 				transformers
 			}
