@@ -22,6 +22,8 @@ export default class Box extends PureComponent {
 		borderBottom: PropTypes.number,
 		borderLeft: PropTypes.number,
 		border: PropTypes.number,
+		borderStyle: PropTypes.string,
+		borderColor: PropTypes.string,
 		width: PropTypes.number,
 		height: PropTypes.number,
 		flexGrow: PropTypes.number,

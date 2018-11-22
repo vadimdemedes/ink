@@ -1,5 +1,7 @@
 import Yoga from 'yoga-layout-prebuilt';
 import widestLine from 'widest-line';
+import cliBoxes from 'cli-boxes';
+import chalk from 'chalk';
 import applyStyles from './apply-styles';
 import Output from './output';
 import {createNode, appendChildNode} from './dom';
@@ -94,6 +96,7 @@ const renderNodeToOutput = (node, output, offsetX = 0, offsetY = 0, {transformer
 	const y = offsetY + yogaNode.getComputedTop();
 
 	const width = yogaNode.getComputedWidth();
+	const height = yogaNode.getComputedWidth();
 	const padding = yogaNode.getComputedPadding(0);
 	const margin = yogaNode.getComputedMargin(0);
 	const borderTop = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
@@ -102,24 +105,29 @@ const renderNodeToOutput = (node, output, offsetX = 0, offsetY = 0, {transformer
 	const borderLeft = yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
 	const layout = yogaNode.getComputedLayout();
 
+	const borderStyle = node.style.borderStyle || 'round'
+	const borderColor = node.style.borderColor ? chalk[node.style.borderColor] : (a) => (a)
+	const box = cliBoxes[borderStyle];
+
+
 	if (borderTop > 0) {
-		output.write(x, y, '-'.repeat(width), {
+		const horizontal = box.horizontal.repeat(width - 2);
+		output.write(x, y, borderColor(box.topLeft + horizontal + box.topRight), {
 			transformers
 		});
 	}
 	if (borderBottom > 0) {
-		output.write(x, y + layout.height - 1, '-'.repeat(width), {
+			const horizontal = box.horizontal.repeat(width - 2);
+		output.write(x, y + layout.height - 1, borderColor(box.bottomLeft + horizontal + box.bottomRight), {
 			transformers
 		});
 	}
 	if (borderLeft > 0) {
+		const vertical = box.vertical.repeat(layout.height - 2).split('').join('\n');
 		output.write(
 			x,
-			y,
-			'|'
-				.repeat(layout.height)
-				.split('')
-				.join('\n'),
+			y + 1,
+			borderColor(vertical),
 			{
 				transformers
 			}
@@ -127,13 +135,11 @@ const renderNodeToOutput = (node, output, offsetX = 0, offsetY = 0, {transformer
 	}
 
 	if (borderRight > 0) {
+		const vertical = box.vertical.repeat(layout.height - 2).split('').join('\n');
 		output.write(
-			x + width,
-			y,
-			'|'
-				.repeat(layout.height)
-				.split('')
-				.join('\n'),
+			x + width - 1,
+			y + 1,
+			borderColor(vertical),
 			{
 				transformers
 			}
