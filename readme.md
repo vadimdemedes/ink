@@ -11,11 +11,12 @@
 
 [![Build Status](https://travis-ci.org/vadimdemedes/ink.svg?branch=next)](https://travis-ci.org/vadimdemedes/ink)
 
+This is a temporary fork of [ink#next](https://github.com/vadimdemedes/ink/tree/next)
 
 ## Install
 
 ```
-$ npm install ink@next
+$ npm install @terrastack/ink
 ```
 
 
@@ -62,6 +63,8 @@ render(<Counter/>);
 
 
 ## Useful Components
+
+They probably don't work with `ink#next` out of the box
 
 - [ink-redux](https://github.com/vadimdemedes/ink-redux) - Redux bindings.
 - [ink-text-input](https://github.com/vadimdemedes/ink-text-input) - Text input.
