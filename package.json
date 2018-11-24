@@ -1,117 +1,117 @@
 {
-  "name": "ink",
-  "version": "2.0.0-9",
-  "description": "React for CLI",
-  "license": "MIT",
-  "repository": "vadimdemedes/ink",
-  "author": {
-    "name": "vdemedes",
-    "email": "vdemedes@gmail.com",
-    "url": "github.com/vadimdemedes"
-  },
-  "engines": {
-    "node": ">=8"
-  },
-  "scripts": {
-    "build": "babel src --out-dir build",
-    "prepublish": "npm run build",
-    "test": "xo && ava",
-    "pretest": "npm run build",
-    "cast": "svg-term --command 'node media/demo.js' --out media/demo.svg --from=100 --window --width=50 --height=8 --term=iterm2 --profile=Snazzy"
-  },
-  "main": "build",
-  "files": [
-    "build"
-  ],
-  "keywords": [
-    "react",
-    "cli",
-    "jsx",
-    "stdout",
-    "components",
-    "command-line",
-    "preact",
-    "redux",
-    "print",
-    "render",
-    "colors",
-    "text"
-  ],
-  "dependencies": {
-    "arrify": "^1.0.1",
-    "chalk": "^2.4.1",
-    "cli-boxes": "^1.0.0",
-    "cli-cursor": "^2.1.0",
-    "lodash.throttle": "^4.1.1",
-    "log-update": "^2.3.0",
-    "prop-types": "^15.6.2",
-    "react-reconciler": "^0.17.0",
-    "slice-ansi": "^1.0.0",
-    "string-length": "^2.0.0",
-    "widest-line": "^2.0.0",
-    "yoga-layout-prebuilt": "^1.9.3"
-  },
-  "devDependencies": {
-    "@babel/cli": "^7.1.2",
-    "@babel/core": "^7.1.2",
-    "@babel/plugin-proposal-class-properties": "^7.1.0",
-    "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
-    "@babel/preset-react": "^7.0.0",
-    "ava": "1.0.0-beta.8",
-    "babel-eslint": "^10.0.1",
-    "eslint-config-xo-react": "^0.17.0",
-    "eslint-plugin-react": "^7.11.1",
-    "react": "^16.6.1",
-    "strip-ansi": "^4.0.0",
-    "svg-term-cli": "^2.1.1",
-    "xo": "^0.23.0"
-  },
-  "babel": {
-    "plugins": [
-      "@babel/plugin-proposal-class-properties",
-      "@babel/plugin-proposal-object-rest-spread",
-      "@babel/plugin-transform-modules-commonjs"
-    ],
-    "presets": [
-      "@babel/preset-react"
-    ]
-  },
-  "ava": {
-    "babel": {
-      "testOptions": {
-        "plugins": [
-          "@babel/plugin-proposal-class-properties",
-          "@babel/plugin-proposal-object-rest-spread",
-          "@babel/plugin-transform-modules-commonjs"
-        ],
-        "presets": [
-          "@babel/preset-react"
-        ]
-      }
-    }
-  },
-  "xo": {
-    "parser": "babel-eslint",
-    "extends": [
-      "xo-react"
-    ],
-    "plugins": [
-      "react"
-    ],
-    "overrides": [
-      {
-        "files": "src/components/*.js",
-        "rules": {
-          "unicorn/filename-case": 0,
-          "react/require-default-props": 1
-        }
-      },
-      {
-        "files": "test/*.js",
-        "rules": {
-          "import/default": 0
-        }
-      }
-    ]
-  }
+	"name": "@terrastack@ink",
+	"version": "2.0.0",
+	"description": "React for CLI",
+	"license": "MIT",
+	"repository": "TerraStackIO/ink",
+	"author": {
+		"name": "skorfmann",
+		"email": "sebastian@korfmann.net",
+		"url": "github.com/skorfmann"
+	},
+	"engines": {
+		"node": ">=8"
+	},
+	"scripts": {
+		"build": "babel src --out-dir build",
+		"prepublish": "npm run build",
+		"test": "xo && ava",
+		"pretest": "npm run build",
+		"cast": "svg-term --command 'node media/demo.js' --out media/demo.svg --from=100 --window --width=50 --height=8 --term=iterm2 --profile=Snazzy"
+	},
+	"main": "build",
+	"files": [
+		"build"
+	],
+	"keywords": [
+		"react",
+		"cli",
+		"jsx",
+		"stdout",
+		"components",
+		"command-line",
+		"preact",
+		"redux",
+		"print",
+		"render",
+		"colors",
+		"text"
+	],
+	"dependencies": {
+		"arrify": "^1.0.1",
+		"chalk": "^2.4.1",
+		"cli-boxes": "^1.0.0",
+		"cli-cursor": "^2.1.0",
+		"lodash.throttle": "^4.1.1",
+		"log-update": "^2.3.0",
+		"prop-types": "^15.6.2",
+		"react-reconciler": "^0.17.0",
+		"slice-ansi": "^1.0.0",
+		"string-length": "^2.0.0",
+		"widest-line": "^2.0.0",
+		"yoga-layout-prebuilt": "^1.9.3"
+	},
+	"devDependencies": {
+		"@babel/cli": "^7.1.2",
+		"@babel/core": "^7.1.2",
+		"@babel/plugin-proposal-class-properties": "^7.1.0",
+		"@babel/plugin-proposal-object-rest-spread": "^7.0.0",
+		"@babel/preset-react": "^7.0.0",
+		"ava": "1.0.0-beta.8",
+		"babel-eslint": "^10.0.1",
+		"eslint-config-xo-react": "^0.17.0",
+		"eslint-plugin-react": "^7.11.1",
+		"react": "^16.6.1",
+		"strip-ansi": "^4.0.0",
+		"svg-term-cli": "^2.1.1",
+		"xo": "^0.23.0"
+	},
+	"babel": {
+		"plugins": [
+			"@babel/plugin-proposal-class-properties",
+			"@babel/plugin-proposal-object-rest-spread",
+			"@babel/plugin-transform-modules-commonjs"
+		],
+		"presets": [
+			"@babel/preset-react"
+		]
+	},
+	"ava": {
+		"babel": {
+			"testOptions": {
+				"plugins": [
+					"@babel/plugin-proposal-class-properties",
+					"@babel/plugin-proposal-object-rest-spread",
+					"@babel/plugin-transform-modules-commonjs"
+				],
+				"presets": [
+					"@babel/preset-react"
+				]
+			}
+		}
+	},
+	"xo": {
+		"parser": "babel-eslint",
+		"extends": [
+			"xo-react"
+		],
+		"plugins": [
+			"react"
+		],
+		"overrides": [
+			{
+				"files": "src/components/*.js",
+				"rules": {
+					"unicorn/filename-case": 0,
+					"react/require-default-props": 1
+				}
+			},
+			{
+				"files": "test/*.js",
+				"rules": {
+					"import/default": 0
+				}
+			}
+		]
+	}
 }
