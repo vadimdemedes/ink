@@ -105,10 +105,10 @@ const renderNodeToOutput = (node, output, offsetX = 0, offsetY = 0, {transformer
 	const borderLeft = yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
 	const layout = yogaNode.getComputedLayout();
 
-	const borderStyle = node.style.borderStyle || 'round'
-	const borderColor = node.style.borderColor ? chalk[node.style.borderColor] : (a) => (a)
+	const styles = node.style || {}
+	const borderStyle = styles.borderStyle || 'round'
+	const borderColor = styles.borderColor ? chalk[styles.borderColor] : (a) => (a)
 	const box = cliBoxes[borderStyle];
-
 
 	if (borderTop > 0) {
 		const horizontal = box.horizontal.repeat(width - 2);
