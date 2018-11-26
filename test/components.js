@@ -47,6 +47,12 @@ test('text with fragment', t => {
 	t.is(output, 'Hello World');
 });
 
+test('number', t => {
+	const output = renderToString(<Box>{1}</Box>);
+
+	t.is(output, '1');
+});
+
 test('fragment', t => {
 	const output = renderToString(<React.Fragment>Hello World</React.Fragment>);
 

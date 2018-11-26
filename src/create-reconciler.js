@@ -29,7 +29,7 @@ export default onRender => {
 					if (typeof value === 'string' || typeof value === 'number') {
 						// Text node must be wrapped in another node, so that text can be aligned within container
 						const textElement = createNode('span');
-						textElement.textContent = value;
+						textElement.textContent = String(value);
 						appendChildNode(node, textElement);
 					}
 				} else if (key === 'style') {
@@ -77,7 +77,7 @@ export default onRender => {
 			for (const [key, value] of Object.entries(newProps)) {
 				if (key === 'children') {
 					if (typeof value === 'string' || typeof value === 'number') {
-						node.childNodes[0].textContent = value;
+						node.childNodes[0].textContent = String(value);
 					}
 				} else if (key === 'style') {
 					Object.assign(node.style, value);
