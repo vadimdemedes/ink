@@ -68,6 +68,10 @@ export default onRender => {
 			appendChildNode(parentNode, childNode);
 			onRender();
 		},
+		insertInContainerBefore: (parentNode, childNode, beforeNode) => {
+			insertBeforeNode(parentNode, childNode, beforeNode);
+			onRender();
+		},
 		removeChildFromContainer: (parentNode, childNode) => {
 			removeChildNode(parentNode, childNode);
 			onRender();
