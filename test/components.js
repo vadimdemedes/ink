@@ -1,6 +1,6 @@
 import React from 'react';
 import test from 'ava';
-import {Box, Static, renderToString} from '..';
+import {Box, renderToString} from '..';
 
 test('text', t => {
 	const output = renderToString(<Box>Hello World</Box>);
@@ -67,24 +67,4 @@ test('transform children', t => {
 	);
 
 	t.is(output, '[{test}]');
-});
-
-test('static output', t => {
-	const output = renderToString(
-		<Box>
-			<Static>
-				<Box paddingBottom={1} flexDirection="column">
-					<Box>A</Box>
-					<Box>B</Box>
-					<Box>C</Box>
-				</Box>
-			</Static>
-
-			<Box marginTop={1}>
-				X
-			</Box>
-		</Box>
-	);
-
-	t.is(output, 'A\nB\nC\n\n\nX');
 });

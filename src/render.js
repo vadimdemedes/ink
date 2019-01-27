@@ -3,7 +3,6 @@ import throttle from 'lodash.throttle';
 import logUpdate from './vendor/log-update';
 import createReconciler from './create-reconciler';
 import createRenderer from './create-renderer';
-import diffString from './diff-string';
 import {createNode} from './dom';
 import App from './components/App';
 
@@ -35,29 +34,17 @@ export default (node, options = {}) => {
 
 	// Store last output to only rerender when needed
 	let lastOutput = '';
-	let lastStaticOutput = '';
 
 	const onRender = () => {
 		if (ignoreRender) {
 			return;
 		}
 
-		const {output, staticOutput} = render(rootNode);
+		const output = render(rootNode);
 
 		if (options.debug) {
-			options.stdout.write((staticOutput || '') + output);
+			options.stdout.write(output);
 			return;
-		}
-
-		// If <Static> part of the output has changed, calculate the difference
-		// between the last <Static> output and log it to stdout.
-		// To ensure static output is cleanly rendered before main output, clear main output first
-		if (staticOutput && staticOutput !== lastStaticOutput) {
-			log.clear();
-			options.stdout.write(diffString(lastStaticOutput, staticOutput));
-			log(output);
-
-			lastStaticOutput = staticOutput;
 		}
 
 		if (output !== lastOutput) {
