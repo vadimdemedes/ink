@@ -1,5 +1,5 @@
 import React from 'react';
-import logUpdate from 'log-update';
+import logUpdate from './vendor/log-update';
 import throttle from 'lodash.throttle';
 import createReconciler from './create-reconciler';
 import createRenderer from './create-renderer';
