@@ -1,5 +1,6 @@
 'use strict';
 const React = require('react');
+const PropTypes = require('prop-types');
 const {Box, Color} = require('../..');
 
 const getBackgroundForStatus = status => {
@@ -25,7 +26,7 @@ const getBackgroundForStatus = status => {
 	}
 };
 
-const Test = ({ status, path }) => (
+const Test = ({status, path}) => (
 	<Box>
 		<Color {...getBackgroundForStatus(status)}>
 			{` ${status.toUpperCase()} `}
@@ -42,5 +43,10 @@ const Test = ({ status, path }) => (
 		</Box>
 	</Box>
 );
+
+Test.propTypes = {
+	status: PropTypes.string.isRequired,
+	path: PropTypes.string.isRequired
+};
 
 module.exports = Test;

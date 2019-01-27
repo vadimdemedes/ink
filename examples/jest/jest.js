@@ -1,10 +1,11 @@
-'use strict'
-const React = require('react')
-const PQueue = require('p-queue')
-const delay = require('delay')
-const ms = require('ms')
-const importJsx = require('import-jsx')
-const {Box, Text, Color, render} = require('../..')
+'use strict';
+const React = require('react');
+const PQueue = require('p-queue');
+const delay = require('delay');
+const ms = require('ms');
+const importJsx = require('import-jsx');
+const {Box, render} = require('../..');
+
 const Summary = importJsx('./summary');
 const Test = importJsx('./test');
 
@@ -18,22 +19,22 @@ const paths = [
 	'tests/delete-profile.js',
 	'tests/posts.js',
 	'tests/post.js',
-	'tests/comments.js',
-]
+	'tests/comments.js'
+];
 
 class Jest extends React.Component {
 	constructor() {
-		super()
+		super();
 
 		this.state = {
 			startTime: Date.now(),
 			completedTests: [],
 			runningTests: []
-		}
+		};
 	}
 
 	render() {
-		const { startTime, completedTests, runningTests } = this.state
+		const {startTime, completedTests, runningTests} = this.state;
 
 		return (
 			<Box flexDirection="column">
@@ -58,15 +59,15 @@ class Jest extends React.Component {
 					time={ms(Date.now() - startTime)}
 				/>
 			</Box>
-		)
+		);
 	}
 
 	componentDidMount() {
-		const queue = new PQueue({ concurrency: 4 })
+		const queue = new PQueue({concurrency: 4});
 
 		paths.forEach(path => {
-			queue.add(this.runTest.bind(this, path))
-		})
+			queue.add(this.runTest.bind(this, path));
+		});
 	}
 
 	async runTest(path) {
@@ -78,9 +79,9 @@ class Jest extends React.Component {
 					path
 				}
 			]
-		}))
+		}));
 
-		await delay(1000 * Math.random())
+		await delay(1000 * Math.random());
 
 		this.setState(prevState => ({
 			runningTests: prevState.runningTests.filter(test => test.path !== path),
@@ -91,8 +92,8 @@ class Jest extends React.Component {
 					path
 				}
 			]
-		}))
+		}));
 	}
 }
 
-render(<Jest/>, { debug: false })
+render(<Jest/>, {debug: false});

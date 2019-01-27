@@ -3,26 +3,8 @@
 const ansiEscapes = require('ansi-escapes');
 const cliCursor = require('cli-cursor');
 
-const getWidth = stream => {
-	const columns = stream.columns;
-
-	if (!columns) {
-		return 80;
-	}
-
-	// Windows appears to wrap a character early
-	// I hate Windows so much
-	if (process.platform === 'win32') {
-		return columns - 1;
-	}
-
-	return columns;
-};
-
 const main = (stream, options) => {
-	options = Object.assign({
-		showCursor: false
-	}, options);
+	options = {showCursor: false, ...options};
 
 	let prevLineCount = 0;
 
@@ -31,7 +13,7 @@ const main = (stream, options) => {
 			cliCursor.hide();
 		}
 
-		let out = [].join.call(arguments, ' ') + '\n';
+		const out = [].join.call(arguments, ' ') + '\n'; // eslint-disable-line prefer-rest-params
 		stream.write(ansiEscapes.eraseLines(prevLineCount) + out);
 		prevLineCount = out.split('\n').length;
 	};

@@ -1,6 +1,6 @@
 import React from 'react';
-import logUpdate from './vendor/log-update';
 import throttle from 'lodash.throttle';
+import logUpdate from './vendor/log-update';
 import createReconciler from './create-reconciler';
 import createRenderer from './create-renderer';
 import diffString from './diff-string';
