@@ -1,0 +1,3 @@
+tasks:
+- init: npm install
+  command: node media/demo.js

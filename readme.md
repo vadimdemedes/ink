@@ -60,6 +60,12 @@ render(<Counter/>);
 	<img src="media/demo.svg" width="600">
 </p>
 
+## Live Demo
+
+Play with the example above in a free pre-configured online workspace:
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/vadimdemedes/ink/blob/master/media/demo.js)
+
 ## Useful Components
 
 - [ink-redux](https://github.com/vadimdemedes/ink-redux) - Redux bindings.
