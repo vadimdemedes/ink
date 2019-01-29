@@ -1,5 +1,6 @@
 import React from 'react';
 import throttle from 'lodash.throttle';
+import ansiEscapes from 'ansi-escapes';
 import logUpdate from './vendor/log-update';
 import createReconciler from './create-reconciler';
 import createRenderer from './create-renderer';
@@ -48,7 +49,18 @@ export default (node, options = {}) => {
 		}
 
 		if (output !== lastOutput) {
-			log(output);
+			const lines = output.split('\n').length;
+
+			// There's no ability to erase lines beyond visible part of the terminal,
+			// so if height of output is larger than the height of terminal,
+			// Ink has to erase all terminal contents (including scrollback history)
+			if (lines > options.stdout.rows) {
+				log.clear();
+				options.stdout.write(ansiEscapes.clearTerminal + output);
+			} else {
+				log(output);
+			}
+
 			lastOutput = output;
 		}
 	};
