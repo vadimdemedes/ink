@@ -581,7 +581,7 @@ To use the Fragments make sure you have `pragmaFrag` in your configuration:
 
 You will also need [Babel v7.0.0-beta.31](https://github.com/babel/babel/releases/tag/v7.0.0-beta.31) or above, which means you will also need to upgrade any other tools that use Babel to their compatible versions, like [@babel/plugin-transform-react-jsx](https://www.npmjs.com/package/@babel/plugin-transform-react-jsx) and [@babel/core](https://www.npmjs.com/package/@babel/core).
 
-The `<Color>` compoment is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api) it supports all of the chalk methods as `props`.
+The `<Color>` component is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api) it supports all of the chalk methods as `props`.
 
 ```jsx
 import {Color} from 'ink';
