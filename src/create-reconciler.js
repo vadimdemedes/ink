@@ -16,7 +16,7 @@ export default onRender => {
 		now: Date.now,
 		getRootHostContext: () => rootHostContext,
 		prepareForCommit: () => {},
-		resetAfterCommit: () => {},
+		resetAfterCommit: onRender,
 		getChildHostContext: () => childHostContext,
 		shouldSetTextContent: (type, props) => {
 			return typeof props.children === 'string' || typeof props.children === 'number';
@@ -64,18 +64,9 @@ export default onRender => {
 		insertBefore: insertBeforeNode,
 		finalizeInitialChildren: () => {},
 		supportsMutation: true,
-		appendChildToContainer: (parentNode, childNode) => {
-			appendChildNode(parentNode, childNode);
-			onRender();
-		},
-		insertInContainerBefore: (parentNode, childNode, beforeNode) => {
-			insertBeforeNode(parentNode, childNode, beforeNode);
-			onRender();
-		},
-		removeChildFromContainer: (parentNode, childNode) => {
-			removeChildNode(parentNode, childNode);
-			onRender();
-		},
+		appendChildToContainer: appendChildNode,
+		insertInContainerBefore: insertBeforeNode,
+		removeChildFromContainer: removeChildNode,
 		prepareUpdate: () => true,
 		commitUpdate: (node, updatePayload, type, oldProps, newProps) => {
 			for (const [key, value] of Object.entries(newProps)) {
@@ -93,8 +84,6 @@ export default onRender => {
 					setAttribute(node, key, value);
 				}
 			}
-
-			onRender();
 		},
 		commitTextUpdate: (node, oldText, newText) => {
 			if (node.nodeName === '#text') {
@@ -102,13 +91,8 @@ export default onRender => {
 			} else {
 				node.textContent = newText;
 			}
-
-			onRender();
 		},
-		removeChild: (parentNode, childNode) => {
-			removeChildNode(parentNode, childNode);
-			onRender();
-		}
+		removeChild: removeChildNode
 	};
 
 	return ReactReconciler(hostConfig); // eslint-disable-line new-cap
