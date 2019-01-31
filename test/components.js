@@ -72,12 +72,10 @@ test('transform children', t => {
 test('static output', t => {
 	const output = renderToString(
 		<Box>
-			<Static>
-				<Box paddingBottom={1} flexDirection="column">
-					<Box>A</Box>
-					<Box>B</Box>
-					<Box>C</Box>
-				</Box>
+			<Static paddingBottom={1}>
+				<Box key="a">A</Box>
+				<Box key="b">B</Box>
+				<Box key="c">C</Box>
 			</Static>
 
 			<Box marginTop={1}>

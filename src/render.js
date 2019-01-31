@@ -1,10 +1,8 @@
 import React from 'react';
 import throttle from 'lodash.throttle';
-import ansiEscapes from 'ansi-escapes';
 import logUpdate from './vendor/log-update';
 import createReconciler from './create-reconciler';
 import createRenderer from './create-renderer';
-import diffString from './diff-string';
 import {createNode} from './dom';
 import App from './components/App';
 
@@ -30,6 +28,10 @@ export default (node, options = {}) => {
 	});
 
 	const log = logUpdate.create(options.stdout);
+	const throttledLog = options.debug ? log : throttle(log, {
+		leading: true,
+		trailing: true
+	});
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	let ignoreRender = false;
@@ -38,6 +40,10 @@ export default (node, options = {}) => {
 	let lastOutput = '';
 	let lastStaticOutput = '';
 
+	// This variable is used only in debug mode to store full static output
+	// so that it's rerendered every time, not just new static parts, like in non-debug mode
+	let fullStaticOutput = '';
+
 	const onRender = () => {
 		if (ignoreRender) {
 			return;
@@ -45,45 +51,36 @@ export default (node, options = {}) => {
 
 		const {output, staticOutput} = render(rootNode);
 
+		// If <Static> output isn't empty, it means new children have been added to it
+		const hasNewStaticOutput = staticOutput && staticOutput !== '\n' && staticOutput !== lastStaticOutput;
+
 		if (options.debug) {
-			options.stdout.write((staticOutput || '') + output);
+			if (hasNewStaticOutput) {
+				fullStaticOutput += staticOutput;
+				lastStaticOutput = staticOutput;
+			}
+
+			options.stdout.write(fullStaticOutput + output);
 			return;
 		}
 
-		// If <Static> part of the output has changed, calculate the difference
-		// between the last <Static> output and log it to stdout.
 		// To ensure static output is cleanly rendered before main output, clear main output first
-		if (staticOutput && staticOutput !== lastStaticOutput) {
+		if (hasNewStaticOutput) {
 			log.clear();
-			options.stdout.write(diffString(lastStaticOutput, staticOutput));
+			options.stdout.write(staticOutput);
 			log(output);
 
 			lastStaticOutput = staticOutput;
 		}
 
 		if (output !== lastOutput) {
-			const lines = output.split('\n').length;
-
-			// There's no ability to erase lines beyond visible part of the terminal,
-			// so if height of output is larger than the height of terminal,
-			// Ink has to erase all terminal contents (including scrollback history)
-			if (lines > options.stdout.rows) {
-				log.clear();
-				options.stdout.write(ansiEscapes.clearTerminal + output);
-			} else {
-				log(output);
-			}
+			throttledLog(output);
 
 			lastOutput = output;
 		}
 	};
 
-	const throttledRender = options.debug ? onRender : throttle(onRender, 50, {
-		leading: true,
-		trailing: true
-	});
-
-	const reconciler = options.stdout._inkReconciler || createReconciler(throttledRender);
+	const reconciler = options.stdout._inkReconciler || createReconciler(onRender);
 
 	if (!options.stdout._ink) {
 		options.stdout._ink = true;
@@ -100,12 +97,8 @@ export default (node, options = {}) => {
 	reconciler.updateContainer(tree, options.stdout._inkContainer);
 
 	return () => {
-		if (typeof throttledRender.cancel === 'function') {
-			throttledRender.cancel();
-			onRender();
-			log.done();
-		}
-
+		onRender();
+		log.done();
 		ignoreRender = true;
 		reconciler.updateContainer(null, options.stdout._inkContainer);
 	};

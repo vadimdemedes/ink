@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
 // This component allows developers to render output before main output from all the other components.
@@ -11,14 +11,60 @@ import PropTypes from 'prop-types';
 // A good example of where this component might be useful is interface like Jest's.
 // When running tests, Jest keeps writing completed tests to output, while continuously
 // rendering test stats at the end of the output.
-const Static = ({children}) => (
-	<div static>
-		{children}
-	</div>
-);
+export default class Static extends Component {
+	static propTypes = {
+		children: PropTypes.node
+	}
 
-Static.propTypes = {
-	children: PropTypes.node
-};
+	constructor() {
+		super();
 
-export default Static;
+		this.state = {
+			ignoreKeys: []
+		};
+	}
+
+	render() {
+		const {children, ...otherProps} = this.props;
+
+		const newChildren = React.Children.toArray(children).filter(child => {
+			return !this.state.ignoreKeys.includes(child.key);
+		});
+
+		return (
+			<div static style={otherProps}>
+				{newChildren}
+			</div>
+		);
+	}
+
+	componentDidMount() {
+		this.saveRenderedKeys();
+	}
+
+	componentDidUpdate(prevProps, prevState) {
+		if (prevState.ignoreKeys === this.state.ignoreKeys) {
+			this.saveRenderedKeys();
+		}
+	}
+
+	shouldComponentUpdate(nextProps, nextState) {
+		return this.state.ignoreKeys === nextState.ignoreKeys;
+	}
+
+	saveRenderedKeys() {
+		this.setState(prevState => {
+			const newKeys = React.Children
+				.toArray(this.props.children)
+				.map(child => child.key)
+				.filter(key => !prevState.ignoreKeys.includes(key));
+
+			return {
+				ignoreKeys: [
+					...prevState.ignoreKeys,
+					...newKeys
+				]
+			};
+		});
+	}
+}
