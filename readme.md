@@ -544,6 +544,8 @@ Components passed to `<Static>` as children will be written to stdout only once 
 `<Static>` output comes first, before any other output from your components, no matter where it is in the tree.
 In order for this mechanism to work properly, at most one `<Static>` component must be present in your node tree and components that were rendered must never update their output. Ink will detect new children appended to `<Static>` and render them to stdout.
 
+**Note:** `<Static>` accepts only an array of children and each of them must have a unique key.
+
 Example use case for this component is Jest's output:
 
 ![](https://jestjs.io/img/content/feature-fast.png)
