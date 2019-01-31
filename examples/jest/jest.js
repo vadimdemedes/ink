@@ -4,7 +4,7 @@ const PQueue = require('p-queue');
 const delay = require('delay');
 const ms = require('ms');
 const importJsx = require('import-jsx');
-const {Box, render} = require('../..');
+const {Static, Box, render} = require('../..');
 
 const Summary = importJsx('./summary');
 const Test = importJsx('./test');
@@ -38,11 +38,11 @@ class Jest extends React.Component {
 
 		return (
 			<Box flexDirection="column">
-				<Box flexDirection="column">
+				<Static>
 					{completedTests.map(test => (
 						<Test key={test.path} status={test.status} path={test.path}/>
 					))}
-				</Box>
+				</Static>
 
 				{runningTests.length > 0 && (
 					<Box flexDirection="column" marginTop={1}>
@@ -96,4 +96,4 @@ class Jest extends React.Component {
 	}
 }
 
-render(<Jest/>, {debug: false});
+render(<Jest/>);
