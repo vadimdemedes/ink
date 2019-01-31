@@ -537,6 +537,32 @@ Usage:
 <Text strikethrough>I am strikethrough</Text>
 ```
 
+#### &lt;Static&gt;
+
+`<Static>` component allows permanently rendering output to stdout and preserving it across renders.
+Components passed to `<Static>` as children will be written to stdout only once and will never be rerendered.
+`<Static>` output comes first, before any other output from your components, no matter where it is in the tree.
+In order for this mechanism to work properly, at most one `<Static>` component must be present in your node tree and components that were rendered must never update their output. Ink will detect new children appended to `<Static>` and render them to stdout.
+
+Example use case for this component is Jest's output:
+
+![](https://jestjs.io/img/content/feature-fast.png)
+
+Jest continuosuly writes the list of completed tests to the output, while updating test results at the bottom of the output in real-time. Here's how this user interface could be implemented with Ink:
+
+```jsx
+<Fragment>
+	<Static>
+		{tests.map(test => (
+			<Test key={test.id} title={test.title}/>
+		))}
+	</Static>
+
+	<Box marginTop={1}>
+		<TestResults passed={results.passed} failed={results.failed}/>
+	</Box>
+</Fragment>
+```
 
 #### &lt;StdinContext&gt;
 
