@@ -566,6 +566,8 @@ Jest continuosuly writes the list of completed tests to the output, while updati
 </Fragment>
 ```
 
+See [examples/jest](examples/jest/jest.js) for a basic implementation of Jest's UI.
+
 #### &lt;StdinContext&gt;
 
 `<StdinContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes several props.
