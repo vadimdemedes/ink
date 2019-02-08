@@ -67,7 +67,7 @@ const buildLayout = (node, options) => {
 		yogaNode.setHeight(style.height);
 	}
 
-	if (node.childNodes.length > 0) {
+	if (node.childNodes && node.childNodes.length > 0) {
 		const childNodes = node.childNodes.filter(childNode => {
 			return skipStaticElements ? !childNode.static : true;
 		});
@@ -108,11 +108,13 @@ const renderNodeToOutput = (node, output, offsetX = 0, offsetY = 0, {transformer
 	}
 
 	// Nodes that have other nodes as children
-	for (const childNode of node.childNodes) {
-		renderNodeToOutput(childNode, output, x, y, {
-			transformers: newTransformers,
-			skipStaticElements
-		});
+	if (node.childNodes) {
+		for (const childNode of node.childNodes) {
+			renderNodeToOutput(childNode, output, x, y, {
+				transformers: newTransformers,
+				skipStaticElements
+			});
+		}
 	}
 };
 
