@@ -195,7 +195,7 @@ class Counter extends Component {
 		this.timer = setInterval(() => {
 			this.setState(prevState => ({
 				i: prevState.i + 1
-			});
+			}));
 		}, 100);
 	}
 
