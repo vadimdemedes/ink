@@ -1,3 +1,7 @@
+import {
+	unstable_scheduleCallback as schedulePassiveEffects,
+	unstable_cancelCallback as cancelPassiveEffects
+} from 'scheduler';
 import ReactReconciler from 'react-reconciler';
 import {
 	createNode,
@@ -13,6 +17,8 @@ export default onRender => {
 	const childHostContext = {};
 
 	const hostConfig = {
+		schedulePassiveEffects,
+		cancelPassiveEffects,
 		now: Date.now,
 		getRootHostContext: () => rootHostContext,
 		prepareForCommit: () => {},
