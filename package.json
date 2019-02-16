@@ -44,7 +44,7 @@
     "cli-cursor": "^2.1.0",
     "lodash.throttle": "^4.1.1",
     "prop-types": "^15.6.2",
-    "react-reconciler": "^0.17.0",
+    "react-reconciler": "^0.20.0",
     "slice-ansi": "^1.0.0",
     "string-length": "^2.0.0",
     "widest-line": "^2.0.0",
