@@ -30,7 +30,9 @@ export default class Box extends PureComponent {
 	};
 
 	static defaultProps = {
-		flexDirection: 'row'
+		flexDirection: 'row',
+		flexGrow: 0,
+		flexShrink: 1
 	}
 
 	constructor() {
