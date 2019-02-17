@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "babel src --out-dir build",
-    "prepublish": "npm run build",
+    "prepare": "npm run build",
     "test": "xo && ava",
     "pretest": "npm run build",
     "cast": "svg-term --command 'node media/demo.js' --out media/demo.svg --from=100 --window --width=50 --height=8 --term=iterm2 --profile=Snazzy"
@@ -44,7 +44,8 @@
     "cli-cursor": "^2.1.0",
     "lodash.throttle": "^4.1.1",
     "prop-types": "^15.6.2",
-    "react-reconciler": "^0.17.0",
+    "react-reconciler": "^0.20.0",
+    "scheduler": "^0.13.2",
     "slice-ansi": "^1.0.0",
     "string-length": "^2.0.0",
     "widest-line": "^2.0.0",
