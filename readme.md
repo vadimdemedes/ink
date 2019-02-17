@@ -100,15 +100,21 @@ Don't forget to import `React` into every file that contains JSX:
 
 ```jsx
 import React from 'react';
-import {Box} from 'ink';
+import {render, Box} from 'ink';
 
-const Demo = () => <Box/>;
+const Demo = () => (
+	<Box>
+		Hello World
+	</Box>
+);
+
+render(<Demo/>);
 ```
 
-To get started, quickly scaffold out a project using [Ink CLI](https://github.com/vadimdemedes/generator-ink-cli) Yeoman generator. To create a new component that you intend to publish, you can use [Ink Component](https://github.com/vadimdemedes/generator-ink-component) generator.
+To get started quickly, scaffold out a project using [Ink CLI](https://github.com/vadimdemedes/generator-ink-cli) Yeoman generator. To create a new component that you intend to publish, you can use [Ink Component](https://github.com/vadimdemedes/generator-ink-component) generator.
 
 
-## Examples
+### Examples
 
 - [Jest](examples/jest/jest.js) - Implementation of basic Jest UI.
 - [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms.
@@ -116,7 +122,7 @@ To get started, quickly scaffold out a project using [Ink CLI](https://github.co
 
 ### API
 
-Since Ink is a React renderer, it means that all of React is supported.
+Since Ink is a React renderer, it means that all features of React are supported.
 Head over to [React](https://reactjs.org/) website for documentation on how to use it.
 In this readme only Ink's methods will be documented.
 
@@ -212,7 +218,7 @@ See `<Box>` built-in component below for documentation on how to use Flexbox lay
 
 #### &lt;Box&gt;
 
-`<Box>` it's an essential Ink component to build your layout. It's like a `<div>` in a browser.
+`<Box>` it's an essential Ink component to build your layout. It's like a `<div style="display: flex">` in a browser.
 
 Import:
 
