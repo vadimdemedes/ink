@@ -86,6 +86,7 @@ render(<Counter/>);
 - [ink-text-animation](https://github.com/yardnsm/ink-text-animation) - Text animation component.
 - [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color component.
 - [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
+- [ink-figlet](https://github.com/KimotoYanke/ink-figlet) - Large text component with Figlet fonts.
 - [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider component.
 
 
