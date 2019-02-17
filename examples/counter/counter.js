@@ -7,23 +7,23 @@ class Counter extends React.Component {
 		super();
 
 		this.state = {
-			i: 0
+			counter: 0
 		};
 	}
 
 	render() {
 		return (
 			<Color green>
-				{this.state.i} tests passed
+				{this.state.counter} tests passed
 			</Color>
 		);
 	}
 
 	componentDidMount() {
 		this.timer = setInterval(() => {
-			this.setState({
-				i: this.state.i + 1
-			});
+			this.setState(prevState => ({
+				counter: prevState.counter + 1
+			}));
 		}, 100);
 	}
 

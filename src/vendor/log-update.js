@@ -1,4 +1,6 @@
 // Fork of `log-update` without `wrap-ansi` until https://github.com/chalk/wrap-ansi/issues/27 is closed
+// Disable some eslint rules to closely match the original source
+/* eslint-disable prefer-destructuring, prefer-object-spread, prefer-rest-params */
 'use strict';
 const ansiEscapes = require('ansi-escapes');
 const cliCursor = require('cli-cursor');

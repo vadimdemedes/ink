@@ -49,6 +49,7 @@
     "slice-ansi": "^1.0.0",
     "string-length": "^2.0.0",
     "widest-line": "^2.0.0",
+    "wrap-ansi": "^4.0.0",
     "yoga-layout-prebuilt": "^1.9.3"
   },
   "devDependencies": {
