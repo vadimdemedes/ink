@@ -1,120 +1,8 @@
 import Yoga from 'yoga-layout-prebuilt';
-import widestLine from 'widest-line';
-import applyStyles from './apply-styles';
 import Output from './output';
 import {createNode, appendChildNode} from './dom';
-
-const measureText = text => {
-	const width = widestLine(text);
-	const height = text.split('\n').length;
-
-	return {width, height};
-};
-
-// Traverse the node tree, create Yoga nodes and assign styles to each Yoga node
-const buildLayout = (node, options) => {
-	const {config, terminalWidth, skipStaticElements} = options;
-	const yogaNode = Yoga.Node.create(config);
-	node.yogaNode = yogaNode;
-
-	const style = node.style || {};
-
-	// Root node of the tree
-	if (node.nodeName === 'ROOT') {
-		yogaNode.setWidth(terminalWidth);
-
-		if (node.childNodes.length > 0) {
-			const childNodes = node.childNodes.filter(childNode => {
-				return skipStaticElements ? !childNode.static : true;
-			});
-
-			for (const [index, childNode] of Object.entries(childNodes)) {
-				const childYogaNode = buildLayout(childNode, options).yogaNode;
-				yogaNode.insertChild(childYogaNode, index);
-			}
-		}
-
-		return node;
-	}
-
-	// Apply margin, padding, flex, etc styles
-	applyStyles(yogaNode, style);
-
-	// Nodes with only text have a child Yoga node dedicated for that text
-	if (node.textContent) {
-		const {width, height} = measureText(node.textContent);
-		yogaNode.setWidth(style.width || width);
-		yogaNode.setHeight(style.height || height);
-
-		return node;
-	}
-
-	// Text node
-	if (node.nodeValue) {
-		const {width, height} = measureText(node.nodeValue);
-		yogaNode.setWidth(width);
-		yogaNode.setHeight(height);
-
-		return node;
-	}
-
-	// Nodes with other nodes as children
-	if (style.width) {
-		yogaNode.setWidth(style.width);
-	}
-
-	if (style.height) {
-		yogaNode.setHeight(style.height);
-	}
-
-	if (node.childNodes.length > 0) {
-		const childNodes = node.childNodes.filter(childNode => {
-			return skipStaticElements ? !childNode.static : true;
-		});
-
-		for (const [index, childNode] of Object.entries(childNodes)) {
-			const {yogaNode: childYogaNode} = buildLayout(childNode, options);
-			yogaNode.insertChild(childYogaNode, index);
-		}
-	}
-
-	return node;
-};
-
-// After nodes are laid out, render each to output object, which later gets rendered to terminal
-const renderNodeToOutput = (node, output, offsetX = 0, offsetY = 0, {transformers, skipStaticElements}) => {
-	if (node.static && skipStaticElements) {
-		return;
-	}
-
-	const {yogaNode} = node;
-
-	// Left and top positions in Yoga are relative to their parent node
-	const x = offsetX + yogaNode.getComputedLeft();
-	const y = offsetY + yogaNode.getComputedTop();
-
-	// Transformers are functions that transform final text output of each component
-	// See Output class for logic that applies transformers
-	let newTransformers = transformers;
-	if (node.unstable__transformChildren) {
-		newTransformers = [node.unstable__transformChildren, ...transformers];
-	}
-
-	// Text nodes
-	const text = node.textContent || node.nodeValue;
-	if (text) {
-		output.write(x, y, text, {transformers: newTransformers});
-		return;
-	}
-
-	// Nodes that have other nodes as children
-	for (const childNode of node.childNodes) {
-		renderNodeToOutput(childNode, output, x, y, {
-			transformers: newTransformers,
-			skipStaticElements
-		});
-	}
-};
+import buildLayout from './build-layout';
+import renderNodeToOutput from './render-node-to-output';
 
 // Since <Static> components can be placed anywhere in the tree, this helper finds and returns them
 const getStaticNodes = element => {
@@ -179,10 +67,7 @@ export default ({terminalWidth}) => {
 				height: staticYogaNode.getComputedHeight()
 			});
 
-			renderNodeToOutput(rootNode, staticOutput, 0, 0, {
-				transformers: [],
-				skipStaticElements: false
-			});
+			renderNodeToOutput(rootNode, staticOutput, {skipStaticElements: false});
 		}
 
 		const {yogaNode} = buildLayout(node, {
@@ -201,10 +86,7 @@ export default ({terminalWidth}) => {
 			height: yogaNode.getComputedHeight()
 		});
 
-		renderNodeToOutput(node, output, 0, 0, {
-			transformers: [],
-			skipStaticElements: true
-		});
+		renderNodeToOutput(node, output, {skipStaticElements: true});
 
 		return {
 			output: output.get(),
