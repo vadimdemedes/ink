@@ -68,7 +68,7 @@ render(<Counter/>);
 - [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command line tools for time-saving web developers.
 
 
-## Guide
+## Table of Contents
 
 - [Getting Started](#getting-started)
 - [Examples](#examples)
@@ -77,12 +77,12 @@ render(<Counter/>);
 - [Built-in Components](#built-in-components)
 - [Useful Components](#useful-components)
 
+
+## Getting Started
+
 Ink's goal is to provide the same component-based UI building experience that React provides, but for command-line apps. It uses [yoga-layout](https://github.com/facebook/yoga) to allow Flexbox layouts in the terminal. If you are already familiar with React, you already know Ink.
 
 The key difference you have to remember is that the rendering result isn't a DOM, but a string, which Ink writes to the output.
-
-
-### Getting Started
 
 To ensure all examples work and you can begin your adventure with Ink, make sure to set up Babel with a React preset. After [installing Babel](https://babeljs.io/docs/en/usage), configure it in `package.json`:
 
@@ -114,13 +114,13 @@ render(<Demo/>);
 To get started quickly, scaffold out a project using [Ink CLI](https://github.com/vadimdemedes/generator-ink-cli) Yeoman generator. To create a new component that you intend to publish, you can use [Ink Component](https://github.com/vadimdemedes/generator-ink-component) generator.
 
 
-### Examples
+## Examples
 
 - [Jest](examples/jest/jest.js) - Implementation of basic Jest UI.
 - [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms.
 
 
-### API
+## API
 
 Since Ink is a React renderer, it means that all features of React are supported.
 Head over to [React](https://reactjs.org/) website for documentation on how to use it.
@@ -206,7 +206,7 @@ render(<Counter>, process.stdout);
 ```
 
 
-### Building Layouts
+## Building Layouts
 
 Ink uses [Yoga](https://github.com/facebook/yoga) - a Flexbox layout engine to build great user interfaces for your CLIs.
 It's important to remember that each element is a Flexbox container.
