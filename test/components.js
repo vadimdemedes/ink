@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import test from 'ava';
-import {Box, Static, renderToString} from '..';
+import chalk from 'chalk';
+import {Box, Color, Static, renderToString} from '..';
 
 test('text', t => {
 	const output = renderToString(<Box>Hello World</Box>);
@@ -98,4 +99,15 @@ test('static output', t => {
 	);
 
 	t.is(output, 'A\nB\nC\n\n\nX');
+});
+
+// See https://github.com/chalk/wrap-ansi/issues/27
+test('ensure wrap-ansi doesn\'t trim leading whitespace', t => {
+	const output = renderToString(
+		<Color red>
+			{' ERROR '}
+		</Color>
+	);
+
+	t.is(output, chalk.red(' ERROR '));
 });
