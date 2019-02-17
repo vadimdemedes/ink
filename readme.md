@@ -71,6 +71,7 @@ render(<Counter/>);
 ## Guide
 
 - [Getting Started](#getting-started)
+- [Examples](#examples)
 - [API](#api)
 - [Building Layouts](#building-layouts)
 - [Built-in Components](#built-in-components)
@@ -105,6 +106,12 @@ const Demo = () => <Box/>;
 ```
 
 To get started, quickly scaffold out a project using [Ink CLI](https://github.com/vadimdemedes/generator-ink-cli) Yeoman generator. To create a new component that you intend to publish, you can use [Ink Component](https://github.com/vadimdemedes/generator-ink-component) generator.
+
+
+## Examples
+
+- [Jest](examples/jest/jest.js) - Implementation of basic Jest UI.
+- [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms.
 
 
 ### API
