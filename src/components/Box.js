@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 
@@ -24,7 +25,7 @@ export default class Box extends PureComponent {
 		flexDirection: PropTypes.oneOf(['row', 'row-reverse', 'column', 'column-reverse']),
 		alignItems: PropTypes.oneOf(['flex-start', 'center', 'flex-end']),
 		justifyContent: PropTypes.oneOf(['flex-start', 'center', 'flex-end', 'space-between', 'space-around']),
-		unstable__transformChildren: PropTypes.func, // eslint-disable-line camelcase
+		unstable__transformChildren: PropTypes.func,
 		children: PropTypes.node
 	};
 
@@ -39,7 +40,6 @@ export default class Box extends PureComponent {
 	}
 
 	render() {
-		/* eslint-disable camelcase */
 		const {children, unstable__transformChildren, ...style} = this.props;
 
 		return (
@@ -49,7 +49,7 @@ export default class Box extends PureComponent {
 		);
 	}
 
-	unstable__getComputedWidth() { // eslint-disable-line camelcase
+	unstable__getComputedWidth() {
 		return this.nodeRef.current.yogaNode.getComputedWidth();
 	}
 }

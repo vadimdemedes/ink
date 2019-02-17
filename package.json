@@ -68,7 +68,7 @@
     "react": "^16.6.1",
     "strip-ansi": "^4.0.0",
     "svg-term-cli": "^2.1.1",
-    "xo": "^0.23.0"
+    "xo": "^0.24.0"
   },
   "babel": {
     "plugins": [
