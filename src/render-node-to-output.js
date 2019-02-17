@@ -1,6 +1,6 @@
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
 const renderNodeToOutput = (node, output, {offsetX = 0, offsetY = 0, transformers = [], skipStaticElements}) => {
-	if (node.static && skipStaticElements) {
+	if (node.unstable__static && skipStaticElements) {
 		return;
 	}
 

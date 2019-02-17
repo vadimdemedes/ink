@@ -32,7 +32,7 @@ export default class Static extends Component {
 		});
 
 		return (
-			<div static style={otherProps}>
+			<div unstable__static style={otherProps}>
 				{newChildren}
 			</div>
 		);

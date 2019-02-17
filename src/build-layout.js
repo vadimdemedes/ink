@@ -23,7 +23,7 @@ const buildLayout = (node, options) => {
 
 		if (node.childNodes.length > 0) {
 			const childNodes = node.childNodes.filter(childNode => {
-				return skipStaticElements ? !childNode.static : true;
+				return skipStaticElements ? !childNode.unstable__static : true;
 			});
 
 			for (const [index, childNode] of Object.entries(childNodes)) {
@@ -67,7 +67,7 @@ const buildLayout = (node, options) => {
 
 	if (node.childNodes.length > 0) {
 		const childNodes = node.childNodes.filter(childNode => {
-			return skipStaticElements ? !childNode.static : true;
+			return skipStaticElements ? !childNode.unstable__static : true;
 		});
 
 		for (const [index, childNode] of Object.entries(childNodes)) {

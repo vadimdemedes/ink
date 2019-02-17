@@ -9,7 +9,7 @@ const getStaticNodes = element => {
 	const staticNodes = [];
 
 	for (const childNode of element.childNodes) {
-		if (childNode.static) {
+		if (childNode.unstable__static) {
 			staticNodes.push(childNode);
 		}
 
