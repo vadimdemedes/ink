@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import test from 'ava';
 import {Box, Static, renderToString} from '..';
 
@@ -67,6 +67,19 @@ test('transform children', t => {
 	);
 
 	t.is(output, '[{test}]');
+});
+
+test('hooks', t => {
+	const WithHooks = () => {
+		const [value] = useState('Hello');
+
+		return (
+			<Box>{value}</Box>
+		);
+	};
+
+	const output = renderToString(<WithHooks/>);
+	t.is(output, 'Hello');
 });
 
 test('static output', t => {
