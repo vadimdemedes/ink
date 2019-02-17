@@ -71,6 +71,9 @@ const applyPaddingStyles = (node, style) => {
 };
 
 const applyFlexStyles = (node, style) => {
+	node.setFlexGrow(0);
+	node.setFlexShrink(1);
+
 	if (style.flexGrow) {
 		node.setFlexGrow(style.flexGrow);
 	}

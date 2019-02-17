@@ -339,7 +339,8 @@ Default: `0`
 
 ###### flexGrow
 
-Type: `number`
+Type: `number`<br>
+Default: `0`
 
 See [flex-grow](https://css-tricks.com/almanac/properties/f/flex-grow/).
 
@@ -354,7 +355,8 @@ See [flex-grow](https://css-tricks.com/almanac/properties/f/flex-grow/).
 
 ###### flexShrink
 
-Type: `number`
+Type: `number`<br>
+Default: `1`
 
 See [flex-shrink](https://css-tricks.com/almanac/properties/f/flex-shrink/).
 
@@ -472,6 +474,7 @@ See [justify-content](https://css-tricks.com/almanac/properties/f/justify-conten
 </Box>
 // [  X   Y  ]
 ```
+
 
 #### &lt;Color&gt;
 
