@@ -2,9 +2,28 @@
 'use strict';
 const ansiEscapes = require('ansi-escapes');
 const cliCursor = require('cli-cursor');
+const wrapAnsi = require('wrap-ansi');
+
+const getWidth = stream => {
+	const columns = stream.columns;
+
+	if (!columns) {
+		return 80;
+	}
+
+	// Windows appears to wrap a character early
+	// I hate Windows so much
+	if (process.platform === 'win32') {
+		return columns - 1;
+	}
+
+	return columns;
+};
 
 const main = (stream, options) => {
-	options = {showCursor: false, ...options};
+	options = Object.assign({
+		showCursor: false
+	}, options);
 
 	let prevLineCount = 0;
 
@@ -13,9 +32,15 @@ const main = (stream, options) => {
 			cliCursor.hide();
 		}
 
-		const out = [].join.call(arguments, ' ') + '\n'; // eslint-disable-line prefer-rest-params
+		const out = [].join.call(arguments, ' ') + '\n';
+		const wrappedOut = wrapAnsi(out, getWidth(stream), {
+			trim: false,
+			hard: true,
+			wordWrap: false
+		});
+
 		stream.write(ansiEscapes.eraseLines(prevLineCount) + out);
-		prevLineCount = out.split('\n').length;
+		prevLineCount = wrappedOut.split('\n').length;
 	};
 
 	render.clear = () => {
