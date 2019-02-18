@@ -65,7 +65,7 @@ const buildLayout = (node, options) => {
 		yogaNode.setHeight(style.height);
 	}
 
-	if (node.childNodes.length > 0) {
+	if (Array.isArray(node.childNodes) && node.childNodes.length > 0) {
 		const childNodes = node.childNodes.filter(childNode => {
 			return skipStaticElements ? !childNode.unstable__static : true;
 		});

@@ -25,13 +25,15 @@ const renderNodeToOutput = (node, output, {offsetX = 0, offsetY = 0, transformer
 	}
 
 	// Nodes that have other nodes as children
-	for (const childNode of node.childNodes) {
-		renderNodeToOutput(childNode, output, {
-			offsetX: x,
-			offsetY: y,
-			transformers: newTransformers,
-			skipStaticElements
-		});
+	if (Array.isArray(node.childNodes) && node.childNodes.length > 0) {
+		for (const childNode of node.childNodes) {
+			renderNodeToOutput(childNode, output, {
+				offsetX: x,
+				offsetY: y,
+				transformers: newTransformers,
+				skipStaticElements
+			});
+		}
 	}
 };
 
