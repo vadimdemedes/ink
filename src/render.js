@@ -88,18 +88,35 @@ export default (node, options = {}) => {
 		options.stdout._inkContainer = reconciler.createContainer(rootNode, false);
 	}
 
+	const unmount = () => {
+		onRender();
+		log.done();
+		ignoreRender = true;
+		reconciler.updateContainer(null, options.stdout._inkContainer);
+	};
+
+	let resolveExitPromise;
+	const exitPromise = new Promise(resolve => {
+		resolveExitPromise = resolve;
+	});
+
+	const onExit = () => {
+		unmount();
+		resolveExitPromise();
+	};
+
 	const tree = (
-		<App stdin={options.stdin} stdout={options.stdout}>
+		<App stdin={options.stdin} stdout={options.stdout} onExit={onExit}>
 			{node}
 		</App>
 	);
 
 	reconciler.updateContainer(tree, options.stdout._inkContainer);
 
-	return () => {
-		onRender();
-		log.done();
-		ignoreRender = true;
-		reconciler.updateContainer(null, options.stdout._inkContainer);
+	return {
+		waitUntilExit() {
+			return exitPromise;
+		},
+		unmount
 	};
 };

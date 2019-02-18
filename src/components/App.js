@@ -1,6 +1,7 @@
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import cliCursor from 'cli-cursor';
+import AppContext from './AppContext';
 import StdinContext from './StdinContext';
 import StdoutContext from './StdoutContext';
 
@@ -11,25 +12,32 @@ export default class App extends PureComponent {
 	static propTypes = {
 		children: PropTypes.node.isRequired,
 		stdin: PropTypes.object.isRequired,
-		stdout: PropTypes.object.isRequired
+		stdout: PropTypes.object.isRequired,
+		onExit: PropTypes.func.isRequired
 	};
 
 	render() {
 		return (
-			<StdinContext.Provider
+			<AppContext.Provider
 				value={{
-					stdin: this.props.stdin,
-					setRawMode: this.handleSetRawMode
+					exit: this.props.onExit
 				}}
 			>
-				<StdoutContext.Provider
+				<StdinContext.Provider
 					value={{
-						stdout: this.props.stdout
+						stdin: this.props.stdin,
+						setRawMode: this.handleSetRawMode
 					}}
 				>
-					{this.props.children}
-				</StdoutContext.Provider>
-			</StdinContext.Provider>
+					<StdoutContext.Provider
+						value={{
+							stdout: this.props.stdout
+						}}
+					>
+						{this.props.children}
+					</StdoutContext.Provider>
+				</StdinContext.Provider>
+			</AppContext.Provider>
 		);
 	}
 

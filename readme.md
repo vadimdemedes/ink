@@ -128,6 +128,8 @@ In this readme only Ink's methods will be documented.
 
 #### render(tree, options)
 
+Returns: `App`
+
 Mount a component and render the output.
 
 ##### tree
@@ -191,11 +193,11 @@ class Counter extends Component {
 	}
 }
 
-const unmount = render(<Counter/>);
+const app = render(<Counter/>);
 
 setTimeout(() => {
 	// Enough counting
-	unmount();
+	app.unmount();
 }, 1000);
 ```
 
@@ -205,6 +207,32 @@ There's also a shortcut to avoid passing `options` object:
 render(<Counter>, process.stdout);
 ```
 
+#### App
+
+This is the object that `render()` returns.
+
+##### unmount
+
+Manually unmount the whole Ink app.
+
+```jsx
+const app = render(<MyApp/>);
+app.unmount();
+```
+
+##### waitUntilExit
+
+Returns a promise, which resolves when app is unmounted.
+
+```jsx
+const app = render(<MyApp/>);
+
+setTimeout(() => {
+	app.unmount();
+}, 1000);
+
+await app.waitUntilExit(); // resolves after `app.unmount()` is called
+```
 
 ## Building Layouts
 
@@ -558,9 +586,36 @@ Jest continuosuly writes the list of completed tests to the output, while updati
 
 See [examples/jest](examples/jest/jest.js) for a basic implementation of Jest's UI.
 
+#### &lt;AppContext&gt;
+
+`<StdinContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes a method to manually exit the app (unmount).
+
+Import:
+
+```js
+import {AppContext} from 'ink';
+```
+
+##### exit
+
+Type: `Function`
+
+Exit (unmount) the whole Ink app.
+
+Usage:
+
+```jsx
+<AppContext.Consumer>
+	{({ exit }) => (
+		{/* Calling `onExit()` from within <MyApp> will unmount the app */}
+		<MyApp onExit={exit}/>
+	)}
+</AppContext.Consumer>
+```
+
 #### &lt;StdinContext&gt;
 
-`<StdinContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes several props.
+`<StdinContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes input stream.
 
 Import:
 
