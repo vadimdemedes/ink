@@ -704,6 +704,7 @@ Usage:
 - [ink-box](https://github.com/sindresorhus/ink-box) - Box component.
 - [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color component.
 - [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
+- [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
 
 ### Incompatible components
 
@@ -711,7 +712,6 @@ These are components that haven't migrated to Ink 2 yet:
 
 - [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Configurable component for rendering progress bars.
 - [ink-console](https://github.com/ForbesLindesay/ink-console) - Render output from `console[method]` calls in a scrollable panel.
-- [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
 - [ink-confirm-input](https://github.com/kevva/ink-confirm-input) - Yes/No confirmation input.
 - [ink-checkbox-list](https://github.com/MaxMEllon/ink-checkbox-list) - Checkbox.
 - [ink-quicksearch](https://github.com/aicioara/ink-quicksearch) - Select Component with fast quicksearch-like navigation
