@@ -119,8 +119,8 @@ To get started quickly, scaffold out a project using [Ink CLI](https://github.co
 
 ## Examples
 
-- [Jest](examples/jest/jest.js) - Implementation of basic Jest UI.
-- [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms.
+- [Jest](examples/jest/jest.js) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
+- [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms [(live demo)](https://ink-counter-demo.vadimdemedes.repl.run/).
 
 
 ## API
