@@ -60,6 +60,9 @@ render(<Counter/>);
 
 <img src="media/demo.svg" width="600">
 
+You can also check it out live on [repl.it sandbox](https://ink-counter-demo.vadimdemedes.repl.run/).
+Feel free to play around with the code and fork this repl at [https://repl.it/@vadimdemedes/ink-counter-demo](https://repl.it/@vadimdemedes/ink-counter-demo).
+
 
 ## Built with Ink
 
