@@ -3,8 +3,6 @@ import test from 'ava';
 import chalk from 'chalk';
 import {Box, Color, Static, renderToString} from '..';
 
-chalk.enabled = true;
-
 test('text', t => {
 	const output = renderToString(<Box>Hello World</Box>);
 

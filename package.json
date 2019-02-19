@@ -15,7 +15,7 @@
   "scripts": {
     "build": "babel src --out-dir build",
     "prepare": "npm run build",
-    "test": "xo && ava",
+    "test": "xo && FORCE_COLOR=true ava",
     "pretest": "npm run build",
     "cast": "svg-term --command 'node media/demo.js' --out media/demo.svg --from=100 --window --width=50 --height=8 --term=iterm2 --profile=Snazzy"
   },
