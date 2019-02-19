@@ -19,6 +19,7 @@ export default (node, options = {}) => {
 		stdout: process.stdout,
 		stdin: process.stdin,
 		debug: false,
+		exitOnCtrlC: true,
 		...options
 	};
 
@@ -106,7 +107,7 @@ export default (node, options = {}) => {
 	};
 
 	const tree = (
-		<App stdin={options.stdin} stdout={options.stdout} onExit={onExit}>
+		<App stdin={options.stdin} stdout={options.stdout} exitOnCtrlC={options.exitOnCtrlC} onExit={onExit}>
 			{node}
 		</App>
 	);

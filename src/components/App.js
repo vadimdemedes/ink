@@ -13,6 +13,7 @@ export default class App extends PureComponent {
 		children: PropTypes.node.isRequired,
 		stdin: PropTypes.object.isRequired,
 		stdout: PropTypes.object.isRequired,
+		exitOnCtrlC: PropTypes.bool.isRequired,
 		onExit: PropTypes.func.isRequired
 	};
 
@@ -64,7 +65,7 @@ export default class App extends PureComponent {
 
 	handleInput = input => {
 		// Exit on Ctrl+C
-		if (input === '\x03') { // eslint-disable-line unicorn/no-hex-escape
+		if (input === '\x03' && this.props.exitOnCtrlC) { // eslint-disable-line unicorn/no-hex-escape
 			process.exit(0); // eslint-disable-line unicorn/no-process-exit
 		}
 	};
