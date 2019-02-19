@@ -84,7 +84,13 @@ export default onRender => {
 			for (const [key, value] of Object.entries(newProps)) {
 				if (key === 'children') {
 					if (typeof value === 'string' || typeof value === 'number') {
-						node.childNodes[0].textContent = String(value);
+						if (type === 'div') {
+							node.childNodes[0].textContent = String(value);
+						}
+
+						if (type === 'span') {
+							node.textContent = String(value);
+						}
 					}
 				} else if (key === 'style') {
 					Object.assign(node.style, value);
