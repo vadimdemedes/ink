@@ -114,8 +114,6 @@ const Demo = () => (
 render(<Demo/>);
 ```
 
-To get started quickly, scaffold out a project using [Ink CLI](https://github.com/vadimdemedes/generator-ink-cli) Yeoman generator. To create a new component that you intend to publish, you can use [Ink Component](https://github.com/vadimdemedes/generator-ink-component) generator.
-
 
 ## Examples
 
