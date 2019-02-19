@@ -694,33 +694,38 @@ Usage:
 </StdoutContext.Consumer>
 ```
 
+
 ## Useful Components
 
-- [ink-redux](https://github.com/vadimdemedes/ink-redux) - Redux bindings.
 - [ink-text-input](https://github.com/vadimdemedes/ink-text-input) - Text input.
-- [ink-password-input](https://github.com/vadimdemedes/ink-password-input) - Password input.
-- [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Configurable component for rendering progress bars.
 - [ink-spinner](https://github.com/vadimdemedes/ink-spinner) - Spinner.
+- [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
+- [ink-link](https://github.com/sindresorhus/ink-link) - Link component.
+- [ink-box](https://github.com/sindresorhus/ink-box) - Box component.
+- [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color component.
+- [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
+
+### Incompatible components
+
+These are components that haven't migrated to Ink 2 yet:
+
+- [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Configurable component for rendering progress bars.
 - [ink-console](https://github.com/ForbesLindesay/ink-console) - Render output from `console[method]` calls in a scrollable panel.
 - [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
 - [ink-confirm-input](https://github.com/kevva/ink-confirm-input) - Yes/No confirmation input.
 - [ink-checkbox-list](https://github.com/MaxMEllon/ink-checkbox-list) - Checkbox.
-- [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
 - [ink-quicksearch](https://github.com/aicioara/ink-quicksearch) - Select Component with fast quicksearch-like navigation
 - [ink-autocomplete](https://github.com/maticzav/ink-autocomplete) - Autocomplete.
 - [ink-table](https://github.com/maticzav/ink-table) - Table component.
 - [ink-broadcast](https://github.com/jimmed/ink-broadcast) - Implementation of react-broadcast for Ink.
 - [ink-router](https://github.com/jimmed/ink-router) - Implementation of react-router for Ink.
 - [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
-- [ink-link](https://github.com/sindresorhus/ink-link) - Link component.
 - [ink-select](https://github.com/karaggeorge/ink-select) - Select component.
 - [ink-scrollbar](https://github.com/karaggeorge/ink-scrollbar) - Scrollbar component.
-- [ink-box](https://github.com/sindresorhus/ink-box) - Box component.
 - [ink-text-animation](https://github.com/yardnsm/ink-text-animation) - Text animation component.
-- [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color component.
-- [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
 - [ink-figlet](https://github.com/KimotoYanke/ink-figlet) - Large text component with Figlet fonts.
 - [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider component.
+
 
 ## License
 
