@@ -70,6 +70,18 @@ test('transform children', t => {
 	t.is(output, '[{test}]');
 });
 
+test('apply transform once to multiple text children', t => {
+	const output = renderToString(
+		<Box unstable__transformChildren={str => `[${str}]`}>
+			<Box unstable__transformChildren={str => `{${str}}`}>
+				hello{' '}world
+			</Box>
+		</Box>
+	);
+
+	t.is(output, '[{hello world}]');
+});
+
 test('hooks', t => {
 	const WithHooks = () => {
 		const [value] = useState('Hello');

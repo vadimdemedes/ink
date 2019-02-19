@@ -1,9 +1,9 @@
+/* eslint-disable camelcase */
 import React from 'react';
 import PropTypes from 'prop-types';
 import chalk from 'chalk';
-import Box from './Box';
 
-const Text = ({bold, italic, underline, strikethrough, children}) => {
+const Text = ({bold, italic, underline, strikethrough, children, unstable__transformChildren}) => {
 	const transformChildren = children => {
 		if (bold) {
 			children = chalk.bold(children);
@@ -21,10 +21,14 @@ const Text = ({bold, italic, underline, strikethrough, children}) => {
 			children = chalk.strikethrough(children);
 		}
 
+		if (unstable__transformChildren) {
+			children = unstable__transformChildren(children);
+		}
+
 		return children;
 	};
 
-	return <Box unstable__transformChildren={transformChildren}>{children}</Box>;
+	return <span style={{flexDirection: 'row'}} unstable__transformChildren={transformChildren}>{children}</span>;
 };
 
 Text.propTypes = {
@@ -32,14 +36,16 @@ Text.propTypes = {
 	italic: PropTypes.bool,
 	underline: PropTypes.bool,
 	strikethrough: PropTypes.bool,
-	children: PropTypes.node.isRequired
+	children: PropTypes.node.isRequired,
+	unstable__transformChildren: PropTypes.func
 };
 
 Text.defaultProps = {
 	bold: false,
 	italic: false,
 	underline: false,
-	strikethrough: false
+	strikethrough: false,
+	unstable__transformChildren: undefined
 };
 
 export default Text;

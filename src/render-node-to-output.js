@@ -26,6 +26,35 @@ const renderNodeToOutput = (node, output, {offsetX = 0, offsetY = 0, transformer
 
 	// Nodes that have other nodes as children
 	if (Array.isArray(node.childNodes) && node.childNodes.length > 0) {
+		// Squashing text nodes allows to combine multiple text nodes into one and write
+		// to `Output` instance only once. For example, <Text>hello{' '}world</Text>
+		// is actually 3 text nodes, which would result 3 writes to `Output`.
+		//
+		// Also, this is necessary for libraries like ink-link (https://github.com/sindresorhus/ink-link),
+		// which need to wrap all children at once, instead of wrapping 3 text nodes separately.
+		const isAllTextNodes = node.childNodes.every(childNode => {
+			return Boolean(childNode.nodeValue) || (childNode.nodeName === 'SPAN' && Boolean(childNode.textContent));
+		});
+
+		if (isAllTextNodes) {
+			let text = '';
+
+			for (const childNode of node.childNodes) {
+				let nodeText = childNode.nodeValue || childNode.textContent;
+
+				// Since these text nodes are being concatenated, `Output` instance won't be able to
+				// apply children transform, so we have to do it manually here for each text node
+				if (childNode.unstable__transformChildren) {
+					nodeText = childNode.unstable__transformChildren(nodeText);
+				}
+
+				text += nodeText;
+			}
+
+			output.write(x, y, text, {transformers: newTransformers});
+			return;
+		}
+
 		for (const childNode of node.childNodes) {
 			renderNodeToOutput(childNode, output, {
 				offsetX: x,

@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import arrify from 'arrify';
 import chalk from 'chalk';
-import Box from './Box';
 
 const methods = [
 	'hex',
@@ -34,7 +33,11 @@ const Color = ({children, ...colorProps}) => {
 		return children;
 	};
 
-	return <Box unstable__transformChildren={transformChildren}>{children}</Box>;
+	return (
+		<span style={{flexDirection: 'row'}} unstable__transformChildren={transformChildren}>
+			{children}
+		</span>
+	);
 };
 
 Color.propTypes = {

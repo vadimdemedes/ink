@@ -33,10 +33,16 @@ export default onRender => {
 			for (const [key, value] of Object.entries(newProps)) {
 				if (key === 'children') {
 					if (typeof value === 'string' || typeof value === 'number') {
-						// Text node must be wrapped in another node, so that text can be aligned within container
-						const textElement = createNode('span');
-						textElement.textContent = String(value);
-						appendChildNode(node, textElement);
+						if (type === 'div') {
+							// Text node must be wrapped in another node, so that text can be aligned within container
+							const textElement = createNode('div');
+							textElement.textContent = String(value);
+							appendChildNode(node, textElement);
+						}
+
+						if (type === 'span') {
+							node.textContent = String(value);
+						}
 					}
 				} else if (key === 'style') {
 					Object.assign(node.style, value);
