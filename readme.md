@@ -708,14 +708,15 @@ Usage:
 
 ## Useful Components
 
-- [ink-text-input](https://github.com/vadimdemedes/ink-text-input) - Text input.
-- [ink-spinner](https://github.com/vadimdemedes/ink-spinner) - Spinner.
-- [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
-- [ink-link](https://github.com/sindresorhus/ink-link) - Link component.
+- [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
 - [ink-box](https://github.com/sindresorhus/ink-box) - Box component.
 - [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color component.
-- [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
 - [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
+- [ink-link](https://github.com/sindresorhus/ink-link) - Link component.
+- [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
+- [ink-spinner](https://github.com/vadimdemedes/ink-spinner) - Spinner.
+- [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
+- [ink-text-input](https://github.com/vadimdemedes/ink-text-input) - Text input.
 
 ### Incompatible components
 
@@ -730,7 +731,6 @@ These are components that haven't migrated to Ink 2 yet:
 - [ink-table](https://github.com/maticzav/ink-table) - Table component.
 - [ink-broadcast](https://github.com/jimmed/ink-broadcast) - Implementation of react-broadcast for Ink.
 - [ink-router](https://github.com/jimmed/ink-router) - Implementation of react-router for Ink.
-- [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
 - [ink-select](https://github.com/karaggeorge/ink-select) - Select component.
 - [ink-scrollbar](https://github.com/karaggeorge/ink-scrollbar) - Scrollbar component.
 - [ink-text-animation](https://github.com/yardnsm/ink-text-animation) - Text animation component.
