@@ -21,7 +21,7 @@ export default class App extends PureComponent {
 		return (
 			<AppContext.Provider
 				value={{
-					exit: this.props.onExit
+					exit: this.handleExit
 				}}
 			>
 				<StdinContext.Provider
@@ -48,6 +48,7 @@ export default class App extends PureComponent {
 
 	componentWillUnmount() {
 		cliCursor.show(this.props.stdout);
+		this.handleSetRawMode(false);
 	}
 
 	handleSetRawMode = isEnabled => {
@@ -60,13 +61,19 @@ export default class App extends PureComponent {
 			stdin.addListener('data', this.handleInput);
 		} else {
 			stdin.removeListener('data', this.handleInput);
+			stdin.pause();
 		}
 	};
 
 	handleInput = input => {
 		// Exit on Ctrl+C
 		if (input === '\x03' && this.props.exitOnCtrlC) { // eslint-disable-line unicorn/no-hex-escape
-			process.exit(0); // eslint-disable-line unicorn/no-process-exit
+			this.handleExit()
 		}
 	};
+
+	handleExit = () => {
+		this.handleSetRawMode(false);
+		this.props.onExit();
+	}
 }
