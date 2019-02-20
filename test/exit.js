@@ -1,9 +1,9 @@
 import test from 'ava';
-import pty from 'pty.js'; // eslint-disable-line ava/no-import-test-files
+import {spawn} from 'node-pty';
 
 const run = fixture => {
 	return new Promise((resolve, reject) => {
-		const term = pty.spawn('node', ['./fixtures/run', `./${fixture}`], {
+		const term = spawn('node', ['./fixtures/run', `./${fixture}`], {
 			name: 'xterm-color',
 			cols: 100,
 			cwd: __dirname,
