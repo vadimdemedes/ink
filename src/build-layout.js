@@ -19,7 +19,8 @@ const buildLayout = (node, options) => {
 
 	// Root node of the tree
 	if (node.nodeName === 'ROOT') {
-		yogaNode.setWidth(terminalWidth);
+		// `terminalWidth` can be `undefined` if env isn't a TTY
+		yogaNode.setWidth(terminalWidth || 100);
 
 		if (node.childNodes.length > 0) {
 			const childNodes = node.childNodes.filter(childNode => {
