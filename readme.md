@@ -69,6 +69,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [emoj](https://github.com/sindresorhus/emoj) - Find relevant emoji on the command-line.
 - [emma](https://github.com/maticzav/emma-cli) - Terminal assistant to find and install npm packages.
 - [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command line tools for time-saving web developers.
+- [changelog-view](https://github.com/jdeniau/changelog-view) - Tool view changelog in console.
 
 
 ## Table of Contents
