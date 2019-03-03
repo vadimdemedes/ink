@@ -2,8 +2,8 @@ import React from 'react';
 import throttle from 'lodash.throttle';
 import autoBind from 'auto-bind';
 import logUpdate from './vendor/log-update';
-import createReconciler from './create-reconciler';
-import createRenderer from './create-renderer';
+import createReconciler from './reconciler';
+import createRenderer from './renderer';
 import {createNode} from './dom';
 import App from './components/App';
 
