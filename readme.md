@@ -129,7 +129,7 @@ In this readme only Ink's methods will be documented.
 
 #### render(tree, options)
 
-Returns: `App`
+Returns: `Instance`
 
 Mount a component and render the output.
 
@@ -216,17 +216,31 @@ There's also a shortcut to avoid passing `options` object:
 render(<Counter>, process.stdout);
 ```
 
-#### App
+#### Instance
 
 This is the object that `render()` returns.
+
+##### rerender
+
+Replace previous root node with a new one or update props of the current root node.
+
+```jsx
+// Update props of the root node
+const {rerender} = render(<Counter count={1}/>);
+rerender(<Counter count={2}/>);
+
+// Replace root node
+const {rerender} = render(<OldCounter/>);
+rerender(<NewCounter/>);
+```
 
 ##### unmount
 
 Manually unmount the whole Ink app.
 
 ```jsx
-const app = render(<MyApp/>);
-app.unmount();
+const {unmount} = render(<MyApp/>);
+unmount();
 ```
 
 ##### waitUntilExit
@@ -234,13 +248,11 @@ app.unmount();
 Returns a promise, which resolves when app is unmounted.
 
 ```jsx
-const app = render(<MyApp/>);
+const {unmount, waitUntilExit} = render(<MyApp/>);
 
-setTimeout(() => {
-	app.unmount();
-}, 1000);
+setTimeout(unmount, 1000);
 
-await app.waitUntilExit(); // resolves after `app.unmount()` is called
+await waitUntilExit(); // resolves after `unmount()` is called
 ```
 
 ## Building Layouts
