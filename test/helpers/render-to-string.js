@@ -1,4 +1,4 @@
-import render from './render';
+import {render} from '../..';
 
 // Fake process.stdout
 class Stream {

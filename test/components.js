@@ -1,7 +1,8 @@
 import React, {useState} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
-import {Box, Color, Static, renderToString} from '..';
+import {Box, Color, Static} from '..';
+import renderToString from './helpers/render-to-string';
 
 test('text', t => {
 	const output = renderToString(<Box>Hello World</Box>);
