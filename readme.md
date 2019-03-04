@@ -1,5 +1,3 @@
-**You're viewing a readme for an old version of Ink. Ink 2 is an incredibly exciting rewrite based on actual React. It will be released soon, but meanwhile go to [next branch](https://github.com/vadimdemedes/ink/tree/next) to check out the latest readme and progress.**
-
 <h1 align="center">
 	<br>
 	<br>
