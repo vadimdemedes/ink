@@ -38,19 +38,18 @@
     "text"
   ],
   "dependencies": {
-    "ansi-escapes": "^3.2.0",
     "arrify": "^1.0.1",
     "auto-bind": "^2.0.0",
     "chalk": "^2.4.1",
     "cli-cursor": "^2.1.0",
     "lodash.throttle": "^4.1.1",
+    "log-update": "^3.0.0",
     "prop-types": "^15.6.2",
     "react-reconciler": "^0.20.0",
     "scheduler": "^0.13.2",
     "slice-ansi": "^1.0.0",
     "string-length": "^2.0.0",
     "widest-line": "^2.0.0",
-    "wrap-ansi": "^4.0.0",
     "yoga-layout-prebuilt": "^1.9.3"
   },
   "devDependencies": {
