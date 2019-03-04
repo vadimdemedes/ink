@@ -1,6 +1,8 @@
-const {h, render, Component, Text} = require('../');
+'use strict';
+const React = require('react');
+const {render, Box, Color} = require('..');
 
-class Counter extends Component {
+class Counter extends React.PureComponent {
 	constructor() {
 		super();
 
@@ -10,18 +12,19 @@ class Counter extends Component {
 	}
 
 	render() {
-		return h('div', {}, [
-			h('div', {}, []),
-			h('div', {}, [
-				h(Text, {blue: true}, '~/Projects/ink ')
-			]),
-			h('div', {}, [
-				h(Text, {red: true}, 'λ '),
-				h(Text, {green: true}, 'node '),
-				h(Text, {}, 'media/example')
-			]),
-			h(Text, {green: true}, `${this.state.i} tests passed`)
-		]);
+		return React.createElement(
+			Box,
+			{flexDirection: 'column'},
+			React.createElement(Box, {}, React.createElement(Color, {blue: true}, '~/Projects/ink ')),
+			React.createElement(
+				Box,
+				{},
+				React.createElement(Color, {red: true}, 'λ '),
+				React.createElement(Color, {green: true}, 'node '),
+				React.createElement(Box, {}, 'media/example')
+			),
+			React.createElement(Color, {green: true}, `${this.state.i} tests passed`)
+		);
 	}
 
 	componentDidMount() {
@@ -30,9 +33,9 @@ class Counter extends Component {
 				process.exit(0); // eslint-disable-line unicorn/no-process-exit
 			}
 
-			this.setState({
-				i: this.state.i + 1
-			});
+			this.setState(prevState => ({
+				i: prevState.i + 1
+			}));
 		}, 100);
 	}
 
@@ -41,4 +44,4 @@ class Counter extends Component {
 	}
 }
 
-render(h(Counter));
+render(React.createElement(Counter));
