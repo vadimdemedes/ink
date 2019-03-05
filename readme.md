@@ -716,6 +716,7 @@ Usage:
 - [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color component.
 - [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
 - [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
+- [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
 
 ### Incompatible components
 
