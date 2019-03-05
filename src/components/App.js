@@ -59,6 +59,7 @@ export default class App extends PureComponent {
 
 		if (isEnabled) {
 			stdin.addListener('data', this.handleInput);
+			stdin.resume();
 		} else {
 			stdin.removeListener('data', this.handleInput);
 			stdin.pause();
