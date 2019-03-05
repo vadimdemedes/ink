@@ -1,7 +1,8 @@
 import React, {useState} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
-import {Box, Color, Static} from '..';
+import {spy} from 'sinon';
+import {Box, Color, Static, render} from '..';
 import renderToString from './helpers/render-to-string';
 
 test('text', t => {
@@ -123,4 +124,27 @@ test('ensure wrap-ansi doesn\'t trim leading whitespace', t => {
 	);
 
 	t.is(output, chalk.red(' ERROR '));
+});
+
+test('replace child node with text', t => {
+	const stdout = {
+		write: spy(),
+		columns: 100
+	};
+
+	const Dynamic = ({replace}) => ( // eslint-disable-line react/prop-types
+		<Box>
+			{replace ? 'x' : <Color green>test</Color>}
+		</Box>
+	);
+
+	const {rerender} = render(<Dynamic/>, {
+		stdout,
+		debug: true
+	});
+
+	t.is(stdout.write.lastCall.args[0], chalk.green('test'));
+
+	rerender(<Dynamic replace/>);
+	t.is(stdout.write.lastCall.args[0], 'x');
 });

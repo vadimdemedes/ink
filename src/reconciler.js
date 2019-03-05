@@ -85,7 +85,15 @@ export default onRender => {
 				if (key === 'children') {
 					if (typeof value === 'string' || typeof value === 'number') {
 						if (type === 'div') {
-							node.childNodes[0].textContent = String(value);
+							// Text node must be wrapped in another node, so that text can be aligned within container
+							// If there's no such node, a new one must be created
+							if (node.childNodes.length === 0) {
+								const textElement = createNode('div');
+								textElement.textContent = String(value);
+								appendChildNode(node, textElement);
+							} else {
+								node.childNodes[0].textContent = String(value);
+							}
 						}
 
 						if (type === 'span') {
