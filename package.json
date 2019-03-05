@@ -20,8 +20,10 @@
     "cast": "svg-term --command 'node media/demo.js' --out media/demo.svg --from=100 --window --width=50 --height=8 --term=iterm2 --profile=Snazzy"
   },
   "main": "build",
+  "types": "index.d.ts",
   "files": [
-    "build"
+    "build",
+    "index.d.ts"
   ],
   "keywords": [
     "react",
@@ -38,6 +40,7 @@
     "text"
   ],
   "dependencies": {
+    "@types/react": "^16.8.6",
     "arrify": "^1.0.1",
     "auto-bind": "^2.0.0",
     "chalk": "^2.4.1",
