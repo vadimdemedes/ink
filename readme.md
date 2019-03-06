@@ -610,7 +610,7 @@ See [examples/jest](examples/jest/jest.js) for a basic implementation of Jest's 
 
 #### &lt;AppContext&gt;
 
-`<StdinContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes a method to manually exit the app (unmount).
+`<AppContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes a method to manually exit the app (unmount).
 
 Import:
 
