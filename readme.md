@@ -731,7 +731,6 @@ These are components that haven't migrated to Ink 2 yet:
 - [ink-table](https://github.com/maticzav/ink-table) - Table component.
 - [ink-broadcast](https://github.com/jimmed/ink-broadcast) - Implementation of react-broadcast for Ink.
 - [ink-router](https://github.com/jimmed/ink-router) - Implementation of react-router for Ink.
-- [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
 - [ink-select](https://github.com/karaggeorge/ink-select) - Select component.
 - [ink-scrollbar](https://github.com/karaggeorge/ink-scrollbar) - Scrollbar component.
 - [ink-text-animation](https://github.com/yardnsm/ink-text-animation) - Text animation component.
