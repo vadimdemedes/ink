@@ -15,7 +15,7 @@
 ## Install
 
 ```
-$ npm install ink
+$ npm install ink react
 ```
 
 
