@@ -80,6 +80,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Building Layouts](#building-layouts)
 - [Built-in Components](#built-in-components)
 - [Useful Components](#useful-components)
+- [Testing](#testing)
 
 
 ## Getting Started
@@ -736,6 +737,25 @@ These are components that haven't migrated to Ink 2 yet:
 - [ink-text-animation](https://github.com/yardnsm/ink-text-animation) - Text animation component.
 - [ink-figlet](https://github.com/KimotoYanke/ink-figlet) - Large text component with Figlet fonts.
 - [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider component.
+
+
+## Testing
+
+Ink components are simple to test with [ink-testing-library](https://github.com/vadimdemedes/ink-testing-library).
+Here's a simple example that checks how component is rendered:
+
+```jsx
+import React from 'react';
+import {Text} from 'ink';
+import {render} from 'ink-testing-library';
+
+const Test = () => <Text>Hello World</Text>;
+const {lastFrame} = render(<Test/>);
+
+lastFrame() === 'Hello World'; //=> true
+```
+
+Visit [ink-testing-library](https://github.com/vadimdemedes/ink-testing-library) for more examples and full documentation.
 
 
 ## License
