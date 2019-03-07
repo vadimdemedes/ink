@@ -72,7 +72,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [changelog-view](https://github.com/jdeniau/changelog-view) - Tool view changelog in console.
 
 
-## Table of Contents
+## Contents
 
 - [Getting Started](#getting-started)
 - [Examples](#examples)
@@ -126,7 +126,7 @@ render(<Demo/>);
 ## API
 
 Since Ink is a React renderer, it means that all features of React are supported.
-Head over to [React](https://reactjs.org/) website for documentation on how to use it.
+Head over to [React](https://reactjs.org) website for documentation on how to use it.
 In this readme only Ink's methods will be documented.
 
 #### render(tree, options)
@@ -141,23 +141,25 @@ Type: `ReactElement`
 
 ##### options
 
+Type: `Object`
+
 ###### stdout
 
-Type: `Stream`<br>
+Type: `stream.Writable`<br>
 Default: `process.stdout`
 
 Output stream where app will be rendered.
 
 ###### stdin
 
-Type: `Stream`<br>
+Type: `stream.Readable`<br>
 Default: `process.stdin`
 
 Input stream where app will listen for input.
 
 ###### exitOnCtrlC
 
-Type: `Boolean`<br>
+Type: `boolean`<br>
 Default: `true`
 
 Configure whether Ink should listen to Ctrl+C keyboard input and exit the app.
@@ -165,7 +167,7 @@ This is needed in case `process.stdin` is in [raw mode](https://nodejs.org/api/t
 
 ###### debug
 
-Type: `Boolean`<br>
+Type: `boolean`<br>
 Default: `false`
 
 If `true`, each update will be rendered as a separate output, without replacing the previous one.
@@ -267,7 +269,7 @@ See `<Box>` built-in component below for documentation on how to use Flexbox lay
 
 ### Built-in Components
 
-#### &lt;Box&gt;
+#### `<Box>`
 
 `<Box>` it's an essential Ink component to build your layout. It's like a `<div style="display: flex">` in a browser.
 
@@ -512,7 +514,7 @@ See [justify-content](https://css-tricks.com/almanac/properties/f/justify-conten
 ```
 
 
-#### &lt;Color&gt;
+#### `<Color>`
 
 The `<Color>` compoment is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api).
 It supports all of the chalk's methods as `props`.
@@ -539,7 +541,7 @@ Usage:
 </Color>
 ```
 
-#### &lt;Text&gt;
+#### `<Text>`
 
 This component can change the style of the text, make it bold, underline, italic or strikethrough.
 
@@ -578,7 +580,7 @@ Usage:
 <Text strikethrough>I am strikethrough</Text>
 ```
 
-#### &lt;Static&gt;
+#### `<Static>`
 
 `<Static>` component allows permanently rendering output to stdout and preserving it across renders.
 Components passed to `<Static>` as children will be written to stdout only once and will never be rerendered.
@@ -594,7 +596,7 @@ Example use case for this component is Jest's output:
 Jest continuosuly writes the list of completed tests to the output, while updating test results at the bottom of the output in real-time. Here's how this user interface could be implemented with Ink:
 
 ```jsx
-<Fragment>
+<>
 	<Static>
 		{tests.map(test => (
 			<Test key={test.id} title={test.title}/>
@@ -604,12 +606,12 @@ Jest continuosuly writes the list of completed tests to the output, while updati
 	<Box marginTop={1}>
 		<TestResults passed={results.passed} failed={results.failed}/>
 	</Box>
-</Fragment>
+</>
 ```
 
 See [examples/jest](examples/jest/jest.js) for a basic implementation of Jest's UI.
 
-#### &lt;AppContext&gt;
+#### `<AppContext>`
 
 `<AppContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes a method to manually exit the app (unmount).
 
@@ -636,7 +638,7 @@ Usage:
 </AppContext.Consumer>
 ```
 
-#### &lt;StdinContext&gt;
+#### `<StdinContext>`
 
 `<StdinContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes input stream.
 
@@ -648,7 +650,7 @@ import {StdinContext} from 'ink';
 
 ##### stdin
 
-Type: `Stream`<br>
+Type: `stream.Readable`<br>
 Default: `process.stdin`
 
 Stdin stream passed to `render()` in `options.stdin` or `process.stdin` by default.
@@ -668,7 +670,7 @@ Usage:
 
 Type: `function`<br>
 
-See [setRawMode](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode).
+See [`setRawMode`](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode).
 Ink exposes this function via own `<StdinContext>` to be able to handle <kbd>Ctrl</kbd>+<kbd>C</kbd>, that's why you should use Ink's `setRawMode` instead of `process.stdin.setRawMode`.
 
 Usage:
@@ -681,7 +683,7 @@ Usage:
 </StdinContext.Consumer>
 ```
 
-#### &lt;StdoutContext&gt;
+#### `<StdoutContext>`
 
 `<StdoutContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes stdout stream, where Ink renders your app.
 
@@ -693,7 +695,7 @@ import {StdoutContext} from 'ink';
 
 ##### stdout
 
-Type: `Stream`<br>
+Type: `stream.Writable`<br>
 Default: `process.stdout`
 
 Usage:
@@ -713,7 +715,7 @@ Usage:
 - [ink-spinner](https://github.com/vadimdemedes/ink-spinner) - Spinner.
 - [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
 - [ink-link](https://github.com/sindresorhus/ink-link) - Link component.
-- [ink-box](https://github.com/sindresorhus/ink-box) - Box component.
+- [ink-box](https://github.com/sindresorhus/ink-box) - Styled box component.
 - [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color component.
 - [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
 - [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.

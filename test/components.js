@@ -43,7 +43,7 @@ test('text with component', t => {
 test('text with fragment', t => {
 	const output = renderToString(
 		<Box>
-			Hello <React.Fragment>World</React.Fragment>
+			Hello <>World</>
 		</Box>
 	);
 
@@ -57,7 +57,7 @@ test('number', t => {
 });
 
 test('fragment', t => {
-	const output = renderToString(<React.Fragment>Hello World</React.Fragment>);
+	const output = renderToString(<>Hello World</>);
 
 	t.is(output, 'Hello World');
 });
