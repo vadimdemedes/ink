@@ -758,6 +758,12 @@ lastFrame() === 'Hello World'; //=> true
 Visit [ink-testing-library](https://github.com/vadimdemedes/ink-testing-library) for more examples and full documentation.
 
 
+## Maintainers
+
+- [Vadim Demedes](https://github.com/vadimdemedes)
+- [Sindre Sorhus](https://github.com/sindresorhus)
+
+
 ## License
 
-MIT © [Vadim Demedes](https://github.com/vadimdemedes)
+MIT
