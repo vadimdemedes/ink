@@ -593,7 +593,7 @@ Example use case for this component is Jest's output:
 
 ![](https://jestjs.io/img/content/feature-fast.png)
 
-Jest continuosuly writes the list of completed tests to the output, while updating test results at the bottom of the output in real-time. Here's how this user interface could be implemented with Ink:
+Jest continuously writes the list of completed tests to the output, while updating test results at the bottom of the output in real-time. Here's how this user interface could be implemented with Ink:
 
 ```jsx
 <>
