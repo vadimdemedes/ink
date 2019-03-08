@@ -1,3 +1,4 @@
+import readline from 'readline';
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import cliCursor from 'cli-cursor';
@@ -70,6 +71,7 @@ export default class App extends PureComponent {
 				stdin.addListener('data', this.handleInput);
 				stdin.resume();
 				stdin.setRawMode(true);
+				readline.emitKeypressEvents(stdin);
 			}
 
 			this.rawModeEnabledCount++;
