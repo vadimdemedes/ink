@@ -17,6 +17,14 @@ export default class App extends PureComponent {
 		onExit: PropTypes.func.isRequired
 	};
 
+	constructor() {
+		super();
+
+		// Count how many components enabled raw mode to avoid disabling
+		// raw mode until all components don't need it anymore
+		this.rawModeEnabledCount = 0;
+	}
+
 	render() {
 		return (
 			<AppContext.Provider
@@ -55,12 +63,22 @@ export default class App extends PureComponent {
 		const {stdin} = this.props;
 
 		stdin.setEncoding('utf8');
-		stdin.setRawMode(isEnabled);
 
 		if (isEnabled) {
-			stdin.addListener('data', this.handleInput);
-			stdin.resume();
-		} else {
+			// Ensure raw mode is enabled only once
+			if (this.rawModeEnabledCount === 0) {
+				stdin.addListener('data', this.handleInput);
+				stdin.resume();
+				stdin.setRawMode(true);
+			}
+
+			this.rawModeEnabledCount++;
+			return;
+		}
+
+		// Disable raw mode only when no components left that are using it
+		if (--this.rawModeEnabledCount === 0) {
+			stdin.setRawMode(false);
 			stdin.removeListener('data', this.handleInput);
 			stdin.pause();
 		}

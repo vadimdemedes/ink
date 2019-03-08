@@ -1,8 +1,10 @@
+/* eslint-disable react/prop-types */
+import EventEmitter from 'events';
 import React, {useState} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
 import {spy} from 'sinon';
-import {Box, Color, Static, render} from '..';
+import {Box, Color, Static, StdinContext, render} from '..';
 import renderToString from './helpers/render-to-string';
 
 test('text', t => {
@@ -132,7 +134,7 @@ test('replace child node with text', t => {
 		columns: 100
 	};
 
-	const Dynamic = ({replace}) => ( // eslint-disable-line react/prop-types
+	const Dynamic = ({replace}) => (
 		<Box>
 			{replace ? 'x' : <Color green>test</Color>}
 		</Box>
@@ -147,4 +149,69 @@ test('replace child node with text', t => {
 
 	rerender(<Dynamic replace/>);
 	t.is(stdout.write.lastCall.args[0], 'x');
+});
+
+// See https://github.com/vadimdemedes/ink/issues/145
+test('disable raw mode when all input components are unmounted', t => {
+	const stdout = {
+		write: spy(),
+		columns: 100
+	};
+
+	const stdin = new EventEmitter();
+	stdin.setEncoding = () => {};
+	stdin.setRawMode = spy();
+	stdin.resume = spy();
+	stdin.pause = spy();
+
+	const options = {
+		stdout,
+		stdin,
+		debug: true
+	};
+
+	class Input extends React.Component {
+		render() {
+			return <Box>Test</Box>;
+		}
+
+		componentDidMount() {
+			this.props.setRawMode(true);
+		}
+
+		componentWillUnmount() {
+			this.props.setRawMode(false);
+		}
+	}
+
+	const Test = ({renderFirstInput, renderSecondInput}) => (
+		<StdinContext.Consumer>
+			{({setRawMode}) => (
+				<>
+					{renderFirstInput && <Input setRawMode={setRawMode}/>}
+					{renderSecondInput && <Input setRawMode={setRawMode}/>}
+				</>
+			)}
+		</StdinContext.Consumer>
+	);
+
+	const {rerender} = render(<Test renderFirstInput renderSecondInput/>, options);
+
+	t.true(stdin.setRawMode.calledOnce);
+	t.deepEqual(stdin.setRawMode.firstCall.args, [true]);
+	t.true(stdin.resume.calledOnce);
+	t.false(stdin.pause.called);
+
+	rerender(<Test renderFirstInput/>);
+
+	t.true(stdin.setRawMode.calledOnce);
+	t.true(stdin.resume.calledOnce);
+	t.false(stdin.pause.called);
+
+	rerender(<Test/>);
+
+	t.true(stdin.setRawMode.calledTwice);
+	t.deepEqual(stdin.setRawMode.lastCall.args, [false]);
+	t.true(stdin.resume.calledOnce);
+	t.true(stdin.pause.calledOnce);
 });
