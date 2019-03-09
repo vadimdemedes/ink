@@ -39,7 +39,7 @@ export const insertBeforeNode = (node, newChildNode, beforeChildNode) => {
 };
 
 export const removeChildNode = (node, removeNode) => {
-	removeNode.parentNode = null
+	removeNode.parentNode = null;
 
 	const index = node.childNodes.indexOf(removeNode);
 	if (index >= 0) {
