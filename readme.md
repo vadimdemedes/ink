@@ -516,7 +516,7 @@ See [justify-content](https://css-tricks.com/almanac/properties/f/justify-conten
 
 #### `<Color>`
 
-The `<Color>` compoment is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api).
+The `<Color>` component is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api).
 It supports all of the chalk's methods as `props`.
 
 Import:
