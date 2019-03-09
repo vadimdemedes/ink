@@ -720,6 +720,7 @@ Usage:
 - [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
 - [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
 - [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
+- [ink-color-pipe](https://github.com/LitoMore/ink-color-pipe) - Create color text with simpler style strings in Ink.
 
 ### Incompatible components
 
