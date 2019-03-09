@@ -1,6 +1,6 @@
 import Yoga from 'yoga-layout-prebuilt';
 import Output from './output';
-import {createNode, appendChildNode} from './dom';
+import {createNode, appendStaticNode} from './dom';
 import buildLayout from './build-layout';
 import renderNodeToOutput from './render-node-to-output';
 
@@ -49,7 +49,7 @@ export default ({terminalWidth}) => {
 		let staticOutput;
 		if (staticElements.length === 1) {
 			const rootNode = createNode('root');
-			appendChildNode(rootNode, staticElements[0]);
+			appendStaticNode(rootNode, staticElements[0], {woot: true});
 
 			const {yogaNode: staticYogaNode} = buildLayout(rootNode, {
 				config,
