@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 
 export interface RenderOptions {
 	/**
@@ -140,21 +140,21 @@ export interface BoxProps {
 	readonly margin?: number;
 	readonly flexGrow?: number;
 	readonly flexShrink?: number;
-	readonly flexDirection?: "row" | "row-reverse" | "column" | "column-reverse";
+	readonly flexDirection?: 'row' | 'row-reverse' | 'column' | 'column-reverse';
 	readonly flexBasis?: string | number;
-	readonly alignItems?: "flex-start" | "center" | "flex-end";
+	readonly alignItems?: 'flex-start' | 'center' | 'flex-end';
 	readonly justifyContent?:
-		| "flex-start"
-		| "center"
-		| "flex-end"
-		| "space-between"
-		| "space-around";
+		| 'flex-start'
+		| 'center'
+		| 'flex-end'
+		| 'space-between'
+		| 'space-around';
 	readonly textWrap?:
-		| "wrap"
-		| "truncate"
-		| "truncate-start"
-		| "truncate-middle"
-		| "truncate-end";
+		| 'wrap'
+		| 'truncate'
+		| 'truncate-start'
+		| 'truncate-middle'
+		| 'truncate-end';
 }
 
 /**
@@ -209,7 +209,7 @@ export const StdinContext: React.Context<{
 	 * Ink exposes this function via own `<StdinContext>` to be able to handle Ctrl+C, that's why you should use Ink's `setRawMode` instead of `process.stdin.setRawMode`.
 	 * If the `stdin` stream passed to Ink does not support setRawMode, this function does nothing.
 	 */
-	readonly setRawMode: NodeJS.ReadStream["setRawMode"];
+	readonly setRawMode: NodeJS.ReadStream['setRawMode'];
 }>;
 
 /**

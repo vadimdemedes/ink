@@ -16,7 +16,7 @@
 	"scripts": {
 		"build": "babel src --out-dir=build",
 		"prepare": "npm run build",
-		"test": "xo && FORCE_COLOR=true ava",
+		"test": "xo && FORCE_COLOR=true ava && tsd",
 		"pretest": "npm run build",
 		"cast": "svg-term --command='node media/demo.js' --out=media/demo.svg --from=100 --window --width=50 --height=8 --term=iterm2 --profile=Snazzy"
 	},
@@ -79,6 +79,7 @@
 		"sinon": "^7.2.7",
 		"strip-ansi": "^5.2.0",
 		"svg-term-cli": "^2.1.1",
+		"tsd": "^0.8.0",
 		"xo": "^0.24.0"
 	},
 	"peerDependencies": {
