@@ -39,7 +39,7 @@ export type Instance = {
 	/**
 	 * Returns a promise, which resolves when app is unmounted.
 	 */
-	waitUntilExit: Promise<void>;
+	waitUntilExit: () => Promise<void>;
 };
 
 export type Unmount = () => void;
