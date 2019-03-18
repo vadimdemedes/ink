@@ -182,7 +182,7 @@ export const AppContext: React.Context<{
 	/**
 	 * Exit (unmount) the whole Ink app.
 	 */
-	readonly exit: () => void;
+	readonly exit: (error?: Error) => void;
 }>;
 
 /**

@@ -38,8 +38,9 @@ export default class Instance {
 
 		this.container = reconciler.createContainer(this.rootNode, false, false);
 
-		this.exitPromise = new Promise(resolve => {
+		this.exitPromise = new Promise((resolve, reject) => {
 			this.resolveExitPromise = resolve;
+			this.rejectExitPromise = reject;
 		});
 	}
 
@@ -94,12 +95,16 @@ export default class Instance {
 		reconciler.updateContainer(tree, this.container);
 	}
 
-	unmount() {
+	unmount(error) {
 		this.onRender();
 		this.log.done();
 		this.ignoreRender = true;
 		reconciler.updateContainer(null, this.container);
-		this.resolveExitPromise();
+		if (error instanceof Error) {
+			this.rejectExitPromise(error);
+		} else {
+			this.resolveExitPromise();
+		}
 	}
 
 	waitUntilExit() {
