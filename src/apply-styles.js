@@ -101,6 +101,10 @@ const applyFlexStyles = (node, style) => {
 		}
 	}
 
+	if (hasOwnProperty(style, 'flexBasis')) {
+		node.setFlexBasis(style.flexBasis);
+	}
+
 	if (style.alignItems) {
 		if (style.alignItems === 'flex-start') {
 			node.setAlignItems(Yoga.ALIGN_FLEX_START);

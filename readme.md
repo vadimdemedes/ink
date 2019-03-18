@@ -458,6 +458,26 @@ See [flex-shrink](https://css-tricks.com/almanac/properties/f/flex-shrink/).
 </Box>
 ```
 
+###### flexBasis
+
+Type: `number`, `string`<br>
+
+See [flex-basis](https://css-tricks.com/almanac/properties/f/flex-basis/).
+
+```jsx
+<Box width={6}>
+	<Box flexBasis={3}>X</Box>
+	Y
+</Box> //=> 'X  Y'
+```
+
+```jsx
+<Box width={6}>
+	<Box flexBasis="50%">X</Box>
+	Y
+</Box> //=> 'X  Y'
+```
+
 ###### flexDirection
 
 Type: `string`<br>
