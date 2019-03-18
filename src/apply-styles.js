@@ -1,5 +1,9 @@
 import Yoga from 'yoga-layout-prebuilt';
 
+const hasOwnProperty = (obj, prop) => {
+	return {}.hasOwnProperty.call(obj, prop);
+};
+
 const applyMarginStyles = (node, style) => {
 	if (style.margin) {
 		node.setMargin(Yoga.EDGE_TOP, style.margin);
@@ -134,8 +138,19 @@ const applyFlexStyles = (node, style) => {
 	}
 };
 
+const applyDimensionStyles = (node, style) => {
+	if (hasOwnProperty(style, 'minWidth')) {
+		node.setMinWidth(style.minWidth);
+	}
+
+	if (hasOwnProperty(style, 'minHeight')) {
+		node.setMinHeight(style.minHeight);
+	}
+};
+
 export default (node, style = {}) => {
 	applyMarginStyles(node, style);
 	applyPaddingStyles(node, style);
 	applyFlexStyles(node, style);
+	applyDimensionStyles(node, style);
 };

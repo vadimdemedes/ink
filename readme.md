@@ -315,6 +315,18 @@ Height of the element in lines (rows). You can also set it in percent, which wil
 </Box> //=> 'X\n\n\nY\n\n'
 ```
 
+###### min-width
+
+Type: `number`
+
+Sets a minimum width of the element. Percentages aren't supported yet, see https://github.com/facebook/yoga/issues/872.
+
+###### min-height
+
+Type: `number`
+
+Sets a minimum height of the element. Percentages aren't supported yet, see https://github.com/facebook/yoga/issues/872.
+
 
 ##### Padding
 
