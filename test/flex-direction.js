@@ -1,6 +1,6 @@
 import React from 'react';
 import test from 'ava';
-import {Box} from '..';
+import {Box, Text} from '..';
 import renderToString from './helpers/render-to-string';
 
 test('direction row', t => {
@@ -45,4 +45,15 @@ test('direction column reverse', t => {
 	);
 
 	t.is(output, '\n\nB\nA');
+});
+
+test('don\'t squash text nodes when column direction is applied', t => {
+	const output = renderToString(
+		<Box flexDirection="column">
+			<Text>A</Text>
+			<Text>B</Text>
+		</Box>
+	);
+
+	t.is(output, 'A\nB');
 });

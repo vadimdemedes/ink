@@ -32,11 +32,12 @@ const renderNodeToOutput = (node, output, {offsetX = 0, offsetY = 0, transformer
 		//
 		// Also, this is necessary for libraries like ink-link (https://github.com/sindresorhus/ink-link),
 		// which need to wrap all children at once, instead of wrapping 3 text nodes separately.
+		const isFlexDirectionColumn = node.style.flexDirection === 'column';
 		const isAllTextNodes = node.childNodes.every(childNode => {
 			return Boolean(childNode.nodeValue) || (childNode.nodeName === 'SPAN' && Boolean(childNode.textContent));
 		});
 
-		if (isAllTextNodes) {
+		if (!isFlexDirectionColumn && isAllTextNodes) {
 			let text = '';
 
 			for (const childNode of node.childNodes) {
