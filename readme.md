@@ -279,6 +279,43 @@ Import:
 import {Box} from 'ink';
 ```
 
+##### Dimensions
+
+###### width
+
+Type: `number`, `string`
+
+Width of the element in spaces. You can also set it in percent, which will calculate the width based on the width of parent element.
+
+```jsx
+<Box width={4}>X</Box> //=> 'X   '
+```
+
+```jsx
+<Box width={10}>
+	<Box width="50%">X</Box>
+	Y
+</Box> //=> 'X    Y'
+```
+
+###### height
+
+Type: `number`, `string`
+
+Height of the element in lines (rows). You can also set it in percent, which will calculate the height based on the height of parent element.
+
+```jsx
+<Box height={4}>X</Box> //=> 'X\n\n\n'
+```
+
+```jsx
+<Box height={6} flexDirection="column">
+	<Box height="50%">X</Box>
+	Y
+</Box> //=> 'X\n\n\nY\n\n'
+```
+
+
 ##### Padding
 
 ###### paddingTop
