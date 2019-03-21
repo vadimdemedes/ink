@@ -122,6 +122,8 @@ export const Color: React.FC<ColorProps>;
 export interface BoxProps {
 	readonly width?: number;
 	readonly height?: number;
+	readonly minWidth?: number;
+	readonly minHeight?: number;
 	readonly paddingTop?: number;
 	readonly paddingBottom?: number;
 	readonly paddingLeft?: number;
