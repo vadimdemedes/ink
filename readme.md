@@ -762,6 +762,23 @@ Usage:
 </StdinContext.Consumer>
 ```
 
+##### isRawModeSupported
+
+Type: `boolean`
+
+A boolean flag determining if the current `stdin` supports `setRawMode`.
+A component using `setRawMode` might want to use `isRawModeSupported` to nicely fall back in environments where raw mode is not supported.
+
+Usage:
+
+```jsx
+<StdinContext.Consumer>
+	{({ isRawModeSupported, setRawMode, stdin }) => (
+		isRawModeSupported ? <MyInputComponent setRawMode={setRawMode} stdin={stdin}/> : <MyComponentThatDoesntUseInput />
+	)}
+</StdinContext.Consumer>
+```
+
 ##### setRawMode
 
 Type: `function`<br>
