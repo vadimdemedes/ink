@@ -2,7 +2,7 @@ import React from 'react';
 import throttle from 'lodash.throttle';
 import autoBind from 'auto-bind';
 import logUpdate from 'log-update';
-import createReconciler from './reconciler';
+import reconciler from './reconciler';
 import createRenderer from './renderer';
 import {createNode} from './dom';
 import App from './components/App';
@@ -14,6 +14,7 @@ export default class Instance {
 		this.options = options;
 
 		this.rootNode = createNode('root');
+		this.rootNode.onRender = this.onRender;
 		this.renderer = createRenderer({
 			terminalWidth: options.stdout.columns
 		});
@@ -35,8 +36,7 @@ export default class Instance {
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
 		this.fullStaticOutput = '';
 
-		this.reconciler = createReconciler(this.onRender);
-		this.container = this.reconciler.createContainer(this.rootNode, false);
+		this.container = reconciler.createContainer(this.rootNode, false, false);
 
 		this.exitPromise = new Promise(resolve => {
 			this.resolveExitPromise = resolve;
@@ -91,14 +91,14 @@ export default class Instance {
 			</App>
 		);
 
-		this.reconciler.updateContainer(tree, this.container);
+		reconciler.updateContainer(tree, this.container);
 	}
 
 	unmount() {
 		this.onRender();
 		this.log.done();
 		this.ignoreRender = true;
-		this.reconciler.updateContainer(null, this.container);
+		reconciler.updateContainer(null, this.container);
 		this.resolveExitPromise();
 	}
 
