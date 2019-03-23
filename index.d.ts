@@ -141,6 +141,7 @@ export interface BoxProps {
 	readonly flexGrow?: number;
 	readonly flexShrink?: number;
 	readonly flexDirection?: "row" | "row-reverse" | "column" | "column-reverse";
+	readonly flexBasis?: string | number;
 	readonly alignItems?: "flex-start" | "center" | "flex-end";
 	readonly justifyContent?:
 		| "flex-start"
