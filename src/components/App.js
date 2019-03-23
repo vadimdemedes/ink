@@ -76,8 +76,15 @@ export default class App extends PureComponent {
 	handleSetRawMode = isEnabled => {
 		const {stdin} = this.props;
 		if (!this.isRawModeSupported(stdin)) {
-			// Do nothing if stdin doesn't support raw mode
-			return;
+			if (stdin === process.stdin) {
+				throw new Error(
+					'setRawMode is not supported on the current process.stdin, which Ink uses as input stream by default.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported'
+				);
+			} else {
+				throw new Error(
+					'setRawMode is not supported on the stdin provided to Ink.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported'
+				);
+			}
 		}
 
 		stdin.setEncoding('utf8');
