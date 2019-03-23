@@ -58,7 +58,11 @@ export default class App extends PureComponent {
 
 	componentWillUnmount() {
 		cliCursor.show(this.props.stdout);
-		this.handleSetRawMode(false);
+
+		// ignore calling setRawMode on an handle stdin it cannot be called
+		if (this.isRawModeSupported(this.props.stdin)) {
+			this.handleSetRawMode(false);
+		}
 	}
 
 	componentDidCatch(error) {
@@ -107,7 +111,11 @@ export default class App extends PureComponent {
 	};
 
 	handleExit = error => {
-		this.handleSetRawMode(false);
+		// ignore calling setRawMode on an handle stdin it cannot be called
+		if (this.isRawModeSupported(this.props.stdin)) {
+			this.handleSetRawMode(false);
+		}
+		
 		this.props.onExit(error);
 	}
 }
