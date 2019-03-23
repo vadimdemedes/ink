@@ -120,8 +120,8 @@ export interface ColorProps {
 export const Color: React.FC<ColorProps>;
 
 export interface BoxProps {
-	readonly width?: number;
-	readonly height?: number;
+	readonly width?: number | string;
+	readonly height?: number | string;
 	readonly minWidth?: number;
 	readonly minHeight?: number;
 	readonly paddingTop?: number;
