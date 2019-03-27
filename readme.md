@@ -707,7 +707,7 @@ Usage:
 </AppContext.Consumer>
 ```
 
-If `exit` is called with an Error, `waitUntilExit` will reject with the error.
+If `exit` is called with an Error, `waitUntilExit` will reject with that error.
 
 #### `<StdinContext>`
 
