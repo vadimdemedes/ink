@@ -2,6 +2,8 @@ import React from 'react';
 import throttle from 'lodash.throttle';
 import autoBind from 'auto-bind';
 import logUpdate from 'log-update';
+import isCI from 'is-ci';
+import signalExit from 'signal-exit';
 import reconciler from './reconciler';
 import createRenderer from './renderer';
 import {createNode} from './dom';
@@ -26,7 +28,7 @@ export default class Instance {
 		});
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
-		this.ignoreRender = false;
+		this.isUnmounted = false;
 
 		// Store last output to only rerender when needed
 		this.lastOutput = '';
@@ -41,10 +43,13 @@ export default class Instance {
 			this.resolveExitPromise = resolve;
 			this.rejectExitPromise = reject;
 		});
+
+		// Unmount when process exits
+		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 	}
 
 	onRender() {
-		if (this.ignoreRender) {
+		if (this.isUnmounted) {
 			return;
 		}
 
@@ -64,13 +69,21 @@ export default class Instance {
 
 		// To ensure static output is cleanly rendered before main output, clear main output first
 		if (hasStaticOutput) {
-			this.log.clear();
+			if (!isCI) {
+				this.log.clear();
+			}
+
 			this.options.stdout.write(staticOutput);
-			this.log(output);
+
+			if (!isCI) {
+				this.log(output);
+			}
 		}
 
 		if (output !== this.lastOutput) {
-			this.throttledLog(output);
+			if (!isCI) {
+				this.throttledLog(output);
+			}
 
 			this.lastOutput = output;
 		}
@@ -92,9 +105,22 @@ export default class Instance {
 	}
 
 	unmount(error) {
+		if (this.isUnmounted) {
+			return;
+		}
+
 		this.onRender();
-		this.log.done();
-		this.ignoreRender = true;
+		this.unsubscribeExit();
+
+		// CIs don't handle erasing ansi escapes well, so it's better to
+		// only render last frame of non-static output
+		if (isCI) {
+			this.options.stdout.write(this.lastOutput + '\n');
+		} else if (!this.options.debug) {
+			this.log.done();
+		}
+
+		this.isUnmounted = true;
 		reconciler.updateContainer(null, this.container);
 		if (error instanceof Error) {
 			this.rejectExitPromise(error);

@@ -4,8 +4,10 @@ import React, {useState} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
 import {spy} from 'sinon';
+import stripAnsi from 'strip-ansi';
 import {Box, Color, Static, StdinContext, render} from '..';
 import renderToString from './helpers/render-to-string';
+import run from './helpers/run';
 
 test('text', t => {
 	const output = renderToString(<Box>Hello World</Box>);
@@ -288,4 +290,19 @@ test('disable raw mode when all input components are unmounted', t => {
 	t.deepEqual(stdin.setRawMode.lastCall.args, [false]);
 	t.true(stdin.resume.calledOnce);
 	t.true(stdin.pause.calledOnce);
+});
+
+test('render only last frame when run in CI', async t => {
+	const output = await run('ci', {
+		env: {CI: true}
+	});
+
+	t.is(stripAnsi(output), [
+		'#1',
+		'#2',
+		'#3',
+		'#4',
+		'#5',
+		'Counter: 5'
+	].join('\r\n') + '\r\n');
 });

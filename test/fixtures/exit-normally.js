@@ -2,4 +2,5 @@
 const React = require('react');
 const {render, Box} = require('../..');
 
-render(<Box>Hello World</Box>);
+const {waitUntilExit} = render(<Box>Hello World</Box>);
+waitUntilExit().then(() => console.log('exited'));
