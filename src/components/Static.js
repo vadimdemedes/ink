@@ -48,10 +48,6 @@ export default class Static extends Component {
 		}
 	}
 
-	shouldComponentUpdate(nextProps, nextState) {
-		return this.state.ignoreKeys === nextState.ignoreKeys;
-	}
-
 	saveRenderedKeys() {
 		this.setState(prevState => {
 			const newKeys = React.Children

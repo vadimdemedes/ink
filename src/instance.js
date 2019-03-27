@@ -30,7 +30,6 @@ export default class Instance {
 
 		// Store last output to only rerender when needed
 		this.lastOutput = '';
-		this.lastStaticOutput = '';
 
 		// This variable is used only in debug mode to store full static output
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
@@ -52,12 +51,11 @@ export default class Instance {
 		const {output, staticOutput} = this.renderer(this.rootNode);
 
 		// If <Static> output isn't empty, it means new children have been added to it
-		const hasNewStaticOutput = staticOutput && staticOutput !== '\n' && staticOutput !== this.lastStaticOutput;
+		const hasStaticOutput = staticOutput && staticOutput !== '\n';
 
 		if (this.options.debug) {
-			if (hasNewStaticOutput) {
+			if (hasStaticOutput) {
 				this.fullStaticOutput += staticOutput;
-				this.lastStaticOutput = staticOutput;
 			}
 
 			this.options.stdout.write(this.fullStaticOutput + output);
@@ -65,12 +63,10 @@ export default class Instance {
 		}
 
 		// To ensure static output is cleanly rendered before main output, clear main output first
-		if (hasNewStaticOutput) {
+		if (hasStaticOutput) {
 			this.log.clear();
 			this.options.stdout.write(staticOutput);
 			this.log(output);
-
-			this.lastStaticOutput = staticOutput;
 		}
 
 		if (output !== this.lastOutput) {
