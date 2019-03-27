@@ -2,9 +2,9 @@ import {render} from '../..';
 
 // Fake process.stdout
 class Stream {
-	constructor() {
+	constructor({columns}) {
 		this.output = '';
-		this.columns = 100;
+		this.columns = columns || 100;
 	}
 
 	write(str) {
@@ -16,8 +16,8 @@ class Stream {
 	}
 }
 
-export default node => {
-	const stream = new Stream();
+export default (node, {columns} = {}) => {
+	const stream = new Stream({columns});
 
 	render(node, {
 		stdout: stream,

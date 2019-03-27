@@ -149,6 +149,12 @@ export interface BoxProps {
 		| "flex-end"
 		| "space-between"
 		| "space-around";
+	readonly textWrap?:
+		| "wrap"
+		| "truncate"
+		| "truncate-start"
+		| "truncate-middle"
+		| "truncate-end";
 }
 
 /**

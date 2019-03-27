@@ -1,13 +1,6 @@
 import Yoga from 'yoga-layout-prebuilt';
-import widestLine from 'widest-line';
 import applyStyles from './apply-styles';
-
-const measureText = text => {
-	const width = widestLine(text);
-	const height = text.split('\n').length;
-
-	return {width, height};
-};
+import measureText from './measure-text';
 
 // Traverse the node tree, create Yoga nodes and assign styles to each Yoga node
 const buildLayout = (node, options) => {
@@ -40,30 +33,12 @@ const buildLayout = (node, options) => {
 	applyStyles(yogaNode, style);
 
 	// Nodes with only text have a child Yoga node dedicated for that text
-	if (node.textContent) {
-		const {width, height} = measureText(node.textContent);
+	if (node.textContent || node.nodeValue) {
+		const {width, height} = measureText(node.textContent || node.nodeValue);
 		yogaNode.setWidth(style.width || width);
 		yogaNode.setHeight(style.height || height);
 
 		return node;
-	}
-
-	// Text node
-	if (node.nodeValue) {
-		const {width, height} = measureText(node.nodeValue);
-		yogaNode.setWidth(width);
-		yogaNode.setHeight(height);
-
-		return node;
-	}
-
-	// Nodes with other nodes as children
-	if (style.width) {
-		yogaNode.setWidth(style.width);
-	}
-
-	if (style.height) {
-		yogaNode.setHeight(style.height);
 	}
 
 	if (Array.isArray(node.childNodes) && node.childNodes.length > 0) {

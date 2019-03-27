@@ -52,6 +52,56 @@ test('text with fragment', t => {
 	t.is(output, 'Hello World');
 });
 
+test('wrap text', t => {
+	const output = renderToString((
+		<Box textWrap="wrap">
+			Hello World
+		</Box>
+	), {columns: 7});
+
+	t.is(output, 'Hello\nWorld');
+});
+
+test('don\'t wrap text if there is enough space', t => {
+	const output = renderToString((
+		<Box textWrap="wrap">
+			Hello World
+		</Box>
+	), {columns: 20});
+
+	t.is(output, 'Hello World');
+});
+
+test('truncate text in the end', t => {
+	const output = renderToString((
+		<Box textWrap="truncate">
+			Hello World
+		</Box>
+	), {columns: 7});
+
+	t.is(output, 'Hello …');
+});
+
+test('truncate text in the middle', t => {
+	const output = renderToString((
+		<Box textWrap="truncate-middle">
+			Hello World
+		</Box>
+	), {columns: 7});
+
+	t.is(output, 'Hel…rld');
+});
+
+test('truncate text in the beginning', t => {
+	const output = renderToString((
+		<Box textWrap="truncate-start">
+			Hello World
+		</Box>
+	), {columns: 7});
+
+	t.is(output, '… World');
+});
+
 test('number', t => {
 	const output = renderToString(<Box>{1}</Box>);
 

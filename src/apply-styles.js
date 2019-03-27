@@ -143,6 +143,14 @@ const applyFlexStyles = (node, style) => {
 };
 
 const applyDimensionStyles = (node, style) => {
+	if (hasOwnProperty(style, 'width')) {
+		node.setWidth(style.width);
+	}
+
+	if (hasOwnProperty(style, 'height')) {
+		node.setHeight(style.height);
+	}
+
 	if (hasOwnProperty(style, 'minWidth')) {
 		node.setMinWidth(style.minWidth);
 	}

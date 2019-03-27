@@ -327,6 +327,31 @@ Type: `number`
 
 Sets a minimum height of the element. Percentages aren't supported yet, see https://github.com/facebook/yoga/issues/872.
 
+##### Wrapping
+
+###### textWrap
+
+Type: `string`<br>
+Values: `wrap` `truncate` `truncate-start` `truncate-middle` `truncate-end`
+
+This property tells Ink to wrap or truncate text content of `<Box>` if its width is larger than container. If `wrap` is passed, Ink will wrap text and split it into multiple lines. If `truncate-*` is passed, Ink will truncate text instead, which will result in one line of text with the rest cut off.
+
+*Note:* Ink doesn't wrap text by default.
+
+```jsx
+<Box textWrap="wrap">Hello World</Box>
+//=> 'Hello\nWorld'
+
+// `truncate` is an alias to `truncate-end`
+<Box textWrap="truncate">Hello World</Box>
+//=> 'Hello…'
+
+<Box textWrap="truncate-middle">Hello World</Box>
+//=> 'He…ld'
+
+<Box textWrap="truncate-start">Hello World</Box>
+//=> '…World'
+```
 
 ##### Padding
 

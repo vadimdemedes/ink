@@ -3,6 +3,7 @@ import Output from './output';
 import {createNode, appendStaticNode} from './dom';
 import buildLayout from './build-layout';
 import renderNodeToOutput from './render-node-to-output';
+import wrapText from './wrap-text';
 
 // Since <Static> components can be placed anywhere in the tree, this helper finds and returns them
 const getStaticNodes = element => {
@@ -49,7 +50,7 @@ export default ({terminalWidth}) => {
 		let staticOutput;
 		if (staticElements.length === 1) {
 			const rootNode = createNode('root');
-			appendStaticNode(rootNode, staticElements[0], {woot: true});
+			appendStaticNode(rootNode, staticElements[0]);
 
 			const {yogaNode: staticYogaNode} = buildLayout(rootNode, {
 				config,
@@ -57,6 +58,8 @@ export default ({terminalWidth}) => {
 				skipStaticElements: false
 			});
 
+			staticYogaNode.calculateLayout(Yoga.UNDEFINED, Yoga.UNDEFINED, Yoga.DIRECTION_LTR);
+			wrapText(rootNode);
 			staticYogaNode.calculateLayout(Yoga.UNDEFINED, Yoga.UNDEFINED, Yoga.DIRECTION_LTR);
 
 			// Save current Yoga node tree to free up memory later
@@ -76,6 +79,8 @@ export default ({terminalWidth}) => {
 			skipStaticElements: true
 		});
 
+		yogaNode.calculateLayout(Yoga.UNDEFINED, Yoga.UNDEFINED, Yoga.DIRECTION_LTR);
+		wrapText(node);
 		yogaNode.calculateLayout(Yoga.UNDEFINED, Yoga.UNDEFINED, Yoga.DIRECTION_LTR);
 
 		// Save current node tree to free up memory later
