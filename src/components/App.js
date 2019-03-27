@@ -93,8 +93,8 @@ export default class App extends PureComponent {
 		}
 	};
 
-	handleExit = () => {
+	handleExit = error => {
 		this.handleSetRawMode(false);
-		this.props.onExit();
+		this.props.onExit(error);
 	}
 }

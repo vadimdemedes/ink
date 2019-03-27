@@ -707,6 +707,8 @@ Usage:
 </AppContext.Consumer>
 ```
 
+If `exit` is called with an Error, `waitUntilExit` will reject with that error.
+
 #### `<StdinContext>`
 
 `<StdinContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes input stream.

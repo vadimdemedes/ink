@@ -47,9 +47,19 @@ test('exit on exit()', async t => {
 	t.true(output.includes('exited'));
 });
 
+test('exit on exit() with error', async t => {
+	const output = await run('exit-on-exit-with-error');
+	t.true(output.includes('errored'));
+});
+
 test('exit on exit() with raw mode', async t => {
 	const output = await run('exit-raw-on-exit');
 	t.true(output.includes('exited'));
+});
+
+test('exit on exit() with raw mode with error', async t => {
+	const output = await run('exit-raw-on-exit-with-error');
+	t.true(output.includes('errored'));
 });
 
 test('exit on unmount() with raw mode', async t => {

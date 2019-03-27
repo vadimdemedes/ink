@@ -31,7 +31,7 @@ export default (node, options = {}) => {
 
 	return {
 		rerender: instance.render,
-		unmount: instance.unmount,
+		unmount: () => instance.unmount(),
 		waitUntilExit: instance.waitUntilExit,
 		cleanup: () => instances.delete(options.stdout)
 	};
