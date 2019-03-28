@@ -1,3 +1,57 @@
+import widestLine from 'widest-line';
+import wrapText from './wrap-text';
+import getMaxWidth from './get-max-width';
+
+const isAllTextNodes = node => {
+	if (node.nodeName === '#text') {
+		return true;
+	}
+
+	if (node.nodeName === 'SPAN') {
+		if (node.textContent) {
+			return true;
+		}
+
+		if (Array.isArray(node.childNodes)) {
+			return node.childNodes.every(isAllTextNodes);
+		}
+	}
+
+	return false;
+};
+
+// Squashing text nodes allows to combine multiple text nodes into one and write
+// to `Output` instance only once. For example, <Text>hello{' '}world</Text>
+// is actually 3 text nodes, which would result 3 writes to `Output`.
+//
+// Also, this is necessary for libraries like ink-link (https://github.com/sindresorhus/ink-link),
+// which need to wrap all children at once, instead of wrapping 3 text nodes separately.
+const squashTextNodes = node => {
+	let text = '';
+
+	for (const childNode of node.childNodes) {
+		let nodeText;
+
+		if (childNode.nodeName === '#text') {
+			nodeText = childNode.nodeValue;
+		}
+
+		if (childNode.nodeName === 'SPAN') {
+			nodeText = childNode.textContent || squashTextNodes(childNode);
+		}
+
+		// Since these text nodes are being concatenated, `Output` instance won't be able to
+		// apply children transform, so we have to do it manually here for each text node
+		if (childNode.unstable__transformChildren) {
+			nodeText = childNode.unstable__transformChildren(nodeText);
+		}
+
+		text += nodeText;
+	}
+
+	return text;
+};
+
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
 const renderNodeToOutput = (node, output, {offsetX = 0, offsetY = 0, transformers = [], skipStaticElements}) => {
 	if (node.unstable__static && skipStaticElements) {
@@ -17,39 +71,49 @@ const renderNodeToOutput = (node, output, {offsetX = 0, offsetY = 0, transformer
 		newTransformers = [node.unstable__transformChildren, ...transformers];
 	}
 
-	// Text nodes
-	const text = node.textContent || node.nodeValue;
-	if (text) {
+	// Nodes with only text inside
+	if (node.textContent) {
+		let text = node.textContent;
+
+		// Since text nodes are always wrapped in an additional node, parent node
+		// is where we should look for attributes
+		if (node.parentNode.style.textWrap) {
+			const currentWidth = widestLine(text);
+			const maxWidth = getMaxWidth(node.parentNode.yogaNode);
+
+			if (currentWidth > maxWidth) {
+				text = wrapText(text, maxWidth, {
+					textWrap: node.parentNode.style.textWrap
+				});
+			}
+		}
+
 		output.write(x, y, text, {transformers: newTransformers});
+		return;
+	}
+
+	// Text nodes
+	if (node.nodeName === '#text') {
+		output.write(x, y, node.nodeValue, {transformers: newTransformers});
 		return;
 	}
 
 	// Nodes that have other nodes as children
 	if (Array.isArray(node.childNodes) && node.childNodes.length > 0) {
-		// Squashing text nodes allows to combine multiple text nodes into one and write
-		// to `Output` instance only once. For example, <Text>hello{' '}world</Text>
-		// is actually 3 text nodes, which would result 3 writes to `Output`.
-		//
-		// Also, this is necessary for libraries like ink-link (https://github.com/sindresorhus/ink-link),
-		// which need to wrap all children at once, instead of wrapping 3 text nodes separately.
-		const isFlexDirectionColumn = node.style.flexDirection === 'column';
-		const isAllTextNodes = node.childNodes.every(childNode => {
-			return Boolean(childNode.nodeValue) || (childNode.nodeName === 'SPAN' && Boolean(childNode.textContent));
-		});
+		const isFlexDirectionRow = node.style.flexDirection === 'row';
 
-		if (!isFlexDirectionColumn && isAllTextNodes) {
-			let text = '';
+		if (isFlexDirectionRow && node.childNodes.every(isAllTextNodes)) {
+			let text = squashTextNodes(node);
 
-			for (const childNode of node.childNodes) {
-				let nodeText = childNode.nodeValue || childNode.textContent;
+			if (node.style.textWrap) {
+				const currentWidth = widestLine(text);
+				const maxWidth = getMaxWidth(yogaNode);
 
-				// Since these text nodes are being concatenated, `Output` instance won't be able to
-				// apply children transform, so we have to do it manually here for each text node
-				if (childNode.unstable__transformChildren) {
-					nodeText = childNode.unstable__transformChildren(nodeText);
+				if (currentWidth > maxWidth) {
+					text = wrapText(text, maxWidth, {
+						textWrap: node.style.textWrap
+					});
 				}
-
-				text += nodeText;
 			}
 
 			output.write(x, y, text, {transformers: newTransformers});

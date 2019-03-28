@@ -5,7 +5,7 @@ import test from 'ava';
 import chalk from 'chalk';
 import {spy} from 'sinon';
 import stripAnsi from 'strip-ansi';
-import {Box, Color, Static, StdinContext, render} from '..';
+import {Box, Color, Text, Static, StdinContext, render} from '..';
 import renderToString from './helpers/render-to-string';
 import run from './helpers/run';
 
@@ -126,11 +126,24 @@ test('transform children', t => {
 	t.is(output, '[{test}]');
 });
 
-test('apply transform once to multiple text children', t => {
+test('squash multiple text nodes', t => {
 	const output = renderToString(
 		<Box unstable__transformChildren={str => `[${str}]`}>
 			<Box unstable__transformChildren={str => `{${str}}`}>
 				hello{' '}world
+			</Box>
+		</Box>
+	);
+
+	t.is(output, '[{hello world}]');
+});
+
+test('squash multiple nested text nodes', t => {
+	const output = renderToString(
+		<Box unstable__transformChildren={str => `[${str}]`}>
+			<Box unstable__transformChildren={str => `{${str}}`}>
+				hello
+				<Text>{' '}world</Text>
 			</Box>
 		</Box>
 	);
