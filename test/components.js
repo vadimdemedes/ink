@@ -261,6 +261,7 @@ test('disable raw mode when all input components are unmounted', t => {
 	const stdin = new EventEmitter();
 	stdin.setEncoding = () => {};
 	stdin.setRawMode = spy();
+	stdin.isTTY = true; // Without this, setRawMode will throw
 	stdin.resume = spy();
 	stdin.pause = spy();
 
