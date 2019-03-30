@@ -317,6 +317,145 @@ test('disable raw mode when all input components are unmounted', t => {
 	t.true(stdin.pause.calledOnce);
 });
 
+test('setRawMode should throw if not supported', t => {
+	const stdout = {
+		write: spy(),
+		columns: 100
+	};
+
+	const stdin = new EventEmitter();
+	stdin.setEncoding = () => {};
+	stdin.setRawMode = spy();
+	stdin.isTTY = false; // Without this, setRawMode will throw
+	stdin.resume = spy();
+	stdin.pause = spy();
+	
+	const didCatch = spy();
+
+	const options = {
+		stdout,
+		stdin,
+		debug: true
+	};
+
+	class Input extends React.Component {
+		render() {
+			return <Box>Test</Box>;
+		}
+
+		componentDidMount() {
+			try {
+				this.props.setRawMode(true);
+			} catch(err) {
+				didCatch(err);
+			}
+		}
+
+		componentWillUnmount() {
+			try {
+				this.props.setRawMode(false);
+			} catch(err) {
+				didCatch(err);
+			}
+		}
+	}
+
+	const Test = ({renderFirstInput, renderSecondInput}) => (
+		<StdinContext.Consumer>
+			{({setRawMode}) => (
+				<>
+					{renderFirstInput && <Input setRawMode={setRawMode}/>}
+					{renderSecondInput && <Input setRawMode={setRawMode}/>}
+				</>
+			)}
+		</StdinContext.Consumer>
+	);
+
+	const {rerender} = render(<Test renderFirstInput renderSecondInput/>, options);
+	
+	t.true(didCatch.callCount == 4);
+	t.false(stdin.setRawMode.called);
+	t.false(stdin.resume.called);
+	t.false(stdin.pause.called);
+
+	rerender(<Test renderFirstInput/>);
+
+	t.true(didCatch.callCount == 2);
+	t.false(stdin.setRawMode.called);
+	t.false(stdin.resume.called);
+	t.false(stdin.pause.called);
+
+	rerender(<Test/>);
+
+	t.true(didCatch.callCount == 0);
+	t.false(stdin.setRawMode.called);
+	t.false(stdin.resume.called);
+	t.false(stdin.pause.called);
+});
+
+test('isRawModeSupported should be used if setRawMode is not supported', t => {
+	const stdout = {
+		write: spy(),
+		columns: 100
+	};
+
+	const stdin = new EventEmitter();
+	stdin.setEncoding = () => {};
+	stdin.setRawMode = spy();
+	stdin.isTTY = false; // Without this, setRawMode will throw
+	stdin.resume = spy();
+	stdin.pause = spy();
+
+	const options = {
+		stdout,
+		stdin,
+		debug: true
+	};
+
+	class Input extends React.Component {
+		render() {
+			return <Box>Test</Box>;
+		}
+
+		componentDidMount() {
+			this.props.setRawMode(true);
+		}
+
+		componentWillUnmount() {
+			this.props.setRawMode(false);
+		}
+	}
+
+	const Test = ({renderFirstInput, renderSecondInput}) => (
+		<StdinContext.Consumer>
+			{({isRawModeSupported, setRawMode}) => (
+				<>
+					{isRawModeSupported && renderFirstInput && <Input setRawMode={setRawMode}/>}
+					{isRawModeSupported && renderSecondInput && <Input setRawMode={setRawMode}/>}
+				</>
+			)}
+		</StdinContext.Consumer>
+	);
+
+	const {rerender} = render(<Test renderFirstInput renderSecondInput/>, options);
+	
+	t.false(stdin.setRawMode.called);
+	t.false(stdin.resume.called);
+	t.false(stdin.pause.called);
+
+	rerender(<Test renderFirstInput/>);
+
+	t.false(stdin.setRawMode.called);
+	t.false(stdin.resume.called);
+	t.false(stdin.pause.called);
+
+	rerender(<Test/>);
+
+	t.false(stdin.setRawMode.called);
+	t.false(stdin.resume.called);
+	t.false(stdin.pause.called);
+});
+
 test('render only last frame when run in CI', async t => {
 	const output = await run('ci', {
 		env: {CI: true}
