@@ -69,10 +69,12 @@ export default class App extends PureComponent {
 		this.handleExit(error);
 	}
 
+	// Pass stdin directly here, for theoretical better reusability
 	isRawModeSupported(stdin) {
 		return stdin.isTTY;
 	}
 
+	// Handle setRawMode being called. Throws if setRawMode cannot be called on 'this.props.stdin'.
 	handleSetRawMode = isEnabled => {
 		const {stdin} = this.props;
 		if (!this.isRawModeSupported(stdin)) {
