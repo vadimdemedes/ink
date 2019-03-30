@@ -60,6 +60,10 @@ export default class App extends PureComponent {
 		this.handleSetRawMode(false);
 	}
 
+	componentDidCatch(error) {
+		this.handleExit(error);
+	}
+
 	handleSetRawMode = isEnabled => {
 		const {stdin} = this.props;
 
