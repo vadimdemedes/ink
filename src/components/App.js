@@ -37,7 +37,7 @@ export default class App extends PureComponent {
 					value={{
 						stdin: this.props.stdin,
 						setRawMode: this.handleSetRawMode,
-						isRawModeSupported: this.isRawModeSupported(this.props.stdin.isTTY)
+						isRawModeSupported: this.isRawModeSupported(this.props.stdin)
 					}}
 				>
 					<StdoutContext.Provider
