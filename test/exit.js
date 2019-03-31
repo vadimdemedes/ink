@@ -42,6 +42,11 @@ test('exit on unmount() with raw mode', async t => {
 	t.true(output.includes('exited'));
 });
 
+test('exit with thrown error', async t => {
+	const output = await run('exit-with-thrown-error');
+	t.true(output.includes('errored'));
+});
+
 test.cb('don\'t exit while raw mode is active', t => {
 	const term = spawn('node', ['./fixtures/run', './exit-double-raw-mode'], {
 		name: 'xterm-color',
