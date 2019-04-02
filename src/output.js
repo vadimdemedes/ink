@@ -23,6 +23,10 @@ export default class Output {
 	}
 
 	write(x, y, text, {transformers}) {
+		if (!text) {
+			return
+		}
+
 		const lines = text.split('\n');
 		let offsetY = 0;
 
