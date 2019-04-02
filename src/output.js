@@ -24,7 +24,7 @@ export default class Output {
 
 	write(x, y, text, {transformers}) {
 		if (!text) {
-			return
+			return;
 		}
 
 		const lines = text.split('\n');
