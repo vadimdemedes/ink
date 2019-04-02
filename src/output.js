@@ -34,6 +34,11 @@ export default class Output {
 			const length = stringLength(line);
 			const currentLine = this.output[y + offsetY];
 
+			// Line can be missing if `text` is taller than height of pre-initialized `this.output`
+			if (!currentLine) {
+				continue;
+			}
+
 			for (const transformer of transformers) {
 				line = transformer(line);
 			}

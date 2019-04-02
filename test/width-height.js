@@ -78,6 +78,16 @@ test('set height in percent', t => {
 	t.is(output, 'A\n\n\nB\n\n');
 });
 
+test('cut text over the set height', t => {
+	const output = renderToString((
+		<Box textWrap="wrap" height={2}>
+			AAAABBBBCCCC
+		</Box>
+	), {columns: 4});
+
+	t.is(output, 'AAAA\nBBBB');
+});
+
 test('set min height', t => {
 	const smallerOutput = renderToString(
 		<Box minHeight={4}>
