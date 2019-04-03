@@ -817,6 +817,7 @@ Usage:
 - [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
 - [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
 - [ink-color-pipe](https://github.com/LitoMore/ink-color-pipe) - Create color text with simpler style strings in Ink.
+- [ink-multi-select](https://github.com/karaggeorge/ink-multi-select) - Select one or more values from a list
 
 ### Incompatible components
 
