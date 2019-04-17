@@ -329,8 +329,9 @@ test('setRawMode should throw if not supported', t => {
 	stdin.isTTY = false; // Without this, setRawMode will throw
 	stdin.resume = spy();
 	stdin.pause = spy();
-	
-	const didCatch = spy();
+
+	const didCatchInMount = spy();
+	const didCatchInUnmount = spy();
 
 	const options = {
 		stdout,
@@ -346,48 +347,33 @@ test('setRawMode should throw if not supported', t => {
 		componentDidMount() {
 			try {
 				this.props.setRawMode(true);
-			} catch(err) {
-				didCatch(err);
+			} catch (error) {
+				didCatchInMount(error);
 			}
 		}
 
 		componentWillUnmount() {
 			try {
 				this.props.setRawMode(false);
-			} catch(err) {
-				didCatch(err);
+			} catch (error) {
+				didCatchInUnmount(error);
 			}
 		}
 	}
 
-	const Test = ({renderFirstInput, renderSecondInput}) => (
+	const Test = () => (
 		<StdinContext.Consumer>
 			{({setRawMode}) => (
-				<>
-					{renderFirstInput && <Input setRawMode={setRawMode}/>}
-					{renderSecondInput && <Input setRawMode={setRawMode}/>}
-				</>
+				<Input setRawMode={setRawMode}/>
 			)}
 		</StdinContext.Consumer>
 	);
 
-	const {rerender} = render(<Test renderFirstInput renderSecondInput/>, options);
-	
-	t.true(didCatch.callCount == 4);
-	t.false(stdin.setRawMode.called);
-	t.false(stdin.resume.called);
-	t.false(stdin.pause.called);
+	const {unmount} = render(<Test/>, options);
+	unmount();
 
-	rerender(<Test renderFirstInput/>);
-
-	t.true(didCatch.callCount == 2);
-	t.false(stdin.setRawMode.called);
-	t.false(stdin.resume.called);
-	t.false(stdin.pause.called);
-
-	rerender(<Test/>);
-
-	t.true(didCatch.callCount == 0);
+	t.is(didCatchInMount.callCount, 1);
+	t.is(didCatchInUnmount.callCount, 1);
 	t.false(stdin.setRawMode.called);
 	t.false(stdin.resume.called);
 	t.false(stdin.pause.called);
@@ -438,7 +424,7 @@ test('isRawModeSupported should be used if setRawMode is not supported', t => {
 	);
 
 	const {rerender} = render(<Test renderFirstInput renderSecondInput/>, options);
-	
+
 	t.false(stdin.setRawMode.called);
 	t.false(stdin.resume.called);
 	t.false(stdin.pause.called);
