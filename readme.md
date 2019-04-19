@@ -70,7 +70,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [emma](https://github.com/maticzav/emma-cli) - Terminal assistant to find and install npm packages.
 - [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command line tools for time-saving web developers.
 - [changelog-view](https://github.com/jdeniau/changelog-view) - Tool view changelog in console.
-- [gomoku-terminal](https://github.com/acrazing/gomoku-terminal) - A terminal online gomoku game client built with Ink & React.
+- [gomoku-terminal](https://github.com/acrazing/gomoku-terminal) - Play online Gomoku in the terminal.
 
 
 ## Contents
