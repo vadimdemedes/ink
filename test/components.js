@@ -379,7 +379,7 @@ test('setRawMode should throw if not supported', t => {
 	t.false(stdin.pause.called);
 });
 
-test('isRawModeSupported should be used if setRawMode is not supported', t => {
+test('rendering should succeed when using isRawModeSupported to test for isTTY-capable stdin', t => {
 	const stdout = {
 		write: spy(),
 		columns: 100
