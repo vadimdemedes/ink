@@ -388,7 +388,9 @@ test('rendering should succeed when using isRawModeSupported to test for isTTY-c
 	const stdin = new EventEmitter();
 	stdin.setEncoding = () => {};
 	stdin.setRawMode = spy();
-	stdin.isTTY = false; // Without this, setRawMode will throw
+	stdin.isTTY = false;
+	// When this is false, setRawMode will throw.
+	// So isRawModeSupported is necessary to test for isTTY-capable stdin
 	stdin.resume = spy();
 	stdin.pause = spy();
 
