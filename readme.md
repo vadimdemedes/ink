@@ -821,6 +821,7 @@ Usage:
 - [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
 - [ink-color-pipe](https://github.com/LitoMore/ink-color-pipe) - Create color text with simpler style strings in Ink.
 - [ink-multi-select](https://github.com/karaggeorge/ink-multi-select) - Select one or more values from a list
+- [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider component.
 
 ### Incompatible components
 
@@ -839,7 +840,6 @@ These are components that haven't migrated to Ink 2 yet:
 - [ink-scrollbar](https://github.com/karaggeorge/ink-scrollbar) - Scrollbar component.
 - [ink-text-animation](https://github.com/yardnsm/ink-text-animation) - Text animation component.
 - [ink-figlet](https://github.com/KimotoYanke/ink-figlet) - Large text component with Figlet fonts.
-- [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider component.
 
 
 ## Testing
