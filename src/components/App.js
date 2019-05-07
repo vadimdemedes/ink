@@ -19,8 +19,8 @@ export default class App extends PureComponent {
 	};
 
 	// Determines if TTY is supported on the provided stdin
-	static isRawModeSupported(stdin) {
-		return stdin.isTTY;
+	isRawModeSupported() {
+		return this.props.stdin.isTTY;
 	}
 
 	constructor() {
@@ -42,7 +42,7 @@ export default class App extends PureComponent {
 					value={{
 						stdin: this.props.stdin,
 						setRawMode: this.handleSetRawMode,
-						isRawModeSupported: App.isRawModeSupported(this.props.stdin)
+						isRawModeSupported: this.isRawModeSupported()
 					}}
 				>
 					<StdoutContext.Provider
@@ -65,7 +65,7 @@ export default class App extends PureComponent {
 		cliCursor.show(this.props.stdout);
 
 		// ignore calling setRawMode on an handle stdin it cannot be called
-		if (App.isRawModeSupported(this.props.stdin)) {
+		if (this.isRawModeSupported()) {
 			this.handleSetRawMode(false);
 		}
 	}
@@ -77,7 +77,7 @@ export default class App extends PureComponent {
 	// Handle setRawMode being called. Throws if setRawMode cannot be called on 'this.props.stdin'.
 	handleSetRawMode = isEnabled => {
 		const {stdin} = this.props;
-		if (!App.isRawModeSupported(stdin)) {
+		if (!this.isRawModeSupported()) {
 			if (stdin === process.stdin) {
 				throw new Error(
 					'setRawMode is not supported on the current process.stdin, which Ink uses as input stream by default.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported'
@@ -121,7 +121,7 @@ export default class App extends PureComponent {
 
 	handleExit = error => {
 		// ignore calling setRawMode on an handle stdin it cannot be called
-		if (App.isRawModeSupported(this.props.stdin)) {
+		if (this.isRawModeSupported()) {
 			this.handleSetRawMode(false);
 		}
 
