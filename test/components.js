@@ -317,7 +317,7 @@ test('disable raw mode when all input components are unmounted', t => {
 	t.true(stdin.pause.calledOnce);
 });
 
-test('setRawMode should throw if not supported', t => {
+test('setRawMode() should throw if raw mode is not supported', t => {
 	const stdout = {
 		write: spy(),
 		columns: 100
@@ -326,7 +326,7 @@ test('setRawMode should throw if not supported', t => {
 	const stdin = new EventEmitter();
 	stdin.setEncoding = () => {};
 	stdin.setRawMode = spy();
-	stdin.isTTY = false; // Without this, setRawMode will throw
+	stdin.isTTY = false;
 	stdin.resume = spy();
 	stdin.pause = spy();
 
@@ -379,7 +379,7 @@ test('setRawMode should throw if not supported', t => {
 	t.false(stdin.pause.called);
 });
 
-test('rendering should succeed when using isRawModeSupported to test for isTTY-capable stdin', t => {
+test('render different component based on whether stdin is a TTY or not', t => {
 	const stdout = {
 		write: spy(),
 		columns: 100
@@ -389,8 +389,6 @@ test('rendering should succeed when using isRawModeSupported to test for isTTY-c
 	stdin.setEncoding = () => {};
 	stdin.setRawMode = spy();
 	stdin.isTTY = false;
-	// When this is false, setRawMode will throw.
-	// So isRawModeSupported is necessary to test for isTTY-capable stdin
 	stdin.resume = spy();
 	stdin.pause = spy();
 
