@@ -148,21 +148,21 @@ Type: `ReactElement`
 
 Type: `Object`
 
-###### stdout
+###### options.stdout
 
 Type: `stream.Writable`<br>
 Default: `process.stdout`
 
 Output stream where app will be rendered.
 
-###### stdin
+###### options.stdin
 
 Type: `stream.Readable`<br>
 Default: `process.stdin`
 
 Input stream where app will listen for input.
 
-###### exitOnCtrlC
+###### options.exitOnCtrlC
 
 Type: `boolean`<br>
 Default: `true`
@@ -170,7 +170,7 @@ Default: `true`
 Configure whether Ink should listen to Ctrl+C keyboard input and exit the app.
 This is needed in case `process.stdin` is in [raw mode](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode), because then Ctrl+C is ignored by default and process is expected to handle it manually.
 
-###### debug
+###### options.debug
 
 Type: `boolean`<br>
 Default: `false`
