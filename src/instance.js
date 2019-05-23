@@ -7,6 +7,7 @@ import signalExit from 'signal-exit';
 import reconciler from './reconciler';
 import createRenderer from './renderer';
 import {createNode} from './dom';
+import instances from './instances';
 import App from './components/App';
 
 export default class Instance {
@@ -122,6 +123,8 @@ export default class Instance {
 
 		this.isUnmounted = true;
 		reconciler.updateContainer(null, this.container);
+		instances.delete(this.options.stdout);
+
 		if (error instanceof Error) {
 			this.rejectExitPromise(error);
 		} else {

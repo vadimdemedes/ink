@@ -1,6 +1,5 @@
 import Instance from './instance';
-
-const instances = new WeakMap();
+import instances from './instances';
 
 export default (node, options = {}) => {
 	// Stream was passed instead of `options` object
