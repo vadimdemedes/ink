@@ -76,7 +76,7 @@ export default class App extends PureComponent {
 
 	handleSetRawMode = isEnabled => {
 		const {stdin} = this.props;
-		
+
 		if (!this.isRawModeSupported()) {
 			if (stdin === process.stdin) {
 				throw new Error(
