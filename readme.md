@@ -886,6 +886,7 @@ Visit [ink-testing-library](https://github.com/vadimdemedes/ink-testing-library)
 
 - [Vadim Demedes](https://github.com/vadimdemedes)
 - [Sindre Sorhus](https://github.com/sindresorhus)
+- [LitoMore](https://github.com/LitoMore)
 
 
 ## License
