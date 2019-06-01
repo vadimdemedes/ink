@@ -843,12 +843,12 @@ Usage:
 - [ink-color-pipe](https://github.com/LitoMore/ink-color-pipe) - Create color text with simpler style strings in Ink.
 - [ink-multi-select](https://github.com/karaggeorge/ink-multi-select) - Select one or more values from a list
 - [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider component.
+- [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Configurable component for rendering progress bars.
 
 ### Incompatible components
 
 These are components that haven't migrated to Ink 2 yet:
 
-- [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Configurable component for rendering progress bars.
 - [ink-console](https://github.com/ForbesLindesay/ink-console) - Render output from `console[method]` calls in a scrollable panel.
 - [ink-confirm-input](https://github.com/kevva/ink-confirm-input) - Yes/No confirmation input.
 - [ink-checkbox-list](https://github.com/MaxMEllon/ink-checkbox-list) - Checkbox.
