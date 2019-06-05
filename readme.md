@@ -844,6 +844,7 @@ Usage:
 - [ink-multi-select](https://github.com/karaggeorge/ink-multi-select) - Select one or more values from a list
 - [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider component.
 - [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Configurable component for rendering progress bars.
+- [ink-table](https://github.com/maticzav/ink-table) - Table component.
 
 ### Incompatible components
 
@@ -854,7 +855,6 @@ These are components that haven't migrated to Ink 2 yet:
 - [ink-checkbox-list](https://github.com/MaxMEllon/ink-checkbox-list) - Checkbox.
 - [ink-quicksearch](https://github.com/aicioara/ink-quicksearch) - Select Component with fast quicksearch-like navigation
 - [ink-autocomplete](https://github.com/maticzav/ink-autocomplete) - Autocomplete.
-- [ink-table](https://github.com/maticzav/ink-table) - Table component.
 - [ink-broadcast](https://github.com/jimmed/ink-broadcast) - Implementation of react-broadcast for Ink.
 - [ink-router](https://github.com/jimmed/ink-router) - Implementation of react-router for Ink.
 - [ink-select](https://github.com/karaggeorge/ink-select) - Select component.
