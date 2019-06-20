@@ -99,7 +99,15 @@ To ensure all examples work and you can begin your adventure with Ink, make sure
 {
 	"babel": {
 		"presets": [
-			"@babel/preset-react"
+			"@babel/preset-react",
+			[
+				"@babel/preset-env",
+				{
+					"targets": {
+						"node": true
+					}
+				}
+			]
 		]
 	}
 }
