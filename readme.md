@@ -95,19 +95,21 @@ The key difference you have to remember is that the rendering result isn't a DOM
 To ensure all examples work and you can begin your adventure with Ink, make sure to set up Babel with a React preset. After [installing Babel](https://babeljs.io/docs/en/usage), configure it in `package.json`:
 
 ```json
-  "babel": {
-    "presets": [
-      "@babel/preset-react",
-      [
-        "@babel/preset-env",
-        {
-          "targets": {
-            "node": "current"
-          }
-        }
-      ]
-    ]
-  }
+{
+	"babel": {
+		"presets": [
+			"@babel/preset-react",
+			[
+				"@babel/preset-env",
+				{
+					"targets": {
+						"node": true
+					}
+				}
+			]
+		]
+	}
+}
 ```
 
 Don't forget to import `React` into every file that contains JSX:
