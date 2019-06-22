@@ -65,7 +65,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 
 
 ## Built with Ink
-- [ink-starter](https://github.com/pranshuchittora/ink) - Boilerplate for ink
+- [ink-starter](https://github.com/pranshuchittora/ink-starter) - Boilerplate for ink (Unofficial)
 - [emoj](https://github.com/sindresorhus/emoj) - Find relevant emoji on the command-line.
 - [emma](https://github.com/maticzav/emma-cli) - Terminal assistant to find and install npm packages.
 - [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command line tools for time-saving web developers.
