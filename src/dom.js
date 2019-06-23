@@ -1,5 +1,54 @@
 // Helper utilities implementing some common DOM methods to simplify reconciliation code
-export const createNode = tagName => ({
+const _documentCreateNode = (document, tagName) => {
+	return document.createElement(tagName);
+};
+
+const _documentAppendChildNode = (node, childNode) => {
+	if (childNode.parentNode) {
+		childNode.parentNode.removeChild(childNode);
+	}
+
+	node.append(childNode);
+}; // Same as `appendChildNode`, but without removing child node from parent node
+
+const _documentAppendStaticNode = (node, childNode) => {
+	node.append(childNode);
+};
+
+const _documentInsertBeforeNode = (node, newChildNode, beforeChildNode) => {
+	if (newChildNode.parentNode) {
+		newChildNode.parentNode.removeChild(newChildNode);
+	}
+
+	node.insertBefore(newChildNode, beforeChildNode);
+};
+
+const _documentRemoveChildNode = (node, removeNode) => {
+	node.removeChild(removeNode);
+};
+
+const _documentSetAttribute = (node, key, value) => {
+	node.setAttribute(key, value);
+};
+
+const _documentCreateTextNode = (document, text) => {
+	return document.createTextNode(text);
+};
+
+const _documentGetChildNodes = node => {
+	return [...node.childNodes];
+};
+
+const _documentGetTextContent = node => {
+	if (node.nodeType === 3) {
+		return node.data;
+	}
+
+	return null;
+};
+
+// Helper utilities implementing some common DOM methods to simplify reconciliation code
+const _createNode = tagName => ({
 	nodeName: tagName.toUpperCase(),
 	style: {},
 	attributes: {},
@@ -7,9 +56,9 @@ export const createNode = tagName => ({
 	parentNode: null
 });
 
-export const appendChildNode = (node, childNode) => {
+const _appendChildNode = (node, childNode) => {
 	if (childNode.parentNode) {
-		removeChildNode(childNode.parentNode, childNode);
+		_removeChildNode(childNode.parentNode, childNode);
 	}
 
 	childNode.parentNode = node;
@@ -18,13 +67,13 @@ export const appendChildNode = (node, childNode) => {
 };
 
 // Same as `appendChildNode`, but without removing child node from parent node
-export const appendStaticNode = (node, childNode) => {
+const _appendStaticNode = (node, childNode) => {
 	node.childNodes.push(childNode);
 };
 
-export const insertBeforeNode = (node, newChildNode, beforeChildNode) => {
+const _insertBeforeNode = (node, newChildNode, beforeChildNode) => {
 	if (newChildNode.parentNode) {
-		removeChildNode(newChildNode.parentNode, newChildNode);
+		_removeChildNode(newChildNode.parentNode, newChildNode);
 	}
 
 	newChildNode.parentNode = node;
@@ -38,7 +87,7 @@ export const insertBeforeNode = (node, newChildNode, beforeChildNode) => {
 	node.childNodes.push(newChildNode);
 };
 
-export const removeChildNode = (node, removeNode) => {
+const _removeChildNode = (node, removeNode) => {
 	removeNode.parentNode = null;
 
 	const index = node.childNodes.indexOf(removeNode);
@@ -47,11 +96,47 @@ export const removeChildNode = (node, removeNode) => {
 	}
 };
 
-export const setAttribute = (node, key, value) => {
+const _setAttribute = (node, key, value) => {
 	node.attributes[key] = value;
 };
 
-export const createTextNode = text => ({
+const _createTextNode = text => ({
 	nodeName: '#text',
 	nodeValue: text
 });
+
+const _getChildNodes = node => {
+	return node.childNodes;
+};
+
+const _getTextContent = node => {
+	return node.textContent;
+};
+
+export const createDocumentHelpers = document => {
+	if (document) {
+		return Object.freeze({
+			createNode: tagName => _documentCreateNode(document, tagName),
+			appendChildNode: _documentAppendChildNode,
+			appendStaticNode: _documentAppendStaticNode,
+			insertBeforeNode: _documentInsertBeforeNode,
+			removeChildNode: _documentRemoveChildNode,
+			setAttribute: _documentSetAttribute,
+			createTextNode: text => _documentCreateTextNode(document, text),
+			getChildNodes: _documentGetChildNodes,
+			getTextContent: _documentGetTextContent
+		});
+	}
+
+	return Object.freeze({
+		createNode: _createNode,
+		appendChildNode: _appendChildNode,
+		appendStaticNode: _appendStaticNode,
+		insertBeforeNode: _insertBeforeNode,
+		removeChildNode: _removeChildNode,
+		setAttribute: _setAttribute,
+		createTextNode: _createTextNode,
+		getChildNodes: _getChildNodes,
+		getTextContent: _getTextContent
+	});
+};

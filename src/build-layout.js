@@ -3,7 +3,7 @@ import applyStyles from './apply-styles';
 import measureText from './measure-text';
 
 // Traverse the node tree, create Yoga nodes and assign styles to each Yoga node
-const buildLayout = (node, options) => {
+const buildLayout = (documentHelpers, node, options) => {
 	const {config, terminalWidth, skipStaticElements} = options;
 	const yogaNode = Yoga.Node.create(config);
 	node.yogaNode = yogaNode;
@@ -15,13 +15,15 @@ const buildLayout = (node, options) => {
 		// `terminalWidth` can be `undefined` if env isn't a TTY
 		yogaNode.setWidth(terminalWidth || 100);
 
-		if (node.childNodes.length > 0) {
-			const childNodes = node.childNodes.filter(childNode => {
+		const childNodes1 = documentHelpers.getChildNodes(node);
+
+		if (childNodes1.length > 0) {
+			const childNodes = childNodes1.filter(childNode => {
 				return skipStaticElements ? !childNode.unstable__static : true;
 			});
 
 			for (const [index, childNode] of Object.entries(childNodes)) {
-				const childYogaNode = buildLayout(childNode, options).yogaNode;
+				const childYogaNode = buildLayout(documentHelpers, childNode, options).yogaNode;
 				yogaNode.insertChild(childYogaNode, index);
 			}
 		}
@@ -33,21 +35,24 @@ const buildLayout = (node, options) => {
 	applyStyles(yogaNode, style);
 
 	// Nodes with only text have a child Yoga node dedicated for that text
-	if (node.textContent || node.nodeValue) {
-		const {width, height} = measureText(node.textContent || node.nodeValue);
+	const textContent = documentHelpers.getTextContent(node);
+	if (textContent || node.nodeValue) {
+		const {width, height} = measureText(textContent || node.nodeValue);
 		yogaNode.setWidth(style.width || width);
 		yogaNode.setHeight(style.height || height);
 
 		return node;
 	}
 
-	if (Array.isArray(node.childNodes) && node.childNodes.length > 0) {
-		const childNodes = node.childNodes.filter(childNode => {
+	const childNodes1 = documentHelpers.getChildNodes(node);
+
+	if (Array.isArray(childNodes1) && childNodes1.length > 0) {
+		const childNodes = childNodes1.filter(childNode => {
 			return skipStaticElements ? !childNode.unstable__static : true;
 		});
 
 		for (const [index, childNode] of Object.entries(childNodes)) {
-			const {yogaNode: childYogaNode} = buildLayout(childNode, options);
+			const {yogaNode: childYogaNode} = buildLayout(documentHelpers, childNode, options);
 			yogaNode.insertChild(childYogaNode, index);
 		}
 	}

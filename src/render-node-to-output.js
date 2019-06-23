@@ -2,18 +2,21 @@ import widestLine from 'widest-line';
 import wrapText from './wrap-text';
 import getMaxWidth from './get-max-width';
 
-const isAllTextNodes = node => {
+const isAllTextNodes = (documentHelpers, node) => {
 	if (node.nodeName === '#text') {
 		return true;
 	}
 
 	if (node.nodeName === 'SPAN') {
-		if (node.textContent) {
+		if (documentHelpers.getTextContent(node)) {
 			return true;
 		}
 
-		if (Array.isArray(node.childNodes)) {
-			return node.childNodes.every(isAllTextNodes);
+		const childNodes = documentHelpers.getChildNodes(node);
+
+		if (Array.isArray(childNodes)) {
+			const fn = node => isAllTextNodes(documentHelpers, node);
+			return childNodes.every(fn);
 		}
 	}
 
@@ -26,10 +29,12 @@ const isAllTextNodes = node => {
 //
 // Also, this is necessary for libraries like ink-link (https://github.com/sindresorhus/ink-link),
 // which need to wrap all children at once, instead of wrapping 3 text nodes separately.
-const squashTextNodes = node => {
+const squashTextNodes = (documentHelpers, node) => {
 	let text = '';
 
-	for (const childNode of node.childNodes) {
+	const childNodes = documentHelpers.getChildNodes(node);
+
+	for (const childNode of childNodes) {
 		let nodeText;
 
 		if (childNode.nodeName === '#text') {
@@ -37,7 +42,7 @@ const squashTextNodes = node => {
 		}
 
 		if (childNode.nodeName === 'SPAN') {
-			nodeText = childNode.textContent || squashTextNodes(childNode);
+			nodeText = documentHelpers.getTextContent(childNode) || squashTextNodes(documentHelpers, childNode);
 		}
 
 		// Since these text nodes are being concatenated, `Output` instance won't be able to
@@ -53,7 +58,7 @@ const squashTextNodes = node => {
 };
 
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
-const renderNodeToOutput = (node, output, {offsetX = 0, offsetY = 0, transformers = [], skipStaticElements}) => {
+const renderNodeToOutput = (documentHelpers, node, output, {offsetX = 0, offsetY = 0, transformers = [], skipStaticElements}) => {
 	if (node.unstable__static && skipStaticElements) {
 		return;
 	}
@@ -72,12 +77,12 @@ const renderNodeToOutput = (node, output, {offsetX = 0, offsetY = 0, transformer
 	}
 
 	// Nodes with only text inside
-	if (node.textContent) {
-		let text = node.textContent;
+	if (documentHelpers.getTextContent(node)) {
+		let text = documentHelpers.getTextContent(node);
 
 		// Since text nodes are always wrapped in an additional node, parent node
 		// is where we should look for attributes
-		if (node.parentNode.style.textWrap) {
+		if (node.parentNode && node.parentNode.style && node.parentNode.style.textWrap) {
 			const currentWidth = widestLine(text);
 			const maxWidth = getMaxWidth(node.parentNode.yogaNode);
 
@@ -99,11 +104,14 @@ const renderNodeToOutput = (node, output, {offsetX = 0, offsetY = 0, transformer
 	}
 
 	// Nodes that have other nodes as children
-	if (Array.isArray(node.childNodes) && node.childNodes.length > 0) {
+	const childNodes = documentHelpers.getChildNodes(node);
+	if (Array.isArray(childNodes) && childNodes.length > 0) {
 		const isFlexDirectionRow = node.style.flexDirection === 'row';
 
-		if (isFlexDirectionRow && node.childNodes.every(isAllTextNodes)) {
-			let text = squashTextNodes(node);
+		const fn = node => isAllTextNodes(documentHelpers, node);
+
+		if (isFlexDirectionRow && childNodes.every(fn)) {
+			let text = squashTextNodes(documentHelpers, node);
 
 			if (node.style.textWrap) {
 				const currentWidth = widestLine(text);
@@ -120,8 +128,8 @@ const renderNodeToOutput = (node, output, {offsetX = 0, offsetY = 0, transformer
 			return;
 		}
 
-		for (const childNode of node.childNodes) {
-			renderNodeToOutput(childNode, output, {
+		for (const childNode of childNodes) {
+			renderNodeToOutput(documentHelpers, childNode, output, {
 				offsetX: x,
 				offsetY: y,
 				transformers: newTransformers,
