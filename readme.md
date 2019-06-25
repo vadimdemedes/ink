@@ -74,6 +74,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [cfpush](https://github.com/mamachanko/cfpush) - An interactive Cloud Foundry tutorial in your terminal.
 - [startd](https://github.com/mgrip/startd) - Turn your React component into a web app from the command-line.
 - [sindresorhus](https://github.com/sindresorhus/sindresorhus) - The Sindre Sorhus CLI.
+- [tap](https://node-tap.org/) - A Test-Anything-Protocol library for JavaScript
 
 
 ## Contents
