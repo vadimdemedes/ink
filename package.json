@@ -48,6 +48,7 @@
 		"cli-truncate": "^1.1.0",
 		"is-ci": "^2.0.0",
 		"jsdom": "^15.1.1",
+		"keycode": "^2.2.0",
 		"lodash.throttle": "^4.1.1",
 		"log-update": "^3.0.0",
 		"prop-types": "^15.6.2",

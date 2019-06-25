@@ -2,10 +2,82 @@ import readline from 'readline';
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import cliCursor from 'cli-cursor';
+import {default as keycode} from 'keycode';
 import AppContext from './AppContext';
 import StdinContext from './StdinContext';
 import StdoutContext from './StdoutContext';
 
+class DOMKeypressDispatcher extends PureComponent {
+	static propTypes = {
+		stdin: PropTypes.object.isRequired,
+		setRawMode: PropTypes.func.isRequired,
+		document: PropTypes.any,
+		window: PropTypes.any
+	};
+
+	componentDidMount() {
+		if (this.props.document) {
+			const {stdin, setRawMode} = this.props;
+			setRawMode(true);
+			stdin.on('keypress', this.dispatchInput);
+		}
+	}
+
+	componentWillUnmount() {
+		if (this.props.document) {
+			const {stdin, setRawMode} = this.props;
+			stdin.removeListener('keypress', this.dispatchInput);
+			setRawMode(false);
+		}
+	}
+
+	render() {
+		return (null);
+	}
+
+	dispatchInput = (str, key) => {
+		const code = keycode(key.name);
+		const downEvent = new this.props.window.KeyboardEvent('keydown', {
+			key: key.name,
+			charCode: code,
+			ctrlKey: key.ctrl,
+			shiftKey: key.shift,
+			keyCode: code,
+			which: code,
+			bubbles: true,
+			repeat: false,
+			location: 0,
+			isComposing: false
+		});
+		this.props.document.activeElement.dispatchEvent(downEvent);
+		const pressEvent = new this.props.window.KeyboardEvent('keypress', {
+			key: key.name,
+			charCode: code,
+			ctrlKey: key.ctrl,
+			shiftKey: key.shift,
+			keyCode: code,
+			which: code,
+			bubbles: true,
+			repeat: false,
+			location: 0,
+			isComposing: false
+		});
+		this.props.document.activeElement.dispatchEvent(pressEvent);
+		const upEvent = new this.props.window.KeyboardEvent('keyup', {
+			key: key.name,
+			charCode: code,
+			ctrlKey: key.ctrl,
+			shiftKey: key.shift,
+			keyCode: code,
+			which: code,
+			bubbles: true,
+			repeat: false,
+			location: 0,
+			isComposing: false
+		});
+		this.props.document.activeElement.dispatchEvent(upEvent);
+	}
+}
 
 // Root component for all Ink apps
 // It renders stdin and stdout contexts, so that children can access them if needed
@@ -16,7 +88,9 @@ export default class App extends PureComponent {
 		stdin: PropTypes.object.isRequired,
 		stdout: PropTypes.object.isRequired,
 		exitOnCtrlC: PropTypes.bool.isRequired,
-		onExit: PropTypes.func.isRequired
+		onExit: PropTypes.func.isRequired,
+		window: PropTypes.object,
+		document: PropTypes.object
 	};
 
 	// Determines if TTY is supported on the provided stdin
@@ -33,6 +107,14 @@ export default class App extends PureComponent {
 	}
 
 	render() {
+		const keyboardEventDispatcher = (this.props.window && this.props.document) ? (
+			<DOMKeypressDispatcher
+				window={this.props.window}
+				document={this.props.document}
+				stdin={this.props.stdin}
+				setRawMode={this.handleSetRawMode}
+			/>
+		) : null;
 		return (
 			<AppContext.Provider
 				value={{
@@ -51,6 +133,7 @@ export default class App extends PureComponent {
 							stdout: this.props.stdout
 						}}
 					>
+						{keyboardEventDispatcher}
 						{this.props.children}
 					</StdoutContext.Provider>
 				</StdinContext.Provider>
