@@ -5,9 +5,9 @@ import test from 'ava';
 import chalk from 'chalk';
 import {spy} from 'sinon';
 import stripAnsi from 'strip-ansi';
-import {Box, Color, Text, Static, StdinContext, render} from '..';
 import renderToString from './helpers/render-to-string';
 import run from './helpers/run';
+import {Box, Color, Text, Static, StdinContext, render} from '..';
 
 test('text', t => {
 	const output = renderToString(<Box>Hello World</Box>);

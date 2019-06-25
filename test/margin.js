@@ -1,7 +1,7 @@
 import React from 'react';
 import test from 'ava';
-import {Box} from '..';
 import renderToString from './helpers/render-to-string';
+import {Box} from '..';
 
 test('margin', t => {
 	const output = renderToString(<Box margin={2}>X</Box>);
