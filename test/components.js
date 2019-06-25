@@ -193,28 +193,29 @@ test('static output', t => {
 	t.is(output, 'A\nB\nC\n\n\nX');
 });
 
-test('render identical static output with unique keys', t => {
+test('skip previous output when rendering new static output', t => {
 	const stdout = {
 		write: spy(),
 		columns: 100
 	};
 
-	const Dynamic = ({add}) => (
+	const Dynamic = ({items}) => (
 		<Static>
-			<Box key="a">A</Box>
-			{add && <Box key="b">A</Box>}
+			{items.map(item => (
+				<Box key={item}>{item}</Box>
+			))}
 		</Static>
 	);
 
-	const {rerender} = render(<Dynamic/>, {
+	const {rerender} = render(<Dynamic items={['A']}/>, {
 		stdout,
 		debug: true
 	});
 
 	t.is(stdout.write.lastCall.args[0], 'A\n');
 
-	rerender(<Dynamic add/>);
-	t.is(stdout.write.lastCall.args[0], 'A\nA\n');
+	rerender(<Dynamic items={['A', 'B']}/>);
+	t.is(stdout.write.lastCall.args[0], 'A\nB\n');
 });
 
 // See https://github.com/chalk/wrap-ansi/issues/27

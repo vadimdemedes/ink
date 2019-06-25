@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 
+const childrenToArray = children => Array.isArray(children) ? children : [children];
+
 // This component allows developers to render output before main output from all the other components.
 // The reason it's called <Static> is it's append-only output. Output from <Static> components
 // is written permantently to stdout and is never updated afterwards. If <Static> component
@@ -16,20 +18,18 @@ export default class Static extends Component {
 		children: PropTypes.node
 	}
 
-	constructor() {
-		super();
-
-		this.state = {
-			ignoreKeys: []
-		};
+	state = {
+		lastIndex: null
 	}
 
 	render() {
 		const {children, ...otherProps} = this.props;
+		const {lastIndex} = this.state;
+		let newChildren = children;
 
-		const newChildren = React.Children.toArray(children).filter(child => {
-			return !this.state.ignoreKeys.includes(child.key);
-		});
+		if (typeof lastIndex === 'number') {
+			newChildren = childrenToArray(children).slice(lastIndex);
+		}
 
 		return (
 			<div unstable__static style={otherProps}>
@@ -39,28 +39,22 @@ export default class Static extends Component {
 	}
 
 	componentDidMount() {
-		this.saveRenderedKeys();
+		this.saveLastIndex(this.props.children);
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		if (prevState.ignoreKeys === this.state.ignoreKeys) {
-			this.saveRenderedKeys();
+		if (prevState.lastIndex === this.state.lastIndex) {
+			this.saveLastIndex(this.props.children);
 		}
 	}
 
-	saveRenderedKeys() {
-		this.setState(prevState => {
-			const newKeys = React.Children
-				.toArray(this.props.children)
-				.map(child => child.key)
-				.filter(key => !prevState.ignoreKeys.includes(key));
+	saveLastIndex(children) {
+		const nextIndex = childrenToArray(children).length;
 
-			return {
-				ignoreKeys: [
-					...prevState.ignoreKeys,
-					...newKeys
-				]
-			};
-		});
+		if (this.state.lastIndex !== nextIndex) {
+			this.setState({
+				lastIndex: nextIndex
+			});
+		}
 	}
 }
