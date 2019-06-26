@@ -75,6 +75,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [startd](https://github.com/mgrip/startd) - Turn your React component into a web app from the command-line.
 - [sindresorhus](https://github.com/sindresorhus/sindresorhus) - The Sindre Sorhus CLI.
 - [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
+- [gatsby-cli](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing fast websites.
 
 
 ## Contents
