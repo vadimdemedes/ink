@@ -95,7 +95,7 @@ Ink's goal is to provide the same component-based UI building experience that Re
 
 The key difference you have to remember is that the rendering result isn't a DOM, but a string, which Ink writes to the output.
 
-To ensure all examples work and you can begin your adventure with Ink, make sure to set up Babel with a React preset. After [installing Babel](https://babeljs.io/docs/en/usage), configure it in `package.json`:
+To get started with Ink quickly, use [`create-ink-app`](https://github.com/vadimdemedes/create-ink-app) to quickly scaffold a new Ink-based CLI. Alternatively, here's how to configure Babel to work with Ink. To ensure all examples work and you can begin your adventure, make sure to set up Babel with a React preset. After [installing Babel](https://babeljs.io/docs/en/usage), configure it in `package.json`:
 
 ```json
 {
