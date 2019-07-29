@@ -22,7 +22,7 @@ const Color = ({children, ...colorProps}) => {
 	if (children === '') {
 		return null;
 	}
-	
+
 	const transformChildren = children => {
 		Object.keys(colorProps).forEach(method => {
 			if (colorProps[method]) {
