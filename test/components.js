@@ -229,6 +229,16 @@ test('ensure wrap-ansi doesn\'t trim leading whitespace', t => {
 	t.is(output, chalk.red(' ERROR '));
 });
 
+test('ensure Color doesn\'t throw on no children', t => {
+	const output = renderToString(
+		<Color>
+			{undefined}
+		</Color>
+	);
+
+	t.is(output, '');
+});
+
 test('replace child node with text', t => {
 	const stdout = {
 		write: spy(),
