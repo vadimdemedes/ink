@@ -19,6 +19,10 @@ const methods = [
 ];
 
 const Color = ({children, ...colorProps}) => {
+	if (children === '') {
+		return null;
+	}
+
 	const transformChildren = children => {
 		Object.keys(colorProps).forEach(method => {
 			if (colorProps[method]) {
@@ -41,7 +45,11 @@ const Color = ({children, ...colorProps}) => {
 };
 
 Color.propTypes = {
-	children: PropTypes.node.isRequired
+	children: PropTypes.node
+};
+
+Color.defaultProps = {
+	children: ''
 };
 
 export default Color;
