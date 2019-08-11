@@ -26,7 +26,9 @@ const {unmount, waitUntilExit} = render((
 			<ExitDoubleRawMode setRawMode={setRawMode}/>
 		)}
 	</StdinContext.Consumer>
-));
+), {
+	experimental: process.env.EXPERIMENTAL === 'true'
+});
 
 process.stdin.on('data', data => {
 	if (String(data) === 'q') {

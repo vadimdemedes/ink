@@ -39,6 +39,8 @@ const app = render((
 			<Test onExit={exit}/>
 		)}
 	</AppContext.Consumer>
-));
+), {
+	experimental: process.env.EXPERIMENTAL === 'true'
+});
 
 app.waitUntilExit().catch(error => console.log(error.message));

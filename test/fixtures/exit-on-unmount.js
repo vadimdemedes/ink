@@ -30,6 +30,9 @@ class Test extends React.Component {
 	}
 }
 
-const app = render(<Test/>);
+const app = render(<Test/>, {
+	experimental: process.env.EXPERIMENTAL === 'true'
+});
+
 setTimeout(() => app.unmount(), 500);
 app.waitUntilExit().then(() => console.log('exited'));

@@ -21,7 +21,9 @@ const app = render((
 			<Test onSetRawMode={setRawMode}/>
 		)}
 	</StdinContext.Consumer>
-));
+), {
+	experimental: process.env.EXPERIMENTAL === 'true'
+});
 
 setTimeout(() => app.unmount(), 500);
 app.waitUntilExit().then(() => console.log('exited'));

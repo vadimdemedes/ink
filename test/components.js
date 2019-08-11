@@ -9,6 +9,8 @@ import renderToString from './helpers/render-to-string';
 import run from './helpers/run';
 import {Box, Color, Text, Static, StdinContext, render} from '..';
 
+const isExperimental = process.env.EXPERIMENTAL === 'true';
+
 test('text', t => {
 	const output = renderToString(<Box>Hello World</Box>);
 
@@ -209,7 +211,8 @@ test('skip previous output when rendering new static output', t => {
 
 	const {rerender} = render(<Dynamic items={['A']}/>, {
 		stdout,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	});
 
 	t.is(stdout.write.lastCall.args[0], 'A\n');
@@ -248,7 +251,8 @@ test('replace child node with text', t => {
 
 	const {rerender} = render(<Dynamic/>, {
 		stdout,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	});
 
 	t.is(stdout.write.lastCall.args[0], chalk.green('test'));
@@ -274,7 +278,8 @@ test('disable raw mode when all input components are unmounted', t => {
 	const options = {
 		stdout,
 		stdin,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	};
 
 	class Input extends React.Component {
@@ -342,7 +347,8 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 	const options = {
 		stdout,
 		stdin,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	};
 
 	class Input extends React.Component {
@@ -401,7 +407,8 @@ test('render different component based on whether stdin is a TTY or not', t => {
 	const options = {
 		stdout,
 		stdin,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	};
 
 	class Input extends React.Component {

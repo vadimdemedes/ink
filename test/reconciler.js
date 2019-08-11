@@ -5,6 +5,8 @@ import chalk from 'chalk';
 import {spy} from 'sinon';
 import {Box, Color, render} from '..';
 
+const isExperimental = process.env.EXPERIMENTAL === 'true';
+
 const createStdout = () => ({
 	write: spy(),
 	columns: 100
@@ -18,12 +20,14 @@ test('update child', t => {
 
 	const actual = render(<Test/>, {
 		stdout: stdoutActual,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	});
 
 	const expected = render(<Box>A</Box>, {
 		stdout: stdoutExpected,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	});
 
 	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
@@ -42,12 +46,14 @@ test('update text node', t => {
 
 	const actual = render(<Test/>, {
 		stdout: stdoutActual,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	});
 
 	const expected = render(<Box>Hello A</Box>, {
 		stdout: stdoutExpected,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	});
 
 	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
@@ -81,7 +87,8 @@ test('append child', t => {
 
 	const actual = render(<Test/>, {
 		stdout: stdoutActual,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	});
 
 	const expected = render((
@@ -90,7 +97,8 @@ test('append child', t => {
 		</Box>
 	), {
 		stdout: stdoutExpected,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	});
 
 	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
@@ -132,7 +140,8 @@ test('insert child between other children', t => {
 
 	const actual = render(<Test/>, {
 		stdout: stdoutActual,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	});
 
 	const expected = render((
@@ -142,7 +151,8 @@ test('insert child between other children', t => {
 		</Box>
 	), {
 		stdout: stdoutExpected,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	});
 
 	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
@@ -183,7 +193,8 @@ test('remove child', t => {
 
 	const actual = render(<Test/>, {
 		stdout: stdoutActual,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	});
 
 	const expected = render((
@@ -193,7 +204,8 @@ test('remove child', t => {
 		</Box>
 	), {
 		stdout: stdoutExpected,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	});
 
 	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
@@ -233,7 +245,8 @@ test('reorder children', t => {
 
 	const actual = render(<Test/>, {
 		stdout: stdoutActual,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	});
 
 	const expected = render((
@@ -243,7 +256,8 @@ test('reorder children', t => {
 		</Box>
 	), {
 		stdout: stdoutExpected,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	});
 
 	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
@@ -271,7 +285,8 @@ test('replace child node with text', t => {
 
 	const {rerender} = render(<Dynamic/>, {
 		stdout,
-		debug: true
+		debug: true,
+		experimental: isExperimental
 	});
 
 	t.is(stdout.write.lastCall.args[0], chalk.green('test'));

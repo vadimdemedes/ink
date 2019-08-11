@@ -26,6 +26,8 @@ const app = render((
 			</StdinContext.Consumer>
 		)}
 	</AppContext.Consumer>
-));
+), {
+	experimental: process.env.EXPERIMENTAL === 'true'
+});
 
 app.waitUntilExit().then(() => console.log('exited'));

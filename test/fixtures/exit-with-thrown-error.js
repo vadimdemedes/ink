@@ -8,6 +8,8 @@ class Test extends React.Component {
 	}
 }
 
-const app = render(<Test/>);
+const app = render(<Test/>, {
+	experimental: process.env.EXPERIMENTAL === 'true'
+});
 
 app.waitUntilExit().catch(error => console.log(error.message));

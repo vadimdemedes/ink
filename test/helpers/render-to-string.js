@@ -21,7 +21,8 @@ export default (node, {columns} = {}) => {
 
 	render(node, {
 		stdout: stream,
-		debug: true
+		debug: true,
+		experimental: process.env.EXPERIMENTAL === 'true'
 	});
 
 	return stream.get();

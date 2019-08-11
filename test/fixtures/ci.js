@@ -52,4 +52,6 @@ class Test extends React.Component {
 	}
 }
 
-render(<Test/>);
+render(<Test/>, {
+	experimental: process.env.EXPERIMENTAL === 'true'
+});
