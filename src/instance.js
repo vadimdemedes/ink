@@ -5,8 +5,11 @@ import logUpdate from 'log-update';
 import isCI from 'is-ci';
 import signalExit from 'signal-exit';
 import reconciler from './reconciler';
+import experimentalReconciler from './experimental/reconciler';
 import createRenderer from './renderer';
-import {createNode} from './dom';
+import createExperimentalRenderer from './experimental/renderer';
+import * as dom from './dom';
+import * as experimentalDom from './experimental/dom';
 import instances from './instances';
 import App from './components/App';
 
@@ -16,11 +19,27 @@ export default class Instance {
 
 		this.options = options;
 
-		this.rootNode = createNode('root');
-		this.rootNode.onRender = this.onRender;
-		this.renderer = createRenderer({
-			terminalWidth: options.stdout.columns
-		});
+		if (options.experimental) {
+			this.rootNode = experimentalDom.createNode('root');
+
+			this.rootNode.onRender = options.debug ? this.onRender : throttle(this.onRender, 16, {
+				leading: true,
+				trailing: true
+			});
+
+			this.rootNode.onImmediateRender = this.onRender;
+
+			this.renderer = createExperimentalRenderer({
+				terminalWidth: options.stdout.columns
+			});
+		} else {
+			this.rootNode = dom.createNode('root');
+			this.rootNode.onRender = this.onRender;
+
+			this.renderer = createRenderer({
+				terminalWidth: options.stdout.columns
+			});
+		}
 
 		this.log = logUpdate.create(options.stdout);
 		this.throttledLog = options.debug ? this.log : throttle(this.log, {
@@ -38,7 +57,11 @@ export default class Instance {
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
 		this.fullStaticOutput = '';
 
-		this.container = reconciler.createContainer(this.rootNode, false, false);
+		if (options.experimental) {
+			this.container = experimentalReconciler.createContainer(this.rootNode, false, false);
+		} else {
+			this.container = reconciler.createContainer(this.rootNode, false, false);
+		}
 
 		this.exitPromise = new Promise((resolve, reject) => {
 			this.resolveExitPromise = resolve;
@@ -77,13 +100,17 @@ export default class Instance {
 			this.options.stdout.write(staticOutput);
 
 			if (!isCI) {
-				this.log(output);
+				if (this.options.experimental) {
+					this.throttledLog(output);
+				} else {
+					this.log(output);
+				}
 			}
 		}
 
 		if (output !== this.lastOutput) {
 			if (!isCI) {
-				this.throttledLog(output);
+				this.log(output);
 			}
 
 			this.lastOutput = output;
@@ -102,7 +129,11 @@ export default class Instance {
 			</App>
 		);
 
-		reconciler.updateContainer(tree, this.container);
+		if (this.options.experimental) {
+			experimentalReconciler.updateContainer(tree, this.container);
+		} else {
+			reconciler.updateContainer(tree, this.container);
+		}
 	}
 
 	unmount(error) {
@@ -122,7 +153,13 @@ export default class Instance {
 		}
 
 		this.isUnmounted = true;
-		reconciler.updateContainer(null, this.container);
+
+		if (this.options.experimental) {
+			experimentalReconciler.updateContainer(null, this.container);
+		} else {
+			reconciler.updateContainer(null, this.container);
+		}
+
 		instances.delete(this.options.stdout);
 
 		if (error instanceof Error) {
