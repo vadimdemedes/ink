@@ -26,7 +26,7 @@ export default class Box extends PureComponent {
 		flexShrink: PropTypes.number,
 		flexDirection: PropTypes.oneOf(['row', 'row-reverse', 'column', 'column-reverse']),
 		flexBasis: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-		alignItems: PropTypes.oneOf(['flex-start', 'center', 'flex-end']),
+		alignItems: PropTypes.oneOf(['stretch', 'flex-start', 'center', 'flex-end']),
 		justifyContent: PropTypes.oneOf(['flex-start', 'center', 'flex-end', 'space-between', 'space-around']),
 		textWrap: PropTypes.oneOf(['wrap', 'truncate', 'truncate-start', 'truncate-middle', 'truncate-end']),
 		unstable__transformChildren: PropTypes.func,
