@@ -51,7 +51,7 @@
 		"log-update": "^3.0.0",
 		"prop-types": "^15.6.2",
 		"react-reconciler": "^0.20.0",
-		"scheduler": "^0.13.2",
+		"scheduler": "^0.15.0",
 		"signal-exit": "^3.0.2",
 		"slice-ansi": "^1.0.0",
 		"string-length": "^2.0.0",
