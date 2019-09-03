@@ -48,7 +48,7 @@
 		"cli-truncate": "^1.1.0",
 		"is-ci": "^2.0.0",
 		"lodash.throttle": "^4.1.1",
-		"log-update": "^3.0.0",
+		"log-update": "^3.3.0",
 		"prop-types": "^15.6.2",
 		"react-reconciler": "^0.20.0",
 		"scheduler": "^0.13.2",
