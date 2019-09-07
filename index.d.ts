@@ -52,6 +52,14 @@ export type Instance = {
 export type Unmount = () => void;
 
 /**
+ * Hook that calls keyPressHandler callback with whatever key has been pressed.
+ * See key to handle modifiers correctly.
+ */
+export function useKeypress(
+	keyPressHandler: (str?: string, key?: Key) => void
+): void;
+
+/**
  * Mount a component and render the output.
  */
 export function render<Props>(
