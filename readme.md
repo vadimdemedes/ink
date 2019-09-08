@@ -900,4 +900,4 @@ Visit [ink-testing-library](https://github.com/vadimdemedes/ink-testing-library)
 
 ## License
 
-MIT
+[MIT](license)
