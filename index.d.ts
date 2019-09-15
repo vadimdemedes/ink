@@ -52,12 +52,19 @@ export type Instance = {
 export type Unmount = () => void;
 
 /**
- * Hook that calls keyPressHandler callback with whatever key has been pressed.
- * See key to handle modifiers correctly.
+ * Hook that calls inputHandler callback with input that program received.
+ * Additionally contains helpful metadata for detecting when arrow keys were pressed.
  */
-export function useKeypress(
-	keyPressHandler: (str?: string, key?: Key) => void
+export function useInput(
+	inputHandler: (input: string, meta: Meta) => void
 ): void;
+
+export interface Meta {
+	up: boolean
+	down: boolean
+	left: boolean
+	right: boolean
+};
 
 /**
  * Mount a component and render the output.

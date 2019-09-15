@@ -47,48 +47,6 @@ test('exit with thrown error', async t => {
 	t.true(output.includes('errored'));
 });
 
-test.cb('handles keypresses', t => {
-	const term = spawn('node', ['./fixtures/run', './handles-keypresses'], {
-		name: 'xterm',
-		cols: 100,
-		cwd: __dirname,
-		env: process.env
-	});
-
-	let output = '';
-
-	term.on('data', data => {
-		output += data;
-	});
-
-	let isExited = false;
-
-	term.on('exit', code => {
-		isExited = true;
-
-		if (code === 0) {
-			t.true(output.includes('exited'));
-			t.pass();
-			t.end();
-			return;
-		}
-
-		t.fail();
-		t.end();
-	});
-
-	setTimeout(() => {
-		t.false(isExited);
-		'abcdefghijklmnopqrstuvwxyz'.split('').forEach(key => term.write(key));
-	}, 100);
-
-	setTimeout(() => {
-		term.kill();
-		t.fail();
-		t.end();
-	}, 5000);
-});
-
 test.cb('don\'t exit while raw mode is active', t => {
 	const term = spawn('node', ['./fixtures/run', './exit-double-raw-mode'], {
 		name: 'xterm-color',

@@ -85,6 +85,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [API](#api)
 - [Building Layouts](#building-layouts)
 - [Built-in Components](#built-in-components)
+- [Hooks](#hooks)
 - [Useful Components](#useful-components)
 - [Testing](#testing)
 - [Experimental mode](#experimental-mode)
@@ -845,6 +846,57 @@ Usage:
 	)}
 </StdoutContext.Consumer>
 ```
+
+## Hooks
+
+### useInput
+
+This hook is used for handling user input.
+It's a more convienient alternative to using `StdinContext` and listening to `data` events.
+You can find a full example of using `useInput` at [examples/useinput](examples/useinput/useinput.js).
+
+```jsx
+import {useInput} from 'ink';
+
+const UserInput = () => {
+	useInput((input, meta) => {
+		if (input === 'q') {
+			// Exit program
+		}
+
+		if (meta.left) {
+			// Left arrow key pressed
+		}
+	});
+
+	return …
+};
+```
+
+Handler function that you pass to `useInput` receives two arguments:
+
+#### input
+
+Type: `string`
+
+Input that program received.
+
+#### meta
+
+Type: `object`
+
+Handy input metadata. Exposes properties to detect if arrow keys were pressed.
+
+##### meta.left
+##### meta.right
+##### meta.up
+##### meta.down
+
+Type: `boolean`<br>
+Default: `false`
+
+If an arrow key was pressed, corresponding property will be `true`.
+For example, if user presses left arrow key, `meta.left` equals `true`.
 
 
 ## Useful Components

@@ -6,4 +6,4 @@ export {default as AppContext} from './components/AppContext';
 export {default as StdinContext} from './components/StdinContext';
 export {default as StdoutContext} from './components/StdoutContext';
 export {default as Static} from './components/Static';
-export {default as useKeypress} from './hooks/useKeypress';
+export {default as useInput} from './hooks/useInput';
