@@ -5,7 +5,7 @@ const childrenToArray = children => Array.isArray(children) ? children : [childr
 
 // This component allows developers to render output before main output from all the other components.
 // The reason it's called <Static> is it's append-only output. Output from <Static> components
-// is written permantently to stdout and is never updated afterwards. If <Static> component
+// is written permanently to stdout and is never updated afterwards. If <Static> component
 // receives new children, Ink will detect the changes and write them to stdout.
 // In order for this mechanism to work perfectly, <Static> children must never update their output
 // once they've been appended to <Static>.
