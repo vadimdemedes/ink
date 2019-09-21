@@ -32,7 +32,9 @@ export default inputHandler => {
 		    key.ctrl = true;
 		  }
 
-			if (input.length === 1 && input >= 'A' && input <= 'Z') {
+			const isLatinUppercase = input >= 'A' && input <= 'Z'
+			const isCyrillicUppercase = input => 'А' && input <= 'Я'
+			if (input.length === 1 && (isLatinUppercase || isCyrillicUppercase)) {
 			  key.shift = true;
 			}
 
