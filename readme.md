@@ -861,12 +861,12 @@ You can find a full example of using `useInput` at [examples/useinput](examples/
 import {useInput} from 'ink';
 
 const UserInput = () => {
-	useInput((input, meta) => {
+	useInput((input, key) => {
 		if (input === 'q') {
 			// Exit program
 		}
 
-		if (meta.left) {
+		if (key.leftArrow) {
 			// Left arrow key pressed
 		}
 	});
@@ -883,22 +883,22 @@ Type: `string`
 
 The input that the program received.
 
-#### meta
+#### key
 
 Type: `object`
 
-Handy input metadata. Exposes properties to detect if arrow keys were pressed.
+Handy information about a key that was pressed.
 
-##### meta.left
-##### meta.right
-##### meta.up
-##### meta.down
+##### key.leftArrow
+##### key.rightArrow
+##### key.upArrow
+##### key.downArrow
 
 Type: `boolean`<br>
 Default: `false`
 
 If an arrow key was pressed, the corresponding property will be `true`.
-For example, if user presses left arrow key, `meta.left` equals `true`.
+For example, if user presses left arrow key, `key.leftArrow` equals `true`.
 
 
 ## Useful Components
