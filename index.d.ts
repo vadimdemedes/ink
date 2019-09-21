@@ -52,7 +52,7 @@ export type Instance = {
 export type Unmount = () => void;
 
 /**
- * Hook that calls inputHandler callback with input that program received.
+ * Hook that calls the `inputHandler` callback with the input that the program received.
  * Additionally contains helpful metadata for detecting when arrow keys were pressed.
  */
 export function useInput(

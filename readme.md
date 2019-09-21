@@ -873,13 +873,13 @@ const UserInput = () => {
 };
 ```
 
-Handler function that you pass to `useInput` receives two arguments:
+The handler function that you pass to `useInput` receives two arguments:
 
 #### input
 
 Type: `string`
 
-Input that program received.
+The input that the program received.
 
 #### meta
 
@@ -895,7 +895,7 @@ Handy input metadata. Exposes properties to detect if arrow keys were pressed.
 Type: `boolean`<br>
 Default: `false`
 
-If an arrow key was pressed, corresponding property will be `true`.
+If an arrow key was pressed, the corresponding property will be `true`.
 For example, if user presses left arrow key, `meta.left` equals `true`.
 
 
