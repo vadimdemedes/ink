@@ -53,17 +53,17 @@ export type Unmount = () => void;
 
 /**
  * Hook that calls the `inputHandler` callback with the input that the program received.
- * Additionally contains helpful metadata for detecting when arrow keys were pressed.
+ * Additionally contains helpful metadata about the key that was pressed.
  */
 export function useInput(
-	inputHandler: (input: string, meta: Meta) => void
+	inputHandler: (input: string, key: Key) => void
 ): void;
 
-export interface Meta {
-	up: boolean
-	down: boolean
-	left: boolean
-	right: boolean
+export interface Key {
+	upArrow: boolean
+	downArrow: boolean
+	leftArrow: boolean
+	rightArrow: boolean
 };
 
 /**

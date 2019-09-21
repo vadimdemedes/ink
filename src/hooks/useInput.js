@@ -15,14 +15,14 @@ export default inputHandler => {
 	useLayoutEffect(() => {
 		const handleData = data => {
 			const input = String(data);
-			const meta = {
-				up: input === '\u001B[A',
-				down: input === '\u001B[B',
-				left: input === '\u001B[D',
-				right: input === '\u001B[C'
+			const key = {
+				upArrow: input === '\u001B[A',
+				downArrow: input === '\u001B[B',
+				leftArrow: input === '\u001B[D',
+				rightArrow: input === '\u001B[C'
 			};
 
-			inputHandler(input, meta);
+			inputHandler(input, key);
 		};
 
 		stdin.on('data', handleData);
