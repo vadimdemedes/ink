@@ -7,7 +7,9 @@ export default inputHandler => {
 	useLayoutEffect(() => {
 		setRawMode(true);
 
-		return () => setRawMode(false);
+		return () => {
+			setRawMode(false);
+		};
 	}, [setRawMode]);
 
 	useLayoutEffect(() => {
