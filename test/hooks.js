@@ -2,7 +2,7 @@ import {serial as test} from 'ava';
 import {spawn} from 'node-pty';
 
 test.cb('exit when user types "q" character', t => {
-	const term = spawn('node', ['./fixtures/run', './handles-user-input'], {
+	const term = spawn('node', ['./fixtures/run', './use-input'], {
 		name: 'xterm-color',
 		cols: 100,
 		cwd: __dirname,
