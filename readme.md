@@ -900,6 +900,26 @@ Default: `false`
 If an arrow key was pressed, the corresponding property will be `true`.
 For example, if user presses left arrow key, `key.leftArrow` equals `true`.
 
+##### key.return
+
+Type: `boolean`<br>
+Default: `false`
+
+Return (Enter) key was pressed.
+
+##### key.ctrl
+
+Type: `boolean`<br>
+Default: `false`
+
+Ctrl key was pressed.
+
+##### key.shift
+
+Type: `boolean`<br>
+Default: `false`
+
+Shift key was pressed.
 
 ## Useful Components
 

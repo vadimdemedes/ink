@@ -8,24 +8,24 @@ const Robot = () => {
 	const [x, setX] = useState(1);
 	const [y, setY] = useState(1);
 
-	useInput((input, meta) => {
+	useInput((input, key) => {
 		if (input === 'q') {
 			exit();
 		}
 
-		if (meta.left) {
+		if (key.leftArrow) {
 			setX(Math.max(1, x - 1));
 		}
 
-		if (meta.right) {
+		if (key.rightArrow) {
 			setX(Math.min(20, x + 1));
 		}
 
-		if (meta.up) {
+		if (key.upArrow) {
 			setY(Math.max(1, y - 1));
 		}
 
-		if (meta.down) {
+		if (key.downArrow) {
 			setY(Math.min(10, y + 1));
 		}
 	});

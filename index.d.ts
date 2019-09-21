@@ -52,8 +52,26 @@ export type Instance = {
 export type Unmount = () => void;
 
 /**
- * Hook that calls the `inputHandler` callback with the input that the program received.
- * Additionally contains helpful metadata about the key that was pressed.
+ * This hook is used for handling user input.
+ * It's a more convienient alternative to using `StdinContext` and listening to `data` events.
+ * The callback you pass to `useInput` is called for each character when user enters any input.
+ * However, if user pastes text and it's more than one character, the callback will be called only once and the whole string will be passed as `input`.
+ *
+ * import {useInput} from 'ink';
+ *
+ * const UserInput = () => {
+ *   useInput((input, key) => {
+ *     if (input === 'q') {
+ *       // Exit program
+ *     }
+ *
+ *     if (key.leftArrow) {
+ *       // Left arrow key pressed
+ *     }
+ *   });
+ *
+ *   return …
+ * };
  */
 export function useInput(
 	inputHandler: (input: string, key: Key) => void
@@ -64,6 +82,10 @@ export interface Key {
 	downArrow: boolean
 	leftArrow: boolean
 	rightArrow: boolean
+	return: boolean
+	escape: boolean
+	ctrl: boolean
+	shift: boolean
 };
 
 /**
