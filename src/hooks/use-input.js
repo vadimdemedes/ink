@@ -27,7 +27,7 @@ export default inputHandler => {
 			};
 
 			// Copied from `keypress` module
-			if (input <= '\u001A') {
+			if (input <= '\u001A' && !key.return) {
 				input = String.fromCharCode(input.charCodeAt(0) + 'a'.charCodeAt(0) - 1);
 				key.ctrl = true;
 			}
