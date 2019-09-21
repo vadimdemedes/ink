@@ -27,6 +27,8 @@ export default inputHandler => {
 
 		stdin.on('data', handleData);
 
-		return () => stdin.off('data', handleData);
+		return () => {
+			stdin.off('data', handleData);
+		};
 	}, [stdin, inputHandler]);
 };
