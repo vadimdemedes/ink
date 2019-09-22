@@ -23,13 +23,19 @@ export default inputHandler => {
 				return: input === '\r',
 				escape: input === '\u001B',
 				ctrl: false,
-				shift: false
+				shift: false,
+				meta: false
 			};
 
 			// Copied from `keypress` module
 			if (input <= '\u001A' && !key.return) {
 				input = String.fromCharCode(input.charCodeAt(0) + 'a'.charCodeAt(0) - 1);
 				key.ctrl = true;
+			}
+
+			if (input[0] === '\u001B') {
+				input = input.slice(1);
+				key.meta = true;
 			}
 
 			const isLatinUppercase = input >= 'A' && input <= 'Z';

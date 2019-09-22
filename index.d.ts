@@ -86,6 +86,7 @@ export interface Key {
 	escape: boolean
 	ctrl: boolean
 	shift: boolean
+	meta: boolean
 }
 
 /**

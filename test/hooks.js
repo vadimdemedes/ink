@@ -68,6 +68,13 @@ test('handle ctrl', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test('handle meta', async t => {
+	const ps = term('use-input', ['meta']);
+	ps.write('\u001Bm');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test('handle up arrow', async t => {
 	const ps = term('use-input', ['upArrow']);
 	ps.write('\u001B[A');

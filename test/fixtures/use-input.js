@@ -26,6 +26,11 @@ const UserInput = ({test}) => {
 			return;
 		}
 
+		if (test === 'meta' && input === 'm' && key.meta) {
+			exit();
+			return;
+		}
+
 		if (test === 'upArrow' && key.upArrow) {
 			exit();
 			return;
