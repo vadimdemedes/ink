@@ -86,7 +86,7 @@ export interface Key {
 	escape: boolean
 	ctrl: boolean
 	shift: boolean
-};
+}
 
 /**
  * Mount a component and render the output.
