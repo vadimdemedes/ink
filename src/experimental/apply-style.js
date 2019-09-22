@@ -28,7 +28,7 @@ const applyFlexStyles = (node, style) => {
 	node.setFlexGrow(style.flexGrow || 0);
 	node.setFlexShrink(typeof style.flexShrink === 'number' ? style.flexShrink : 1);
 
-	if (style.flexDirection === 'row' || !style.flexDirection) {
+	if (style.flexDirection === 'row') {
 		node.setFlexDirection(Yoga.FLEX_DIRECTION_ROW);
 	}
 
