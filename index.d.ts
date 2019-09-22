@@ -25,6 +25,13 @@ export interface RenderOptions {
 	 * @default false
 	 */
 	readonly debug?: boolean;
+	/**
+	 * Enable experimental mode and use a new and faster reconciler and renderer.
+	 * There should be no changes to the output. If there are, please report it.
+	 *
+	 * @default false
+	 */
+	readonly experimental?: boolean;
 }
 
 export type Instance = {
