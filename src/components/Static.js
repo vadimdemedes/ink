@@ -32,7 +32,14 @@ export default class Static extends Component {
 		}
 
 		return (
-			<div unstable__static style={otherProps}>
+			<div
+				unstable__static
+				style={{
+					position: 'absolute',
+					flexDirection: 'column',
+					...otherProps
+				}}
+			>
 				{newChildren}
 			</div>
 		);

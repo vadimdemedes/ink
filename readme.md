@@ -87,6 +87,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Built-in Components](#built-in-components)
 - [Useful Components](#useful-components)
 - [Testing](#testing)
+- [Experimental mode](#experimental-mode)
 
 
 ## Getting Started
@@ -186,6 +187,13 @@ Type: `boolean`<br>
 Default: `false`
 
 If `true`, each update will be rendered as a separate output, without replacing the previous one.
+
+###### experimental
+
+Type: `boolean`<br>
+Default: `false`
+
+Enables [experimental mode](#experimental-mode).
 
 ```jsx
 import React, {Component} from 'react';
@@ -890,6 +898,20 @@ lastFrame() === 'Hello World'; //=> true
 ```
 
 Visit [ink-testing-library](https://github.com/vadimdemedes/ink-testing-library) for more examples and full documentation.
+
+## Experimental Mode
+
+Ink has experimental mode, which currently enables a more efficient and faster reconciler and renderer.
+Instead of shipping it under `next` tag or something similar, Ink ships it as part of a regular release.
+It can be enabled simply by passing `experimental` parameter to `render()` function:
+
+```jsx
+render(<App/>, {experimental: true});
+```
+
+Experimental mode actually includes stable features, but I want to be extra sure that it doesn't introduce regressions before shipping this new code for everyone and making it a default.
+
+Feel free to use experimental mode in development and I would appreciate if you reported any regressions you might see.
 
 
 ## Maintainers
