@@ -2,34 +2,24 @@
 const React = require('react');
 const {render, Color} = require('../..');
 
-class Counter extends React.Component {
-	constructor() {
-		super();
+const Counter = () => {
+	const [counter, setCounter] = React.useState(0);
 
-		this.state = {
-			counter: 0
+	React.useEffect(() => {
+		const timer = setInterval(() => {
+			setCounter(prevCounter => prevCounter + 1);
+		});
+
+		return () => {
+			clearInterval(timer);
 		};
-	}
+	});
 
-	render() {
-		return (
-			<Color green>
-				{this.state.counter} tests passed
-			</Color>
-		);
-	}
-
-	componentDidMount() {
-		this.timer = setInterval(() => {
-			this.setState(prevState => ({
-				counter: prevState.counter + 1
-			}));
-		}, 100);
-	}
-
-	componentWillUnmount() {
-		clearInterval(this.timer);
-	}
-}
+	return (
+		<Color green>
+			{counter} tests passed
+		</Color>
+	);
+};
 
 render(<Counter/>);
