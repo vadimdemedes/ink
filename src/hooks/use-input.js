@@ -1,10 +1,10 @@
-import {useLayoutEffect, useContext} from 'react';
+import {useEffect, useContext} from 'react';
 import {StdinContext} from '..';
 
 export default inputHandler => {
 	const {stdin, setRawMode} = useContext(StdinContext);
 
-	useLayoutEffect(() => {
+	useEffect(() => {
 		setRawMode(true);
 
 		return () => {
@@ -12,7 +12,7 @@ export default inputHandler => {
 		};
 	}, [setRawMode]);
 
-	useLayoutEffect(() => {
+	useEffect(() => {
 		const handleData = data => {
 			let input = String(data);
 			const key = {
