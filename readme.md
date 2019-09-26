@@ -919,6 +919,8 @@ Ctrl key was pressed.
 Type: `boolean`<br>
 Default: `false`
 
+Shift key was pressed.
+
 ##### key.meta
 
 Type: `boolean`<br>
@@ -926,7 +928,6 @@ Default: `false`
 
 [Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 
-Shift key was pressed.
 
 ## Useful Components
 
