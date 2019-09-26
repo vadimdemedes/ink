@@ -1,6 +1,6 @@
 {
 	"name": "ink",
-	"version": "2.3.0",
+	"version": "2.4.0",
 	"description": "React for CLI",
 	"license": "MIT",
 	"repository": "vadimdemedes/ink",
