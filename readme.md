@@ -1000,8 +1000,3 @@ Feel free to use experimental mode in development and I would appreciate if you 
 
 - [Vadim Demedes](https://github.com/vadimdemedes)
 - [Sindre Sorhus](https://github.com/sindresorhus)
-
-
-## License
-
-MIT
