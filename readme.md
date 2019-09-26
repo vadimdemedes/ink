@@ -9,7 +9,7 @@
 
 > React for CLIs. Build and test your CLI output using components.
 
-[![Build Status](https://travis-ci.org/vadimdemedes/ink.svg?branch=master)](https://travis-ci.org/vadimdemedes/ink)
+![Build Status](https://github.com/vadimdemedes/ink/workflows/tests/badge.svg)
 
 
 ## Install
