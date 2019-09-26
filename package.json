@@ -117,9 +117,15 @@
 		"plugins": [
 			"react"
 		],
+		"rules": {
+			"react/no-unescaped-entities": "off"
+		},
 		"overrides": [
 			{
-				"files": "src/components/*.js",
+				"files": [
+					"src/components/*.js",
+					"src/hooks/*.js"
+				],
 				"rules": {
 					"unicorn/filename-case": "off",
 					"react/require-default-props": "warning"

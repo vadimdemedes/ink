@@ -85,6 +85,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [API](#api)
 - [Building Layouts](#building-layouts)
 - [Built-in Components](#built-in-components)
+- [Hooks](#hooks)
 - [Useful Components](#useful-components)
 - [Testing](#testing)
 - [Experimental mode](#experimental-mode)
@@ -845,6 +846,87 @@ Usage:
 	)}
 </StdoutContext.Consumer>
 ```
+
+## Hooks
+
+### useInput
+
+This hook is used for handling user input.
+It's a more convienient alternative to using `StdinContext` and listening to `data` events.
+The callback you pass to `useInput` is called for each character when user enters any input.
+However, if user pastes text and it's more than one character, the callback will be called only once and the whole string will be passed as `input`.
+You can find a full example of using `useInput` at [examples/useinput](examples/useinput/useinput.js).
+
+```jsx
+import {useInput} from 'ink';
+
+const UserInput = () => {
+	useInput((input, key) => {
+		if (input === 'q') {
+			// Exit program
+		}
+
+		if (key.leftArrow) {
+			// Left arrow key pressed
+		}
+	});
+
+	return …
+};
+```
+
+The handler function that you pass to `useInput` receives two arguments:
+
+#### input
+
+Type: `string`
+
+The input that the program received.
+
+#### key
+
+Type: `object`
+
+Handy information about a key that was pressed.
+
+##### key.leftArrow
+##### key.rightArrow
+##### key.upArrow
+##### key.downArrow
+
+Type: `boolean`<br>
+Default: `false`
+
+If an arrow key was pressed, the corresponding property will be `true`.
+For example, if user presses left arrow key, `key.leftArrow` equals `true`.
+
+##### key.return
+
+Type: `boolean`<br>
+Default: `false`
+
+Return (Enter) key was pressed.
+
+##### key.ctrl
+
+Type: `boolean`<br>
+Default: `false`
+
+Ctrl key was pressed.
+
+##### key.shift
+
+Type: `boolean`<br>
+Default: `false`
+
+Shift key was pressed.
+
+##### key.meta
+
+Type: `boolean`<br>
+Default: `false`
+
+[Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 
 
 ## Useful Components
