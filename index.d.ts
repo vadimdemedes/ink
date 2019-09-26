@@ -57,7 +57,7 @@ export type Unmount = () => void;
  * The callback you pass to `useInput` is called for each character when user enters any input.
  * However, if user pastes text and it's more than one character, the callback will be called only once and the whole string will be passed as `input`.
  *
- * ```js
+ * ```
  * import {useInput} from 'ink';
  *
  * const UserInput = () => {
