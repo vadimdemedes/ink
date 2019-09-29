@@ -930,7 +930,7 @@ Default: `false`
 
 ### useApp
 
-`useApp()` is a React hook, which exposes props of [`AppContext`](#appcontext).
+`useApp` is a React hook, which exposes props of [`AppContext`](#appcontext).
 
 ```js
 import {useApp} from 'ink';
@@ -952,12 +952,12 @@ It's equivalent to consuming `AppContext` props via `AppContext.Consumer`:
 
 ### useStdin
 
-`useStdin()` is a React hook, which exposes props of [`StdinContext`](#stdincontext).
+`useStdin` is a React hook, which exposes props of [`StdinContext`](#stdincontext).
 Similar to `useApp`, it's equivalent to consuming `StdinContext` directly.
 
 ### useStdout
 
-`useStdout()` is a React hook, which exposes props of [`StdoutContext`](#stdoutcontext).
+`useStdout` is a React hook, which exposes props of [`StdoutContext`](#stdoutcontext).
 Similar to `useApp`, it's equivalent to consuming `StdoutContext` directly.
 
 

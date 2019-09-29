@@ -241,7 +241,24 @@ interface AppProps {
 export const AppContext: React.Context<AppProps>;
 
 /**
- * `useApp()` is a React hook, which exposes props of `AppContext`.
+ * `useApp` is a React hook, which exposes props of `AppContext`.
+ * ```js
+ * import {useApp} from 'ink';
+ *
+ * const MyApp = () => {
+ *   const {exit} = useApp();
+ * };
+ * ```
+ *
+ * It's equivalent to consuming `AppContext` props via `AppContext.Consumer`:
+ *
+ * ```jsx
+ * <AppContext.Consumer>
+ *   {({exit}) => {
+ *     // …
+ *   }}
+ * </AppContext.Consumer>
+ * ```
  */
 export function useApp(): AppProps;
 
@@ -269,7 +286,8 @@ interface StdinProps {
 export const StdinContext: React.Context<StdinProps>;
 
 /**
- * `useStdin()` is a React hook, which exposes props of `StdinContext`.
+ * `useStdin` is a React hook, which exposes props of `StdinContext`.
+ * Similar to `useApp`, it's equivalent to consuming `StdinContext` directly.
  */
 export function useStdin(): StdinProps;
 
@@ -286,6 +304,7 @@ interface StdoutProps {
 export const StdoutContext: React.Context<StdoutProps>;
 
 /**
- * `useStdout()` is a React hook, which exposes props of `StdoutContext`.
+ * `useStdout` is a React hook, which exposes props of `StdoutContext`.
+ * Similar to `useStdout`, it's equivalent to consuming `StdoutContext` directly.
  */
 export function useStdout(): StdoutProps;
