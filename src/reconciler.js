@@ -45,7 +45,7 @@ const hostConfig = {
 					}
 				}
 			} else if (key === 'style') {
-				Object.assign(node.style, value);
+				node.style = value;
 			} else if (key === 'unstable__transformChildren') {
 				node.unstable__transformChildren = value; // eslint-disable-line camelcase
 			} else if (key === 'unstable__static') {
@@ -101,7 +101,7 @@ const hostConfig = {
 					}
 				}
 			} else if (key === 'style') {
-				Object.assign(node.style, value);
+				node.style = value;
 			} else if (key === 'unstable__transformChildren') {
 				node.unstable__transformChildren = value; // eslint-disable-line camelcase
 			} else if (key === 'unstable__static') {

@@ -469,3 +469,27 @@ test('render only last frame when run in CI', async t => {
 		'Counter: 5'
 	].join('\r\n') + '\r\n');
 });
+
+test('reset prop when it\'s removed from the element', t => {
+	const stdout = {
+		write: spy(),
+		columns: 100
+	};
+
+	const Dynamic = ({remove}) => (
+		<Box flexDirection="column" justifyContent="flex-end" height={remove ? undefined : 4}>
+			x
+		</Box>
+	);
+
+	const {rerender} = render(<Dynamic/>, {
+		stdout,
+		debug: true,
+		experimental: isExperimental
+	});
+
+	t.is(stdout.write.lastCall.args[0], '\n\n\nx');
+
+	rerender(<Dynamic remove/>);
+	t.is(stdout.write.lastCall.args[0], 'x');
+});
