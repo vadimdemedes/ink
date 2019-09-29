@@ -50,11 +50,14 @@ export default ({terminalWidth = 100}) => {
 			renderNodeToOutput(staticNode, staticOutput, {skipStaticElements: false});
 		}
 
+		const {output: generatedOutput, height: outputHeight} = output.get();
+
 		return {
-			output: output.get(),
+			output: generatedOutput,
+			outputHeight,
 			// Newline at the end is needed, because static output doesn't have one, so
 			// interactive output will override last line of static output
-			staticOutput: staticOutput ? `${staticOutput.get()}\n` : undefined
+			staticOutput: staticOutput ? `${staticOutput.get().output}\n` : undefined
 		};
 	};
 };

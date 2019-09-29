@@ -41,6 +41,7 @@
 	],
 	"dependencies": {
 		"@types/react": "^16.8.6",
+		"ansi-escapes": "^4.2.1",
 		"arrify": "^1.0.1",
 		"auto-bind": "^2.0.0",
 		"chalk": "^2.4.1",

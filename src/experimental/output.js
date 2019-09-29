@@ -58,8 +58,13 @@ export default class Output {
 			}
 		}
 
-		return output
+		const generatedOutput = output
 			.map(line => line.trimRight())
 			.join('\n');
+
+		return {
+			output: generatedOutput,
+			height: output.length
+		};
 	}
 }
