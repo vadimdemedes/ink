@@ -15,6 +15,7 @@ export default (node, options = {}) => {
 		stdin: process.stdin,
 		debug: false,
 		exitOnCtrlC: true,
+		experimental: false,
 		...options
 	};
 
