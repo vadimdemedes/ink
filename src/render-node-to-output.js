@@ -27,7 +27,16 @@ const isAllTextNodes = node => {
 // Also, this is necessary for libraries like ink-link (https://github.com/sindresorhus/ink-link),
 // which need to wrap all children at once, instead of wrapping 3 text nodes separately.
 const squashTextNodes = node => {
-	let text = '';
+	// If parent container is `<Box>`, text nodes will be treated as separate nodes in
+	// the tree and will have their own coordinates in the layout.
+	// To ensure text nodes are aligned correctly, take X and Y of the first text node
+	// and use them as offset for the rest of the nodes
+	// Only first node is taken into account, because other text nodes can't have margin or padding,
+	// so their coordinates will be relative to the first node anyway
+	const offsetX = node.childNodes[0].yogaNode.getComputedLeft();
+	const offsetY = node.childNodes[0].yogaNode.getComputedTop();
+
+	let text = '\n'.repeat(offsetY) + ' '.repeat(offsetX);
 
 	for (const childNode of node.childNodes) {
 		let nodeText;

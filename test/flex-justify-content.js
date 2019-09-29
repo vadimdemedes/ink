@@ -1,7 +1,8 @@
 import React from 'react';
 import test from 'ava';
+import chalk from 'chalk';
 import renderToString from './helpers/render-to-string';
-import {Box} from '..';
+import {Box, Color} from '..';
 
 test('row - align text to center', t => {
 	const output = renderToString(
@@ -13,6 +14,16 @@ test('row - align text to center', t => {
 	t.is(output, '   Test');
 });
 
+test('row - align multiple text nodes to center', t => {
+	const output = renderToString(
+		<Box justifyContent="center" width={10}>
+			A{'B'}
+		</Box>
+	);
+
+	t.is(output, '    AB');
+});
+
 test('row - align text to right', t => {
 	const output = renderToString(
 		<Box justifyContent="flex-end" width={10}>
@@ -21,6 +32,16 @@ test('row - align text to right', t => {
 	);
 
 	t.is(output, '      Test');
+});
+
+test('row - align multiple text nodes to right', t => {
+	const output = renderToString(
+		<Box justifyContent="flex-end" width={10}>
+			A{'B'}
+		</Box>
+	);
+
+	t.is(output, '        AB');
 });
 
 test('row - align two text nodes on the edges', t => {
@@ -43,6 +64,16 @@ test('row - align two text nodes with equal space around them', t => {
 	);
 
 	t.is(output, ' A B');
+});
+
+test('row - align colored text node when text is squashed', t => {
+	const output = renderToString(
+		<Box justifyContent="flex-end" width={5}>
+			<Color green>X</Color>
+		</Box>
+	);
+
+	t.is(output, `    ${chalk.green('X')}`);
 });
 
 test('column - align text to center', t => {

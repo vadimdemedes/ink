@@ -13,6 +13,16 @@ test('row - align text to center', t => {
 	t.is(output, '\nTest\n');
 });
 
+test('row - align multiple text nodes to center', t => {
+	const output = renderToString(
+		<Box alignItems="center" height={3}>
+			A{'B'}
+		</Box>
+	);
+
+	t.is(output, '\nAB\n');
+});
+
 test('row - align text to bottom', t => {
 	const output = renderToString(
 		<Box alignItems="flex-end" height={3}>
@@ -21,6 +31,16 @@ test('row - align text to bottom', t => {
 	);
 
 	t.is(output, '\n\nTest');
+});
+
+test('row - align multiple text nodes to bottom', t => {
+	const output = renderToString(
+		<Box alignItems="flex-end" height={3}>
+			A{'B'}
+		</Box>
+	);
+
+	t.is(output, '\n\nAB');
 });
 
 test('column - align text to center', t => {
