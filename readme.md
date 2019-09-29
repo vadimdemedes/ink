@@ -64,18 +64,26 @@ You can also check it out live on [repl.it sandbox](https://ink-counter-demo.vad
 Feel free to play around with the code and fork this repl at [https://repl.it/@vadimdemedes/ink-counter-demo](https://repl.it/@vadimdemedes/ink-counter-demo).
 
 
-## Built with Ink
+## Who's Using Ink?
 
+- [Gatsby](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing fast websites.
+- [Parcel](https://parceljs.org) - Blazing fast, zero configuration web application bundler.
+- [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
+- [Typewriter](https://github.com/segmentio/typewriter) - Generates strongly-typed [Segment](https://segment.com) analytics clients from arbitrary JSON Schema.
+- [Prisma](https://www.prisma.io) - The unified data layer for modern applications.
+- [Wallace](https://www.projectwallace.com) - Pretty CSS analytics on the CLI.
+- [tink](https://github.com/npm/tink) - Next-generation runtime and package manager.
+- [Splash](https://github.com/Shopify/polaris-react/tree/master/scripts/splash) - Observe the splash zone of a change across the Shopify's [Polaris](https://polaris.shopify.com) component library.
 - [emoj](https://github.com/sindresorhus/emoj) - Find relevant emoji on the command-line.
 - [emma](https://github.com/maticzav/emma-cli) - Terminal assistant to find and install npm packages.
+- [sindresorhus](https://github.com/sindresorhus/sindresorhus) - The Sindre Sorhus CLI.
 - [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command line tools for time-saving web developers.
+- [share](https://github.com/marionebl/share-cli) - Quickly share files from your command line.
+- [Kubelive](https://github.com/ameerthehacker/kubelive) - CLI for Kubernetes to provide live data about the cluster and its resources.
 - [changelog-view](https://github.com/jdeniau/changelog-view) - Tool view changelog in console.
 - [gomoku-terminal](https://github.com/acrazing/gomoku-terminal) - Play online Gomoku in the terminal.
 - [cfpush](https://github.com/mamachanko/cfpush) - An interactive Cloud Foundry tutorial in your terminal.
 - [startd](https://github.com/mgrip/startd) - Turn your React component into a web app from the command-line.
-- [sindresorhus](https://github.com/sindresorhus/sindresorhus) - The Sindre Sorhus CLI.
-- [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
-- [gatsby-cli](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing fast websites.
 
 
 ## Contents
