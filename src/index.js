@@ -7,3 +7,6 @@ export {default as StdinContext} from './components/StdinContext';
 export {default as StdoutContext} from './components/StdoutContext';
 export {default as Static} from './components/Static';
 export {default as useInput} from './hooks/use-input';
+export {default as useApp} from './hooks/use-app';
+export {default as useStdin} from './hooks/use-stdin';
+export {default as useStdout} from './hooks/use-stdout';
