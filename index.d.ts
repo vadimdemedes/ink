@@ -236,7 +236,7 @@ interface AppProps {
 }
 
 /**
- * `<AppContext>` is a React context, which exposes a method to manually exit the app (unmount).
+ * `AppContext` is a React context, which exposes a method to manually exit the app (unmount).
  */
 export const AppContext: React.Context<AppProps>;
 
@@ -281,7 +281,7 @@ interface StdinProps {
 }
 
 /**
- * <StdinContext> is a React context, which exposes input stream.
+ * `StdinContext` is a React context, which exposes input stream.
  */
 export const StdinContext: React.Context<StdinProps>;
 
@@ -299,7 +299,7 @@ interface StdoutProps {
 }
 
 /**
- * `<StdoutContext>` is a React context, which exposes stdout stream, where Ink renders your app.
+ * `StdoutContext` is a React context, which exposes stdout stream, where Ink renders your app.
  */
 export const StdoutContext: React.Context<StdoutProps>;
 
