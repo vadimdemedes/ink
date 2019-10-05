@@ -936,6 +936,38 @@ Default: `false`
 
 [Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 
+### useApp
+
+`useApp` is a React hook, which exposes props of [`AppContext`](#appcontext).
+
+```js
+import {useApp} from 'ink';
+
+const MyApp = () => {
+	const {exit} = useApp();
+};
+```
+
+It's equivalent to consuming `AppContext` props via `AppContext.Consumer`:
+
+```jsx
+<AppContext.Consumer>
+	{({exit}) => {
+		// …
+	}}
+</AppContext.Consumer>
+```
+
+### useStdin
+
+`useStdin` is a React hook, which exposes props of [`StdinContext`](#stdincontext).
+Similar to `useApp`, it's equivalent to consuming `StdinContext` directly.
+
+### useStdout
+
+`useStdout` is a React hook, which exposes props of [`StdoutContext`](#stdoutcontext).
+Similar to `useApp`, it's equivalent to consuming `StdoutContext` directly.
+
 
 ## Useful Components
 

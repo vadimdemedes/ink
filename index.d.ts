@@ -228,20 +228,41 @@ export const Text: React.FC<TextProps>;
  */
 export const Static: React.FC<{children: React.ReactNodeArray}>;
 
-/**
- * `<AppContext>` is a React context, which exposes a method to manually exit the app (unmount).
- */
-export const AppContext: React.Context<{
+interface AppProps {
 	/**
 	 * Exit (unmount) the whole Ink app.
 	 */
 	readonly exit: (error?: Error) => void;
-}>;
+}
 
 /**
- * <StdinContext> is a React context, which exposes input stream.
+ * `AppContext` is a React context, which exposes a method to manually exit the app (unmount).
  */
-export const StdinContext: React.Context<{
+export const AppContext: React.Context<AppProps>;
+
+/**
+ * `useApp` is a React hook, which exposes props of `AppContext`.
+ * ```js
+ * import {useApp} from 'ink';
+ *
+ * const MyApp = () => {
+ *   const {exit} = useApp();
+ * };
+ * ```
+ *
+ * It's equivalent to consuming `AppContext` props via `AppContext.Consumer`:
+ *
+ * ```jsx
+ * <AppContext.Consumer>
+ *   {({exit}) => {
+ *     // …
+ *   }}
+ * </AppContext.Consumer>
+ * ```
+ */
+export function useApp(): AppProps;
+
+interface StdinProps {
 	/**
 	 * Stdin stream passed to `render()` in `options.stdin` or `process.stdin` by default. Useful if your app needs to handle user input.
 	 */
@@ -257,14 +278,33 @@ export const StdinContext: React.Context<{
 	 * If the `stdin` stream passed to Ink does not support setRawMode, this function does nothing.
 	 */
 	readonly setRawMode: NodeJS.ReadStream['setRawMode'];
-}>;
+}
 
 /**
- * `<StdoutContext>` is a React context, which exposes stdout stream, where Ink renders your app.
+ * `StdinContext` is a React context, which exposes input stream.
  */
-export const StdoutContext: React.Context<{
+export const StdinContext: React.Context<StdinProps>;
+
+/**
+ * `useStdin` is a React hook, which exposes props of `StdinContext`.
+ * Similar to `useApp`, it's equivalent to consuming `StdinContext` directly.
+ */
+export function useStdin(): StdinProps;
+
+interface StdoutProps {
 	/**
 	 * Stdout stream passed to `render()` in `options.stdout` or `process.stdout` by default.
 	 */
 	readonly stdout: NodeJS.WriteStream;
-}>;
+}
+
+/**
+ * `StdoutContext` is a React context, which exposes stdout stream, where Ink renders your app.
+ */
+export const StdoutContext: React.Context<StdoutProps>;
+
+/**
+ * `useStdout` is a React hook, which exposes props of `StdoutContext`.
+ * Similar to `useStdout`, it's equivalent to consuming `StdoutContext` directly.
+ */
+export function useStdout(): StdoutProps;
