@@ -115,16 +115,14 @@ export default class Instance {
 		if (hasStaticOutput) {
 			this.log.clear();
 			this.options.stdout.write(staticOutput);
+		}
 
+		if (output !== this.lastOutput) {
 			if (this.options.experimental) {
 				this.throttledLog(output);
 			} else {
 				this.log(output);
 			}
-		}
-
-		if (output !== this.lastOutput) {
-			this.log(output);
 		}
 	}
 
