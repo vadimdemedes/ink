@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-fragments */
 'use strict';
 const React = require('react');
 const {Static, Box, Text, render} = require('../..');
