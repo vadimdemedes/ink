@@ -4,6 +4,7 @@ import autoBind from 'auto-bind';
 import logUpdate from 'log-update';
 import isCI from 'is-ci';
 import signalExit from 'signal-exit';
+import ansiEscapes from 'ansi-escapes';
 import reconciler from './reconciler';
 import experimentalReconciler from './experimental/reconciler';
 import createRenderer from './renderer';
@@ -77,7 +78,7 @@ export default class Instance {
 			return;
 		}
 
-		const {output, staticOutput} = this.renderer(this.rootNode);
+		const {output, outputHeight, staticOutput} = this.renderer(this.rootNode);
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
@@ -91,29 +92,37 @@ export default class Instance {
 			return;
 		}
 
-		// To ensure static output is cleanly rendered before main output, clear main output first
-		if (hasStaticOutput) {
-			if (!isCI) {
-				this.log.clear();
-			}
-
-			this.options.stdout.write(staticOutput);
-
-			if (!isCI) {
-				if (this.options.experimental) {
-					this.throttledLog(output);
-				} else {
-					this.log(output);
-				}
-			}
-		}
-
-		if (output !== this.lastOutput) {
-			if (!isCI) {
-				this.log(output);
+		if (isCI) {
+			if (hasStaticOutput) {
+				this.options.stdout.write(staticOutput);
 			}
 
 			this.lastOutput = output;
+			return;
+		}
+
+		if (hasStaticOutput) {
+			this.fullStaticOutput += staticOutput;
+		}
+
+		if (this.options.experimental && outputHeight >= this.options.stdout.rows) {
+			this.options.stdout.write(ansiEscapes.clearTerminal + this.fullStaticOutput + output);
+			this.lastOutput = output;
+			return;
+		}
+
+		// To ensure static output is cleanly rendered before main output, clear main output first
+		if (hasStaticOutput) {
+			this.log.clear();
+			this.options.stdout.write(staticOutput);
+		}
+
+		if (output !== this.lastOutput) {
+			if (this.options.experimental) {
+				this.throttledLog(output);
+			} else {
+				this.log(output);
+			}
 		}
 	}
 

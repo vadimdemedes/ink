@@ -54,4 +54,8 @@ export default class Output {
 			.map(line => line.trimRight())
 			.join('\n');
 	}
+
+	getHeight() {
+		return this.output.length;
+	}
 }

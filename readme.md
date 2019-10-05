@@ -1023,7 +1023,9 @@ Visit [ink-testing-library](https://github.com/vadimdemedes/ink-testing-library)
 
 ## Experimental Mode
 
-Ink has experimental mode, which currently enables a more efficient and faster reconciler and renderer.
+Ink has experimental mode, which includes stable new features behind a flag.
+They're exposed behind a flag, because I want to be extra sure that it doesn't introduce regressions before shipping this new code for everyone and making it a default.
+
 Instead of shipping it under `next` tag or something similar, Ink ships it as part of a regular release.
 It can be enabled simply by passing `experimental` parameter to `render()` function:
 
@@ -1031,9 +1033,25 @@ It can be enabled simply by passing `experimental` parameter to `render()` funct
 render(<App/>, {experimental: true});
 ```
 
-Experimental mode actually includes stable features, but I want to be extra sure that it doesn't introduce regressions before shipping this new code for everyone and making it a default.
-
 Feel free to use experimental mode in development and I would appreciate if you reported any regressions you might see.
+
+### More efficient reconciler and renderer
+
+Experimental mode enables a new reconciler and renderer, which should significantly improve the rendering performance of your Ink apps.
+Ink rebuilds the entire layout and output on every update, which can be taxing if there's a high frequency of updates.
+Experimental mode ensures only necessary parts of the layout are updated and limits the number of renders to 60 frames per second.
+
+### Automatic handling of oversized output
+
+Unfortunately, terminals can't rerender output that is taller than terminal window.
+So if your app output has a height of 60 rows, but user resized terminal window to 50 rows, first 10 rows won't be rerendered, because they're out of viewport.
+
+Experimental mode adopts the same workaround that Jest does, it erases the entire terminal content if output is taller than terminal window. It comes with tradeoffs though:
+
+- Output can become janky, since erasing terminal is not a "cheap" operation.
+- Entire scrollback history in that terminal session will be lost.
+
+It is, however, the only way known now to handle this.
 
 
 ## Maintainers
