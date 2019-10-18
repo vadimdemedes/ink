@@ -84,6 +84,7 @@
 		"xo": "^0.24.0"
 	},
 	"peerDependencies": {
+		"@types/react": ">=16.8.0",
 		"react": ">=16.8.0"
 	},
 	"babel": {
