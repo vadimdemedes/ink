@@ -39,9 +39,6 @@
 		"colors",
 		"text"
 	],
-	"peerDependencies": {
-		"@types/react": "^16.8.6"
-	},
 	"dependencies": {
 		"ansi-escapes": "^4.2.1",
 		"arrify": "^1.0.1",
