@@ -40,7 +40,6 @@
 		"text"
 	],
 	"dependencies": {
-		"@types/react": "^16.8.6",
 		"ansi-escapes": "^4.2.1",
 		"arrify": "^1.0.1",
 		"auto-bind": "^2.0.0",
@@ -61,6 +60,7 @@
 		"yoga-layout-prebuilt": "^1.9.3"
 	},
 	"devDependencies": {
+		"@types/react": "^16.8.6",
 		"@babel/cli": "^7.1.2",
 		"@babel/core": "^7.1.2",
 		"@babel/plugin-proposal-class-properties": "^7.1.0",
@@ -84,6 +84,7 @@
 		"xo": "^0.24.0"
 	},
 	"peerDependencies": {
+		"@types/react": ">=16.8.0",
 		"react": ">=16.8.0"
 	},
 	"babel": {
