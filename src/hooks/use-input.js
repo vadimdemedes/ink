@@ -1,18 +1,26 @@
 import {useEffect, useContext} from 'react';
 import {StdinContext} from '..';
 
-export default inputHandler => {
+export default (inputHandler, {active = true} = {}) => {
 	const {stdin, setRawMode} = useContext(StdinContext);
 
-	useEffect(() => {
+    useEffect(() => {
+		if (!active) {
+			return;
+		}
+
 		setRawMode(true);
 
 		return () => {
 			setRawMode(false);
 		};
-	}, [setRawMode]);
+    }, [active, setRawMode]);
 
-	useEffect(() => {
+    useEffect(() => {
+		if (!active) {
+			return;
+		}
+
 		const handleData = data => {
 			let input = String(data);
 			const key = {
@@ -52,5 +60,5 @@ export default inputHandler => {
 		return () => {
 			stdin.off('data', handleData);
 		};
-	}, [stdin, inputHandler]);
+    }, [active, stdin, inputHandler]);
 };
