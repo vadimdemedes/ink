@@ -1,6 +1,6 @@
 'use strict';
 const React = require('react');
-const PQueue = require('p-queue');
+const {default: PQueue} = require('p-queue');
 const delay = require('delay');
 const ms = require('ms');
 const importJsx = require('import-jsx');
