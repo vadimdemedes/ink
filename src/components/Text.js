@@ -31,6 +31,7 @@ const Text = ({bold, italic, underline, strikethrough, children, unstable__trans
 	return <span style={{flexDirection: 'row'}} unstable__transformChildren={transformChildren}>{children}</span>;
 };
 
+/* eslint-disable react/boolean-prop-naming */
 Text.propTypes = {
 	bold: PropTypes.bool,
 	italic: PropTypes.bool,
@@ -39,6 +40,7 @@ Text.propTypes = {
 	children: PropTypes.node.isRequired,
 	unstable__transformChildren: PropTypes.func
 };
+/* eslint-enable react/boolean-prop-naming */
 
 Text.defaultProps = {
 	bold: false,

@@ -24,7 +24,7 @@ export default (fixture, {env} = {}) => {
 				return;
 			}
 
-			reject(new Error('Process exited with a non-zero code'));
+			reject(new Error(`Process exited with a non-zero code: ${output}`));
 		});
 	});
 };
