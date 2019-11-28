@@ -789,7 +789,7 @@ Usage:
 Type: `function`<br>
 
 See [`setRawMode`](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode).
-Ink exposes this function via own `<StdinContext>` to be able to handle <kbd>Ctrl</kbd>+<kbd>C</kbd>, that's why you should use Ink's `setRawMode` instead of `process.stdin.setRawMode`. Ink also enables `keypress` events via [`readline.emitKeypressEvents()`](https://nodejs.org/api/readline.html#readline_readline_emitkeypressevents_stream_interface) when raw mode is enabled.
+Ink exposes this function via own `<StdinContext>` to be able to handle <kbd>Ctrl</kbd>+<kbd>C</kbd>, that's why you should use Ink's `setRawMode` instead of `process.stdin.setRawMode`.
 
 **Warning:** This function will throw unless the current `stdin` supports `setRawMode`. Use [`isRawModeSupported`](#israwmodesupported) to detect `setRawMode` support.
 
