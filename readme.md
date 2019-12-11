@@ -956,6 +956,7 @@ Similar to `useApp`, it's equivalent to consuming `StdoutContext` directly.
 -   [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider component.
 -   [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Configurable component for rendering progress bars.
 -   [ink-table](https://github.com/maticzav/ink-table) - Table component.
+-   [ink-quicksearch-input](https://github.com/Eximchain/ink-quicksearch-input) - Select component with fast quicksearch-like navigation.
 
 ### Incompatible components
 
