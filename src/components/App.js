@@ -13,7 +13,7 @@ export default class App extends PureComponent {
 		children: PropTypes.node.isRequired,
 		stdin: PropTypes.object.isRequired,
 		stdout: PropTypes.object.isRequired,
-		exitOnCtrlC: PropTypes.bool.isRequired,
+		exitOnCtrlC: PropTypes.bool.isRequired, // eslint-disable-line react/boolean-prop-naming
 		onExit: PropTypes.func.isRequired
 	};
 

@@ -11,19 +11,17 @@
 
 ![Build Status](https://github.com/vadimdemedes/ink/workflows/tests/badge.svg)
 
-
 ## Install
 
 ```
 $ npm install ink react
 ```
 
-
 ## Usage
 
 ```jsx
-import React, {Component} from 'react';
-import {render, Color} from 'ink';
+import React, { Component } from "react";
+import { render, Color } from "ink";
 
 class Counter extends Component {
 	constructor() {
@@ -35,11 +33,7 @@ class Counter extends Component {
 	}
 
 	render() {
-		return (
-			<Color green>
-				{this.state.i} tests passed
-			</Color>
-		);
+		return <Color green>{this.state.i} tests passed</Color>;
 	}
 
 	componentDidMount() {
@@ -55,7 +49,7 @@ class Counter extends Component {
 	}
 }
 
-render(<Counter/>);
+render(<Counter />);
 ```
 
 <img src="media/demo.svg" width="600">
@@ -63,42 +57,39 @@ render(<Counter/>);
 You can also check it out live on [repl.it sandbox](https://ink-counter-demo.vadimdemedes.repl.run/).
 Feel free to play around with the code and fork this repl at [https://repl.it/@vadimdemedes/ink-counter-demo](https://repl.it/@vadimdemedes/ink-counter-demo).
 
-
 ## Who's Using Ink?
 
-- [Gatsby](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing fast websites.
-- [Parcel](https://parceljs.org) - Blazing fast, zero configuration web application bundler.
-- [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
-- [Typewriter](https://github.com/segmentio/typewriter) - Generates strongly-typed [Segment](https://segment.com) analytics clients from arbitrary JSON Schema.
-- [Prisma](https://www.prisma.io) - The unified data layer for modern applications.
-- [Wallace](https://www.projectwallace.com) - Pretty CSS analytics on the CLI.
-- [tink](https://github.com/npm/tink) - Next-generation runtime and package manager.
-- [Splash](https://github.com/Shopify/polaris-react/tree/master/scripts/splash) - Observe the splash zone of a change across the Shopify's [Polaris](https://polaris.shopify.com) component library.
-- [emoj](https://github.com/sindresorhus/emoj) - Find relevant emoji on the command-line.
-- [emma](https://github.com/maticzav/emma-cli) - Terminal assistant to find and install npm packages.
-- [sindresorhus](https://github.com/sindresorhus/sindresorhus) - The Sindre Sorhus CLI.
-- [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command line tools for time-saving web developers.
-- [share](https://github.com/marionebl/share-cli) - Quickly share files from your command line.
-- [Kubelive](https://github.com/ameerthehacker/kubelive) - CLI for Kubernetes to provide live data about the cluster and its resources.
-- [changelog-view](https://github.com/jdeniau/changelog-view) - Tool view changelog in console.
-- [gomoku-terminal](https://github.com/acrazing/gomoku-terminal) - Play online Gomoku in the terminal.
-- [cfpush](https://github.com/mamachanko/cfpush) - An interactive Cloud Foundry tutorial in your terminal.
-- [startd](https://github.com/mgrip/startd) - Turn your React component into a web app from the command-line.
-- [wiki-cli](https://github.com/hexrcs/wiki-cli) - Search Wikipedia and read summaries directly in your terminal.
-
+-   [Gatsby](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing fast websites.
+-   [Parcel](https://parceljs.org) - Blazing fast, zero configuration web application bundler.
+-   [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
+-   [Typewriter](https://github.com/segmentio/typewriter) - Generates strongly-typed [Segment](https://segment.com) analytics clients from arbitrary JSON Schema.
+-   [Prisma](https://www.prisma.io) - The unified data layer for modern applications.
+-   [Wallace](https://www.projectwallace.com) - Pretty CSS analytics on the CLI.
+-   [tink](https://github.com/npm/tink) - Next-generation runtime and package manager.
+-   [Splash](https://github.com/Shopify/polaris-react/tree/master/scripts/splash) - Observe the splash zone of a change across the Shopify's [Polaris](https://polaris.shopify.com) component library.
+-   [emoj](https://github.com/sindresorhus/emoj) - Find relevant emoji on the command-line.
+-   [emma](https://github.com/maticzav/emma-cli) - Terminal assistant to find and install npm packages.
+-   [sindresorhus](https://github.com/sindresorhus/sindresorhus) - The Sindre Sorhus CLI.
+-   [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command line tools for time-saving web developers.
+-   [share](https://github.com/marionebl/share-cli) - Quickly share files from your command line.
+-   [Kubelive](https://github.com/ameerthehacker/kubelive) - CLI for Kubernetes to provide live data about the cluster and its resources.
+-   [changelog-view](https://github.com/jdeniau/changelog-view) - Tool view changelog in console.
+-   [gomoku-terminal](https://github.com/acrazing/gomoku-terminal) - Play online Gomoku in the terminal.
+-   [cfpush](https://github.com/mamachanko/cfpush) - An interactive Cloud Foundry tutorial in your terminal.
+-   [startd](https://github.com/mgrip/startd) - Turn your React component into a web app from the command-line.
+-   [wiki-cli](https://github.com/hexrcs/wiki-cli) - Search Wikipedia and read summaries directly in your terminal.
 
 ## Contents
 
-- [Getting Started](#getting-started)
-- [Examples](#examples)
-- [API](#api)
-- [Building Layouts](#building-layouts)
-- [Built-in Components](#built-in-components)
-- [Hooks](#hooks)
-- [Useful Components](#useful-components)
-- [Testing](#testing)
-- [Experimental mode](#experimental-mode)
-
+-   [Getting Started](#getting-started)
+-   [Examples](#examples)
+-   [API](#api)
+-   [Building Layouts](#building-layouts)
+-   [Built-in Components](#built-in-components)
+-   [Hooks](#hooks)
+-   [Useful Components](#useful-components)
+-   [Testing](#testing)
+-   [Experimental mode](#experimental-mode)
 
 ## Getting Started
 
@@ -129,25 +120,19 @@ To get started with Ink quickly, use [create-ink-app](https://github.com/vadimde
 Don't forget to import `React` into every file that contains JSX:
 
 ```jsx
-import React from 'react';
-import {render, Box} from 'ink';
+import React from "react";
+import { render, Box } from "ink";
 
-const Demo = () => (
-	<Box>
-		Hello World
-	</Box>
-);
+const Demo = () => <Box>Hello World</Box>;
 
-render(<Demo/>);
+render(<Demo />);
 ```
-
 
 ## Examples
 
-- [Jest](examples/jest/jest.js) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
-- [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms [(live demo)](https://ink-counter-demo.vadimdemedes.repl.run/).
-- [Form with Validation](https://github.com/final-form/rff-cli-example) - Using framework agnostic form library, [🏁 Final Form](https://github.com/final-form/final-form#-final-form) to manage input state.
-
+-   [Jest](examples/jest/jest.js) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
+-   [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms [(live demo)](https://ink-counter-demo.vadimdemedes.repl.run/).
+-   [Form with Validation](https://github.com/final-form/rff-cli-example) - Using framework agnostic form library, [🏁 Final Form](https://github.com/final-form/final-form#-final-form) to manage input state.
 
 ## API
 
@@ -206,8 +191,8 @@ Default: `false`
 Enables [experimental mode](#experimental-mode).
 
 ```jsx
-import React, {Component} from 'react';
-import {render, Box} from 'ink';
+import React, { Component } from "react";
+import { render, Box } from "ink";
 
 class Counter extends Component {
 	constructor() {
@@ -219,11 +204,7 @@ class Counter extends Component {
 	}
 
 	render() {
-		return (
-			<Box>
-				Iteration #{this.state.i}
-			</Box>
-		);
+		return <Box>Iteration #{this.state.i}</Box>;
 	}
 
 	componentDidMount() {
@@ -239,7 +220,7 @@ class Counter extends Component {
 	}
 }
 
-const app = render(<Counter/>);
+const app = render(<Counter />);
 
 setTimeout(() => {
 	// Enough counting
@@ -263,12 +244,12 @@ Replace previous root node with a new one or update props of the current root no
 
 ```jsx
 // Update props of the root node
-const {rerender} = render(<Counter count={1}/>);
-rerender(<Counter count={2}/>);
+const { rerender } = render(<Counter count={1} />);
+rerender(<Counter count={2} />);
 
 // Replace root node
-const {rerender} = render(<OldCounter/>);
-rerender(<NewCounter/>);
+const { rerender } = render(<OldCounter />);
+rerender(<NewCounter />);
 ```
 
 ##### unmount
@@ -276,7 +257,7 @@ rerender(<NewCounter/>);
 Manually unmount the whole Ink app.
 
 ```jsx
-const {unmount} = render(<MyApp/>);
+const { unmount } = render(<MyApp />);
 unmount();
 ```
 
@@ -285,7 +266,7 @@ unmount();
 Returns a promise, which resolves when app is unmounted.
 
 ```jsx
-const {unmount, waitUntilExit} = render(<MyApp/>);
+const { unmount, waitUntilExit } = render(<MyApp />);
 
 setTimeout(unmount, 1000);
 
@@ -299,7 +280,6 @@ It's important to remember that each element is a Flexbox container.
 Think of it as if each `<div>` in the browser had `display: flex`.
 See `<Box>` built-in component below for documentation on how to use Flexbox layouts in Ink.
 
-
 ### Built-in Components
 
 #### `<Box>`
@@ -309,7 +289,7 @@ See `<Box>` built-in component below for documentation on how to use Flexbox lay
 Import:
 
 ```js
-import {Box} from 'ink';
+import { Box } from "ink";
 ```
 
 ##### Dimensions
@@ -326,8 +306,7 @@ Width of the element in spaces. You can also set it in percent, which will calcu
 
 ```jsx
 <Box width={10}>
-	<Box width="50%">X</Box>
-	Y
+	<Box width="50%">X</Box>Y
 </Box> //=> 'X    Y'
 ```
 
@@ -343,8 +322,7 @@ Height of the element in lines (rows). You can also set it in percent, which wil
 
 ```jsx
 <Box height={6} flexDirection="column">
-	<Box height="50%">X</Box>
-	Y
+	<Box height="50%">X</Box>Y
 </Box> //=> 'X\n\n\nY\n\n'
 ```
 
@@ -369,7 +347,7 @@ Values: `wrap` `truncate` `truncate-start` `truncate-middle` `truncate-end`
 
 This property tells Ink to wrap or truncate text content of `<Box>` if its width is larger than container. If `wrap` is passed, Ink will wrap text and split it into multiple lines. If `truncate-*` is passed, Ink will truncate text instead, which will result in one line of text with the rest cut off.
 
-*Note:* Ink doesn't wrap text by default.
+_Note:_ Ink doesn't wrap text by default.
 
 ```jsx
 <Box textWrap="wrap">Hello World</Box>
@@ -492,9 +470,7 @@ See [flex-grow](https://css-tricks.com/almanac/properties/f/flex-grow/).
 ```jsx
 <Box>
 	Label:
-	<Box flexGrow={1}>
-		Fills all remaining space
-	</Box>
+	<Box flexGrow={1}>Fills all remaining space</Box>
 </Box>
 ```
 
@@ -510,9 +486,7 @@ See [flex-shrink](https://css-tricks.com/almanac/properties/f/flex-shrink/).
 	<Box flexShrink={2} width={10}>
 		Will be 1/4
 	</Box>
-	<Box width={10}>
-		Will be 3/4
-	</Box>
+	<Box width={10}>Will be 3/4</Box>
 </Box>
 ```
 
@@ -524,15 +498,13 @@ See [flex-basis](https://css-tricks.com/almanac/properties/f/flex-basis/).
 
 ```jsx
 <Box width={6}>
-	<Box flexBasis={3}>X</Box>
-	Y
+	<Box flexBasis={3}>X</Box>Y
 </Box> //=> 'X  Y'
 ```
 
 ```jsx
 <Box width={6}>
-	<Box flexBasis="50%">X</Box>
-	Y
+	<Box flexBasis="50%">X</Box>Y
 </Box> //=> 'X  Y'
 ```
 
@@ -640,7 +612,6 @@ See [justify-content](https://css-tricks.com/almanac/properties/f/justify-conten
 // [  X   Y  ]
 ```
 
-
 #### `<Color>`
 
 The `<Color>` component is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api).
@@ -649,7 +620,7 @@ It supports all of the chalk's methods as `props`.
 Import:
 
 ```js
-import {Color} from 'ink';
+import { Color } from "ink";
 ```
 
 Usage:
@@ -675,7 +646,7 @@ This component can change the style of the text, make it bold, underline, italic
 Import:
 
 ```js
-import {Text} from 'ink';
+import { Text } from "ink";
 ```
 
 ##### bold
@@ -726,12 +697,12 @@ Jest continuously writes the list of completed tests to the output, while updati
 <>
 	<Static>
 		{tests.map(test => (
-			<Test key={test.id} title={test.title}/>
+			<Test key={test.id} title={test.title} />
 		))}
 	</Static>
 
 	<Box marginTop={1}>
-		<TestResults passed={results.passed} failed={results.failed}/>
+		<TestResults passed={results.passed} failed={results.failed} />
 	</Box>
 </>
 ```
@@ -745,7 +716,7 @@ See [examples/jest](examples/jest/jest.js) for a basic implementation of Jest's 
 Import:
 
 ```js
-import {AppContext} from 'ink';
+import { AppContext } from "ink";
 ```
 
 ##### exit
@@ -774,7 +745,7 @@ If `exit` is called with an Error, `waitUntilExit` will reject with that error.
 Import:
 
 ```js
-import {StdinContext} from 'ink';
+import { StdinContext } from "ink";
 ```
 
 ##### stdin
@@ -789,9 +760,7 @@ Usage:
 
 ```jsx
 <StdinContext.Consumer>
-	{({ stdin }) => (
-		<MyComponent stdin={stdin}/>
-	)}
+	{({ stdin }) => <MyComponent stdin={stdin} />}
 </StdinContext.Consumer>
 ```
 
@@ -806,9 +775,13 @@ Usage:
 
 ```jsx
 <StdinContext.Consumer>
-	{({ isRawModeSupported, setRawMode, stdin }) => (
-		isRawModeSupported ? <MyInputComponent setRawMode={setRawMode} stdin={stdin}/> : <MyComponentThatDoesntUseInput />
-	)}
+	{({ isRawModeSupported, setRawMode, stdin }) =>
+		isRawModeSupported ? (
+			<MyInputComponent setRawMode={setRawMode} stdin={stdin} />
+		) : (
+			<MyComponentThatDoesntUseInput />
+		)
+	}
 </StdinContext.Consumer>
 ```
 
@@ -817,7 +790,7 @@ Usage:
 Type: `function`<br>
 
 See [`setRawMode`](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode).
-Ink exposes this function via own `<StdinContext>` to be able to handle <kbd>Ctrl</kbd>+<kbd>C</kbd>, that's why you should use Ink's `setRawMode` instead of `process.stdin.setRawMode`. Ink also enables `keypress` events via [`readline.emitKeypressEvents()`](https://nodejs.org/api/readline.html#readline_readline_emitkeypressevents_stream_interface) when raw mode is enabled.
+Ink exposes this function via own `<StdinContext>` to be able to handle <kbd>Ctrl</kbd>+<kbd>C</kbd>, that's why you should use Ink's `setRawMode` instead of `process.stdin.setRawMode`.
 
 **Warning:** This function will throw unless the current `stdin` supports `setRawMode`. Use [`isRawModeSupported`](#israwmodesupported) to detect `setRawMode` support.
 
@@ -825,9 +798,7 @@ Usage:
 
 ```jsx
 <StdinContext.Consumer>
-	{({ setRawMode }) => (
-		<MyComponent setRawMode={setRawMode}/>
-	)}
+	{({ setRawMode }) => <MyComponent setRawMode={setRawMode} />}
 </StdinContext.Consumer>
 ```
 
@@ -838,7 +809,7 @@ Usage:
 Import:
 
 ```js
-import {StdoutContext} from 'ink';
+import { StdoutContext } from "ink";
 ```
 
 ##### stdout
@@ -850,9 +821,7 @@ Usage:
 
 ```jsx
 <StdoutContext.Consumer>
-	{({ stdout }) => (
-		<MyComponent stdout={stdout}/>
-	)}
+	{({ stdout }) => <MyComponent stdout={stdout} />}
 </StdoutContext.Consumer>
 ```
 
@@ -899,8 +868,11 @@ Type: `object`
 Handy information about a key that was pressed.
 
 ##### key.leftArrow
+
 ##### key.rightArrow
+
 ##### key.upArrow
+
 ##### key.downArrow
 
 Type: `boolean`<br>
@@ -942,10 +914,10 @@ Default: `false`
 `useApp` is a React hook, which exposes props of [`AppContext`](#appcontext).
 
 ```js
-import {useApp} from 'ink';
+import { useApp } from "ink";
 
 const MyApp = () => {
-	const {exit} = useApp();
+	const { exit } = useApp();
 };
 ```
 
@@ -953,7 +925,7 @@ It's equivalent to consuming `AppContext` props via `AppContext.Consumer`:
 
 ```jsx
 <AppContext.Consumer>
-	{({exit}) => {
+	{({ exit }) => {
 		// …
 	}}
 </AppContext.Consumer>
@@ -969,41 +941,39 @@ Similar to `useApp`, it's equivalent to consuming `StdinContext` directly.
 `useStdout` is a React hook, which exposes props of [`StdoutContext`](#stdoutcontext).
 Similar to `useApp`, it's equivalent to consuming `StdoutContext` directly.
 
-
 ## Useful Components
 
-- [ink-text-input](https://github.com/vadimdemedes/ink-text-input) - Text input.
-- [ink-spinner](https://github.com/vadimdemedes/ink-spinner) - Spinner.
-- [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
-- [ink-link](https://github.com/sindresorhus/ink-link) - Link component.
-- [ink-box](https://github.com/sindresorhus/ink-box) - Styled box component.
-- [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color component.
-- [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
-- [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
-- [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
-- [ink-color-pipe](https://github.com/LitoMore/ink-color-pipe) - Create color text with simpler style strings in Ink.
-- [ink-multi-select](https://github.com/karaggeorge/ink-multi-select) - Select one or more values from a list
-- [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider component.
-- [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Configurable component for rendering progress bars.
-- [ink-table](https://github.com/maticzav/ink-table) - Table component.
-- [ink-ascii](https://github.com/hexrcs/ink-ascii) - Awesome text component with more font choices, based on Figlet.
+-   [ink-text-input](https://github.com/vadimdemedes/ink-text-input) - Text input.
+-   [ink-spinner](https://github.com/vadimdemedes/ink-spinner) - Spinner.
+-   [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
+-   [ink-link](https://github.com/sindresorhus/ink-link) - Link component.
+-   [ink-box](https://github.com/sindresorhus/ink-box) - Styled box component.
+-   [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color component.
+-   [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
+-   [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
+-   [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
+-   [ink-color-pipe](https://github.com/LitoMore/ink-color-pipe) - Create color text with simpler style strings in Ink.
+-   [ink-multi-select](https://github.com/karaggeorge/ink-multi-select) - Select one or more values from a list
+-   [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider component.
+-   [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Configurable component for rendering progress bars.
+-   [ink-table](https://github.com/maticzav/ink-table) - Table component.
+-   [ink-ascii](https://github.com/hexrcs/ink-ascii) - Awesome text component with more font choices, based on Figlet.
 
 ### Incompatible components
 
 These are components that haven't migrated to Ink 2 yet:
 
-- [ink-console](https://github.com/ForbesLindesay/ink-console) - Render output from `console[method]` calls in a scrollable panel.
-- [ink-confirm-input](https://github.com/kevva/ink-confirm-input) - Yes/No confirmation input.
-- [ink-checkbox-list](https://github.com/MaxMEllon/ink-checkbox-list) - Checkbox.
-- [ink-quicksearch](https://github.com/aicioara/ink-quicksearch) - Select Component with fast quicksearch-like navigation
-- [ink-autocomplete](https://github.com/maticzav/ink-autocomplete) - Autocomplete.
-- [ink-broadcast](https://github.com/jimmed/ink-broadcast) - Implementation of react-broadcast for Ink.
-- [ink-router](https://github.com/jimmed/ink-router) - Implementation of react-router for Ink.
-- [ink-select](https://github.com/karaggeorge/ink-select) - Select component.
-- [ink-scrollbar](https://github.com/karaggeorge/ink-scrollbar) - Scrollbar component.
-- [ink-text-animation](https://github.com/yardnsm/ink-text-animation) - Text animation component.
-- [ink-figlet](https://github.com/KimotoYanke/ink-figlet) - Large text component with Figlet fonts.
-
+-   [ink-console](https://github.com/ForbesLindesay/ink-console) - Render output from `console[method]` calls in a scrollable panel.
+-   [ink-confirm-input](https://github.com/kevva/ink-confirm-input) - Yes/No confirmation input.
+-   [ink-checkbox-list](https://github.com/MaxMEllon/ink-checkbox-list) - Checkbox.
+-   [ink-quicksearch](https://github.com/aicioara/ink-quicksearch) - Select Component with fast quicksearch-like navigation
+-   [ink-autocomplete](https://github.com/maticzav/ink-autocomplete) - Autocomplete.
+-   [ink-broadcast](https://github.com/jimmed/ink-broadcast) - Implementation of react-broadcast for Ink.
+-   [ink-router](https://github.com/jimmed/ink-router) - Implementation of react-router for Ink.
+-   [ink-select](https://github.com/karaggeorge/ink-select) - Select component.
+-   [ink-scrollbar](https://github.com/karaggeorge/ink-scrollbar) - Scrollbar component.
+-   [ink-text-animation](https://github.com/yardnsm/ink-text-animation) - Text animation component.
+-   [ink-figlet](https://github.com/KimotoYanke/ink-figlet) - Large text component with Figlet fonts.
 
 ## Testing
 
@@ -1011,14 +981,14 @@ Ink components are simple to test with [ink-testing-library](https://github.com/
 Here's a simple example that checks how component is rendered:
 
 ```jsx
-import React from 'react';
-import {Text} from 'ink';
-import {render} from 'ink-testing-library';
+import React from "react";
+import { Text } from "ink";
+import { render } from "ink-testing-library";
 
 const Test = () => <Text>Hello World</Text>;
-const {lastFrame} = render(<Test/>);
+const { lastFrame } = render(<Test />);
 
-lastFrame() === 'Hello World'; //=> true
+lastFrame() === "Hello World"; //=> true
 ```
 
 Visit [ink-testing-library](https://github.com/vadimdemedes/ink-testing-library) for more examples and full documentation.
@@ -1032,7 +1002,7 @@ Instead of shipping it under `next` tag or something similar, Ink ships it as pa
 It can be enabled simply by passing `experimental` parameter to `render()` function:
 
 ```jsx
-render(<App/>, {experimental: true});
+render(<App />, { experimental: true });
 ```
 
 Feel free to use experimental mode in development and I would appreciate if you reported any regressions you might see.
@@ -1050,13 +1020,12 @@ So if your app output has a height of 60 rows, but user resized terminal window 
 
 Experimental mode adopts the same workaround that Jest does, it erases the entire terminal content if output is taller than terminal window. It comes with tradeoffs though:
 
-- Output can become janky, since erasing terminal is not a "cheap" operation.
-- Entire scrollback history in that terminal session will be lost.
+-   Output can become janky, since erasing terminal is not a "cheap" operation.
+-   Entire scrollback history in that terminal session will be lost.
 
 It is, however, the only way known now to handle this.
 
-
 ## Maintainers
 
-- [Vadim Demedes](https://github.com/vadimdemedes)
-- [Sindre Sorhus](https://github.com/sindresorhus)
+-   [Vadim Demedes](https://github.com/vadimdemedes)
+-   [Sindre Sorhus](https://github.com/sindresorhus)
