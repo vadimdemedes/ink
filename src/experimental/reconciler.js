@@ -68,6 +68,7 @@ const hostConfig = {
 
 		return node;
 	},
+	unhideInstance: () => {},
 	createTextInstance: createTextNode,
 	resetTextContent: node => {
 		if (node.textContent) {
