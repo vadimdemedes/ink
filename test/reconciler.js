@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React from 'react';
+import React, {Suspense} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
 import {spy} from 'sinon';
@@ -293,4 +293,59 @@ test('replace child node with text', t => {
 
 	rerender(<Dynamic replace/>);
 	t.is(stdout.write.lastCall.args[0], 'x');
+});
+
+test('unhide node', async t => {
+	const stdout = createStdout();
+
+	const suspender = new Promise(resolve => {
+		setTimeout(() => resolve('Hi'), 30);
+	});
+
+	let state = ['pending', suspender];
+
+	// eslint-disable-next-line promise/prefer-await-to-then
+	suspender.then(
+		value => {
+			state = ['success', value];
+			return value;
+		},
+		error => {
+			state = ['error', error];
+			return error;
+		}
+	);
+
+	const read = () => {
+		switch (state[0]) {
+			case 'pending': {
+				throw state[1];
+			}
+
+			case 'error': {
+				throw state[1];
+			}
+
+			default: {
+				return state[1];
+			}
+		}
+	};
+
+	const Suspendable = ({read}) => (
+		<Box>{read()}</Box>
+	);
+
+	const out = render(<Suspense fallback={<Box>Loading</Box>}><Suspendable read={read}/></Suspense>, {
+		stdout,
+		debug: true,
+		experimental: isExperimental
+	});
+
+	t.is(stdout.write.lastCall.args[0], 'Loading');
+
+	await suspender;
+
+	out.rerender(<Suspense fallback={<Box>Loading</Box>}><Suspendable read={read}/></Suspense>);
+	t.is(stdout.write.lastCall.args[0], 'Hi');
 });
