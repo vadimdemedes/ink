@@ -77,6 +77,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 -   [gomoku-terminal](https://github.com/acrazing/gomoku-terminal) - Play online Gomoku in the terminal.
 -   [cfpush](https://github.com/mamachanko/cfpush) - An interactive Cloud Foundry tutorial in your terminal.
 -   [startd](https://github.com/mgrip/startd) - Turn your React component into a web app from the command-line.
+-   [wiki-cli](https://github.com/hexrcs/wiki-cli) - Search Wikipedia and read summaries directly in your terminal.
 
 ## Contents
 
@@ -956,6 +957,7 @@ Similar to `useApp`, it's equivalent to consuming `StdoutContext` directly.
 -   [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider component.
 -   [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Configurable component for rendering progress bars.
 -   [ink-table](https://github.com/maticzav/ink-table) - Table component.
+-   [ink-ascii](https://github.com/hexrcs/ink-ascii) - Awesome text component with more font choices, based on Figlet.
 
 ### Incompatible components
 
