@@ -941,6 +941,10 @@ Similar to `useApp`, it's equivalent to consuming `StdinContext` directly.
 `useStdout` is a React hook, which exposes props of [`StdoutContext`](#stdoutcontext).
 Similar to `useApp`, it's equivalent to consuming `StdoutContext` directly.
 
+## Useful Hooks
+
+-   [ink-use-stdout-dimensions](https://github.com/cameronhunter/ink-monorepo/tree/master/packages/ink-use-stdout-dimensions) - Subscribe to stdout dimensions.
+
 ## Useful Components
 
 -   [ink-text-input](https://github.com/vadimdemedes/ink-text-input) - Text input.
