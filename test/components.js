@@ -49,7 +49,7 @@ test('text with component', t => {
 test('text with fragment', t => {
 	const output = renderToString(
 		<Box>
-			Hello <>World</>
+			Hello <>World</> {/* eslint-disable-line react/jsx-no-useless-fragment */}
 		</Box>
 	);
 
