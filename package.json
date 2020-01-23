@@ -87,6 +87,11 @@
 		"@types/react": ">=16.8.0",
 		"react": ">=16.8.0"
 	},
+	"peerDependenciesMeta": {
+		"@types/react": {
+			"optional": true
+		}
+	},
 	"babel": {
 		"plugins": [
 			"@babel/plugin-proposal-class-properties",
