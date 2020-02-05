@@ -164,10 +164,10 @@ test('squash multiple nested text nodes', t => {
 	t.is(output, '[{hello world}]');
 });
 
-test('squash empty <Text> nodes', t => {
+test('squash empty `<Text>` nodes', t => {
 	const output = renderToString(
-		<Box unstable__transformChildren={str => `[${str}]`}>
-			<Box unstable__transformChildren={str => `{${str}}`}>
+		<Box unstable__transformChildren={string => `[${string}]`}>
+			<Box unstable__transformChildren={string => `{${string}}`}>
 				<Text>{[]}</Text>
 			</Box>
 		</Box>
