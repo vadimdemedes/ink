@@ -164,6 +164,18 @@ test('squash multiple nested text nodes', t => {
 	t.is(output, '[{hello world}]');
 });
 
+test('squash empty `<Text>` nodes', t => {
+	const output = renderToString(
+		<Box unstable__transformChildren={string => `[${string}]`}>
+			<Box unstable__transformChildren={string => `{${string}}`}>
+				<Text>{[]}</Text>
+			</Box>
+		</Box>
+	);
+
+	t.is(output, '');
+});
+
 test('hooks', t => {
 	const WithHooks = () => {
 		const [value] = useState('Hello');

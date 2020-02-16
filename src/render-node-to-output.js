@@ -27,6 +27,10 @@ const isAllTextNodes = node => {
 // Also, this is necessary for libraries like ink-link (https://github.com/sindresorhus/ink-link),
 // which need to wrap all children at once, instead of wrapping 3 text nodes separately.
 const squashTextNodes = node => {
+	if (node.childNodes.length === 0) {
+		return '';
+	}
+
 	// If parent container is `<Box>`, text nodes will be treated as separate nodes in
 	// the tree and will have their own coordinates in the layout.
 	// To ensure text nodes are aligned correctly, take X and Y of the first text node
