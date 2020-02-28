@@ -4,6 +4,26 @@ import cliCursor from 'cli-cursor';
 import AppContext from './AppContext';
 import StdinContext from './StdinContext';
 import StdoutContext from './StdoutContext';
+import useFocusSelector from '../hooks/use-focus-selector';
+import FocusContext from './FocusContext';
+
+function AppWithFocus({children}) {
+	const {
+		register,
+		unregister,
+		hasFocus
+	} = useFocusSelector();
+
+	return (
+		<FocusContext.Provider value={{register, unregister, hasFocus}}>
+			{children}
+		</FocusContext.Provider>
+	);
+}
+
+AppWithFocus.propTypes = {
+	children: PropTypes.node.isRequired
+};
 
 // Root component for all Ink apps
 // It renders stdin and stdout contexts, so that children can access them if needed
@@ -49,7 +69,9 @@ export default class App extends PureComponent {
 							stdout: this.props.stdout
 						}}
 					>
-						{this.props.children}
+						<AppWithFocus>
+							{this.props.children}
+						</AppWithFocus>
 					</StdoutContext.Provider>
 				</StdinContext.Provider>
 			</AppContext.Provider>

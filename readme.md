@@ -909,6 +909,51 @@ Default: `false`
 
 [Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 
+
+### useFocus / withFocus
+
+These hook and HOC provides a way to use ink focus system.
+
+ink tries to emulate a browser-like focus management to navigate throught multiple focusable components.
+
+You can navigate through focusable component by using TAB / SHIFT+TAB keys.
+
+Please note that if you want to implement a component with focus management, and if you handle input (either via `useInput` or `stdin.on('data'` for example), you will need to handle these keys as it will conflict with ink's focus management).
+
+#### useFocus
+
+```js
+import { useFocus } from "ink";
+
+function FooWithFocus() {
+	const hasFocus = useFocus();
+
+	if (hasFocus) {
+		return <Box>has focus</Box>;
+	}
+
+	return <Box>no focus</Box>;
+}
+```
+
+#### withFocus
+
+`withFocus` HOC works as `useFocus` and inject automatically the `hasFocus` props into the given prop.
+
+```js
+import { withFocus } from "ink";
+
+function FooWithFocus({ hasFocus }) {
+	if (hasFocus) {
+		return <Box>has focus</Box>;
+	}
+
+	return <Box>no focus</Box>;
+}
+
+export default withFocus(FooWithFocus);
+```
+
 ### useApp
 
 `useApp` is a React hook, which exposes props of [`AppContext`](#appcontext).

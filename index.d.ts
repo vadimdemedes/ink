@@ -79,6 +79,14 @@ export function useInput(
 	inputHandler: (input: string, key: Key) => void
 ): void;
 
+export function useFocus(): boolean;
+
+interface WithFocusProps {
+	hasFocus: boolean;
+}  
+
+export function withFocus(WrappedComponent: React.ComponentClass): React.ComponentClass<WithFocusProps>;
+
 export interface Key {
 	upArrow: boolean
 	downArrow: boolean
