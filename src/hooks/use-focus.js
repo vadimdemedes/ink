@@ -14,7 +14,7 @@ export default function useFocus() {
 		return () => {
 			focusContext.unregister(generatedFocusKey);
 		};
-	}, [focusContext]);
+	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 	return focusContext.hasFocus(focusKey);
 }

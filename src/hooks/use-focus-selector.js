@@ -1,6 +1,8 @@
 import {useContext, useEffect, useState} from 'react';
-import readline from 'readline';
 import {StdinContext} from '..';
+
+const TAB = '\t';
+const SHIFT_TAB = '\u001B[Z';
 
 let FOCUS_ID = 0;
 function nextFocusId() {
@@ -29,24 +31,6 @@ export default function useFocusSelector() {
 		return elementList[currentFocusedIndex] === focusId;
 	}
 
-	function focusPrevious() {
-		let newIndex = currentFocusedIndex - 1;
-		if (newIndex < 0) {
-			newIndex = elementList.length - 1;
-		}
-
-		setCurrentFocusedIndex(newIndex);
-	}
-
-	function focusNext() {
-		let newIndex = currentFocusedIndex + 1;
-		if (newIndex >= elementList.length) {
-			newIndex = 0;
-		}
-
-		setCurrentFocusedIndex(newIndex);
-	}
-
 	const {stdin, isRawModeSupported, setRawMode} = useContext(StdinContext);
 
 	useEffect(() => {
@@ -62,23 +46,40 @@ export default function useFocusSelector() {
 	}, [isRawModeSupported, setRawMode]);
 
 	useEffect(() => {
-		const handleData = (ch, key) => {
-			if (key.name === 'tab') {
-				if (key.shift) {
-					focusPrevious();
-				} else {
-					focusNext();
-				}
+		function focusPrevious() {
+			let newIndex = currentFocusedIndex - 1;
+			if (newIndex < 0) {
+				newIndex = elementList.length - 1;
+			}
+
+			setCurrentFocusedIndex(newIndex);
+		}
+
+		function focusNext() {
+			let newIndex = currentFocusedIndex + 1;
+			if (newIndex >= elementList.length) {
+				newIndex = 0;
+			}
+
+			setCurrentFocusedIndex(newIndex);
+		}
+
+		const handleData = data => {
+			const s = String(data);
+
+			if (s === TAB) {
+				focusNext();
+			} else if (s === SHIFT_TAB) {
+				focusPrevious();
 			}
 		};
 
-		readline.emitKeypressEvents(stdin);
-		stdin.on('keypress', handleData);
+		stdin.on('data', handleData);
 
 		return () => {
-			stdin.off('keypress', handleData);
+			stdin.off('data', handleData);
 		};
-	}, [stdin, focusNext, focusPrevious]);
+	}, [stdin, currentFocusedIndex, elementList.length]);
 
 	return {register, unregister, hasFocus, elementList, currentFocusedIndex};
 }

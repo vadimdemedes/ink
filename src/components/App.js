@@ -1,10 +1,10 @@
 import React, {PureComponent} from 'react';
 import PropTypes from 'prop-types';
 import cliCursor from 'cli-cursor';
+import useFocusSelector from '../hooks/use-focus-selector';
 import AppContext from './AppContext';
 import StdinContext from './StdinContext';
 import StdoutContext from './StdoutContext';
-import useFocusSelector from '../hooks/use-focus-selector';
 import FocusContext from './FocusContext';
 
 function AppWithFocus({children}) {
