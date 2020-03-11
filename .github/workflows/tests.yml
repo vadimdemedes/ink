@@ -3,11 +3,12 @@ on: [push]
 
 jobs:
   test:
-    name: Node.js ${{ matrix.node_version }}
+    name: Node.js ${{ matrix.node_version }} & Experimental ${{ matrix.experimental }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node_version: [8, 10]
+        node_version: [10, 12]
+        experimental: [true, false]
 
     steps:
     - uses: actions/checkout@master
@@ -18,4 +19,7 @@ jobs:
     - name: Test
       run: |
         npm install
-        npm test
+        npx ava
+      env:
+        FORCE_COLOR: true
+        EXPERIMENAL: ${{ matrix.experimental }}

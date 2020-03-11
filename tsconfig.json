@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"esModuleInterop": true,
+		"jsx": "react",
+		"noImplicitAny": true,
+		"declaration": true,
+		"allowSyntheticDefaultImports": true,
+		"target": "esnext",
+		"module": "commonjs",
+		"outDir": "build"
+	},
+	"include": ["src"]
+}
