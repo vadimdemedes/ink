@@ -64,7 +64,7 @@ test('wrap text', t => {
 	t.is(output, 'Hello\nWorld');
 });
 
-test('don\'t wrap text if there is enough space', t => {
+test('don’t wrap text if there is enough space', t => {
 	const output = renderToString(<Box textWrap="wrap">Hello World</Box>, {
 		columns: 20
 	});
@@ -220,13 +220,13 @@ test('skip previous output when rendering new static output', t => {
 });
 
 // See https://github.com/chalk/wrap-ansi/issues/27
-test('ensure wrap-ansi doesn\'t trim leading whitespace', t => {
+test('ensure wrap-ansi doesn’t trim leading whitespace', t => {
 	const output = renderToString(<Color red>{' ERROR '}</Color>);
 
 	t.is(output, chalk.red(' ERROR '));
 });
 
-test('ensure Color doesn\'t throw on empty children', t => {
+test('ensure Color doesn’t throw on empty children', t => {
 	const output = renderToString(<Color/>);
 	t.is(output, '');
 });
@@ -466,7 +466,7 @@ test('render only last frame when run in CI', async t => {
 	);
 });
 
-test('reset prop when it\'s removed from the element', t => {
+test('reset prop when it’s removed from the element', t => {
 	const stdout = {
 		write: spy(),
 		columns: 100

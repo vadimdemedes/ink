@@ -63,7 +63,7 @@ export default class Output implements OutputWriter {
 	}
 
 	get() {
-		return this.output.map(line => line.trimRight()).join('\n');
+		return this.output.map(line => line.trimEnd()).join('\n');
 	}
 
 	getHeight() {

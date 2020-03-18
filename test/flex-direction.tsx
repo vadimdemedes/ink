@@ -47,7 +47,7 @@ test('direction column reverse', t => {
 	t.is(output, '\n\nB\nA');
 });
 
-test('don\'t squash text nodes when column direction is applied', t => {
+test('don’t squash text nodes when column direction is applied', t => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Text>A</Text>
