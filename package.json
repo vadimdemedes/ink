@@ -171,6 +171,7 @@
 					"react/prop-types": "warn",
 					"unicorn/prevent-abbreviations": "off",
 					"react/require-default-props": "warn",
+					"react/jsx-curly-brace-presence": "off",
 					"@typescript-eslint/no-empty-function": "warn",
 					"@typescript-eslint/promise-function-async": "warn",
 					"@typescript-eslint/explicit-function-return": "off",

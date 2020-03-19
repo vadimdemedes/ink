@@ -17,7 +17,7 @@ test('row - align text to center', t => {
 test('row - align multiple text nodes to center', t => {
 	const output = renderToString(
 		<Box justifyContent="center" width={10}>
-			AB
+			A{'B'}
 		</Box>
 	);
 
@@ -37,7 +37,7 @@ test('row - align text to right', t => {
 test('row - align multiple text nodes to right', t => {
 	const output = renderToString(
 		<Box justifyContent="flex-end" width={10}>
-			AB
+			A{'B'}
 		</Box>
 	);
 
