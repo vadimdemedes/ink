@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types, react/jsx-curly-brace-presence */
+/* eslint-disable react/prop-types */
 import EventEmitter from 'events';
 import React, {useState} from 'react';
 import test from 'ava';

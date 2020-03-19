@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-curly-brace-presence */
 import React from 'react';
 import test from 'ava';
 import renderToString from './helpers/render-to-string';
