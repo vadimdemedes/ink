@@ -92,7 +92,7 @@ export default class Instance {
 			return;
 		}
 
-		if (isCI) {
+		if (this.options.CIMode && isCI) {
 			if (hasStaticOutput) {
 				this.options.stdout.write(staticOutput);
 			}
@@ -155,7 +155,7 @@ export default class Instance {
 
 		// CIs don't handle erasing ansi escapes well, so it's better to
 		// only render last frame of non-static output
-		if (isCI) {
+		if (this.options.CIMode && isCI) {
 			this.options.stdout.write(this.lastOutput + '\n');
 		} else if (!this.options.debug) {
 			this.log.done();
