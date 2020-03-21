@@ -1,6 +1,7 @@
 import Yoga from 'yoga-layout-prebuilt';
 import {Styles} from './styles';
 import {OutputTransformer} from './render-node-to-output';
+
 export type NodeNames = 'root' | 'div' | 'span';
 
 export interface DOMNode {
