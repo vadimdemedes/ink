@@ -23,7 +23,7 @@ const methods = [
 	'bgAnsi256'
 ];
 
-const Color: FC<ColorProps & { children: ReactNode }> = ({
+const Color: FC<ColorProps & {children: ReactNode}> = ({
 	children,
 	...colorProps
 }) => {
