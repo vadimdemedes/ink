@@ -16,10 +16,7 @@
 	},
 	"scripts": {
 		"type-check": "tsc --noEmit",
-		"type-check:watch": "npm run type-check -- --watch",
-		"build": "npm run build:types && npm run build:js",
-		"build:types": "tsc --emitDeclarationOnly",
-		"build:js": "babel src --out-dir=build --extensions \".js,.ts,.tsx\" --source-maps inline",
+		"build": "tsc",
 		"prepare": "npm run build",
 		"test": "xo && FORCE_COLOR=true EXPERIMENTAL=true ava && FORCE_COLOR=true ava",
 		"cast": "svg-term --command='node media/demo.js' --out=media/demo.svg --from=100 --window --width=50 --height=8 --term=iterm2 --profile=Snazzy"
@@ -66,12 +63,6 @@
 	"devDependencies": {
 		"@ava/babel": "1.0.1",
 		"@ava/typescript": "1.1.1",
-		"@babel/cli": "^7.8.3",
-		"@babel/core": "^7.8.3",
-		"@babel/plugin-proposal-class-properties": "7.8.3",
-		"@babel/preset-env": "7.8.7",
-		"@babel/preset-react": "^7.8.3",
-		"@babel/preset-typescript": "7.8.3",
 		"@types/is-ci": "2.0.0",
 		"@types/lodash.throttle": "4.1.6",
 		"@types/node": "13.9.1",
@@ -109,24 +100,6 @@
 		"@types/react": {
 			"optional": true
 		}
-	},
-	"babel": {
-		"presets": [
-			[
-				"@babel/env",
-				{
-					"targets": {
-						"node": 10
-					}
-				}
-			],
-			"@babel/react",
-			"@babel/typescript"
-		],
-		"plugins": [
-			"@babel/proposal-class-properties",
-			"@babel/proposal-object-rest-spread"
-		]
 	},
 	"ava": {
 		"extensions": [

@@ -8,7 +8,8 @@
 		"allowSyntheticDefaultImports": true,
 		"target": "esnext",
 		"module": "commonjs",
-		"outDir": "build"
+		"outDir": "build",
+		"sourceMap": true
 	},
 	"include": ["src"]
 }
