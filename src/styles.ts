@@ -55,8 +55,8 @@ export interface DimensionStyles {
 }
 
 export type Styles = PaddingStyles &
-MarginStyles &
-FlexStyles &
-DimensionStyles &
-PositionStyles &
-WrapTextStyles;
+	MarginStyles &
+	FlexStyles &
+	DimensionStyles &
+	PositionStyles &
+	WrapTextStyles;
