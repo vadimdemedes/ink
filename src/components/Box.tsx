@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, {PureComponent, ReactNode} from 'react';
 import PropTypes from 'prop-types';
 import {YogaNode} from 'yoga-layout-prebuilt';
 
@@ -38,7 +38,7 @@ interface BoxProps {
 	| 'truncate-start'
 	| 'truncate-middle'
 	| 'truncate-end';
-	readonly unstable__transformChildren?: (x: any) => any;
+	readonly unstable__transformChildren?: (children: ReactNode) => ReactNode;
 }
 
 export default class Box extends PureComponent<BoxProps> {

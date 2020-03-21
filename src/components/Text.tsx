@@ -7,7 +7,7 @@ interface TextProps {
 	readonly italic?: boolean;
 	readonly underline?: boolean;
 	readonly strikethrough?: boolean;
-	readonly unstable__transformChildren?: (x: string) => string;
+	readonly unstable__transformChildren?: (children: ReactNode) => ReactNode;
 }
 
 const Text: FC<TextProps & { children: ReactNode }> = ({
@@ -18,7 +18,7 @@ const Text: FC<TextProps & { children: ReactNode }> = ({
 	children,
 	unstable__transformChildren
 }) => {
-	const transformChildren = (children: string) => {
+	const transformChildren = (children: ReactNode) => {
 		if (bold) {
 			children = chalk.bold(children);
 		}
