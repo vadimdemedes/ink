@@ -27,11 +27,11 @@ interface BoxProps {
 	readonly flexBasis?: string | number;
 	readonly alignItems?: 'flex-start' | 'center' | 'flex-end';
 	readonly justifyContent?:
-	| 'flex-start'
-	| 'center'
-	| 'flex-end'
-	| 'space-between'
-	| 'space-around';
+		| 'flex-start'
+		| 'center'
+		| 'flex-end'
+		| 'space-between'
+		| 'space-around';
 	readonly textWrap?:
 	| 'wrap'
 	| 'truncate'
