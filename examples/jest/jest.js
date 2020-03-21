@@ -71,7 +71,7 @@ class Jest extends React.Component {
 	}
 
 	async runTest(path) {
-		this.setState(prevState => ({
+		this.setState(prevState => ({ // eslint-disable-line unicorn/prevent-abbreviations
 			runningTests: [
 				...prevState.runningTests,
 				{
@@ -83,7 +83,7 @@ class Jest extends React.Component {
 
 		await delay(1000 * Math.random());
 
-		this.setState(prevState => ({
+		this.setState(prevState => ({ // eslint-disable-line unicorn/prevent-abbreviations
 			runningTests: prevState.runningTests.filter(test => test.path !== path),
 			completedTests: [
 				...prevState.completedTests,
