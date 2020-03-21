@@ -6,6 +6,7 @@ import reconciler from './reconciler';
 import createRenderer, {InkRenderer} from './renderer';
 import signalExit from 'signal-exit';
 import {createNode, DOMNode} from './dom';
+import {FiberRoot} from 'react-reconciler';
 import instances from './instances';
 import App from './components/App';
 
@@ -14,7 +15,7 @@ export interface InkOptions {
 	stdin: NodeJS.ReadStream;
 	debug: boolean;
 	exitOnCtrlC: boolean;
-	waitUntilExit?: () => Promise<any>;
+	waitUntilExit?: () => Promise<void>;
 }
 
 export interface Ink<Type> {
@@ -24,7 +25,7 @@ export interface Ink<Type> {
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	isUnmounted: boolean;
 	lastOutput: string;
-	container: any;
+	container: FiberRoot;
 	rootNode: Type;
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
@@ -35,7 +36,7 @@ export interface Ink<Type> {
 	waitUntilExit: () => Promise<void>;
 	exitPromise: Promise<any>;
 	unmount: () => void;
-	resolveExitPromise: (value?: unknown) => void;
+	resolveExitPromise: (value?: void) => void;
 	rejectExitPromise: (reason?: any) => void;
 	unsubscribeExit: () => void;
 }
@@ -150,7 +151,7 @@ export function createInk(options: InkOptions): Ink<DOMNode> {
 
 	const unsubscribeExit = signalExit(unmount, {alwaysLast: false});
 
-	const exitPromise = new Promise((resolve, reject) => {
+	const exitPromise = new Promise<void>((resolve, reject) => {
 		resolveExitPromise = resolve;
 		rejectExitPromise = reject;
 	});

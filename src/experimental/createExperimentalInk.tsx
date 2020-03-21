@@ -138,7 +138,7 @@ export function createExperimentalInk(options: InkOptions): Ink<ExperimentalDOMN
 
 	const unsubscribeExit = signalExit(unmount, {alwaysLast: false});
 
-	const exitPromise = new Promise((resolve, reject) => {
+	const exitPromise = new Promise<void>((resolve, reject) => {
 		resolveExitPromise = resolve;
 		rejectExitPromise = reject;
 	});
