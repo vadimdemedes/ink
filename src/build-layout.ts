@@ -29,7 +29,7 @@ const buildLayout = (node: DOMNode, options: BuildLayoutOptions) => {
 
 			for (const [index, childNode] of Object.entries(childNodes)) {
 				const childYogaNode = buildLayout(childNode, options).yogaNode;
-				yogaNode.insertChild(childYogaNode, parseInt(index, 10));
+				yogaNode.insertChild(childYogaNode, Number.parseInt(index, 10));
 			}
 		}
 
