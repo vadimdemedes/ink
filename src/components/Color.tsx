@@ -31,21 +31,18 @@ const Color: FC<ColorProps & { children: ReactNode }> = ({
 		return null;
 	}
 
-	const transformChildren = (children: string) => {
-		return Object.keys(colorProps).reduce(
-			(acc: string, methodName: keyof ColorProps) => {
-				if (methods.includes(methodName)) {
-					return (chalk[methodName] as any)(...arrify(colorProps[methodName]))(acc);
+	const transformChildren = (children: ReactNode) => {
+		Object.keys(colorProps).forEach((method: keyof ColorProps) => {
+			if (colorProps[method]) {
+				if (methods.includes(method)) {
+					children = (chalk[method] as any)(...arrify(colorProps[method]))(children);
+				} else if (typeof chalk[method] === 'function') {
+					children = (chalk[method] as any)(children);
 				}
+			}
+		});
 
-				if (typeof chalk[methodName] === 'function') {
-					return (chalk[methodName] as any)(children);
-				}
-
-				return acc;
-			},
-			children
-		);
+		return children;
 	};
 
 	return (
