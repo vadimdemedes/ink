@@ -1,4 +1,4 @@
-import {ReactNode} from 'react';
+import {ReactElement} from 'react';
 import {Ink, createInk, InkOptions} from './ink';
 import {createExperimentalInk} from './experimental/createExperimentalInk';
 import instances from './instances';
@@ -21,17 +21,19 @@ interface InkControls<T> {
 	cleanup?: () => void;
 }
 
-type RenderFunction = <T extends NodeJS.WriteStream | RenderOptions = Record<string, unknown>>(
-	node: ReactNode,
-	options?: T
+type RenderFunction = <Props, O extends NodeJS.WriteStream | RenderOptions>(
+	tree: ReactElement<Props>,
+	options?: O
 ) => InkControls<
-T extends { experimental: true } ? ExperimentalDOMNode : DOMNode
+O extends { experimental: true } ? ExperimentalDOMNode : DOMNode
 >;
+
+type Instance = InkControls<DOMNode | ExperimentalDOMNode>
 
 const render: RenderFunction = (
 	node,
 	options
-): InkControls<DOMNode | ExperimentalDOMNode> => {
+): Instance => {
 	const defaults = {
 		experimental: false,
 		...(options || {})

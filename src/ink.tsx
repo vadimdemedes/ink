@@ -29,12 +29,12 @@ export interface Ink<Type> {
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	fullStaticOutput: string;
-	render: (tree: any) => void;
+	render: <Props>(tree: React.ReactElement<Props>) => void;
 	renderer: InkRenderer;
 	onRender: () => void;
-	waitUntilExit: () => Promise<any>;
+	waitUntilExit: () => Promise<void>;
 	exitPromise: Promise<any>;
-	unmount: (errorCode?: number | Error) => void;
+	unmount: () => void;
 	resolveExitPromise: (value?: unknown) => void;
 	rejectExitPromise: (reason?: any) => void;
 	unsubscribeExit: () => void;
