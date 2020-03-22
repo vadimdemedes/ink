@@ -26,7 +26,7 @@ const getStaticNodes = (element: DOMNode): DOMNode[] => {
 };
 
 export interface InkRendererOutput {
-	output: string;
+output: string;
 	outputHeight: number;
 	staticOutput: string | undefined;
 }
@@ -113,7 +113,7 @@ const createRenderer: RendererCreator = ({terminalWidth}) => {
 		return {
 			output: output.get(),
 			outputHeight: output.getHeight(),
-			staticOutput: staticOutput ? `${staticOutput.get()}\n` : undefined
+			staticOutput: staticOutput ? `${staticOutput.get()}\n` : ''
 		};
 	};
 };

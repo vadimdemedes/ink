@@ -13,11 +13,7 @@ export default (text: string, maxWidth: number, style: WrapTextStyles = {}) => {
 	}
 
 	if (String(textWrap).startsWith('truncate')) {
-		let position: 'end' | 'middle' | 'start';
-
-		if (textWrap === 'truncate' || textWrap === 'truncate-end') {
-			position = 'end';
-		}
+		let position: 'end' | 'middle' | 'start' = 'end';
 
 		if (textWrap === 'truncate-middle') {
 			position = 'middle';

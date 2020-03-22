@@ -16,7 +16,7 @@ export interface DOMNode {
 	onRender: () => void;
 	unstable__transformChildren?: OutputTransformer;
 	unstable__static?: boolean;
-	yogaNode?: Yoga.YogaNode;
+	yogaNode: Yoga.YogaNode;
 	nodeValue?: string;
 }
 
@@ -29,6 +29,7 @@ export const createNode = (nodeName: NodeNames): DOMNode => ({
 	attributes: {},
 	childNodes: [],
 	parentNode: null,
+	yogaNode: null,
 	onRender: () => {}
 });
 

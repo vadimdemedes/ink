@@ -21,11 +21,11 @@ interface InkControls<T> {
 	cleanup?: () => void;
 }
 
-type RenderFunction = <Props, O extends NodeJS.WriteStream | RenderOptions>(
+type RenderFunction = <Props, K extends NodeJS.WriteStream | RenderOptions>(
 	tree: ReactElement<Props>,
-	options?: O
+	options?: K
 ) => InkControls<
-O extends { experimental: true } ? ExperimentalDOMNode : DOMNode
+K extends { experimental: true } ? ExperimentalDOMNode : DOMNode
 >;
 
 type Instance = InkControls<DOMNode | ExperimentalDOMNode>
@@ -34,23 +34,19 @@ const render: RenderFunction = (
 	node,
 	options
 ): Instance => {
-	const defaults = {
-		experimental: false,
-		...(options || {})
-	};
-
 	const inkOptions: InkOptions = {
 		stdout: process.stdout,
 		stdin: process.stdin,
 		debug: false,
 		exitOnCtrlC: true,
-		...streamToOptions(options)
+		experimental: false,
+		...optionsFrom(options)
 	};
 
 	const {stdout} = inkOptions;
 
 	let instance: Ink<DOMNode | ExperimentalDOMNode>;
-	if (defaults.experimental) {
+	if (inkOptions.experimental) {
 		instance = retrieveCachedInstance<ExperimentalDOMNode>(stdout, () =>
 			createExperimentalInk(inkOptions)
 		);
@@ -70,11 +66,12 @@ const render: RenderFunction = (
 	};
 };
 
-function streamToOptions(stdout: NodeJS.WriteStream | RenderOptions): RenderOptions {
+function optionsFrom(stdout: NodeJS.WriteStream | RenderOptions | undefined = {}): RenderOptions {
 	if (stdout instanceof Stream) {
 		return {
 			stdout,
-			stdin: process.stdin
+			stdin: process.stdin,
+			experimental: false
 		};
 	}
 

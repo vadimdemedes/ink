@@ -15,6 +15,7 @@ export interface InkOptions {
 	stdin: NodeJS.ReadStream;
 	debug: boolean;
 	exitOnCtrlC: boolean;
+	experimental: boolean;
 	waitUntilExit?: () => Promise<void>;
 }
 
