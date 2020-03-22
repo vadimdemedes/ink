@@ -118,6 +118,6 @@ export default class Box extends PureComponent<BoxProps> {
 	}
 
 	unstable__getComputedWidth() {
-		return this.nodeRef.current.yogaNode.getComputedWidth();
+		return this.nodeRef.current?.yogaNode.getComputedWidth();
 	}
 }

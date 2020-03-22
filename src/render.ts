@@ -28,7 +28,7 @@ type RenderFunction = <Props, K extends NodeJS.WriteStream | RenderOptions>(
 K extends { experimental: true } ? ExperimentalDOMNode : DOMNode
 >;
 
-type Instance = InkControls<DOMNode | ExperimentalDOMNode>
+type Instance = InkControls<DOMNode | ExperimentalDOMNode>;
 
 const render: RenderFunction = (
 	node,

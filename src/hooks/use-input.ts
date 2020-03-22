@@ -61,10 +61,10 @@ const useInput = (inputHandler: (input: string, key: Key) => void) => {
 			inputHandler(input, key);
 		};
 
-		stdin.on('data', handleData);
+		stdin?.on('data', handleData);
 
 		return () => {
-			stdin.off('data', handleData);
+			stdin?.off('data', handleData);
 		};
 	}, [stdin, inputHandler]);
 };

@@ -2,38 +2,56 @@ import Yoga from 'yoga-layout-prebuilt';
 import {Styles} from './styles';
 import {OutputTransformer} from './render-node-to-output';
 
-export type NodeNames = 'root' | 'div' | 'span';
-
-export interface DOMNode {
-	nodeName: string;
+interface InkNode {
+	parentNode: DOMElement | null;
+	yogaNode?: Yoga.YogaNode;
+	unstable__static?: boolean;
 	style: Styles;
+}
+
+export const TEXT_NAME = '#text';
+export type TextName = '#text';
+
+export type ElementNames = 'root' | 'div' | 'span' | 'ROOT' | 'DIV' | 'SPAN';
+
+export type NodeNames = ElementNames | TextName;
+
+export type DOMElement = {
+	nodeName: ElementNames;
 	attributes: {
 		[key: string]: DOMNodeAttribute;
 	};
 	textContent?: string;
 	childNodes: DOMNode[];
-	parentNode?: DOMNode;
-	onRender: () => void;
 	unstable__transformChildren?: OutputTransformer;
-	unstable__static?: boolean;
-	yogaNode: Yoga.YogaNode;
-	nodeValue?: string;
+} & InkNode;
+
+export type TextNode = {
+	nodeName: TextName;
+	nodeValue: string;
+} & InkNode;
+
+export type DOMNode<T = { nodeName: NodeNames; unstable__static?: boolean }> = T extends {
+	nodeName: infer U;
 }
+	? U extends '#text'
+		? TextNode
+		: DOMElement
+	: never;
 
 export type DOMNodeAttribute = boolean | string | number;
 
 // Helper utilities implementing some common DOM methods to simplify reconciliation code
-export const createNode = (nodeName: NodeNames): DOMNode => ({
-	nodeName: nodeName.toUpperCase(),
+export const createNode = (nodeName: ElementNames): DOMElement => ({
+	nodeName: nodeName.toUpperCase() as ElementNames,
 	style: {},
 	attributes: {},
 	childNodes: [],
 	parentNode: null,
-	yogaNode: null,
-	onRender: () => {}
+	yogaNode: undefined
 });
 
-export const appendChildNode = (node: DOMNode, childNode: DOMNode) => {
+export const appendChildNode = (node: DOMElement, childNode: DOMElement) => {
 	if (childNode.parentNode) {
 		removeChildNode(childNode.parentNode, childNode);
 	}
@@ -44,13 +62,13 @@ export const appendChildNode = (node: DOMNode, childNode: DOMNode) => {
 };
 
 // Same as `appendChildNode`, but without removing child node from parent node
-export const appendStaticNode = (node: DOMNode, childNode: DOMNode) => {
+export const appendStaticNode = (node: DOMElement, childNode: DOMNode) => {
 	node.childNodes.push(childNode);
 };
 
 export const insertBeforeNode = (
-	node: DOMNode,
-	newChildNode: DOMNode,
+	node: DOMElement,
+	newChildNode: DOMElement,
 	beforeChildNode: DOMNode
 ) => {
 	if (newChildNode.parentNode) {
@@ -68,7 +86,7 @@ export const insertBeforeNode = (
 	node.childNodes.push(newChildNode);
 };
 
-export const removeChildNode = (node: DOMNode, removeNode: DOMNode) => {
+export const removeChildNode = (node: DOMElement, removeNode: DOMNode) => {
 	removeNode.parentNode = null;
 
 	const index = node.childNodes.indexOf(removeNode);
@@ -78,14 +96,20 @@ export const removeChildNode = (node: DOMNode, removeNode: DOMNode) => {
 };
 
 export const setAttribute = (
-	node: DOMNode,
+	node: DOMElement,
 	key: string,
 	value: DOMNodeAttribute
 ) => {
 	node.attributes[key] = value;
 };
 
-export const createTextNode = (text: string) => ({
-	nodeName: '#text',
-	nodeValue: text
+export const createTextNode = (text: string): TextNode => ({
+	nodeName: TEXT_NAME,
+	nodeValue: text,
+	parentNode: null,
+	yogaNode: undefined,
+	style: {}
 });
+
+export const isElement = (node: DOMNode) => node.nodeName !== TEXT_NAME;
+export const isText = (node: DOMNode) => node.nodeName === TEXT_NAME;

@@ -60,7 +60,7 @@ export default class Static extends Component<StaticProps & Styles, StaticState>
 		this.saveLastIndex(this.props.children);
 	}
 
-	componentDidUpdate(prevProps: StaticProps, prevState: StaticState) {
+	componentDidUpdate(_prevProps: StaticProps, prevState: StaticState) {
 		if (prevState.lastIndex === this.state.lastIndex) {
 			this.saveLastIndex(this.props.children);
 		}

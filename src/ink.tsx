@@ -2,7 +2,7 @@ import React, {ReactNode} from 'react';
 import throttle from 'lodash.throttle';
 import logUpdate, {LogUpdate} from 'log-update';
 import isCI from 'is-ci';
-import reconciler from './reconciler';
+import {createReconciler} from './reconciler';
 import createRenderer, {InkRenderer} from './renderer';
 import signalExit from 'signal-exit';
 import {createNode, DOMNode} from './dom';
@@ -52,8 +52,8 @@ export function createInk(options: InkOptions): Ink<DOMNode> {
 			trailing: true
 		});
 
-	let resolveExitPromise: Ink<DOMNode>['resolveExitPromise'];
-	let rejectExitPromise: Ink<DOMNode>['rejectExitPromise'];
+	let resolveExitPromise: Ink<DOMNode>['resolveExitPromise'] = () => {};
+	let rejectExitPromise: Ink<DOMNode>['rejectExitPromise'] = () => {};
 
 	const renderer = createRenderer({
 		terminalWidth: options.stdout.columns
@@ -102,11 +102,11 @@ export function createInk(options: InkOptions): Ink<DOMNode> {
 		}
 	};
 
-	rootNode.onRender = onRender;
+	const reconciler = createReconciler(onRender);
 
 	const container = reconciler.createContainer(rootNode, false, false);
 
-	const unmount = (exitCode?: number | Error) => {
+	const unmount = (exitCode?: number | Error | null) => {
 		if (instance.isUnmounted) {
 			return;
 		}
@@ -177,7 +177,7 @@ export function createInk(options: InkOptions): Ink<DOMNode> {
 		rejectExitPromise,
 		unmount,
 		unsubscribeExit,
-		waitUntilExit: options.waitUntilExit || waitUntilExit
+		waitUntilExit: options.waitUntilExit ?? waitUntilExit
 	};
 
 	return instance;

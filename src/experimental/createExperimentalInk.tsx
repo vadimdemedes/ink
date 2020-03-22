@@ -162,7 +162,7 @@ export function createExperimentalInk(options: InkOptions): Ink<ExperimentalDOMN
 		rejectExitPromise,
 		unsubscribeExit,
 		unmount,
-		waitUntilExit: options.waitUntilExit || waitUntilExit
+		waitUntilExit: options.waitUntilExit ?? waitUntilExit
 	};
 
 	return instance;

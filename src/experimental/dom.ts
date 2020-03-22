@@ -143,7 +143,7 @@ export const setTextContent = (node: NodeTextTypes, text: string) => {
 		node.yogaNode.setHeight(height);
 	} else {
 		node.textContent = text;
-		node.yogaNode.setWidth(node.style.width || width);
-		node.yogaNode.setHeight(node.style.height || height);
+		node.yogaNode.setWidth(node.style.width ?? width);
+		node.yogaNode.setHeight(node.style.height ?? height);
 	}
 };

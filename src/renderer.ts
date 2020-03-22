@@ -1,24 +1,26 @@
 import Yoga, {YogaNode} from 'yoga-layout-prebuilt';
 import Output from './output';
-import {createNode, appendStaticNode, DOMNode} from './dom';
+import {createNode, appendStaticNode, DOMElement, DOMNode, TEXT_NAME} from './dom';
 import buildLayout from './build-layout';
 import renderNodeToOutput from './render-node-to-output';
 import calculateWrappedText from './calculate-wrapped-text';
 
 // Since <Static> components can be placed anywhere in the tree, this helper finds and returns them
-const getStaticNodes = (element: DOMNode): DOMNode[] => {
-	const staticNodes = [];
+const getStaticNodes = (element: DOMElement): DOMElement[] => {
+	const staticNodes: DOMElement[] = [];
 
 	for (const childNode of element.childNodes) {
-		if (childNode.unstable__static) {
-			staticNodes.push(childNode);
-		}
+		if (childNode.nodeName !== TEXT_NAME) {
+			if (childNode.unstable__static) {
+				staticNodes.push(childNode);
+			}
 
-		if (
-			Array.isArray(childNode.childNodes) &&
-			childNode.childNodes.length > 0
-		) {
-			staticNodes.push(...getStaticNodes(childNode));
+			if (
+				Array.isArray(childNode.childNodes) &&
+				childNode.childNodes.length > 0
+			) {
+				staticNodes.push(...getStaticNodes(childNode));
+			}
 		}
 	}
 
@@ -26,7 +28,7 @@ const getStaticNodes = (element: DOMNode): DOMNode[] => {
 };
 
 export interface InkRendererOutput {
-output: string;
+	output: string;
 	outputHeight: number;
 	staticOutput: string | undefined;
 }
@@ -36,7 +38,7 @@ export type InkRenderer = (node: DOMNode) => InkRendererOutput;
 type RendererCreator = (options: {
 	terminalWidth: number;
 }) => (
-	node: DOMNode
+	node: DOMElement
 ) => { output: string; outputHeight: number; staticOutput: string };
 
 // Build layout, apply styles, build text output of all nodes and return it
@@ -47,7 +49,7 @@ const createRenderer: RendererCreator = ({terminalWidth}) => {
 	let lastYogaNode: YogaNode;
 	let lastStaticYogaNode: YogaNode;
 
-	return (node: DOMNode) => {
+	return (node: DOMElement) => {
 		if (lastYogaNode) {
 			lastYogaNode.freeRecursive();
 		}
@@ -75,19 +77,21 @@ const createRenderer: RendererCreator = ({terminalWidth}) => {
 				skipStaticElements: false
 			});
 
-			staticYogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
-			calculateWrappedText(rootNode);
-			staticYogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+			if (staticYogaNode) {
+				staticYogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+				calculateWrappedText(rootNode);
+				staticYogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
 
-			// Save current Yoga node tree to free up memory later
-			lastStaticYogaNode = staticYogaNode;
+				// Save current Yoga node tree to free up memory later
+				lastStaticYogaNode = staticYogaNode;
 
-			staticOutput = new Output({
-				width: staticYogaNode.getComputedWidth(),
-				height: staticYogaNode.getComputedHeight()
-			});
+				staticOutput = new Output({
+					width: staticYogaNode.getComputedWidth(),
+					height: staticYogaNode.getComputedHeight()
+				});
 
-			renderNodeToOutput(rootNode, staticOutput, {skipStaticElements: false});
+				renderNodeToOutput(rootNode, staticOutput, {skipStaticElements: false});
+			}
 		}
 
 		const {yogaNode} = buildLayout(node, {
@@ -96,24 +100,32 @@ const createRenderer: RendererCreator = ({terminalWidth}) => {
 			skipStaticElements: true
 		});
 
-		yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
-		calculateWrappedText(node);
-		yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+		if (yogaNode) {
+			yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+			calculateWrappedText(node);
+			yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
 
-		// Save current node tree to free up memory later
-		lastYogaNode = yogaNode;
+			// Save current node tree to free up memory later
+			lastYogaNode = yogaNode;
 
-		const output = new Output({
-			width: yogaNode.getComputedWidth(),
-			height: yogaNode.getComputedHeight()
-		});
+			const output = new Output({
+				width: yogaNode.getComputedWidth(),
+				height: yogaNode.getComputedHeight()
+			});
 
-		renderNodeToOutput(node, output, {skipStaticElements: true});
+			renderNodeToOutput(node, output, {skipStaticElements: true});
+
+			return {
+				output: output.get(),
+				outputHeight: output.getHeight(),
+				staticOutput: staticOutput ? `${staticOutput.get()}\n` : ''
+			};
+		}
 
 		return {
-			output: output.get(),
-			outputHeight: output.getHeight(),
-			staticOutput: staticOutput ? `${staticOutput.get()}\n` : ''
+			output: '',
+			outputHeight: 1,
+			staticOutput: ''
 		};
 	};
 };

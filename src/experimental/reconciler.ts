@@ -103,14 +103,14 @@ const hostConfig: HostConfig<NodeNames, Props, ExperimentalDOMNode, any, any, an
 	appendChildToContainer: appendChildNode,
 	insertInContainerBefore: insertBeforeNode,
 	removeChildFromContainer: removeChildNode,
-	prepareUpdate: (node, type, oldProps, newProps, rootNode) => {
+	prepareUpdate: (node, _type, _oldProps, _newProps, rootNode) => {
 		if (node.unstable__static) {
 			rootNode.isStaticDirty = true;
 		}
 
 		return true;
 	},
-	commitUpdate: (node, updatePayload, type, oldProps, newProps) => {
+	commitUpdate: (node, _updatePayload, type, _oldProps, newProps) => {
 		for (const [key, value] of Object.entries(newProps)) {
 			if (key === 'children') {
 				if (typeof value === 'string' || typeof value === 'number') {

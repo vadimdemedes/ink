@@ -15,7 +15,7 @@ const buildLayout = (node: DOMNode, options: BuildLayoutOptions) => {
 	const yogaNode = Yoga.Node.createWithConfig(config);
 	node.yogaNode = yogaNode;
 
-	const style = node.style || {};
+	const {style} = node;
 
 	// Root node of the tree
 	if (node.nodeName === 'ROOT') {
@@ -28,8 +28,10 @@ const buildLayout = (node: DOMNode, options: BuildLayoutOptions) => {
 			});
 
 			for (const [index, childNode] of Object.entries(childNodes)) {
-				const childYogaNode = buildLayout(childNode, options).yogaNode;
-				yogaNode.insertChild(childYogaNode, Number.parseInt(index, 10));
+				const {yogaNode: childYogaNode} = buildLayout(childNode, options);
+				if (childYogaNode) {
+					yogaNode.insertChild(childYogaNode, Number.parseInt(index, 10));
+				}
 			}
 		}
 
@@ -39,27 +41,32 @@ const buildLayout = (node: DOMNode, options: BuildLayoutOptions) => {
 	// Apply margin, padding, flex, etc styles
 	applyStyles(yogaNode, style);
 
-	// Nodes with only text have a child Yoga node dedicated for that text
-	if (node.textContent || node.nodeValue) {
-		const {width, height} = measureText(node.textContent || node.nodeValue);
-		yogaNode.setWidth(style.width || width);
-		yogaNode.setHeight(style.height || height);
-
-		return node;
-	}
-
-	if (Array.isArray(node.childNodes) && node.childNodes.length > 0) {
+	if (node.nodeName === '#text') {
+		// Nodes with only text have a child Yoga node dedicated for that text
+		applySize(yogaNode, node.nodeValue, style.width, style.height);
+	} else if (node.textContent) {
+		// Nodes with only text have a child Yoga node dedicated for that text
+		applySize(yogaNode, node.textContent, style.width, style.height);
+	} else {
 		const childNodes = node.childNodes.filter(childNode => {
 			return skipStaticElements ? !childNode.unstable__static : true;
 		});
 
 		for (const [index, childNode] of Object.entries(childNodes)) {
 			const {yogaNode: childYogaNode} = buildLayout(childNode, options);
-			yogaNode.insertChild(childYogaNode, parseInt(index, 10));
+			if (childYogaNode) {
+				yogaNode.insertChild(childYogaNode, parseInt(index, 10));
+			}
 		}
 	}
 
 	return node;
+};
+
+const applySize = (yogaNode: Yoga.YogaNode, text: string, nodeWidth?: string | number, nodeHeight?: string | number) => {
+	const {width, height} = measureText(text);
+	yogaNode.setWidth(nodeWidth ?? width);
+	yogaNode.setHeight(nodeHeight ?? height);
 };
 
 export default buildLayout;
