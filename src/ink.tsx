@@ -34,10 +34,10 @@ export interface Ink<Type> {
 	renderer: InkRenderer;
 	onRender: () => void;
 	waitUntilExit: () => Promise<void>;
-	exitPromise: Promise<any>;
+	exitPromise: Promise<void>;
 	unmount: () => void;
 	resolveExitPromise: (value?: void) => void;
-	rejectExitPromise: (reason?: any) => void;
+	rejectExitPromise: (reason?: unknown) => void;
 	unsubscribeExit: () => void;
 }
 
