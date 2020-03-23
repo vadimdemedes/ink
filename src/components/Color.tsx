@@ -32,6 +32,7 @@ const Color: FC<ColorProps & {children: ReactNode}> = ({
 	}
 
 	const transformChildren = (children: ReactNode) => {
+		// @ts-ignore
 		Object.keys(colorProps).forEach((method: keyof ColorProps) => {
 			if (colorProps[method]) {
 				if (methods.includes(method)) {
