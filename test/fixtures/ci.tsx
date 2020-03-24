@@ -7,7 +7,7 @@ interface TestState {
 }
 
 class Test extends React.Component<Record<string, unknown>, TestState> {
-	timer: NodeJS.Timeout;
+	timer?: NodeJS.Timeout;
 
 	state: TestState = {
 		items: [],
@@ -46,7 +46,7 @@ class Test extends React.Component<Record<string, unknown>, TestState> {
 	}
 
 	componentWillUnmount() {
-		clearTimeout(this.timer);
+		clearTimeout(this.timer!);
 	}
 }
 

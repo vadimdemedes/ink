@@ -2,7 +2,7 @@ import React from 'react';
 import {render, Box} from '../../src';
 
 class Test extends React.Component<Record<string, unknown>, { counter: number }> {
-	timer: NodeJS.Timeout;
+	timer?: NodeJS.Timeout;
 
 	state = {
 		counter: 0
@@ -31,7 +31,7 @@ class Test extends React.Component<Record<string, unknown>, { counter: number }>
 	}
 
 	componentWillUnmount() {
-		clearTimeout(this.timer);
+		clearTimeout(this.timer!);
 	}
 }
 

@@ -5,7 +5,7 @@ class Test extends React.Component<
 { onExit: (error: Error) => void },
 { counter: number }
 > {
-	timer: NodeJS.Timeout;
+	timer?: NodeJS.Timeout;
 
 	state = {
 		counter: 0
@@ -26,7 +26,7 @@ class Test extends React.Component<
 	}
 
 	componentWillUnmount() {
-		clearInterval(this.timer);
+		clearInterval(this.timer!);
 	}
 }
 

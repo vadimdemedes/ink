@@ -53,7 +53,7 @@ const UserInput: (props: { test: string }) => JSX.Element = ({test}) => {
 		throw new Error('Crash');
 	});
 
-	return null;
+	return <></>;
 };
 
 const app = render(<UserInput test={process.argv[2]}/>);

@@ -82,7 +82,7 @@ export default class Output implements OutputWriter {
 			}
 		}
 
-		const generatedOutput = output.map(line => line.trimEnd()).join('\n');
+		const generatedOutput = output.map(line => line.trimRight()).join('\n');
 
 		return {
 			output: generatedOutput,
