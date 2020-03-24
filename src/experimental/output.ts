@@ -82,6 +82,7 @@ export default class Output implements OutputWriter {
 			}
 		}
 
+		// eslint-disable-next-line unicorn/prefer-trim-start-end
 		const generatedOutput = output.map(line => line.trimRight()).join('\n');
 
 		return {

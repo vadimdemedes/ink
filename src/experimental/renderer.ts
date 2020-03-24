@@ -20,7 +20,8 @@ const findStaticNode = (node: DOMElement): DOMElement | undefined => {
 			return findStaticNode(childNode);
 		}
 	}
-	return;
+
+	return undefined;
 };
 
 export default ({terminalWidth = 100}) => {

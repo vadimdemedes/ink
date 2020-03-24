@@ -1,7 +1,7 @@
 import React from 'react';
 import {render, useInput, AppContext} from '../../src';
 
-const UserInput: (props: { test: string }) => JSX.Element = ({test}) => {
+const UserInput: (props: { test: string }) => JSX.Element | null = ({test}) => {
 	const {exit} = React.useContext(AppContext);
 
 	useInput((input, key) => {
@@ -53,7 +53,7 @@ const UserInput: (props: { test: string }) => JSX.Element = ({test}) => {
 		throw new Error('Crash');
 	});
 
-	return <></>;
+	return null;
 };
 
 const app = render(<UserInput test={process.argv[2]}/>);
