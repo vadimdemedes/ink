@@ -1,35 +1,40 @@
-import {ReactNode} from 'react';
-import {render} from '../../src';
+import { render } from "../../src";
 
 // Fake process.stdout
-class Stream {
-	output = '';
+interface Stream {
+	output: string;
 	columns: number;
-
-	constructor({columns}) {
-		this.columns = columns || 100;
-	}
-
-	write(str: string) {
-		this.output = str;
-	}
-
-	get() {
-		return this.output;
-	}
+	write(str: string): void;
+	get(): string;
 }
 
+const createStream: (options: { columns: number }) => Stream = ({
+	columns
+}) => {
+	let output = "";
+	return {
+		output,
+		columns,
+		write(str: string) {
+			output = str;
+		},
+		get() {
+			return output;
+		}
+	};
+};
+
 const renderToString: (
-	node: ReactNode,
-	options?: { columns?: number }
-) => string = (node, {columns} = {}) => {
-	const stream = new Stream({columns});
+	node: JSX.Element,
+	options?: { columns: number }
+) => string = (node, options = { columns: 100 }) => {
+	const stream = createStream(options);
 
 	render(node, {
 		// @ts-ignore
 		stdout: stream,
 		debug: true,
-		experimental: process.env.EXPERIMENTAL === 'true'
+		experimental: process.env.EXPERIMENTAL === "true"
 	});
 
 	return stream.get();
