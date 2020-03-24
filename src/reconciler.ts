@@ -11,8 +11,9 @@ import {
 	insertBeforeNode,
 	removeChildNode,
 	setAttribute,
-	DOMNode,
-	ElementNames
+	ElementNames,
+	DOMElement,
+	DOMNode
 } from './dom';
 
 const NO_CONTEXT = true;
@@ -25,16 +26,16 @@ export const createReconciler = (onRender: () => void) =>
 	createReactReconciler<
 	ElementNames,
 	Props,
+	DOMElement,
+	DOMElement,
 	DOMNode,
-	any,
-	any,
-	any,
-	any,
-	any,
-	any,
-	any,
-	any,
-	any
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown
 	>({
 		// @ts-ignore
 		schedulePassiveEffects,
@@ -87,7 +88,7 @@ export const createReconciler = (onRender: () => void) =>
 
 			if (node.childNodes.length > 0) {
 				for (const childNode of node.childNodes) {
-					childNode.yogaNode.free();
+					childNode.yogaNode?.free();
 					removeChildNode(node, childNode);
 				}
 			}
@@ -113,7 +114,7 @@ export const createReconciler = (onRender: () => void) =>
 								const textElement = createNode('div');
 								textElement.textContent = String(value);
 								appendChildNode(node, textElement);
-							} else {
+							} else if (node.childNodes[0].nodeName === 'div') {
 								node.childNodes[0].textContent = String(value);
 							}
 						}

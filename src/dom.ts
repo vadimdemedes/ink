@@ -24,6 +24,9 @@ export type DOMElement = {
 	textContent?: string;
 	childNodes: DOMNode[];
 	unstable__transformChildren?: OutputTransformer;
+
+	// Experimental properties
+	isStaticDirty?: boolean;
 } & InkNode;
 
 export type TextNode = {
@@ -31,7 +34,7 @@ export type TextNode = {
 	nodeValue: string;
 } & InkNode;
 
-export type DOMNode<T = { nodeName: NodeNames; unstable__static?: boolean }> = T extends {
+export type DOMNode<T = { nodeName: NodeNames }> = T extends {
 	nodeName: infer U;
 }
 	? U extends '#text'

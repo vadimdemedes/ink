@@ -1,6 +1,6 @@
 import Yoga, {YogaNode} from 'yoga-layout-prebuilt';
 import Output from './output';
-import {createNode, appendStaticNode, DOMElement, DOMNode, TEXT_NAME} from './dom';
+import {createNode, appendStaticNode, DOMElement, TEXT_NAME} from './dom';
 import buildLayout from './build-layout';
 import renderNodeToOutput from './render-node-to-output';
 import calculateWrappedText from './calculate-wrapped-text';
@@ -33,7 +33,7 @@ export interface InkRendererOutput {
 	staticOutput: string | undefined;
 }
 
-export type InkRenderer = (node: DOMNode) => InkRendererOutput;
+export type InkRenderer = (node: DOMElement) => InkRendererOutput;
 
 type RendererCreator = (options: {
 	terminalWidth: number;

@@ -2,8 +2,6 @@ import {ReactElement} from 'react';
 import {Ink, createInk, InkOptions} from './ink';
 import {createExperimentalInk} from './experimental/createExperimentalInk';
 import instances from './instances';
-import {ExperimentalDOMNode} from './experimental/dom';
-import {DOMNode} from './dom';
 import {Stream} from 'stream';
 
 export interface RenderOptions {
@@ -14,21 +12,17 @@ export interface RenderOptions {
 	experimental?: boolean;
 }
 
-interface InkControls<T> {
-	rerender?: Ink<T>['render'];
-	unmount?: Ink<T>['unmount'];
-	waitUntilExit?: Ink<T>['waitUntilExit'];
+interface Instance {
+	rerender: Ink['render'];
+	unmount: Ink['unmount'];
+	waitUntilExit: Ink['waitUntilExit'];
 	cleanup?: () => void;
 }
 
 type RenderFunction = <Props, K extends NodeJS.WriteStream | RenderOptions>(
 	tree: ReactElement<Props>,
 	options?: K
-) => InkControls<
-K extends { experimental: true } ? ExperimentalDOMNode : DOMNode
->;
-
-type Instance = InkControls<DOMNode | ExperimentalDOMNode>;
+) => Instance;
 
 const render: RenderFunction = (
 	node,
@@ -45,13 +39,13 @@ const render: RenderFunction = (
 
 	const {stdout} = inkOptions;
 
-	let instance: Ink<DOMNode | ExperimentalDOMNode>;
+	let instance: Ink;
 	if (inkOptions.experimental) {
-		instance = retrieveCachedInstance<ExperimentalDOMNode>(stdout, () =>
+		instance = retrieveCachedInstance(stdout, () =>
 			createExperimentalInk(inkOptions)
 		);
 	} else {
-		instance = retrieveCachedInstance<DOMNode>(stdout, () =>
+		instance = retrieveCachedInstance(stdout, () =>
 			createInk(inkOptions)
 		);
 	}
@@ -78,11 +72,11 @@ function optionsFrom(stdout: NodeJS.WriteStream | RenderOptions | undefined = {}
 	return stdout;
 }
 
-function retrieveCachedInstance<T>(
+function retrieveCachedInstance(
 	stdout: NodeJS.WriteStream,
-	createInstance: () => Ink<T>
+	createInstance: () => Ink
 ) {
-	let instance: Ink<T>;
+	let instance: Ink;
 	if (instances.has(stdout)) {
 		instance = instances.get(stdout);
 	} else {

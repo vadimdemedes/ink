@@ -5,7 +5,7 @@ import isCI from 'is-ci';
 import {createReconciler} from './reconciler';
 import createRenderer, {InkRenderer} from './renderer';
 import signalExit from 'signal-exit';
-import {createNode, DOMNode} from './dom';
+import {createNode, DOMElement} from './dom';
 import {FiberRoot} from 'react-reconciler';
 import instances from './instances';
 import App from './components/App';
@@ -19,7 +19,7 @@ export interface InkOptions {
 	waitUntilExit?: () => Promise<void>;
 }
 
-export interface Ink<Type> {
+export interface Ink {
 	options: InkOptions;
 	log: LogUpdate;
 	throttledLog: LogUpdate;
@@ -27,7 +27,7 @@ export interface Ink<Type> {
 	isUnmounted: boolean;
 	lastOutput: string;
 	container: FiberRoot;
-	rootNode: Type;
+	rootNode: DOMElement;
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	fullStaticOutput: string;
@@ -42,7 +42,7 @@ export interface Ink<Type> {
 	unsubscribeExit: () => void;
 }
 
-export function createInk(options: InkOptions): Ink<DOMNode> {
+export function createInk(options: InkOptions): Ink {
 	const rootNode = createNode('root');
 	const log = logUpdate.create(options.stdout);
 	const throttledLog = options.debug ?
@@ -52,8 +52,8 @@ export function createInk(options: InkOptions): Ink<DOMNode> {
 			trailing: true
 		});
 
-	let resolveExitPromise: Ink<DOMNode>['resolveExitPromise'] = () => {};
-	let rejectExitPromise: Ink<DOMNode>['rejectExitPromise'] = () => {};
+	let resolveExitPromise: Ink['resolveExitPromise'] = () => {};
+	let rejectExitPromise: Ink['rejectExitPromise'] = () => {};
 
 	const renderer = createRenderer({
 		terminalWidth: options.stdout.columns
