@@ -28,10 +28,10 @@ const calculateWrappedText = (node: DOMNode) => {
 					yogaNode.setHeight(height);
 				}
 			}
+		}
 
-			for (const childNode of node.childNodes) {
-				calculateWrappedText(childNode);
-			}
+		for (const childNode of node.childNodes) {
+			calculateWrappedText(childNode);
 		}
 	}
 };
