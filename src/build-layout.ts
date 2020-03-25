@@ -43,7 +43,9 @@ const buildLayout = (node: DOMNode, options: BuildLayoutOptions) => {
 
 	if (node.nodeName === '#text') {
 		// Nodes with only text have a child Yoga node dedicated for that text
-		applySize(yogaNode, node.nodeValue, style.width, style.height);
+		if (node.nodeValue) {
+			applySize(yogaNode, node.nodeValue, style.width, style.height);
+		}
 	} else if (node.textContent) {
 		// Nodes with only text have a child Yoga node dedicated for that text
 		applySize(yogaNode, node.textContent, style.width, style.height);
