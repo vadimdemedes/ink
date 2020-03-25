@@ -1,9 +1,9 @@
-import React from 'react';
+import {createContext} from 'react';
 
 export interface AppContextValue {
 	exit: (error?: Error) => void;
 }
 
-export default React.createContext<AppContextValue>({
+export default createContext<AppContextValue>({
 	exit: () => {}
 });
