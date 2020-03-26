@@ -6,15 +6,18 @@ type Run = (
 ) => Promise<any>;
 
 const run: Run = (fixture, props) => {
+
+	const env = {
+		...process.env,
+		...props?.env
+	};
+
 	return new Promise((resolve, reject) => {
 		const term = spawn('ts-node', [`${__dirname}/../fixtures/${fixture}.tsx`], {
 			name: 'xterm-color',
 			cols: 100,
 			cwd: __dirname,
-			env: {
-				...process.env,
-				...props?.env && {}
-			}
+			env
 		});
 
 		let output = '';
