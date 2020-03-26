@@ -38,7 +38,7 @@ export interface Ink {
 	exitPromise: Promise<void>;
 	unmount: () => void;
 	resolveExitPromise: () => void;
-	rejectExitPromise: (reason?: unknown) => void;
+	rejectExitPromise: (reason?: Error) => void;
 	unsubscribeExit: () => void;
 }
 
