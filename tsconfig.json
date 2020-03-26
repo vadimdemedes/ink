@@ -2,10 +2,6 @@
 	"extends": "@sindresorhus/tsconfig",
 	"compilerOptions": {
 		"esModuleInterop": true,
-		"noImplicitAny": true,
-		"declaration": true,
-		"allowSyntheticDefaultImports": true,
-		"module": "commonjs",
 		"outDir": "build",
 		"sourceMap": true
 	},
