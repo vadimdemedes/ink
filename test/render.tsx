@@ -3,7 +3,7 @@ import {spawn} from 'node-pty';
 import ansiEscapes from 'ansi-escapes';
 
 const term = (fixture: string, args: string[] = []) => {
-	let resolve: (value?: any) => void;
+	let resolve: (value?: unknown) => void;
 	let reject: (error: Error) => void;
 
 	// eslint-disable-next-line promise/param-names

@@ -3,7 +3,7 @@ import {spawn} from 'node-pty';
 type Run = (
 	fixture: string,
 	props?: { env?: Record<string, unknown> }
-) => Promise<any>;
+) => Promise<void>;
 
 export const run: Run = (fixture, props) => {
 	const env = {
