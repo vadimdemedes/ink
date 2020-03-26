@@ -1,7 +1,7 @@
 import Yoga from 'yoga-layout-prebuilt';
-import renderNodeToOutput from '../render-node-to-output';
-import calculateWrappedText from '../calculate-wrapped-text';
-import Output from './output';
+import {renderNodeToOutput} from '../render-node-to-output';
+import {calculateWrappedText} from '../calculate-wrapped-text';
+import {Output} from './output';
 import {setStyle} from './dom';
 import {DOMElement, TEXT_NAME} from '../dom';
 
@@ -24,7 +24,7 @@ const findStaticNode = (node: DOMElement): DOMElement | undefined => {
 	return undefined;
 };
 
-export default ({terminalWidth = 100}) => {
+export const createRenderer = ({terminalWidth = 100}) => {
 	return (node: DOMElement) => {
 		setStyle(node, {
 			width: terminalWidth

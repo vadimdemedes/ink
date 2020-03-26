@@ -154,7 +154,7 @@ const applyDimensionStyles = (node: YogaNode, style: DimensionStyles) => {
 	}
 };
 
-export default (node: YogaNode, style: Styles = {}) => {
+export const applyStyle = (node: YogaNode, style: Styles = {}) => {
 	applyPositionStyles(node, style);
 	applyMarginStyles(node, style);
 	applyPaddingStyles(node, style);

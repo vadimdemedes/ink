@@ -15,7 +15,7 @@ interface OutputConstructorOptions {
  *
  * Used to generate the final output of all nodes before writing it to actual output stream (e.g. stdout)
  */
-export default class Output implements OutputWriter {
+export class Output implements OutputWriter {
 	output: string[];
 
 	constructor(options: OutputConstructorOptions) {

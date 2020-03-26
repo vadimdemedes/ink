@@ -23,7 +23,7 @@ interface Writes {
 	transformers: OutputTransformer[];
 }
 
-export default class Output implements OutputWriter {
+export class Output implements OutputWriter {
 	width: number;
 	height: number;
 

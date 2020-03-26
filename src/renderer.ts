@@ -1,9 +1,9 @@
 import Yoga, {YogaNode} from 'yoga-layout-prebuilt';
-import Output from './output';
+import {Output} from './output';
 import {createNode, appendStaticNode, DOMElement, TEXT_NAME} from './dom';
-import buildLayout from './build-layout';
-import renderNodeToOutput from './render-node-to-output';
-import calculateWrappedText from './calculate-wrapped-text';
+import {buildLayout} from './build-layout';
+import {renderNodeToOutput} from './render-node-to-output';
+import {calculateWrappedText} from './calculate-wrapped-text';
 
 // Since <Static> components can be placed anywhere in the tree, this helper finds and returns them
 const getStaticNodes = (element: DOMElement): DOMElement[] => {
@@ -42,7 +42,7 @@ type RendererCreator = (options: {
 ) => { output: string; outputHeight: number; staticOutput: string };
 
 // Build layout, apply styles, build text output of all nodes and return it
-const createRenderer: RendererCreator = ({terminalWidth}) => {
+export const createRenderer: RendererCreator = ({terminalWidth}) => {
 	const config = Yoga.Config.create();
 
 	// Used to free up memory used by last Yoga node tree
@@ -129,5 +129,3 @@ const createRenderer: RendererCreator = ({terminalWidth}) => {
 		};
 	};
 };
-
-export default createRenderer;

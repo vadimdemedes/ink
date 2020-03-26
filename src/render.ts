@@ -86,5 +86,3 @@ function retrieveCachedInstance(
 
 	return instance;
 }
-
-export default render;

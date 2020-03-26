@@ -160,7 +160,7 @@ const applyDimensionStyles = (node: Yoga.YogaNode, style: DimensionStyles) => {
 	}
 };
 
-export default (node: Yoga.YogaNode, style: Styles = {}) => {
+export const applyStyles = (node: Yoga.YogaNode, style: Styles = {}) => {
 	applyMarginStyles(node, style);
 	applyPaddingStyles(node, style);
 	applyFlexStyles(node, style);

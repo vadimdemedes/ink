@@ -1,6 +1,6 @@
 import Yoga from 'yoga-layout-prebuilt';
-import applyStyles from './apply-styles';
-import measureText from './measure-text';
+import {applyStyles} from './apply-styles';
+import {measureText} from './measure-text';
 import {DOMNode} from './dom';
 
 interface BuildLayoutOptions {
@@ -10,7 +10,7 @@ interface BuildLayoutOptions {
 }
 
 // Traverse the node tree, create Yoga nodes and assign styles to each Yoga node
-const buildLayout = (node: DOMNode, options: BuildLayoutOptions) => {
+export const buildLayout = (node: DOMNode, options: BuildLayoutOptions) => {
 	const {config, terminalWidth, skipStaticElements} = options;
 	const yogaNode = Yoga.Node.createWithConfig(config);
 	node.yogaNode = yogaNode;
@@ -70,5 +70,3 @@ const applySize = (yogaNode: Yoga.YogaNode, text: string, nodeWidth?: string | n
 	yogaNode.setWidth(nodeWidth ?? width);
 	yogaNode.setHeight(nodeHeight ?? height);
 };
-
-export default buildLayout;

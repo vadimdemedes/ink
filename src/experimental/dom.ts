@@ -1,6 +1,6 @@
 import Yoga from 'yoga-layout-prebuilt';
-import measureText from '../measure-text';
-import applyStyle from './apply-style';
+import {measureText} from '../measure-text';
+import {applyStyle} from './apply-style';
 import {TextNode, DOMNode, DOMElement, ElementNames} from '../dom';
 import {Styles} from '../styles';
 

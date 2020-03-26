@@ -1,11 +1,11 @@
-import measureText from './measure-text';
-import wrapText from './wrap-text';
-import getMaxWidth from './get-max-width';
+import {measureText} from './measure-text';
+import {wrapText} from './wrap-text';
+import {getMaxWidth} from './get-max-width';
 import {DOMNode} from './dom';
 
 // Since we need to know the width of text container to wrap text, we have to calculate layout twice
 // This function is executed after first layout calculation to reassign width and height of text nodes
-const calculateWrappedText = (node: DOMNode) => {
+export const calculateWrappedText = (node: DOMNode) => {
 	if (node.nodeName !== '#text') {
 		if (
 			node.textContent &&
@@ -35,5 +35,3 @@ const calculateWrappedText = (node: DOMNode) => {
 		}
 	}
 };
-
-export default calculateWrappedText;

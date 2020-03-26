@@ -3,7 +3,7 @@ import throttle from 'lodash.throttle';
 import logUpdate, {LogUpdate} from 'log-update';
 import isCI from 'is-ci';
 import {reconciler} from './reconciler';
-import createRenderer, {InkRenderer} from './renderer';
+import {createRenderer, InkRenderer} from './renderer';
 import signalExit from 'signal-exit';
 import {createNode, DOMElement} from './dom';
 import {FiberRoot} from 'react-reconciler';

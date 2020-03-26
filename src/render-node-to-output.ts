@@ -1,6 +1,6 @@
 import widestLine from 'widest-line';
-import wrapText from './wrap-text';
-import getMaxWidth from './get-max-width';
+import {wrapText} from './wrap-text';
+import {getMaxWidth} from './get-max-width';
 import {DOMNode, DOMElement} from './dom';
 
 const isAllTextNodes = (node: DOMNode): boolean => {
@@ -86,7 +86,7 @@ export interface OutputWriter {
 }
 
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
-const renderNodeToOutput = (
+export const renderNodeToOutput = (
 	node: DOMNode,
 	output: OutputWriter,
 	options: RenderNodeToOutputOptions
@@ -177,5 +177,3 @@ const renderNodeToOutput = (
 		}
 	}
 };
-
-export default renderNodeToOutput;

@@ -8,7 +8,7 @@ import {App} from '../components/App';
 import {Ink, InkOptions} from '../ink';
 import {instances} from '../instances';
 import {reconciler} from './reconciler';
-import createExperimentalRenderer from './renderer';
+import {createRenderer} from './renderer';
 import {createNode} from './dom';
 
 export function createExperimentalInk(options: InkOptions): Ink {
@@ -21,7 +21,7 @@ export function createExperimentalInk(options: InkOptions): Ink {
 			trailing: true
 		});
 
-	const renderer = createExperimentalRenderer({
+	const renderer = createRenderer({
 		terminalWidth: options.stdout.columns
 	});
 
