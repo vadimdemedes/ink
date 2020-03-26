@@ -13,7 +13,7 @@ export interface Key {
 	meta: boolean;
 }
 
-const useInput = (inputHandler: (input: string, key: Key) => void) => {
+export const useInput = (inputHandler: (input: string, key: Key) => void) => {
 	const {stdin, setRawMode} = useContext(StdinContext);
 
 	useEffect(() => {
@@ -68,5 +68,3 @@ const useInput = (inputHandler: (input: string, key: Key) => void) => {
 		};
 	}, [stdin, inputHandler]);
 };
-
-export default useInput;

@@ -10,7 +10,7 @@ interface TextProps {
 	readonly unstable__transformChildren?: (children: ReactNode) => ReactNode;
 }
 
-const Text: FC<TextProps & { children: ReactNode }> = ({
+export const Text: FC<TextProps & { children: ReactNode }> = ({
 	bold,
 	italic,
 	underline,
@@ -71,5 +71,3 @@ Text.defaultProps = {
 	strikethrough: false,
 	unstable__transformChildren: undefined
 };
-
-export default Text;

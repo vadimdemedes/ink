@@ -4,6 +4,7 @@ export interface AppContextValue {
 	exit: (error?: Error) => void;
 }
 
-export default createContext<AppContextValue>({
-	exit: () => {}
+export const AppContext = createContext<AppContextValue>({
+	// @ts-ignore
+	exit: undefined
 });

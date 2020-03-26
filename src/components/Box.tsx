@@ -41,7 +41,7 @@ interface BoxProps {
 	readonly unstable__transformChildren?: (children: ReactNode) => ReactNode;
 }
 
-export default class Box extends PureComponent<BoxProps> {
+export class Box extends PureComponent<BoxProps> {
 	static propTypes = {
 		margin: PropTypes.number,
 		marginX: PropTypes.number,

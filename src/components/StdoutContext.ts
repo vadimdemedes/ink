@@ -1,6 +1,6 @@
 import {createContext} from 'react';
 
-interface StdoutContextValue {
+export interface StdoutContextValue {
 	stdout?: NodeJS.WriteStream;
 }
 

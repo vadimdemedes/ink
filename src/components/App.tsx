@@ -1,7 +1,7 @@
 import React, {PureComponent, ReactNode} from 'react';
 import PropTypes from 'prop-types';
 import cliCursor from 'cli-cursor';
-import AppContext from './AppContext';
+import {AppContext} from './AppContext';
 import {StdinContext} from './StdinContext';
 import {StdoutContext} from './StdoutContext';
 interface AppProps {

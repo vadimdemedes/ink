@@ -24,7 +24,7 @@ type RenderFunction = <Props, K extends NodeJS.WriteStream | RenderOptions>(
 	options?: K
 ) => Instance;
 
-const render: RenderFunction = (
+export const render: RenderFunction = (
 	node,
 	options
 ): Instance => {

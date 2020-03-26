@@ -23,7 +23,7 @@ const methods = [
 	'bgAnsi256'
 ];
 
-const Color: FC<ColorProps & {children: ReactNode}> = ({
+export const Color: FC<ColorProps & {children: ReactNode}> = ({
 	children,
 	...colorProps
 }) => {
@@ -64,8 +64,6 @@ Color.propTypes = {
 Color.defaultProps = {
 	children: ''
 };
-
-export default Color;
 
 type Colors =
 	| typeof chalk.ForegroundColor
