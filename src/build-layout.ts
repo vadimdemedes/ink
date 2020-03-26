@@ -57,7 +57,7 @@ export const buildLayout = (node: DOMNode, options: BuildLayoutOptions) => {
 		for (const [index, childNode] of Object.entries(childNodes)) {
 			const {yogaNode: childYogaNode} = buildLayout(childNode, options);
 			if (childYogaNode) {
-				yogaNode.insertChild(childYogaNode, parseInt(index, 10));
+				yogaNode.insertChild(childYogaNode, Number.parseInt(index, 10));
 			}
 		}
 	}

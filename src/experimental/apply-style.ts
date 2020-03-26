@@ -81,7 +81,7 @@ const applyFlexStyles = (node: YogaNode, style: FlexStyles) => {
 	if (typeof style.flexBasis === 'number') {
 		node.setFlexBasis(style.flexBasis);
 	} else if (typeof style.flexBasis === 'string') {
-		node.setFlexBasisPercent(parseInt(style.flexBasis, 10));
+		node.setFlexBasisPercent(Number.parseInt(style.flexBasis, 10));
 	} else {
 		// This should be replaced with node.setFlexBasisAuto() when new Yoga release is out
 		node.setFlexBasis(NaN);
@@ -128,7 +128,7 @@ const applyDimensionStyles = (node: YogaNode, style: DimensionStyles) => {
 	if (typeof style.width === 'number') {
 		node.setWidth(style.width);
 	} else if (typeof style.width === 'string') {
-		node.setWidthPercent(parseInt(style.width, 10));
+		node.setWidthPercent(Number.parseInt(style.width, 10));
 	} else {
 		node.setWidthAuto();
 	}
@@ -136,19 +136,19 @@ const applyDimensionStyles = (node: YogaNode, style: DimensionStyles) => {
 	if (typeof style.height === 'number') {
 		node.setHeight(style.height);
 	} else if (typeof style.height === 'string') {
-		node.setHeightPercent(parseInt(style.height, 10));
+		node.setHeightPercent(Number.parseInt(style.height, 10));
 	} else {
 		node.setHeightAuto();
 	}
 
 	if (typeof style.minWidth === 'string') {
-		node.setMinWidthPercent(parseInt(style.minWidth, 10));
+		node.setMinWidthPercent(Number.parseInt(style.minWidth, 10));
 	} else {
 		node.setMinWidth(style.minWidth ?? 0);
 	}
 
 	if (typeof style.minHeight === 'string') {
-		node.setMinHeightPercent(parseInt(style.minHeight, 10));
+		node.setMinHeightPercent(Number.parseInt(style.minHeight, 10));
 	} else {
 		node.setMinHeight(style.minHeight ?? 0);
 	}
