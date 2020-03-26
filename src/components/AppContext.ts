@@ -5,6 +5,5 @@ export interface AppContextValue {
 }
 
 export const AppContext = createContext<AppContextValue>({
-	// @ts-ignore
-	exit: undefined
+	exit: () => {}
 });

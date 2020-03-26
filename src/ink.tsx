@@ -2,7 +2,7 @@ import React, {ReactNode} from 'react';
 import throttle from 'lodash.throttle';
 import logUpdate, {LogUpdate} from 'log-update';
 import isCI from 'is-ci';
-import {createReconciler} from './reconciler';
+import {reconciler} from './reconciler';
 import createRenderer, {InkRenderer} from './renderer';
 import signalExit from 'signal-exit';
 import {createNode, DOMElement} from './dom';
@@ -102,7 +102,7 @@ export function createInk(options: InkOptions): Ink {
 		}
 	};
 
-	const reconciler = createReconciler(onRender);
+	rootNode.onRender = onRender;
 
 	const container = reconciler.createContainer(rootNode, false, false);
 

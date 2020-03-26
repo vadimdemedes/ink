@@ -7,7 +7,7 @@ import signalExit from 'signal-exit';
 import App from '../components/App';
 import {Ink, InkOptions} from '../ink';
 import instances from '../instances';
-import {createExperimentalReconciler} from './reconciler';
+import {reconciler} from './reconciler';
 import createExperimentalRenderer from './renderer';
 import {createNode} from '../dom';
 
@@ -76,18 +76,16 @@ export function createExperimentalInk(options: InkOptions): Ink {
 		}
 	};
 
+	rootNode.onRender = options.debug ?
+		onRender :
+		throttle(onRender, 16, {
+			leading: true,
+			trailing: true
+		});
+	rootNode.onImmediateRender = onRender;
+
 	let resolveExitPromise: Ink['resolveExitPromise'] = () => {};
 	let rejectExitPromise: Ink['rejectExitPromise'] = () => {};
-
-	const reconciler = createExperimentalReconciler(
-		options.debug ?
-			onRender :
-			throttle(onRender, 16, {
-				leading: true,
-				trailing: true
-			}),
-		onRender
-	);
 
 	const container = reconciler.createContainer(rootNode, false, false);
 

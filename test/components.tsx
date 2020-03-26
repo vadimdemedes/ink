@@ -466,7 +466,7 @@ test('render only last frame when run in CI', async t => {
 	);
 });
 
-// test('reset prop when it’s removed from the element', t => {
+// Test('reset prop when it’s removed from the element', t => {
 // 	const stdout = {
 // 		write: spy(),
 // 		columns: 100

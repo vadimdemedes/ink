@@ -25,8 +25,11 @@ export type DOMElement = {
 	childNodes: DOMNode[];
 	unstable__transformChildren?: OutputTransformer;
 
+	onRender?: () => void;
+
 	// Experimental properties
 	isStaticDirty?: boolean;
+	onImmediateRender?: () => void;
 } & InkNode;
 
 export type TextNode = {

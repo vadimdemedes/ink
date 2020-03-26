@@ -1,4 +1,4 @@
-import { render } from "../../src";
+import {render} from '../../src';
 
 // Fake process.stdout
 interface Stream {
@@ -11,7 +11,7 @@ interface Stream {
 const createStream: (options: { columns: number }) => Stream = ({
 	columns
 }) => {
-	let output = "";
+	let output = '';
 	return {
 		output,
 		columns,
@@ -27,14 +27,14 @@ const createStream: (options: { columns: number }) => Stream = ({
 const renderToString: (
 	node: JSX.Element,
 	options?: { columns: number }
-) => string = (node, options = { columns: 100 }) => {
+) => string = (node, options = {columns: 100}) => {
 	const stream = createStream(options);
 
 	render(node, {
 		// @ts-ignore
 		stdout: stream,
 		debug: true,
-		experimental: process.env.EXPERIMENTAL === "true"
+		experimental: process.env.EXPERIMENTAL === 'true'
 	});
 
 	return stream.get();
