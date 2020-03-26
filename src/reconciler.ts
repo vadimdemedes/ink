@@ -114,7 +114,7 @@ export const createReconciler = (onRender: () => void) =>
 								const textElement = createNode('div');
 								textElement.textContent = String(value);
 								appendChildNode(node, textElement);
-							} else if (node.childNodes[0].nodeName === 'div') {
+							} else if (node.childNodes[0].nodeName === 'DIV') {
 								node.childNodes[0].textContent = String(value);
 							}
 						}
