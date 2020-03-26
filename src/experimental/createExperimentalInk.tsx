@@ -9,7 +9,7 @@ import {Ink, InkOptions} from '../ink';
 import instances from '../instances';
 import {reconciler} from './reconciler';
 import createExperimentalRenderer from './renderer';
-import {createNode} from '../dom';
+import {createNode} from './dom';
 
 export function createExperimentalInk(options: InkOptions): Ink {
 	const rootNode = createNode('root');

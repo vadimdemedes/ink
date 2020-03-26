@@ -1,10 +1,19 @@
 import Yoga from 'yoga-layout-prebuilt';
 import measureText from '../measure-text';
 import applyStyle from './apply-style';
-import {TextNode, DOMNode, DOMElement} from '../dom';
+import {TextNode, DOMNode, DOMElement, ElementNames} from '../dom';
 import {Styles} from '../styles';
 
 export type NodeNames = 'root' | 'div' | 'span';
+
+export const createNode = (nodeName: ElementNames): DOMElement => ({
+	nodeName: nodeName.toUpperCase() as ElementNames,
+	style: {},
+	attributes: {},
+	childNodes: [],
+	parentNode: null,
+	yogaNode: Yoga.Node.create()
+});
 
 export const appendChildNode = (
 	node: DOMElement,

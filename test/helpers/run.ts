@@ -6,7 +6,6 @@ type Run = (
 ) => Promise<any>;
 
 const run: Run = (fixture, props) => {
-
 	const env = {
 		...process.env,
 		...props?.env

@@ -10,14 +10,14 @@ import {
 	insertBeforeNode,
 	removeChildNode,
 	setStyle,
-	setTextContent
+	setTextContent,
+	createNode
 } from './dom';
 import {
 	setAttribute,
 	DOMNode,
 	ElementNames,
-	DOMElement,
-	createNode
+	DOMElement
 } from '../dom';
 
 const NO_CONTEXT = true;

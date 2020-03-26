@@ -21,43 +21,43 @@ const applyPositionStyles = (node: Yoga.YogaNode, style: PositionStyles) => {
 const applyMarginStyles = (node: Yoga.YogaNode, style: MarginStyles) => {
 	node.setMargin(
 		Yoga.EDGE_START,
-		style.marginLeft || style.marginX || style.margin || 0
+		(style.marginLeft ?? style.marginX) ?? style.margin ?? 0
 	);
 	node.setMargin(
 		Yoga.EDGE_END,
-		style.marginRight || style.marginX || style.margin || 0
+		(style.marginRight ?? style.marginX) ?? style.margin ?? 0
 	);
 	node.setMargin(
 		Yoga.EDGE_TOP,
-		style.marginTop || style.marginY || style.margin || 0
+		(style.marginTop ?? style.marginY) ?? style.margin ?? 0
 	);
 	node.setMargin(
 		Yoga.EDGE_BOTTOM,
-		style.marginBottom || style.marginY || style.margin || 0
+		(style.marginBottom ?? style.marginY) ?? style.margin ?? 0
 	);
 };
 
 const applyPaddingStyles = (node: Yoga.YogaNode, style: PaddingStyles) => {
 	node.setPadding(
 		Yoga.EDGE_LEFT,
-		style.paddingLeft || style.paddingX || style.padding || 0
+		(style.paddingLeft ?? style.paddingX) ?? style.padding ?? 0
 	);
 	node.setPadding(
 		Yoga.EDGE_RIGHT,
-		style.paddingRight || style.paddingX || style.padding || 0
+		(style.paddingRight ?? style.paddingX) ?? style.padding ?? 0
 	);
 	node.setPadding(
 		Yoga.EDGE_TOP,
-		style.paddingTop || style.paddingY || style.padding || 0
+		(style.paddingTop ?? style.paddingY) ?? style.padding ?? 0
 	);
 	node.setPadding(
 		Yoga.EDGE_BOTTOM,
-		style.paddingBottom || style.paddingY || style.padding || 0
+		(style.paddingBottom ?? style.paddingY) ?? style.padding ?? 0
 	);
 };
 
 const applyFlexStyles = (node: YogaNode, style: FlexStyles) => {
-	node.setFlexGrow(style.flexGrow || 0);
+	node.setFlexGrow(style.flexGrow ?? 0);
 	node.setFlexShrink(
 		typeof style.flexShrink === 'number' ? style.flexShrink : 1
 	);
@@ -144,13 +144,13 @@ const applyDimensionStyles = (node: YogaNode, style: DimensionStyles) => {
 	if (typeof style.minWidth === 'string') {
 		node.setMinWidthPercent(parseInt(style.minWidth, 10));
 	} else {
-		node.setMinWidth(style.minWidth || 0);
+		node.setMinWidth(style.minWidth ?? 0);
 	}
 
 	if (typeof style.minHeight === 'string') {
 		node.setMinHeightPercent(parseInt(style.minHeight, 10));
 	} else {
-		node.setMinHeight(style.minHeight || 0);
+		node.setMinHeight(style.minHeight ?? 0);
 	}
 };
 
