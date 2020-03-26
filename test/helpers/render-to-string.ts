@@ -24,7 +24,7 @@ const createStream: (options: { columns: number }) => Stream = ({
 	};
 };
 
-const renderToString: (
+export const renderToString: (
 	node: JSX.Element,
 	options?: { columns: number }
 ) => string = (node, options = {columns: 100}) => {
@@ -39,5 +39,3 @@ const renderToString: (
 
 	return stream.get();
 };
-
-export default renderToString;

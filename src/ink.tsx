@@ -7,8 +7,8 @@ import createRenderer, {InkRenderer} from './renderer';
 import signalExit from 'signal-exit';
 import {createNode, DOMElement} from './dom';
 import {FiberRoot} from 'react-reconciler';
-import instances from './instances';
-import App from './components/App';
+import {instances} from './instances';
+import {App} from './components/App';
 
 export interface InkOptions {
 	stdout: NodeJS.WriteStream;

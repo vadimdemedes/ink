@@ -1,6 +1,6 @@
 import React from 'react';
 import test from 'ava';
-import renderToString from './helpers/render-to-string';
+import {renderToString} from './helpers/render-to-string';
 import {Box} from '../src';
 
 test('margin', t => {

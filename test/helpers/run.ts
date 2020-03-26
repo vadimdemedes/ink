@@ -5,7 +5,7 @@ type Run = (
 	props?: { env?: Record<string, unknown> }
 ) => Promise<any>;
 
-const run: Run = (fixture, props) => {
+export const run: Run = (fixture, props) => {
 	const env = {
 		...process.env,
 		...props?.env
@@ -35,5 +35,3 @@ const run: Run = (fixture, props) => {
 		});
 	});
 };
-
-export default run;

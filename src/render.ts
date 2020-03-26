@@ -1,7 +1,7 @@
 import {ReactElement} from 'react';
 import {Ink, createInk, InkOptions} from './ink';
 import {createExperimentalInk} from './experimental/createExperimentalInk';
-import instances from './instances';
+import {instances} from './instances';
 import {Stream} from 'stream';
 
 export interface RenderOptions {

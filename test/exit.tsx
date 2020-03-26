@@ -1,6 +1,6 @@
 import {serial as test} from 'ava';
 import {spawn} from 'node-pty';
-import run from './helpers/run';
+import {run} from './helpers/run';
 
 test('exit normally without unmount() or exit()', async t => {
 	const output = await run('exit-normally');
