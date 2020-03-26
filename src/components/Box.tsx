@@ -41,6 +41,9 @@ interface BoxProps {
 	readonly unstable__transformChildren?: (children: ReactNode) => ReactNode;
 }
 
+/**
+ * `<Box>` it's an essential Ink component to build your layout. It's like a `<div style="display: flex">` in a browser.
+ */
 export class Box extends PureComponent<BoxProps> {
 	static propTypes = {
 		margin: PropTypes.number,

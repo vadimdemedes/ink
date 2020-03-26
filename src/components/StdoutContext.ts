@@ -1,9 +1,15 @@
 import {createContext} from 'react';
 
-export interface StdoutContextValue {
+export interface StdoutProps {
+	/**
+	 * Stdout stream passed to `render()` in `options.stdout` or `process.stdout` by default.
+	 */
 	stdout?: NodeJS.WriteStream;
 }
 
-export const StdoutContext = createContext<StdoutContextValue>({
+/**
+ * `StdoutContext` is a React context, which exposes stdout stream, where Ink renders your app.
+ */
+export const StdoutContext = createContext<StdoutProps>({
 	stdout: undefined
 });

@@ -13,16 +13,22 @@ interface StaticState {
 	lastIndex: number | null;
 }
 
-// This component allows developers to render output before main output from all the other components.
-// The reason it's called <Static> is it's append-only output. Output from <Static> components
-// is written permanently to stdout and is never updated afterwards. If <Static> component
-// receives new children, Ink will detect the changes and write them to stdout.
-// In order for this mechanism to work perfectly, <Static> children must never update their output
-// once they've been appended to <Static>.
-//
-// A good example of where this component might be useful is interface like Jest's.
-// When running tests, Jest keeps writing completed tests to output, while continuously
-// rendering test stats at the end of the output.
+/**
+ * `<Static>` component allows permanently rendering output to stdout and preserving it across renders. Components passed to `<Static>` as children will be written to stdout only once and will never be rerendered. `<Static>` output comes first, before any other output from your components, no matter where it is in the tree. In order for this mechanism to work properly, at most one `<Static>` component must be present in your node tree and components that were rendered must never update their output. Ink will detect new children appended to `<Static>` and render them to stdout.
+ *
+ * __Note__: `<Static>` accepts only an array of children and each of them must have a unique key.
+ *
+ * This component allows developers to render output before main output from all the other components.
+ * The reason it's called <Static> is it's append-only output. Output from <Static> components
+ * is written permanently to stdout and is never updated afterwards. If <Static> component
+ * receives new children, Ink will detect the changes and write them to stdout.
+ * In order for this mechanism to work perfectly, <Static> children must never update their output
+ * once they've been appended to <Static>.
+ *
+ * A good example of where this component might be useful is interface like Jest's.
+ * When running tests, Jest keeps writing completed tests to output, while continuously
+ * rendering test stats at the end of the output.
+ */
 export class Static extends Component<StaticProps & Styles, StaticState> {
 	static propTypes = {
 		children: PropTypes.node

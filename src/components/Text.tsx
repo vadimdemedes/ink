@@ -10,6 +10,9 @@ interface TextProps {
 	readonly unstable__transformChildren?: (children: ReactNode) => ReactNode;
 }
 
+/**
+ * This component can change the style of the text, make it bold, underline, italic or strikethrough.
+ */
 export const Text: FC<TextProps & { children: ReactNode }> = ({
 	bold,
 	italic,

@@ -23,6 +23,9 @@ const methods = [
 	'bgAnsi256'
 ];
 
+/**
+ * The `<Color>` compoment is a simple wrapper around the `chalk` API. It supports all of the `chalk`'s methods as `props`.
+ */
 export const Color: FC<ColorProps & {children: ReactNode}> = ({
 	children,
 	...colorProps
