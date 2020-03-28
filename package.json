@@ -128,6 +128,8 @@
 					"test/**/*.{ts,tsx}"
 				],
 				"rules": {
+					"no-unused-expressions": "off",
+					"camelcase": ["error", {"allow": ["^unstable__"]}],
 					"unicorn/filename-case": "off",
 					"react/prop-types": "warn",
 					"unicorn/prevent-abbreviations": "off",
