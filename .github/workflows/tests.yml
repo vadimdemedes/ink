@@ -16,8 +16,6 @@ jobs:
       with:
         node-version: ${{ matrix.node_version }}
     - run: npm install
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v2
     - run: npm test
       env:
         FORCE_COLOR: true
