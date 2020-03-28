@@ -3,15 +3,17 @@ import PropTypes from 'prop-types';
 import cliCursor from 'cli-cursor';
 import AppContext from './AppContext';
 import StdinContext from './StdinContext';
+import StderrContext from './StderrContext';
 import StdoutContext from './StdoutContext';
 
 // Root component for all Ink apps
-// It renders stdin and stdout contexts, so that children can access them if needed
+// It renders stdin, stderr, and stdout contexts, so that children can access them if needed
 // It also handles Ctrl+C exiting and cursor visibility
 export default class App extends PureComponent {
 	static propTypes = {
 		children: PropTypes.node.isRequired,
 		stdin: PropTypes.object.isRequired,
+		stderr: PropTypes.object.isRequired,
 		stdout: PropTypes.object.isRequired,
 		exitOnCtrlC: PropTypes.bool.isRequired, // eslint-disable-line react/boolean-prop-naming
 		onExit: PropTypes.func.isRequired
@@ -32,11 +34,7 @@ export default class App extends PureComponent {
 
 	render() {
 		return (
-			<AppContext.Provider
-				value={{
-					exit: this.handleExit
-				}}
-			>
+			<AppContext.Provider value={{ exit: this.handleExit }}>
 				<StdinContext.Provider
 					value={{
 						stdin: this.props.stdin,
@@ -44,23 +42,23 @@ export default class App extends PureComponent {
 						isRawModeSupported: this.isRawModeSupported()
 					}}
 				>
-					<StdoutContext.Provider
-						value={{
-							stdout: this.props.stdout
-						}}
-					>
-						{this.props.children}
-					</StdoutContext.Provider>
+					<StderrContext.Provider value={{ stderr: this.props.stderr }}>
+						<StdoutContext.Provider value={{ stdout: this.props.stdout }}>
+							{this.props.children}
+						</StdoutContext.Provider>
+					</StderrContext.Provider>
 				</StdinContext.Provider>
 			</AppContext.Provider>
 		);
 	}
 
 	componentDidMount() {
+		cliCursor.hide(this.props.stderr);
 		cliCursor.hide(this.props.stdout);
 	}
 
 	componentWillUnmount() {
+		cliCursor.show(this.props.stderr);
 		cliCursor.show(this.props.stdout);
 
 		// ignore calling setRawMode on an handle stdin it cannot be called

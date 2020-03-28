@@ -5,7 +5,7 @@ const childrenToArray = children => Array.isArray(children) ? children : [childr
 
 // This component allows developers to render output before main output from all the other components.
 // The reason it's called <Static> is it's append-only output. Output from <Static> components
-// is written permanently to stdout and is never updated afterwards. If <Static> component
+// is written permanently to stderr/stdout and is never updated afterwards. If <Static> component
 // receives new children, Ink will detect the changes and write them to stdout.
 // In order for this mechanism to work perfectly, <Static> children must never update their output
 // once they've been appended to <Static>.
@@ -15,7 +15,12 @@ const childrenToArray = children => Array.isArray(children) ? children : [childr
 // rendering test stats at the end of the output.
 export default class Static extends Component {
 	static propTypes = {
-		children: PropTypes.node
+		children: PropTypes.node,
+		type: PropTypes.oneOf(['stderr', 'stdout'])
+	}
+
+	static defaultProps = {
+		type: 'stdout'
 	}
 
 	state = {
@@ -23,7 +28,7 @@ export default class Static extends Component {
 	}
 
 	render() {
-		const {children, ...otherProps} = this.props;
+		const {children, type, ...otherProps} = this.props;
 		const {lastIndex} = this.state;
 		let newChildren = children;
 
@@ -33,7 +38,7 @@ export default class Static extends Component {
 
 		return (
 			<div
-				unstable__static
+				unstable__static={type}
 				style={{
 					position: 'absolute',
 					flexDirection: 'column',

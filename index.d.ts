@@ -2,6 +2,12 @@ import * as React from 'react';
 
 export interface RenderOptions {
 	/**
+	 * Output stream for errors.
+	 *
+	 * @default process.stderr
+	 */
+	readonly stderr?: NodeJS.WriteStream;
+	/**
 	 * Output stream where app will be rendered.
 	 *
 	 * @default process.stdout
@@ -226,7 +232,10 @@ export const Text: React.FC<TextProps>;
  *
  * __Note__: `<Static>` accepts only an array of children and each of them must have a unique key.
  */
-export const Static: React.FC<{children: React.ReactNodeArray}>;
+export const Static: React.FC<{
+	children: React.ReactNodeArray,
+	type?: 'stderr' | 'stdout'
+}>;
 
 interface AppProps {
 	/**
@@ -290,6 +299,24 @@ export const StdinContext: React.Context<StdinProps>;
  * Similar to `useApp`, it's equivalent to consuming `StdinContext` directly.
  */
 export function useStdin(): StdinProps;
+
+interface StderrProps {
+	/**
+	 * Stderr stream passed to `render()` in `options.stderr` or `process.stderr` by default.
+	 */
+	readonly stderr: NodeJS.WriteStream;
+}
+
+/**
+ * `StderrContext` is a React context, which exposes stderr stream, where Ink renders your app.
+ */
+export const StderrContext: React.Context<StderrProps>;
+
+/**
+ * `useStderr` is a React hook, which exposes props of `StderrContext`.
+ * Similar to `useStderr`, it's equivalent to consuming `StderrContext` directly.
+ */
+export function useStderr(): StderrProps;
 
 interface StdoutProps {
 	/**
