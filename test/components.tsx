@@ -134,7 +134,7 @@ test('transform children', t => {
 test('squash multiple text nodes', t => {
 	const output = renderToString(
 		<Box unstable__transformChildren={(string: string) => `[${string}]`}>
-			<Box unstable__transformChildren={(string: string) => `{${string}}`}>hello world</Box>
+			<Box unstable__transformChildren={(string: string) => `{${string}}`}>hello{' '}world</Box>
 		</Box>
 	);
 
