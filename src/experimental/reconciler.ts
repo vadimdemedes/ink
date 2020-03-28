@@ -59,7 +59,7 @@ unknown
 			return;
 		}
 
-		if (rootNode.onRender) {
+		if (typeof rootNode.onRender === 'function') {
 			rootNode.onRender();
 		}
 	},

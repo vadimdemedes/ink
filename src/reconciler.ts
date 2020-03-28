@@ -43,7 +43,7 @@ unknown
 	getRootHostContext: () => NO_CONTEXT,
 	prepareForCommit: () => {},
 	resetAfterCommit: rootNode => {
-		if (rootNode.onRender) {
+		if (typeof rootNode.onRender === 'function') {
 			rootNode.onRender();
 		}
 	},
