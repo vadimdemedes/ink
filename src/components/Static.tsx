@@ -1,14 +1,10 @@
-import React, {Component, ReactNode, ReactNodeArray} from 'react';
+import React, {Component, ReactNode} from 'react';
 import PropTypes from 'prop-types';
 import {Styles} from '../styles';
 
 const childrenToArray = (children: ReactNode) => {
 	return Array.isArray(children) ? children : [children];
-}
-
-interface StaticProps {
-	children: ReactNodeArray;
-}
+};
 
 interface StaticState {
 	lastIndex: number | null;
@@ -30,7 +26,7 @@ interface StaticState {
  * When running tests, Jest keeps writing completed tests to output, while continuously
  * rendering test stats at the end of the output.
  */
-export class Static extends Component<StaticProps & Styles, StaticState> {
+export class Static extends Component<Styles, StaticState> {
 	static propTypes = {
 		children: PropTypes.node
 	};
@@ -67,7 +63,7 @@ export class Static extends Component<StaticProps & Styles, StaticState> {
 		this.saveLastIndex(this.props.children);
 	}
 
-	componentDidUpdate(_prevProps: StaticProps, prevState: StaticState) {
+	componentDidUpdate(_prevProps: Styles, prevState: StaticState) {
 		if (prevState.lastIndex === this.state.lastIndex) {
 			this.saveLastIndex(this.props.children);
 		}
