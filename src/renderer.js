@@ -96,7 +96,8 @@ export default ({terminalWidth}) => {
 		return {
 			output: output.get(),
 			outputHeight: output.getHeight(),
-			staticOutput: staticOutput ? `${staticOutput.get()}\n` : undefined
+			staticErr: '', // Only 1 static is allowed, so ignore for now
+			staticOut: staticOutput ? `${staticOutput.get()}\n` : undefined
 		};
 	};
 };

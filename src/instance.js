@@ -56,7 +56,8 @@ export default class Instance {
 
 		// This variable is used only in debug mode to store full static output
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
-		this.fullStaticOutput = '';
+		this.errStaticOutput = '';
+		this.outStaticOutput = '';
 
 		if (options.experimental) {
 			this.container = experimentalReconciler.createContainer(this.rootNode, false, false);
@@ -78,43 +79,70 @@ export default class Instance {
 			return;
 		}
 
-		const {output, outputHeight, staticOutput} = this.renderer(this.rootNode);
+		const {output, outputHeight, staticErr, staticOut} = this.renderer(this.rootNode);
 
 		// If <Static> output isn't empty, it means new children have been added to it
-		const hasStaticOutput = staticOutput && staticOutput !== '\n';
+		const hasStaticErr = staticErr && staticErr !== '\n';
+		const hasStaticOut = staticOut && staticOut !== '\n';
 
 		if (this.options.debug) {
-			if (hasStaticOutput) {
-				this.fullStaticOutput += staticOutput;
+			if (hasStaticErr) {
+				this.errStaticOutput += staticErr;
 			}
 
-			this.options.stdout.write(this.fullStaticOutput + output);
+			if (hasStaticOut) {
+				this.outStaticOutput += staticOut;
+			}
+
+			this.options.stderr.write(this.errStaticOutput + output);
+			this.options.stdout.write(this.outStaticOutput + output);
 			return;
 		}
 
 		if (isCI) {
-			if (hasStaticOutput) {
-				this.options.stdout.write(staticOutput);
+			if (hasStaticErr) {
+				this.options.stderr.write(staticErr);
+			}
+
+			if (hasStaticOut) {
+				this.options.stdout.write(staticOut);
 			}
 
 			this.lastOutput = output;
 			return;
 		}
 
-		if (hasStaticOutput) {
-			this.fullStaticOutput += staticOutput;
+		if (hasStaticErr) {
+			this.errStaticOutput += staticErr;
+		}
+
+		if (hasStaticOut) {
+			this.outStaticOutput += staticOut;
 		}
 
 		if (this.options.experimental && outputHeight >= this.options.stdout.rows) {
-			this.options.stdout.write(ansiEscapes.clearTerminal + this.fullStaticOutput + output);
+			this.options.stdout.write(
+				ansiEscapes.clearTerminal +
+				this.errStaticOutput +
+				this.outStaticOutput +
+				output
+			);
+
 			this.lastOutput = output;
 			return;
 		}
 
 		// To ensure static output is cleanly rendered before main output, clear main output first
-		if (hasStaticOutput) {
+		if (hasStaticErr || hasStaticOut) {
 			this.log.clear();
-			this.options.stdout.write(staticOutput);
+		}
+
+		if (hasStaticErr) {
+			this.options.stderr.write(staticErr);
+		}
+
+		if (hasStaticOut) {
+			this.options.stdout.write(staticOut);
 		}
 
 		if (output !== this.lastOutput) {
@@ -130,6 +158,7 @@ export default class Instance {
 		const tree = (
 			<App
 				stdin={this.options.stdin}
+				stderr={this.options.stderr}
 				stdout={this.options.stdout}
 				exitOnCtrlC={this.options.exitOnCtrlC}
 				onExit={this.unmount}

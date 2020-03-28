@@ -5,20 +5,24 @@ import Output from './output';
 import {setStyle} from './dom';
 
 // Since <Static> components can be placed anywhere in the tree, this helper finds and returns them
-const findStaticNode = node => {
+const findStaticNodes = node => {
+	const nodes = [];
+
 	if (node.unstable__static) {
-		return node;
+		nodes.push(node);
 	}
 
 	for (const childNode of node.childNodes) {
 		if (childNode.unstable__static) {
-			return childNode;
+			nodes.push(childNode);
 		}
 
 		if (Array.isArray(childNode.childNodes) && childNode.childNodes.length > 0) {
-			return findStaticNode(childNode);
+			nodes.push(...findStaticNode(childNode));
 		}
 	}
+
+	return nodes;
 };
 
 export default ({terminalWidth = 100}) => {
@@ -38,17 +42,23 @@ export default ({terminalWidth = 100}) => {
 
 		renderNodeToOutput(node, output, {skipStaticElements: true});
 
-		const staticNode = findStaticNode(node);
-		let staticOutput;
+		let staticErr;
+		let staticOut;
 
-		if (staticNode) {
-			staticOutput = new Output({
+		findStaticNodes(node).forEach(staticNode => {
+			const staticOutput = new Output({
 				width: staticNode.yogaNode.getComputedWidth(),
 				height: staticNode.yogaNode.getComputedHeight()
 			});
 
 			renderNodeToOutput(staticNode, staticOutput, {skipStaticElements: false});
-		}
+
+			if (staticNode.unstable__static === 'stderr') {
+				staticErr = staticOutput;
+			} else {
+				staticOut = staticOutput;
+			}
+		});
 
 		const {output: generatedOutput, height: outputHeight} = output.get();
 
@@ -57,7 +67,8 @@ export default ({terminalWidth = 100}) => {
 			outputHeight,
 			// Newline at the end is needed, because static output doesn't have one, so
 			// interactive output will override last line of static output
-			staticOutput: staticOutput ? `${staticOutput.get().output}\n` : undefined
+			staticErr: staticErr ? `${staticErr.get().output}\n` : undefined,
+			staticOut: staticOut ? `${staticOut.get().output}\n` : undefined
 		};
 	};
 };
