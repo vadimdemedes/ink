@@ -52,7 +52,7 @@ unknown
 		// trigger an immediate render to ensure <Static> children are written to output before they get erased
 		if (rootNode.isStaticDirty) {
 			rootNode.isStaticDirty = false;
-			if (rootNode.onImmediateRender) {
+			if (typeof rootNode.onImmediateRender === 'function') {
 				rootNode.onImmediateRender();
 			}
 
