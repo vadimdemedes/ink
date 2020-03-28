@@ -2,8 +2,9 @@ import React, {Component, ReactNode, ReactNodeArray} from 'react';
 import PropTypes from 'prop-types';
 import {Styles} from '../styles';
 
-const childrenToArray = (children: ReactNode) =>
-	Array.isArray(children) ? children : [children];
+const childrenToArray = (children: ReactNode) => {
+	return Array.isArray(children) ? children : [children];
+}
 
 interface StaticProps {
 	children: ReactNodeArray;
