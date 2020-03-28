@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import EventEmitter from 'events';
-import React, {useState} from 'react';
+import React, {useState, FC} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
 import {spy} from 'sinon';
@@ -199,7 +199,7 @@ test('skip previous output when rendering new static output', t => {
 		columns: 100
 	};
 
-	const Dynamic = ({items}) => (
+	const Dynamic: FC<{items: string[]}> = ({items}) => (
 		<Static>
 			{items.map(item => (
 				<Box key={item}>{item}</Box>
