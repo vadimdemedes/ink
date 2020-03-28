@@ -34,7 +34,7 @@ export default class App extends PureComponent {
 
 	render() {
 		return (
-			<AppContext.Provider value={{ exit: this.handleExit }}>
+			<AppContext.Provider value={{exit: this.handleExit}}>
 				<StdinContext.Provider
 					value={{
 						stdin: this.props.stdin,
@@ -42,8 +42,8 @@ export default class App extends PureComponent {
 						isRawModeSupported: this.isRawModeSupported()
 					}}
 				>
-					<StderrContext.Provider value={{ stderr: this.props.stderr }}>
-						<StdoutContext.Provider value={{ stdout: this.props.stdout }}>
+					<StderrContext.Provider value={{stderr: this.props.stderr}}>
+						<StdoutContext.Provider value={{stdout: this.props.stdout}}>
 							{this.props.children}
 						</StdoutContext.Provider>
 					</StderrContext.Provider>

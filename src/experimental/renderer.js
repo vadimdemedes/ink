@@ -18,7 +18,7 @@ const findStaticNodes = node => {
 		}
 
 		if (Array.isArray(childNode.childNodes) && childNode.childNodes.length > 0) {
-			nodes.push(...findStaticNode(childNode));
+			nodes.push(...findStaticNodes(childNode));
 		}
 	}
 
