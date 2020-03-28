@@ -162,6 +162,13 @@ Default: `process.stdout`
 
 Output stream where app will be rendered.
 
+###### stderr
+
+Type: `stream.Writable`<br>
+Default: `process.stderr`
+
+Output stream where `Static` (`type="stderr"`) will be rendered.
+
 ###### stdin
 
 Type: `stream.Readable`<br>
@@ -681,10 +688,11 @@ Usage:
 
 #### `<Static>`
 
-`<Static>` component allows permanently rendering output to stdout and preserving it across renders.
-Components passed to `<Static>` as children will be written to stdout only once and will never be rerendered.
+`<Static>` component allows permanently rendering output to stdout (or stderr) and preserving it across renders.
+Components passed to `<Static>` as children will be written only once and will never be rerendered.
 `<Static>` output comes first, before any other output from your components, no matter where it is in the tree.
-In order for this mechanism to work properly, at most one `<Static>` component must be present in your node tree and components that were rendered must never update their output. Ink will detect new children appended to `<Static>` and render them to stdout.
+In order for this mechanism to work properly, at most one `<Static>` component must be present in your node tree (non-experimental only)
+and components that were rendered must never update their output. Ink will detect new children appended to `<Static>` and render them to stdout.
 
 **Note:** `<Static>` accepts only an array of children and each of them must have a unique key.
 
@@ -709,6 +717,16 @@ Jest continuously writes the list of completed tests to the output, while updati
 ```
 
 See [examples/jest](examples/jest/jest.js) for a basic implementation of Jest's UI.
+
+By default `Static` will write to `stdout`. However, it can be updated to write to `stderr` by passing the `type` prop.
+
+```jsx
+<Static type="stderr">
+	{tests.map(test => (
+		<Test key={test.id} title={test.title} />
+	))}
+</Static>
+```
 
 #### `<AppContext>`
 
@@ -826,6 +844,29 @@ Usage:
 </StdoutContext.Consumer>
 ```
 
+#### `<StderrContext>`
+
+`<StderrContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes stderr stream.
+
+Import:
+
+```js
+import { StderrContext } from "ink";
+```
+
+##### stderr
+
+Type: `stream.Writable`<br>
+Default: `process.stderr`
+
+Usage:
+
+```jsx
+<StderrContext.Consumer>
+	{({ stderr }) => <MyComponent stderr={stderr} />}
+</StderrContext.Consumer>
+```
+
 ## Hooks
 
 ### useInput
@@ -941,6 +982,11 @@ Similar to `useApp`, it's equivalent to consuming `StdinContext` directly.
 
 `useStdout` is a React hook, which exposes props of [`StdoutContext`](#stdoutcontext).
 Similar to `useApp`, it's equivalent to consuming `StdoutContext` directly.
+
+### useStderr
+
+`useStderr` is a React hook, which exposes props of [`StderrContext`](#stderrcontext).
+Similar to `useApp`, it's equivalent to consuming `StderrContext` directly.
 
 ## Useful Hooks
 
