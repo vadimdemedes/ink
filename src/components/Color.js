@@ -4,12 +4,16 @@ import arrify from 'arrify';
 import chalk from 'chalk';
 
 const methods = [
+	'ansi',
+	'ansi256',
 	'hex',
 	'hsl',
 	'hsv',
 	'hwb',
 	'rgb',
 	'keyword',
+	'bgAnsi',
+	'bgAnsi256',
 	'bgHex',
 	'bgHsl',
 	'bgHsv',

@@ -100,12 +100,16 @@ export function render<Props>(
 ): Instance;
 
 export interface ColorProps {
+	readonly ansi?: number;
+	readonly ansi256?: number;		
 	readonly hex?: string;
 	readonly hsl?: [number, number, number];
 	readonly hsv?: [number, number, number];
 	readonly hwb?: [number, number, number];
 	readonly rgb?: [number, number, number];
 	readonly keyword?: string;
+	readonly bgAnsi?: number;
+	readonly bgAnsi256?: number;	
 	readonly bgHex?: string;
 	readonly bgHsl?: [number, number, number];
 	readonly bgHsv?: [number, number, number];
