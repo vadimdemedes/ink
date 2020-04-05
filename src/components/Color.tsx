@@ -1,46 +1,45 @@
-import React, {FC, ReactNode} from 'react';
-import PropTypes from 'prop-types';
-import arrify from 'arrify';
-import chalk, {Chalk} from 'chalk';
-import {Except} from 'type-fest';
+import React, { FC, ReactNode } from "react";
+import PropTypes from "prop-types";
+import arrify from "arrify";
+import chalk, { Chalk } from "chalk";
+import { Except } from "type-fest";
 
 const methods = [
-	'hex',
-	'hsl',
-	'hsv',
-	'hwb',
-	'rgb',
-	'keyword',
-	'bgHex',
-	'bgHsl',
-	'bgHsv',
-	'bgHwb',
-	'bgRgb',
-	'bgKeyword',
-	'ansi',
-	'ansi256',
-	'bgAnsi',
-	'bgAnsi256'
+	"hex",
+	"hsl",
+	"hsv",
+	"hwb",
+	"rgb",
+	"keyword",
+	"bgHex",
+	"bgHsl",
+	"bgHsv",
+	"bgHwb",
+	"bgRgb",
+	"bgKeyword",
+	"ansi",
+	"ansi256",
+	"bgAnsi",
+	"bgAnsi256",
 ];
 
 /**
  * The `<Color>` compoment is a simple wrapper around the `chalk` API. It supports all of the `chalk`'s methods as `props`.
  */
-export const Color: FC<ColorProps & {children: ReactNode}> = ({
-	children,
-	...colorProps
-}) => {
-	if (children === '') {
+export const Color: FC<ColorProps> = ({ children, ...colorProps }) => {
+	if (children === "") {
 		return null;
 	}
 
 	const transformChildren = (children: ReactNode) => {
 		// @ts-ignore
-		Object.keys(colorProps).forEach((method: keyof ColorProps) => {
+		Object.keys(colorProps).forEach((method: keyof ChalkProps) => {
 			if (colorProps[method]) {
 				if (methods.includes(method)) {
-					children = (chalk[method] as any)(...arrify(colorProps[method]))(children);
-				} else if (typeof chalk[method] === 'function') {
+					children = (chalk[method] as any)(...arrify(colorProps[method]))(
+						children
+					);
+				} else if (typeof chalk[method] === "function") {
 					children = (chalk[method] as any)(children);
 				}
 			}
@@ -51,7 +50,7 @@ export const Color: FC<ColorProps & {children: ReactNode}> = ({
 
 	return (
 		<span
-			style={{flexDirection: 'row'}}
+			style={{ flexDirection: "row" }}
 			// @ts-ignore
 			unstable__transformChildren={transformChildren}
 		>
@@ -61,11 +60,11 @@ export const Color: FC<ColorProps & {children: ReactNode}> = ({
 };
 
 Color.propTypes = {
-	children: PropTypes.node
+	children: PropTypes.node,
 };
 
 Color.defaultProps = {
-	children: ''
+	children: "",
 };
 
 type Colors =
@@ -73,7 +72,7 @@ type Colors =
 	| typeof chalk.BackgroundColor
 	| typeof chalk.Modifiers;
 
-type ChalkFunctions = Except<Except<Chalk, 'Instance' | 'level'>, Colors>;
+type ChalkFunctions = Except<Except<Chalk, "Instance" | "level">, Colors>;
 
 type ChalkFunctionProps = {
 	[K in keyof ChalkFunctions]: Parameters<ChalkFunctions[K]>;
@@ -81,4 +80,6 @@ type ChalkFunctionProps = {
 
 type ChalkBooleanProps = Record<Colors, boolean>;
 
-type ColorProps = Partial<ChalkBooleanProps & ChalkFunctionProps>;
+type ChalkProps = Partial<ChalkBooleanProps & ChalkFunctionProps>;
+
+type ColorProps = ChalkProps & { children: ReactNode };
