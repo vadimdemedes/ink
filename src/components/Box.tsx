@@ -1,44 +1,10 @@
 import React, {PureComponent, ReactNode} from 'react';
 import PropTypes from 'prop-types';
 import {YogaNode} from 'yoga-layout-prebuilt';
+import { Styles } from '../styles';
 
-interface BoxProps {
-	readonly width?: number | string;
-	readonly height?: number | string;
-	readonly minWidth?: number;
-	readonly minHeight?: number;
-	readonly paddingTop?: number;
-	readonly paddingBottom?: number;
-	readonly paddingLeft?: number;
-	readonly paddingRight?: number;
-	readonly paddingX?: number;
-	readonly paddingY?: number;
-	readonly padding?: number;
-	readonly marginTop?: number;
-	readonly marginBottom?: number;
-	readonly marginLeft?: number;
-	readonly marginRight?: number;
-	readonly marginX?: number;
-	readonly marginY?: number;
-	readonly margin?: number;
-	readonly flexGrow?: number;
-	readonly flexShrink?: number;
-	readonly flexDirection?: 'row' | 'row-reverse' | 'column' | 'column-reverse';
-	readonly flexBasis?: string | number;
-	readonly alignItems?: 'flex-start' | 'center' | 'flex-end';
-	readonly justifyContent?:
-	| 'flex-start'
-	| 'center'
-	| 'flex-end'
-	| 'space-between'
-	| 'space-around';
-	readonly textWrap?:
-	| 'wrap'
-	| 'truncate'
-	| 'truncate-start'
-	| 'truncate-middle'
-	| 'truncate-end';
-	readonly unstable__transformChildren?: (children: ReactNode) => ReactNode;
+type BoxProps = Styles & {
+	unstable__transformChildren?: (children: ReactNode) => ReactNode;
 }
 
 /**
