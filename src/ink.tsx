@@ -19,6 +19,8 @@ export interface InkOptions {
 	waitUntilExit?: () => Promise<void>;
 }
 
+export type Unmount = () => void;
+
 export interface Ink {
 	options: InkOptions;
 	log: LogUpdate;
@@ -36,7 +38,7 @@ export interface Ink {
 	onRender: () => void;
 	waitUntilExit: () => Promise<void>;
 	exitPromise: Promise<void>;
-	unmount: () => void;
+	unmount: Unmount;
 	resolveExitPromise: () => void;
 	rejectExitPromise: (reason?: Error) => void;
 	unsubscribeExit: () => void;

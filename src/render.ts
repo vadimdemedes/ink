@@ -38,7 +38,7 @@ export interface RenderOptions {
 	experimental?: boolean;
 }
 
-interface Instance {
+export interface Instance {
 	/**
 	 * Replace previous root node with a new one or update props of the current root node.
 	 */
