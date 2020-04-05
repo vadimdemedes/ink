@@ -1,33 +1,33 @@
-import React, { FC, ReactNode } from "react";
-import PropTypes from "prop-types";
-import arrify from "arrify";
-import chalk, { Chalk } from "chalk";
-import { Except } from "type-fest";
+import React, {FC, ReactNode} from 'react';
+import PropTypes from 'prop-types';
+import arrify from 'arrify';
+import chalk, {Chalk} from 'chalk';
+import {Except} from 'type-fest';
 
 const methods = [
-	"hex",
-	"hsl",
-	"hsv",
-	"hwb",
-	"rgb",
-	"keyword",
-	"bgHex",
-	"bgHsl",
-	"bgHsv",
-	"bgHwb",
-	"bgRgb",
-	"bgKeyword",
-	"ansi",
-	"ansi256",
-	"bgAnsi",
-	"bgAnsi256",
+	'hex',
+	'hsl',
+	'hsv',
+	'hwb',
+	'rgb',
+	'keyword',
+	'bgHex',
+	'bgHsl',
+	'bgHsv',
+	'bgHwb',
+	'bgRgb',
+	'bgKeyword',
+	'ansi',
+	'ansi256',
+	'bgAnsi',
+	'bgAnsi256'
 ];
 
 /**
  * The `<Color>` compoment is a simple wrapper around the `chalk` API. It supports all of the `chalk`'s methods as `props`.
  */
-export const Color: FC<ColorProps> = ({ children, ...colorProps }) => {
-	if (children === "") {
+export const Color: FC<ColorProps> = ({children, ...colorProps}) => {
+	if (children === '') {
 		return null;
 	}
 
@@ -39,7 +39,7 @@ export const Color: FC<ColorProps> = ({ children, ...colorProps }) => {
 					children = (chalk[method] as any)(...arrify(colorProps[method]))(
 						children
 					);
-				} else if (typeof chalk[method] === "function") {
+				} else if (typeof chalk[method] === 'function') {
 					children = (chalk[method] as any)(children);
 				}
 			}
@@ -50,7 +50,7 @@ export const Color: FC<ColorProps> = ({ children, ...colorProps }) => {
 
 	return (
 		<span
-			style={{ flexDirection: "row" }}
+			style={{flexDirection: 'row'}}
 			// @ts-ignore
 			unstable__transformChildren={transformChildren}
 		>
@@ -60,11 +60,11 @@ export const Color: FC<ColorProps> = ({ children, ...colorProps }) => {
 };
 
 Color.propTypes = {
-	children: PropTypes.node,
+	children: PropTypes.node
 };
 
 Color.defaultProps = {
-	children: "",
+	children: ''
 };
 
 type Colors =
@@ -72,7 +72,7 @@ type Colors =
 	| typeof chalk.BackgroundColor
 	| typeof chalk.Modifiers;
 
-type ChalkFunctions = Except<Except<Chalk, "Instance" | "level">, Colors>;
+type ChalkFunctions = Except<Except<Chalk, 'Instance' | 'level'>, Colors>;
 
 type ChalkFunctionProps = {
 	[K in keyof ChalkFunctions]: Parameters<ChalkFunctions[K]>;

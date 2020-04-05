@@ -1,11 +1,11 @@
 import React, {PureComponent, ReactNode} from 'react';
 import PropTypes from 'prop-types';
 import {YogaNode} from 'yoga-layout-prebuilt';
-import { Styles } from '../styles';
+import {Styles} from '../styles';
 
 type BoxProps = Styles & {
 	unstable__transformChildren?: (children: ReactNode) => ReactNode;
-}
+};
 
 /**
  * `<Box>` it's an essential Ink component to build your layout. It's like a `<div style="display: flex">` in a browser.
