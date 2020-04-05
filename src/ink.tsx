@@ -1,11 +1,16 @@
 import React, {ReactNode} from 'react';
 import throttle from 'lodash.throttle';
 import logUpdate, {LogUpdate} from 'log-update';
+import ansiEscapes from 'ansi-escapes';
 import isCI from 'is-ci';
+import autoBind from 'auto-bind';
 import {reconciler} from './reconciler';
 import {createRenderer, InkRenderer} from './renderer';
 import signalExit from 'signal-exit';
-import {createNode, DOMElement} from './dom';
+import * as dom from './dom';
+import * as experimentalDom from './experimental/dom';
+import {reconciler as experimentalReconciler} from './experimental/reconciler';
+import {createRenderer as createExperimentalRenderer} from './experimental/renderer';
 import {FiberRoot} from 'react-reconciler';
 import {instances} from './instances';
 import {App} from './components/App';
@@ -19,9 +24,9 @@ export interface InkOptions {
 	waitUntilExit?: () => Promise<void>;
 }
 
-export type Unmount = () => void;
+export type Unmount = (exitCode?: number | Error | null) => void;
 
-export interface Ink {
+export class Ink {
 	options: InkOptions;
 	log: LogUpdate;
 	throttledLog: LogUpdate;
@@ -29,158 +34,180 @@ export interface Ink {
 	isUnmounted: boolean;
 	lastOutput: string;
 	container: FiberRoot;
-	rootNode: DOMElement;
+	rootNode: dom.DOMElement;
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	fullStaticOutput: string;
-	render: <Props>(tree: React.ReactElement<Props>) => void;
 	renderer: InkRenderer;
-	onRender: () => void;
-	waitUntilExit: () => Promise<void>;
 	exitPromise: Promise<void>;
-	unmount: Unmount;
-	resolveExitPromise: () => void;
-	rejectExitPromise: (reason?: Error) => void;
-	unsubscribeExit: () => void;
-}
 
-export function createInk(options: InkOptions): Ink {
-	const rootNode = createNode('root');
-	const log = logUpdate.create(options.stdout);
-	const throttledLog = options.debug ?
-		log :
-		throttle(log, undefined, {
+	constructor(options: InkOptions) {
+		autoBind(this);
+		this.options = options;
+
+		if (options.experimental) {
+			this.rootNode = experimentalDom.createNode('root');
+
+			this.rootNode.onRender = options.debug ? this.onRender : throttle(this.onRender, 16, {
+				leading: true,
+				trailing: true
+			});
+
+			this.rootNode.onImmediateRender = this.onRender;
+
+			this.renderer = createExperimentalRenderer({
+				terminalWidth: options.stdout.columns
+			});
+		} else {
+			this.rootNode = dom.createNode('root');
+			this.rootNode.onRender = this.onRender;
+
+			this.renderer = createRenderer({
+				terminalWidth: options.stdout.columns
+			});
+		}
+
+		this.log = logUpdate.create(options.stdout);
+		this.throttledLog = options.debug ? this.log : throttle(this.log, undefined, {
 			leading: true,
 			trailing: true
 		});
 
-	let resolveExitPromise: Ink['resolveExitPromise'] = () => {};
-	let rejectExitPromise: Ink['rejectExitPromise'] = () => {};
+		// Ignore last render after unmounting a tree to prevent empty output before exit
+		this.isUnmounted = false;
 
-	const renderer = createRenderer({
-		terminalWidth: options.stdout.columns
-	});
+		// Store last output to only rerender when needed
+		this.lastOutput = '';
 
-	const onRender = () => {
-		if (instance.isUnmounted) {
+		// This variable is used only in debug mode to store full static output
+		// so that it's rerendered every time, not just new static parts, like in non-debug mode
+		this.fullStaticOutput = '';
+
+		if (options.experimental) {
+			this.container = experimentalReconciler.createContainer(this.rootNode, false, false);
+		} else {
+			this.container = reconciler.createContainer(this.rootNode, false, false);
+		}
+
+		this.exitPromise = new Promise((resolve, reject) => {
+			this.resolveExitPromise = resolve;
+			this.rejectExitPromise = reject;
+		});
+
+		// Unmount when process exits
+		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
+	}
+
+	resolveExitPromise: () => void = () => {};
+	rejectExitPromise: (reason?: Error) => void = () => {};
+	unsubscribeExit: () => void = () => {};
+
+	onRender: () => void = () => {
+		if (this.isUnmounted) {
 			return;
 		}
 
-		const {output, staticOutput} = renderer(rootNode);
+		const {output, outputHeight, staticOutput} = this.renderer(this.rootNode);
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
 
-		if (options.debug) {
+		if (this.options.debug) {
 			if (hasStaticOutput) {
-				instance.fullStaticOutput += staticOutput;
+				this.fullStaticOutput += staticOutput;
 			}
 
-			options.stdout.write(instance.fullStaticOutput + output);
+			this.options.stdout.write(this.fullStaticOutput + output);
 			return;
 		}
 
 		if (isCI) {
 			if (hasStaticOutput) {
-				options.stdout.write(staticOutput);
+				this.options.stdout.write(staticOutput);
 			}
 
-			instance.lastOutput = output;
+			this.lastOutput = output;
 			return;
 		}
 
 		if (hasStaticOutput) {
-			instance.fullStaticOutput += staticOutput;
+			this.fullStaticOutput += staticOutput;
+		}
+
+		if (this.options.experimental && outputHeight >= this.options.stdout.rows) {
+			this.options.stdout.write(ansiEscapes.clearTerminal + this.fullStaticOutput + output);
+			this.lastOutput = output;
+			return;
 		}
 
 		// To ensure static output is cleanly rendered before main output, clear main output first
 		if (hasStaticOutput) {
-			log.clear();
-			options.stdout.write(staticOutput);
+			this.log.clear();
+			this.options.stdout.write(staticOutput);
 		}
 
-		if (output !== instance.lastOutput) {
-			log(output);
-		}
-	};
-
-	rootNode.onRender = onRender;
-
-	const container = reconciler.createContainer(rootNode, false, false);
-
-	const unmount = (exitCode?: number | Error | null) => {
-		if (instance.isUnmounted) {
-			return;
-		}
-
-		onRender();
-		unsubscribeExit();
-
-		// CIs don't handle erasing ansi escapes well, so it's better to
-		// only render last frame of non-static output
-		if (isCI) {
-			options.stdout.write(instance.lastOutput + '\n');
-		} else if (!options.debug) {
-			log.done();
-		}
-
-		instance.isUnmounted = true;
-
-		reconciler.updateContainer(null, container, undefined, undefined);
-
-		instances.delete(options.stdout);
-
-		if (exitCode instanceof Error) {
-			rejectExitPromise(exitCode);
-		} else {
-			resolveExitPromise();
+		if (output !== this.lastOutput) {
+			if (this.options.experimental) {
+				this.throttledLog(output);
+			} else {
+				this.log(output);
+			}
 		}
 	};
 
-	const render = (node: ReactNode) => {
+	render(node: ReactNode) {
 		const tree = (
 			<App
-				stdin={options.stdin}
-				stdout={options.stdout}
-				exitOnCtrlC={options.exitOnCtrlC}
-				onExit={unmount}
+				stdin={this.options.stdin}
+				stdout={this.options.stdout}
+				exitOnCtrlC={this.options.exitOnCtrlC}
+				onExit={this.unmount}
 			>
 				{node}
 			</App>
 		);
 
-		reconciler.updateContainer(tree, container, undefined, undefined);
-	};
+		if (this.options.experimental) {
+			experimentalReconciler.updateContainer(tree, this.container);
+		} else {
+			reconciler.updateContainer(tree, this.container);
+		}
+	}
 
-	const unsubscribeExit = signalExit(unmount, {alwaysLast: false});
+	unmount(error?: Error | number | null) {
+		if (this.isUnmounted) {
+			return;
+		}
 
-	const exitPromise = new Promise<void>((resolve, reject) => {
-		resolveExitPromise = resolve;
-		rejectExitPromise = reject;
-	});
+		this.onRender();
+		this.unsubscribeExit();
 
-	const waitUntilExit = () => exitPromise;
+		// CIs don't handle erasing ansi escapes well, so it's better to
+		// only render last frame of non-static output
+		if (isCI) {
+			this.options.stdout.write(this.lastOutput + '\n');
+		} else if (!this.options.debug) {
+			this.log.done();
+		}
 
-	const instance = {
-		options,
-		log,
-		fullStaticOutput: '',
-		renderer,
-		onRender,
-		isUnmounted: false,
-		throttledLog,
-		// Store last output to only rerender when needed
-		lastOutput: '',
-		rootNode,
-		render,
-		container,
-		exitPromise,
-		resolveExitPromise,
-		rejectExitPromise,
-		unmount,
-		unsubscribeExit,
-		waitUntilExit: options.waitUntilExit ?? waitUntilExit
-	};
+		this.isUnmounted = true;
 
-	return instance;
+		if (this.options.experimental) {
+			experimentalReconciler.updateContainer(null, this.container);
+		} else {
+			reconciler.updateContainer(null, this.container);
+		}
+
+		instances.delete(this.options.stdout);
+
+		if (error instanceof Error) {
+			this.rejectExitPromise(error);
+		} else {
+			this.resolveExitPromise();
+		}
+	}
+
+	waitUntilExit() {
+		return this.exitPromise;
+	}
 }

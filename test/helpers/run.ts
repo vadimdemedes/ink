@@ -3,7 +3,7 @@ import {spawn} from 'node-pty';
 type Run = (
 	fixture: string,
 	props?: { env?: Record<string, unknown> }
-) => Promise<void>;
+) => Promise<string>;
 
 export const run: Run = (fixture, props) => {
 	const env = {
@@ -11,7 +11,7 @@ export const run: Run = (fixture, props) => {
 		...props?.env
 	};
 
-	return new Promise((resolve, reject) => {
+	return new Promise<string>((resolve, reject) => {
 		const term = spawn('ts-node', [`${__dirname}/../fixtures/${fixture}.tsx`], {
 			name: 'xterm-color',
 			cols: 100,

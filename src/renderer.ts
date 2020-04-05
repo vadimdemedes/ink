@@ -30,7 +30,7 @@ const getStaticNodes = (element: DOMElement): DOMElement[] => {
 export interface InkRendererOutput {
 	output: string;
 	outputHeight: number;
-	staticOutput: string | undefined;
+	staticOutput: string;
 }
 
 export type InkRenderer = (node: DOMElement) => InkRendererOutput;

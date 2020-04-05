@@ -1,6 +1,5 @@
 import {ReactElement} from 'react';
-import {Ink, createInk, InkOptions} from './ink';
-import {createExperimentalInk} from './experimental/createExperimentalInk';
+import {Ink, InkOptions} from './ink';
 import {instances} from './instances';
 import {Stream} from 'stream';
 
@@ -62,10 +61,7 @@ type RenderFunction = <Props, K extends NodeJS.WriteStream | RenderOptions>(
 /**
  * Mount a component and render the output.
  */
-export const render: RenderFunction = (
-	node,
-	options
-): Instance => {
+export const render: RenderFunction = (node, options): Instance => {
 	const inkOptions: InkOptions = {
 		stdout: process.stdout,
 		stdin: process.stdin,
@@ -77,16 +73,7 @@ export const render: RenderFunction = (
 
 	const {stdout} = inkOptions;
 
-	let instance: Ink;
-	if (inkOptions.experimental) {
-		instance = retrieveCachedInstance(stdout, () =>
-			createExperimentalInk(inkOptions)
-		);
-	} else {
-		instance = retrieveCachedInstance(stdout, () =>
-			createInk(inkOptions)
-		);
-	}
+	const instance: Ink = retrieveCachedInstance(stdout, () => new Ink(inkOptions));
 
 	instance.render(node);
 
@@ -98,7 +85,9 @@ export const render: RenderFunction = (
 	};
 };
 
-function optionsFrom(stdout: NodeJS.WriteStream | RenderOptions | undefined = {}): RenderOptions {
+function optionsFrom(
+	stdout: NodeJS.WriteStream | RenderOptions | undefined = {}
+): RenderOptions {
 	if (stdout instanceof Stream) {
 		return {
 			stdout,
