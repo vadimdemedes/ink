@@ -82,4 +82,4 @@ type ChalkBooleanProps = Record<Colors, boolean>;
 
 type ChalkProps = Partial<ChalkBooleanProps & ChalkFunctionProps>;
 
-type ColorProps = ChalkProps & { children: ReactNode };
+export type ColorProps = ChalkProps & { children: ReactNode };

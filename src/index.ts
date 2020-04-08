@@ -2,7 +2,7 @@ export {render, RenderOptions, Instance} from './render';
 export {Unmount} from './ink';
 export {Box} from './components/Box';
 export {Text} from './components/Text';
-export {Color} from './components/Color';
+export {Color, ColorProps} from './components/Color';
 export {AppContext, AppContextProps as AppProps} from './components/AppContext';
 export {StdinContext, StdinContextProps as StdinProps} from './components/StdinContext';
 export {StdoutContext, StdoutContextProps as StdoutProps} from './components/StdoutContext';
