@@ -21,8 +21,7 @@
 		"cast": "svg-term --command='node media/demo.js' --out=media/demo.svg --from=100 --window --width=50 --height=8 --term=iterm2 --profile=Snazzy"
 	},
 	"files": [
-		"build",
-		"src"
+		"build"
 	],
 	"keywords": [
 		"react",
