@@ -33,7 +33,7 @@ class Counter extends React.PureComponent {
 				process.exit(0); // eslint-disable-line unicorn/no-process-exit
 			}
 
-			this.setState(prevState => ({
+			this.setState(prevState => ({ // eslint-disable-line unicorn/prevent-abbreviations
 				i: prevState.i + 1
 			}));
 		}, 100);

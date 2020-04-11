@@ -7,23 +7,23 @@
 	"author": {
 		"name": "vdemedes",
 		"email": "vdemedes@gmail.com",
-		"url": "github.com/vadimdemedes"
+		"url": "https://github.com/vadimdemedes"
 	},
 	"main": "build",
+	"types": "build/index.d.ts",
 	"engines": {
-		"node": ">=8"
+		"node": ">=10"
 	},
 	"scripts": {
-		"build": "babel src --out-dir=build",
+		"type-check": "tsc --noEmit",
+		"build": "tsc",
 		"prepare": "npm run build",
-		"test": "xo && FORCE_COLOR=true EXPERIMENTAL=true ava && FORCE_COLOR=true ava && tsd",
-		"pretest": "npm run build",
+		"test": "xo && FORCE_COLOR=true EXPERIMENTAL=true ava && FORCE_COLOR=true ava",
 		"cast": "svg-term --command='node media/demo.js' --out=media/demo.svg --from=100 --window --width=50 --height=8 --term=iterm2 --profile=Snazzy"
 	},
-	"types": "index.d.ts",
 	"files": [
 		"build",
-		"index.d.ts"
+		"src"
 	],
 	"keywords": [
 		"react",
@@ -40,9 +40,19 @@
 		"text"
 	],
 	"dependencies": {
+		"@types/is-ci": "^2.0.0",
+		"@types/lodash.throttle": "^4.1.6",
+		"@types/node": "^13.9.1",
+		"@types/react": "^16.9.19",
+		"@types/react-reconciler": "^0.18.0",
+		"@types/scheduler": "^0.16.1",
+		"@types/signal-exit": "^3.0.0",
+		"@types/sinon": "^7.5.2",
+		"@types/slice-ansi": "^2.0.0",
+		"@types/wrap-ansi": "^3.0.0",
 		"ansi-escapes": "^4.2.1",
 		"arrify": "^2.0.1",
-		"auto-bind": "^4.0.0",
+		"auto-bind": "4.0.0",
 		"chalk": "^3.0.0",
 		"cli-cursor": "^3.1.0",
 		"cli-truncate": "^2.1.0",
@@ -55,24 +65,22 @@
 		"signal-exit": "^3.0.2",
 		"slice-ansi": "^3.0.0",
 		"string-length": "^3.1.0",
+		"type-fest": "^0.12.0",
+		"typescript": "^3.8.3",
 		"widest-line": "^3.1.0",
 		"wrap-ansi": "^6.2.0",
-		"yoga-layout-prebuilt": "^1.9.3"
+		"yoga-layout-prebuilt": "^1.9.5"
 	},
 	"devDependencies": {
-		"@babel/cli": "^7.8.3",
-		"@babel/core": "^7.8.3",
-		"@babel/plugin-proposal-class-properties": "^7.8.3",
-		"@babel/plugin-proposal-object-rest-spread": "^7.8.3",
-		"@babel/preset-react": "^7.8.3",
-		"@types/react": "^16.9.19",
-		"ava": "^2.4.0",
+		"@sindresorhus/tsconfig": "0.7.0",
+		"ava": "^3.5.0",
 		"babel-eslint": "^10.0.1",
 		"delay": "^4.1.0",
+		"eslint-config-xo": "0.29.1",
 		"eslint-config-xo-react": "^0.22.0",
 		"eslint-plugin-react": "^7.18.0",
 		"eslint-plugin-react-hooks": "^2.3.0",
-		"import-jsx": "^3.1.0",
+		"import-jsx": "3.1.0",
 		"ms": "^2.1.1",
 		"node-pty": "^0.9.0",
 		"p-queue": "^6.2.1",
@@ -80,8 +88,8 @@
 		"sinon": "^8.1.1",
 		"strip-ansi": "^6.0.0",
 		"svg-term-cli": "^2.1.1",
-		"tsd": "^0.11.0",
-		"xo": "^0.25.3"
+		"ts-node": "7.0.0",
+		"xo": "^0.28.0"
 	},
 	"peerDependencies": {
 		"@types/react": ">=16.8.0",
@@ -92,38 +100,16 @@
 			"optional": true
 		}
 	},
-	"babel": {
-		"plugins": [
-			"@babel/plugin-proposal-class-properties",
-			"@babel/plugin-proposal-object-rest-spread",
-			"@babel/plugin-transform-modules-commonjs"
-		],
-		"presets": [
-			"@babel/preset-react"
-		]
-	},
 	"ava": {
-		"babel": {
-			"testOptions": {
-				"plugins": [
-					"@babel/plugin-proposal-class-properties",
-					"@babel/plugin-proposal-object-rest-spread",
-					"@babel/plugin-transform-modules-commonjs"
-				],
-				"presets": [
-					"@babel/preset-react"
-				]
-			}
-		},
-		"files": [
-			"test/*.js"
+		"extensions": [
+			"ts",
+			"tsx"
 		],
-		"helpers": [
-			"test/helpers/*.js"
+		"require": [
+			"ts-node/register/transpile-only"
 		]
 	},
 	"xo": {
-		"parser": "babel-eslint",
 		"extends": [
 			"xo-react"
 		],
@@ -138,12 +124,28 @@
 		"overrides": [
 			{
 				"files": [
-					"src/components/*.js",
-					"src/hooks/*.js"
+					"src/**/*.{ts,tsx}",
+					"test/**/*.{ts,tsx}"
 				],
 				"rules": {
+					"no-unused-expressions": "off",
+					"camelcase": [
+						"error",
+						{
+							"allow": [
+								"^unstable__"
+							]
+						}
+					],
 					"unicorn/filename-case": "off",
-					"react/require-default-props": "warn"
+					"react/prop-types": "warn",
+					"unicorn/prevent-abbreviations": "off",
+					"react/require-default-props": "warn",
+					"react/jsx-curly-brace-presence": "off",
+					"@typescript-eslint/no-empty-function": "warn",
+					"@typescript-eslint/promise-function-async": "warn",
+					"@typescript-eslint/explicit-function-return": "off",
+					"@typescript-eslint/explicit-function-return-type": "off"
 				}
 			}
 		]
