@@ -17,7 +17,7 @@ test('update child', t => {
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
 
-	const actual = render(<Test/>, {
+	const actual = render(<Test />, {
 		stdout: stdoutActual,
 		debug: true,
 		experimental: isExperimental
@@ -29,21 +29,32 @@ test('update child', t => {
 		experimental: isExperimental
 	});
 
-	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
+	t.is(
+		stdoutActual.write.lastCall.args[0],
+		stdoutExpected.write.lastCall.args[0]
+	);
 
-	actual.rerender(<Test update/>);
+	actual.rerender(<Test update />);
 	expected.rerender(<Box>B</Box>);
 
-	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
+	t.is(
+		stdoutActual.write.lastCall.args[0],
+		stdoutExpected.write.lastCall.args[0]
+	);
 });
 
 test('update text node', t => {
-	const Test = ({update}) => <Box>{'Hello '}{update ? 'B' : 'A'}</Box>;
+	const Test = ({update}) => (
+		<Box>
+			{'Hello '}
+			{update ? 'B' : 'A'}
+		</Box>
+	);
 
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
 
-	const actual = render(<Test/>, {
+	const actual = render(<Test />, {
 		stdout: stdoutActual,
 		debug: true,
 		experimental: isExperimental
@@ -55,12 +66,18 @@ test('update text node', t => {
 		experimental: isExperimental
 	});
 
-	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
+	t.is(
+		stdoutActual.write.lastCall.args[0],
+		stdoutExpected.write.lastCall.args[0]
+	);
 
-	actual.rerender(<Test update/>);
+	actual.rerender(<Test update />);
 	expected.rerender(<Box>Hello B</Box>);
 
-	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
+	t.is(
+		stdoutActual.write.lastCall.args[0],
+		stdoutExpected.write.lastCall.args[0]
+	);
 });
 
 test('append child', t => {
@@ -84,34 +101,41 @@ test('append child', t => {
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
 
-	const actual = render(<Test/>, {
+	const actual = render(<Test />, {
 		stdout: stdoutActual,
 		debug: true,
 		experimental: isExperimental
 	});
 
-	const expected = render((
+	const expected = render(
 		<Box flexDirection="column">
 			<Box>A</Box>
-		</Box>
-	), {
-		stdout: stdoutExpected,
-		debug: true,
-		experimental: isExperimental
-	});
+		</Box>,
+		{
+			stdout: stdoutExpected,
+			debug: true,
+			experimental: isExperimental
+		}
+	);
 
-	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
+	t.is(
+		stdoutActual.write.lastCall.args[0],
+		stdoutExpected.write.lastCall.args[0]
+	);
 
-	actual.rerender(<Test append/>);
+	actual.rerender(<Test append />);
 
-	expected.rerender((
+	expected.rerender(
 		<Box flexDirection="column">
 			<Box>A</Box>
 			<Box>B</Box>
 		</Box>
-	));
+	);
 
-	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
+	t.is(
+		stdoutActual.write.lastCall.args[0],
+		stdoutExpected.write.lastCall.args[0]
+	);
 });
 
 test('insert child between other children', t => {
@@ -137,36 +161,43 @@ test('insert child between other children', t => {
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
 
-	const actual = render(<Test/>, {
+	const actual = render(<Test />, {
 		stdout: stdoutActual,
 		debug: true,
 		experimental: isExperimental
 	});
 
-	const expected = render((
+	const expected = render(
 		<Box flexDirection="column">
 			<Box>A</Box>
 			<Box>C</Box>
-		</Box>
-	), {
-		stdout: stdoutExpected,
-		debug: true,
-		experimental: isExperimental
-	});
+		</Box>,
+		{
+			stdout: stdoutExpected,
+			debug: true,
+			experimental: isExperimental
+		}
+	);
 
-	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
+	t.is(
+		stdoutActual.write.lastCall.args[0],
+		stdoutExpected.write.lastCall.args[0]
+	);
 
-	actual.rerender(<Test insert/>);
+	actual.rerender(<Test insert />);
 
-	expected.rerender((
+	expected.rerender(
 		<Box flexDirection="column">
 			<Box>A</Box>
 			<Box>B</Box>
 			<Box>C</Box>
 		</Box>
-	));
+	);
 
-	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
+	t.is(
+		stdoutActual.write.lastCall.args[0],
+		stdoutExpected.write.lastCall.args[0]
+	);
 });
 
 test('remove child', t => {
@@ -190,34 +221,41 @@ test('remove child', t => {
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
 
-	const actual = render(<Test/>, {
+	const actual = render(<Test />, {
 		stdout: stdoutActual,
 		debug: true,
 		experimental: isExperimental
 	});
 
-	const expected = render((
+	const expected = render(
 		<Box flexDirection="column">
 			<Box>A</Box>
 			<Box>B</Box>
-		</Box>
-	), {
-		stdout: stdoutExpected,
-		debug: true,
-		experimental: isExperimental
-	});
+		</Box>,
+		{
+			stdout: stdoutExpected,
+			debug: true,
+			experimental: isExperimental
+		}
+	);
 
-	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
+	t.is(
+		stdoutActual.write.lastCall.args[0],
+		stdoutExpected.write.lastCall.args[0]
+	);
 
-	actual.rerender(<Test remove/>);
+	actual.rerender(<Test remove />);
 
-	expected.rerender((
+	expected.rerender(
 		<Box flexDirection="column">
 			<Box>A</Box>
 		</Box>
-	));
+	);
 
-	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
+	t.is(
+		stdoutActual.write.lastCall.args[0],
+		stdoutExpected.write.lastCall.args[0]
+	);
 });
 
 test('reorder children', t => {
@@ -242,47 +280,52 @@ test('reorder children', t => {
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
 
-	const actual = render(<Test/>, {
+	const actual = render(<Test />, {
 		stdout: stdoutActual,
 		debug: true,
 		experimental: isExperimental
 	});
 
-	const expected = render((
+	const expected = render(
 		<Box flexDirection="column">
 			<Box>A</Box>
 			<Box>B</Box>
-		</Box>
-	), {
-		stdout: stdoutExpected,
-		debug: true,
-		experimental: isExperimental
-	});
+		</Box>,
+		{
+			stdout: stdoutExpected,
+			debug: true,
+			experimental: isExperimental
+		}
+	);
 
-	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
+	t.is(
+		stdoutActual.write.lastCall.args[0],
+		stdoutExpected.write.lastCall.args[0]
+	);
 
-	actual.rerender(<Test reorder/>);
+	actual.rerender(<Test reorder />);
 
-	expected.rerender((
+	expected.rerender(
 		<Box flexDirection="column">
 			<Box>B</Box>
 			<Box>A</Box>
 		</Box>
-	));
+	);
 
-	t.is(stdoutActual.write.lastCall.args[0], stdoutExpected.write.lastCall.args[0]);
+	t.is(
+		stdoutActual.write.lastCall.args[0],
+		stdoutExpected.write.lastCall.args[0]
+	);
 });
 
 test('replace child node with text', t => {
 	const stdout = createStdout();
 
 	const Dynamic = ({replace}) => (
-		<Box>
-			{replace ? 'x' : <Color green>test</Color>}
-		</Box>
+		<Box>{replace ? 'x' : <Color green>test</Color>}</Box>
 	);
 
-	const {rerender} = render(<Dynamic/>, {
+	const {rerender} = render(<Dynamic />, {
 		stdout,
 		debug: true,
 		experimental: isExperimental
@@ -290,6 +333,6 @@ test('replace child node with text', t => {
 
 	t.is(stdout.write.lastCall.args[0], chalk.green('test'));
 
-	rerender(<Dynamic replace/>);
+	rerender(<Dynamic replace />);
 	t.is(stdout.write.lastCall.args[0], 'x');
 });

@@ -60,11 +60,7 @@ test('shrink equally', t => {
 test('set flex basis with flexDirection="row" container', t => {
 	const output = renderToString(
 		<Box width={6}>
-			<Box flexBasis={3}>
-				A
-			</Box>
-
-			B
+			<Box flexBasis={3}>A</Box>B
 		</Box>
 	);
 
@@ -74,11 +70,7 @@ test('set flex basis with flexDirection="row" container', t => {
 test('set flex basis in percent with flexDirection="row" container', t => {
 	const output = renderToString(
 		<Box width={6}>
-			<Box flexBasis="50%">
-				A
-			</Box>
-
-			B
+			<Box flexBasis="50%">A</Box>B
 		</Box>
 	);
 
@@ -88,11 +80,7 @@ test('set flex basis in percent with flexDirection="row" container', t => {
 test('set flex basis with flexDirection="column" container', t => {
 	const output = renderToString(
 		<Box height={6} flexDirection="column">
-			<Box flexBasis={3}>
-				A
-			</Box>
-
-			B
+			<Box flexBasis={3}>A</Box>B
 		</Box>
 	);
 
@@ -102,11 +90,7 @@ test('set flex basis with flexDirection="column" container', t => {
 test('set flex basis in percent with flexDirection="column" container', t => {
 	const output = renderToString(
 		<Box height={6} flexDirection="column">
-			<Box flexBasis="50%">
-				A
-			</Box>
-
-			B
+			<Box flexBasis="50%">A</Box>B
 		</Box>
 	);
 

@@ -15,7 +15,11 @@ class Counter extends React.PureComponent {
 		return React.createElement(
 			Box,
 			{flexDirection: 'column'},
-			React.createElement(Box, {}, React.createElement(Color, {blue: true}, '~/Projects/ink ')),
+			React.createElement(
+				Box,
+				{},
+				React.createElement(Color, {blue: true}, '~/Projects/ink ')
+			),
 			React.createElement(
 				Box,
 				{},
@@ -33,7 +37,8 @@ class Counter extends React.PureComponent {
 				process.exit(0); // eslint-disable-line unicorn/no-process-exit
 			}
 
-			this.setState(prevState => ({ // eslint-disable-line unicorn/prevent-abbreviations
+			this.setState(prevState => ({
+				// eslint-disable-line unicorn/prevent-abbreviations
 				i: prevState.i + 1
 			}));
 		}, 100);

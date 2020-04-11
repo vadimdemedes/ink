@@ -40,14 +40,14 @@ class Jest extends React.Component {
 			<Box flexDirection="column">
 				<Static>
 					{completedTests.map(test => (
-						<Test key={test.path} status={test.status} path={test.path}/>
+						<Test key={test.path} status={test.status} path={test.path} />
 					))}
 				</Static>
 
 				{runningTests.length > 0 && (
 					<Box flexDirection="column" marginTop={1}>
 						{runningTests.map(test => (
-							<Test key={test.path} status={test.status} path={test.path}/>
+							<Test key={test.path} status={test.status} path={test.path} />
 						))}
 					</Box>
 				)}
@@ -71,7 +71,8 @@ class Jest extends React.Component {
 	}
 
 	async runTest(path) {
-		this.setState(prevState => ({ // eslint-disable-line unicorn/prevent-abbreviations
+		this.setState(prevState => ({
+			// eslint-disable-line unicorn/prevent-abbreviations
 			runningTests: [
 				...prevState.runningTests,
 				{
@@ -83,7 +84,8 @@ class Jest extends React.Component {
 
 		await delay(1000 * Math.random());
 
-		this.setState(prevState => ({ // eslint-disable-line unicorn/prevent-abbreviations
+		this.setState(prevState => ({
+			// eslint-disable-line unicorn/prevent-abbreviations
 			runningTests: prevState.runningTests.filter(test => test.path !== path),
 			completedTests: [
 				...prevState.completedTests,
@@ -96,4 +98,4 @@ class Jest extends React.Component {
 	}
 }
 
-render(<Jest/>);
+render(<Jest />);

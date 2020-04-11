@@ -2,8 +2,8 @@ import React from 'react';
 import {render, Box, AppContext} from '../../src';
 
 class Test extends React.Component<
-{ onExit: (error: Error) => void },
-{ counter: number }
+	{onExit: (error: Error) => void},
+	{counter: number}
 > {
 	timer?: NodeJS.Timeout;
 
@@ -32,7 +32,7 @@ class Test extends React.Component<
 
 const app = render(
 	<AppContext.Consumer>
-		{({exit}) => <Test onExit={exit}/>}
+		{({exit}) => <Test onExit={exit} />}
 	</AppContext.Consumer>,
 	{
 		experimental: process.env.EXPERIMENTAL === 'true'

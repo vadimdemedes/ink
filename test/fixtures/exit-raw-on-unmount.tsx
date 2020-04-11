@@ -15,7 +15,7 @@ class Test extends React.Component<{
 
 const app = render(
 	<StdinContext.Consumer>
-		{({setRawMode}) => <Test onSetRawMode={setRawMode}/>}
+		{({setRawMode}) => <Test onSetRawMode={setRawMode} />}
 	</StdinContext.Consumer>,
 	{
 		experimental: process.env.EXPERIMENTAL === 'true'

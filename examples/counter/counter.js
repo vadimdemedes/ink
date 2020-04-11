@@ -15,11 +15,7 @@ const Counter = () => {
 		};
 	});
 
-	return (
-		<Color green>
-			{counter} tests passed
-		</Color>
-	);
+	return <Color green>{counter} tests passed</Color>;
 };
 
-render(<Counter/>);
+render(<Counter />);

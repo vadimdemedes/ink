@@ -39,7 +39,7 @@ type RendererCreator = (options: {
 	terminalWidth: number;
 }) => (
 	node: DOMElement
-) => { output: string; outputHeight: number; staticOutput: string };
+) => {output: string; outputHeight: number; staticOutput: string};
 
 // Build layout, apply styles, build text output of all nodes and return it
 export const createRenderer: RendererCreator = ({terminalWidth}) => {
@@ -78,9 +78,17 @@ export const createRenderer: RendererCreator = ({terminalWidth}) => {
 			});
 
 			if (staticYogaNode) {
-				staticYogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+				staticYogaNode.calculateLayout(
+					undefined,
+					undefined,
+					Yoga.DIRECTION_LTR
+				);
 				calculateWrappedText(rootNode);
-				staticYogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+				staticYogaNode.calculateLayout(
+					undefined,
+					undefined,
+					Yoga.DIRECTION_LTR
+				);
 
 				// Save current Yoga node tree to free up memory later
 				lastStaticYogaNode = staticYogaNode;

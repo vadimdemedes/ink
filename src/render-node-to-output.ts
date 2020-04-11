@@ -131,9 +131,9 @@ export const renderNodeToOutput = (
 			// is where we should look for attributes
 			if (node.parentNode?.style.textWrap) {
 				const currentWidth = widestLine(text);
-				const maxWidth = node.parentNode.yogaNode ?
-					getMaxWidth(node.parentNode.yogaNode) :
-					0;
+				const maxWidth = node.parentNode.yogaNode
+					? getMaxWidth(node.parentNode.yogaNode)
+					: 0;
 
 				if (currentWidth > maxWidth) {
 					text = wrapText(text, maxWidth, {

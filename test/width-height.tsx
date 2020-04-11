@@ -28,8 +28,7 @@ test('set width in percent', t => {
 test('set min width', t => {
 	const smallerOutput = renderToString(
 		<Box>
-			<Box minWidth={5}>A</Box>
-			B
+			<Box minWidth={5}>A</Box>B
 		</Box>
 	);
 
@@ -37,8 +36,7 @@ test('set min width', t => {
 
 	const largerOutput = renderToString(
 		<Box>
-			<Box minWidth={2}>AAAAA</Box>
-			B
+			<Box minWidth={2}>AAAAA</Box>B
 		</Box>
 	);
 
@@ -48,8 +46,7 @@ test('set min width', t => {
 test.failing('set min width in percent', t => {
 	const output = renderToString(
 		<Box width={10}>
-			<Box minWidth="50%">A</Box>
-			B
+			<Box minWidth="50%">A</Box>B
 		</Box>
 	);
 
@@ -79,21 +76,18 @@ test('set height in percent', t => {
 });
 
 test('cut text over the set height', t => {
-	const output = renderToString((
+	const output = renderToString(
 		<Box textWrap="wrap" height={2}>
 			AAAABBBBCCCC
-		</Box>
-	), {columns: 4});
+		</Box>,
+		{columns: 4}
+	);
 
 	t.is(output, 'AAAA\nBBBB');
 });
 
 test('set min height', t => {
-	const smallerOutput = renderToString(
-		<Box minHeight={4}>
-			A
-		</Box>
-	);
+	const smallerOutput = renderToString(<Box minHeight={4}>A</Box>);
 
 	t.is(smallerOutput, 'A\n\n\n');
 

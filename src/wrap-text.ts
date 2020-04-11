@@ -2,7 +2,11 @@ import wrapAnsi from 'wrap-ansi';
 import cliTruncate from 'cli-truncate';
 import {WrapTextStyles} from './styles';
 
-export const wrapText = (text: string, maxWidth: number, style: WrapTextStyles = {}) => {
+export const wrapText = (
+	text: string,
+	maxWidth: number,
+	style: WrapTextStyles = {}
+) => {
 	const {textWrap} = style;
 
 	if (textWrap === 'wrap') {

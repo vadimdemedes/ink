@@ -33,9 +33,7 @@ const Test = ({status, path}) => (
 		</Color>
 
 		<Box marginLeft={1}>
-			<Color dim>
-				{path.split('/')[0]}/
-			</Color>
+			<Color dim>{path.split('/')[0]}/</Color>
 
 			<Color bold white>
 				{path.split('/')[1]}

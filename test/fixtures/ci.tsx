@@ -50,6 +50,6 @@ class Test extends React.Component<Record<string, unknown>, TestState> {
 	}
 }
 
-render(<Test/>, {
+render(<Test />, {
 	experimental: process.env.EXPERIMENTAL === 'true'
 });

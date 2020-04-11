@@ -9,9 +9,7 @@ class Test extends React.Component<Record<string, unknown>, {counter: number}> {
 	};
 
 	render() {
-		return (
-			<Box>Counter: {this.state.counter}</Box>
-		);
+		return <Box>Counter: {this.state.counter}</Box>;
 	}
 
 	componentDidMount() {
@@ -35,6 +33,6 @@ class Test extends React.Component<Record<string, unknown>, {counter: number}> {
 	}
 }
 
-render(<Test/>, {
+render(<Test />, {
 	experimental: process.env.EXPERIMENTAL === 'true'
 });

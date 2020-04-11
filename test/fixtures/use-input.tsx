@@ -1,7 +1,7 @@
 import React, {FC} from 'react';
 import {render, useInput, AppContext} from '../../src';
 
-const UserInput: FC<{ test: string }> = ({test}) => {
+const UserInput: FC<{test: string}> = ({test}) => {
 	const {exit} = React.useContext(AppContext);
 
 	useInput((input, key) => {
@@ -56,7 +56,7 @@ const UserInput: FC<{ test: string }> = ({test}) => {
 	return null;
 };
 
-const app = render(<UserInput test={process.argv[2]}/>);
+const app = render(<UserInput test={process.argv[2]} />);
 
 (async () => {
 	await app.waitUntilExit();

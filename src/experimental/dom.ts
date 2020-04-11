@@ -15,10 +15,7 @@ export const createNode = (nodeName: ElementNames): DOMElement => ({
 	yogaNode: Yoga.Node.create()
 });
 
-export const appendChildNode = (
-	node: DOMElement,
-	childNode: DOMElement
-) => {
+export const appendChildNode = (node: DOMElement, childNode: DOMElement) => {
 	if (childNode.parentNode) {
 		removeChildNode(childNode.parentNode, childNode);
 	}
@@ -27,7 +24,10 @@ export const appendChildNode = (
 
 	node.childNodes.push(childNode);
 	if (childNode.yogaNode) {
-		node.yogaNode?.insertChild(childNode.yogaNode, node.yogaNode.getChildCount());
+		node.yogaNode?.insertChild(
+			childNode.yogaNode,
+			node.yogaNode.getChildCount()
+		);
 	}
 };
 
@@ -61,10 +61,7 @@ export const insertBeforeNode = (
 	}
 };
 
-export const removeChildNode = (
-	node: DOMElement,
-	removeNode: DOMNode
-) => {
+export const removeChildNode = (node: DOMElement, removeNode: DOMNode) => {
 	if (removeNode.yogaNode) {
 		removeNode.parentNode?.yogaNode?.removeChild(removeNode.yogaNode);
 	}

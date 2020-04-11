@@ -69,7 +69,7 @@ export class Box extends PureComponent<BoxProps> {
 		flexShrink: 1
 	};
 
-	nodeRef = React.createRef<{ yogaNode: YogaNode } & HTMLDivElement>();
+	nodeRef = React.createRef<{yogaNode: YogaNode} & HTMLDivElement>();
 
 	render() {
 		const {children, unstable__transformChildren, ...style} = this.props;

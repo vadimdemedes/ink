@@ -77,12 +77,14 @@
 		"delay": "^4.1.0",
 		"eslint-config-xo": "0.29.1",
 		"eslint-config-xo-react": "^0.22.0",
+		"eslint-plugin-prettier": "^3.1.2",
 		"eslint-plugin-react": "^7.18.0",
 		"eslint-plugin-react-hooks": "^2.3.0",
 		"import-jsx": "3.1.0",
 		"ms": "^2.1.1",
 		"node-pty": "^0.9.0",
 		"p-queue": "^6.2.1",
+		"prettier": "^2.0.4",
 		"react": "^16.9.0",
 		"sinon": "^8.1.1",
 		"strip-ansi": "^6.0.0",
@@ -115,6 +117,7 @@
 		"plugins": [
 			"react"
 		],
+		"prettier": true,
 		"rules": {
 			"react/no-unescaped-entities": "off",
 			"react/state-in-constructor": "off",
@@ -148,5 +151,13 @@
 				}
 			}
 		]
+	},
+	"prettier": {
+		"useTabs": true,
+		"singleQuote": true,
+		"quoteProps": "as-needed",
+		"trailingComma": "none",
+		"bracketSpacing": false,
+		"arrowParens": "avoid"
 	}
 }

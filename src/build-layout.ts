@@ -65,7 +65,12 @@ export const buildLayout = (node: DOMNode, options: BuildLayoutOptions) => {
 	return node;
 };
 
-const applySize = (yogaNode: Yoga.YogaNode, text: string, nodeWidth?: string | number, nodeHeight?: string | number) => {
+const applySize = (
+	yogaNode: Yoga.YogaNode,
+	text: string,
+	nodeWidth?: string | number,
+	nodeHeight?: string | number
+) => {
 	const {width, height} = measureText(text);
 	yogaNode.setWidth(nodeWidth ?? width);
 	yogaNode.setHeight(nodeHeight ?? height);

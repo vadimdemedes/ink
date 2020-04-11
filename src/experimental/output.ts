@@ -1,6 +1,10 @@
 import sliceAnsi from 'slice-ansi';
 import stringLength from 'string-length';
-import {OutputWriter, OutputWriteOptions, OutputTransformer} from '../render-node-to-output';
+import {
+	OutputWriter,
+	OutputWriteOptions,
+	OutputTransformer
+} from '../render-node-to-output';
 
 /**
  * "Virtual" output class

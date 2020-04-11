@@ -8,9 +8,7 @@ interface Stream {
 	get(): string;
 }
 
-const createStream: (options: { columns: number }) => Stream = ({
-	columns
-}) => {
+const createStream: (options: {columns: number}) => Stream = ({columns}) => {
 	let output = '';
 	return {
 		output,
@@ -26,7 +24,7 @@ const createStream: (options: { columns: number }) => Stream = ({
 
 export const renderToString: (
 	node: JSX.Element,
-	options?: { columns: number }
+	options?: {columns: number}
 ) => string = (node, options = {columns: 100}) => {
 	const stream = createStream(options);
 

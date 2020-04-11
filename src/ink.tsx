@@ -48,10 +48,12 @@ export class Ink {
 		if (options.experimental) {
 			this.rootNode = experimentalDom.createNode('root');
 
-			this.rootNode.onRender = options.debug ? this.onRender : throttle(this.onRender, 16, {
-				leading: true,
-				trailing: true
-			});
+			this.rootNode.onRender = options.debug
+				? this.onRender
+				: throttle(this.onRender, 16, {
+						leading: true,
+						trailing: true
+				  });
 
 			this.rootNode.onImmediateRender = this.onRender;
 
@@ -68,10 +70,12 @@ export class Ink {
 		}
 
 		this.log = logUpdate.create(options.stdout);
-		this.throttledLog = options.debug ? this.log : throttle(this.log, undefined, {
-			leading: true,
-			trailing: true
-		});
+		this.throttledLog = options.debug
+			? this.log
+			: throttle(this.log, undefined, {
+					leading: true,
+					trailing: true
+			  });
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
@@ -84,7 +88,11 @@ export class Ink {
 		this.fullStaticOutput = '';
 
 		if (options.experimental) {
-			this.container = experimentalReconciler.createContainer(this.rootNode, false, false);
+			this.container = experimentalReconciler.createContainer(
+				this.rootNode,
+				false,
+				false
+			);
 		} else {
 			this.container = reconciler.createContainer(this.rootNode, false, false);
 		}
@@ -135,7 +143,9 @@ export class Ink {
 		}
 
 		if (this.options.experimental && outputHeight >= this.options.stdout.rows) {
-			this.options.stdout.write(ansiEscapes.clearTerminal + this.fullStaticOutput + output);
+			this.options.stdout.write(
+				ansiEscapes.clearTerminal + this.fullStaticOutput + output
+			);
 			this.lastOutput = output;
 			return;
 		}

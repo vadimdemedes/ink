@@ -19,7 +19,7 @@ const app = render(
 	<AppContext.Consumer>
 		{({exit}) => (
 			<StdinContext.Consumer>
-				{({setRawMode}) => <Test onExit={exit} onSetRawMode={setRawMode}/>}
+				{({setRawMode}) => <Test onExit={exit} onSetRawMode={setRawMode} />}
 			</StdinContext.Consumer>
 		)}
 	</AppContext.Consumer>,

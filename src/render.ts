@@ -73,7 +73,10 @@ export const render: RenderFunction = (node, options): Instance => {
 
 	const {stdout} = inkOptions;
 
-	const instance: Ink = retrieveCachedInstance(stdout, () => new Ink(inkOptions));
+	const instance: Ink = retrieveCachedInstance(
+		stdout,
+		() => new Ink(inkOptions)
+	);
 
 	instance.render(node);
 

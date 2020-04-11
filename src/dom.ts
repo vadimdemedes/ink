@@ -37,7 +37,7 @@ export type TextNode = {
 	nodeValue: string;
 } & InkNode;
 
-export type DOMNode<T = { nodeName: NodeNames }> = T extends {
+export type DOMNode<T = {nodeName: NodeNames}> = T extends {
 	nodeName: infer U;
 }
 	? U extends '#text'

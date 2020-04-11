@@ -75,11 +75,13 @@ type Colors =
 type ChalkFunctions = Except<Except<Chalk, 'Instance' | 'level'>, Colors>;
 
 type ChalkFunctionProps = {
-	[K in keyof ChalkFunctions]: Parameters<ChalkFunctions[K]> extends [string] ? string : Parameters<ChalkFunctions[K]>;
+	[K in keyof ChalkFunctions]: Parameters<ChalkFunctions[K]> extends [string]
+		? string
+		: Parameters<ChalkFunctions[K]>;
 };
 
 type ChalkBooleanProps = Record<Colors, boolean>;
 
 type ChalkProps = Partial<ChalkBooleanProps & ChalkFunctionProps>;
 
-export type ColorProps = ChalkProps & { children: ReactNode };
+export type ColorProps = ChalkProps & {children: ReactNode};

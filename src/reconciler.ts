@@ -23,18 +23,18 @@ interface Props {
 }
 
 export const reconciler = createReconciler<
-ElementNames,
-Props,
-DOMElement,
-DOMElement,
-DOMNode,
-unknown,
-unknown,
-unknown,
-unknown,
-unknown,
-unknown,
-unknown
+	ElementNames,
+	Props,
+	DOMElement,
+	DOMElement,
+	DOMNode,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown
 >({
 	// @ts-ignore
 	schedulePassiveEffects,

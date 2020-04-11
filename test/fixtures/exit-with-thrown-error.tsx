@@ -5,7 +5,7 @@ const Test = () => {
 	throw new Error('errored');
 };
 
-const app = render(<Test/>, {
+const app = render(<Test />, {
 	experimental: process.env.EXPERIMENTAL === 'true'
 });
 
