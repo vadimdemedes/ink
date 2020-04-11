@@ -5,7 +5,7 @@ import {DOMNode} from './dom';
 
 // Since we need to know the width of text container to wrap text, we have to calculate layout twice
 // This function is executed after first layout calculation to reassign width and height of text nodes
-export const calculateWrappedText = (node: DOMNode) => {
+export const calculateWrappedText = (node: DOMNode): void => {
 	if (node.nodeName !== '#text') {
 		if (
 			node.textContent &&

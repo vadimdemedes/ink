@@ -27,7 +27,7 @@ const isAllTextNodes = (node: DOMNode): boolean => {
 //
 // Also, this is necessary for libraries like ink-link (https://github.com/sindresorhus/ink-link),
 // which need to wrap all children at once, instead of wrapping 3 text nodes separately.
-const squashTextNodes = (node: DOMElement) => {
+const squashTextNodes = (node: DOMElement): string => {
 	let text = '';
 	if (node.childNodes.length > 0) {
 		// If parent container is `<Box>`, text nodes will be treated as separate nodes in
@@ -68,28 +68,27 @@ const squashTextNodes = (node: DOMElement) => {
 	return text;
 };
 
-interface RenderNodeToOutputOptions {
-	offsetX?: number;
-	offsetY?: number;
-	transformers?: OutputTransformer[];
-	skipStaticElements: boolean;
-}
-
-export interface OutputWriteOptions {
-	transformers: OutputTransformer[];
+export interface OutputWriter {
+	write(
+		x: number,
+		y: number,
+		text: string,
+		options: {transformers: OutputTransformer[]}
+	): void;
 }
 
 export type OutputTransformer = (s: string) => string;
-
-export interface OutputWriter {
-	write(x: number, y: number, text: string, options: OutputWriteOptions): void;
-}
 
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
 export const renderNodeToOutput = (
 	node: DOMNode,
 	output: OutputWriter,
-	options: RenderNodeToOutputOptions
+	options: {
+		offsetX?: number;
+		offsetY?: number;
+		transformers?: OutputTransformer[];
+		skipStaticElements: boolean;
+	}
 ) => {
 	const {
 		offsetX = 0,

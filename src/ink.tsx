@@ -24,8 +24,6 @@ export interface InkOptions {
 	waitUntilExit?: () => Promise<void>;
 }
 
-export type Unmount = (exitCode?: number | Error | null) => void;
-
 export class Ink {
 	options: InkOptions;
 	log: LogUpdate;
@@ -165,7 +163,7 @@ export class Ink {
 		}
 	};
 
-	render(node: ReactNode) {
+	render(node: ReactNode): void {
 		const tree = (
 			<App
 				stdin={this.options.stdin}
@@ -184,7 +182,7 @@ export class Ink {
 		}
 	}
 
-	unmount(error?: Error | number | null) {
+	unmount(error?: Error | number | null): void {
 		if (this.isUnmounted) {
 			return;
 		}
@@ -217,7 +215,7 @@ export class Ink {
 		}
 	}
 
-	waitUntilExit() {
+	waitUntilExit(): Promise<void> {
 		return this.exitPromise;
 	}
 }

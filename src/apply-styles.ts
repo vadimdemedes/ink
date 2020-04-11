@@ -1,7 +1,7 @@
 import Yoga from 'yoga-layout-prebuilt';
-import {Styles, FlexStyles, PaddingStyles, DimensionStyles} from './styles';
+import {Styles} from './styles';
 
-const applyMarginStyles = (node: Yoga.YogaNode, style: Styles) => {
+const applyMarginStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	if (style.margin) {
 		node.setMargin(Yoga.EDGE_TOP, style.margin);
 		node.setMargin(Yoga.EDGE_BOTTOM, style.margin);
@@ -36,10 +36,7 @@ const applyMarginStyles = (node: Yoga.YogaNode, style: Styles) => {
 	}
 };
 
-const applyPaddingStyles = (
-	node: Yoga.YogaNode,
-	style: FlexStyles & PaddingStyles
-) => {
+const applyPaddingStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	if (style.padding) {
 		node.setPadding(Yoga.EDGE_TOP, style.padding);
 		node.setPadding(Yoga.EDGE_BOTTOM, style.padding);
@@ -74,7 +71,7 @@ const applyPaddingStyles = (
 	}
 };
 
-const applyFlexStyles = (node: Yoga.YogaNode, style: FlexStyles) => {
+const applyFlexStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	if (style.flexGrow) {
 		node.setFlexGrow(style.flexGrow);
 	}
@@ -142,7 +139,7 @@ const applyFlexStyles = (node: Yoga.YogaNode, style: FlexStyles) => {
 	}
 };
 
-const applyDimensionStyles = (node: Yoga.YogaNode, style: DimensionStyles) => {
+const applyDimensionStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	if (style.width !== undefined) {
 		node.setWidth(style.width);
 	}
@@ -160,7 +157,7 @@ const applyDimensionStyles = (node: Yoga.YogaNode, style: DimensionStyles) => {
 	}
 };
 
-export const applyStyles = (node: Yoga.YogaNode, style: Styles = {}) => {
+export const applyStyles = (node: Yoga.YogaNode, style: Styles = {}): void => {
 	applyMarginStyles(node, style);
 	applyPaddingStyles(node, style);
 	applyFlexStyles(node, style);

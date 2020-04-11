@@ -27,22 +27,18 @@ const getStaticNodes = (element: DOMElement): DOMElement[] => {
 	return staticNodes;
 };
 
-export interface InkRendererOutput {
+export type InkRenderer = (
+	node: DOMElement
+) => {
 	output: string;
 	outputHeight: number;
 	staticOutput: string;
-}
+};
 
-export type InkRenderer = (node: DOMElement) => InkRendererOutput;
-
-type RendererCreator = (options: {
-	terminalWidth: number;
-}) => (
-	node: DOMElement
-) => {output: string; outputHeight: number; staticOutput: string};
+type CreateRenderer = (options: {terminalWidth: number}) => InkRenderer;
 
 // Build layout, apply styles, build text output of all nodes and return it
-export const createRenderer: RendererCreator = ({terminalWidth}) => {
+export const createRenderer: CreateRenderer = ({terminalWidth}) => {
 	const config = Yoga.Config.create();
 
 	// Used to free up memory used by last Yoga node tree

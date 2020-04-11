@@ -1,8 +1,8 @@
 import stringLength from 'string-length';
 import sliceAnsi from 'slice-ansi';
-import {OutputWriteOptions, OutputWriter} from './render-node-to-output';
+import {OutputTransformer, OutputWriter} from './render-node-to-output';
 
-interface OutputConstructorOptions {
+interface Options {
 	width: number;
 	height: number;
 }
@@ -18,7 +18,7 @@ interface OutputConstructorOptions {
 export class Output implements OutputWriter {
 	output: string[];
 
-	constructor(options: OutputConstructorOptions) {
+	constructor(options: Options) {
 		const {width, height} = options;
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
 		const output = [];
@@ -30,7 +30,12 @@ export class Output implements OutputWriter {
 		this.output = output;
 	}
 
-	write(x: number, y: number, text: string, options: OutputWriteOptions) {
+	write(
+		x: number,
+		y: number,
+		text: string,
+		options: {transformers: OutputTransformer[]}
+	): void {
 		const {transformers} = options;
 
 		if (!text) {
@@ -62,11 +67,11 @@ export class Output implements OutputWriter {
 		}
 	}
 
-	get() {
+	get(): string {
 		return this.output.map(line => line.trimEnd()).join('\n');
 	}
 
-	getHeight() {
+	getHeight(): number {
 		return this.output.length;
 	}
 }

@@ -4,6 +4,25 @@ import arrify from 'arrify';
 import chalk, {Chalk} from 'chalk';
 import {Except} from 'type-fest';
 
+type Colors =
+	| typeof chalk.ForegroundColor
+	| typeof chalk.BackgroundColor
+	| typeof chalk.Modifiers;
+
+type ChalkFunctions = Except<Except<Chalk, 'Instance' | 'level'>, Colors>;
+
+type ChalkFunctionProps = {
+	[K in keyof ChalkFunctions]: Parameters<ChalkFunctions[K]> extends [string]
+		? string
+		: Parameters<ChalkFunctions[K]>;
+};
+
+type ChalkBooleanProps = Record<Colors, boolean>;
+
+type ChalkProps = Partial<ChalkBooleanProps & ChalkFunctionProps>;
+
+export type ColorProps = ChalkProps & {children: ReactNode};
+
 const methods = [
 	'hex',
 	'hsl',
@@ -66,22 +85,3 @@ Color.propTypes = {
 Color.defaultProps = {
 	children: ''
 };
-
-type Colors =
-	| typeof chalk.ForegroundColor
-	| typeof chalk.BackgroundColor
-	| typeof chalk.Modifiers;
-
-type ChalkFunctions = Except<Except<Chalk, 'Instance' | 'level'>, Colors>;
-
-type ChalkFunctionProps = {
-	[K in keyof ChalkFunctions]: Parameters<ChalkFunctions[K]> extends [string]
-		? string
-		: Parameters<ChalkFunctions[K]>;
-};
-
-type ChalkBooleanProps = Record<Colors, boolean>;
-
-type ChalkProps = Partial<ChalkBooleanProps & ChalkFunctionProps>;
-
-export type ColorProps = ChalkProps & {children: ReactNode};

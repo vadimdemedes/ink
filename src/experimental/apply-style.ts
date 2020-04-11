@@ -1,15 +1,8 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import Yoga, {YogaNode} from 'yoga-layout-prebuilt';
-import {
-	PositionStyles,
-	MarginStyles,
-	PaddingStyles,
-	FlexStyles,
-	DimensionStyles,
-	Styles
-} from '../styles';
+import {Styles} from '../styles';
 
-const applyPositionStyles = (node: Yoga.YogaNode, style: PositionStyles) => {
+const applyPositionStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	if (!style.position) {
 		node.setPositionType(Yoga.POSITION_TYPE_RELATIVE);
 	}
@@ -19,7 +12,7 @@ const applyPositionStyles = (node: Yoga.YogaNode, style: PositionStyles) => {
 	}
 };
 
-const applyMarginStyles = (node: Yoga.YogaNode, style: MarginStyles) => {
+const applyMarginStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	node.setMargin(
 		Yoga.EDGE_START,
 		style.marginLeft || style.marginX || style.margin || 0
@@ -38,7 +31,7 @@ const applyMarginStyles = (node: Yoga.YogaNode, style: MarginStyles) => {
 	);
 };
 
-const applyPaddingStyles = (node: Yoga.YogaNode, style: PaddingStyles) => {
+const applyPaddingStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	node.setPadding(
 		Yoga.EDGE_LEFT,
 		style.paddingLeft || style.paddingX || style.padding || 0
@@ -57,7 +50,7 @@ const applyPaddingStyles = (node: Yoga.YogaNode, style: PaddingStyles) => {
 	);
 };
 
-const applyFlexStyles = (node: YogaNode, style: FlexStyles) => {
+const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 	node.setFlexGrow(style.flexGrow ?? 0);
 	node.setFlexShrink(
 		typeof style.flexShrink === 'number' ? style.flexShrink : 1
@@ -125,7 +118,7 @@ const applyFlexStyles = (node: YogaNode, style: FlexStyles) => {
 	}
 };
 
-const applyDimensionStyles = (node: YogaNode, style: DimensionStyles) => {
+const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
 	if (typeof style.width === 'number') {
 		node.setWidth(style.width);
 	} else if (typeof style.width === 'string') {
@@ -155,7 +148,7 @@ const applyDimensionStyles = (node: YogaNode, style: DimensionStyles) => {
 	}
 };
 
-export const applyStyle = (node: YogaNode, style: Styles = {}) => {
+export const applyStyle = (node: YogaNode, style: Styles = {}): void => {
 	applyPositionStyles(node, style);
 	applyMarginStyles(node, style);
 	applyPaddingStyles(node, style);

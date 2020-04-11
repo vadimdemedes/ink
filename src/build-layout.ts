@@ -10,7 +10,10 @@ interface BuildLayoutOptions {
 }
 
 // Traverse the node tree, create Yoga nodes and assign styles to each Yoga node
-export const buildLayout = (node: DOMNode, options: BuildLayoutOptions) => {
+export const buildLayout = (
+	node: DOMNode,
+	options: BuildLayoutOptions
+): DOMNode => {
 	const {config, terminalWidth, skipStaticElements} = options;
 	const yogaNode = Yoga.Node.createWithConfig(config);
 	node.yogaNode = yogaNode;
@@ -70,7 +73,7 @@ const applySize = (
 	text: string,
 	nodeWidth?: string | number,
 	nodeHeight?: string | number
-) => {
+): void => {
 	const {width, height} = measureText(text);
 	yogaNode.setWidth(nodeWidth ?? width);
 	yogaNode.setHeight(nodeHeight ?? height);

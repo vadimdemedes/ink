@@ -1,6 +1,11 @@
 import widestLine from 'widest-line';
 
-export const measureText = (text: string) => {
+interface Output {
+	width: number;
+	height: number;
+}
+
+export const measureText = (text: string): Output => {
 	const width = widestLine(text);
 	const height = text.split('\n').length;
 

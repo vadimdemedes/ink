@@ -86,7 +86,7 @@ export class Box extends PureComponent<BoxProps> {
 		);
 	}
 
-	unstable__getComputedWidth() {
+	unstable__getComputedWidth(): number | undefined {
 		return this.nodeRef.current?.yogaNode.getComputedWidth();
 	}
 }

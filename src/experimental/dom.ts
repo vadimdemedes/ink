@@ -15,14 +15,17 @@ export const createNode = (nodeName: ElementNames): DOMElement => ({
 	yogaNode: Yoga.Node.create()
 });
 
-export const appendChildNode = (node: DOMElement, childNode: DOMElement) => {
+export const appendChildNode = (
+	node: DOMElement,
+	childNode: DOMElement
+): void => {
 	if (childNode.parentNode) {
 		removeChildNode(childNode.parentNode, childNode);
 	}
 
 	childNode.parentNode = node;
-
 	node.childNodes.push(childNode);
+
 	if (childNode.yogaNode) {
 		node.yogaNode?.insertChild(
 			childNode.yogaNode,
@@ -35,7 +38,7 @@ export const insertBeforeNode = (
 	node: DOMElement,
 	newChildNode: DOMNode,
 	beforeChildNode: DOMNode
-) => {
+): void => {
 	if (newChildNode.parentNode) {
 		removeChildNode(newChildNode.parentNode, newChildNode);
 	}
@@ -53,6 +56,7 @@ export const insertBeforeNode = (
 	}
 
 	node.childNodes.push(newChildNode);
+
 	if (newChildNode.yogaNode) {
 		node.yogaNode?.insertChild(
 			newChildNode.yogaNode,
@@ -61,7 +65,10 @@ export const insertBeforeNode = (
 	}
 };
 
-export const removeChildNode = (node: DOMElement, removeNode: DOMNode) => {
+export const removeChildNode = (
+	node: DOMElement,
+	removeNode: DOMNode
+): void => {
 	if (removeNode.yogaNode) {
 		removeNode.parentNode?.yogaNode?.removeChild(removeNode.yogaNode);
 	}
@@ -74,8 +81,9 @@ export const removeChildNode = (node: DOMElement, removeNode: DOMNode) => {
 	}
 };
 
-export const setStyle = (node: DOMNode, style: Styles) => {
+export const setStyle = (node: DOMNode, style: Styles): void => {
 	node.style = style;
+
 	if (node.yogaNode) {
 		applyStyle(node.yogaNode, style);
 	}
@@ -95,7 +103,7 @@ export const createTextNode = (text: string): TextNode => {
 	return node;
 };
 
-export const setTextContent = (node: DOMNode, text: string) => {
+export const setTextContent = (node: DOMNode, text: string): void => {
 	if (typeof text !== 'string') {
 		text = String(text);
 	}

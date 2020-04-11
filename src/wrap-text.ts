@@ -6,7 +6,7 @@ export const wrapText = (
 	text: string,
 	maxWidth: number,
 	style: WrapTextStyles = {}
-) => {
+): string => {
 	const {textWrap} = style;
 
 	if (textWrap === 'wrap') {

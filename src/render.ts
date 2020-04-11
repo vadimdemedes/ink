@@ -68,16 +68,13 @@ export const render: RenderFunction = (node, options): Instance => {
 		debug: false,
 		exitOnCtrlC: true,
 		experimental: false,
-		...optionsFrom(options)
+		...getOptions(options)
 	};
 
-	const {stdout} = inkOptions;
-
-	const instance: Ink = retrieveCachedInstance(
-		stdout,
+	const instance: Ink = getInstance(
+		inkOptions.stdout,
 		() => new Ink(inkOptions)
 	);
-
 	instance.render(node);
 
 	return {
@@ -88,9 +85,9 @@ export const render: RenderFunction = (node, options): Instance => {
 	};
 };
 
-function optionsFrom(
+const getOptions = (
 	stdout: NodeJS.WriteStream | RenderOptions | undefined = {}
-): RenderOptions {
+): RenderOptions => {
 	if (stdout instanceof Stream) {
 		return {
 			stdout,
@@ -100,13 +97,14 @@ function optionsFrom(
 	}
 
 	return stdout;
-}
+};
 
-function retrieveCachedInstance(
+const getInstance = (
 	stdout: NodeJS.WriteStream,
 	createInstance: () => Ink
-) {
+): Ink => {
 	let instance: Ink;
+
 	if (instances.has(stdout)) {
 		instance = instances.get(stdout);
 	} else {
@@ -115,4 +113,4 @@ function retrieveCachedInstance(
 	}
 
 	return instance;
-}
+};

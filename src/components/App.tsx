@@ -4,7 +4,8 @@ import cliCursor from 'cli-cursor';
 import {AppContext} from './AppContext';
 import {StdinContext} from './StdinContext';
 import {StdoutContext} from './StdoutContext';
-interface AppProps {
+
+interface Props {
 	children: ReactNode;
 	stdin: NodeJS.ReadStream;
 	stdout: NodeJS.WriteStream;
@@ -15,7 +16,7 @@ interface AppProps {
 // Root component for all Ink apps
 // It renders stdin and stdout contexts, so that children can access them if needed
 // It also handles Ctrl+C exiting and cursor visibility
-export class App extends PureComponent<AppProps> {
+export class App extends PureComponent<Props> {
 	static propTypes = {
 		children: PropTypes.node.isRequired,
 		stdin: PropTypes.object.isRequired,
@@ -29,7 +30,7 @@ export class App extends PureComponent<AppProps> {
 	rawModeEnabledCount = 0;
 
 	// Determines if TTY is supported on the provided stdin
-	isRawModeSupported() {
+	isRawModeSupported(): boolean {
 		return this.props.stdin.isTTY;
 	}
 
@@ -76,7 +77,7 @@ export class App extends PureComponent<AppProps> {
 		this.handleExit(error);
 	}
 
-	handleSetRawMode = (isEnabled: boolean) => {
+	handleSetRawMode = (isEnabled: boolean): void => {
 		const {stdin} = this.props;
 
 		if (!this.isRawModeSupported()) {
@@ -113,7 +114,7 @@ export class App extends PureComponent<AppProps> {
 		}
 	};
 
-	handleInput = (input: string) => {
+	handleInput = (input: string): void => {
 		// Exit on Ctrl+C
 		// eslint-disable-next-line unicorn/no-hex-escape
 		if (input === '\x03' && this.props.exitOnCtrlC) {
@@ -121,7 +122,7 @@ export class App extends PureComponent<AppProps> {
 		}
 	};
 
-	handleExit = (error?: Error) => {
+	handleExit = (error?: Error): void => {
 		if (this.isRawModeSupported()) {
 			this.handleSetRawMode(false);
 		}

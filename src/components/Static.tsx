@@ -6,7 +6,7 @@ const childrenToArray = (children: ReactNode) => {
 	return Array.isArray(children) ? children : [children];
 };
 
-interface StaticState {
+interface State {
 	lastIndex: number | null;
 }
 
@@ -26,12 +26,12 @@ interface StaticState {
  * When running tests, Jest keeps writing completed tests to output, while continuously
  * rendering test stats at the end of the output.
  */
-export class Static extends Component<Styles, StaticState> {
+export class Static extends Component<Styles, State> {
 	static propTypes = {
 		children: PropTypes.node
 	};
 
-	state: StaticState = {
+	state: State = {
 		lastIndex: null
 	};
 
@@ -63,13 +63,13 @@ export class Static extends Component<Styles, StaticState> {
 		this.saveLastIndex(this.props.children);
 	}
 
-	componentDidUpdate(_prevProps: Styles, prevState: StaticState) {
+	componentDidUpdate(_prevProps: Styles, prevState: State) {
 		if (prevState.lastIndex === this.state.lastIndex) {
 			this.saveLastIndex(this.props.children);
 		}
 	}
 
-	saveLastIndex(children: ReactNode) {
+	saveLastIndex(children: ReactNode): void {
 		const nextIndex = childrenToArray(children).length;
 
 		if (this.state.lastIndex !== nextIndex) {

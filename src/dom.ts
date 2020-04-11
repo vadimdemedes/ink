@@ -11,9 +11,7 @@ interface InkNode {
 
 export const TEXT_NAME = '#text';
 export type TextName = '#text';
-
 export type ElementNames = 'root' | 'div' | 'span' | 'ROOT' | 'DIV' | 'SPAN';
-
 export type NodeNames = ElementNames | TextName;
 
 export type DOMElement = {
@@ -24,7 +22,6 @@ export type DOMElement = {
 	textContent?: string;
 	childNodes: DOMNode[];
 	unstable__transformChildren?: OutputTransformer;
-
 	onRender?: () => void;
 
 	// Experimental properties
@@ -57,18 +54,23 @@ export const createNode = (nodeName: ElementNames): DOMElement => ({
 	yogaNode: undefined
 });
 
-export const appendChildNode = (node: DOMElement, childNode: DOMElement) => {
+export const appendChildNode = (
+	node: DOMElement,
+	childNode: DOMElement
+): void => {
 	if (childNode.parentNode) {
 		removeChildNode(childNode.parentNode, childNode);
 	}
 
 	childNode.parentNode = node;
-
 	node.childNodes.push(childNode);
 };
 
 // Same as `appendChildNode`, but without removing child node from parent node
-export const appendStaticNode = (node: DOMElement, childNode: DOMNode) => {
+export const appendStaticNode = (
+	node: DOMElement,
+	childNode: DOMNode
+): void => {
 	node.childNodes.push(childNode);
 };
 
@@ -76,7 +78,7 @@ export const insertBeforeNode = (
 	node: DOMElement,
 	newChildNode: DOMElement,
 	beforeChildNode: DOMNode
-) => {
+): void => {
 	if (newChildNode.parentNode) {
 		removeChildNode(newChildNode.parentNode, newChildNode);
 	}
@@ -92,7 +94,10 @@ export const insertBeforeNode = (
 	node.childNodes.push(newChildNode);
 };
 
-export const removeChildNode = (node: DOMElement, removeNode: DOMNode) => {
+export const removeChildNode = (
+	node: DOMElement,
+	removeNode: DOMNode
+): void => {
 	removeNode.parentNode = null;
 
 	const index = node.childNodes.indexOf(removeNode);
@@ -105,7 +110,7 @@ export const setAttribute = (
 	node: DOMElement,
 	key: string,
 	value: DOMNodeAttribute
-) => {
+): void => {
 	node.attributes[key] = value;
 };
 
@@ -116,6 +121,3 @@ export const createTextNode = (text: string): TextNode => ({
 	yogaNode: undefined,
 	style: {}
 });
-
-export const isElement = (node: DOMNode) => node.nodeName !== TEXT_NAME;
-export const isText = (node: DOMNode) => node.nodeName === TEXT_NAME;

@@ -1,5 +1,4 @@
 export {render, RenderOptions, Instance} from './render';
-export {Unmount} from './ink';
 export {Box} from './components/Box';
 export {Text} from './components/Text';
 export {Color, ColorProps} from './components/Color';
