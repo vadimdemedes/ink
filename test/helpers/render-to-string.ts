@@ -31,8 +31,7 @@ export const renderToString: (
 	render(node, {
 		// @ts-ignore
 		stdout: stream,
-		debug: true,
-		experimental: process.env.EXPERIMENTAL === 'true'
+		debug: true
 	});
 
 	return stream.get();

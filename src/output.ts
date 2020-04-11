@@ -1,11 +1,6 @@
-import stringLength from 'string-length';
 import sliceAnsi from 'slice-ansi';
-import {OutputTransformer, OutputWriter} from './render-node-to-output';
-
-interface Options {
-	width: number;
-	height: number;
-}
+import stringLength from 'string-length';
+import {OutputTransformer} from './render-node-to-output';
 
 /**
  * "Virtual" output class
@@ -15,19 +10,31 @@ interface Options {
  *
  * Used to generate the final output of all nodes before writing it to actual output stream (e.g. stdout)
  */
-export class Output implements OutputWriter {
-	output: string[];
+
+interface Options {
+	width: number;
+	height: number;
+}
+
+interface Writes {
+	x: number;
+	y: number;
+	text: string;
+	transformers: OutputTransformer[];
+}
+
+export class Output {
+	width: number;
+	height: number;
+
+	// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
+	writes: Writes[] = [];
 
 	constructor(options: Options) {
 		const {width, height} = options;
-		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
-		const output = [];
 
-		for (let y = 0; y < height; y++) {
-			output.push(' '.repeat(width));
-		}
-
-		this.output = output;
+		this.width = width;
+		this.height = height;
 	}
 
 	write(
@@ -42,36 +49,50 @@ export class Output implements OutputWriter {
 			return;
 		}
 
-		const lines = text.split('\n');
-		let offsetY = 0;
+		this.writes.push({x, y, text, transformers});
+	}
 
-		for (let line of lines) {
-			const length = stringLength(line);
-			const currentLine = this.output[y + offsetY];
+	get(): {output: string; height: number} {
+		const output: string[] = [];
 
-			// Line can be missing if `text` is taller than height of pre-initialized `this.output`
-			if (!currentLine) {
-				continue;
-			}
-
-			for (const transformer of transformers) {
-				line = transformer(line);
-			}
-
-			this.output[y + offsetY] =
-				sliceAnsi(currentLine, 0, x) +
-				line +
-				sliceAnsi(currentLine, x + length);
-
-			offsetY++;
+		for (let y = 0; y < this.height; y++) {
+			output.push(' '.repeat(this.width));
 		}
-	}
 
-	get(): string {
-		return this.output.map(line => line.trimEnd()).join('\n');
-	}
+		for (const write of this.writes) {
+			const {x, y, text, transformers} = write;
+			const lines = text.split('\n');
+			let offsetY = 0;
 
-	getHeight(): number {
-		return this.output.length;
+			for (let line of lines) {
+				const currentLine = output[y + offsetY];
+
+				// Line can be missing if `text` is taller than height of pre-initialized `this.output`
+				if (!currentLine) {
+					continue;
+				}
+
+				const length = stringLength(line);
+
+				for (const transformer of transformers) {
+					line = transformer(line);
+				}
+
+				output[y + offsetY] =
+					sliceAnsi(currentLine, 0, x) +
+					line +
+					sliceAnsi(currentLine, x + length);
+
+				offsetY++;
+			}
+		}
+
+		// eslint-disable-next-line unicorn/prefer-trim-start-end
+		const generatedOutput = output.map(line => line.trimRight()).join('\n');
+
+		return {
+			output: generatedOutput,
+			height: output.length
+		};
 	}
 }

@@ -22,10 +22,7 @@ const app = render(
 				{({setRawMode}) => <Test onExit={exit} onSetRawMode={setRawMode} />}
 			</StdinContext.Consumer>
 		)}
-	</AppContext.Consumer>,
-	{
-		experimental: process.env.EXPERIMENTAL === 'true'
-	}
+	</AppContext.Consumer>
 );
 
 app.waitUntilExit().catch(error => console.log(error.message));

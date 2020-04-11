@@ -5,15 +5,17 @@ import {
 } from 'scheduler';
 import createReconciler from 'react-reconciler';
 import {
-	createNode,
 	createTextNode,
 	appendChildNode,
 	insertBeforeNode,
 	removeChildNode,
+	setStyle,
+	setTextContent,
+	createNode,
 	setAttribute,
+	DOMNode,
 	ElementNames,
-	DOMElement,
-	DOMNode
+	DOMElement
 } from './dom';
 
 const NO_CONTEXT = true;
@@ -43,6 +45,18 @@ export const reconciler = createReconciler<
 	getRootHostContext: () => NO_CONTEXT,
 	prepareForCommit: () => {},
 	resetAfterCommit: rootNode => {
+		// Since renders are throttled at the instance level and <Static> component children
+		// are rendered only once and then get deleted, we need an escape hatch to
+		// trigger an immediate render to ensure <Static> children are written to output before they get erased
+		if (rootNode.isStaticDirty) {
+			rootNode.isStaticDirty = false;
+			if (typeof rootNode.onImmediateRender === 'function') {
+				rootNode.onImmediateRender();
+			}
+
+			return;
+		}
+
 		if (typeof rootNode.onRender === 'function') {
 			rootNode.onRender();
 		}
@@ -61,17 +75,17 @@ export const reconciler = createReconciler<
 				if (typeof value === 'string' || typeof value === 'number') {
 					if (type === 'div') {
 						// Text node must be wrapped in another node, so that text can be aligned within container
-						const textElement = createNode('div');
-						textElement.textContent = String(value);
-						appendChildNode(node, textElement);
+						const textNode = createNode('div');
+						setTextContent(textNode, String(value));
+						appendChildNode(node, textNode);
 					}
 
 					if (type === 'span') {
-						node.textContent = String(value);
+						setTextContent(node, String(value));
 					}
 				}
 			} else if (key === 'style') {
-				node.style = value;
+				setStyle(node, value);
 			} else if (key === 'unstable__transformChildren') {
 				node.unstable__transformChildren = value;
 			} else if (key === 'unstable__static') {
@@ -91,7 +105,6 @@ export const reconciler = createReconciler<
 
 		if (node.childNodes.length > 0) {
 			for (const childNode of node.childNodes) {
-				childNode.yogaNode?.free();
 				removeChildNode(node, childNode);
 			}
 		}
@@ -100,12 +113,24 @@ export const reconciler = createReconciler<
 	appendInitialChild: appendChildNode,
 	appendChild: appendChildNode,
 	insertBefore: insertBeforeNode,
-	finalizeInitialChildren: () => false,
+	finalizeInitialChildren: (node, _type, _props, rootNode) => {
+		if (node.unstable__static) {
+			rootNode.isStaticDirty = true;
+		}
+
+		return false;
+	},
 	supportsMutation: true,
 	appendChildToContainer: appendChildNode,
 	insertInContainerBefore: insertBeforeNode,
 	removeChildFromContainer: removeChildNode,
-	prepareUpdate: () => true,
+	prepareUpdate: (node, _type, _oldProps, _newProps, rootNode) => {
+		if (node.unstable__static) {
+			rootNode.isStaticDirty = true;
+		}
+
+		return true;
+	},
 	commitUpdate: (node, _updatePayload, type, _oldProps, newProps) => {
 		for (const [key, value] of Object.entries(newProps)) {
 			if (key === 'children') {
@@ -114,20 +139,20 @@ export const reconciler = createReconciler<
 						// Text node must be wrapped in another node, so that text can be aligned within container
 						// If there's no such node, a new one must be created
 						if (node.childNodes.length === 0) {
-							const textElement = createNode('div');
-							textElement.textContent = String(value);
-							appendChildNode(node, textElement);
-						} else if (node.childNodes[0].nodeName === 'DIV') {
-							node.childNodes[0].textContent = String(value);
+							const textNode = createNode('div');
+							setTextContent(textNode, String(value));
+							appendChildNode(node, textNode);
+						} else {
+							setTextContent(node.childNodes[0], String(value));
 						}
 					}
 
 					if (type === 'span') {
-						node.textContent = String(value);
+						setTextContent(node, String(value));
 					}
 				}
 			} else if (key === 'style') {
-				node.style = value;
+				setStyle(node, value);
 			} else if (key === 'unstable__transformChildren') {
 				node.unstable__transformChildren = value;
 			} else if (key === 'unstable__static') {
@@ -138,11 +163,7 @@ export const reconciler = createReconciler<
 		}
 	},
 	commitTextUpdate: (node, _oldText, newText) => {
-		if (node.nodeName === '#text') {
-			node.nodeValue = newText;
-		} else {
-			node.textContent = newText;
-		}
+		setTextContent(node, newText);
 	},
 	removeChild: removeChildNode
 });

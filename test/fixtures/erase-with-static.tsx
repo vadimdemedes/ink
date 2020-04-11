@@ -18,4 +18,4 @@ const EraseWithStatic = () => (
 );
 
 process.stdout.rows = Number(process.argv[3]);
-render(<EraseWithStatic />, {experimental: true});
+render(<EraseWithStatic />);

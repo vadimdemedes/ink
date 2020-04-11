@@ -10,4 +10,4 @@ const Erase = () => (
 );
 
 process.stdout.rows = Number(process.argv[2]);
-render(<Erase />, {experimental: true});
+render(<Erase />);

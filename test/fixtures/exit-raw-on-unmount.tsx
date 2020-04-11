@@ -16,10 +16,7 @@ class Test extends React.Component<{
 const app = render(
 	<StdinContext.Consumer>
 		{({setRawMode}) => <Test onSetRawMode={setRawMode} />}
-	</StdinContext.Consumer>,
-	{
-		experimental: process.env.EXPERIMENTAL === 'true'
-	}
+	</StdinContext.Consumer>
 );
 
 setTimeout(() => app.unmount(), 500);

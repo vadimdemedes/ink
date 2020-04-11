@@ -33,6 +33,4 @@ class Test extends React.Component<Record<string, unknown>, {counter: number}> {
 	}
 }
 
-render(<Test />, {
-	experimental: process.env.EXPERIMENTAL === 'true'
-});
+render(<Test />);

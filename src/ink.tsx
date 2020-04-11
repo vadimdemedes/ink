@@ -5,12 +5,9 @@ import ansiEscapes from 'ansi-escapes';
 import isCI from 'is-ci';
 import autoBind from 'auto-bind';
 import {reconciler} from './reconciler';
-import {createRenderer, InkRenderer} from './renderer';
+import {createRenderer, Renderer} from './renderer';
 import signalExit from 'signal-exit';
 import * as dom from './dom';
-import * as experimentalDom from './experimental/dom';
-import {reconciler as experimentalReconciler} from './experimental/reconciler';
-import {createRenderer as createExperimentalRenderer} from './experimental/renderer';
 import {FiberRoot} from 'react-reconciler';
 import {instances} from './instances';
 import {App} from './components/App';
@@ -20,7 +17,6 @@ export interface InkOptions {
 	stdin: NodeJS.ReadStream;
 	debug: boolean;
 	exitOnCtrlC: boolean;
-	experimental: boolean;
 	waitUntilExit?: () => Promise<void>;
 }
 
@@ -36,36 +32,27 @@ export class Ink {
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	fullStaticOutput: string;
-	renderer: InkRenderer;
+	renderer: Renderer;
 	exitPromise: Promise<void>;
 
 	constructor(options: InkOptions) {
 		autoBind(this);
+
 		this.options = options;
+		this.rootNode = dom.createNode('root');
 
-		if (options.experimental) {
-			this.rootNode = experimentalDom.createNode('root');
+		this.rootNode.onRender = options.debug
+			? this.onRender
+			: throttle(this.onRender, 16, {
+					leading: true,
+					trailing: true
+			  });
 
-			this.rootNode.onRender = options.debug
-				? this.onRender
-				: throttle(this.onRender, 16, {
-						leading: true,
-						trailing: true
-				  });
+		this.rootNode.onImmediateRender = this.onRender;
 
-			this.rootNode.onImmediateRender = this.onRender;
-
-			this.renderer = createExperimentalRenderer({
-				terminalWidth: options.stdout.columns
-			});
-		} else {
-			this.rootNode = dom.createNode('root');
-			this.rootNode.onRender = this.onRender;
-
-			this.renderer = createRenderer({
-				terminalWidth: options.stdout.columns
-			});
-		}
+		this.renderer = createRenderer({
+			terminalWidth: options.stdout.columns
+		});
 
 		this.log = logUpdate.create(options.stdout);
 		this.throttledLog = options.debug
@@ -85,15 +72,7 @@ export class Ink {
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
 		this.fullStaticOutput = '';
 
-		if (options.experimental) {
-			this.container = experimentalReconciler.createContainer(
-				this.rootNode,
-				false,
-				false
-			);
-		} else {
-			this.container = reconciler.createContainer(this.rootNode, false, false);
-		}
+		this.container = reconciler.createContainer(this.rootNode, false, false);
 
 		this.exitPromise = new Promise((resolve, reject) => {
 			this.resolveExitPromise = resolve;
@@ -140,7 +119,7 @@ export class Ink {
 			this.fullStaticOutput += staticOutput;
 		}
 
-		if (this.options.experimental && outputHeight >= this.options.stdout.rows) {
+		if (outputHeight >= this.options.stdout.rows) {
 			this.options.stdout.write(
 				ansiEscapes.clearTerminal + this.fullStaticOutput + output
 			);
@@ -155,11 +134,7 @@ export class Ink {
 		}
 
 		if (output !== this.lastOutput) {
-			if (this.options.experimental) {
-				this.throttledLog(output);
-			} else {
-				this.log(output);
-			}
+			this.throttledLog(output);
 		}
 	};
 
@@ -175,11 +150,7 @@ export class Ink {
 			</App>
 		);
 
-		if (this.options.experimental) {
-			experimentalReconciler.updateContainer(tree, this.container);
-		} else {
-			reconciler.updateContainer(tree, this.container);
-		}
+		reconciler.updateContainer(tree, this.container);
 	}
 
 	unmount(error?: Error | number | null): void {
@@ -200,12 +171,7 @@ export class Ink {
 
 		this.isUnmounted = true;
 
-		if (this.options.experimental) {
-			experimentalReconciler.updateContainer(null, this.container);
-		} else {
-			reconciler.updateContainer(null, this.container);
-		}
-
+		reconciler.updateContainer(null, this.container);
 		instances.delete(this.options.stdout);
 
 		if (error instanceof Error) {

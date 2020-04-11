@@ -25,9 +25,6 @@ class Test extends React.Component<Record<string, unknown>, {counter: number}> {
 	}
 }
 
-const app = render(<Test />, {
-	experimental: process.env.EXPERIMENTAL === 'true'
-});
-
+const app = render(<Test />);
 setTimeout(() => app.unmount(), 500);
 app.waitUntilExit().then(() => console.log('exited'));

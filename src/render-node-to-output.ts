@@ -2,6 +2,7 @@ import widestLine from 'widest-line';
 import {wrapText} from './wrap-text';
 import {getMaxWidth} from './get-max-width';
 import {DOMNode, DOMElement} from './dom';
+import {Output} from './output';
 
 const isAllTextNodes = (node: DOMNode): boolean => {
 	if (node.nodeName === '#text') {
@@ -68,21 +69,12 @@ const squashTextNodes = (node: DOMElement): string => {
 	return text;
 };
 
-export interface OutputWriter {
-	write(
-		x: number,
-		y: number,
-		text: string,
-		options: {transformers: OutputTransformer[]}
-	): void;
-}
-
 export type OutputTransformer = (s: string) => string;
 
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
 export const renderNodeToOutput = (
 	node: DOMNode,
-	output: OutputWriter,
+	output: Output,
 	options: {
 		offsetX?: number;
 		offsetY?: number;

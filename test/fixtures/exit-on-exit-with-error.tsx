@@ -33,10 +33,7 @@ class Test extends React.Component<
 const app = render(
 	<AppContext.Consumer>
 		{({exit}) => <Test onExit={exit} />}
-	</AppContext.Consumer>,
-	{
-		experimental: process.env.EXPERIMENTAL === 'true'
-	}
+	</AppContext.Consumer>
 );
 
 app.waitUntilExit().catch((error: Error) => console.log(error.message));

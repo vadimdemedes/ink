@@ -23,10 +23,7 @@ class ExitDoubleRawMode extends React.Component<{
 const {unmount, waitUntilExit} = render(
 	<StdinContext.Consumer>
 		{({setRawMode}) => <ExitDoubleRawMode setRawMode={setRawMode} />}
-	</StdinContext.Consumer>,
-	{
-		experimental: process.env.EXPERIMENTAL === 'true'
-	}
+	</StdinContext.Consumer>
 );
 
 process.stdin.on('data', data => {

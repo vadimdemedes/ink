@@ -4,8 +4,6 @@ import chalk from 'chalk';
 import {spy} from 'sinon';
 import {Box, Color, render} from '../src';
 
-const isExperimental = process.env.EXPERIMENTAL === 'true';
-
 const createStdout = () => ({
 	write: spy(),
 	columns: 100
@@ -19,14 +17,12 @@ test('update child', t => {
 
 	const actual = render(<Test />, {
 		stdout: stdoutActual,
-		debug: true,
-		experimental: isExperimental
+		debug: true
 	});
 
 	const expected = render(<Box>A</Box>, {
 		stdout: stdoutExpected,
-		debug: true,
-		experimental: isExperimental
+		debug: true
 	});
 
 	t.is(
@@ -56,14 +52,12 @@ test('update text node', t => {
 
 	const actual = render(<Test />, {
 		stdout: stdoutActual,
-		debug: true,
-		experimental: isExperimental
+		debug: true
 	});
 
 	const expected = render(<Box>Hello A</Box>, {
 		stdout: stdoutExpected,
-		debug: true,
-		experimental: isExperimental
+		debug: true
 	});
 
 	t.is(
@@ -103,8 +97,7 @@ test('append child', t => {
 
 	const actual = render(<Test />, {
 		stdout: stdoutActual,
-		debug: true,
-		experimental: isExperimental
+		debug: true
 	});
 
 	const expected = render(
@@ -113,8 +106,7 @@ test('append child', t => {
 		</Box>,
 		{
 			stdout: stdoutExpected,
-			debug: true,
-			experimental: isExperimental
+			debug: true
 		}
 	);
 
@@ -163,8 +155,7 @@ test('insert child between other children', t => {
 
 	const actual = render(<Test />, {
 		stdout: stdoutActual,
-		debug: true,
-		experimental: isExperimental
+		debug: true
 	});
 
 	const expected = render(
@@ -174,8 +165,7 @@ test('insert child between other children', t => {
 		</Box>,
 		{
 			stdout: stdoutExpected,
-			debug: true,
-			experimental: isExperimental
+			debug: true
 		}
 	);
 
@@ -223,8 +213,7 @@ test('remove child', t => {
 
 	const actual = render(<Test />, {
 		stdout: stdoutActual,
-		debug: true,
-		experimental: isExperimental
+		debug: true
 	});
 
 	const expected = render(
@@ -234,8 +223,7 @@ test('remove child', t => {
 		</Box>,
 		{
 			stdout: stdoutExpected,
-			debug: true,
-			experimental: isExperimental
+			debug: true
 		}
 	);
 
@@ -282,8 +270,7 @@ test('reorder children', t => {
 
 	const actual = render(<Test />, {
 		stdout: stdoutActual,
-		debug: true,
-		experimental: isExperimental
+		debug: true
 	});
 
 	const expected = render(
@@ -293,8 +280,7 @@ test('reorder children', t => {
 		</Box>,
 		{
 			stdout: stdoutExpected,
-			debug: true,
-			experimental: isExperimental
+			debug: true
 		}
 	);
 
@@ -327,8 +313,7 @@ test('replace child node with text', t => {
 
 	const {rerender} = render(<Dynamic />, {
 		stdout,
-		debug: true,
-		experimental: isExperimental
+		debug: true
 	});
 
 	t.is(stdout.write.lastCall.args[0], chalk.green('test'));

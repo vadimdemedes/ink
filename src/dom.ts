@@ -1,6 +1,8 @@
 import Yoga from 'yoga-layout-prebuilt';
-import {Styles} from './styles';
+import {measureText} from './measure-text';
+import {applyStyles} from './apply-styles';
 import {OutputTransformer} from './render-node-to-output';
+import {Styles} from './styles';
 
 interface InkNode {
 	parentNode: DOMElement | null;
@@ -44,14 +46,13 @@ export type DOMNode<T = {nodeName: NodeNames}> = T extends {
 
 export type DOMNodeAttribute = boolean | string | number;
 
-// Helper utilities implementing some common DOM methods to simplify reconciliation code
 export const createNode = (nodeName: ElementNames): DOMElement => ({
 	nodeName: nodeName.toUpperCase() as ElementNames,
 	style: {},
 	attributes: {},
 	childNodes: [],
 	parentNode: null,
-	yogaNode: undefined
+	yogaNode: Yoga.Node.create()
 });
 
 export const appendChildNode = (
@@ -64,19 +65,18 @@ export const appendChildNode = (
 
 	childNode.parentNode = node;
 	node.childNodes.push(childNode);
-};
 
-// Same as `appendChildNode`, but without removing child node from parent node
-export const appendStaticNode = (
-	node: DOMElement,
-	childNode: DOMNode
-): void => {
-	node.childNodes.push(childNode);
+	if (childNode.yogaNode) {
+		node.yogaNode?.insertChild(
+			childNode.yogaNode,
+			node.yogaNode.getChildCount()
+		);
+	}
 };
 
 export const insertBeforeNode = (
 	node: DOMElement,
-	newChildNode: DOMElement,
+	newChildNode: DOMNode,
 	beforeChildNode: DOMNode
 ): void => {
 	if (newChildNode.parentNode) {
@@ -88,16 +88,31 @@ export const insertBeforeNode = (
 	const index = node.childNodes.indexOf(beforeChildNode);
 	if (index >= 0) {
 		node.childNodes.splice(index, 0, newChildNode);
+		if (newChildNode.yogaNode) {
+			node.yogaNode?.insertChild(newChildNode.yogaNode, index);
+		}
+
 		return;
 	}
 
 	node.childNodes.push(newChildNode);
+
+	if (newChildNode.yogaNode) {
+		node.yogaNode?.insertChild(
+			newChildNode.yogaNode,
+			node.yogaNode.getChildCount()
+		);
+	}
 };
 
 export const removeChildNode = (
 	node: DOMElement,
 	removeNode: DOMNode
 ): void => {
+	if (removeNode.yogaNode) {
+		removeNode.parentNode?.yogaNode?.removeChild(removeNode.yogaNode);
+	}
+
 	removeNode.parentNode = null;
 
 	const index = node.childNodes.indexOf(removeNode);
@@ -114,10 +129,49 @@ export const setAttribute = (
 	node.attributes[key] = value;
 };
 
-export const createTextNode = (text: string): TextNode => ({
-	nodeName: TEXT_NAME,
-	nodeValue: text,
-	parentNode: null,
-	yogaNode: undefined,
-	style: {}
-});
+export const setStyle = (node: DOMNode, style: Styles): void => {
+	node.style = style;
+
+	if (node.yogaNode) {
+		applyStyles(node.yogaNode, style);
+	}
+};
+
+export const createTextNode = (text: string): TextNode => {
+	const node: TextNode = {
+		nodeName: '#text',
+		nodeValue: text,
+		yogaNode: Yoga.Node.create(),
+		parentNode: null,
+		style: {}
+	};
+
+	setTextContent(node, text);
+
+	return node;
+};
+
+export const setTextContent = (node: DOMNode, text: string): void => {
+	if (typeof text !== 'string') {
+		text = String(text);
+	}
+
+	let width = 0;
+	let height = 0;
+
+	if (text.length > 0) {
+		const dimensions = measureText(text);
+		width = dimensions.width;
+		height = dimensions.height;
+	}
+
+	if (node.nodeName === '#text') {
+		node.nodeValue = text;
+		node.yogaNode?.setWidth(width);
+		node.yogaNode?.setHeight(height);
+	} else {
+		node.textContent = text;
+		node.yogaNode?.setWidth(node.style.width ?? width);
+		node.yogaNode?.setHeight(node.style.height ?? height);
+	}
+};

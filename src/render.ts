@@ -28,13 +28,6 @@ export interface RenderOptions {
 	 * @default true
 	 */
 	exitOnCtrlC?: boolean;
-	/**
-	 * Enable experimental mode and use a new and faster reconciler and renderer.
-	 * There should be no changes to the output. If there are, please report it.
-	 *
-	 * @default false
-	 */
-	experimental?: boolean;
 }
 
 export interface Instance {
@@ -67,7 +60,6 @@ export const render: RenderFunction = (node, options): Instance => {
 		stdin: process.stdin,
 		debug: false,
 		exitOnCtrlC: true,
-		experimental: false,
 		...getOptions(options)
 	};
 
@@ -91,8 +83,7 @@ const getOptions = (
 	if (stdout instanceof Stream) {
 		return {
 			stdout,
-			stdin: process.stdin,
-			experimental: false
+			stdin: process.stdin
 		};
 	}
 
