@@ -43,7 +43,7 @@ export class Ink {
 
 		this.rootNode.onRender = options.debug
 			? this.onRender
-			: throttle(this.onRender, 16, {
+			: throttle(this.onRender, 32, {
 					leading: true,
 					trailing: true
 			  });
