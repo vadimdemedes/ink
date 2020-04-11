@@ -12,7 +12,7 @@ import {FiberRoot} from 'react-reconciler';
 import {instances} from './instances';
 import {App} from './components/App';
 
-export interface InkOptions {
+export interface Options {
 	stdout: NodeJS.WriteStream;
 	stdin: NodeJS.ReadStream;
 	debug: boolean;
@@ -21,21 +21,21 @@ export interface InkOptions {
 }
 
 export class Ink {
-	options: InkOptions;
-	log: LogUpdate;
-	throttledLog: LogUpdate;
+	private readonly options: Options;
+	private readonly log: LogUpdate;
+	private readonly throttledLog: LogUpdate;
 	// Ignore last render after unmounting a tree to prevent empty output before exit
-	isUnmounted: boolean;
-	lastOutput: string;
-	container: FiberRoot;
-	rootNode: dom.DOMElement;
+	private isUnmounted: boolean;
+	private lastOutput: string;
+	private readonly container: FiberRoot;
+	private readonly rootNode: dom.DOMElement;
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
-	fullStaticOutput: string;
-	renderer: Renderer;
-	exitPromise: Promise<void>;
+	private fullStaticOutput: string;
+	private readonly renderer: Renderer;
+	private readonly exitPromise: Promise<void>;
 
-	constructor(options: InkOptions) {
+	constructor(options: Options) {
 		autoBind(this);
 
 		this.options = options;

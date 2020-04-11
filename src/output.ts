@@ -28,7 +28,7 @@ export class Output {
 	height: number;
 
 	// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
-	writes: Writes[] = [];
+	private readonly writes: Writes[] = [];
 
 	constructor(options: Options) {
 		const {width, height} = options;

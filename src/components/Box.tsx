@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {YogaNode} from 'yoga-layout-prebuilt';
 import {Styles} from '../styles';
 
-type BoxProps = Styles & {
+export type BoxProps = Styles & {
 	unstable__transformChildren?: (children: ReactNode) => ReactNode;
 };
 
