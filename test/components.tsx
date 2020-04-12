@@ -4,7 +4,6 @@ import React, {useState, FC} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
 import {spy} from 'sinon';
-import stripAnsi from 'strip-ansi';
 import {renderToString} from './helpers/render-to-string';
 import {run} from './helpers/run';
 import {Box, Color, Text, Static, StdinContext, render} from '../src';
@@ -454,13 +453,24 @@ test('render different component based on whether stdin is a TTY or not', t => {
 
 test('render only last frame when run in CI', async t => {
 	const output = await run('ci', {
-		env: {CI: true}
+		env: {CI: 'true'}
 	});
 
-	t.is(
-		stripAnsi(output),
-		['#1', '#2', '#3', '#4', '#5', 'Counter: 5'].join('\r\n') + '\r\n'
-	);
+	for (const num of [0, 1, 2, 3, 4]) {
+		t.false(output.includes(`Counter: ${num}`));
+	}
+
+	t.true(output.includes('Counter: 5'));
+});
+
+test('render all frames if CI environment variable equals false', async t => {
+	const output = await run('ci', {
+		env: {CI: 'false'}
+	});
+
+	for (const num of [0, 1, 2, 3, 4, 5]) {
+		t.true(output.includes(`Counter: ${num}`));
+	}
 });
 
 test('reset prop when it’s removed from the element', t => {

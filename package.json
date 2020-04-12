@@ -85,7 +85,6 @@
 		"prettier": "^2.0.4",
 		"react": "^16.9.0",
 		"sinon": "^8.1.1",
-		"strip-ansi": "^6.0.0",
 		"svg-term-cli": "^2.1.1",
 		"ts-node": "7.0.0",
 		"typescript": "^3.8.3",

@@ -2,7 +2,7 @@ import React, {ReactNode} from 'react';
 import throttle from 'lodash.throttle';
 import logUpdate, {LogUpdate} from 'log-update';
 import ansiEscapes from 'ansi-escapes';
-import isCI from 'is-ci';
+import originalIsCI from 'is-ci';
 import autoBind from 'auto-bind';
 import {reconciler} from './reconciler';
 import {createRenderer, Renderer} from './renderer';
@@ -11,6 +11,8 @@ import * as dom from './dom';
 import {FiberRoot} from 'react-reconciler';
 import {instances} from './instances';
 import {App} from './components/App';
+
+const isCI = process.env.CI === 'false' ? false : originalIsCI;
 
 export interface Options {
 	stdout: NodeJS.WriteStream;
