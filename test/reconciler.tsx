@@ -1,8 +1,8 @@
-import React from 'react';
+import React, {Suspense} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
 import {spy} from 'sinon';
-import {Box, Color, render} from '../src';
+import {Box, Color, Text, render} from '../src';
 
 const createStdout = () => ({
 	write: spy(),
@@ -320,4 +320,57 @@ test('replace child node with text', t => {
 
 	rerender(<Dynamic replace />);
 	t.is(stdout.write.lastCall.args[0], 'x');
+});
+
+test('support suspense', async t => {
+	const stdout = createStdout();
+
+	let promise;
+	let state;
+	let value;
+
+	const read = () => {
+		if (!promise) {
+			promise = new Promise(resolve => {
+				setTimeout(resolve, 500);
+			});
+
+			state = 'pending';
+
+			// eslint-disable-next-line promise/prefer-await-to-then
+			promise.then(() => {
+				state = 'done';
+				value = 'Hello World';
+			});
+		}
+
+		if (state === 'pending') {
+			throw promise;
+		}
+
+		if (state === 'done') {
+			return value;
+		}
+	};
+
+	const Suspendable = () => <Text>{read()}</Text>;
+
+	const Test = () => (
+		<Suspense fallback={<Text>Loading</Text>}>
+			<Suspendable />
+		</Suspense>
+	);
+
+	const out = render(<Test />, {
+		stdout,
+		debug: true
+	});
+
+	t.is(stdout.write.lastCall.args[0], 'Loading');
+
+	// eslint-disable-next-line @typescript-eslint/await-thenable
+	await promise;
+	out.rerender(<Test />);
+
+	t.is(stdout.write.lastCall.args[0], 'Hello World');
 });

@@ -4,6 +4,7 @@ import {
 	unstable_cancelCallback as cancelPassiveEffects
 } from 'scheduler';
 import createReconciler from 'react-reconciler';
+import Yoga from 'yoga-layout-prebuilt';
 import {
 	createTextNode,
 	appendChildNode,
@@ -14,6 +15,7 @@ import {
 	createNode,
 	setAttribute,
 	DOMNode,
+	TextNode,
 	ElementNames,
 	DOMElement
 } from './dom';
@@ -109,7 +111,19 @@ export const reconciler = createReconciler<
 			}
 		}
 	},
+	hideTextInstance: (node: TextNode): void => {
+		node.nodeValue = '';
+	},
+	unhideTextInstance: (node: TextNode, text: string): void => {
+		node.nodeValue = text;
+	},
 	getPublicInstance: instance => instance,
+	hideInstance: (node: DOMElement): void => {
+		node.yogaNode?.setDisplay(Yoga.DISPLAY_NONE);
+	},
+	unhideInstance: (node: DOMElement): void => {
+		node.yogaNode?.setDisplay(Yoga.DISPLAY_FLEX);
+	},
 	appendInitialChild: appendChildNode,
 	appendChild: appendChildNode,
 	insertBefore: insertBeforeNode,
