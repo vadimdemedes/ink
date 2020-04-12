@@ -13,6 +13,12 @@ export interface Key {
 	meta: boolean;
 }
 
+type Handler = (input: string, key: Key) => void;
+
+interface Options {
+	isActive?: boolean;
+}
+
 /**
  * This hook is used for handling user input.
  * It's a more convienient alternative to using `StdinContext` and listening to `data` events.
@@ -37,18 +43,26 @@ export interface Key {
  * };
  * ```
  */
-export const useInput = (inputHandler: (input: string, key: Key) => void) => {
+export const useInput = (inputHandler: Handler, options: Options = {}) => {
 	const {stdin, setRawMode} = useContext(StdinContext);
 
 	useEffect(() => {
+		if (options.isActive === false) {
+			return;
+		}
+
 		setRawMode(true);
 
 		return () => {
 			setRawMode(false);
 		};
-	}, [setRawMode]);
+	}, [options.isActive, setRawMode]);
 
 	useEffect(() => {
+		if (options.isActive === false) {
+			return;
+		}
+
 		const handleData = (data: Buffer) => {
 			let input = String(data);
 			const key = {
@@ -90,5 +104,5 @@ export const useInput = (inputHandler: (input: string, key: Key) => void) => {
 		return () => {
 			stdin?.off('data', handleData);
 		};
-	}, [stdin, inputHandler]);
+	}, [options.isActive, stdin, inputHandler]);
 };

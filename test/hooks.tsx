@@ -102,3 +102,12 @@ test('handle right arrow', async t => {
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
+
+test('ignore input if not active', async t => {
+	const ps = term('use-input-multiple');
+	ps.write('x');
+	await ps.waitForExit();
+	t.false(ps.output.includes('xx'));
+	t.true(ps.output.includes('x'));
+	t.true(ps.output.includes('exited'));
+});

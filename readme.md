@@ -790,7 +790,7 @@ Usage:
 
 ## Hooks
 
-### useInput
+### useInput(inputHandler, options?)
 
 This hook is used for handling user input.
 It's a more convienient alternative to using `StdinContext` and listening to `data` events.
@@ -816,27 +816,31 @@ const UserInput = () => {
 };
 ```
 
+#### inputHandler
+
+Type: `Function`
+
 The handler function that you pass to `useInput` receives two arguments:
 
-#### input
+##### input
 
 Type: `string`
 
 The input that the program received.
 
-#### key
+##### key
 
 Type: `object`
 
 Handy information about a key that was pressed.
 
-##### key.leftArrow
+###### key.leftArrow
 
-##### key.rightArrow
+###### key.rightArrow
 
-##### key.upArrow
+###### key.upArrow
 
-##### key.downArrow
+###### key.downArrow
 
 Type: `boolean`<br>
 Default: `false`
@@ -844,33 +848,45 @@ Default: `false`
 If an arrow key was pressed, the corresponding property will be `true`.
 For example, if user presses left arrow key, `key.leftArrow` equals `true`.
 
-##### key.return
+###### key.return
 
 Type: `boolean`<br>
 Default: `false`
 
 Return (Enter) key was pressed.
 
-##### key.ctrl
+###### key.ctrl
 
 Type: `boolean`<br>
 Default: `false`
 
 Ctrl key was pressed.
 
-##### key.shift
+###### key.shift
 
 Type: `boolean`<br>
 Default: `false`
 
 Shift key was pressed.
 
-##### key.meta
+###### key.meta
 
 Type: `boolean`<br>
 Default: `false`
 
 [Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
+
+#### options
+
+Type: `object`
+
+##### isActive
+
+Type: `boolean`<br>
+Default: `true`
+
+Enable or disable capturing of user input.
+Useful when there are multiple `useInput` hooks used at once to avoid handling the same input several times.
 
 ### useApp
 
