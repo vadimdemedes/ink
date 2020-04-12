@@ -54,9 +54,14 @@ export interface DimensionStyles {
 	minHeight?: number | string;
 }
 
+export interface DisplayStyles {
+	display?: 'flex' | 'none';
+}
+
 export type Styles = PaddingStyles &
 	MarginStyles &
 	FlexStyles &
 	DimensionStyles &
 	PositionStyles &
-	WrapTextStyles;
+	WrapTextStyles &
+	DisplayStyles;

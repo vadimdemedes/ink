@@ -3,7 +3,7 @@ import Yoga, {YogaNode} from 'yoga-layout-prebuilt';
 import {Styles} from './styles';
 
 const applyPositionStyles = (node: Yoga.YogaNode, style: Styles): void => {
-	if (!style.position) {
+	if (!style.position || style.position === 'relative') {
 		node.setPositionType(Yoga.POSITION_TYPE_RELATIVE);
 	}
 
@@ -148,10 +148,21 @@ const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
+const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
+	if (style.display === 'flex') {
+		node.setDisplay(Yoga.DISPLAY_FLEX);
+	}
+
+	if (style.display === 'none') {
+		node.setDisplay(Yoga.DISPLAY_NONE);
+	}
+};
+
 export const applyStyles = (node: YogaNode, style: Styles = {}): void => {
 	applyPositionStyles(node, style);
 	applyMarginStyles(node, style);
 	applyPaddingStyles(node, style);
 	applyFlexStyles(node, style);
 	applyDimensionStyles(node, style);
+	applyDisplayStyles(node, style);
 };

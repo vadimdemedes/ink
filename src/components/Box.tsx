@@ -12,6 +12,8 @@ export type BoxProps = Styles & {
  */
 export class Box extends PureComponent<BoxProps> {
 	static propTypes = {
+		display: PropTypes.oneOf(['flex', 'none']),
+		position: PropTypes.oneOf(['relative', 'absolute']),
 		margin: PropTypes.number,
 		marginX: PropTypes.number,
 		marginY: PropTypes.number,
