@@ -1,3 +1,4 @@
+import Yoga from 'yoga-layout-prebuilt';
 import widestLine from 'widest-line';
 import {wrapText} from './wrap-text';
 import {getMaxWidth} from './get-max-width';
@@ -96,6 +97,10 @@ export const renderNodeToOutput = (
 	const {yogaNode} = node;
 
 	if (yogaNode) {
+		if (yogaNode.getDisplay() === Yoga.DISPLAY_NONE) {
+			return;
+		}
+
 		// Left and top positions in Yoga are relative to their parent node
 		const x = offsetX + yogaNode.getComputedLeft();
 		const y = offsetY + yogaNode.getComputedTop();

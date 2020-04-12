@@ -567,6 +567,14 @@ See [justify-content](https://css-tricks.com/almanac/properties/f/justify-conten
 // [  X   Y  ]
 ```
 
+##### Visibility
+
+###### display
+
+Type: `string`<br>
+Allowed values: `flex` and `none`<br>
+Default: `flex`
+
 #### `<Color>`
 
 The `<Color>` component is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api).
