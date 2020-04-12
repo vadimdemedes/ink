@@ -5,8 +5,8 @@ const App: FC = () => {
 	const {exit} = useApp();
 	const [input, setInput] = useState('');
 
-	const handleInput = useCallback(input => {
-		setInput(previousInput => previousInput + input);
+	const handleInput = useCallback((input: string) => {
+		setInput((previousInput: string) => previousInput + input);
 	}, []);
 
 	useInput(handleInput);
