@@ -298,14 +298,15 @@ Sets a minimum height of the element. Percentages aren't supported yet, see http
 ###### textWrap
 
 Type: `string`<br>
-Values: `wrap` `truncate` `truncate-start` `truncate-middle` `truncate-end`
+Values: `wrap` `truncate` `truncate-start` `truncate-middle` `truncate-end`<br>
+Default: `wrap`
 
-This property tells Ink to wrap or truncate text content of `<Box>` if its width is larger than container. If `wrap` is passed, Ink will wrap text and split it into multiple lines. If `truncate-*` is passed, Ink will truncate text instead, which will result in one line of text with the rest cut off.
-
-_Note:_ Ink doesn't wrap text by default.
+This property tells Ink to wrap or truncate text content of `<Box>` if its width is larger than container.
+If `wrap` is passed (by default), Ink will wrap text and split it into multiple lines.
+If `truncate-*` is passed, Ink will truncate text instead, which will result in one line of text with the rest cut off.
 
 ```jsx
-<Box textWrap="wrap">Hello World</Box>
+<Box>Hello World</Box>
 //=> 'Hello\nWorld'
 
 // `truncate` is an alias to `truncate-end`

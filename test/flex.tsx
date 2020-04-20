@@ -27,14 +27,14 @@ test('grow one element', t => {
 
 test('dont shrink', t => {
 	const output = renderToString(
-		<Box width={10}>
+		<Box width={16}>
 			<Box flexShrink={0} width={6}>
 				A
 			</Box>
 			<Box flexShrink={0} width={6}>
 				B
 			</Box>
-			<Box>C</Box>
+			<Box width={6}>C</Box>
 		</Box>
 	);
 

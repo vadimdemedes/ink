@@ -1,6 +1,5 @@
 import Yoga from 'yoga-layout-prebuilt';
 import {renderNodeToOutput} from './render-node-to-output';
-import {calculateWrappedText} from './calculate-wrapped-text';
 import {Output} from './output';
 import {setStyle, DOMElement, TEXT_NAME} from './dom';
 
@@ -40,8 +39,6 @@ export const createRenderer: CreateRenderer = ({terminalWidth = 100}) => {
 		});
 
 		if (node.yogaNode) {
-			node.yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
-			calculateWrappedText(node);
 			node.yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
 
 			const output = new Output({

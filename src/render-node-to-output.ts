@@ -125,16 +125,15 @@ export const renderNodeToOutput = (
 
 			// Since text nodes are always wrapped in an additional node, parent node
 			// is where we should look for attributes
-			if (node.parentNode?.style.textWrap) {
+			if (node.parentNode) {
 				const currentWidth = widestLine(text);
 				const maxWidth = node.parentNode.yogaNode
 					? getMaxWidth(node.parentNode.yogaNode)
 					: 0;
 
 				if (currentWidth > maxWidth) {
-					text = wrapText(text, maxWidth, {
-						textWrap: node.parentNode.style.textWrap
-					});
+					const wrapType = node.parentNode.style.textWrap ?? 'wrap';
+					text = wrapText(text, maxWidth, wrapType);
 				}
 			}
 
@@ -146,16 +145,12 @@ export const renderNodeToOutput = (
 
 		if (isFlexDirectionRow && node.childNodes.every(isAllTextNodes)) {
 			let text = squashTextNodes(node);
+			const currentWidth = widestLine(text);
+			const maxWidth = getMaxWidth(yogaNode);
 
-			if (node.style.textWrap) {
-				const currentWidth = widestLine(text);
-				const maxWidth = getMaxWidth(yogaNode);
-
-				if (currentWidth > maxWidth) {
-					text = wrapText(text, maxWidth, {
-						textWrap: node.style.textWrap
-					});
-				}
+			if (currentWidth > maxWidth) {
+				const wrapType = node.style.textWrap ?? 'wrap';
+				text = wrapText(text, maxWidth, wrapType);
 			}
 
 			output.write(x, y, text, {transformers: newTransformers});

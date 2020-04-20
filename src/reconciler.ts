@@ -20,6 +20,11 @@ import {
 	DOMElement
 } from './dom';
 
+const cleanupYogaNode = (node: Yoga.YogaNode): void => {
+	// @ts-ignore
+	node.unsetMeasureFunc();
+};
+
 const NO_CONTEXT = true;
 
 interface Props {
@@ -108,6 +113,7 @@ export const reconciler = createReconciler<
 		if (node.childNodes.length > 0) {
 			for (const childNode of node.childNodes) {
 				removeChildNode(node, childNode);
+				cleanupYogaNode(childNode.yogaNode!);
 			}
 		}
 	},
@@ -137,7 +143,10 @@ export const reconciler = createReconciler<
 	supportsMutation: true,
 	appendChildToContainer: appendChildNode,
 	insertInContainerBefore: insertBeforeNode,
-	removeChildFromContainer: removeChildNode,
+	removeChildFromContainer: (node, removeNode) => {
+		removeChildNode(node, removeNode);
+		cleanupYogaNode(removeNode.yogaNode!);
+	},
 	prepareUpdate: (node, _type, _oldProps, _newProps, rootNode) => {
 		if (node.unstable__static) {
 			rootNode.isStaticDirty = true;
@@ -179,5 +188,8 @@ export const reconciler = createReconciler<
 	commitTextUpdate: (node, _oldText, newText) => {
 		setTextContent(node, newText);
 	},
-	removeChild: removeChildNode
+	removeChild: (node, removeNode) => {
+		removeChildNode(node, removeNode);
+		cleanupYogaNode(removeNode.yogaNode!);
+	}
 });
