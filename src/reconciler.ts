@@ -95,8 +95,8 @@ export const reconciler = createReconciler<
 				setStyle(node, value);
 			} else if (key === 'internal_transform') {
 				node.internal_transform = value;
-			} else if (key === 'unstable__static') {
-				node.unstable__static = true;
+			} else if (key === 'internal_static') {
+				node.internal_static = true;
 			} else {
 				setAttribute(node, key, value);
 			}
@@ -134,8 +134,12 @@ export const reconciler = createReconciler<
 	appendChild: appendChildNode,
 	insertBefore: insertBeforeNode,
 	finalizeInitialChildren: (node, _type, _props, rootNode) => {
-		if (node.unstable__static) {
+		if (node.internal_static) {
 			rootNode.isStaticDirty = true;
+
+			// Save reference to <Static> node to skip traversal of entire
+			// node tree to find it
+			rootNode.staticNode = node;
 		}
 
 		return false;
@@ -148,7 +152,7 @@ export const reconciler = createReconciler<
 		cleanupYogaNode(removeNode.yogaNode!);
 	},
 	prepareUpdate: (node, _type, _oldProps, _newProps, rootNode) => {
-		if (node.unstable__static) {
+		if (node.internal_static) {
 			rootNode.isStaticDirty = true;
 		}
 
@@ -178,8 +182,8 @@ export const reconciler = createReconciler<
 				setStyle(node, value);
 			} else if (key === 'internal_transform') {
 				node.internal_transform = value;
-			} else if (key === 'unstable__static') {
-				node.unstable__static = true;
+			} else if (key === 'internal_static') {
+				node.internal_static = true;
 			} else {
 				setAttribute(node, key, value);
 			}

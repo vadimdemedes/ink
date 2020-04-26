@@ -90,7 +90,7 @@ export const renderNodeToOutput = (
 		skipStaticElements
 	} = options;
 
-	if (skipStaticElements && node.unstable__static) {
+	if (skipStaticElements && node.internal_static) {
 		return;
 	}
 

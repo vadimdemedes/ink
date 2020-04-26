@@ -48,6 +48,10 @@ test('do not erase screen', async t => {
 	const ps = term('erase', ['4']);
 	await ps.waitForExit();
 	t.false(ps.output.includes(ansiEscapes.clearTerminal));
+
+	['A', 'B', 'C'].forEach(letter => {
+		t.true(ps.output.includes(letter));
+	});
 });
 
 test('do not erase screen where <Static> is taller than viewport', async t => {
@@ -55,16 +59,28 @@ test('do not erase screen where <Static> is taller than viewport', async t => {
 
 	await ps.waitForExit();
 	t.false(ps.output.includes(ansiEscapes.clearTerminal));
+
+	['A', 'B', 'C', 'D', 'E', 'F'].forEach(letter => {
+		t.true(ps.output.includes(letter));
+	});
 });
 
 test('erase screen', async t => {
 	const ps = term('erase', ['3']);
 	await ps.waitForExit();
 	t.true(ps.output.includes(ansiEscapes.clearTerminal));
+
+	['A', 'B', 'C'].forEach(letter => {
+		t.true(ps.output.includes(letter));
+	});
 });
 
 test('erase screen where <Static> exists but interactive part is taller than viewport', async t => {
 	const ps = term('erase', ['3']);
 	await ps.waitForExit();
 	t.true(ps.output.includes(ansiEscapes.clearTerminal));
+
+	['A', 'B', 'C'].forEach(letter => {
+		t.true(ps.output.includes(letter));
+	});
 });

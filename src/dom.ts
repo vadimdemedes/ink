@@ -8,7 +8,7 @@ import {Styles} from './styles';
 interface InkNode {
 	parentNode: DOMElement | null;
 	yogaNode?: Yoga.YogaNode;
-	unstable__static?: boolean;
+	internal_static?: boolean;
 	style: Styles;
 }
 
@@ -25,10 +25,11 @@ export type DOMElement = {
 	textContent?: string;
 	childNodes: DOMNode[];
 	internal_transform?: OutputTransformer;
-	onRender?: () => void;
 
-	// Experimental properties
+	// Internal properties
 	isStaticDirty?: boolean;
+	staticNode?: any;
+	onRender?: () => void;
 	onImmediateRender?: () => void;
 } & InkNode;
 

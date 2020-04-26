@@ -1,81 +1,63 @@
-import React, {Component, ReactNode} from 'react';
+import React, {ReactNode, useMemo, useState, useEffect} from 'react';
 import PropTypes from 'prop-types';
 import {Styles} from '../styles';
 
-const childrenToArray = (children: ReactNode) => {
-	return Array.isArray(children) ? children : [children];
-};
-
-interface State {
-	lastIndex: number | null;
+export interface StaticProps<T> extends Styles {
+	items: T[];
+	style?: Styles;
+	children: (item: T, index: number) => ReactNode;
 }
 
 /**
- * `<Static>` component allows permanently rendering output to stdout and preserving it across renders. Components passed to `<Static>` as children will be written to stdout only once and will never be rerendered. `<Static>` output comes first, before any other output from your components, no matter where it is in the tree. In order for this mechanism to work properly, at most one `<Static>` component must be present in your node tree and components that were rendered must never update their output. Ink will detect new children appended to `<Static>` and render them to stdout.
+ * `<Static>` component permanently renders its output above everything else.
+ * It's useful for displaying activity like completed tasks or logs - things that
+ * are not changing after they're rendered (hence the name "Static").
  *
- * __Note__: `<Static>` accepts only an array of children and each of them must have a unique key.
+ * It's preferred to use `<Static>` for use cases like these, when you can't know
+ * or control the amount of items that need to be rendered.
  *
- * This component allows developers to render output before main output from all the other components.
- * The reason it's called <Static> is it's append-only output. Output from <Static> components
- * is written permanently to stdout and is never updated afterwards. If <Static> component
- * receives new children, Ink will detect the changes and write them to stdout.
- * In order for this mechanism to work perfectly, <Static> children must never update their output
- * once they've been appended to <Static>.
- *
- * A good example of where this component might be useful is interface like Jest's.
- * When running tests, Jest keeps writing completed tests to output, while continuously
- * rendering test stats at the end of the output.
+ * For example, [Tap](https://github.com/tapjs/node-tap) uses `<Static>` to display
+ * a list of completed tests. [Gatsby](https://github.com/gatsbyjs/gatsby) uses it
+ * to display a list of generated pages, while still displaying a live progress bar.
  */
-export class Static extends Component<Styles, State> {
-	static propTypes = {
-		children: PropTypes.node
-	};
+export const Static = <T,>(props: StaticProps<T>) => {
+	const {items, children: render, style: customStyle} = props;
+	const [index, setIndex] = useState(0);
 
-	state: State = {
-		lastIndex: null
-	};
+	const itemsToRender: T[] = useMemo(() => {
+		return items.slice(index);
+	}, [items, index]);
 
-	render() {
-		const {children, ...otherProps} = this.props;
-		const {lastIndex} = this.state;
-		let newChildren = children;
+	useEffect(() => {
+		setIndex(items.length);
+	}, [items.length]);
 
-		if (typeof lastIndex === 'number') {
-			newChildren = childrenToArray(children).slice(lastIndex);
-		}
+	const children = itemsToRender.map((item, itemIndex) => {
+		return render(item, index + itemIndex);
+	});
 
-		return (
-			<div
-				// @ts-ignore
-				unstable__static
-				style={{
-					position: 'absolute',
-					flexDirection: 'column',
-					...otherProps
-				}}
-			>
-				{newChildren}
-			</div>
-		);
-	}
+	const style: Styles = useMemo(
+		() => ({
+			position: 'absolute',
+			flexDirection: 'column',
+			...customStyle
+		}),
+		[customStyle]
+	);
 
-	componentDidMount() {
-		this.saveLastIndex(this.props.children);
-	}
+	return (
+		<div
+			// @ts-ignore
+			internal_static
+			style={style}
+		>
+			{children}
+		</div>
+	);
+};
 
-	componentDidUpdate(_prevProps: Styles, prevState: State) {
-		if (prevState.lastIndex === this.state.lastIndex) {
-			this.saveLastIndex(this.props.children);
-		}
-	}
-
-	saveLastIndex(children: ReactNode): void {
-		const nextIndex = childrenToArray(children).length;
-
-		if (this.state.lastIndex !== nextIndex) {
-			this.setState({
-				lastIndex: nextIndex
-			});
-		}
-	}
-}
+Static.propTypes = {
+	items: PropTypes.array.isRequired,
+	style: PropTypes.object,
+	children: PropTypes.func.isRequired
+};

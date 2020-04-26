@@ -197,10 +197,8 @@ test('hooks', t => {
 test('static output', t => {
 	const output = renderToString(
 		<Box>
-			<Static paddingBottom={1}>
-				<Box key="a">A</Box>
-				<Box key="b">B</Box>
-				<Box key="c">C</Box>
+			<Static items={['A', 'B', 'C']} style={{paddingBottom: 1}}>
+				{letter => <Box key={letter}>{letter}</Box>}
 			</Static>
 
 			<Box marginTop={1}>X</Box>
@@ -217,11 +215,7 @@ test('skip previous output when rendering new static output', t => {
 	};
 
 	const Dynamic: FC<{items: string[]}> = ({items}) => (
-		<Static>
-			{items.map(item => (
-				<Box key={item}>{item}</Box>
-			))}
-		</Static>
+		<Static items={items}>{item => <Box key={item}>{item}</Box>}</Static>
 	);
 
 	const {rerender} = render(<Dynamic items={['A']} />, {

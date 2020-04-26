@@ -1,26 +1,7 @@
 import Yoga from 'yoga-layout-prebuilt';
 import {renderNodeToOutput} from './render-node-to-output';
 import {Output} from './output';
-import {setStyle, DOMElement, TEXT_NAME} from './dom';
-
-// Since <Static> components can be placed anywhere in the tree, this helper finds and returns them
-const findStaticNode = (node: DOMElement): DOMElement | undefined => {
-	if (node.unstable__static) {
-		return node;
-	}
-
-	for (const childNode of node.childNodes) {
-		if (childNode.nodeName !== TEXT_NAME) {
-			if (childNode.unstable__static) {
-				return childNode;
-			}
-
-			return findStaticNode(childNode);
-		}
-	}
-
-	return undefined;
-};
+import {setStyle, DOMElement} from './dom';
 
 export type Renderer = (
 	node: DOMElement
@@ -48,16 +29,15 @@ export const createRenderer: CreateRenderer = ({terminalWidth = 100}) => {
 
 			renderNodeToOutput(node, output, {skipStaticElements: true});
 
-			const staticNode = findStaticNode(node);
 			let staticOutput;
 
-			if (staticNode?.yogaNode) {
+			if (node.staticNode?.yogaNode) {
 				staticOutput = new Output({
-					width: staticNode.yogaNode.getComputedWidth(),
-					height: staticNode.yogaNode.getComputedHeight()
+					width: node.staticNode.yogaNode.getComputedWidth(),
+					height: node.staticNode.yogaNode.getComputedHeight()
 				});
 
-				renderNodeToOutput(staticNode, staticOutput, {
+				renderNodeToOutput(node.staticNode, staticOutput, {
 					skipStaticElements: false
 				});
 			}
