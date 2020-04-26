@@ -72,6 +72,7 @@
 		"@sindresorhus/tsconfig": "0.7.0",
 		"ava": "^3.5.0",
 		"babel-eslint": "^10.0.1",
+		"benchmark": "^2.1.4",
 		"delay": "^4.1.0",
 		"eslint-config-xo": "0.29.1",
 		"eslint-config-xo-react": "^0.22.0",
