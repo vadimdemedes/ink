@@ -1,6 +1,7 @@
 import Yoga from 'yoga-layout-prebuilt';
 import {measureText} from './measure-text';
 import {applyStyles} from './apply-styles';
+import {wrapText} from './wrap-text';
 import {OutputTransformer} from './render-node-to-output';
 import {Styles} from './styles';
 
@@ -151,27 +152,36 @@ export const createTextNode = (text: string): TextNode => {
 	return node;
 };
 
+const measureTextNode = function (
+	node: DOMNode,
+	text: string,
+	width: number
+): {width: number; height: number} {
+	const dimensions = measureText(text);
+
+	// Text fits into container, no need to wrap
+	if (dimensions.width <= width) {
+		return dimensions;
+	}
+
+	const wrapType = node.parentNode?.style?.textWrap ?? 'wrap';
+	const wrappedText = wrapText(text, width, wrapType);
+
+	return measureText(wrappedText);
+};
+
 export const setTextContent = (node: DOMNode, text: string): void => {
 	if (typeof text !== 'string') {
 		text = String(text);
 	}
 
-	let width = 0;
-	let height = 0;
-
-	if (text.length > 0) {
-		const dimensions = measureText(text);
-		width = dimensions.width;
-		height = dimensions.height;
-	}
-
 	if (node.nodeName === '#text') {
 		node.nodeValue = text;
-		node.yogaNode?.setWidth(width);
-		node.yogaNode?.setHeight(height);
 	} else {
 		node.textContent = text;
-		node.yogaNode?.setWidth(node.style.width ?? width);
-		node.yogaNode?.setHeight(node.style.height ?? height);
 	}
+
+	node.yogaNode?.setMeasureFunc(
+		measureTextNode.bind(null, node, text) as () => any
+	);
 };

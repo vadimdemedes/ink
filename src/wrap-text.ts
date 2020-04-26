@@ -2,33 +2,43 @@ import wrapAnsi from 'wrap-ansi';
 import cliTruncate from 'cli-truncate';
 import {WrapTextStyles} from './styles';
 
+const cache: Record<string, string> = {};
+
 export const wrapText = (
 	text: string,
 	maxWidth: number,
-	style: WrapTextStyles = {}
+	wrapType: WrapTextStyles['textWrap']
 ): string => {
-	const {textWrap} = style;
+	const cacheKey = text + String(maxWidth) + String(wrapType);
 
-	if (textWrap === 'wrap') {
-		return wrapAnsi(text, maxWidth, {
+	if (cache[cacheKey]) {
+		return cache[cacheKey];
+	}
+
+	let wrappedText = text;
+
+	if (wrapType === 'wrap') {
+		wrappedText = wrapAnsi(text, maxWidth, {
 			trim: false,
 			hard: true
 		});
 	}
 
-	if (String(textWrap).startsWith('truncate')) {
+	if (wrapType!.startsWith('truncate')) {
 		let position: 'end' | 'middle' | 'start' = 'end';
 
-		if (textWrap === 'truncate-middle') {
+		if (wrapType === 'truncate-middle') {
 			position = 'middle';
 		}
 
-		if (textWrap === 'truncate-start') {
+		if (wrapType === 'truncate-start') {
 			position = 'start';
 		}
 
-		return cliTruncate(text, maxWidth, {position});
+		wrappedText = cliTruncate(text, maxWidth, {position});
 	}
 
-	return text;
+	cache[cacheKey] = wrappedText;
+
+	return wrappedText;
 };
