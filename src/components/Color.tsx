@@ -1,4 +1,4 @@
-import React, {FC, ReactNode} from 'react';
+import React, {FC, ReactNode, memo} from 'react';
 import PropTypes from 'prop-types';
 import arrify from 'arrify';
 import chalk, {Chalk} from 'chalk';
@@ -46,7 +46,7 @@ const methods = [
 /**
  * The `<Color>` compoment is a simple wrapper around the `chalk` API. It supports all of the `chalk`'s methods as `props`.
  */
-export const Color: FC<ColorProps> = ({children, ...colorProps}) => {
+export const Color: FC<ColorProps> = memo(({children, ...colorProps}) => {
 	if (children === '') {
 		return null;
 	}
@@ -69,7 +69,7 @@ export const Color: FC<ColorProps> = ({children, ...colorProps}) => {
 	};
 
 	return <Transform transform={transform}>{children}</Transform>;
-};
+});
 
 Color.propTypes = {
 	children: PropTypes.node
