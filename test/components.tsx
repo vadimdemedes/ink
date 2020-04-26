@@ -6,7 +6,15 @@ import chalk from 'chalk';
 import {spy} from 'sinon';
 import {renderToString} from './helpers/render-to-string';
 import {run} from './helpers/run';
-import {Box, Color, Text, Static, StdinContext, render} from '../src';
+import {
+	Box,
+	Color,
+	Text,
+	Static,
+	StdinContext,
+	Transform,
+	render
+} from '../src';
 
 test('text', t => {
 	const output = renderToString(<Box>Hello World</Box>);
@@ -120,11 +128,13 @@ test('fragment', t => {
 
 test('transform children', t => {
 	const output = renderToString(
-		<Box unstable__transformChildren={(string: string) => `[${string}]`}>
-			<Box unstable__transformChildren={(string: string) => `{${string}}`}>
-				test
+		<Transform transform={(string: string) => `[${string}]`}>
+			<Box>
+				<Transform transform={(string: string) => `{${string}}`}>
+					<Box>test</Box>
+				</Transform>
 			</Box>
-		</Box>
+		</Transform>
 	);
 
 	t.is(output, '[{test}]');
@@ -132,11 +142,13 @@ test('transform children', t => {
 
 test('squash multiple text nodes', t => {
 	const output = renderToString(
-		<Box unstable__transformChildren={(string: string) => `[${string}]`}>
-			<Box unstable__transformChildren={(string: string) => `{${string}}`}>
-				hello world
-			</Box>
-		</Box>
+		<Transform transform={(string: string) => `[${string}]`}>
+			<Text>
+				<Transform transform={(string: string) => `{${string}}`}>
+					<Text>hello world</Text>
+				</Transform>
+			</Text>
+		</Transform>
 	);
 
 	t.is(output, '[{hello world}]');
@@ -144,12 +156,14 @@ test('squash multiple text nodes', t => {
 
 test('squash multiple nested text nodes', t => {
 	const output = renderToString(
-		<Box unstable__transformChildren={(string: string) => `[${string}]`}>
-			<Box unstable__transformChildren={(string: string) => `{${string}}`}>
-				hello
-				<Text> world</Text>
-			</Box>
-		</Box>
+		<Transform transform={(string: string) => `[${string}]`}>
+			<Text>
+				<Transform transform={(string: string) => `{${string}}`}>
+					hello
+					<Text> world</Text>
+				</Transform>
+			</Text>
+		</Transform>
 	);
 
 	t.is(output, '[{hello world}]');
@@ -157,11 +171,13 @@ test('squash multiple nested text nodes', t => {
 
 test('squash empty `<Text>` nodes', t => {
 	const output = renderToString(
-		<Box unstable__transformChildren={(string: string) => `[${string}]`}>
-			<Box unstable__transformChildren={(string: string) => `{${string}}`}>
-				<Text>{[]}</Text>
-			</Box>
-		</Box>
+		<Transform transform={(string: string) => `[${string}]`}>
+			<Text>
+				<Transform transform={(string: string) => `{${string}}`}>
+					<Text>{[]}</Text>
+				</Transform>
+			</Text>
+		</Transform>
 	);
 
 	t.is(output, '');

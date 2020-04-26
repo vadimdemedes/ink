@@ -24,7 +24,7 @@ export type DOMElement = {
 	};
 	textContent?: string;
 	childNodes: DOMNode[];
-	unstable__transformChildren?: OutputTransformer;
+	internal_transform?: OutputTransformer;
 	onRender?: () => void;
 
 	// Experimental properties

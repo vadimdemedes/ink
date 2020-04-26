@@ -673,6 +673,34 @@ Jest continuously writes the list of completed tests to the output, while updati
 
 See [examples/jest](examples/jest/jest.js) for a basic implementation of Jest's UI.
 
+#### `<Transform>`
+
+Transform a string representation of React components before they are written to output.
+For example, you might want to apply a [gradient to text](https://github.com/sindresorhus/ink-gradient), [add a clickable link](https://github.com/sindresorhus/ink-link) or [create some text effects](https://github.com/sindresorhus/ink-big-text).
+These use cases can't accept React nodes as input, they are expecting a string.
+That's what `<Transform>` component does, it gives you an output string of its child components and lets you transform it in any way.
+
+```jsx
+<Transform transform={output => output.toUpperCase()}>
+	<Text>Hello World</Text>
+</Transform>
+```
+
+Since `transform` function converts all characters to upper case, final output that's rendered to the terminal will be "HELLO WORLD", not "Hello World".
+
+##### transform(children)
+
+Type: `Function`
+
+Function which transforms children output.
+It accepts children and must return transformed children too.
+
+##### children
+
+Type: `string`
+
+Output of child components.
+
 #### `<AppContext>`
 
 `<AppContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes a method to manually exit the app (unmount).

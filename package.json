@@ -134,7 +134,8 @@
 						"error",
 						{
 							"allow": [
-								"^unstable__"
+								"^unstable__",
+								"^internal_"
 							]
 						}
 					],

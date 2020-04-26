@@ -57,8 +57,8 @@ const squashTextNodes = (node: DOMElement): string => {
 
 					// Since these text nodes are being concatenated, `Output` instance won't be able to
 					// apply children transform, so we have to do it manually here for each text node
-					if (childNode.unstable__transformChildren) {
-						nodeText = childNode.unstable__transformChildren(nodeText);
+					if (typeof childNode.internal_transform === 'function') {
+						nodeText = childNode.internal_transform(nodeText);
 					}
 				}
 
@@ -115,8 +115,8 @@ export const renderNodeToOutput = (
 			return;
 		}
 
-		if (node.unstable__transformChildren) {
-			newTransformers = [node.unstable__transformChildren, ...transformers];
+		if (typeof node.internal_transform === 'function') {
+			newTransformers = [node.internal_transform, ...transformers];
 		}
 
 		// Nodes with only text inside
