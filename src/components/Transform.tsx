@@ -1,4 +1,4 @@
-import React, {FC, ReactNode} from 'react';
+import React, {FC, ReactNode, memo} from 'react';
 import PropTypes from 'prop-types';
 
 export interface TransformProps {
@@ -9,7 +9,7 @@ export interface TransformProps {
 /*
  * Transform a string representation of React components before they are written to output.
  */
-export const Transform: FC<TransformProps> = ({children, transform}) => (
+export const Transform: FC<TransformProps> = memo(({children, transform}) => (
 	<span
 		style={{flexDirection: 'row'}}
 		// @ts-ignore
@@ -17,7 +17,7 @@ export const Transform: FC<TransformProps> = ({children, transform}) => (
 	>
 		{children}
 	</span>
-);
+));
 
 Transform.propTypes = {
 	transform: PropTypes.func.isRequired,
