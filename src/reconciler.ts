@@ -93,8 +93,8 @@ export const reconciler = createReconciler<
 				}
 			} else if (key === 'style') {
 				setStyle(node, value);
-			} else if (key === 'unstable__transformChildren') {
-				node.unstable__transformChildren = value;
+			} else if (key === 'internal_transform') {
+				node.internal_transform = value;
 			} else if (key === 'unstable__static') {
 				node.unstable__static = true;
 			} else {
@@ -176,8 +176,8 @@ export const reconciler = createReconciler<
 				}
 			} else if (key === 'style') {
 				setStyle(node, value);
-			} else if (key === 'unstable__transformChildren') {
-				node.unstable__transformChildren = value;
+			} else if (key === 'internal_transform') {
+				node.internal_transform = value;
 			} else if (key === 'unstable__static') {
 				node.unstable__static = true;
 			} else {

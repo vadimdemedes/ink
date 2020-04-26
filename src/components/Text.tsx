@@ -1,6 +1,7 @@
 import React, {FC, ReactNode} from 'react';
 import PropTypes from 'prop-types';
 import chalk from 'chalk';
+import {Transform} from './Transform';
 
 export interface TextProps {
 	readonly bold?: boolean;
@@ -22,7 +23,7 @@ export const Text: FC<TextProps> = ({
 	children,
 	unstable__transformChildren
 }) => {
-	const transformChildren = (children: ReactNode) => {
+	const transform = (children: ReactNode) => {
 		if (bold) {
 			children = chalk.bold(children);
 		}
@@ -39,22 +40,14 @@ export const Text: FC<TextProps> = ({
 			children = chalk.strikethrough(children);
 		}
 
-		if (unstable__transformChildren) {
+		if (typeof unstable__transformChildren === 'function') {
 			children = unstable__transformChildren(children);
 		}
 
 		return children;
 	};
 
-	return (
-		<span
-			style={{flexDirection: 'row'}}
-			// @ts-ignore
-			unstable__transformChildren={transformChildren}
-		>
-			{children}
-		</span>
-	);
+	return <Transform transform={transform}>{children}</Transform>;
 };
 
 /* eslint-disable react/boolean-prop-naming */

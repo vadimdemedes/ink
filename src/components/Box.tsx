@@ -80,7 +80,7 @@ export class Box extends PureComponent<BoxProps> {
 				ref={this.nodeRef}
 				style={style}
 				// @ts-ignore
-				unstable__transformChildren={unstable__transformChildren}
+				internal_transform={unstable__transformChildren}
 			>
 				{children}
 			</div>

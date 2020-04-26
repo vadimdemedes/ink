@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import arrify from 'arrify';
 import chalk, {Chalk} from 'chalk';
 import {Except} from 'type-fest';
+import {Transform} from './Transform';
 
 type Colors =
 	| typeof chalk.ForegroundColor
@@ -50,7 +51,7 @@ export const Color: FC<ColorProps> = ({children, ...colorProps}) => {
 		return null;
 	}
 
-	const transformChildren = (children: ReactNode) => {
+	const transform = (children: ReactNode) => {
 		// @ts-ignore
 		Object.keys(colorProps).forEach((method: keyof ChalkProps) => {
 			if (colorProps[method]) {
@@ -67,15 +68,7 @@ export const Color: FC<ColorProps> = ({children, ...colorProps}) => {
 		return children;
 	};
 
-	return (
-		<span
-			style={{flexDirection: 'row'}}
-			// @ts-ignore
-			unstable__transformChildren={transformChildren}
-		>
-			{children}
-		</span>
-	);
+	return <Transform transform={transform}>{children}</Transform>;
 };
 
 Color.propTypes = {
