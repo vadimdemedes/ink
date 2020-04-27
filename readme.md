@@ -24,20 +24,21 @@ import React, {useState, useEffect} from 'react';
 import {render, Color} from 'ink';
 
 function Counter() {
-  let [counter, setCounter] = React.useState(0);
+	let [counter, setCounter] = React.useState(0);
 
-  React.useEffect(() => {
-    let id = setInterval(() => {
-      setCounter((c) => c + 1);
-    }, 100);
-    return () => clearInterval(id);
-  }, []);
+	React.useEffect(() => {
+		let id = setInterval(() => {
+			setCounter(count => count + 1);
+		}, 100);
 
-  return (
-    <Color green>
-      {counter} tests passed
-    </Color>
-  );
+		return () => clearInterval(id);
+	}, []);
+
+	return (
+		<Color green>
+			{counter} tests passed
+		</Color>
+	);
 }
 
 render(<Counter />);
