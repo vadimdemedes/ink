@@ -676,7 +676,7 @@ UI using `<Static>` component.
 
 ##### items
 
-Type: `array`
+Type: `Array`
 
 Array of items of any type to render using a function you pass as a component child.
 
