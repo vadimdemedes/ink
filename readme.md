@@ -20,33 +20,27 @@ $ npm install ink react
 ## Usage
 
 ```jsx
-import React, {Component} from 'react';
+import React, {useState, useEffect} from 'react';
 import {render, Color} from 'ink';
 
-class Counter extends Component {
-	constructor() {
-		super();
+const Counter = () => {
+	const [counter, setCounter] = useState(0);
 
-		this.state = {
-			i: 0
-		};
-	}
-
-	render() {
-		return <Color green>{this.state.i} tests passed</Color>;
-	}
-
-	componentDidMount() {
-		this.timer = setInterval(() => {
-			this.setState({
-				i: this.state.i + 1
-			});
+	useEffect(() => {
+		const timer = setInterval(() => {
+			setCounter(previousCounter => previousCounter + 1);
 		}, 100);
-	}
 
-	componentWillUnmount() {
-		clearInterval(this.timer);
-	}
+		return () => {
+			clearInterval(timer);
+		};
+	}, []);
+
+	return (
+		<Color green>
+			{counter} tests passed
+		</Color>
+	);
 }
 
 render(<Counter />);
