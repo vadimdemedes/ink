@@ -38,10 +38,10 @@ class Jest extends React.Component {
 
 		return (
 			<Box flexDirection="column">
-				<Static>
-					{completedTests.map(test => (
+				<Static items={completedTests}>
+					{test => (
 						<Test key={test.path} status={test.status} path={test.path} />
-					))}
+					)}
 				</Static>
 
 				{runningTests.length > 0 && (

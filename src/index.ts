@@ -5,7 +5,7 @@ export {Color, ColorProps} from './components/Color';
 export {AppContext, AppContextProps} from './components/AppContext';
 export {StdinContext, StdinContextProps} from './components/StdinContext';
 export {StdoutContext, StdoutContextProps} from './components/StdoutContext';
-export {Static} from './components/Static';
+export {Static, StaticProps} from './components/Static';
 export {Transform, TransformProps} from './components/Transform';
 export {useInput, Key} from './hooks/use-input';
 export {useApp} from './hooks/use-app';

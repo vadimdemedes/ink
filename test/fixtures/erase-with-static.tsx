@@ -3,10 +3,8 @@ import {Static, Box, Text, render} from '../../src';
 
 const EraseWithStatic = () => (
 	<>
-		<Static>
-			<Text key="a">A</Text>
-			<Text key="b">B</Text>
-			<Text key="c">C</Text>
+		<Static items={['A', 'B', 'C']}>
+			{item => <Text key={item}>{item}</Text>}
 		</Static>
 
 		<Box flexDirection="column">

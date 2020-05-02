@@ -644,25 +644,21 @@ Usage:
 
 #### `<Static>`
 
-`<Static>` component allows permanently rendering output to stdout and preserving it across renders.
-Components passed to `<Static>` as children will be written to stdout only once and will never be rerendered.
-`<Static>` output comes first, before any other output from your components, no matter where it is in the tree.
-In order for this mechanism to work properly, at most one `<Static>` component must be present in your node tree and components that were rendered must never update their output. Ink will detect new children appended to `<Static>` and render them to stdout.
+`<Static>` component permanently renders its output above everything else.
+It's useful for displaying activity like completed tasks or logs - things that
+are not changing after they're rendered (hence the name "Static").
 
-**Note:** `<Static>` accepts only an array of children and each of them must have a unique key.
+It's preferred to use `<Static>` for use cases like these, when you can't know
+or control the amount of items that need to be rendered.
 
-Example use case for this component is Jest's output:
-
-![](https://jestjs.io/img/content/feature-fast.png)
-
-Jest continuously writes the list of completed tests to the output, while updating test results at the bottom of the output in real-time. Here's how this user interface could be implemented with Ink:
+For example, [Tap](https://github.com/tapjs/node-tap) uses `<Static>` to display
+a list of completed tests. [Gatsby](https://github.com/gatsbyjs/gatsby) uses it
+to display a list of generated pages, while still displaying a live progress bar.
 
 ```jsx
 <>
-	<Static>
-		{tests.map(test => (
-			<Test key={test.id} title={test.title} />
-		))}
+	<Static items={tests}>
+		{test => <Test key={test.id} title={test.title} />}
 	</Static>
 
 	<Box marginTop={1}>
@@ -671,7 +667,52 @@ Jest continuously writes the list of completed tests to the output, while updati
 </>
 ```
 
-See [examples/jest](examples/jest/jest.js) for a basic implementation of Jest's UI.
+**Note:** `<Static>` only renders new items in `items` prop and ignores items
+that were previously rendered. This means that when you add new items to `items`
+array, changes you make to previous items will not trigger a rerender.
+
+See [examples/jest](examples/jest/jest.js) for a basic implementation of Jest's
+UI using `<Static>` component.
+
+##### items
+
+Type: `Array`
+
+Array of items of any type to render using a function you pass as a component child.
+
+##### style
+
+Type: `object`
+
+Styles to apply to a container of child elements.
+See [`<Box>`](#box) for supported properties.
+
+```jsx
+<Static items={...} style={{padding: 1}}>
+	{...}
+</Static>
+```
+
+##### children
+
+Type: `Function`
+
+Function that is called to render every item in `items` array.
+First argument is an item itself and second argument is index of that item in
+`items` array.
+
+Note that `key` must be assigned to the root component.
+
+```jsx
+<Static items={['a', 'b', 'c']}>
+	{(item, index) => {
+		// This function is called for every item in ['a', 'b', 'c']
+		// `item` is 'a', 'b', 'c'
+		// `index` is 0, 1, 2
+		return <Box key={index}>Item: {item}</Box>;
+	}}
+</Static>
+```
 
 #### `<Transform>`
 

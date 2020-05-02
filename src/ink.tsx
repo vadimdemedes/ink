@@ -133,11 +133,14 @@ export class Ink {
 		if (hasStaticOutput) {
 			this.log.clear();
 			this.options.stdout.write(staticOutput);
+			this.log(output);
 		}
 
-		if (output !== this.lastOutput) {
+		if (!hasStaticOutput && output !== this.lastOutput) {
 			this.throttledLog(output);
 		}
+
+		this.lastOutput = output;
 	};
 
 	render(node: ReactNode): void {

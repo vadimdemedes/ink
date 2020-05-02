@@ -17,10 +17,8 @@ class Test extends React.Component<Record<string, unknown>, TestState> {
 	render() {
 		return (
 			<>
-				<Static>
-					{this.state.items.map(item => (
-						<Box key={item}>{item}</Box>
-					))}
+				<Static items={this.state.items}>
+					{item => <Box key={item}>{item}</Box>}
 				</Static>
 
 				<Box>Counter: {this.state.counter}</Box>
