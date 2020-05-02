@@ -1,6 +1,6 @@
 import React, {ReactNode} from 'react';
 import throttle from 'lodash.throttle';
-import logUpdate, {LogUpdate} from 'log-update';
+import logUpdate, {LogUpdate} from './log-update';
 import ansiEscapes from 'ansi-escapes';
 import originalIsCI from 'is-ci';
 import autoBind from 'auto-bind';
