@@ -7,15 +7,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node_version: [8, 10]
+        node_version: [10, 12]
 
     steps:
     - uses: actions/checkout@master
     - name: Use Node.js ${{ matrix.node_version }}
       uses: actions/setup-node@v1
       with:
-        version: ${{ matrix.node_version }}
-    - name: Test
-      run: |
-        npm install
-        npm test
+        node-version: ${{ matrix.node_version }}
+    - run: npm install
+    - run: npm test
+      env:
+        FORCE_COLOR: true

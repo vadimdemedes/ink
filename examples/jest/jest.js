@@ -38,16 +38,16 @@ class Jest extends React.Component {
 
 		return (
 			<Box flexDirection="column">
-				<Static>
-					{completedTests.map(test => (
-						<Test key={test.path} status={test.status} path={test.path}/>
-					))}
+				<Static items={completedTests}>
+					{test => (
+						<Test key={test.path} status={test.status} path={test.path} />
+					)}
 				</Static>
 
 				{runningTests.length > 0 && (
 					<Box flexDirection="column" marginTop={1}>
 						{runningTests.map(test => (
-							<Test key={test.path} status={test.status} path={test.path}/>
+							<Test key={test.path} status={test.status} path={test.path} />
 						))}
 					</Box>
 				)}
@@ -71,9 +71,9 @@ class Jest extends React.Component {
 	}
 
 	async runTest(path) {
-		this.setState(prevState => ({
+		this.setState(previousState => ({
 			runningTests: [
-				...prevState.runningTests,
+				...previousState.runningTests,
 				{
 					status: 'runs',
 					path
@@ -83,10 +83,12 @@ class Jest extends React.Component {
 
 		await delay(1000 * Math.random());
 
-		this.setState(prevState => ({
-			runningTests: prevState.runningTests.filter(test => test.path !== path),
+		this.setState(previousState => ({
+			runningTests: previousState.runningTests.filter(
+				test => test.path !== path
+			),
 			completedTests: [
-				...prevState.completedTests,
+				...previousState.completedTests,
 				{
 					status: Math.random() < 0.5 ? 'pass' : 'fail',
 					path
@@ -96,4 +98,4 @@ class Jest extends React.Component {
 	}
 }
 
-render(<Jest/>);
+render(<Jest />);
