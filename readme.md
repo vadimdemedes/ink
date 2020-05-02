@@ -23,15 +23,17 @@ $ npm install ink react
 import React, {useState, useEffect} from 'react';
 import {render, Color} from 'ink';
 
-function Counter() {
-	let [counter, setCounter] = React.useState(0);
+const Counter = () => {
+	const [counter, setCounter] = useState(0);
 
-	React.useEffect(() => {
-		let id = setInterval(() => {
-			setCounter(count => count + 1);
+	useEffect(() => {
+		const timer = setInterval(() => {
+			setCounter(previousCounter => previousCounter + 1);
 		}, 100);
 
-		return () => clearInterval(id);
+		return () => {
+			clearInterval(timer);
+		};
 	}, []);
 
 	return (
