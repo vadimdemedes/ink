@@ -1006,6 +1006,7 @@ Similar to `useApp`, it's equivalent to consuming `StdoutContext` directly.
 - [ink-table](https://github.com/maticzav/ink-table) - Table component.
 - [ink-ascii](https://github.com/hexrcs/ink-ascii) - Awesome text component with more font choices, based on Figlet.
 - [ink-markdown](https://github.com/cameronhunter/ink-markdown) - Render syntax highlighted Markdown.
+- [ink-quicksearch-input](https://github.com/Eximchain/ink-quicksearch-input) - Select component with fast quicksearch-like navigation.
 
 ### Incompatible components
 
