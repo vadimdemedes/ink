@@ -124,4 +124,7 @@ test('useStdout - write to stdout', async t => {
 	t.deepEqual(lines, ['Hello from Ink to stdout', 'Hello World', 'exited']);
 });
 
+// `node-pty` doesn't support streaming stderr output, so I need to figure out
+// how to test useStderr() hook. child_process.spawn() can't be used, because
+// Ink fails with "raw mode unsupported" error.
 test.todo('useStderr - write to stderr');
