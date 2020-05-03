@@ -68,3 +68,14 @@ test('padding with multiline string', t => {
 
 	t.is(output, '\n\n  A\n  B\n\n');
 });
+
+test('don’t take padding dimensions into account when wrapping text', t => {
+	const output = renderToString(
+		<Box>
+			<Box padding={1}>Hello World</Box>
+			<Box>It works</Box>
+		</Box>
+	);
+
+	t.is(output, '             It works\n Hello World\n');
+});

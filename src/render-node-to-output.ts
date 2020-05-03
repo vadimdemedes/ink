@@ -1,7 +1,6 @@
 import Yoga from 'yoga-layout-prebuilt';
 import widestLine from 'widest-line';
 import {wrapText} from './wrap-text';
-import {getMaxWidth} from './get-max-width';
 import {DOMNode, DOMElement} from './dom';
 import {Output} from './output';
 
@@ -128,7 +127,7 @@ export const renderNodeToOutput = (
 			if (node.parentNode) {
 				const currentWidth = widestLine(text);
 				const maxWidth = node.parentNode.yogaNode
-					? getMaxWidth(node.parentNode.yogaNode)
+					? node.parentNode.yogaNode.getComputedWidth()
 					: 0;
 
 				if (currentWidth > maxWidth) {
@@ -146,7 +145,7 @@ export const renderNodeToOutput = (
 		if (isFlexDirectionRow && node.childNodes.every(isAllTextNodes)) {
 			let text = squashTextNodes(node);
 			const currentWidth = widestLine(text);
-			const maxWidth = getMaxWidth(yogaNode);
+			const maxWidth = yogaNode.getComputedWidth();
 
 			if (currentWidth > maxWidth) {
 				const wrapType = node.style.textWrap ?? 'wrap';

@@ -183,6 +183,20 @@ test('squash empty `<Text>` nodes', t => {
 	t.is(output, '');
 });
 
+test('squash multiple nested text nodes within a container with padding', t => {
+	const output = renderToString(
+		<Box padding={1}>
+			{1} new message:{' '}
+			<Color green>
+				{'Hello '}
+				{'World'}
+			</Color>
+		</Box>
+	);
+
+	t.is(output, `\n 1 new message: ${chalk.green('Hello World')}\n`);
+});
+
 test('hooks', t => {
 	const WithHooks = () => {
 		const [value] = useState('Hello');
