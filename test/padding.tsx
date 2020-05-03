@@ -68,3 +68,18 @@ test('padding with multiline string', t => {
 
 	t.is(output, '\n\n  A\n  B\n\n');
 });
+
+test('apply padding to text with newlines', t => {
+	const output = renderToString(<Box padding={1}>Hello{'\n'}World</Box>);
+	t.is(output, '\n Hello\n World\n');
+});
+
+test('apply padding to wrapped text', t => {
+	const output = renderToString(
+		<Box padding={1} width={5}>
+			Hello World
+		</Box>
+	);
+
+	t.is(output, '\n Hel\n lo\n Wor\n ld\n');
+});

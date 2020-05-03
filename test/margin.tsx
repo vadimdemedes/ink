@@ -68,3 +68,18 @@ test('margin with multiline string', t => {
 
 	t.is(output, '\n\n  A\n  B\n\n');
 });
+
+test('apply margin to text with newlines', t => {
+	const output = renderToString(<Box margin={1}>Hello{'\n'}World</Box>);
+	t.is(output, '\n Hello\n World\n');
+});
+
+test('apply margin to wrapped text', t => {
+	const output = renderToString(
+		<Box margin={1} width={6}>
+			Hello World
+		</Box>
+	);
+
+	t.is(output, '\n Hello\n World\n');
+});

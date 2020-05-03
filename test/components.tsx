@@ -103,7 +103,7 @@ test('truncate text in the beginning', t => {
 	t.is(output, '… World');
 });
 
-test('empty text node', t => {
+test('ignore empty text node', t => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Box>Hello World</Box>
@@ -112,6 +112,11 @@ test('empty text node', t => {
 	);
 
 	t.is(output, 'Hello World');
+});
+
+test('render a single empty text node', t => {
+	const output = renderToString(<Text>{''}</Text>);
+	t.is(output, '');
 });
 
 test('number', t => {
