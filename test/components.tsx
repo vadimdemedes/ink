@@ -103,7 +103,7 @@ test('truncate text in the beginning', t => {
 	t.is(output, '… World');
 });
 
-test('empty text node', t => {
+test('ignore empty text node', t => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Box>Hello World</Box>
@@ -112,6 +112,11 @@ test('empty text node', t => {
 	);
 
 	t.is(output, 'Hello World');
+});
+
+test('render a single empty text node', t => {
+	const output = renderToString(<Text>{''}</Text>);
+	t.is(output, '');
 });
 
 test('number', t => {
@@ -181,20 +186,6 @@ test('squash empty `<Text>` nodes', t => {
 	);
 
 	t.is(output, '');
-});
-
-test('squash multiple nested text nodes within a container with padding', t => {
-	const output = renderToString(
-		<Box padding={1}>
-			{1} new message:{' '}
-			<Color green>
-				{'Hello '}
-				{'World'}
-			</Color>
-		</Box>
-	);
-
-	t.is(output, `\n 1 new message: ${chalk.green('Hello World')}\n`);
 });
 
 test('hooks', t => {

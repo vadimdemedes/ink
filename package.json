@@ -54,6 +54,7 @@
 		"chalk": "^3.0.0",
 		"cli-cursor": "^3.1.0",
 		"cli-truncate": "^2.1.0",
+		"indent-string": "^4.0.0",
 		"is-ci": "^2.0.0",
 		"lodash.throttle": "^4.1.1",
 		"prop-types": "^15.6.2",

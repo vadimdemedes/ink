@@ -1,6 +1,8 @@
 import Yoga from 'yoga-layout-prebuilt';
 import widestLine from 'widest-line';
+import indentString from 'indent-string';
 import {wrapText} from './wrap-text';
+import {getMaxWidth} from './get-max-width';
 import {DOMNode, DOMElement} from './dom';
 import {Output} from './output';
 
@@ -31,39 +33,43 @@ const isAllTextNodes = (node: DOMNode): boolean => {
 const squashTextNodes = (node: DOMElement): string => {
 	let text = '';
 	if (node.childNodes.length > 0) {
-		// If parent container is `<Box>`, text nodes will be treated as separate nodes in
-		// the tree and will have their own coordinates in the layout.
-		// To ensure text nodes are aligned correctly, take X and Y of the first text node
-		// and use them as offset for the rest of the nodes
-		// Only first node is taken into account, because other text nodes can't have margin or padding,
-		// so their coordinates will be relative to the first node anyway
-		const [{yogaNode}] = node.childNodes;
-		if (yogaNode) {
-			const offsetX = yogaNode.getComputedLeft();
-			const offsetY = yogaNode.getComputedTop();
+		for (const childNode of node.childNodes) {
+			let nodeText = '';
 
-			text = '\n'.repeat(offsetY) + ' '.repeat(offsetX);
-
-			for (const childNode of node.childNodes) {
-				let nodeText = '';
-
-				if (childNode.nodeName === '#text') {
-					nodeText = childNode.nodeValue;
-				} else {
-					if (childNode.nodeName === 'SPAN') {
-						nodeText = childNode.textContent ?? squashTextNodes(childNode);
-					}
-
-					// Since these text nodes are being concatenated, `Output` instance won't be able to
-					// apply children transform, so we have to do it manually here for each text node
-					if (typeof childNode.internal_transform === 'function') {
-						nodeText = childNode.internal_transform(nodeText);
-					}
+			if (childNode.nodeName === '#text') {
+				nodeText = childNode.nodeValue;
+			} else {
+				if (childNode.nodeName === 'SPAN') {
+					nodeText = childNode.textContent ?? squashTextNodes(childNode);
 				}
 
-				text += nodeText;
+				// Since these text nodes are being concatenated, `Output` instance won't be able to
+				// apply children transform, so we have to do it manually here for each text node
+				if (typeof childNode.internal_transform === 'function') {
+					nodeText = childNode.internal_transform(nodeText);
+				}
 			}
+
+			text += nodeText;
 		}
+	}
+
+	return text;
+};
+
+// If parent container is `<Box>`, text nodes will be treated as separate nodes in
+// the tree and will have their own coordinates in the layout.
+// To ensure text nodes are aligned correctly, take X and Y of the first text node
+// and use it as offset for the rest of the nodes
+// Only first node is taken into account, because other text nodes can't have margin or padding,
+// so their coordinates will be relative to the first node anyway
+const applyPaddingToText = (node: DOMElement, text: string): string => {
+	const yogaNode = node.childNodes[0]?.yogaNode;
+
+	if (yogaNode) {
+		const offsetX = yogaNode.getComputedLeft();
+		const offsetY = yogaNode.getComputedTop();
+		text = '\n'.repeat(offsetY) + indentString(text, offsetX);
 	}
 
 	return text;
@@ -127,7 +133,7 @@ export const renderNodeToOutput = (
 			if (node.parentNode) {
 				const currentWidth = widestLine(text);
 				const maxWidth = node.parentNode.yogaNode
-					? node.parentNode.yogaNode.getComputedWidth()
+					? getMaxWidth(node.parentNode.yogaNode)
 					: 0;
 
 				if (currentWidth > maxWidth) {
@@ -145,13 +151,14 @@ export const renderNodeToOutput = (
 		if (isFlexDirectionRow && node.childNodes.every(isAllTextNodes)) {
 			let text = squashTextNodes(node);
 			const currentWidth = widestLine(text);
-			const maxWidth = yogaNode.getComputedWidth();
+			const maxWidth = getMaxWidth(yogaNode);
 
 			if (currentWidth > maxWidth) {
 				const wrapType = node.style.textWrap ?? 'wrap';
 				text = wrapText(text, maxWidth, wrapType);
 			}
 
+			text = applyPaddingToText(node, text);
 			output.write(x, y, text, {transformers: newTransformers});
 			return;
 		}
