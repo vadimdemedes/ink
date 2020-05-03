@@ -4,12 +4,15 @@ import cliCursor from 'cli-cursor';
 import {AppContext} from './AppContext';
 import {StdinContext} from './StdinContext';
 import {StdoutContext} from './StdoutContext';
+import {StderrContext} from './StderrContext';
 
 interface Props {
 	children: ReactNode;
 	stdin: NodeJS.ReadStream;
 	stdout: NodeJS.WriteStream;
+	stderr: NodeJS.WriteStream;
 	writeToStdout: (data: string) => void;
+	writeToStderr: (data: string) => void;
 	exitOnCtrlC: boolean;
 	onExit: (error?: Error) => void;
 }
@@ -22,7 +25,9 @@ export class App extends PureComponent<Props> {
 		children: PropTypes.node.isRequired,
 		stdin: PropTypes.object.isRequired,
 		stdout: PropTypes.object.isRequired,
+		stderr: PropTypes.object.isRequired,
 		writeToStdout: PropTypes.func.isRequired,
+		writeToStderr: PropTypes.func.isRequired,
 		exitOnCtrlC: PropTypes.bool.isRequired, // eslint-disable-line react/boolean-prop-naming
 		onExit: PropTypes.func.isRequired
 	};
@@ -56,7 +61,14 @@ export class App extends PureComponent<Props> {
 							write: this.props.writeToStdout
 						}}
 					>
-						{this.props.children}
+						<StderrContext.Provider
+							value={{
+								stderr: this.props.stderr,
+								write: this.props.writeToStderr
+							}}
+						>
+							{this.props.children}
+						</StderrContext.Provider>
 					</StdoutContext.Provider>
 				</StdinContext.Provider>
 			</AppContext.Provider>
