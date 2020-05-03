@@ -36,12 +36,8 @@ const Counter = () => {
 		};
 	}, []);
 
-	return (
-		<Color green>
-			{counter} tests passed
-		</Color>
-	);
-}
+	return <Color green>{counter} tests passed</Color>;
+};
 
 render(<Counter />);
 ```
@@ -860,7 +856,7 @@ This hook is used for handling user input.
 It's a more convienient alternative to using `StdinContext` and listening to `data` events.
 The callback you pass to `useInput` is called for each character when user enters any input.
 However, if user pastes text and it's more than one character, the callback will be called only once and the whole string will be passed as `input`.
-You can find a full example of using `useInput` at [examples/useinput](examples/useinput/useinput.js).
+You can find a full example of using `useInput` at [examples/use-input](examples/use-input/use-input.js).
 
 ```jsx
 import {useInput} from 'ink';
