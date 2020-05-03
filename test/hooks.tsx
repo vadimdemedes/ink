@@ -116,7 +116,7 @@ test('useInput - ignore input if not active', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
-test('useStdout - write to output', async t => {
+test('useStdout - write to stdout', async t => {
 	const ps = term('use-stdout');
 	await ps.waitForExit();
 
