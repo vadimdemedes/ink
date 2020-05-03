@@ -829,12 +829,6 @@ Usage:
 
 `<StdoutContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes stdout stream, where Ink renders your app.
 
-Import:
-
-```js
-import {StdoutContext} from 'ink';
-```
-
 ##### stdout
 
 Type: `stream.Writable`<br>
@@ -843,9 +837,40 @@ Default: `process.stdout`
 Usage:
 
 ```jsx
-<StdoutContext.Consumer>
-	{({stdout}) => <MyComponent stdout={stdout} />}
-</StdoutContext.Consumer>
+import {StdoutContext} from 'ink';
+
+const MyApp = () => {
+	const {stdout} = useContext(StdoutContext);
+
+	return …
+};
+```
+
+##### write(data)
+
+Write any string to stdout, while preserving Ink's output.
+It's useful when you want to display some external information outside of Ink's rendering and ensure there's no conflict between the two.
+It's similar to `<Static>`, except it can't accept components, it only works with strings.
+
+###### data
+
+Type: `string`
+
+Data to write to stdout.
+
+```jsx
+import {StdoutContext} from 'ink';
+
+const MyApp = () => {
+	const {write} = useContext(StdoutContext);
+
+	useEffect(() => {
+		// Write a single message to stdout, above Ink's output
+		write('Hello from Ink to stdout\n');
+	}, []);
+
+	return …
+};
 ```
 
 ## Hooks
@@ -979,6 +1004,8 @@ Similar to `useApp`, it's equivalent to consuming `StdinContext` directly.
 
 `useStdout` is a React hook, which exposes props of [`StdoutContext`](#stdoutcontext).
 Similar to `useApp`, it's equivalent to consuming `StdoutContext` directly.
+
+See usage example in [examples/use-stdout](examples/use-stdout/use-stdout.js).
 
 ## Useful Hooks
 
