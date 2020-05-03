@@ -148,6 +148,7 @@ export class Ink {
 			<App
 				stdin={this.options.stdin}
 				stdout={this.options.stdout}
+				writeToStdout={this.writeToStdout}
 				exitOnCtrlC={this.options.exitOnCtrlC}
 				onExit={this.unmount}
 			>
@@ -156,6 +157,26 @@ export class Ink {
 		);
 
 		reconciler.updateContainer(tree, this.container);
+	}
+
+	writeToStdout(data: string): void {
+		if (this.isUnmounted) {
+			return;
+		}
+
+		if (this.options.debug) {
+			this.options.stdout.write(data + this.fullStaticOutput + this.lastOutput);
+			return;
+		}
+
+		if (isCI) {
+			this.options.stdout.write(data);
+			return;
+		}
+
+		this.log.clear();
+		this.options.stdout.write(data);
+		this.log(this.lastOutput);
 	}
 
 	unmount(error?: Error | number | null): void {

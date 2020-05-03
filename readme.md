@@ -980,6 +980,35 @@ Similar to `useApp`, it's equivalent to consuming `StdinContext` directly.
 `useStdout` is a React hook, which exposes props of [`StdoutContext`](#stdoutcontext).
 Similar to `useApp`, it's equivalent to consuming `StdoutContext` directly.
 
+See usage example in [examples/use-stdout](examples/use-stdout/use-stdout.js).
+
+#### write(data)
+
+Write any string to stdout, while preserving Ink's output.
+It's useful when you want to display some external information outside of Ink's rendering and ensure there's no conflict between the two.
+It's similar to `<Static>`, except it can't accept components, it only works with strings.
+
+##### data
+
+Type: `string`
+
+Data to write to stdout.
+
+```jsx
+import {useStdout} from 'ink';
+
+const MyApp = () => {
+	const {write} = useStdout();
+
+	useEffect(() => {
+		// Write a single message to stdout, above Ink's output
+		write('Hello from Ink to stdout\n');
+	}, []);
+
+	return <JSX />;
+};
+```
+
 ## Useful Hooks
 
 - [ink-use-stdout-dimensions](https://github.com/cameronhunter/ink-monorepo/tree/master/packages/ink-use-stdout-dimensions) - Subscribe to stdout dimensions.

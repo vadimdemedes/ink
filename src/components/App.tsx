@@ -9,6 +9,7 @@ interface Props {
 	children: ReactNode;
 	stdin: NodeJS.ReadStream;
 	stdout: NodeJS.WriteStream;
+	writeToStdout: (data: string) => void;
 	exitOnCtrlC: boolean;
 	onExit: (error?: Error) => void;
 }
@@ -21,6 +22,7 @@ export class App extends PureComponent<Props> {
 		children: PropTypes.node.isRequired,
 		stdin: PropTypes.object.isRequired,
 		stdout: PropTypes.object.isRequired,
+		writeToStdout: PropTypes.func.isRequired,
 		exitOnCtrlC: PropTypes.bool.isRequired, // eslint-disable-line react/boolean-prop-naming
 		onExit: PropTypes.func.isRequired
 	};
@@ -50,7 +52,8 @@ export class App extends PureComponent<Props> {
 				>
 					<StdoutContext.Provider
 						value={{
-							stdout: this.props.stdout
+							stdout: this.props.stdout,
+							write: this.props.writeToStdout
 						}}
 					>
 						{this.props.children}
