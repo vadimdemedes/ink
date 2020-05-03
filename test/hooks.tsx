@@ -12,11 +12,14 @@ const term = (fixture: string, args: string[] = []) => {
 		reject = reject2;
 	});
 
+	const env = {...process.env};
+	delete env.CI;
+
 	const ps = spawn('ts-node', [`./fixtures/${fixture}.tsx`, ...args], {
 		name: 'xterm-color',
 		cols: 100,
 		cwd: __dirname,
-		env: process.env
+		env
 	});
 
 	const result = {
