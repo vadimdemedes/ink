@@ -17,6 +17,11 @@ export interface RenderOptions {
 	 */
 	stdin?: NodeJS.ReadStream;
 	/**
+	 * Error stream.
+	 * @default process.stderr
+	 */
+	stderr?: NodeJS.WriteStream;
+	/**
 	 * If true, each update will be rendered as a separate output, without replacing the previous one.
 	 *
 	 * @default false
@@ -58,6 +63,7 @@ export const render: RenderFunction = (node, options): Instance => {
 	const inkOptions: InkOptions = {
 		stdout: process.stdout,
 		stdin: process.stdin,
+		stderr: process.stderr,
 		debug: false,
 		exitOnCtrlC: true,
 		...getOptions(options)

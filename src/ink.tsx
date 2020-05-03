@@ -17,6 +17,7 @@ const isCI = process.env.CI === 'false' ? false : originalIsCI;
 export interface Options {
 	stdout: NodeJS.WriteStream;
 	stdin: NodeJS.ReadStream;
+	stderr: NodeJS.WriteStream;
 	debug: boolean;
 	exitOnCtrlC: boolean;
 	waitUntilExit?: () => Promise<void>;
@@ -148,7 +149,9 @@ export class Ink {
 			<App
 				stdin={this.options.stdin}
 				stdout={this.options.stdout}
+				stderr={this.options.stderr}
 				writeToStdout={this.writeToStdout}
+				writeToStderr={this.writeToStderr}
 				exitOnCtrlC={this.options.exitOnCtrlC}
 				onExit={this.unmount}
 			>
@@ -176,6 +179,27 @@ export class Ink {
 
 		this.log.clear();
 		this.options.stdout.write(data);
+		this.log(this.lastOutput);
+	}
+
+	writeToStderr(data: string): void {
+		if (this.isUnmounted) {
+			return;
+		}
+
+		if (this.options.debug) {
+			this.options.stderr.write(data);
+			this.options.stdout.write(this.fullStaticOutput + this.lastOutput);
+			return;
+		}
+
+		if (isCI) {
+			this.options.stderr.write(data);
+			return;
+		}
+
+		this.log.clear();
+		this.options.stderr.write(data);
 		this.log(this.lastOutput);
 	}
 

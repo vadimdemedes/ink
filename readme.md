@@ -1007,6 +1007,55 @@ Similar to `useApp`, it's equivalent to consuming `StdoutContext` directly.
 
 See usage example in [examples/use-stdout](examples/use-stdout/use-stdout.js).
 
+### useStderr
+
+`useStderr` is a React hook, which exposes stderr stream.
+
+#### stderr
+
+Type: `stream.Writable`<br>
+Default: `process.stderr`
+
+Stderr stream.
+
+```jsx
+import {useStderr} from 'ink';
+
+const MyApp = () => {
+	const {stderr} = useStderr();
+
+	return …
+};
+```
+
+#### write(data)
+
+Write any string to stderr, while preserving Ink's output.
+
+It's useful when you want to display some external information outside of Ink's rendering and ensure there's no conflict between the two.
+It's similar to `<Static>`, except it can't accept components, it only works with strings.
+
+##### data
+
+Type: `string`
+
+Data to write to stderr.
+
+```jsx
+import {useStderr} from 'ink';
+
+const MyApp = () => {
+	const {write} = useStderr();
+
+	useEffect(() => {
+		// Write a single message to stderr, above Ink's output
+		write('Hello from Ink to stderr\n');
+	}, []);
+
+	return …
+};
+```
+
 ## Useful Hooks
 
 - [ink-use-stdout-dimensions](https://github.com/cameronhunter/ink-monorepo/tree/master/packages/ink-use-stdout-dimensions) - Subscribe to stdout dimensions.

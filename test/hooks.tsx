@@ -116,10 +116,12 @@ test('useInput - ignore input if not active', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
-test('useStdout - write to stdout', async t => {
+test('useStdout - write to output', async t => {
 	const ps = term('use-stdout');
 	await ps.waitForExit();
 
 	const lines = stripAnsi(ps.output).split('\r\n').slice(1, -1);
 	t.deepEqual(lines, ['Hello from Ink to stdout', 'Hello World', 'exited']);
 });
+
+test.todo('useStderr - write to stderr');
