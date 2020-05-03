@@ -1,5 +1,6 @@
 import {serial as test} from 'ava';
 import {spawn} from 'node-pty';
+import stripAnsi from 'strip-ansi';
 
 const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: any) => void;
@@ -116,8 +117,6 @@ test('useStdout - write to stdout', async t => {
 	const ps = term('use-stdout');
 	await ps.waitForExit();
 
-	const lines = ps.output.split('\n').slice(1);
-	t.true(lines[0].includes('Hello from Ink to stdout'));
-	t.true(lines[1].includes('Hello World'));
-	t.true(lines[2].includes('exited'));
+	const lines = stripAnsi(ps.output).split('\r\n').slice(1, -1);
+	t.deepEqual(lines, ['Hello from Ink to stdout', 'Hello World', 'exited']);
 });
