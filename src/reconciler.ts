@@ -19,6 +19,8 @@ import {
 	ElementNames,
 	DOMElement
 } from './dom';
+// eslint-disable-next-line import/no-unassigned-import
+import './devtools';
 
 const cleanupYogaNode = (node: Yoga.YogaNode): void => {
 	// @ts-ignore

@@ -9,7 +9,7 @@ export interface TransformProps {
 /*
  * Transform a string representation of React components before they are written to output.
  */
-export const Transform: FC<TransformProps> = memo(({children, transform}) => (
+const Transform: FC<TransformProps> = ({children, transform}) => (
 	<span
 		style={{flexDirection: 'row'}}
 		// @ts-ignore
@@ -17,9 +17,13 @@ export const Transform: FC<TransformProps> = memo(({children, transform}) => (
 	>
 		{children}
 	</span>
-));
+);
+
+Transform.displayName = 'Transform';
 
 Transform.propTypes = {
 	transform: PropTypes.func.isRequired,
 	children: PropTypes.node.isRequired
 };
+
+export default memo(Transform);

@@ -80,6 +80,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Hooks](#hooks)
 - [Useful Components](#useful-components)
 - [Testing](#testing)
+- [Using React Devtools](#using-react-devtools)
 
 ## Getting Started
 
@@ -1113,6 +1114,28 @@ lastFrame() === 'Hello World'; //=> true
 ```
 
 Visit [ink-testing-library](https://github.com/vadimdemedes/ink-testing-library) for more examples and full documentation.
+
+## Using React Devtools
+
+![](media/devtools.jpg)
+
+Ink supports [React Devtools](https://github.com/facebook/react/tree/master/packages/react-devtools) out-of-the-box.
+To enable integration with React Devtools in your Ink-based CLI, run it with `DEV=true` environment variable:
+
+```
+$ DEV=true my-cli
+```
+
+Then, start React Devtools itself:
+
+```
+$ npx react-devtools
+```
+
+After it starts up, you should see the component tree of your CLI.
+You can even inspect and change the props of components, and see the results immediatelly in the CLI, without restarting it.
+
+**Note**: You must manually quit your CLI via <kbd>Ctrl</kbd>+<kbd>C</kbd> after you're done testing.
 
 ## Maintainers
 

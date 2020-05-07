@@ -56,6 +56,8 @@ export const Static = <T,>(props: StaticProps<T>) => {
 	);
 };
 
+Static.displayName = 'Static';
+
 Static.propTypes = {
 	items: PropTypes.array.isRequired,
 	style: PropTypes.object,

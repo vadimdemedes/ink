@@ -21,3 +21,5 @@ export const StderrContext = createContext<StderrProps>({
 	stderr: undefined,
 	write: () => {}
 });
+
+StderrContext.displayName = 'InternalStderrContext';
