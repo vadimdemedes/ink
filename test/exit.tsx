@@ -62,7 +62,20 @@ test.cb('don’t exit while raw mode is active', t => {
 	let output = '';
 
 	term.on('data', data => {
-		output += data;
+		if (data === 's') {
+			setTimeout(() => {
+				t.false(isExited);
+				term.write('q');
+			}, 2000);
+
+			setTimeout(() => {
+				term.kill();
+				t.fail();
+				t.end();
+			}, 5000);
+		} else {
+			output += data;
+		}
 	});
 
 	let isExited = false;
@@ -80,15 +93,4 @@ test.cb('don’t exit while raw mode is active', t => {
 		t.fail();
 		t.end();
 	});
-
-	setTimeout(() => {
-		t.false(isExited);
-		term.write('q');
-	}, 2000);
-
-	setTimeout(() => {
-		term.kill();
-		t.fail();
-		t.end();
-	}, 5000);
 });

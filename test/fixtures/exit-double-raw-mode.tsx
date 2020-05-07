@@ -16,6 +16,9 @@ class ExitDoubleRawMode extends React.Component<{
 		setTimeout(() => {
 			setRawMode(false);
 			setRawMode(true);
+
+			// Start the test
+			process.stdout.write('s');
 		}, 500);
 	}
 }
