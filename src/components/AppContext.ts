@@ -10,3 +10,5 @@ export interface AppContextProps {
 export const AppContext = createContext<AppContextProps>({
 	exit: () => {}
 });
+
+AppContext.displayName = 'InternalAppContext';

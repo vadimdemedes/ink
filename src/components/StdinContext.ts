@@ -24,3 +24,5 @@ export const StdinContext = createContext<StdinContextProps>({
 	setRawMode: () => {},
 	isRawModeSupported: false
 });
+
+StdinContext.displayName = 'InternalStdinContext';

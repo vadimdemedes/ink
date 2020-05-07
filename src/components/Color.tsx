@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import arrify from 'arrify';
 import chalk, {Chalk} from 'chalk';
 import {Except} from 'type-fest';
-import {Transform} from './Transform';
+import Transform from './Transform';
 
 type Colors =
 	| typeof chalk.ForegroundColor
@@ -46,7 +46,7 @@ const methods = [
 /**
  * The `<Color>` compoment is a simple wrapper around the `chalk` API. It supports all of the `chalk`'s methods as `props`.
  */
-export const Color: FC<ColorProps> = memo(({children, ...colorProps}) => {
+const Color: FC<ColorProps> = ({children, ...colorProps}) => {
 	if (children === '') {
 		return null;
 	}
@@ -69,7 +69,9 @@ export const Color: FC<ColorProps> = memo(({children, ...colorProps}) => {
 	};
 
 	return <Transform transform={transform}>{children}</Transform>;
-});
+};
+
+Color.displayName = 'Color';
 
 Color.propTypes = {
 	children: PropTypes.node
@@ -78,3 +80,5 @@ Color.propTypes = {
 Color.defaultProps = {
 	children: ''
 };
+
+export default memo(Color);

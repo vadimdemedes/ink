@@ -21,6 +21,7 @@ interface Props {
 // It renders stdin and stdout contexts, so that children can access them if needed
 // It also handles Ctrl+C exiting and cursor visibility
 export class App extends PureComponent<Props> {
+	static displayName = 'InternalApp';
 	static propTypes = {
 		children: PropTypes.node.isRequired,
 		stdin: PropTypes.object.isRequired,

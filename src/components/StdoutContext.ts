@@ -21,3 +21,5 @@ export const StdoutContext = createContext<StdoutContextProps>({
 	stdout: undefined,
 	write: () => {}
 });
+
+StdoutContext.displayName = 'InternalStdoutContext';
