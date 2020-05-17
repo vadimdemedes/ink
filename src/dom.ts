@@ -182,7 +182,5 @@ export const setTextContent = (node: DOMNode, text: string): void => {
 		node.textContent = text;
 	}
 
-	node.yogaNode?.setMeasureFunc(
-		measureTextNode.bind(null, node, text) as () => any
-	);
+	node.yogaNode?.setMeasureFunc(measureTextNode.bind(null, node, text));
 };

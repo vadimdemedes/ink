@@ -23,7 +23,6 @@ import {
 import './devtools';
 
 const cleanupYogaNode = (node: Yoga.YogaNode): void => {
-	// @ts-ignore
 	node.unsetMeasureFunc();
 };
 
