@@ -13,6 +13,7 @@ import {instances} from './instances';
 import {App} from './components/App';
 
 const isCI = process.env.CI === 'false' ? false : originalIsCI;
+const noop = () => {};
 
 export interface Options {
 	stdout: NodeJS.WriteStream;
@@ -91,8 +92,7 @@ export class Ink {
 				// Reporting React DOM's version, not Ink's
 				// See https://github.com/facebook/react/issues/16666#issuecomment-532639905
 				version: '16.13.1',
-				rendererPackageName: 'ink',
-				findHostInstanceByFiber: reconciler.findHostInstance
+				rendererPackageName: 'ink'
 			});
 		}
 	}
@@ -170,7 +170,7 @@ export class Ink {
 			</App>
 		);
 
-		reconciler.updateContainer(tree, this.container);
+		reconciler.updateContainer(tree, this.container, null, noop);
 	}
 
 	writeToStdout(data: string): void {
@@ -232,7 +232,7 @@ export class Ink {
 
 		this.isUnmounted = true;
 
-		reconciler.updateContainer(null, this.container);
+		reconciler.updateContainer(null, this.container, null, noop);
 		instances.delete(this.options.stdout);
 
 		if (error instanceof Error) {
