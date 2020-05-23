@@ -1,6 +1,7 @@
 import {serial as test} from 'ava';
 import {spawn} from 'node-pty';
 import ansiEscapes from 'ansi-escapes';
+import stripAnsi from 'strip-ansi';
 
 const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: unknown) => void;
@@ -94,4 +95,16 @@ test('clear output', async t => {
 	[('A', 'B', 'C')].forEach(letter => {
 		t.false(secondFrame.includes(letter));
 	});
+});
+
+test('intercept console methods and display result above output', async t => {
+	const ps = term('console');
+	await ps.waitForExit();
+
+	const frames = ps.output.split(ansiEscapes.eraseLines(2)).map(stripAnsi);
+
+	t.deepEqual(frames, [
+		'Hello World\r\n',
+		'First log\r\nHello World\r\nSecond log\r\n'
+	]);
 });

@@ -1,3 +1,4 @@
+import {PassThrough} from 'stream';
 import React, {ReactNode} from 'react';
 import throttle from 'lodash.throttle';
 import logUpdate, {LogUpdate} from './log-update';
@@ -14,6 +15,27 @@ import {App} from './components/App';
 
 const isCI = process.env.CI === 'false' ? false : originalIsCI;
 const noop = () => {};
+
+const CONSOLE_METHODS = [
+	'assert',
+	'count',
+	'countReset',
+	'debug',
+	'dir',
+	'dirxml',
+	'error',
+	'group',
+	'groupCollapsed',
+	'groupEnd',
+	'info',
+	'log',
+	'table',
+	'time',
+	'timeEnd',
+	'timeLog',
+	'trace',
+	'warn'
+];
 
 export interface Options {
 	stdout: NodeJS.WriteStream;
@@ -38,6 +60,7 @@ export class Ink {
 	private fullStaticOutput: string;
 	private readonly renderer: Renderer;
 	private readonly exitPromise: Promise<void>;
+	private originalConsoleMethods: any = {};
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -95,6 +118,8 @@ export class Ink {
 				rendererPackageName: 'ink'
 			});
 		}
+
+		this.patchConsole();
 	}
 
 	resolveExitPromise: () => void = () => {};
@@ -221,6 +246,7 @@ export class Ink {
 
 		this.onRender();
 		this.unsubscribeExit();
+		this.restoreConsole();
 
 		// CIs don't handle erasing ansi escapes well, so it's better to
 		// only render last frame of non-static output
@@ -250,5 +276,40 @@ export class Ink {
 		if (!isCI && !this.options.debug) {
 			this.log.clear();
 		}
+	}
+
+	patchConsole(): void {
+		if (this.options.debug) {
+			return;
+		}
+
+		const stdout = new PassThrough();
+		(stdout as any).write = (output: string): void => {
+			this.writeToStdout(output);
+		};
+
+		const stderr = new PassThrough();
+		(stderr as any).write = (output: string): void => {
+			this.writeToStderr(output);
+		};
+
+		const internalConsole = new console.Console(stdout, stderr);
+
+		for (const method of CONSOLE_METHODS) {
+			this.originalConsoleMethods[method] = (console as any)[method];
+			(console as any)[method] = (internalConsole as any)[method];
+		}
+	}
+
+	restoreConsole(): void {
+		if (this.options.debug) {
+			return;
+		}
+
+		for (const method of CONSOLE_METHODS) {
+			(console as any)[method] = this.originalConsoleMethods[method];
+		}
+
+		this.originalConsoleMethods = {};
 	}
 }
