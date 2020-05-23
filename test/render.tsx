@@ -92,7 +92,7 @@ test('clear output', async t => {
 
 	const secondFrame = ps.output.split(ansiEscapes.eraseLines(4))[1];
 
-	[('A', 'B', 'C')].forEach(letter => {
+	['A', 'B', 'C'].forEach(letter => {
 		t.false(secondFrame.includes(letter));
 	});
 });
