@@ -219,6 +219,15 @@ setTimeout(unmount, 1000);
 await waitUntilExit(); // resolves after `unmount()` is called
 ```
 
+##### clear
+
+Clear output.
+
+```jsx
+const {clear} = render(<MyApp />);
+clear();
+```
+
 ## Building Layouts
 
 Ink uses [Yoga](https://github.com/facebook/yoga) - a Flexbox layout engine to build great user interfaces for your CLIs.

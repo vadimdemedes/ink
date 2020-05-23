@@ -49,6 +49,9 @@ export interface Instance {
 	 */
 	waitUntilExit: Ink['waitUntilExit'];
 	cleanup?: () => void;
+
+	// Clear output
+	clear: () => void;
 }
 
 type RenderFunction = <Props, K extends NodeJS.WriteStream | RenderOptions>(
@@ -79,7 +82,8 @@ export const render: RenderFunction = (node, options): Instance => {
 		rerender: instance.render,
 		unmount: () => instance.unmount(),
 		waitUntilExit: instance.waitUntilExit,
-		cleanup: () => instances.delete(inkOptions.stdout)
+		cleanup: () => instances.delete(inkOptions.stdout),
+		clear: instance.clear
 	};
 };
 

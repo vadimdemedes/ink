@@ -84,3 +84,14 @@ test('erase screen where <Static> exists but interactive part is taller than vie
 		t.true(ps.output.includes(letter));
 	});
 });
+
+test('clear output', async t => {
+	const ps = term('clear');
+	await ps.waitForExit();
+
+	const secondFrame = ps.output.split(ansiEscapes.eraseLines(4))[1];
+
+	[('A', 'B', 'C')].forEach(letter => {
+		t.false(secondFrame.includes(letter));
+	});
+});

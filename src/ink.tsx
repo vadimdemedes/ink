@@ -245,4 +245,10 @@ export class Ink {
 	waitUntilExit(): Promise<void> {
 		return this.exitPromise;
 	}
+
+	clear(): void {
+		if (!isCI && !this.options.debug) {
+			this.log.clear();
+		}
+	}
 }
