@@ -1,10 +1,10 @@
 import Yoga from 'yoga-layout-prebuilt';
 import widestLine from 'widest-line';
 import indentString from 'indent-string';
-import {wrapText} from './wrap-text';
-import {getMaxWidth} from './get-max-width';
-import {DOMNode, DOMElement} from './dom';
-import {Output} from './output';
+import wrapText from './wrap-text';
+import getMaxWidth from './get-max-width';
+import type {DOMNode, DOMElement} from './dom';
+import Output from './output';
 
 const isAllTextNodes = (node: DOMNode): boolean => {
 	if (node.nodeName === '#text') {
@@ -78,7 +78,7 @@ const applyPaddingToText = (node: DOMElement, text: string): string => {
 export type OutputTransformer = (s: string) => string;
 
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
-export const renderNodeToOutput = (
+const renderNodeToOutput = (
 	node: DOMNode,
 	output: Output,
 	options: {
@@ -174,3 +174,5 @@ export const renderNodeToOutput = (
 		}
 	}
 };
+
+export default renderNodeToOutput;

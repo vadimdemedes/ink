@@ -1,14 +1,13 @@
-import React, {FC} from 'react';
+import React from 'react';
+import type {FC} from 'react';
 import PropTypes from 'prop-types';
 
-export interface NewlineProps {
+export interface Props {
 	count?: number;
 }
 
 // Add a newline
-const Newline: FC<NewlineProps> = ({count = 1}) => (
-	<span>{'\n'.repeat(count)}</span>
-);
+const Newline: FC<Props> = ({count = 1}) => <span>{'\n'.repeat(count)}</span>;
 
 Newline.displayName = 'Newline';
 

@@ -1,7 +1,8 @@
 import Yoga from 'yoga-layout-prebuilt';
-import {renderNodeToOutput} from './render-node-to-output';
-import {Output} from './output';
-import {setStyle, DOMElement} from './dom';
+import renderNodeToOutput from './render-node-to-output';
+import Output from './output';
+import {setStyle} from './dom';
+import type {DOMElement} from './dom';
 
 export type Renderer = (
 	node: DOMElement
@@ -11,9 +12,7 @@ export type Renderer = (
 	staticOutput: string;
 };
 
-type CreateRenderer = (options: {terminalWidth: number}) => Renderer;
-
-export const createRenderer: CreateRenderer = ({terminalWidth = 100}) => {
+export default ({terminalWidth = 100}: {terminalWidth: number}): Renderer => {
 	return (node: DOMElement) => {
 		setStyle(node, {
 			width: terminalWidth

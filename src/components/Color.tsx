@@ -1,8 +1,10 @@
-import React, {FC, ReactNode, memo} from 'react';
+import React, {memo} from 'react';
+import type {FC, ReactNode} from 'react';
 import PropTypes from 'prop-types';
 import arrify from 'arrify';
-import chalk, {Chalk} from 'chalk';
-import {Except} from 'type-fest';
+import chalk from 'chalk';
+import type {Chalk} from 'chalk';
+import type {Except} from 'type-fest';
 import Transform from './Transform';
 
 type Colors =
@@ -22,7 +24,7 @@ type ChalkBooleanProps = Record<Colors, boolean>;
 
 type ChalkProps = Partial<ChalkBooleanProps & ChalkFunctionProps>;
 
-export type ColorProps = ChalkProps & {children: ReactNode};
+export type Props = ChalkProps & {children: ReactNode};
 
 const methods = [
 	'hex',
@@ -46,7 +48,7 @@ const methods = [
 /**
  * The `<Color>` compoment is a simple wrapper around the `chalk` API. It supports all of the `chalk`'s methods as `props`.
  */
-const Color: FC<ColorProps> = ({children, ...colorProps}) => {
+const Color: FC<Props> = ({children, ...colorProps}) => {
 	if (children === '') {
 		return null;
 	}

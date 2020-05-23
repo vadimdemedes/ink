@@ -1,6 +1,6 @@
 import {createContext} from 'react';
 
-export interface StdinContextProps {
+export interface Props {
 	/**
 	 * Stdin stream passed to `render()` in `options.stdin` or `process.stdin` by default. Useful if your app needs to handle user input.
 	 */
@@ -19,10 +19,12 @@ export interface StdinContextProps {
 /**
  * `StdinContext` is a React context, which exposes input stream.
  */
-export const StdinContext = createContext<StdinContextProps>({
+const StdinContext = createContext<Props>({
 	stdin: undefined,
 	setRawMode: () => {},
 	isRawModeSupported: false
 });
 
 StdinContext.displayName = 'InternalStdinContext';
+
+export default StdinContext;

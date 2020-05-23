@@ -1,7 +1,8 @@
-import React, {FC, ReactNode, memo} from 'react';
+import React, {memo} from 'react';
+import type {FC, ReactNode} from 'react';
 import PropTypes from 'prop-types';
 
-export interface TransformProps {
+export interface Props {
 	readonly transform: (children: ReactNode) => ReactNode;
 	readonly children: ReactNode;
 }
@@ -9,7 +10,7 @@ export interface TransformProps {
 /*
  * Transform a string representation of React components before they are written to output.
  */
-const Transform: FC<TransformProps> = ({children, transform}) => (
+const Transform: FC<Props> = ({children, transform}) => (
 	<span
 		style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row'}}
 		// @ts-ignore

@@ -1,8 +1,9 @@
-import React, {ReactNode, useMemo, useState, useEffect} from 'react';
+import React, {useMemo, useState, useEffect} from 'react';
+import type {ReactNode} from 'react';
 import PropTypes from 'prop-types';
-import {Styles} from '../styles';
+import type {Styles} from '../styles';
 
-export interface StaticProps<T> extends Styles {
+export interface Props<T> extends Styles {
 	items: T[];
 	style?: Styles;
 	children: (item: T, index: number) => ReactNode;
@@ -20,7 +21,7 @@ export interface StaticProps<T> extends Styles {
  * a list of completed tests. [Gatsby](https://github.com/gatsbyjs/gatsby) uses it
  * to display a list of generated pages, while still displaying a live progress bar.
  */
-export const Static = <T,>(props: StaticProps<T>) => {
+const Static = <T,>(props: Props<T>) => {
 	const {items, children: render, style: customStyle} = props;
 	const [index, setIndex] = useState(0);
 
@@ -63,3 +64,5 @@ Static.propTypes = {
 	style: PropTypes.object,
 	children: PropTypes.func.isRequired
 };
+
+export default Static;

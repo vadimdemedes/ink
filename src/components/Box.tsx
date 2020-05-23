@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import React, {PureComponent, ReactNode} from 'react';
+import React, {PureComponent} from 'react';
+import type {ReactNode} from 'react';
 import PropTypes from 'prop-types';
-import {YogaNode} from 'yoga-layout-prebuilt';
-import {Styles} from '../styles';
+import type {YogaNode} from 'yoga-layout-prebuilt';
+import type {Styles} from '../styles';
 
-export type BoxProps = Styles & {
+export type Props = Styles & {
 	margin?: number;
 	marginX?: number;
 	marginY?: number;
@@ -17,7 +18,7 @@ export type BoxProps = Styles & {
 /**
  * `<Box>` it's an essential Ink component to build your layout. It's like a `<div style="display: flex">` in a browser.
  */
-export class Box extends PureComponent<BoxProps> {
+export default class Box extends PureComponent<Props> {
 	static displayName = 'Box';
 	static propTypes = {
 		display: PropTypes.oneOf(['flex', 'none']),

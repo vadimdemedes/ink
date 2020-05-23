@@ -1,9 +1,10 @@
-import React, {FC, ReactNode, memo} from 'react';
+import React, {memo} from 'react';
+import type {FC, ReactNode} from 'react';
 import PropTypes from 'prop-types';
 import chalk from 'chalk';
 import Transform from './Transform';
 
-export interface TextProps {
+export interface Props {
 	readonly bold?: boolean;
 	readonly italic?: boolean;
 	readonly underline?: boolean;
@@ -15,7 +16,7 @@ export interface TextProps {
 /**
  * This component can change the style of the text, make it bold, underline, italic or strikethrough.
  */
-const Text: FC<TextProps> = ({
+const Text: FC<Props> = ({
 	bold,
 	italic,
 	underline,

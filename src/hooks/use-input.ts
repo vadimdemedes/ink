@@ -1,5 +1,5 @@
-import {useEffect, useContext} from 'react';
-import {StdinContext} from '..';
+import {useEffect} from 'react';
+import useStdin from './use-stdin';
 
 export interface Key {
 	upArrow: boolean;
@@ -43,8 +43,8 @@ interface Options {
  * };
  * ```
  */
-export const useInput = (inputHandler: Handler, options: Options = {}) => {
-	const {stdin, setRawMode} = useContext(StdinContext);
+const useInput = (inputHandler: Handler, options: Options = {}) => {
+	const {stdin, setRawMode} = useStdin();
 
 	useEffect(() => {
 		if (options.isActive === false) {
@@ -106,3 +106,5 @@ export const useInput = (inputHandler: Handler, options: Options = {}) => {
 		};
 	}, [options.isActive, stdin, inputHandler]);
 };
+
+export default useInput;

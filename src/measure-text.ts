@@ -7,7 +7,7 @@ interface Output {
 	height: number;
 }
 
-export const measureText = (text: string): Output => {
+export default (text: string): Output => {
 	if (text.length === 0) {
 		return {
 			width: 0,

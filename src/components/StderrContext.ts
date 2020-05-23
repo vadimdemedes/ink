@@ -1,6 +1,6 @@
 import {createContext} from 'react';
 
-export interface StderrProps {
+export interface Props {
 	/**
 	 * Stderr stream passed to `render()` in `options.stderr` or `process.stderr` by default.
 	 */
@@ -17,9 +17,11 @@ export interface StderrProps {
 /**
  * `StderrContext` is a React context, which exposes stderr stream.
  */
-export const StderrContext = createContext<StderrProps>({
+const StderrContext = createContext<Props>({
 	stderr: undefined,
 	write: () => {}
 });
 
 StderrContext.displayName = 'InternalStderrContext';
+
+export default StderrContext;

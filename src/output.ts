@@ -1,6 +1,6 @@
 import sliceAnsi from 'slice-ansi';
 import stringLength from 'string-length';
-import {OutputTransformer} from './render-node-to-output';
+import type {OutputTransformer} from './render-node-to-output';
 
 /**
  * "Virtual" output class
@@ -23,7 +23,7 @@ interface Writes {
 	transformers: OutputTransformer[];
 }
 
-export class Output {
+export default class Output {
 	width: number;
 	height: number;
 

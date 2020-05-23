@@ -1,13 +1,13 @@
 import wrapAnsi from 'wrap-ansi';
 import cliTruncate from 'cli-truncate';
-import {WrapTextStyles} from './styles';
+import {Styles} from './styles';
 
 const cache: Record<string, string> = {};
 
-export const wrapText = (
+export default (
 	text: string,
 	maxWidth: number,
-	wrapType: WrapTextStyles['textWrap']
+	wrapType: Styles['textWrap']
 ): string => {
 	const cacheKey = text + String(maxWidth) + String(wrapType);
 

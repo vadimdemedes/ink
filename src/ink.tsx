@@ -1,17 +1,20 @@
 import {PassThrough} from 'stream';
-import React, {ReactNode} from 'react';
+import React from 'react';
+import type {ReactNode} from 'react';
 import throttle from 'lodash.throttle';
-import logUpdate, {LogUpdate} from './log-update';
+import logUpdate from './log-update';
+import type {LogUpdate} from './log-update';
 import ansiEscapes from 'ansi-escapes';
 import originalIsCI from 'is-ci';
 import autoBind from 'auto-bind';
-import {reconciler} from './reconciler';
-import {createRenderer, Renderer} from './renderer';
+import reconciler from './reconciler';
+import createRenderer from './renderer';
+import type {Renderer} from './renderer';
 import signalExit from 'signal-exit';
 import * as dom from './dom';
-import {FiberRoot} from 'react-reconciler';
-import {instances} from './instances';
-import {App} from './components/App';
+import type {FiberRoot} from 'react-reconciler';
+import instances from './instances';
+import App from './components/App';
 
 const isCI = process.env.CI === 'false' ? false : originalIsCI;
 const noop = () => {};
@@ -46,7 +49,7 @@ export interface Options {
 	waitUntilExit?: () => Promise<void>;
 }
 
-export class Ink {
+export default class Ink {
 	private readonly options: Options;
 	private readonly log: LogUpdate;
 	private readonly throttledLog: LogUpdate;

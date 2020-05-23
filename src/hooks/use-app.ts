@@ -1,5 +1,5 @@
 import {useContext} from 'react';
-import {AppContext} from '../components/AppContext';
+import AppContext from '../components/AppContext';
 
 /**
  * `useApp` is a React hook, which exposes props of `AppContext`.
@@ -21,4 +21,6 @@ import {AppContext} from '../components/AppContext';
  * </AppContext.Consumer>
  * ```
  */
-export const useApp = () => useContext(AppContext);
+
+const useApp = () => useContext(AppContext);
+export default useApp;

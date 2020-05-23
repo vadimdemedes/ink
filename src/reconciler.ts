@@ -12,15 +12,17 @@ import {
 	setStyle,
 	setTextContent,
 	createNode,
-	setAttribute,
+	setAttribute
+} from './dom';
+import type {
 	DOMNode,
 	DOMNodeAttribute,
 	TextNode,
 	ElementNames,
 	DOMElement
 } from './dom';
-import {Styles} from './styles';
-import {OutputTransformer} from './render-node-to-output';
+import type {Styles} from './styles';
+import type {OutputTransformer} from './render-node-to-output';
 // eslint-disable-next-line import/no-unassigned-import
 import './devtools';
 
@@ -34,7 +36,7 @@ interface Props {
 	[key: string]: unknown;
 }
 
-export const reconciler = createReconciler<
+export default createReconciler<
 	ElementNames,
 	Props,
 	DOMElement,

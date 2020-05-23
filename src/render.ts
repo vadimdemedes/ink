@@ -1,6 +1,7 @@
-import {ReactElement} from 'react';
-import {Ink, Options as InkOptions} from './ink';
-import {instances} from './instances';
+import type {ReactElement} from 'react';
+import Ink from './ink';
+import type {Options as InkOptions} from './ink';
+import instances from './instances';
 import {Stream} from 'stream';
 
 export interface RenderOptions {
@@ -62,7 +63,7 @@ type RenderFunction = <Props, K extends NodeJS.WriteStream | RenderOptions>(
 /**
  * Mount a component and render the output.
  */
-export const render: RenderFunction = (node, options): Instance => {
+const render: RenderFunction = (node, options): Instance => {
 	const inkOptions: InkOptions = {
 		stdout: process.stdout,
 		stdin: process.stdin,
@@ -86,6 +87,8 @@ export const render: RenderFunction = (node, options): Instance => {
 		clear: instance.clear
 	};
 };
+
+export default render;
 
 const getOptions = (
 	stdout: NodeJS.WriteStream | RenderOptions | undefined = {}

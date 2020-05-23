@@ -1,10 +1,11 @@
-import React, {PureComponent, ReactNode} from 'react';
+import React, {PureComponent} from 'react';
+import type {ReactNode} from 'react';
 import PropTypes from 'prop-types';
 import cliCursor from 'cli-cursor';
-import {AppContext} from './AppContext';
-import {StdinContext} from './StdinContext';
-import {StdoutContext} from './StdoutContext';
-import {StderrContext} from './StderrContext';
+import AppContext from './AppContext';
+import StdinContext from './StdinContext';
+import StdoutContext from './StdoutContext';
+import StderrContext from './StderrContext';
 
 interface Props {
 	children: ReactNode;
@@ -20,7 +21,7 @@ interface Props {
 // Root component for all Ink apps
 // It renders stdin and stdout contexts, so that children can access them if needed
 // It also handles Ctrl+C exiting and cursor visibility
-export class App extends PureComponent<Props> {
+export default class App extends PureComponent<Props> {
 	static displayName = 'InternalApp';
 	static propTypes = {
 		children: PropTypes.node.isRequired,
