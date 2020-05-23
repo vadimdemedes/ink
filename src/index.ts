@@ -8,6 +8,7 @@ export {StdoutContext, StdoutContextProps} from './components/StdoutContext';
 export {StderrProps} from './components/StderrContext';
 export {Static, StaticProps} from './components/Static';
 export {default as Transform, TransformProps} from './components/Transform';
+export {default as Newline} from './components/Newline';
 export {useInput, Key} from './hooks/use-input';
 export {useApp} from './hooks/use-app';
 export {useStdin} from './hooks/use-stdin';

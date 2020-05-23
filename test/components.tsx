@@ -13,6 +13,7 @@ import {
 	Static,
 	StdinContext,
 	Transform,
+	Newline,
 	render
 } from '../src';
 
@@ -513,4 +514,26 @@ test('reset prop when it’s removed from the element', t => {
 
 	rerender(<Dynamic remove />);
 	t.is(stdout.write.lastCall.args[0], 'x');
+});
+
+test('newline', t => {
+	const output = renderToString(
+		<Box>
+			Hello
+			<Newline />
+			World
+		</Box>
+	);
+	t.is(output, 'Hello\nWorld');
+});
+
+test('multiple newlines', t => {
+	const output = renderToString(
+		<Box>
+			Hello
+			<Newline count={2} />
+			World
+		</Box>
+	);
+	t.is(output, 'Hello\n\nWorld');
 });

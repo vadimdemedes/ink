@@ -642,6 +642,38 @@ Usage:
 <Text strikethrough>I am strikethrough</Text>
 ```
 
+#### `<Newline>`
+
+Adds a newline (`\n`) character.
+
+##### count
+
+Type: `number`<br>
+Default: `1`
+
+Number of newlines to insert.
+
+Usage:
+
+```jsx
+import {Box, Color, Newline} from 'ink';
+
+const Example = () => (
+	<Box>
+		<Color green>Hello</Color>
+		<Newline />
+		<Color red>World</Color>
+	</Box>
+);
+```
+
+This will output:
+
+```
+Hello
+World
+```
+
 #### `<Static>`
 
 `<Static>` component permanently renders its output above everything else.
