@@ -11,7 +11,7 @@ export interface TransformProps {
  */
 const Transform: FC<TransformProps> = ({children, transform}) => (
 	<span
-		style={{flexDirection: 'row'}}
+		style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row'}}
 		// @ts-ignore
 		internal_transform={transform}
 	>

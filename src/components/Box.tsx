@@ -1,9 +1,16 @@
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import React, {PureComponent, ReactNode} from 'react';
 import PropTypes from 'prop-types';
 import {YogaNode} from 'yoga-layout-prebuilt';
 import {Styles} from '../styles';
 
 export type BoxProps = Styles & {
+	margin?: number;
+	marginX?: number;
+	marginY?: number;
+	padding?: number;
+	paddingX?: number;
+	paddingY?: number;
 	unstable__transformChildren?: (children: ReactNode) => ReactNode;
 };
 
@@ -76,10 +83,22 @@ export class Box extends PureComponent<BoxProps> {
 	render() {
 		const {children, unstable__transformChildren, ...style} = this.props;
 
+		const transformedStyle = {
+			...style,
+			marginLeft: style.marginLeft || style.marginX || style.margin || 0,
+			marginRight: style.marginRight || style.marginX || style.margin || 0,
+			marginTop: style.marginTop || style.marginY || style.margin || 0,
+			marginBottom: style.marginBottom || style.marginY || style.margin || 0,
+			paddingLeft: style.paddingLeft || style.paddingX || style.padding || 0,
+			paddingRight: style.paddingRight || style.paddingX || style.padding || 0,
+			paddingTop: style.paddingTop || style.paddingY || style.padding || 0,
+			paddingBottom: style.paddingBottom || style.paddingY || style.padding || 0
+		};
+
 		return (
 			<div
 				ref={this.nodeRef}
-				style={style}
+				style={transformedStyle}
 				// @ts-ignore
 				internal_transform={unstable__transformChildren}
 			>

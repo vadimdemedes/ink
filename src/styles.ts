@@ -14,9 +14,6 @@ export interface PositionStyles {
 }
 
 export interface MarginStyles {
-	margin?: number;
-	marginX?: number;
-	marginY?: number;
 	marginTop?: number;
 	marginBottom?: number;
 	marginLeft?: number;
@@ -24,9 +21,6 @@ export interface MarginStyles {
 }
 
 export interface PaddingStyles {
-	padding?: number;
-	paddingX?: number;
-	paddingY?: number;
 	paddingTop?: number;
 	paddingBottom?: number;
 	paddingLeft?: number;

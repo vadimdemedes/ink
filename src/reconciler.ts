@@ -1,4 +1,3 @@
-import {ReactNode} from 'react';
 import {
 	unstable_scheduleCallback as schedulePassiveEffects,
 	unstable_cancelCallback as cancelPassiveEffects
@@ -15,10 +14,13 @@ import {
 	createNode,
 	setAttribute,
 	DOMNode,
+	DOMNodeAttribute,
 	TextNode,
 	ElementNames,
 	DOMElement
 } from './dom';
+import {Styles} from './styles';
+import {OutputTransformer} from './render-node-to-output';
 // eslint-disable-next-line import/no-unassigned-import
 import './devtools';
 
@@ -29,7 +31,7 @@ const cleanupYogaNode = (node: Yoga.YogaNode): void => {
 const NO_CONTEXT = true;
 
 interface Props {
-	children: ReactNode;
+	[key: string]: unknown;
 }
 
 export const reconciler = createReconciler<
@@ -41,7 +43,7 @@ export const reconciler = createReconciler<
 	unknown,
 	unknown,
 	unknown,
-	unknown,
+	Props,
 	unknown,
 	unknown,
 	unknown
@@ -93,13 +95,13 @@ export const reconciler = createReconciler<
 					}
 				}
 			} else if (key === 'style') {
-				setStyle(node, value);
+				setStyle(node, value as Styles);
 			} else if (key === 'internal_transform') {
-				node.internal_transform = value;
+				node.internal_transform = value as OutputTransformer;
 			} else if (key === 'internal_static') {
 				node.internal_static = true;
 			} else {
-				setAttribute(node, key, value);
+				setAttribute(node, key, value as DOMNodeAttribute);
 			}
 		}
 
@@ -152,15 +154,49 @@ export const reconciler = createReconciler<
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode!);
 	},
-	prepareUpdate: (node, _type, _oldProps, _newProps, rootNode) => {
+	prepareUpdate: (node, _type, oldProps, newProps, rootNode) => {
 		if (node.internal_static) {
 			rootNode.isStaticDirty = true;
 		}
 
-		return true;
+		const updatePayload: Props = {};
+		const keys = Object.keys(newProps);
+
+		for (const key of keys) {
+			if (newProps[key] !== oldProps[key]) {
+				const isStyle =
+					key === 'style' &&
+					typeof newProps.style === 'object' &&
+					typeof oldProps.style === 'object';
+
+				if (isStyle) {
+					const newStyle = newProps.style as Styles;
+					const oldStyle = oldProps.style as Styles;
+					const styleKeys = Object.keys(newStyle) as Array<keyof Styles>;
+
+					for (const styleKey of styleKeys) {
+						if (newStyle[styleKey] !== oldStyle[styleKey]) {
+							if (typeof updatePayload.style !== 'object') {
+								// Linter didn't like `= {} as Style`
+								const style: Styles = {};
+								updatePayload.style = style;
+							}
+
+							(updatePayload.style as any)[styleKey] = newStyle[styleKey];
+						}
+					}
+
+					continue;
+				}
+
+				(updatePayload as any)[key] = newProps[key];
+			}
+		}
+
+		return updatePayload;
 	},
-	commitUpdate: (node, _updatePayload, type, _oldProps, newProps) => {
-		for (const [key, value] of Object.entries(newProps)) {
+	commitUpdate: (node, updatePayload, type) => {
+		for (const [key, value] of Object.entries(updatePayload)) {
 			if (key === 'children') {
 				if (typeof value === 'string' || typeof value === 'number') {
 					if (type === 'div') {
@@ -180,13 +216,13 @@ export const reconciler = createReconciler<
 					}
 				}
 			} else if (key === 'style') {
-				setStyle(node, value);
+				setStyle(node, value as Styles);
 			} else if (key === 'internal_transform') {
-				node.internal_transform = value;
+				node.internal_transform = value as OutputTransformer;
 			} else if (key === 'internal_static') {
 				node.internal_static = true;
 			} else {
-				setAttribute(node, key, value);
+				setAttribute(node, key, value as DOMNodeAttribute);
 			}
 		}
 	},
