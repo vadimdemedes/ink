@@ -1121,22 +1121,7 @@ const MyApp = () => {
 - [ink-ascii](https://github.com/hexrcs/ink-ascii) - Awesome text component with more font choices, based on Figlet.
 - [ink-markdown](https://github.com/cameronhunter/ink-markdown) - Render syntax highlighted Markdown.
 - [ink-quicksearch-input](https://github.com/Eximchain/ink-quicksearch-input) - Select component with fast quicksearch-like navigation.
-
-### Incompatible components
-
-These are components that haven't migrated to Ink 2 yet:
-
-- [ink-console](https://github.com/ForbesLindesay/ink-console) - Render output from `console[method]` calls in a scrollable panel.
 - [ink-confirm-input](https://github.com/kevva/ink-confirm-input) - Yes/No confirmation input.
-- [ink-checkbox-list](https://github.com/MaxMEllon/ink-checkbox-list) - Checkbox.
-- [ink-quicksearch](https://github.com/aicioara/ink-quicksearch) - Select Component with fast quicksearch-like navigation
-- [ink-autocomplete](https://github.com/maticzav/ink-autocomplete) - Autocomplete.
-- [ink-broadcast](https://github.com/jimmed/ink-broadcast) - Implementation of react-broadcast for Ink.
-- [ink-router](https://github.com/jimmed/ink-router) - Implementation of react-router for Ink.
-- [ink-select](https://github.com/karaggeorge/ink-select) - Select component.
-- [ink-scrollbar](https://github.com/karaggeorge/ink-scrollbar) - Scrollbar component.
-- [ink-text-animation](https://github.com/yardnsm/ink-text-animation) - Text animation component.
-- [ink-figlet](https://github.com/KimotoYanke/ink-figlet) - Large text component with Figlet fonts.
 
 ## Testing
 
