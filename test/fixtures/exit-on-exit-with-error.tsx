@@ -1,7 +1,7 @@
 import React from 'react';
-import {render, Box, AppContext} from '../../src';
+import {render, Box, useApp} from '../../src';
 
-class Test extends React.Component<
+class Exit extends React.Component<
 	{onExit: (error: Error) => void},
 	{counter: number}
 > {
@@ -30,10 +30,10 @@ class Test extends React.Component<
 	}
 }
 
-const app = render(
-	<AppContext.Consumer>
-		{({exit}) => <Test onExit={exit} />}
-	</AppContext.Consumer>
-);
+const Test = () => {
+	const {exit} = useApp();
+	return <Exit onExit={exit} />;
+};
 
+const app = render(<Test />);
 app.waitUntilExit().catch((error: Error) => console.log(error.message));

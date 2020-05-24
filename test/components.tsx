@@ -11,9 +11,9 @@ import {
 	Color,
 	Text,
 	Static,
-	StdinContext,
 	Transform,
 	Newline,
+	useStdin,
 	render
 } from '../src';
 
@@ -302,16 +302,16 @@ test('disable raw mode when all input components are unmounted', t => {
 		}
 	}
 
-	const Test = ({renderFirstInput, renderSecondInput}) => (
-		<StdinContext.Consumer>
-			{({setRawMode}) => (
-				<>
-					{renderFirstInput && <Input setRawMode={setRawMode} />}
-					{renderSecondInput && <Input setRawMode={setRawMode} />}
-				</>
-			)}
-		</StdinContext.Consumer>
-	);
+	const Test = ({renderFirstInput, renderSecondInput}) => {
+		const {setRawMode} = useStdin();
+
+		return (
+			<>
+				{renderFirstInput && <Input setRawMode={setRawMode} />}
+				{renderSecondInput && <Input setRawMode={setRawMode} />}
+			</>
+		);
+	};
 
 	const {rerender} = render(
 		<Test renderFirstInput renderSecondInput />,
@@ -381,11 +381,10 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 		}
 	}
 
-	const Test = () => (
-		<StdinContext.Consumer>
-			{({setRawMode}) => <Input setRawMode={setRawMode} />}
-		</StdinContext.Consumer>
-	);
+	const Test = () => {
+		const {setRawMode} = useStdin();
+		return <Input setRawMode={setRawMode} />;
+	};
 
 	const {unmount} = render(<Test />, options);
 	unmount();
@@ -430,20 +429,20 @@ test('render different component based on whether stdin is a TTY or not', t => {
 		}
 	}
 
-	const Test = ({renderFirstInput, renderSecondInput}) => (
-		<StdinContext.Consumer>
-			{({isRawModeSupported, setRawMode}) => (
-				<>
-					{isRawModeSupported && renderFirstInput && (
-						<Input setRawMode={setRawMode} />
-					)}
-					{isRawModeSupported && renderSecondInput && (
-						<Input setRawMode={setRawMode} />
-					)}
-				</>
-			)}
-		</StdinContext.Consumer>
-	);
+	const Test = ({renderFirstInput, renderSecondInput}) => {
+		const {isRawModeSupported, setRawMode} = useStdin();
+
+		return (
+			<>
+				{isRawModeSupported && renderFirstInput && (
+					<Input setRawMode={setRawMode} />
+				)}
+				{isRawModeSupported && renderSecondInput && (
+					<Input setRawMode={setRawMode} />
+				)}
+			</>
+		);
+	};
 
 	const {rerender} = render(
 		<Test renderFirstInput renderSecondInput />,

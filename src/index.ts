@@ -2,18 +2,9 @@ export {default as render, RenderOptions, Instance} from './render';
 export {default as Box, Props as BoxProps} from './components/Box';
 export {default as Text, Props as TextProps} from './components/Text';
 export {default as Color, Props as ColorProps} from './components/Color';
-export {
-	default as AppContext,
-	Props as AppContextProps
-} from './components/AppContext';
-export {
-	default as StdinContext,
-	Props as StdinContextProps
-} from './components/StdinContext';
-export {
-	default as StdoutContext,
-	Props as StdoutContextProps
-} from './components/StdoutContext';
+export {Props as AppProps} from './components/AppContext';
+export {Props as StdinProps} from './components/StdinContext';
+export {Props as StdoutProps} from './components/StdoutContext';
 export {Props as StderrProps} from './components/StderrContext';
 export {default as Static, Props as StaticProps} from './components/Static';
 export {

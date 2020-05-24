@@ -1,8 +1,8 @@
 import React, {FC} from 'react';
-import {render, useInput, AppContext} from '../../src';
+import {render, useInput, useApp} from '../../src';
 
 const UserInput: FC<{test: string}> = ({test}) => {
-	const {exit} = React.useContext(AppContext);
+	const {exit} = useApp();
 
 	useInput((input, key) => {
 		if (test === 'lowercase' && input === 'q') {

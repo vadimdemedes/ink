@@ -2,8 +2,7 @@ import {useContext} from 'react';
 import StdoutContext from '../components/StdoutContext';
 
 /**
- * `useStdout` is a React hook, which exposes props of `StdoutContext`.
- * Similar to `useStdout`, it's equivalent to consuming `StdoutContext` directly.
+ * `useStdout` is a React hook, which exposes stdout stream.
  */
 const useStdout = () => useContext(StdoutContext);
 export default useStdout;

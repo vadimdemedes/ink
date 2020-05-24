@@ -774,153 +774,12 @@ Type: `string`
 
 Output of child components.
 
-#### `<AppContext>`
-
-`<AppContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes a method to manually exit the app (unmount).
-
-Import:
-
-```js
-import {AppContext} from 'ink';
-```
-
-##### exit
-
-Type: `Function`
-
-Exit (unmount) the whole Ink app.
-
-Usage:
-
-```jsx
-<AppContext.Consumer>
-	{({ exit }) => (
-		{/* Calling `onExit()` from within <MyApp> will unmount the app */}
-		<MyApp onExit={exit}/>
-	)}
-</AppContext.Consumer>
-```
-
-If `exit` is called with an Error, `waitUntilExit` will reject with that error.
-
-#### `<StdinContext>`
-
-`<StdinContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes input stream.
-
-Import:
-
-```js
-import {StdinContext} from 'ink';
-```
-
-##### stdin
-
-Type: `stream.Readable`<br>
-Default: `process.stdin`
-
-Stdin stream passed to `render()` in `options.stdin` or `process.stdin` by default.
-Useful if your app needs to handle user input.
-
-Usage:
-
-```jsx
-<StdinContext.Consumer>
-	{({stdin}) => <MyComponent stdin={stdin} />}
-</StdinContext.Consumer>
-```
-
-##### isRawModeSupported
-
-Type: `boolean`
-
-A boolean flag determining if the current `stdin` supports `setRawMode`.
-A component using `setRawMode` might want to use `isRawModeSupported` to nicely fall back in environments where raw mode is not supported.
-
-Usage:
-
-```jsx
-<StdinContext.Consumer>
-	{({isRawModeSupported, setRawMode, stdin}) =>
-		isRawModeSupported ? (
-			<MyInputComponent setRawMode={setRawMode} stdin={stdin} />
-		) : (
-			<MyComponentThatDoesntUseInput />
-		)
-	}
-</StdinContext.Consumer>
-```
-
-##### setRawMode
-
-Type: `function`<br>
-
-See [`setRawMode`](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode).
-Ink exposes this function via own `<StdinContext>` to be able to handle <kbd>Ctrl</kbd>+<kbd>C</kbd>, that's why you should use Ink's `setRawMode` instead of `process.stdin.setRawMode`.
-
-**Warning:** This function will throw unless the current `stdin` supports `setRawMode`. Use [`isRawModeSupported`](#israwmodesupported) to detect `setRawMode` support.
-
-Usage:
-
-```jsx
-<StdinContext.Consumer>
-	{({setRawMode}) => <MyComponent setRawMode={setRawMode} />}
-</StdinContext.Consumer>
-```
-
-#### `<StdoutContext>`
-
-`<StdoutContext>` is a [React context](https://reactjs.org/docs/context.html#reactcreatecontext), which exposes stdout stream, where Ink renders your app.
-
-##### stdout
-
-Type: `stream.Writable`<br>
-Default: `process.stdout`
-
-Usage:
-
-```jsx
-import {StdoutContext} from 'ink';
-
-const MyApp = () => {
-	const {stdout} = useContext(StdoutContext);
-
-	return …
-};
-```
-
-##### write(data)
-
-Write any string to stdout, while preserving Ink's output.
-It's useful when you want to display some external information outside of Ink's rendering and ensure there's no conflict between the two.
-It's similar to `<Static>`, except it can't accept components, it only works with strings.
-
-###### data
-
-Type: `string`
-
-Data to write to stdout.
-
-```jsx
-import {StdoutContext} from 'ink';
-
-const MyApp = () => {
-	const {write} = useContext(StdoutContext);
-
-	useEffect(() => {
-		// Write a single message to stdout, above Ink's output
-		write('Hello from Ink to stdout\n');
-	}, []);
-
-	return …
-};
-```
-
 ## Hooks
 
 ### useInput(inputHandler, options?)
 
 This hook is used for handling user input.
-It's a more convienient alternative to using `StdinContext` and listening to `data` events.
+It's a more convienient alternative to using `useStdin` and listening to `data` events.
 The callback you pass to `useInput` is called for each character when user enters any input.
 However, if user pastes text and it's more than one character, the callback will be called only once and the whole string will be passed as `input`.
 You can find a full example of using `useInput` at [examples/use-input](examples/use-input/use-input.js).
@@ -1017,37 +876,154 @@ Useful when there are multiple `useInput` hooks used at once to avoid handling t
 
 ### useApp
 
-`useApp` is a React hook, which exposes props of [`AppContext`](#appcontext).
+`useApp` is a React hook, which exposes a method to manually exit the app (unmount).
+
+#### exit
+
+Type: `Function`
+
+Exit (unmount) the whole Ink app. If `exit` is called with an `Error`, `waitUntilExit` will reject with that error.
 
 ```js
 import {useApp} from 'ink';
 
-const MyApp = () => {
+const Example = () => {
 	const {exit} = useApp();
+
+	// Exit the app after 5 seconds
+	useEffect(() => {
+		setTimeout(() => {
+			exit();
+		}, 5000);
+	}, []);
+
+	return …
 };
-```
-
-It's equivalent to consuming `AppContext` props via `AppContext.Consumer`:
-
-```jsx
-<AppContext.Consumer>
-	{({exit}) => {
-		// …
-	}}
-</AppContext.Consumer>
 ```
 
 ### useStdin
 
-`useStdin` is a React hook, which exposes props of [`StdinContext`](#stdincontext).
-Similar to `useApp`, it's equivalent to consuming `StdinContext` directly.
+`useStdin` is a React hook, which exposes stdin stream.
+
+#### stdin
+
+Type: `stream.Readable`<br>
+Default: `process.stdin`
+
+Stdin stream passed to `render()` in `options.stdin` or `process.stdin` by default.
+Useful if your app needs to handle user input.
+
+```js
+import {useStdin} from 'ink';
+
+const Example = () => {
+	const {stdin} = useStdin();
+
+	return …
+};
+```
+
+#### isRawModeSupported
+
+Type: `boolean`
+
+A boolean flag determining if the current `stdin` supports `setRawMode`.
+A component using `setRawMode` might want to use `isRawModeSupported` to nicely fall back in environments where raw mode is not supported.
+
+Usage:
+
+```jsx
+import {useStdin} from 'ink';
+
+const Example = () => {
+	const {isRawModeSupported} = useStdin();
+
+	return isRawModeSupported ? (
+		<MyInputComponent />
+	) : (
+		<MyComponentThatDoesntUseInput />
+	);
+};
+```
+
+#### setRawMode
+
+Type: `function`<br>
+
+See [`setRawMode`](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode).
+Ink exposes this function to be able to handle <kbd>Ctrl</kbd>+<kbd>C</kbd>, that's why you should use Ink's `setRawMode` instead of `process.stdin.setRawMode`.
+
+**Warning:** This function will throw unless the current `stdin` supports `setRawMode`. Use [`isRawModeSupported`](#israwmodesupported) to detect `setRawMode` support.
+
+Usage:
+
+```js
+import {useStdin} from 'ink';
+
+const Example = () => {
+	const {setRawMode} = useStdin();
+
+	useEffect(() => {
+		setRawMode(true);
+
+		return () => {
+			setRawMode(false);
+		};
+	});
+
+	return …
+};
+```
 
 ### useStdout
 
-`useStdout` is a React hook, which exposes props of [`StdoutContext`](#stdoutcontext).
-Similar to `useApp`, it's equivalent to consuming `StdoutContext` directly.
+`useStdout` is a React hook, which exposes stdout stream, where Ink renders your app.
 
-See usage example in [examples/use-stdout](examples/use-stdout/use-stdout.js).
+#### stdout
+
+Type: `stream.Writable`<br>
+Default: `process.stdout`
+
+Usage:
+
+```js
+import {useStdout} from 'ink';
+
+const Example = () => {
+	const {stdout} = useStdout;
+
+	return …
+};
+```
+
+#### write(data)
+
+Write any string to stdout, while preserving Ink's output.
+It's useful when you want to display some external information outside of Ink's rendering and ensure there's no conflict between the two.
+It's similar to `<Static>`, except it can't accept components, it only works with strings.
+
+##### data
+
+Type: `string`
+
+Data to write to stdout.
+
+```js
+import {useStdout} from 'ink';
+
+const Example = () => {
+	const {write} = useStdout();
+
+	useEffect(() => {
+		// Write a single message to stdout, above Ink's output
+		write('Hello from Ink to stdout\n');
+	}, []);
+
+	return …
+};
+```
+
+See additional usage example in [examples/use-stdout](examples/use-stdout/use-stdout.js).
 
 ### useStderr
 
@@ -1060,10 +1036,10 @@ Default: `process.stderr`
 
 Stderr stream.
 
-```jsx
+```js
 import {useStderr} from 'ink';
 
-const MyApp = () => {
+const Example = () => {
 	const {stderr} = useStderr();
 
 	return …
@@ -1083,10 +1059,10 @@ Type: `string`
 
 Data to write to stderr.
 
-```jsx
+```js
 import {useStderr} from 'ink';
 
-const MyApp = () => {
+const Example = () => {
 	const {write} = useStderr();
 
 	useEffect(() => {

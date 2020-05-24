@@ -1,7 +1,7 @@
 import React from 'react';
-import {render, Box, AppContext, StdinContext} from '../../src';
+import {render, Box, useApp, useStdin} from '../../src';
 
-class Test extends React.Component<{
+class Exit extends React.Component<{
 	onSetRawMode: (value: boolean) => void;
 	onExit: (error: Error) => void;
 }> {
@@ -15,14 +15,12 @@ class Test extends React.Component<{
 	}
 }
 
-const app = render(
-	<AppContext.Consumer>
-		{({exit}) => (
-			<StdinContext.Consumer>
-				{({setRawMode}) => <Test onExit={exit} onSetRawMode={setRawMode} />}
-			</StdinContext.Consumer>
-		)}
-	</AppContext.Consumer>
-);
+const Test = () => {
+	const {exit} = useApp();
+	const {setRawMode} = useStdin();
 
+	return <Exit onExit={exit} onSetRawMode={setRawMode} />;
+};
+
+const app = render(<Test />);
 app.waitUntilExit().catch(error => console.log(error.message));

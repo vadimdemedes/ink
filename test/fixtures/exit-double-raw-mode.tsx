@@ -1,5 +1,5 @@
 import React from 'react';
-import {Box, render, StdinContext} from '../../src';
+import {Box, render, useStdin} from '../../src';
 
 class ExitDoubleRawMode extends React.Component<{
 	setRawMode: (value: boolean) => void;
@@ -23,11 +23,13 @@ class ExitDoubleRawMode extends React.Component<{
 	}
 }
 
-const {unmount, waitUntilExit} = render(
-	<StdinContext.Consumer>
-		{({setRawMode}) => <ExitDoubleRawMode setRawMode={setRawMode} />}
-	</StdinContext.Consumer>
-);
+const Test = () => {
+	const {setRawMode} = useStdin();
+
+	return <ExitDoubleRawMode setRawMode={setRawMode} />;
+};
+
+const {unmount, waitUntilExit} = render(<Test />);
 
 process.stdin.on('data', data => {
 	if (String(data) === 'q') {
