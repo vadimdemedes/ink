@@ -674,6 +674,40 @@ Hello
 World
 ```
 
+#### `<Spacer>`
+
+A flexible space that expands along the major axis of its containing layout.
+It's useful as a shortcut for filling all the available spaces between elements.
+
+For example, using `<Spacer>` in a `<Box>` with default flex direction (`row`) will position "Left" on the left side and will push "Right" to the right side.
+
+```jsx
+import {Box, Spacer} from 'ink';
+
+const Example = () => (
+	<Box>
+		Left
+		<Spacer />
+		Right
+	</Box>
+);
+```
+
+In a vertical flex direction (`column`), it will position "Top" to the top of the container and push "Bottom" to the bottom of it.
+Note, that container needs to be tall to enough to see this in effect.
+
+```jsx
+import {Box, Spacer} from 'ink';
+
+const Example = () => (
+	<Box flexDirection="column" height={10}>
+		Top
+		<Spacer />
+		Bottom
+	</Box>
+);
+```
+
 #### `<Static>`
 
 `<Static>` component permanently renders its output above everything else.

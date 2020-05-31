@@ -13,6 +13,7 @@ import {
 	Static,
 	Transform,
 	Newline,
+	Spacer,
 	useStdin,
 	render
 } from '../src';
@@ -535,4 +536,28 @@ test('multiple newlines', t => {
 		</Box>
 	);
 	t.is(output, 'Hello\n\nWorld');
+});
+
+test('horizontal spacer', t => {
+	const output = renderToString(
+		<Box width={20}>
+			Left
+			<Spacer />
+			Right
+		</Box>
+	);
+
+	t.is(output, 'Left           Right');
+});
+
+test('vertical spacer', t => {
+	const output = renderToString(
+		<Box flexDirection="column" height={6}>
+			Top
+			<Spacer />
+			Bottom
+		</Box>
+	);
+
+	t.is(output, 'Top\n\n\n\n\nBottom');
 });

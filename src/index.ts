@@ -12,6 +12,7 @@ export {
 	Props as TransformProps
 } from './components/Transform';
 export {default as Newline, Props as NewlineProps} from './components/Newline';
+export {default as Spacer} from './components/Spacer';
 export {default as useInput, Key} from './hooks/use-input';
 export {default as useApp} from './hooks/use-app';
 export {default as useStdin} from './hooks/use-stdin';
