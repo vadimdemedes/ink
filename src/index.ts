@@ -18,3 +18,5 @@ export {default as useApp} from './hooks/use-app';
 export {default as useStdin} from './hooks/use-stdin';
 export {default as useStdout} from './hooks/use-stdout';
 export {default as useStderr} from './hooks/use-stderr';
+export {default as useFocus} from './hooks/use-focus';
+export {default as useFocusManager} from './hooks/use-focus-manager';

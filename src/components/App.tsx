@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import React, {PureComponent} from 'react';
 import type {ReactNode} from 'react';
 import PropTypes from 'prop-types';
@@ -6,6 +7,11 @@ import AppContext from './AppContext';
 import StdinContext from './StdinContext';
 import StdoutContext from './StdoutContext';
 import StderrContext from './StderrContext';
+import FocusContext from './FocusContext';
+
+const TAB = '\t';
+const SHIFT_TAB = '\u001B[Z';
+const ESC = '\u001B';
 
 interface Props {
 	children: ReactNode;
@@ -18,10 +24,21 @@ interface Props {
 	onExit: (error?: Error) => void;
 }
 
+interface State {
+	isFocusEnabled: boolean;
+	activeFocusId?: string;
+	focusables: Focusable[];
+}
+
+interface Focusable {
+	id: string;
+	isActive: boolean;
+}
+
 // Root component for all Ink apps
 // It renders stdin and stdout contexts, so that children can access them if needed
 // It also handles Ctrl+C exiting and cursor visibility
-export default class App extends PureComponent<Props> {
+export default class App extends PureComponent<Props, State> {
 	static displayName = 'InternalApp';
 	static propTypes = {
 		children: PropTypes.node.isRequired,
@@ -32,6 +49,12 @@ export default class App extends PureComponent<Props> {
 		writeToStderr: PropTypes.func.isRequired,
 		exitOnCtrlC: PropTypes.bool.isRequired, // eslint-disable-line react/boolean-prop-naming
 		onExit: PropTypes.func.isRequired
+	};
+
+	state = {
+		isFocusEnabled: true,
+		activeFocusId: undefined,
+		focusables: []
 	};
 
 	// Count how many components enabled raw mode to avoid disabling
@@ -69,7 +92,21 @@ export default class App extends PureComponent<Props> {
 								write: this.props.writeToStderr
 							}}
 						>
-							{this.props.children}
+							<FocusContext.Provider
+								value={{
+									activeId: this.state.activeFocusId,
+									add: this.addFocusable,
+									remove: this.removeFocusable,
+									activate: this.activateFocusable,
+									deactivate: this.deactivateFocusable,
+									enableFocus: this.enableFocus,
+									disableFocus: this.disableFocus,
+									focusNext: this.focusNext,
+									focusPrevious: this.focusPrevious
+								}}
+							>
+								{this.props.children}
+							</FocusContext.Provider>
 						</StderrContext.Provider>
 					</StdoutContext.Provider>
 				</StdinContext.Provider>
@@ -137,6 +174,23 @@ export default class App extends PureComponent<Props> {
 		if (input === '\x03' && this.props.exitOnCtrlC) {
 			this.handleExit();
 		}
+
+		// Reset focus when there's an active focused component on Esc
+		if (input === ESC && this.state.activeFocusId) {
+			this.setState({
+				activeFocusId: undefined
+			});
+		}
+
+		if (this.state.isFocusEnabled && this.state.focusables.length > 0) {
+			if (input === TAB) {
+				this.focusNext();
+			}
+
+			if (input === SHIFT_TAB) {
+				this.focusPrevious();
+			}
+		}
 	};
 
 	handleExit = (error?: Error): void => {
@@ -145,5 +199,140 @@ export default class App extends PureComponent<Props> {
 		}
 
 		this.props.onExit(error);
+	};
+
+	enableFocus = (): void => {
+		this.setState({
+			isFocusEnabled: true
+		});
+	};
+
+	disableFocus = (): void => {
+		this.setState({
+			isFocusEnabled: false
+		});
+	};
+
+	focusNext = (): void => {
+		this.setState(previousState => {
+			const firstFocusableId = previousState.focusables[0].id;
+			const nextFocusableId = this.findNextFocusable(previousState);
+
+			return {
+				activeFocusId: nextFocusableId || firstFocusableId
+			};
+		});
+	};
+
+	focusPrevious = (): void => {
+		this.setState(previousState => {
+			const lastFocusableId =
+				previousState.focusables[previousState.focusables.length - 1].id;
+
+			const previousFocusableId = this.findPreviousFocusable(previousState);
+
+			return {
+				activeFocusId: previousFocusableId || lastFocusableId
+			};
+		});
+	};
+
+	addFocusable = (id: string, {autoFocus}: {autoFocus: boolean}): void => {
+		this.setState(previousState => {
+			let nextFocusId = previousState.activeFocusId;
+
+			if (!nextFocusId && autoFocus) {
+				nextFocusId = id;
+			}
+
+			return {
+				activeFocusId: nextFocusId,
+				focusables: [
+					...previousState.focusables,
+					{
+						id,
+						isActive: true
+					}
+				]
+			};
+		});
+	};
+
+	removeFocusable = (id: string): void => {
+		this.setState(previousState => ({
+			activeFocusId:
+				previousState.activeFocusId === id
+					? undefined
+					: previousState.activeFocusId,
+			focusables: previousState.focusables.filter(focusable => {
+				return focusable.id !== id;
+			})
+		}));
+	};
+
+	activateFocusable = (id: string): void => {
+		this.setState(previousState => ({
+			focusables: previousState.focusables.map(focusable => {
+				if (focusable.id !== id) {
+					return focusable;
+				}
+
+				return {
+					id,
+					isActive: true
+				};
+			})
+		}));
+	};
+
+	deactivateFocusable = (id: string): void => {
+		this.setState(previousState => ({
+			activeFocusId:
+				previousState.activeFocusId === id
+					? undefined
+					: previousState.activeFocusId,
+			focusables: previousState.focusables.map(focusable => {
+				if (focusable.id !== id) {
+					return focusable;
+				}
+
+				return {
+					id,
+					isActive: false
+				};
+			})
+		}));
+	};
+
+	findNextFocusable = (state: State): string | undefined => {
+		const activeIndex = state.focusables.findIndex(focusable => {
+			return focusable.id === state.activeFocusId;
+		});
+
+		for (
+			let index = activeIndex + 1;
+			index < state.focusables.length;
+			index++
+		) {
+			if (state.focusables[index].isActive) {
+				return state.focusables[index].id;
+			}
+		}
+
+		return undefined;
+	};
+
+	findPreviousFocusable = (state: State): string | undefined => {
+		const activeIndex = state.focusables.findIndex(focusable => {
+			return focusable.id === state.activeFocusId;
+		});
+
+		for (let index = activeIndex - 1; index >= 0; index--) {
+			if (state.focusables[index].isActive) {
+				return state.focusables[index].id;
+			}
+		}
+
+		return undefined;
 	};
 }

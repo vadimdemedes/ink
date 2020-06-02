@@ -54,6 +54,13 @@ customGlobal.window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = [
 		value: 'InternalStdinContext',
 		isEnabled: true,
 		isValid: true
+	},
+	{
+		// ComponentFilterDisplayName
+		type: 2,
+		value: 'InternalFocusContext',
+		isEnabled: true,
+		isValid: true
 	}
 ];
 
