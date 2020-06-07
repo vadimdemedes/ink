@@ -25,6 +25,7 @@ export interface Styles {
 	flexDirection?: 'row' | 'column' | 'row-reverse' | 'column-reverse';
 	flexBasis?: number | string;
 	alignItems?: 'flex-start' | 'center' | 'flex-end' | 'stretch';
+	alignSelf?: 'flex-start' | 'center' | 'flex-end' | 'auto';
 	justifyContent?:
 		| 'flex-start'
 		| 'flex-end'
@@ -139,6 +140,24 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 
 		if (style.alignItems === 'flex-end') {
 			node.setAlignItems(Yoga.ALIGN_FLEX_END);
+		}
+	}
+
+	if ('alignSelf' in style) {
+		if (style.alignSelf === 'auto' || !style.alignSelf) {
+			node.setAlignSelf(Yoga.ALIGN_AUTO);
+		}
+
+		if (style.alignSelf === 'flex-start') {
+			node.setAlignSelf(Yoga.ALIGN_FLEX_START);
+		}
+
+		if (style.alignSelf === 'center') {
+			node.setAlignSelf(Yoga.ALIGN_CENTER);
+		}
+
+		if (style.alignSelf === 'flex-end') {
+			node.setAlignSelf(Yoga.ALIGN_FLEX_END);
 		}
 	}
 
