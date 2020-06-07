@@ -55,6 +55,7 @@ export default class Box extends PureComponent<Props> {
 			'center',
 			'flex-end'
 		]),
+		alignSelf: PropTypes.oneOf(['auto', 'flex-start', 'center', 'flex-end']),
 		justifyContent: PropTypes.oneOf([
 			'flex-start',
 			'center',

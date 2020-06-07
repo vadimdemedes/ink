@@ -532,6 +532,37 @@ See [align-items](https://css-tricks.com/almanac/properties/f/align-items/).
 // X C
 ```
 
+###### alignSelf
+
+Type: `string`<br>
+Default: `auto`<br>
+Allowed vales: `auto`, `flex-start`, `center` and `flex-end`
+
+See [align-self](https://css-tricks.com/almanac/properties/f/align-self/).
+
+```jsx
+<Box height={3}>
+	<Box alignSelf="flex-start">X</Box>
+</Box>
+// X
+//
+//
+
+<Box height={3}>
+	<Box alignSelf="center">X</Box>
+</Box>
+//
+// X
+//
+
+<Box height={3}>
+	<Box alignSelf="flex-end">X</Box>
+</Box>
+//
+//
+// X
+```
+
 ###### justifyContent
 
 Type: `string`<br>
