@@ -7,7 +7,7 @@ test('transform children of <Box>', t => {
 	const output = renderToString(
 		<Box unstable__transformChildren={(string: string) => `[${string}]`}>
 			<Box unstable__transformChildren={(string: string) => `{${string}}`}>
-				test
+				<Text>test</Text>
 			</Box>
 		</Box>
 	);
@@ -31,7 +31,7 @@ test('squash multiple text nodes', t => {
 	const output = renderToString(
 		<Box unstable__transformChildren={(string: string) => `[${string}]`}>
 			<Box unstable__transformChildren={(string: string) => `{${string}}`}>
-				hello world
+				<Text>hello world</Text>
 			</Box>
 		</Box>
 	);
@@ -43,8 +43,7 @@ test('squash multiple nested text nodes', t => {
 	const output = renderToString(
 		<Box unstable__transformChildren={(string: string) => `[${string}]`}>
 			<Box unstable__transformChildren={(string: string) => `{${string}}`}>
-				hello
-				<Text> world</Text>
+				<Text>hello{' world'}</Text>
 			</Box>
 		</Box>
 	);

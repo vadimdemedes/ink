@@ -10,7 +10,7 @@ import {
 	insertBeforeNode,
 	removeChildNode,
 	setStyle,
-	setTextContent,
+	setTextNodeValue,
 	createNode,
 	setAttribute
 } from './dom';
@@ -26,14 +26,16 @@ import type {OutputTransformer} from './render-node-to-output';
 // eslint-disable-next-line import/no-unassigned-import
 import './devtools';
 
-const cleanupYogaNode = (node: Yoga.YogaNode): void => {
-	node.unsetMeasureFunc();
+const cleanupYogaNode = (node?: Yoga.YogaNode): void => {
+	node?.unsetMeasureFunc();
 };
-
-const NO_CONTEXT = true;
 
 interface Props {
 	[key: string]: unknown;
+}
+
+interface HostContext {
+	isInsideText: boolean;
 }
 
 export default createReconciler<
@@ -44,7 +46,7 @@ export default createReconciler<
 	DOMNode,
 	unknown,
 	unknown,
-	unknown,
+	HostContext,
 	Props,
 	unknown,
 	unknown,
@@ -54,7 +56,9 @@ export default createReconciler<
 	schedulePassiveEffects,
 	cancelPassiveEffects,
 	now: Date.now,
-	getRootHostContext: () => NO_CONTEXT,
+	getRootHostContext: () => ({
+		isInsideText: false
+	}),
 	prepareForCommit: () => {},
 	resetAfterCommit: rootNode => {
 		// Since renders are throttled at the instance level and <Static> component children
@@ -73,29 +77,28 @@ export default createReconciler<
 			rootNode.onRender();
 		}
 	},
-	getChildHostContext: () => NO_CONTEXT,
-	shouldSetTextContent: (_type, props) => {
-		return (
-			typeof props.children === 'string' || typeof props.children === 'number'
-		);
+	getChildHostContext: (parentHostContext, type) => {
+		const previousIsInsideText = parentHostContext.isInsideText;
+		const isInsideText = type === 'span' || type === 'virtual-span';
+
+		if (previousIsInsideText === isInsideText) {
+			return parentHostContext;
+		}
+
+		return {isInsideText};
 	},
-	createInstance: (type, newProps) => {
+	shouldSetTextContent: () => false,
+	createInstance: (originalType, newProps, _root, hostContext) => {
+		const type =
+			originalType === 'span' && hostContext.isInsideText
+				? 'virtual-span'
+				: originalType;
+
 		const node = createNode(type);
 
 		for (const [key, value] of Object.entries(newProps)) {
 			if (key === 'children') {
-				if (typeof value === 'string' || typeof value === 'number') {
-					if (type === 'div') {
-						// Text node must be wrapped in another node, so that text can be aligned within container
-						const textNode = createNode('div');
-						setTextContent(textNode, String(value));
-						appendChildNode(node, textNode);
-					}
-
-					if (type === 'span') {
-						setTextContent(node, String(value));
-					}
-				}
+				continue;
 			} else if (key === 'style') {
 				setStyle(node, value as Styles);
 			} else if (key === 'internal_transform') {
@@ -109,24 +112,21 @@ export default createReconciler<
 
 		return node;
 	},
-	createTextInstance: createTextNode,
-	resetTextContent: node => {
-		if (node.textContent) {
-			node.textContent = '';
+	createTextInstance: (text, _root, hostContext) => {
+		if (!hostContext.isInsideText) {
+			throw new Error(
+				`Text string "${text}" must be rendered inside <Text> component`
+			);
 		}
 
-		if (node.childNodes.length > 0) {
-			for (const childNode of node.childNodes) {
-				removeChildNode(node, childNode);
-				cleanupYogaNode(childNode.yogaNode!);
-			}
-		}
+		return createTextNode(text);
 	},
+	resetTextContent: () => {},
 	hideTextInstance: (node: TextNode): void => {
-		node.nodeValue = '';
+		setTextNodeValue(node, '');
 	},
 	unhideTextInstance: (node: TextNode, text: string): void => {
-		node.nodeValue = text;
+		setTextNodeValue(node, text);
 	},
 	getPublicInstance: instance => instance,
 	hideInstance: (node: DOMElement): void => {
@@ -154,7 +154,7 @@ export default createReconciler<
 	insertInContainerBefore: insertBeforeNode,
 	removeChildFromContainer: (node, removeNode) => {
 		removeChildNode(node, removeNode);
-		cleanupYogaNode(removeNode.yogaNode!);
+		cleanupYogaNode(removeNode.yogaNode);
 	},
 	prepareUpdate: (node, _type, oldProps, newProps, rootNode) => {
 		if (node.internal_static) {
@@ -197,26 +197,10 @@ export default createReconciler<
 
 		return updatePayload;
 	},
-	commitUpdate: (node, updatePayload, type) => {
+	commitUpdate: (node, updatePayload) => {
 		for (const [key, value] of Object.entries(updatePayload)) {
 			if (key === 'children') {
-				if (typeof value === 'string' || typeof value === 'number') {
-					if (type === 'div') {
-						// Text node must be wrapped in another node, so that text can be aligned within container
-						// If there's no such node, a new one must be created
-						if (node.childNodes.length === 0) {
-							const textNode = createNode('div');
-							setTextContent(textNode, String(value));
-							appendChildNode(node, textNode);
-						} else {
-							setTextContent(node.childNodes[0], String(value));
-						}
-					}
-
-					if (type === 'span') {
-						setTextContent(node, String(value));
-					}
-				}
+				continue;
 			} else if (key === 'style') {
 				setStyle(node, value as Styles);
 			} else if (key === 'internal_transform') {
@@ -229,10 +213,10 @@ export default createReconciler<
 		}
 	},
 	commitTextUpdate: (node, _oldText, newText) => {
-		setTextContent(node, newText);
+		setTextNodeValue(node as TextNode, newText);
 	},
 	removeChild: (node, removeNode) => {
 		removeChildNode(node, removeNode);
-		cleanupYogaNode(removeNode.yogaNode!);
+		cleanupYogaNode(removeNode.yogaNode);
 	}
 });

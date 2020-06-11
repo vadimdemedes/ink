@@ -1,18 +1,24 @@
 import React from 'react';
 import test from 'ava';
 import {renderToString} from './helpers/render-to-string';
-import {Box} from '../src';
+import {Box, Text} from '../src';
 
 test('display flex', t => {
-	const output = renderToString(<Box display="flex">X</Box>);
+	const output = renderToString(
+		<Box display="flex">
+			<Text>X</Text>
+		</Box>
+	);
 	t.is(output, 'X');
 });
 
 test('display none', t => {
 	const output = renderToString(
 		<Box flexDirection="column">
-			<Box display="none">Kitty!</Box>
-			<Box>Doggo</Box>
+			<Box display="none">
+				<Text>Kitty!</Text>
+			</Box>
+			<Text>Doggo</Text>
 		</Box>
 	);
 

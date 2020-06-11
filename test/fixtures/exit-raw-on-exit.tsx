@@ -1,12 +1,12 @@
 import React from 'react';
-import {render, Box, useApp, useStdin} from '../../src';
+import {render, Text, useApp, useStdin} from '../../src';
 
 class Exit extends React.Component<{
 	onSetRawMode: (value: boolean) => void;
 	onExit: (error: Error) => void;
 }> {
 	render() {
-		return <Box>Hello World</Box>;
+		return <Text>Hello World</Text>;
 	}
 
 	componentDidMount() {

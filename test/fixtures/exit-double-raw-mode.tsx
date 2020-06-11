@@ -1,11 +1,11 @@
 import React from 'react';
-import {Box, render, useStdin} from '../../src';
+import {Text, render, useStdin} from '../../src';
 
 class ExitDoubleRawMode extends React.Component<{
 	setRawMode: (value: boolean) => void;
 }> {
 	render() {
-		return <Box>Hello World</Box>;
+		return <Text>Hello World</Text>;
 	}
 
 	componentDidMount() {

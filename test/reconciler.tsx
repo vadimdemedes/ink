@@ -10,7 +10,7 @@ const createStdout = () => ({
 });
 
 test('update child', t => {
-	const Test = ({update}) => <Box>{update ? 'B' : 'A'}</Box>;
+	const Test = ({update}) => <Text>{update ? 'B' : 'A'}</Text>;
 
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
@@ -20,7 +20,7 @@ test('update child', t => {
 		debug: true
 	});
 
-	const expected = render(<Box>A</Box>, {
+	const expected = render(<Text>A</Text>, {
 		stdout: stdoutExpected,
 		debug: true
 	});
@@ -31,7 +31,7 @@ test('update child', t => {
 	);
 
 	actual.rerender(<Test update />);
-	expected.rerender(<Box>B</Box>);
+	expected.rerender(<Text>B</Text>);
 
 	t.is(
 		stdoutActual.write.lastCall.args[0],
@@ -42,8 +42,8 @@ test('update child', t => {
 test('update text node', t => {
 	const Test = ({update}) => (
 		<Box>
-			{'Hello '}
-			{update ? 'B' : 'A'}
+			<Text>Hello </Text>
+			<Text>{update ? 'B' : 'A'}</Text>
 		</Box>
 	);
 
@@ -55,7 +55,7 @@ test('update text node', t => {
 		debug: true
 	});
 
-	const expected = render(<Box>Hello A</Box>, {
+	const expected = render(<Text>Hello A</Text>, {
 		stdout: stdoutExpected,
 		debug: true
 	});
@@ -66,7 +66,7 @@ test('update text node', t => {
 	);
 
 	actual.rerender(<Test update />);
-	expected.rerender(<Box>Hello B</Box>);
+	expected.rerender(<Text>Hello B</Text>);
 
 	t.is(
 		stdoutActual.write.lastCall.args[0],
@@ -79,15 +79,15 @@ test('append child', t => {
 		if (append) {
 			return (
 				<Box flexDirection="column">
-					<Box>A</Box>
-					<Box>B</Box>
+					<Text>A</Text>
+					<Text>B</Text>
 				</Box>
 			);
 		}
 
 		return (
 			<Box flexDirection="column">
-				<Box>A</Box>
+				<Text>A</Text>
 			</Box>
 		);
 	};
@@ -102,7 +102,7 @@ test('append child', t => {
 
 	const expected = render(
 		<Box flexDirection="column">
-			<Box>A</Box>
+			<Text>A</Text>
 		</Box>,
 		{
 			stdout: stdoutExpected,
@@ -119,8 +119,8 @@ test('append child', t => {
 
 	expected.rerender(
 		<Box flexDirection="column">
-			<Box>A</Box>
-			<Box>B</Box>
+			<Text>A</Text>
+			<Text>B</Text>
 		</Box>
 	);
 
@@ -135,17 +135,17 @@ test('insert child between other children', t => {
 		if (insert) {
 			return (
 				<Box flexDirection="column">
-					<Box key="a">A</Box>
-					<Box key="b">B</Box>
-					<Box key="c">C</Box>
+					<Text key="a">A</Text>
+					<Text key="b">B</Text>
+					<Text key="c">C</Text>
 				</Box>
 			);
 		}
 
 		return (
 			<Box flexDirection="column">
-				<Box key="a">A</Box>
-				<Box key="c">C</Box>
+				<Text key="a">A</Text>
+				<Text key="c">C</Text>
 			</Box>
 		);
 	};
@@ -160,8 +160,8 @@ test('insert child between other children', t => {
 
 	const expected = render(
 		<Box flexDirection="column">
-			<Box>A</Box>
-			<Box>C</Box>
+			<Text>A</Text>
+			<Text>C</Text>
 		</Box>,
 		{
 			stdout: stdoutExpected,
@@ -178,9 +178,9 @@ test('insert child between other children', t => {
 
 	expected.rerender(
 		<Box flexDirection="column">
-			<Box>A</Box>
-			<Box>B</Box>
-			<Box>C</Box>
+			<Text>A</Text>
+			<Text>B</Text>
+			<Text>C</Text>
 		</Box>
 	);
 
@@ -195,15 +195,15 @@ test('remove child', t => {
 		if (remove) {
 			return (
 				<Box flexDirection="column">
-					<Box>A</Box>
+					<Text>A</Text>
 				</Box>
 			);
 		}
 
 		return (
 			<Box flexDirection="column">
-				<Box>A</Box>
-				<Box>B</Box>
+				<Text>A</Text>
+				<Text>B</Text>
 			</Box>
 		);
 	};
@@ -218,8 +218,8 @@ test('remove child', t => {
 
 	const expected = render(
 		<Box flexDirection="column">
-			<Box>A</Box>
-			<Box>B</Box>
+			<Text>A</Text>
+			<Text>B</Text>
 		</Box>,
 		{
 			stdout: stdoutExpected,
@@ -236,7 +236,7 @@ test('remove child', t => {
 
 	expected.rerender(
 		<Box flexDirection="column">
-			<Box>A</Box>
+			<Text>A</Text>
 		</Box>
 	);
 
@@ -251,16 +251,16 @@ test('reorder children', t => {
 		if (reorder) {
 			return (
 				<Box flexDirection="column">
-					<Box key="b">B</Box>
-					<Box key="a">A</Box>
+					<Text key="b">B</Text>
+					<Text key="a">A</Text>
 				</Box>
 			);
 		}
 
 		return (
 			<Box flexDirection="column">
-				<Box key="a">A</Box>
-				<Box key="b">B</Box>
+				<Text key="a">A</Text>
+				<Text key="b">B</Text>
 			</Box>
 		);
 	};
@@ -275,8 +275,8 @@ test('reorder children', t => {
 
 	const expected = render(
 		<Box flexDirection="column">
-			<Box>A</Box>
-			<Box>B</Box>
+			<Text>A</Text>
+			<Text>B</Text>
 		</Box>,
 		{
 			stdout: stdoutExpected,
@@ -293,8 +293,8 @@ test('reorder children', t => {
 
 	expected.rerender(
 		<Box flexDirection="column">
-			<Box>B</Box>
-			<Box>A</Box>
+			<Text>B</Text>
+			<Text>A</Text>
 		</Box>
 	);
 
@@ -308,7 +308,7 @@ test('replace child node with text', t => {
 	const stdout = createStdout();
 
 	const Dynamic = ({replace}) => (
-		<Box>{replace ? 'x' : <Color green>test</Color>}</Box>
+		<Text>{replace ? 'x' : <Color green>test</Color>}</Text>
 	);
 
 	const {rerender} = render(<Dynamic />, {

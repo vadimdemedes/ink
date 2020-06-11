@@ -6,8 +6,8 @@ import {Box, Text} from '../src';
 test('direction row', t => {
 	const output = renderToString(
 		<Box flexDirection="row">
-			<Box>A</Box>
-			<Box>B</Box>
+			<Text>A</Text>
+			<Text>B</Text>
 		</Box>
 	);
 
@@ -17,8 +17,8 @@ test('direction row', t => {
 test('direction row reverse', t => {
 	const output = renderToString(
 		<Box flexDirection="row-reverse" width={4}>
-			<Box>A</Box>
-			<Box>B</Box>
+			<Text>A</Text>
+			<Text>B</Text>
 		</Box>
 	);
 
@@ -28,8 +28,8 @@ test('direction row reverse', t => {
 test('direction column', t => {
 	const output = renderToString(
 		<Box flexDirection="column">
-			<Box>A</Box>
-			<Box>B</Box>
+			<Text>A</Text>
+			<Text>B</Text>
 		</Box>
 	);
 
@@ -39,8 +39,8 @@ test('direction column', t => {
 test('direction column reverse', t => {
 	const output = renderToString(
 		<Box flexDirection="column-reverse" height={4}>
-			<Box>A</Box>
-			<Box>B</Box>
+			<Text>A</Text>
+			<Text>B</Text>
 		</Box>
 	);
 

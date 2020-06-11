@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, Static, Box} from '../../src';
+import {render, Static, Text} from '../../src';
 
 interface TestState {
 	counter: number;
@@ -18,10 +18,10 @@ class Test extends React.Component<Record<string, unknown>, TestState> {
 		return (
 			<>
 				<Static items={this.state.items}>
-					{item => <Box key={item}>{item}</Box>}
+					{item => <Text key={item}>{item}</Text>}
 				</Static>
 
-				<Box>Counter: {this.state.counter}</Box>
+				<Text>Counter: {this.state.counter}</Text>
 			</>
 		);
 	}

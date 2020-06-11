@@ -1,7 +1,7 @@
 'use strict';
 const React = require('react');
 const PropTypes = require('prop-types');
-const {Box, Color} = require('../..');
+const {Box, Text, Color} = require('../..');
 
 const Summary = ({isFinished, passed, failed, time}) => (
 	<Box flexDirection="column" marginTop={1}>
@@ -19,7 +19,7 @@ const Summary = ({isFinished, passed, failed, time}) => (
 					{passed} passed,{' '}
 				</Color>
 			)}
-			{passed + failed} total
+			<Text>{passed + failed} total</Text>
 		</Box>
 
 		<Box>
@@ -27,7 +27,7 @@ const Summary = ({isFinished, passed, failed, time}) => (
 				<Color bold>Time:</Color>
 			</Box>
 
-			{time}
+			<Text>{time}</Text>
 		</Box>
 
 		{isFinished && (

@@ -1,13 +1,17 @@
 import React from 'react';
 import test from 'ava';
 import {renderToString} from './helpers/render-to-string';
-import {Box} from '../src';
+import {Box, Text} from '../src';
 
 test('grow equally', t => {
 	const output = renderToString(
 		<Box width={6}>
-			<Box flexGrow={1}>A</Box>
-			<Box flexGrow={1}>B</Box>
+			<Box flexGrow={1}>
+				<Text>A</Text>
+			</Box>
+			<Box flexGrow={1}>
+				<Text>B</Text>
+			</Box>
 		</Box>
 	);
 
@@ -17,8 +21,10 @@ test('grow equally', t => {
 test('grow one element', t => {
 	const output = renderToString(
 		<Box width={6}>
-			<Box flexGrow={1}>A</Box>
-			<Box>B</Box>
+			<Box flexGrow={1}>
+				<Text>A</Text>
+			</Box>
+			<Text>B</Text>
 		</Box>
 	);
 
@@ -29,12 +35,14 @@ test('dont shrink', t => {
 	const output = renderToString(
 		<Box width={16}>
 			<Box flexShrink={0} width={6}>
-				A
+				<Text>A</Text>
 			</Box>
 			<Box flexShrink={0} width={6}>
-				B
+				<Text>B</Text>
 			</Box>
-			<Box width={6}>C</Box>
+			<Box width={6}>
+				<Text>C</Text>
+			</Box>
 		</Box>
 	);
 
@@ -45,12 +53,12 @@ test('shrink equally', t => {
 	const output = renderToString(
 		<Box width={10}>
 			<Box flexShrink={1} width={6}>
-				A
+				<Text>A</Text>
 			</Box>
 			<Box flexShrink={1} width={6}>
-				B
+				<Text>B</Text>
 			</Box>
-			<Box>C</Box>
+			<Text>C</Text>
 		</Box>
 	);
 
@@ -60,7 +68,10 @@ test('shrink equally', t => {
 test('set flex basis with flexDirection="row" container', t => {
 	const output = renderToString(
 		<Box width={6}>
-			<Box flexBasis={3}>A</Box>B
+			<Box flexBasis={3}>
+				<Text>A</Text>
+			</Box>
+			<Text>B</Text>
 		</Box>
 	);
 
@@ -70,7 +81,10 @@ test('set flex basis with flexDirection="row" container', t => {
 test('set flex basis in percent with flexDirection="row" container', t => {
 	const output = renderToString(
 		<Box width={6}>
-			<Box flexBasis="50%">A</Box>B
+			<Box flexBasis="50%">
+				<Text>A</Text>
+			</Box>
+			<Text>B</Text>
 		</Box>
 	);
 
@@ -80,7 +94,10 @@ test('set flex basis in percent with flexDirection="row" container', t => {
 test('set flex basis with flexDirection="column" container', t => {
 	const output = renderToString(
 		<Box height={6} flexDirection="column">
-			<Box flexBasis={3}>A</Box>B
+			<Box flexBasis={3}>
+				<Text>A</Text>
+			</Box>
+			<Text>B</Text>
 		</Box>
 	);
 
@@ -90,7 +107,10 @@ test('set flex basis with flexDirection="column" container', t => {
 test('set flex basis in percent with flexDirection="column" container', t => {
 	const output = renderToString(
 		<Box height={6} flexDirection="column">
-			<Box flexBasis="50%">A</Box>B
+			<Box flexBasis="50%">
+				<Text>A</Text>
+			</Box>
+			<Text>B</Text>
 		</Box>
 	);
 

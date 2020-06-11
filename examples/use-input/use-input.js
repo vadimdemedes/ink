@@ -1,7 +1,7 @@
 'use strict';
 const {useState, useContext} = require('react');
 const React = require('react');
-const {render, useInput, Box, AppContext} = require('../..');
+const {render, useInput, Box, Text, AppContext} = require('../..');
 
 const Robot = () => {
 	const {exit} = useContext(AppContext);
@@ -32,9 +32,9 @@ const Robot = () => {
 
 	return (
 		<Box flexDirection="column">
-			<Box>Use arrow keys to move the face. Press “q” to exit.</Box>
+			<Text>Use arrow keys to move the face. Press “q” to exit.</Text>
 			<Box height={12} paddingLeft={x} paddingTop={y}>
-				^_^
+				<Text>^_^</Text>
 			</Box>
 		</Box>
 	);
