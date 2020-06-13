@@ -1139,6 +1139,128 @@ const Example = () => {
 };
 ```
 
+### useFocus(options?)
+
+Component that uses `useFocus` hook becomes "focusable" to Ink, so when user presses <kbd>Tab</kbd>, Ink will switch focus to this component.
+If there are multiple components that execute `useFocus` hook, focus will be given to them in the order that these components are rendered in.
+This hook returns an object with `isFocused` boolean property, which determines if this component is focused or not.
+
+#### options
+
+##### autoFocus
+
+Type: `boolean`<br>
+Default: `false`
+
+Auto focus this component, if there's no active (focused) component right now.
+
+##### isActive
+
+Type: `boolean`<br>
+Default: `true`
+
+Enable or disable this component's focus, while still maintaining its position in the list of focusable components.
+This is useful for inputs that are temporarily disabled.
+
+```js
+import {useFocus} from 'ink';
+
+const Example = () => {
+	const {isFocused} = useFocus();
+
+	return <Text>{isFocused ? 'I am focused' : 'I am not focused'}</Text>;
+};
+```
+
+See example in [examples/use-focus](examples/use-focus/use-focus.js).
+
+### useFocusManager
+
+This hook exposes methods to enable or disable focus management for all components or manually switch focus to next or previous components.
+
+#### enableFocus()
+
+Enable focus management for all components.
+
+**Note:** You don't need to call this method manually, unless you've disabled focus management. Focus management is enabled by default.
+
+```js
+import {useFocusManager} from 'ink';
+
+const Example = () => {
+	const {enableFocus} = useFocusManager();
+
+	useEffect(() => {
+		enableFocus();
+	}, []);
+
+	return …
+};
+```
+
+#### disableFocus()
+
+Disable focus management for all components.
+Currently active component (if there's one) will lose its focus.
+
+```js
+import {useFocusManager} from 'ink';
+
+const Example = () => {
+	const {disableFocus} = useFocusManager();
+
+	useEffect(() => {
+		disableFocus();
+	}, []);
+
+	return …
+};
+```
+
+#### focusNext()
+
+Switch focus to the next focusable component.
+If there's no active component right now, focus will be given to the first focusable component.
+If active component is the last in the list of focusable components, focus will be switched to the first component.
+
+**Note:** Ink calls this method when user presses <kbd>Tab</kbd>.
+
+```js
+import {useFocusManager} from 'ink';
+
+const Example = () => {
+	const {focusNext} = useFocusManager();
+
+	useEffect(() => {
+		focusNext();
+	}, []);
+
+	return …
+};
+```
+
+#### focusPrevious()
+
+Switch focus to the previous focusable component.
+If there's no active component right now, focus will be given to the first focusable component.
+If active component is the first in the list of focusable components, focus will be switched to the last component.
+
+**Note:** Ink calls this method when user presses <kbd>Shift</kbd>+<kbd>Tab</kbd>.
+
+```js
+import {useFocusManager} from 'ink';
+
+const Example = () => {
+	const {focusPrevious} = useFocusManager();
+
+	useEffect(() => {
+		focusPrevious();
+	}, []);
+
+	return …
+};
+```
+
 ## Useful Hooks
 
 - [ink-use-stdout-dimensions](https://github.com/cameronhunter/ink-monorepo/tree/master/packages/ink-use-stdout-dimensions) - Subscribe to stdout dimensions.
