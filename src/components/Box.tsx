@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import React, {PureComponent} from 'react';
-import type {ReactNode} from 'react';
 import PropTypes from 'prop-types';
 import type {YogaNode} from 'yoga-layout-prebuilt';
 import type {Except} from 'type-fest';
@@ -13,7 +12,6 @@ export type Props = Except<Styles, 'textWrap'> & {
 	padding?: number;
 	paddingX?: number;
 	paddingY?: number;
-	unstable__transformChildren?: (children: ReactNode) => ReactNode;
 };
 
 /**
@@ -74,7 +72,6 @@ export default class Box extends PureComponent<Props> {
 			'classic'
 		]),
 		borderColor: PropTypes.string,
-		unstable__transformChildren: PropTypes.func,
 		children: PropTypes.node
 	};
 
@@ -87,7 +84,7 @@ export default class Box extends PureComponent<Props> {
 	nodeRef = React.createRef<{yogaNode: YogaNode} & HTMLDivElement>();
 
 	render() {
-		const {children, unstable__transformChildren, ...style} = this.props;
+		const {children, ...style} = this.props;
 
 		const transformedStyle = {
 			...style,
@@ -102,12 +99,7 @@ export default class Box extends PureComponent<Props> {
 		};
 
 		return (
-			<div
-				ref={this.nodeRef}
-				style={transformedStyle}
-				// @ts-ignore
-				internal_transform={unstable__transformChildren}
-			>
+			<div ref={this.nodeRef} style={transformedStyle}>
 				{children}
 			</div>
 		);

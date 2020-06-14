@@ -14,7 +14,6 @@ export interface Props {
 	readonly underline?: boolean;
 	readonly strikethrough?: boolean;
 	readonly wrap?: Styles['textWrap'];
-	readonly unstable__transformChildren?: (children: string) => string;
 	readonly children: ReactNode;
 }
 
@@ -30,8 +29,7 @@ const Text: FC<Props> = ({
 	underline,
 	strikethrough,
 	wrap,
-	children,
-	unstable__transformChildren
+	children
 }) => {
 	const transform = (children: string): string => {
 		if (dimColor) {
@@ -60,10 +58,6 @@ const Text: FC<Props> = ({
 
 		if (strikethrough) {
 			children = chalk.strikethrough(children);
-		}
-
-		if (typeof unstable__transformChildren === 'function') {
-			children = unstable__transformChildren(children);
 		}
 
 		return children;
@@ -99,8 +93,7 @@ Text.propTypes = {
 		'truncate-middle',
 		'truncate-end'
 	]),
-	children: PropTypes.node.isRequired,
-	unstable__transformChildren: PropTypes.func
+	children: PropTypes.node.isRequired
 };
 /* eslint-enable react/boolean-prop-naming */
 
@@ -110,8 +103,7 @@ Text.defaultProps = {
 	italic: false,
 	underline: false,
 	strikethrough: false,
-	wrap: 'wrap',
-	unstable__transformChildren: undefined
+	wrap: 'wrap'
 };
 
 export default memo(Text);
