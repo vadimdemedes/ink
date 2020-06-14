@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import Yoga from 'yoga-layout-prebuilt';
 import type {YogaNode} from 'yoga-layout-prebuilt';
+import type {Boxes} from 'cli-boxes';
+import type {ForegroundColor} from 'chalk';
 
 export interface Styles {
 	textWrap?:
@@ -37,6 +39,8 @@ export interface Styles {
 	minWidth?: number | string;
 	minHeight?: number | string;
 	display?: 'flex' | 'none';
+	borderStyle?: keyof Boxes;
+	borderColor?: typeof ForegroundColor;
 }
 
 const applyPositionStyles = (node: Yoga.YogaNode, style: Styles): void => {
@@ -230,6 +234,17 @@ const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
+const applyBorderStyles = (node: YogaNode, style: Styles): void => {
+	if ('borderStyle' in style) {
+		const borderWidth = typeof style.borderStyle === 'string' ? 1 : 0;
+
+		node.setBorder(Yoga.EDGE_TOP, borderWidth);
+		node.setBorder(Yoga.EDGE_BOTTOM, borderWidth);
+		node.setBorder(Yoga.EDGE_LEFT, borderWidth);
+		node.setBorder(Yoga.EDGE_RIGHT, borderWidth);
+	}
+};
+
 export default (node: YogaNode, style: Styles = {}): void => {
 	applyPositionStyles(node, style);
 	applyMarginStyles(node, style);
@@ -237,4 +252,5 @@ export default (node: YogaNode, style: Styles = {}): void => {
 	applyFlexStyles(node, style);
 	applyDimensionStyles(node, style);
 	applyDisplayStyles(node, style);
+	applyBorderStyles(node, style);
 };
