@@ -257,28 +257,28 @@ const Example = () => (
 
 ##### bold
 
-Type: `boolean`<br>
+Type: `boolean`\
 Default: `false`
 
 ##### italic
 
-Type: `boolean`<br>
+Type: `boolean`\
 Default: `false`
 
 ##### underline
 
-Type: `boolean`<br>
+Type: `boolean`\
 Default: `false`
 
 ##### strikethrough
 
-Type: `boolean`<br>
+Type: `boolean`\
 Default: `false`
 
 ###### wrap
 
-Type: `string`<br>
-Values: `wrap` `truncate` `truncate-start` `truncate-middle` `truncate-end`<br>
+Type: `string`\
+Values: `wrap` `truncate` `truncate-start` `truncate-middle` `truncate-end`\
 Default: `wrap`
 
 This property tells Ink to wrap or truncate text if its width is larger than container.
