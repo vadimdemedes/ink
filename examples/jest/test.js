@@ -1,43 +1,33 @@
 'use strict';
 const React = require('react');
 const PropTypes = require('prop-types');
-const {Box, Color} = require('../..');
+const {Box, Text} = require('../..');
 
 const getBackgroundForStatus = status => {
-	if (status === 'runs') {
-		return {
-			bgYellow: true,
-			black: true
-		};
-	}
-
-	if (status === 'pass') {
-		return {
-			bgGreen: true,
-			black: true
-		};
-	}
-
-	if (status === 'fail') {
-		return {
-			bgRed: true,
-			black: true
-		};
+	switch (status) {
+		case 'runs':
+			return 'yellow';
+		case 'pass':
+			return 'green';
+		case 'fail':
+			return 'red';
+		default:
+			return undefined;
 	}
 };
 
 const Test = ({status, path}) => (
 	<Box>
-		<Color {...getBackgroundForStatus(status)}>
+		<Text color="black" backgroundColor={getBackgroundForStatus(status)}>
 			{` ${status.toUpperCase()} `}
-		</Color>
+		</Text>
 
 		<Box marginLeft={1}>
-			<Color dim>{path.split('/')[0]}/</Color>
+			<Text dimColor>{path.split('/')[0]}/</Text>
 
-			<Color bold white>
+			<Text bold color="white">
 				{path.split('/')[1]}
-			</Color>
+			</Text>
 		</Box>
 	</Box>
 );

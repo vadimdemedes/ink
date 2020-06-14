@@ -1,6 +1,6 @@
 'use strict';
 const React = require('react');
-const {render, Color} = require('../..');
+const {render, Text} = require('../..');
 
 const Counter = () => {
 	const [counter, setCounter] = React.useState(0);
@@ -15,7 +15,7 @@ const Counter = () => {
 		};
 	});
 
-	return <Color green>{counter} tests passed</Color>;
+	return <Text color="green">{counter} tests passed</Text>;
 };
 
 render(<Counter />);

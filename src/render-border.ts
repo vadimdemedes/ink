@@ -1,5 +1,5 @@
 import cliBoxes from 'cli-boxes';
-import chalk from 'chalk';
+import colorize from './colorize';
 import type {DOMNode} from './dom';
 import type Output from './output';
 
@@ -10,18 +10,20 @@ export default (x: number, y: number, node: DOMNode, output: Output): void => {
 		const color = node.style.borderColor;
 		const box = cliBoxes[node.style.borderStyle];
 
-		const colorize = (str: string): string => {
-			return color ? chalk[color](str) : str;
-		};
-
 		const topBorder = colorize(
-			box.topLeft + box.horizontal.repeat(width - 2) + box.topRight
+			box.topLeft + box.horizontal.repeat(width - 2) + box.topRight,
+			color,
+			'foreground'
 		);
 
-		const verticalBorder = (colorize(box.vertical) + '\n').repeat(height - 2);
+		const verticalBorder = (
+			colorize(box.vertical, color, 'foreground') + '\n'
+		).repeat(height - 2);
 
 		const bottomBorder = colorize(
-			box.bottomLeft + box.horizontal.repeat(width - 2) + box.bottomRight
+			box.bottomLeft + box.horizontal.repeat(width - 2) + box.bottomRight,
+			color,
+			'foreground'
 		);
 
 		output.write(x, y, topBorder, {transformers: []});

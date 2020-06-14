@@ -8,7 +8,6 @@ import {renderToString} from './helpers/render-to-string';
 import {run} from './helpers/run';
 import {
 	Box,
-	Color,
 	Text,
 	Static,
 	Transform,
@@ -333,14 +332,9 @@ test('skip previous output when rendering new static output', t => {
 
 // See https://github.com/chalk/wrap-ansi/issues/27
 test('ensure wrap-ansi doesn’t trim leading whitespace', t => {
-	const output = renderToString(<Color red>{' ERROR '}</Color>);
+	const output = renderToString(<Text color="red">{' ERROR '}</Text>);
 
 	t.is(output, chalk.red(' ERROR '));
-});
-
-test('ensure Color doesn’t throw on empty children', t => {
-	const output = renderToString(<Color />);
-	t.is(output, '');
 });
 
 test('replace child node with text', t => {
@@ -350,7 +344,7 @@ test('replace child node with text', t => {
 	};
 
 	const Dynamic = ({replace}) => (
-		<Text>{replace ? 'x' : <Color green>test</Color>}</Text>
+		<Text>{replace ? 'x' : <Text color="green">test</Text>}</Text>
 	);
 
 	const {rerender} = render(<Dynamic />, {
