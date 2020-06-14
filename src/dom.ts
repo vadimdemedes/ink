@@ -1,7 +1,9 @@
 import Yoga from 'yoga-layout-prebuilt';
+import type {YogaNode} from 'yoga-layout-prebuilt';
 import measureText from './measure-text';
 import applyStyles from './styles';
 import wrapText from './wrap-text';
+import squashTextNodes from './squash-text-nodes';
 import type {OutputTransformer} from './render-node-to-output';
 import type {Styles} from './styles';
 
@@ -14,7 +16,15 @@ interface InkNode {
 
 export const TEXT_NAME = '#text';
 export type TextName = '#text';
-export type ElementNames = 'root' | 'div' | 'span' | 'ROOT' | 'DIV' | 'SPAN';
+export type ElementNames =
+	| 'root'
+	| 'div'
+	| 'span'
+	| 'virtual-span'
+	| 'ROOT'
+	| 'DIV'
+	| 'SPAN'
+	| 'VIRTUAL-SPAN';
 export type NodeNames = ElementNames | TextName;
 
 export type DOMElement = {
@@ -22,7 +32,6 @@ export type DOMElement = {
 	attributes: {
 		[key: string]: DOMNodeAttribute;
 	};
-	textContent?: string;
 	childNodes: DOMNode[];
 	internal_transform?: OutputTransformer;
 
@@ -48,14 +57,22 @@ export type DOMNode<T = {nodeName: NodeNames}> = T extends {
 
 export type DOMNodeAttribute = boolean | string | number;
 
-export const createNode = (nodeName: ElementNames): DOMElement => ({
-	nodeName: nodeName.toUpperCase() as ElementNames,
-	style: {},
-	attributes: {},
-	childNodes: [],
-	parentNode: null,
-	yogaNode: Yoga.Node.create()
-});
+export const createNode = (nodeName: ElementNames): DOMElement => {
+	const node: DOMElement = {
+		nodeName: nodeName.toUpperCase() as ElementNames,
+		style: {},
+		attributes: {},
+		childNodes: [],
+		parentNode: null,
+		yogaNode: nodeName === 'virtual-span' ? undefined : Yoga.Node.create()
+	};
+
+	if (nodeName === 'span') {
+		node.yogaNode?.setMeasureFunc(measureTextNode.bind(null, node));
+	}
+
+	return node;
+};
 
 export const appendChildNode = (
 	node: DOMElement,
@@ -143,21 +160,23 @@ export const createTextNode = (text: string): TextNode => {
 	const node: TextNode = {
 		nodeName: '#text',
 		nodeValue: text,
-		yogaNode: Yoga.Node.create(),
+		yogaNode: undefined,
 		parentNode: null,
 		style: {}
 	};
 
-	setTextContent(node, text);
+	setTextNodeValue(node, text);
 
 	return node;
 };
 
 const measureTextNode = function (
 	node: DOMNode,
-	text: string,
 	width: number
 ): {width: number; height: number} {
+	const text =
+		node.nodeName === '#text' ? node.nodeValue : squashTextNodes(node);
+
 	const dimensions = measureText(text);
 
 	// Text fits into container, no need to wrap
@@ -165,22 +184,34 @@ const measureTextNode = function (
 		return dimensions;
 	}
 
-	const wrapType = node.parentNode?.style?.textWrap ?? 'wrap';
-	const wrappedText = wrapText(text, width, wrapType);
+	// This is happening when <Box> is shrinking child nodes and Yoga asks
+	// if we can fit this text node in a <1px space, so we just tell Yoga "no"
+	if (dimensions.width >= 1 && width > 0 && width < 1) {
+		return dimensions;
+	}
+
+	const textWrap = node.style?.textWrap ?? 'wrap';
+	const wrappedText = wrapText(text, width, textWrap);
 
 	return measureText(wrappedText);
 };
 
-export const setTextContent = (node: DOMNode, text: string): void => {
+const findParentYogaNode = (node?: DOMNode): YogaNode | undefined => {
+	if (!node || !node.parentNode) {
+		return undefined;
+	}
+
+	return node.yogaNode ?? findParentYogaNode(node.parentNode);
+};
+
+export const setTextNodeValue = (node: TextNode, text: string): void => {
 	if (typeof text !== 'string') {
 		text = String(text);
 	}
 
-	if (node.nodeName === '#text') {
-		node.nodeValue = text;
-	} else {
-		node.textContent = text;
-	}
+	node.nodeValue = text;
 
-	node.yogaNode?.setMeasureFunc(measureTextNode.bind(null, node, text));
+	// Mark parent Yoga node as dirty to measure text dimensions again
+	const parentYogaNode = findParentYogaNode(node);
+	parentYogaNode?.markDirty();
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, Box, useApp} from '../../src';
+import {render, Text, useApp} from '../../src';
 
 class Exit extends React.Component<
 	{onExit: (error: Error) => void},
@@ -12,7 +12,7 @@ class Exit extends React.Component<
 	};
 
 	render() {
-		return <Box>Counter: {this.state.counter}</Box>;
+		return <Text>Counter: {this.state.counter}</Text>;
 	}
 
 	componentDidMount() {

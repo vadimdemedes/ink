@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import EventEmitter from 'events';
-import React, {useState, FC} from 'react';
+import React, {useState, Component, FC} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
 import {spy} from 'sinon';
@@ -19,35 +19,35 @@ import {
 } from '../src';
 
 test('text', t => {
-	const output = renderToString(<Box>Hello World</Box>);
+	const output = renderToString(<Text>Hello World</Text>);
 
 	t.is(output, 'Hello World');
 });
 
 test('text with variable', t => {
-	const output = renderToString(<Box>Count: {1}</Box>);
+	const output = renderToString(<Text>Count: {1}</Text>);
 
 	t.is(output, 'Count: 1');
 });
 
 test('multiple text nodes', t => {
 	const output = renderToString(
-		<Box>
+		<Text>
 			{'Hello'}
 			{' World'}
-		</Box>
+		</Text>
 	);
 
 	t.is(output, 'Hello World');
 });
 
 test('text with component', t => {
-	const World = () => <Box>World</Box>;
+	const World = () => <Text>World</Text>;
 
 	const output = renderToString(
-		<Box>
+		<Text>
 			Hello <World />
-		</Box>
+		</Text>
 	);
 
 	t.is(output, 'Hello World');
@@ -55,42 +55,49 @@ test('text with component', t => {
 
 test('text with fragment', t => {
 	const output = renderToString(
-		<Box>
+		<Text>
 			Hello <>World</> {/* eslint-disable-line react/jsx-no-useless-fragment */}
-		</Box>
+		</Text>
 	);
 
 	t.is(output, 'Hello World');
 });
 
 test('wrap text', t => {
-	const output = renderToString(<Box textWrap="wrap">Hello World</Box>, {
-		columns: 7
-	});
+	const output = renderToString(
+		<Box width={7}>
+			<Text wrap="wrap">Hello World</Text>
+		</Box>
+	);
 
 	t.is(output, 'Hello\nWorld');
 });
 
 test('don’t wrap text if there is enough space', t => {
-	const output = renderToString(<Box textWrap="wrap">Hello World</Box>, {
-		columns: 20
-	});
+	const output = renderToString(
+		<Box width={20}>
+			<Text wrap="wrap">Hello World</Text>
+		</Box>
+	);
 
 	t.is(output, 'Hello World');
 });
 
 test('truncate text in the end', t => {
-	const output = renderToString(<Box textWrap="truncate">Hello World</Box>, {
-		columns: 7
-	});
+	const output = renderToString(
+		<Box width={7}>
+			<Text wrap="truncate">Hello World</Text>
+		</Box>
+	);
 
 	t.is(output, 'Hello …');
 });
 
 test('truncate text in the middle', t => {
 	const output = renderToString(
-		<Box textWrap="truncate-middle">Hello World</Box>,
-		{columns: 7}
+		<Box width={7}>
+			<Text wrap="truncate-middle">Hello World</Text>
+		</Box>
 	);
 
 	t.is(output, 'Hel…rld');
@@ -98,8 +105,9 @@ test('truncate text in the middle', t => {
 
 test('truncate text in the beginning', t => {
 	const output = renderToString(
-		<Box textWrap="truncate-start">Hello World</Box>,
-		{columns: 7}
+		<Box width={7}>
+			<Text wrap="truncate-start">Hello World</Text>
+		</Box>
 	);
 
 	t.is(output, '… World');
@@ -108,8 +116,10 @@ test('truncate text in the beginning', t => {
 test('ignore empty text node', t => {
 	const output = renderToString(
 		<Box flexDirection="column">
-			<Box>Hello World</Box>
-			{''}
+			<Box>
+				<Text>Hello World</Text>
+			</Box>
+			<Text>{''}</Text>
 		</Box>
 	);
 
@@ -122,13 +132,95 @@ test('render a single empty text node', t => {
 });
 
 test('number', t => {
-	const output = renderToString(<Box>{1}</Box>);
+	const output = renderToString(<Text>{1}</Text>);
 
 	t.is(output, '1');
 });
 
+test('fail when text nodes are not within <Text> component', t => {
+	let error;
+
+	class ErrorBoundary extends Component {
+		render() {
+			return this.props.children;
+		}
+
+		componentDidCatch(reactError) {
+			error = reactError;
+		}
+	}
+
+	renderToString(
+		<ErrorBoundary>
+			<Box>
+				Hello
+				<Text>World</Text>
+			</Box>
+		</ErrorBoundary>
+	);
+
+	t.truthy(error);
+	t.is(
+		error.message,
+		'Text string "Hello" must be rendered inside <Text> component'
+	);
+});
+
+test('fail when text node is not within <Text> component', t => {
+	let error;
+
+	class ErrorBoundary extends Component {
+		render() {
+			return this.props.children;
+		}
+
+		componentDidCatch(reactError) {
+			error = reactError;
+		}
+	}
+
+	renderToString(
+		<ErrorBoundary>
+			<Box>Hello World</Box>
+		</ErrorBoundary>
+	);
+
+	t.truthy(error);
+	t.is(
+		error.message,
+		'Text string "Hello World" must be rendered inside <Text> component'
+	);
+});
+
+test('remesure text dimensions on text change', t => {
+	const stdout = {
+		write: spy(),
+		columns: 100
+	};
+
+	const {rerender} = render(
+		<Box>
+			<Text>Hello</Text>
+		</Box>,
+		{stdout, debug: true}
+	);
+	t.is(stdout.write.lastCall.args[0], 'Hello');
+
+	rerender(
+		<Box>
+			<Text>Hello World</Text>
+		</Box>
+	);
+	t.is(stdout.write.lastCall.args[0], 'Hello World');
+});
+
 test('fragment', t => {
-	const output = renderToString(<>Hello World</>);
+	const output = renderToString(
+		// eslint-disable-next-line react/jsx-no-useless-fragment
+		<>
+			<Text>Hello World</Text>
+		</>
+	);
 
 	t.is(output, 'Hello World');
 });
@@ -136,11 +228,11 @@ test('fragment', t => {
 test('transform children', t => {
 	const output = renderToString(
 		<Transform transform={(string: string) => `[${string}]`}>
-			<Box>
+			<Text>
 				<Transform transform={(string: string) => `{${string}}`}>
-					<Box>test</Box>
+					<Text>test</Text>
 				</Transform>
-			</Box>
+			</Text>
 		</Transform>
 	);
 
@@ -152,7 +244,8 @@ test('squash multiple text nodes', t => {
 		<Transform transform={(string: string) => `[${string}]`}>
 			<Text>
 				<Transform transform={(string: string) => `{${string}}`}>
-					<Text>hello world</Text>
+					{/* prettier-ignore */}
+					<Text>hello{' '}world</Text>
 				</Transform>
 			</Text>
 		</Transform>
@@ -194,7 +287,7 @@ test('hooks', t => {
 	const WithHooks = () => {
 		const [value] = useState('Hello');
 
-		return <Box>{value}</Box>;
+		return <Text>{value}</Text>;
 	};
 
 	const output = renderToString(<WithHooks />);
@@ -205,10 +298,12 @@ test('static output', t => {
 	const output = renderToString(
 		<Box>
 			<Static items={['A', 'B', 'C']} style={{paddingBottom: 1}}>
-				{letter => <Box key={letter}>{letter}</Box>}
+				{letter => <Text key={letter}>{letter}</Text>}
 			</Static>
 
-			<Box marginTop={1}>X</Box>
+			<Box marginTop={1}>
+				<Text>X</Text>
+			</Box>
 		</Box>
 	);
 
@@ -222,7 +317,7 @@ test('skip previous output when rendering new static output', t => {
 	};
 
 	const Dynamic: FC<{items: string[]}> = ({items}) => (
-		<Static items={items}>{item => <Box key={item}>{item}</Box>}</Static>
+		<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
 	);
 
 	const {rerender} = render(<Dynamic items={['A']} />, {
@@ -255,7 +350,7 @@ test('replace child node with text', t => {
 	};
 
 	const Dynamic = ({replace}) => (
-		<Box>{replace ? 'x' : <Color green>test</Color>}</Box>
+		<Text>{replace ? 'x' : <Color green>test</Color>}</Text>
 	);
 
 	const {rerender} = render(<Dynamic />, {
@@ -291,7 +386,7 @@ test('disable raw mode when all input components are unmounted', t => {
 
 	class Input extends React.Component {
 		render() {
-			return <Box>Test</Box>;
+			return <Text>Test</Text>;
 		}
 
 		componentDidMount() {
@@ -362,7 +457,7 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 
 	class Input extends React.Component {
 		render() {
-			return <Box>Test</Box>;
+			return <Text>Test</Text>;
 		}
 
 		componentDidMount() {
@@ -418,7 +513,7 @@ test('render different component based on whether stdin is a TTY or not', t => {
 
 	class Input extends React.Component {
 		render() {
-			return <Box>Test</Box>;
+			return <Text>Test</Text>;
 		}
 
 		componentDidMount() {
@@ -501,7 +596,7 @@ test('reset prop when it’s removed from the element', t => {
 			justifyContent="flex-end"
 			height={remove ? undefined : 4}
 		>
-			x
+			<Text>x</Text>
 		</Box>
 	);
 
@@ -518,22 +613,22 @@ test('reset prop when it’s removed from the element', t => {
 
 test('newline', t => {
 	const output = renderToString(
-		<Box>
+		<Text>
 			Hello
 			<Newline />
 			World
-		</Box>
+		</Text>
 	);
 	t.is(output, 'Hello\nWorld');
 });
 
 test('multiple newlines', t => {
 	const output = renderToString(
-		<Box>
+		<Text>
 			Hello
 			<Newline count={2} />
 			World
-		</Box>
+		</Text>
 	);
 	t.is(output, 'Hello\n\nWorld');
 });
@@ -541,9 +636,9 @@ test('multiple newlines', t => {
 test('horizontal spacer', t => {
 	const output = renderToString(
 		<Box width={20}>
-			Left
+			<Text>Left</Text>
 			<Spacer />
-			Right
+			<Text>Right</Text>
 		</Box>
 	);
 
@@ -553,9 +648,9 @@ test('horizontal spacer', t => {
 test('vertical spacer', t => {
 	const output = renderToString(
 		<Box flexDirection="column" height={6}>
-			Top
+			<Text>Top</Text>
 			<Spacer />
-			Bottom
+			<Text>Bottom</Text>
 		</Box>
 	);
 

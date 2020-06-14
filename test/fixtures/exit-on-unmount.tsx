@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, Box} from '../../src';
+import {render, Text} from '../../src';
 
 class Test extends React.Component<Record<string, unknown>, {counter: number}> {
 	timer?: NodeJS.Timeout;
@@ -9,7 +9,7 @@ class Test extends React.Component<Record<string, unknown>, {counter: number}> {
 	};
 
 	render() {
-		return <Box>Counter: {this.state.counter}</Box>;
+		return <Text>Counter: {this.state.counter}</Text>;
 	}
 
 	componentDidMount() {

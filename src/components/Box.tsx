@@ -3,9 +3,10 @@ import React, {PureComponent} from 'react';
 import type {ReactNode} from 'react';
 import PropTypes from 'prop-types';
 import type {YogaNode} from 'yoga-layout-prebuilt';
+import type {Except} from 'type-fest';
 import type {Styles} from '../styles';
 
-export type Props = Styles & {
+export type Props = Except<Styles, 'textWrap'> & {
 	margin?: number;
 	marginX?: number;
 	marginY?: number;
@@ -62,13 +63,6 @@ export default class Box extends PureComponent<Props> {
 			'flex-end',
 			'space-between',
 			'space-around'
-		]),
-		textWrap: PropTypes.oneOf([
-			'wrap',
-			'truncate',
-			'truncate-start',
-			'truncate-middle',
-			'truncate-end'
 		]),
 		unstable__transformChildren: PropTypes.func,
 		children: PropTypes.node

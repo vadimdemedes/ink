@@ -1,12 +1,14 @@
 import React from 'react';
 import test from 'ava';
 import {renderToString} from './helpers/render-to-string';
-import {Box} from '../src';
+import {Box, Text} from '../src';
 
 test('row - align text to center', t => {
 	const output = renderToString(
 		<Box height={3}>
-			<Box alignSelf="center">Test</Box>
+			<Box alignSelf="center">
+				<Text>Test</Text>
+			</Box>
 		</Box>
 	);
 
@@ -16,7 +18,10 @@ test('row - align text to center', t => {
 test('row - align multiple text nodes to center', t => {
 	const output = renderToString(
 		<Box height={3}>
-			<Box alignSelf="center">A{'B'}</Box>
+			<Box alignSelf="center">
+				<Text>A</Text>
+				<Text>B</Text>
+			</Box>
 		</Box>
 	);
 
@@ -26,7 +31,9 @@ test('row - align multiple text nodes to center', t => {
 test('row - align text to bottom', t => {
 	const output = renderToString(
 		<Box height={3}>
-			<Box alignSelf="flex-end">Test</Box>
+			<Box alignSelf="flex-end">
+				<Text>Test</Text>
+			</Box>
 		</Box>
 	);
 
@@ -36,7 +43,10 @@ test('row - align text to bottom', t => {
 test('row - align multiple text nodes to bottom', t => {
 	const output = renderToString(
 		<Box height={3}>
-			<Box alignSelf="flex-end">A{'B'}</Box>
+			<Box alignSelf="flex-end">
+				<Text>A</Text>
+				<Text>B</Text>
+			</Box>
 		</Box>
 	);
 
@@ -46,7 +56,9 @@ test('row - align multiple text nodes to bottom', t => {
 test('column - align text to center', t => {
 	const output = renderToString(
 		<Box flexDirection="column" width={10}>
-			<Box alignSelf="center">Test</Box>
+			<Box alignSelf="center">
+				<Text>Test</Text>
+			</Box>
 		</Box>
 	);
 
@@ -56,7 +68,9 @@ test('column - align text to center', t => {
 test('column - align text to right', t => {
 	const output = renderToString(
 		<Box flexDirection="column" width={10}>
-			<Box alignSelf="flex-end">Test</Box>
+			<Box alignSelf="flex-end">
+				<Text>Test</Text>
+			</Box>
 		</Box>
 	);
 

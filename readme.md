@@ -112,9 +112,9 @@ Don't forget to import `React` into every file that contains JSX:
 
 ```jsx
 import React from 'react';
-import {render, Box} from 'ink';
+import {render, Text} from 'ink';
 
-const Demo = () => <Box>Hello World</Box>;
+const Demo = () => <Text>Hello World</Text>;
 
 render(<Demo />);
 ```
@@ -234,8 +234,79 @@ Ink uses [Yoga](https://github.com/facebook/yoga) - a Flexbox layout engine to b
 It's important to remember that each element is a Flexbox container.
 Think of it as if each `<div>` in the browser had `display: flex`.
 See `<Box>` built-in component below for documentation on how to use Flexbox layouts in Ink.
+Note that all text must be wrapped in a `<Text>` component.
 
 ### Built-in Components
+
+#### `<Text>`
+
+This component can display text, and change its style to make it bold, underline, italic or strikethrough.
+
+```jsx
+import {Text} from 'ink';
+
+const Example = () => (
+	<>
+		<Text bold>I am bold</Text>
+		<Text italic>I am italic</Text>
+		<Text underline>I am underline</Text>
+		<Text strikethrough>I am strikethrough</Text>
+	</>
+);
+```
+
+##### bold
+
+Type: `boolean`\
+Default: `false`
+
+##### italic
+
+Type: `boolean`\
+Default: `false`
+
+##### underline
+
+Type: `boolean`\
+Default: `false`
+
+##### strikethrough
+
+Type: `boolean`\
+Default: `false`
+
+##### wrap
+
+Type: `string`\
+Values: `wrap` `truncate` `truncate-start` `truncate-middle` `truncate-end`\
+Default: `wrap`
+
+This property tells Ink to wrap or truncate text if its width is larger than container.
+If `wrap` is passed (by default), Ink will wrap text and split it into multiple lines.
+If `truncate-*` is passed, Ink will truncate text instead, which will result in one line of text with the rest cut off.
+
+```jsx
+<Box width={7}>
+	<Text>Hello World</Text>
+</Box>
+//=> 'Hello\nWorld'
+
+// `truncate` is an alias to `truncate-end`
+<Box width={7}>
+	<Text wrap="truncate">Hello World</Text>
+</Box>
+//=> 'Hello…'
+
+<Box width={7}>
+	<Text wrap="truncate-middle">Hello World</Text>
+</Box>
+//=> 'He…ld'
+
+<Box width={7}>
+	<Text wrap="truncate-start">Hello World</Text>
+</Box>
+//=> '…World'
+```
 
 #### `<Box>`
 
@@ -256,13 +327,20 @@ Type: `number`, `string`
 Width of the element in spaces. You can also set it in percent, which will calculate the width based on the width of parent element.
 
 ```jsx
-<Box width={4}>X</Box> //=> 'X   '
+<Box width={4}>
+	<Text>X</Text>
+</Box>
+//=> 'X   '
 ```
 
 ```jsx
 <Box width={10}>
-	<Box width="50%">X</Box>Y
-</Box> //=> 'X    Y'
+	<Box width="50%">
+		<Text>X</Text>
+	</Box>
+	<Text>Y</Text>
+</Box>
+//=> 'X    Y'
 ```
 
 ###### height
@@ -272,13 +350,20 @@ Type: `number`, `string`
 Height of the element in lines (rows). You can also set it in percent, which will calculate the height based on the height of parent element.
 
 ```jsx
-<Box height={4}>X</Box> //=> 'X\n\n\n'
+<Box height={4}>
+	<Text>X</Text>
+</Box>
+//=> 'X\n\n\n'
 ```
 
 ```jsx
 <Box height={6} flexDirection="column">
-	<Box height="50%">X</Box>Y
-</Box> //=> 'X\n\n\nY\n\n'
+	<Box height="50%">
+		<Text>X</Text>
+	</Box>
+	<Text>Y</Text>
+</Box>
+//=> 'X\n\n\nY\n\n'
 ```
 
 ###### minWidth
@@ -292,33 +377,6 @@ Sets a minimum width of the element. Percentages aren't supported yet, see https
 Type: `number`
 
 Sets a minimum height of the element. Percentages aren't supported yet, see https://github.com/facebook/yoga/issues/872.
-
-##### Wrapping
-
-###### textWrap
-
-Type: `string`<br>
-Values: `wrap` `truncate` `truncate-start` `truncate-middle` `truncate-end`<br>
-Default: `wrap`
-
-This property tells Ink to wrap or truncate text content of `<Box>` if its width is larger than container.
-If `wrap` is passed (by default), Ink will wrap text and split it into multiple lines.
-If `truncate-*` is passed, Ink will truncate text instead, which will result in one line of text with the rest cut off.
-
-```jsx
-<Box>Hello World</Box>
-//=> 'Hello\nWorld'
-
-// `truncate` is an alias to `truncate-end`
-<Box textWrap="truncate">Hello World</Box>
-//=> 'Hello…'
-
-<Box textWrap="truncate-middle">Hello World</Box>
-//=> 'He…ld'
-
-<Box textWrap="truncate-start">Hello World</Box>
-//=> '…World'
-```
 
 ##### Padding
 
@@ -425,8 +483,10 @@ See [flex-grow](https://css-tricks.com/almanac/properties/f/flex-grow/).
 
 ```jsx
 <Box>
-	Label:
-	<Box flexGrow={1}>Fills all remaining space</Box>
+	<Text>Label:</Text>
+	<Box flexGrow={1}>
+		<Text>Fills all remaining space</Text>
+	</Box>
 </Box>
 ```
 
@@ -440,9 +500,11 @@ See [flex-shrink](https://css-tricks.com/almanac/properties/f/flex-shrink/).
 ```jsx
 <Box width={20}>
 	<Box flexShrink={2} width={10}>
-		Will be 1/4
+		<Text>Will be 1/4</Text>
 	</Box>
-	<Box width={10}>Will be 3/4</Box>
+	<Box width={10}>
+		<Text>Will be 3/4</Text>
+	</Box>
 </Box>
 ```
 
@@ -454,14 +516,22 @@ See [flex-basis](https://css-tricks.com/almanac/properties/f/flex-basis/).
 
 ```jsx
 <Box width={6}>
-	<Box flexBasis={3}>X</Box>Y
-</Box> //=> 'X  Y'
+	<Box flexBasis={3}>
+		<Text>X</Text>
+	</Box>
+	<Text>Y</Text>
+</Box>
+//=> 'X  Y'
 ```
 
 ```jsx
 <Box width={6}>
-	<Box flexBasis="50%">X</Box>Y
-</Box> //=> 'X  Y'
+	<Box flexBasis="50%">
+		<Text>X</Text>
+	</Box>
+	<Text>Y</Text>
+</Box>
+//=> 'X  Y'
 ```
 
 ###### flexDirection
@@ -473,27 +543,31 @@ See [flex-direction](https://css-tricks.com/almanac/properties/f/flex-direction/
 
 ```jsx
 <Box>
-	<Box marginRight={1}>X</Box>
-	<Box>Y</Box>
+	<Box marginRight={1}>
+		<Text>X</Text>
+	</Box>
+	<Text>Y</Text>
 </Box>
 // X Y
 
 <Box flexDirection="row-reverse">
-	<Box>X</Box>
-	<Box marginRight={1}>Y</Box>
+	<Text>X</Text>
+	<Box marginRight={1}>
+		<Text>Y</Text>
+	</Box>
 </Box>
 // Y X
 
 <Box flexDirection="column">
-	<Box>X</Box>
-	<Box>Y</Box>
+	<Text>X</Text>
+	<Text>Y</Text>
 </Box>
 // X
 // Y
 
 <Box flexDirection="column-reverse">
-	<Box>X</Box>
-	<Box>Y</Box>
+	<Text>X</Text>
+	<Text>Y</Text>
 </Box>
 // Y
 // X
@@ -508,24 +582,48 @@ See [align-items](https://css-tricks.com/almanac/properties/f/align-items/).
 
 ```jsx
 <Box alignItems="flex-start">
-	<Box marginRight={1}>X</Box>
-	<Box>{`A\nB\nC`}</Box>
+	<Box marginRight={1}>
+		<Text>X</Text>
+	</Box>
+	<Text>
+		A
+		<Newline/>
+		B
+		<Newline/>
+		C
+	</Text>
 </Box>
 // X A
 //   B
 //   C
 
 <Box alignItems="center">
-	<Box marginRight={1}>X</Box>
-	<Box>{`A\nB\nC`}</Box>
+	<Box marginRight={1}>
+		<Text>X</Text>
+	</Box>
+	<Text>
+		A
+		<Newline/>
+		B
+		<Newline/>
+		C
+	</Text>
 </Box>
 //   A
 // X B
 //   C
 
 <Box alignItems="flex-end">
-	<Box marginRight={1}>X</Box>
-	<Box>{`A\nB\nC`}</Box>
+	<Box marginRight={1}>
+		<Text>X</Text>
+	</Box>
+	<Text>
+		A
+		<Newline/>
+		B
+		<Newline/>
+		C
+	</Text>
 </Box>
 //   A
 //   B
@@ -542,21 +640,27 @@ See [align-self](https://css-tricks.com/almanac/properties/f/align-self/).
 
 ```jsx
 <Box height={3}>
-	<Box alignSelf="flex-start">X</Box>
+	<Box alignSelf="flex-start">
+		<Text>X</Text>
+	</Box>
 </Box>
 // X
 //
 //
 
 <Box height={3}>
-	<Box alignSelf="center">X</Box>
+	<Box alignSelf="center">
+		<Text>X</Text>
+	</Box>
 </Box>
 //
 // X
 //
 
 <Box height={3}>
-	<Box alignSelf="flex-end">X</Box>
+	<Box alignSelf="flex-end">
+		<Text>X</Text>
+	</Box>
 </Box>
 //
 //
@@ -572,29 +676,29 @@ See [justify-content](https://css-tricks.com/almanac/properties/f/justify-conten
 
 ```jsx
 <Box justifyContent="flex-start">
-	<Box>X</Box>
+	<Text>X</Text>
 </Box>
 // [X      ]
 
 <Box justifyContent="center">
-	<Box>X</Box>
+	<Text>X</Text>
 </Box>
 // [   X   ]
 
 <Box justifyContent="flex-end">
-	<Box>X</Box>
+	<Text>X</Text>
 </Box>
 // [      X]
 
 <Box justifyContent="space-between">
-	<Box>X</Box>
-	<Box>Y</Box>
+	<Text>X</Text>
+	<Text>Y</Text>
 </Box>
 // [X      Y]
 
 <Box justifyContent="space-around">
-	<Box>X</Box>
-	<Box>Y</Box>
+	<Text>X</Text>
+	<Text>Y</Text>
 </Box>
 // [  X   Y  ]
 ```
@@ -634,48 +738,10 @@ Usage:
 </Color>
 ```
 
-#### `<Text>`
-
-This component can change the style of the text, make it bold, underline, italic or strikethrough.
-
-Import:
-
-```js
-import {Text} from 'ink';
-```
-
-##### bold
-
-Type: `boolean`<br>
-Default: `false`
-
-##### italic
-
-Type: `boolean`<br>
-Default: `false`
-
-##### underline
-
-Type: `boolean`<br>
-Default: `false`
-
-##### strikethrough
-
-Type: `boolean`<br>
-Default: `false`
-
-Usage:
-
-```jsx
-<Text bold>I am bold</Text>
-<Text italic>I am italic</Text>
-<Text underline>I am underline</Text>
-<Text strikethrough>I am strikethrough</Text>
-```
-
 #### `<Newline>`
 
 Adds a newline (`\n`) character.
+Must be used within `<Text>` or `<Color>` components.
 
 ##### count
 
@@ -687,14 +753,14 @@ Number of newlines to insert.
 Usage:
 
 ```jsx
-import {Box, Color, Newline} from 'ink';
+import {Text, Color, Newline} from 'ink';
 
 const Example = () => (
-	<Box>
+	<Text>
 		<Color green>Hello</Color>
 		<Newline />
 		<Color red>World</Color>
-	</Box>
+	</Text>
 );
 ```
 
@@ -713,13 +779,13 @@ It's useful as a shortcut for filling all the available spaces between elements.
 For example, using `<Spacer>` in a `<Box>` with default flex direction (`row`) will position "Left" on the left side and will push "Right" to the right side.
 
 ```jsx
-import {Box, Spacer} from 'ink';
+import {Box, Text, Spacer} from 'ink';
 
 const Example = () => (
 	<Box>
-		Left
+		<Text>Left</Text>
 		<Spacer />
-		Right
+		<Text>Right</Text>
 	</Box>
 );
 ```
@@ -728,13 +794,13 @@ In a vertical flex direction (`column`), it will position "Top" to the top of th
 Note, that container needs to be tall to enough to see this in effect.
 
 ```jsx
-import {Box, Spacer} from 'ink';
+import {Box, Text, Spacer} from 'ink';
 
 const Example = () => (
 	<Box flexDirection="column" height={10}>
-		Top
+		<Text>Top</Text>
 		<Spacer />
-		Bottom
+		<Text>Bottom</Text>
 	</Box>
 );
 ```
@@ -806,7 +872,11 @@ Note that `key` must be assigned to the root component.
 		// This function is called for every item in ['a', 'b', 'c']
 		// `item` is 'a', 'b', 'c'
 		// `index` is 0, 1, 2
-		return <Box key={index}>Item: {item}</Box>;
+		return (
+			<Box key={index}>
+				<Text>Item: {item}</Text>
+			</Box>
+		);
 	}}
 </Static>
 ```

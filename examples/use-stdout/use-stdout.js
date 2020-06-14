@@ -22,10 +22,14 @@ const Example = () => {
 			</Text>
 
 			<Box marginTop={1}>
-				Width: <Text bold>{stdout.columns}</Text>
+				<Text>
+					Width: <Text bold>{stdout.columns}</Text>
+				</Text>
 			</Box>
 			<Box>
-				Height: <Text bold>{stdout.rows}</Text>
+				<Text>
+					Height: <Text bold>{stdout.rows}</Text>
+				</Text>
 			</Box>
 		</Box>
 	);

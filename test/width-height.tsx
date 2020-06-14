@@ -1,13 +1,15 @@
 import React from 'react';
 import test from 'ava';
 import {renderToString} from './helpers/render-to-string';
-import {Box} from '../src';
+import {Box, Text} from '../src';
 
 test('set width', t => {
 	const output = renderToString(
 		<Box>
-			<Box width={5}>A</Box>
-			<Box>B</Box>
+			<Box width={5}>
+				<Text>A</Text>
+			</Box>
+			<Text>B</Text>
 		</Box>
 	);
 
@@ -17,8 +19,10 @@ test('set width', t => {
 test('set width in percent', t => {
 	const output = renderToString(
 		<Box width={10}>
-			<Box width="50%">A</Box>
-			<Box>B</Box>
+			<Box width="50%">
+				<Text>A</Text>
+			</Box>
+			<Text>B</Text>
 		</Box>
 	);
 
@@ -28,7 +32,10 @@ test('set width in percent', t => {
 test('set min width', t => {
 	const smallerOutput = renderToString(
 		<Box>
-			<Box minWidth={5}>A</Box>B
+			<Box minWidth={5}>
+				<Text>A</Text>
+			</Box>
+			<Text>B</Text>
 		</Box>
 	);
 
@@ -36,7 +43,10 @@ test('set min width', t => {
 
 	const largerOutput = renderToString(
 		<Box>
-			<Box minWidth={2}>AAAAA</Box>B
+			<Box minWidth={2}>
+				<Text>AAAAA</Text>
+			</Box>
+			<Text>B</Text>
 		</Box>
 	);
 
@@ -46,7 +56,10 @@ test('set min width', t => {
 test.failing('set min width in percent', t => {
 	const output = renderToString(
 		<Box width={10}>
-			<Box minWidth="50%">A</Box>B
+			<Box minWidth="50%">
+				<Text>A</Text>
+			</Box>
+			<Text>B</Text>
 		</Box>
 	);
 
@@ -56,8 +69,8 @@ test.failing('set min width in percent', t => {
 test('set height', t => {
 	const output = renderToString(
 		<Box height={4}>
-			<Box>A</Box>
-			<Box>B</Box>
+			<Text>A</Text>
+			<Text>B</Text>
 		</Box>
 	);
 
@@ -67,8 +80,10 @@ test('set height', t => {
 test('set height in percent', t => {
 	const output = renderToString(
 		<Box height={6} flexDirection="column">
-			<Box height="50%">A</Box>
-			<Box>B</Box>
+			<Box height="50%">
+				<Text>A</Text>
+			</Box>
+			<Text>B</Text>
 		</Box>
 	);
 
@@ -78,7 +93,7 @@ test('set height in percent', t => {
 test('cut text over the set height', t => {
 	const output = renderToString(
 		<Box textWrap="wrap" height={2}>
-			AAAABBBBCCCC
+			<Text>AAAABBBBCCCC</Text>
 		</Box>,
 		{columns: 4}
 	);
@@ -87,13 +102,19 @@ test('cut text over the set height', t => {
 });
 
 test('set min height', t => {
-	const smallerOutput = renderToString(<Box minHeight={4}>A</Box>);
+	const smallerOutput = renderToString(
+		<Box minHeight={4}>
+			<Text>A</Text>
+		</Box>
+	);
 
 	t.is(smallerOutput, 'A\n\n\n');
 
 	const largerOutput = renderToString(
 		<Box minHeight={2}>
-			<Box height={4}>A</Box>
+			<Box height={4}>
+				<Text>A</Text>
+			</Box>
 		</Box>
 	);
 

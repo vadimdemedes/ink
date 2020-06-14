@@ -1,10 +1,14 @@
 import React from 'react';
 import test from 'ava';
 import {renderToString} from './helpers/render-to-string';
-import {Box} from '../src';
+import {Box, Text} from '../src';
 
 test('margin', t => {
-	const output = renderToString(<Box margin={2}>X</Box>);
+	const output = renderToString(
+		<Box margin={2}>
+			<Text>X</Text>
+		</Box>
+	);
 
 	t.is(output, '\n\n  X\n\n');
 });
@@ -12,7 +16,10 @@ test('margin', t => {
 test('margin X', t => {
 	const output = renderToString(
 		<Box>
-			<Box marginX={2}>X</Box>Y
+			<Box marginX={2}>
+				<Text>X</Text>
+			</Box>
+			<Text>Y</Text>
 		</Box>
 	);
 
@@ -20,25 +27,41 @@ test('margin X', t => {
 });
 
 test('margin Y', t => {
-	const output = renderToString(<Box marginY={2}>X</Box>);
+	const output = renderToString(
+		<Box marginY={2}>
+			<Text>X</Text>
+		</Box>
+	);
 
 	t.is(output, '\n\nX\n\n');
 });
 
 test('margin top', t => {
-	const output = renderToString(<Box marginTop={2}>X</Box>);
+	const output = renderToString(
+		<Box marginTop={2}>
+			<Text>X</Text>
+		</Box>
+	);
 
 	t.is(output, '\n\nX');
 });
 
 test('margin bottom', t => {
-	const output = renderToString(<Box marginBottom={2}>X</Box>);
+	const output = renderToString(
+		<Box marginBottom={2}>
+			<Text>X</Text>
+		</Box>
+	);
 
 	t.is(output, 'X\n\n');
 });
 
 test('margin left', t => {
-	const output = renderToString(<Box marginLeft={2}>X</Box>);
+	const output = renderToString(
+		<Box marginLeft={2}>
+			<Text>X</Text>
+		</Box>
+	);
 
 	t.is(output, '  X');
 });
@@ -46,7 +69,10 @@ test('margin left', t => {
 test('margin right', t => {
 	const output = renderToString(
 		<Box>
-			<Box marginRight={2}>X</Box>Y
+			<Box marginRight={2}>
+				<Text>X</Text>
+			</Box>
+			<Text>Y</Text>
 		</Box>
 	);
 
@@ -56,7 +82,9 @@ test('margin right', t => {
 test('nested margin', t => {
 	const output = renderToString(
 		<Box margin={2}>
-			<Box margin={2}>X</Box>
+			<Box margin={2}>
+				<Text>X</Text>
+			</Box>
 		</Box>
 	);
 
@@ -64,20 +92,28 @@ test('nested margin', t => {
 });
 
 test('margin with multiline string', t => {
-	const output = renderToString(<Box margin={2}>{'A\nB'}</Box>);
+	const output = renderToString(
+		<Box margin={2}>
+			<Text>{'A\nB'}</Text>
+		</Box>
+	);
 
 	t.is(output, '\n\n  A\n  B\n\n');
 });
 
 test('apply margin to text with newlines', t => {
-	const output = renderToString(<Box margin={1}>Hello{'\n'}World</Box>);
+	const output = renderToString(
+		<Box margin={1}>
+			<Text>Hello{'\n'}World</Text>
+		</Box>
+	);
 	t.is(output, '\n Hello\n World\n');
 });
 
 test('apply margin to wrapped text', t => {
 	const output = renderToString(
 		<Box margin={1} width={6}>
-			Hello World
+			<Text>Hello World</Text>
 		</Box>
 	);
 
