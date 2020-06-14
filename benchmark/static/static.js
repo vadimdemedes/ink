@@ -1,12 +1,10 @@
 /* eslint-disable react/jsx-curly-brace-presence */
 'use strict';
 const React = require('react');
-const {render, Static, Box, Color, Text} = require('../..');
-const Spinner = require('ink-spinner').default;
+const {render, Static, Box, Text} = require('../..');
 
 const App = () => {
 	const [items, setItems] = React.useState([]);
-	const [showSpinner, setShowSpinner] = React.useState(true);
 	const itemCountRef = React.useRef(0);
 
 	React.useEffect(() => {
@@ -14,7 +12,6 @@ const App = () => {
 
 		const run = () => {
 			if (itemCountRef.current++ > 1000) {
-				setShowSpinner(false);
 				return;
 			}
 
@@ -40,42 +37,41 @@ const App = () => {
 			<Static items={items}>
 				{(item, index) => (
 					<Box key={item.id} padding={1} flexDirection="column">
-						<Color green>Item #{index}</Color>
+						<Text color="green">Item #{index}</Text>
 						<Text>Item content</Text>
 					</Box>
 				)}
 			</Static>
 
 			<Box flexDirection="column" padding={1}>
-				<Text underline bold>
-					<Color red>
-						{'Hello'} {'World'}
-					</Color>
+				<Text underline bold color="red">
+					{'Hello'} {'World'}
 				</Text>
 
-				{showSpinner && <Spinner type="dots" />}
 				<Text>Rendered: {items.length}</Text>
 
 				<Box marginTop={1} width={60}>
-					Cupcake ipsum dolor sit amet candy candy. Sesame snaps cookie I love
-					tootsie roll apple pie bonbon wafer. Caramels sesame snaps icing
-					cotton candy I love cookie sweet roll. I love bonbon sweet.
+					<Text>
+						Cupcake ipsum dolor sit amet candy candy. Sesame snaps cookie I love
+						tootsie roll apple pie bonbon wafer. Caramels sesame snaps icing
+						cotton candy I love cookie sweet roll. I love bonbon sweet.
+					</Text>
 				</Box>
 
 				<Box marginTop={1} flexDirection="column">
-					<Color bgWhite black>
+					<Text backgroundColor="white" color="black">
 						Colors:
-					</Color>
+					</Text>
 
 					<Box flexDirection="column" paddingLeft={1}>
 						<Text>
-							- <Color red>Red</Color>
+							- <Text color="red">Red</Text>
 						</Text>
 						<Text>
-							- <Color blue>Blue</Color>
+							- <Text color="blue">Blue</Text>
 						</Text>
 						<Text>
-							- <Color green>Green</Color>
+							- <Text color="green">Green</Text>
 						</Text>
 					</Box>
 				</Box>

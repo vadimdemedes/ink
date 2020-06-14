@@ -1,37 +1,37 @@
 /* eslint-disable react/jsx-curly-brace-presence */
 'use strict';
 const React = require('react');
-const {render, Box, Color, Text} = require('../..');
+const {render, Box, Text} = require('../..');
 const Benchmark = require('benchmark');
 
 const App = () => (
 	<Box flexDirection="column" padding={1}>
-		<Text underline bold>
-			<Color red>
-				{'Hello'} {'World'}
-			</Color>
+		<Text underline bold color="red">
+			{'Hello'} {'World'}
 		</Text>
 
 		<Box marginTop={1} width={60}>
-			Cupcake ipsum dolor sit amet candy candy. Sesame snaps cookie I love
-			tootsie roll apple pie bonbon wafer. Caramels sesame snaps icing cotton
-			candy I love cookie sweet roll. I love bonbon sweet.
+			<Text>
+				Cupcake ipsum dolor sit amet candy candy. Sesame snaps cookie I love
+				tootsie roll apple pie bonbon wafer. Caramels sesame snaps icing cotton
+				candy I love cookie sweet roll. I love bonbon sweet.
+			</Text>
 		</Box>
 
 		<Box marginTop={1} flexDirection="column">
-			<Color bgWhite black>
+			<Text backgroundColor="white" color="black">
 				Colors:
-			</Color>
+			</Text>
 
 			<Box flexDirection="column" paddingLeft={1}>
 				<Text>
-					- <Color red>Red</Color>
+					- <Text color="red">Red</Text>
 				</Text>
 				<Text>
-					- <Color blue>Blue</Color>
+					- <Text color="blue">Blue</Text>
 				</Text>
 				<Text>
-					- <Color green>Green</Color>
+					- <Text color="green">Green</Text>
 				</Text>
 			</Box>
 		</Box>
