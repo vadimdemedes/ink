@@ -4,6 +4,7 @@ import indentString from 'indent-string';
 import wrapText from './wrap-text';
 import getMaxWidth from './get-max-width';
 import squashTextNodes from './squash-text-nodes';
+import renderBorder from './render-border';
 import type {DOMElement} from './dom';
 import Output from './output';
 
@@ -85,6 +86,10 @@ const renderNodeToOutput = (
 			}
 
 			return;
+		}
+
+		if (node.nodeName === 'DIV') {
+			renderBorder(x, y, node, output);
 		}
 
 		if (node.nodeName === 'ROOT' || node.nodeName === 'DIV') {

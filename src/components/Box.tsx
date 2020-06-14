@@ -64,6 +64,16 @@ export default class Box extends PureComponent<Props> {
 			'space-between',
 			'space-around'
 		]),
+		borderStyle: PropTypes.oneOf([
+			'single',
+			'double',
+			'round',
+			'bold',
+			'singleDouble',
+			'doubleSingle',
+			'classic'
+		]),
+		borderColor: PropTypes.string,
 		unstable__transformChildren: PropTypes.func,
 		children: PropTypes.node
 	};

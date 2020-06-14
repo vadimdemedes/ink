@@ -711,6 +711,57 @@ Type: `string`<br>
 Allowed values: `flex` and `none`<br>
 Default: `flex`
 
+##### Borders
+
+###### borderStyle
+
+Type: `string`\
+Allowed values: `single` `double` `round` `bold` `singleDouble` `doubleSingle` `classic`
+
+Add a border with a specified style.
+If `borderStyle` is `undefined` (which it is by default), no border will be added.
+Ink uses border styles from [`cli-boxes`](https://github.com/sindresorhus/cli-boxes) module.
+
+```jsx
+<Box flexDirection="column">
+	<Box>
+		<Box borderStyle="single" marginRight={2}>
+			<Text>single</Text>
+		</Box>
+
+		<Box borderStyle="double" marginRight={2}>
+			<Text>double</Text>
+		</Box>
+
+		<Box borderStyle="round" marginRight={2}>
+			<Text>round</Text>
+		</Box>
+
+		<Box borderStyle="bold">
+			<Text>bold</Text>
+		</Box>
+	</Box>
+
+	<Box marginTop={1}>
+		<Box borderStyle="singleDouble" marginRight={2}>
+			<Text>singleDouble</Text>
+		</Box>
+
+		<Box borderStyle="doubleSingle" marginRight={2}>
+			<Text>doubleSingle</Text>
+		</Box>
+
+		<Box borderStyle="classic">
+			<Text>classic</Text>
+		</Box>
+	</Box>
+</Box>
+```
+
+<img src="media/box-borderStyle.jpg" width="521">
+
+See example in [examples/borders](examples/borders/borders.js).
+
 #### `<Color>`
 
 The `<Color>` component is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api).
