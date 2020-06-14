@@ -1,6 +1,5 @@
 import React, {useMemo, useState, useEffect} from 'react';
 import type {ReactNode} from 'react';
-import PropTypes from 'prop-types';
 import type {Styles} from '../styles';
 
 export interface Props<T> extends Styles {
@@ -58,11 +57,5 @@ const Static = <T,>(props: Props<T>) => {
 };
 
 Static.displayName = 'Static';
-
-Static.propTypes = {
-	items: PropTypes.array.isRequired,
-	style: PropTypes.object,
-	children: PropTypes.func.isRequired
-};
 
 export default Static;

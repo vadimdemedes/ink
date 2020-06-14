@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import React, {PureComponent} from 'react';
 import type {ReactNode} from 'react';
-import PropTypes from 'prop-types';
 import cliCursor from 'cli-cursor';
 import AppContext from './AppContext';
 import StdinContext from './StdinContext';
@@ -40,16 +39,6 @@ interface Focusable {
 // It also handles Ctrl+C exiting and cursor visibility
 export default class App extends PureComponent<Props, State> {
 	static displayName = 'InternalApp';
-	static propTypes = {
-		children: PropTypes.node.isRequired,
-		stdin: PropTypes.object.isRequired,
-		stdout: PropTypes.object.isRequired,
-		stderr: PropTypes.object.isRequired,
-		writeToStdout: PropTypes.func.isRequired,
-		writeToStderr: PropTypes.func.isRequired,
-		exitOnCtrlC: PropTypes.bool.isRequired, // eslint-disable-line react/boolean-prop-naming
-		onExit: PropTypes.func.isRequired
-	};
 
 	state = {
 		isFocusEnabled: true,

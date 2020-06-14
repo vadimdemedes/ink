@@ -1,6 +1,5 @@
 import React, {memo} from 'react';
 import type {FC, ReactNode} from 'react';
-import PropTypes from 'prop-types';
 
 export interface Props {
 	readonly transform: (children: ReactNode) => ReactNode;
@@ -21,10 +20,5 @@ const Transform: FC<Props> = ({children, transform}) => (
 );
 
 Transform.displayName = 'Transform';
-
-Transform.propTypes = {
-	transform: PropTypes.func.isRequired,
-	children: PropTypes.node.isRequired
-};
 
 export default memo(Transform);

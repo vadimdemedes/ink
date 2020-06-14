@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 'use strict';
 const React = require('react');
 const {render, Box, Text, useFocus} = require('../..');

@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import React, {PureComponent} from 'react';
-import PropTypes from 'prop-types';
 import type {YogaNode} from 'yoga-layout-prebuilt';
 import type {Except} from 'type-fest';
 import type {Styles} from '../styles';
@@ -19,61 +18,6 @@ export type Props = Except<Styles, 'textWrap'> & {
  */
 export default class Box extends PureComponent<Props> {
 	static displayName = 'Box';
-	static propTypes = {
-		display: PropTypes.oneOf(['flex', 'none']),
-		margin: PropTypes.number,
-		marginX: PropTypes.number,
-		marginY: PropTypes.number,
-		marginTop: PropTypes.number,
-		marginBottom: PropTypes.number,
-		marginLeft: PropTypes.number,
-		marginRight: PropTypes.number,
-		padding: PropTypes.number,
-		paddingX: PropTypes.number,
-		paddingY: PropTypes.number,
-		paddingTop: PropTypes.number,
-		paddingBottom: PropTypes.number,
-		paddingLeft: PropTypes.number,
-		paddingRight: PropTypes.number,
-		width: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-		minWidth: PropTypes.number,
-		height: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-		minHeight: PropTypes.number,
-		flexGrow: PropTypes.number,
-		flexShrink: PropTypes.number,
-		flexDirection: PropTypes.oneOf([
-			'row',
-			'row-reverse',
-			'column',
-			'column-reverse'
-		]),
-		flexBasis: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-		alignItems: PropTypes.oneOf([
-			'stretch',
-			'flex-start',
-			'center',
-			'flex-end'
-		]),
-		alignSelf: PropTypes.oneOf(['auto', 'flex-start', 'center', 'flex-end']),
-		justifyContent: PropTypes.oneOf([
-			'flex-start',
-			'center',
-			'flex-end',
-			'space-between',
-			'space-around'
-		]),
-		borderStyle: PropTypes.oneOf([
-			'single',
-			'double',
-			'round',
-			'bold',
-			'singleDouble',
-			'doubleSingle',
-			'classic'
-		]),
-		borderColor: PropTypes.string,
-		children: PropTypes.node
-	};
 
 	static defaultProps = {
 		flexDirection: 'row',

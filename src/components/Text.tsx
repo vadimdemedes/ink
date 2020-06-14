@@ -1,6 +1,5 @@
 import React, {memo} from 'react';
 import type {FC, ReactNode} from 'react';
-import PropTypes from 'prop-types';
 import chalk from 'chalk';
 import colorize from '../colorize';
 import type {Styles} from '../styles';
@@ -76,26 +75,6 @@ const Text: FC<Props> = ({
 };
 
 Text.displayName = 'Text';
-
-/* eslint-disable react/boolean-prop-naming */
-Text.propTypes = {
-	color: PropTypes.string,
-	backgroundColor: PropTypes.string,
-	dimColor: PropTypes.bool,
-	bold: PropTypes.bool,
-	italic: PropTypes.bool,
-	underline: PropTypes.bool,
-	strikethrough: PropTypes.bool,
-	wrap: PropTypes.oneOf([
-		'wrap',
-		'truncate',
-		'truncate-start',
-		'truncate-middle',
-		'truncate-end'
-	]),
-	children: PropTypes.node.isRequired
-};
-/* eslint-enable react/boolean-prop-naming */
 
 Text.defaultProps = {
 	dimColor: false,

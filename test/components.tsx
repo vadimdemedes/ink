@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import EventEmitter from 'events';
 import React, {useState, Component, FC} from 'react';
 import test from 'ava';

@@ -57,7 +57,6 @@
 		"indent-string": "^4.0.0",
 		"is-ci": "^2.0.0",
 		"lodash.throttle": "^4.1.1",
-		"prop-types": "^15.6.2",
 		"react-devtools-core": "^4.6.0",
 		"react-reconciler": "^0.24.0",
 		"scheduler": "^0.18.0",
@@ -144,7 +143,7 @@
 						}
 					],
 					"unicorn/filename-case": "off",
-					"react/prop-types": "warn",
+					"react/prop-types": "off",
 					"unicorn/prevent-abbreviations": "off",
 					"react/require-default-props": "warn",
 					"react/jsx-curly-brace-presence": "off",
@@ -152,6 +151,14 @@
 					"@typescript-eslint/promise-function-async": "warn",
 					"@typescript-eslint/explicit-function-return": "off",
 					"@typescript-eslint/explicit-function-return-type": "off"
+				}
+			},
+			{
+				"files": [
+					"examples/**/*.js"
+				],
+				"rules": {
+					"react/prop-types": "off"
 				}
 			}
 		]
