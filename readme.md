@@ -275,7 +275,7 @@ Default: `false`
 Type: `boolean`\
 Default: `false`
 
-###### wrap
+##### wrap
 
 Type: `string`\
 Values: `wrap` `truncate` `truncate-start` `truncate-middle` `truncate-end`\
