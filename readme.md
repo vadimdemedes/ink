@@ -234,7 +234,7 @@ Ink uses [Yoga](https://github.com/facebook/yoga) - a Flexbox layout engine to b
 It's important to remember that each element is a Flexbox container.
 Think of it as if each `<div>` in the browser had `display: flex`.
 See `<Box>` built-in component below for documentation on how to use Flexbox layouts in Ink.
-Note that all text must be wrapped in `<Text>` component.
+Note that all text must be wrapped in a `<Text>` component.
 
 ### Built-in Components
 
