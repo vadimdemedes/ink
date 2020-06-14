@@ -21,7 +21,7 @@ $ npm install ink react
 
 ```jsx
 import React, {useState, useEffect} from 'react';
-import {render, Color} from 'ink';
+import {render, Text} from 'ink';
 
 const Counter = () => {
 	const [counter, setCounter] = useState(0);
@@ -36,7 +36,7 @@ const Counter = () => {
 		};
 	}, []);
 
-	return <Color green>{counter} tests passed</Color>;
+	return <Text color="green">{counter} tests passed</Text>;
 };
 
 render(<Counter />);
@@ -247,6 +247,11 @@ import {Text} from 'ink';
 
 const Example = () => (
 	<>
+		<Text color="green">I am green</Text>
+		<Text color="black" backgroundColor="white">
+			I am black on white
+		</Text>
+		<Text color="#ffffff">I am white</Text>
 		<Text bold>I am bold</Text>
 		<Text italic>I am italic</Text>
 		<Text underline>I am underline</Text>
@@ -254,6 +259,50 @@ const Example = () => (
 	</>
 );
 ```
+
+##### color
+
+Type: `string`
+
+Change text color.
+Ink uses [chalk](https://github.com/chalk/chalk) under the hood, so all its functionality is supported.
+
+```jsx
+<Text color="green">Green</Text>
+<Text color="#005cc5">Blue</Text>
+<Text color="rgb(232, 131, 136)">Red</Text>
+```
+
+<img src="media/text-color.jpg" width="247">
+
+##### backgroundColor
+
+Type: `string`
+
+Same as `color` above, but for background.
+
+```jsx
+<Text backgroundColor="green" color="white">Green</Text>
+<Text backgroundColor="#005cc5" color="white">Blue</Text>
+<Text backgroundColor="rgb(232, 131, 136)" color="white">Red</Text>
+```
+
+<img src="media/text-backgroundColor.jpg" width="226">
+
+##### dimColor
+
+Type: `boolean`\
+Default: `false`
+
+Dim the color (emit a small amount of light).
+
+```jsx
+<Text color="red" dimColor>
+	Dimmed Red
+</Text>
+```
+
+<img src="media/text-dimColor.jpg" width="138">
 
 ##### bold
 
@@ -762,37 +811,25 @@ Ink uses border styles from [`cli-boxes`](https://github.com/sindresorhus/cli-bo
 
 See example in [examples/borders](examples/borders/borders.js).
 
-#### `<Color>`
+###### borderColor
 
-The `<Color>` component is a simple wrapper around [the `chalk` API](https://github.com/chalk/chalk#api).
-It supports all of the chalk's methods as `props`.
+Type: `string`
 
-Import:
-
-```js
-import {Color} from 'ink';
-```
-
-Usage:
+Change border color.
+Accepts the same values as [`color`](#color) in `<Text>` component.
 
 ```jsx
-<Color rgb={[255, 255, 255]} bgKeyword="magenta">
-	Hello!
-</Color>
-
-<Color hex="#000000" bgHex="#FFFFFF">
-	Hey there
-</Color>
-
-<Color blue>
-	I'm blue
-</Color>
+<Box borderStyle="round" borderColor="green">
+	<Text>Green Rounded Box</Text>
+</Box>
 ```
+
+<img src="media/box-borderColor.jpg" width="228">
 
 #### `<Newline>`
 
 Adds a newline (`\n`) character.
-Must be used within `<Text>` or `<Color>` components.
+Must be used within `<Text>` components.
 
 ##### count
 

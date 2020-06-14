@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 'use strict';
 const React = require('react');
-const {render, Box, Text, Color, useFocus} = require('../..');
+const {render, Box, Text, useFocus} = require('../..');
 
 const Focus = () => (
 	<Box flexDirection="column" padding={1}>
@@ -19,7 +19,7 @@ const Item = ({label}) => {
 	const {isFocused} = useFocus();
 	return (
 		<Text>
-			{label} {isFocused && <Color green>(focused)</Color>}
+			{label} {isFocused && <Text color="green">(focused)</Text>}
 		</Text>
 	);
 };

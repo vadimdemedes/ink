@@ -2,7 +2,7 @@ import React from 'react';
 import test from 'ava';
 import chalk from 'chalk';
 import {renderToString} from './helpers/render-to-string';
-import {Box, Color, Text} from '../src';
+import {Box, Text} from '../src';
 
 test('row - align text to center', t => {
 	const output = renderToString(
@@ -73,7 +73,7 @@ test.failing('row - align two text nodes with equal space around them', t => {
 test('row - align colored text node when text is squashed', t => {
 	const output = renderToString(
 		<Box justifyContent="flex-end" width={5}>
-			<Color green>X</Color>
+			<Text color="green">X</Text>
 		</Box>
 	);
 

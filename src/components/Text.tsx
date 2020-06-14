@@ -2,22 +2,29 @@ import React, {memo} from 'react';
 import type {FC, ReactNode} from 'react';
 import PropTypes from 'prop-types';
 import chalk from 'chalk';
+import colorize from '../colorize';
 import type {Styles} from '../styles';
 
 export interface Props {
+	readonly color?: string;
+	readonly backgroundColor?: string;
+	readonly dimColor?: boolean;
 	readonly bold?: boolean;
 	readonly italic?: boolean;
 	readonly underline?: boolean;
 	readonly strikethrough?: boolean;
 	readonly wrap?: Styles['textWrap'];
-	readonly unstable__transformChildren?: (children: ReactNode) => ReactNode;
+	readonly unstable__transformChildren?: (children: string) => string;
 	readonly children: ReactNode;
 }
 
 /**
- * This component can display text, and change its style to make it bold, underline, italic or strikethrough.
+ * This component can display text, and change its style to make it colorful, bold, underline, italic or strikethrough.
  */
 const Text: FC<Props> = ({
+	color,
+	backgroundColor,
+	dimColor,
 	bold,
 	italic,
 	underline,
@@ -26,7 +33,19 @@ const Text: FC<Props> = ({
 	children,
 	unstable__transformChildren
 }) => {
-	const transform = (children: ReactNode) => {
+	const transform = (children: string): string => {
+		if (dimColor) {
+			children = chalk.dim(children);
+		}
+
+		if (color) {
+			children = colorize(children, color, 'foreground');
+		}
+
+		if (backgroundColor) {
+			children = colorize(children, backgroundColor, 'background');
+		}
+
 		if (bold) {
 			children = chalk.bold(children);
 		}
@@ -66,6 +85,9 @@ Text.displayName = 'Text';
 
 /* eslint-disable react/boolean-prop-naming */
 Text.propTypes = {
+	color: PropTypes.string,
+	backgroundColor: PropTypes.string,
+	dimColor: PropTypes.bool,
 	bold: PropTypes.bool,
 	italic: PropTypes.bool,
 	underline: PropTypes.bool,
@@ -83,6 +105,7 @@ Text.propTypes = {
 /* eslint-enable react/boolean-prop-naming */
 
 Text.defaultProps = {
+	dimColor: false,
 	bold: false,
 	italic: false,
 	underline: false,

@@ -2,7 +2,7 @@ import React, {Suspense} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
 import {spy} from 'sinon';
-import {Box, Color, Text, render} from '../src';
+import {Box, Text, render} from '../src';
 
 const createStdout = () => ({
 	write: spy(),
@@ -308,7 +308,7 @@ test('replace child node with text', t => {
 	const stdout = createStdout();
 
 	const Dynamic = ({replace}) => (
-		<Text>{replace ? 'x' : <Color green>test</Color>}</Text>
+		<Text>{replace ? 'x' : <Text color="green">test</Text>}</Text>
 	);
 
 	const {rerender} = render(<Dynamic />, {

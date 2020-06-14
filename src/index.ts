@@ -1,7 +1,6 @@
 export {default as render, RenderOptions, Instance} from './render';
 export {default as Box, Props as BoxProps} from './components/Box';
 export {default as Text, Props as TextProps} from './components/Text';
-export {default as Color, Props as ColorProps} from './components/Color';
 export {Props as AppProps} from './components/AppContext';
 export {Props as StdinProps} from './components/StdinContext';
 export {Props as StdoutProps} from './components/StdoutContext';
