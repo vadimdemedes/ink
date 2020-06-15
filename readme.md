@@ -173,6 +173,10 @@ Type: `boolean`\
 Default: `true`
 
 Patch console methods to ensure console output doesn't mix with Ink output.
+When any of `console.*` methods are called (like `console.log()`), Ink intercepts their output, clears main output, renders output from the console method and then rerenders main output again.
+That way both are visible and are not overlapping each other.
+
+This functionality is powered by [patch-console](https://github.com/vadimdemedes/patch-console), so if you need to disable Ink's interception of output but want to build something custom, you can use it.
 
 ###### debug
 
