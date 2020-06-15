@@ -167,6 +167,13 @@ Default: `true`
 Configure whether Ink should listen to Ctrl+C keyboard input and exit the app.
 This is needed in case `process.stdin` is in [raw mode](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode), because then Ctrl+C is ignored by default and process is expected to handle it manually.
 
+###### patchConsole
+
+Type: `boolean`\
+Default: `true`
+
+Patch console methods to ensure console output doesn't mix with Ink output.
+
 ###### debug
 
 Type: `boolean`<br>

@@ -57,6 +57,7 @@
 		"indent-string": "^4.0.0",
 		"is-ci": "^2.0.0",
 		"lodash.throttle": "^4.1.1",
+		"patch-console": "^1.0.0",
 		"react-devtools-core": "^4.6.0",
 		"react-reconciler": "^0.24.0",
 		"scheduler": "^0.18.0",

@@ -1,4 +1,3 @@
-import {PassThrough} from 'stream';
 import React from 'react';
 import type {ReactNode} from 'react';
 import throttle from 'lodash.throttle';
@@ -11,6 +10,7 @@ import reconciler from './reconciler';
 import createRenderer from './renderer';
 import type {Renderer} from './renderer';
 import signalExit from 'signal-exit';
+import patchConsole from 'patch-console';
 import * as dom from './dom';
 import type {FiberRoot} from 'react-reconciler';
 import instances from './instances';
@@ -19,33 +19,13 @@ import App from './components/App';
 const isCI = process.env.CI === 'false' ? false : originalIsCI;
 const noop = () => {};
 
-const CONSOLE_METHODS = [
-	'assert',
-	'count',
-	'countReset',
-	'debug',
-	'dir',
-	'dirxml',
-	'error',
-	'group',
-	'groupCollapsed',
-	'groupEnd',
-	'info',
-	'log',
-	'table',
-	'time',
-	'timeEnd',
-	'timeLog',
-	'trace',
-	'warn'
-];
-
 export interface Options {
 	stdout: NodeJS.WriteStream;
 	stdin: NodeJS.ReadStream;
 	stderr: NodeJS.WriteStream;
 	debug: boolean;
 	exitOnCtrlC: boolean;
+	patchConsole: boolean;
 	waitUntilExit?: () => Promise<void>;
 }
 
@@ -63,7 +43,7 @@ export default class Ink {
 	private fullStaticOutput: string;
 	private readonly renderer: Renderer;
 	private readonly exitPromise: Promise<void>;
-	private originalConsoleMethods: any = {};
+	private restoreConsole?: () => void;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -122,7 +102,9 @@ export default class Ink {
 			});
 		}
 
-		this.patchConsole();
+		if (options.patchConsole) {
+			this.patchConsole();
+		}
 	}
 
 	resolveExitPromise: () => void = () => {};
@@ -249,7 +231,10 @@ export default class Ink {
 
 		this.onRender();
 		this.unsubscribeExit();
-		this.restoreConsole();
+
+		if (typeof this.restoreConsole === 'function') {
+			this.restoreConsole();
+		}
 
 		// CIs don't handle erasing ansi escapes well, so it's better to
 		// only render last frame of non-static output
@@ -286,33 +271,14 @@ export default class Ink {
 			return;
 		}
 
-		const stdout = new PassThrough();
-		(stdout as any).write = (output: string): void => {
-			this.writeToStdout(output);
-		};
+		this.restoreConsole = patchConsole((stream, data) => {
+			if (stream === 'stdout') {
+				this.writeToStdout(data);
+			}
 
-		const stderr = new PassThrough();
-		(stderr as any).write = (output: string): void => {
-			this.writeToStderr(output);
-		};
-
-		const internalConsole = new console.Console(stdout, stderr);
-
-		for (const method of CONSOLE_METHODS) {
-			this.originalConsoleMethods[method] = (console as any)[method];
-			(console as any)[method] = (internalConsole as any)[method];
-		}
-	}
-
-	restoreConsole(): void {
-		if (this.options.debug) {
-			return;
-		}
-
-		for (const method of CONSOLE_METHODS) {
-			(console as any)[method] = this.originalConsoleMethods[method];
-		}
-
-		this.originalConsoleMethods = {};
+			if (stream === 'stderr') {
+				this.writeToStderr(data);
+			}
+		});
 	}
 }
