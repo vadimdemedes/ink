@@ -167,6 +167,17 @@ Default: `true`
 Configure whether Ink should listen to Ctrl+C keyboard input and exit the app.
 This is needed in case `process.stdin` is in [raw mode](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode), because then Ctrl+C is ignored by default and process is expected to handle it manually.
 
+###### patchConsole
+
+Type: `boolean`\
+Default: `true`
+
+Patch console methods to ensure console output doesn't mix with Ink output.
+When any of `console.*` methods are called (like `console.log()`), Ink intercepts their output, clears main output, renders output from the console method and then rerenders main output again.
+That way both are visible and are not overlapping each other.
+
+This functionality is powered by [patch-console](https://github.com/vadimdemedes/patch-console), so if you need to disable Ink's interception of output but want to build something custom, you can use it.
+
 ###### debug
 
 Type: `boolean`<br>

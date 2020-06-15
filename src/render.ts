@@ -34,6 +34,13 @@ export interface RenderOptions {
 	 * @default true
 	 */
 	exitOnCtrlC?: boolean;
+
+	/**
+	 * Patch console methods to ensure console output doesn't mix with Ink output.
+	 *
+	 * @default true
+	 */
+	patchConsole?: boolean;
 }
 
 export interface Instance {
@@ -70,6 +77,7 @@ const render: RenderFunction = (node, options): Instance => {
 		stderr: process.stderr,
 		debug: false,
 		exitOnCtrlC: true,
+		patchConsole: true,
 		...getOptions(options)
 	};
 
