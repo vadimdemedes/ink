@@ -5,11 +5,7 @@ import delay from 'delay';
 import test from 'ava';
 import {spy} from 'sinon';
 import {render, Box, Text, useFocus, useFocusManager} from '..';
-
-const createStdout = () => ({
-	write: spy(),
-	columns: 100
-});
+import createStdout from './helpers/create-stdout';
 
 const createStdin = () => {
 	const stdin = new EventEmitter();

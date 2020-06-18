@@ -15,6 +15,7 @@ import {
 	useStdin,
 	render
 } from '../src';
+import createStdout from './helpers/create-stdout';
 
 test('text', t => {
 	const output = renderToString(<Text>Hello World</Text>);
@@ -191,10 +192,7 @@ test('fail when text node is not within <Text> component', t => {
 });
 
 test('remesure text dimensions on text change', t => {
-	const stdout = {
-		write: spy(),
-		columns: 100
-	};
+	const stdout = createStdout();
 
 	const {rerender} = render(
 		<Box>
@@ -309,10 +307,7 @@ test('static output', t => {
 });
 
 test('skip previous output when rendering new static output', t => {
-	const stdout = {
-		write: spy(),
-		columns: 100
-	};
+	const stdout = createStdout();
 
 	const Dynamic: FC<{items: string[]}> = ({items}) => (
 		<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
@@ -337,10 +332,7 @@ test('ensure wrap-ansi doesn’t trim leading whitespace', t => {
 });
 
 test('replace child node with text', t => {
-	const stdout = {
-		write: spy(),
-		columns: 100
-	};
+	const stdout = createStdout();
 
 	const Dynamic = ({replace}) => (
 		<Text>{replace ? 'x' : <Text color="green">test</Text>}</Text>
@@ -359,10 +351,7 @@ test('replace child node with text', t => {
 
 // See https://github.com/vadimdemedes/ink/issues/145
 test('disable raw mode when all input components are unmounted', t => {
-	const stdout = {
-		write: spy(),
-		columns: 100
-	};
+	const stdout = createStdout();
 
 	const stdin = new EventEmitter();
 	stdin.setEncoding = () => {};
@@ -427,10 +416,7 @@ test('disable raw mode when all input components are unmounted', t => {
 });
 
 test('setRawMode() should throw if raw mode is not supported', t => {
-	const stdout = {
-		write: spy(),
-		columns: 100
-	};
+	const stdout = createStdout();
 
 	const stdin = new EventEmitter();
 	stdin.setEncoding = () => {};
@@ -486,10 +472,7 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 });
 
 test('render different component based on whether stdin is a TTY or not', t => {
-	const stdout = {
-		write: spy(),
-		columns: 100
-	};
+	const stdout = createStdout();
 
 	const stdin = new EventEmitter();
 	stdin.setEncoding = () => {};
@@ -578,10 +561,7 @@ test('render all frames if CI environment variable equals false', async t => {
 });
 
 test('reset prop when it’s removed from the element', t => {
-	const stdout = {
-		write: spy(),
-		columns: 100
-	};
+	const stdout = createStdout();
 
 	const Dynamic = ({remove}) => (
 		<Box

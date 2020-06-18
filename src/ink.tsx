@@ -7,8 +7,7 @@ import ansiEscapes from 'ansi-escapes';
 import originalIsCI from 'is-ci';
 import autoBind from 'auto-bind';
 import reconciler from './reconciler';
-import createRenderer from './renderer';
-import type {Renderer} from './renderer';
+import render from './renderer';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
 import * as dom from './dom';
@@ -41,9 +40,9 @@ export default class Ink {
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	private fullStaticOutput: string;
-	private readonly renderer: Renderer;
 	private exitPromise?: Promise<void>;
 	private restoreConsole?: () => void;
+	private readonly unsubscribeResize?: () => void;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -59,11 +58,6 @@ export default class Ink {
 			  });
 
 		this.rootNode.onImmediateRender = this.onRender;
-
-		this.renderer = createRenderer({
-			terminalWidth: options.stdout.columns
-		});
-
 		this.log = logUpdate.create(options.stdout);
 		this.throttledLog = options.debug
 			? this.log
@@ -100,6 +94,14 @@ export default class Ink {
 		if (options.patchConsole) {
 			this.patchConsole();
 		}
+
+		if (!isCI) {
+			options.stdout.on('resize', this.onRender);
+
+			this.unsubscribeResize = () => {
+				options.stdout.off('resize', this.onRender);
+			};
+		}
 	}
 
 	resolveExitPromise: () => void = () => {};
@@ -111,7 +113,10 @@ export default class Ink {
 			return;
 		}
 
-		const {output, outputHeight, staticOutput} = this.renderer(this.rootNode);
+		const {output, outputHeight, staticOutput} = render(
+			this.rootNode,
+			this.options.stdout.columns
+		);
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
@@ -229,6 +234,10 @@ export default class Ink {
 
 		if (typeof this.restoreConsole === 'function') {
 			this.restoreConsole();
+		}
+
+		if (typeof this.unsubscribeResize === 'function') {
+			this.unsubscribeResize();
 		}
 
 		// CIs don't handle erasing ansi escapes well, so it's better to
