@@ -7,6 +7,7 @@ import StdinContext from './StdinContext';
 import StdoutContext from './StdoutContext';
 import StderrContext from './StderrContext';
 import FocusContext from './FocusContext';
+import ErrorOverview from './ErrorOverview';
 
 const TAB = '\t';
 const SHIFT_TAB = '\u001B[Z';
@@ -27,6 +28,7 @@ interface State {
 	isFocusEnabled: boolean;
 	activeFocusId?: string;
 	focusables: Focusable[];
+	error?: Error;
 }
 
 interface Focusable {
@@ -43,12 +45,17 @@ export default class App extends PureComponent<Props, State> {
 	state = {
 		isFocusEnabled: true,
 		activeFocusId: undefined,
-		focusables: []
+		focusables: [],
+		error: undefined
 	};
 
 	// Count how many components enabled raw mode to avoid disabling
 	// raw mode until all components don't need it anymore
 	rawModeEnabledCount = 0;
+
+	static getDerivedStateFromError(error: Error) {
+		return {error};
+	}
 
 	// Determines if TTY is supported on the provided stdin
 	isRawModeSupported(): boolean {
@@ -94,7 +101,11 @@ export default class App extends PureComponent<Props, State> {
 									focusPrevious: this.focusPrevious
 								}}
 							>
-								{this.props.children}
+								{this.state.error ? (
+									<ErrorOverview error={this.state.error! as Error} />
+								) : (
+									this.props.children
+								)}
 							</FocusContext.Provider>
 						</StderrContext.Provider>
 					</StdoutContext.Provider>
