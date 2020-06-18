@@ -42,7 +42,7 @@ export default class Ink {
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	private fullStaticOutput: string;
 	private readonly renderer: Renderer;
-	private readonly exitPromise: Promise<void>;
+	private exitPromise?: Promise<void>;
 	private restoreConsole?: () => void;
 
 	constructor(options: Options) {
@@ -83,11 +83,6 @@ export default class Ink {
 		this.fullStaticOutput = '';
 
 		this.container = reconciler.createContainer(this.rootNode, false, false);
-
-		this.exitPromise = new Promise((resolve, reject) => {
-			this.resolveExitPromise = resolve;
-			this.rejectExitPromise = reject;
-		});
 
 		// Unmount when process exits
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
@@ -257,6 +252,13 @@ export default class Ink {
 	}
 
 	waitUntilExit(): Promise<void> {
+		if (!this.exitPromise) {
+			this.exitPromise = new Promise((resolve, reject) => {
+				this.resolveExitPromise = resolve;
+				this.rejectExitPromise = reject;
+			});
+		}
+
 		return this.exitPromise;
 	}
 
@@ -277,7 +279,11 @@ export default class Ink {
 			}
 
 			if (stream === 'stderr') {
-				this.writeToStderr(data);
+				const isReactMessage = data.startsWith('The above error occurred');
+
+				if (!isReactMessage) {
+					this.writeToStderr(data);
+				}
 			}
 		});
 	}
