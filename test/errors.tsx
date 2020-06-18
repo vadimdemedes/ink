@@ -1,9 +1,10 @@
 /* eslint-disable unicorn/string-content */
 import React from 'react';
 import test from 'ava';
-import chalk from 'chalk';
+import {spy} from 'sinon';
 import patchConsole from 'patch-console';
-import {renderToString} from './helpers/render-to-string';
+import stripAnsi from 'strip-ansi';
+import {render} from '../src';
 
 let restore;
 
@@ -16,28 +17,34 @@ test.after(() => {
 });
 
 test('catch and display error', t => {
+	const stdout = {
+		columns: 100,
+		write: spy()
+	};
+
 	const Test = () => {
 		throw new Error('Oh no');
 	};
 
-	const output = renderToString(<Test />);
+	render(<Test />, {stdout});
 
-	t.deepEqual(output.split('\n').slice(0, 14), [
-		'',
-		` ${chalk.bgRed.white(' ERROR ')} Oh no`,
-		'',
-		` ${chalk.dim('test/errors.tsx:19:9')}`,
-		'',
-		` ${chalk.dim('16:')}`,
-		` ${chalk.dim('17:')} test('catch and display error', t => {`,
-		` ${chalk.dim('18:')}   const Test = () => {`,
-		` ${chalk.dim('19:')}     throw new Error('Oh no');`,
-		` ${chalk.dim('20:')}   };`,
-		` ${chalk.dim('21:')}`,
-		` ${chalk.dim('22:')}   const output = renderToString(<Test />);`,
-		'',
-		` ${chalk.dim('-')} ${chalk.dim.bold('Test')} ${chalk.dim.gray(
-			'(test/errors.tsx:19:9)'
-		)}`
-	]);
+	t.deepEqual(
+		stripAnsi(stdout.write.lastCall.args[0]).split('\n').slice(0, 14),
+		[
+			'',
+			'  ERROR  Oh no',
+			'',
+			' test/errors.tsx:26:9',
+			'',
+			' 23:   };',
+			' 24:',
+			' 25:   const Test = () => {',
+			" 26:     throw new Error('Oh no');",
+			' 27:   };',
+			' 28:',
+			' 29:   render(<Test />, {stdout});',
+			'',
+			' - Test (test/errors.tsx:26:9)'
+		]
+	);
 });
