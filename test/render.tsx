@@ -1,3 +1,4 @@
+delete process.env.CI;
 import React from 'react';
 import {serial as test} from 'ava';
 import {spawn} from 'node-pty';
@@ -18,14 +19,11 @@ const term = (fixture: string, args: string[] = []) => {
 		reject = reject2;
 	});
 
-	const env = {...process.env};
-	delete env.CI;
-
 	const ps = spawn('ts-node', [`./fixtures/${fixture}.tsx`, ...args], {
 		name: 'xterm-color',
 		cols: 100,
 		cwd: __dirname,
-		env
+		env: process.env
 	});
 
 	const result = {
