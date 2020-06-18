@@ -1,38 +1,17 @@
 import {render} from '../../src';
-
-// Fake process.stdout
-interface Stream {
-	output: string;
-	columns: number;
-	write(str: string): void;
-	get(): string;
-}
-
-const createStream: (options: {columns: number}) => Stream = ({columns}) => {
-	let output = '';
-	return {
-		output,
-		columns,
-		write(str: string) {
-			output = str;
-		},
-		get() {
-			return output;
-		}
-	};
-};
+import createStdout from './create-stdout';
 
 export const renderToString: (
 	node: JSX.Element,
 	options?: {columns: number}
 ) => string = (node, options = {columns: 100}) => {
-	const stream = createStream(options);
+	const stdout = createStdout(options.columns);
 
 	render(node, {
 		// @ts-ignore
-		stdout: stream,
+		stdout,
 		debug: true
 	});
 
-	return stream.get();
+	return stdout.get();
 };

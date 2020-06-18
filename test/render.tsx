@@ -1,7 +1,13 @@
+delete process.env.CI;
+import React from 'react';
 import {serial as test} from 'ava';
 import {spawn} from 'node-pty';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
+import boxen from 'boxen';
+import delay from 'delay';
+import {render, Box, Text} from '../src';
+import createStdout from './helpers/create-stdout';
 
 const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: unknown) => void;
@@ -13,14 +19,11 @@ const term = (fixture: string, args: string[] = []) => {
 		reject = reject2;
 	});
 
-	const env = {...process.env};
-	delete env.CI;
-
 	const ps = spawn('ts-node', [`./fixtures/${fixture}.tsx`, ...args], {
 		name: 'xterm-color',
 		cols: 100,
 		cwd: __dirname,
-		env
+		env: process.env
 	});
 
 	const result = {
@@ -107,4 +110,35 @@ test('intercept console methods and display result above output', async t => {
 		'Hello World\r\n',
 		'First log\r\nHello World\r\nSecond log\r\n'
 	]);
+});
+
+test('rerender on resize', async t => {
+	const stdout = createStdout(10);
+
+	const Test = () => (
+		<Box borderStyle="round">
+			<Text>Test</Text>
+		</Box>
+	);
+
+	const {unmount} = render(<Test />, {stdout});
+
+	t.is(
+		stripAnsi(stdout.write.firstCall.args[0]),
+		boxen('Test'.padEnd(8), {borderStyle: 'round'}) + '\n'
+	);
+
+	t.is(stdout.listeners('resize').length, 1);
+
+	stdout.columns = 8;
+	stdout.emit('resize');
+	await delay(100);
+
+	t.is(
+		stripAnsi(stdout.write.lastCall.args[0]),
+		boxen('Test'.padEnd(6), {borderStyle: 'round'}) + '\n'
+	);
+
+	unmount();
+	t.is(stdout.listeners('resize').length, 0);
 });

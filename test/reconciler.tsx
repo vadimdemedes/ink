@@ -1,13 +1,8 @@
 import React, {Suspense} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
-import {spy} from 'sinon';
 import {Box, Text, render} from '../src';
-
-const createStdout = () => ({
-	write: spy(),
-	columns: 100
-});
+import createStdout from './helpers/create-stdout';
 
 test('update child', t => {
 	const Test = ({update}) => <Text>{update ? 'B' : 'A'}</Text>;
