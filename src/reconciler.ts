@@ -28,6 +28,7 @@ import './devtools';
 
 const cleanupYogaNode = (node?: Yoga.YogaNode): void => {
 	node?.unsetMeasureFunc();
+	node?.freeRecursive();
 };
 
 interface Props {
