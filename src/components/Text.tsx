@@ -1,4 +1,4 @@
-import React, {memo} from 'react';
+import React from 'react';
 import type {FC, ReactNode} from 'react';
 import chalk from 'chalk';
 import colorize from '../colorize';
@@ -85,4 +85,4 @@ Text.defaultProps = {
 	wrap: 'wrap'
 };
 
-export default memo(Text);
+export default Text;

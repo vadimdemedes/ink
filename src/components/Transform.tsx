@@ -1,4 +1,4 @@
-import React, {memo} from 'react';
+import React from 'react';
 import type {FC, ReactNode} from 'react';
 
 export interface Props {
@@ -21,4 +21,4 @@ const Transform: FC<Props> = ({children, transform}) => (
 
 Transform.displayName = 'Transform';
 
-export default memo(Transform);
+export default Transform;
