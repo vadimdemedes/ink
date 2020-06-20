@@ -79,7 +79,7 @@ export default createReconciler<
 	},
 	getChildHostContext: (parentHostContext, type) => {
 		const previousIsInsideText = parentHostContext.isInsideText;
-		const isInsideText = type === 'span' || type === 'virtual-span';
+		const isInsideText = type === 'ink-text' || type === 'ink-virtual-text';
 
 		if (previousIsInsideText === isInsideText) {
 			return parentHostContext;
@@ -90,8 +90,8 @@ export default createReconciler<
 	shouldSetTextContent: () => false,
 	createInstance: (originalType, newProps, _root, hostContext) => {
 		const type =
-			originalType === 'span' && hostContext.isInsideText
-				? 'virtual-span'
+			originalType === 'ink-text' && hostContext.isInsideText
+				? 'ink-virtual-text'
 				: originalType;
 
 		const node = createNode(type);

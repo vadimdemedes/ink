@@ -1,5 +1,5 @@
 import React, {FC} from 'react';
-import {render, useInput, useApp} from '../../src';
+import {render, useInput, useApp} from '../..';
 
 const UserInput: FC<{test: string}> = ({test}) => {
 	const {exit} = useApp();

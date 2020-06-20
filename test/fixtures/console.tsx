@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {Text, render} from '../../src';
+import {Text, render} from '../..';
 
 const App = () => {
 	useEffect(() => {

@@ -2,7 +2,7 @@ import React from 'react';
 import type {FC, ReactNode} from 'react';
 
 export interface Props {
-	readonly transform: (children: ReactNode) => ReactNode;
+	readonly transform: (children: string) => string;
 	readonly children: ReactNode;
 }
 
@@ -10,13 +10,12 @@ export interface Props {
  * Transform a string representation of React components before they are written to output.
  */
 const Transform: FC<Props> = ({children, transform}) => (
-	<span
+	<ink-text
 		style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row'}}
-		// @ts-ignore
 		internal_transform={transform}
 	>
 		{children}
-	</span>
+	</ink-text>
 );
 
 Transform.displayName = 'Transform';

@@ -17,14 +17,11 @@ interface InkNode {
 export const TEXT_NAME = '#text';
 export type TextName = '#text';
 export type ElementNames =
-	| 'root'
-	| 'div'
-	| 'span'
-	| 'virtual-span'
-	| 'ROOT'
-	| 'DIV'
-	| 'SPAN'
-	| 'VIRTUAL-SPAN';
+	| 'ink-root'
+	| 'ink-box'
+	| 'ink-text'
+	| 'ink-virtual-text';
+
 export type NodeNames = ElementNames | TextName;
 
 export type DOMElement = {
@@ -59,15 +56,15 @@ export type DOMNodeAttribute = boolean | string | number;
 
 export const createNode = (nodeName: ElementNames): DOMElement => {
 	const node: DOMElement = {
-		nodeName: nodeName.toUpperCase() as ElementNames,
+		nodeName,
 		style: {},
 		attributes: {},
 		childNodes: [],
 		parentNode: null,
-		yogaNode: nodeName === 'virtual-span' ? undefined : Yoga.Node.create()
+		yogaNode: nodeName === 'ink-virtual-text' ? undefined : Yoga.Node.create()
 	};
 
-	if (nodeName === 'span') {
+	if (nodeName === 'ink-text') {
 		node.yogaNode?.setMeasureFunc(measureTextNode.bind(null, node));
 	}
 

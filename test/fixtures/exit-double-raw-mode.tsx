@@ -1,5 +1,5 @@
 import React from 'react';
-import {Text, render, useStdin} from '../../src';
+import {Text, render, useStdin} from '../..';
 
 class ExitDoubleRawMode extends React.Component<{
 	setRawMode: (value: boolean) => void;

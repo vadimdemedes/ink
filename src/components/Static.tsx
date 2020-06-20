@@ -46,13 +46,13 @@ const Static = <T,>(props: Props<T>) => {
 	);
 
 	return (
-		<div
+		<ink-box
 			// @ts-ignore
 			internal_static
 			style={style}
 		>
 			{children}
-		</div>
+		</ink-box>
 	);
 };
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Box, Text, render} from '../../src';
+import {Box, Text, render} from '../..';
 
 const Clear = () => (
 	<Box flexDirection="column">
