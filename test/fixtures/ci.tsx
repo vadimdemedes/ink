@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, Static, Text} from '../../src';
+import {render, Static, Text} from '../..';
 
 interface TestState {
 	counter: number;

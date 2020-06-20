@@ -6,7 +6,9 @@ export interface Props {
 }
 
 // Add a newline
-const Newline: FC<Props> = ({count = 1}) => <span>{'\n'.repeat(count)}</span>;
+const Newline: FC<Props> = ({count = 1}) => (
+	<ink-text>{'\n'.repeat(count)}</ink-text>
+);
 
 Newline.displayName = 'Newline';
 

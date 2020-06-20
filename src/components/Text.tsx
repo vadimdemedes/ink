@@ -63,14 +63,12 @@ const Text: FC<Props> = ({
 	};
 
 	return (
-		<span
-			// @ts-ignore
+		<ink-text
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap}}
-			// @ts-ignore
 			internal_transform={transform}
 		>
 			{children}
-		</span>
+		</ink-text>
 	);
 };
 

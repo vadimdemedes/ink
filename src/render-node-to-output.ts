@@ -69,7 +69,7 @@ const renderNodeToOutput = (
 			newTransformers = [node.internal_transform, ...transformers];
 		}
 
-		if (node.nodeName === 'SPAN') {
+		if (node.nodeName === 'ink-text') {
 			let text = squashTextNodes(node);
 
 			if (text.length > 0) {
@@ -88,11 +88,11 @@ const renderNodeToOutput = (
 			return;
 		}
 
-		if (node.nodeName === 'DIV') {
+		if (node.nodeName === 'ink-box') {
 			renderBorder(x, y, node, output);
 		}
 
-		if (node.nodeName === 'ROOT' || node.nodeName === 'DIV') {
+		if (node.nodeName === 'ink-root' || node.nodeName === 'ink-box') {
 			for (const childNode of node.childNodes) {
 				renderNodeToOutput(childNode as DOMElement, output, {
 					offsetX: x,

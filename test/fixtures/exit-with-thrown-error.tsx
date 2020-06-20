@@ -1,5 +1,5 @@
 import React from 'react';
-import {render} from '../../src';
+import {render} from '../..';
 
 const Test = () => {
 	throw new Error('errored');

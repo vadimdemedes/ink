@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, Text, useApp} from '../../src';
+import {render, Text, useApp} from '../..';
 
 class Exit extends React.Component<
 	{onExit: (error: Error) => void},

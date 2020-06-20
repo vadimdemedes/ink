@@ -48,7 +48,7 @@ export default class Ink {
 		autoBind(this);
 
 		this.options = options;
-		this.rootNode = dom.createNode('root');
+		this.rootNode = dom.createNode('ink-root');
 
 		this.rootNode.onRender = options.debug
 			? this.onRender
