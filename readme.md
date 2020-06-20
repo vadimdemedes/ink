@@ -1601,18 +1601,21 @@ A reference to a `<Box>` element captured with a `ref` property.
 See [Refs](https://reactjs.org/docs/refs-and-the-dom.html) for more information on how to capture references.
 
 ```jsx
-import {render, measureElement, Box} from 'ink';
+import {render, measureElement, Box, Text} from 'ink';
 
 const Example = () => {
 	const ref = useRef();
 
 	useEffect(() => {
-		const {width} = measureElement(ref.current);
+		const {width, height} = measureElement(ref.current);
+		// width = 100, height = 1
 	}, []);
 
 	return (
 		<Box width={100}>
-			<Box ref={ref}>{/* This box will stretch to 100 width */}</Box>
+			<Box ref={ref}>
+				<Text>This box will stretch to 100 width</Text>
+			</Box>
 		</Box>
 	);
 };
