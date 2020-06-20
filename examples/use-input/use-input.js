@@ -1,12 +1,11 @@
 'use strict';
-const {useState, useContext} = require('react');
 const React = require('react');
-const {render, useInput, Box, Text, AppContext} = require('../..');
+const {render, useInput, useApp, Box, Text} = require('../..');
 
 const Robot = () => {
-	const {exit} = useContext(AppContext);
-	const [x, setX] = useState(1);
-	const [y, setY] = useState(1);
+	const {exit} = useApp();
+	const [x, setX] = React.useState(1);
+	const [y, setY] = React.useState(1);
 
 	useInput((input, key) => {
 		if (input === 'q') {
