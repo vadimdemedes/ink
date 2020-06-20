@@ -8,6 +8,7 @@ const customGlobal = global as any;
 if (!customGlobal.WebSocket) {
 	customGlobal.WebSocket = ws;
 }
+
 if (!customGlobal.window) {
 	customGlobal.window = global;
 }
