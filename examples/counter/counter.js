@@ -13,7 +13,7 @@ const Counter = () => {
 		return () => {
 			clearInterval(timer);
 		};
-	});
+	}, []);
 
 	return <Text color="green">{counter} tests passed</Text>;
 };
