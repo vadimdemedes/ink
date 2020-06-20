@@ -5,7 +5,7 @@ import type {Boxes} from 'cli-boxes';
 import type {ForegroundColor} from 'chalk';
 
 export interface Styles {
-	textWrap?:
+	readonly textWrap?:
 		| 'wrap'
 		| 'end'
 		| 'middle'
@@ -13,89 +13,90 @@ export interface Styles {
 		| 'truncate'
 		| 'truncate-middle'
 		| 'truncate-start';
-	position?: 'absolute' | 'relative';
+
+	readonly position?: 'absolute' | 'relative';
 
 	/**
 	 * Top margin.
 	 */
-	marginTop?: number;
+	readonly marginTop?: number;
 
 	/**
 	 * Bottom margin.
 	 */
-	marginBottom?: number;
+	readonly marginBottom?: number;
 
 	/**
 	 * Left margin.
 	 */
-	marginLeft?: number;
+	readonly marginLeft?: number;
 
 	/**
 	 * Right margin.
 	 */
-	marginRight?: number;
+	readonly marginRight?: number;
 
 	/**
 	 * Top padding.
 	 */
-	paddingTop?: number;
+	readonly paddingTop?: number;
 
 	/**
 	 * Bottom padding.
 	 */
-	paddingBottom?: number;
+	readonly paddingBottom?: number;
 
 	/**
 	 * Left padding.
 	 */
-	paddingLeft?: number;
+	readonly paddingLeft?: number;
 
 	/**
 	 * Right padding.
 	 */
-	paddingRight?: number;
+	readonly paddingRight?: number;
 
 	/**
 	 * This property defines the ability for a flex item to grow if necessary.
 	 * See [flex-grow](https://css-tricks.com/almanac/properties/f/flex-grow/).
 	 */
-	flexGrow?: number;
+	readonly flexGrow?: number;
 
 	/**
 	 * It specifies the “flex shrink factor”, which determines how much the flex item will shrink relative to the rest of the flex items in the flex container when there isn’t enough space on the row.
 	 * See [flex-shrink](https://css-tricks.com/almanac/properties/f/flex-shrink/).
 	 */
-	flexShrink?: number;
+	readonly flexShrink?: number;
 
 	/**
 	 * It establishes the main-axis, thus defining the direction flex items are placed in the flex container.
 	 * See [flex-direction](https://css-tricks.com/almanac/properties/f/flex-direction/).
 	 */
-	flexDirection?: 'row' | 'column' | 'row-reverse' | 'column-reverse';
+	readonly flexDirection?: 'row' | 'column' | 'row-reverse' | 'column-reverse';
 
 	/**
 	 * It specifies the initial size of the flex item, before any available space is distributed according to the flex factors.
 	 * See [flex-basis](https://css-tricks.com/almanac/properties/f/flex-basis/).
 	 */
-	flexBasis?: number | string;
+	readonly flexBasis?: number | string;
 
 	/**
 	 * The align-items property defines the default behavior for how items are laid out along the cross axis (perpendicular to the main axis).
 	 * See [align-items](https://css-tricks.com/almanac/properties/a/align-items/).
 	 */
-	alignItems?: 'flex-start' | 'center' | 'flex-end' | 'stretch';
+	readonly alignItems?: 'flex-start' | 'center' | 'flex-end' | 'stretch';
 
 	/**
 	 * It makes possible to override the align-items value for specific flex items.
 	 * See [align-self](https://css-tricks.com/almanac/properties/a/align-self/).
 	 */
-	alignSelf?: 'flex-start' | 'center' | 'flex-end' | 'auto';
+	readonly alignSelf?: 'flex-start' | 'center' | 'flex-end' | 'auto';
 
 	/**
 	 * It defines the alignment along the main axis.
 	 * See [justify-content](https://css-tricks.com/almanac/properties/j/justify-content/).
 	 */
-	justifyContent?:
+	readonly justifyContent?:
 		| 'flex-start'
 		| 'flex-end'
 		| 'space-between'
@@ -106,40 +107,40 @@ export interface Styles {
 	 * Width of the element in spaces.
 	 * You can also set it in percent, which will calculate the width based on the width of parent element.
 	 */
-	width?: number | string;
+	readonly width?: number | string;
 
 	/**
 	 * Height of the element in lines (rows).
 	 * You can also set it in percent, which will calculate the height based on the height of parent element.
 	 */
-	height?: number | string;
+	readonly height?: number | string;
 
 	/**
 	 * Sets a minimum width of the element.
 	 */
-	minWidth?: number | string;
+	readonly minWidth?: number | string;
 
 	/**
 	 * Sets a minimum height of the element.
 	 */
-	minHeight?: number | string;
+	readonly minHeight?: number | string;
 
 	/**
 	 * Set this property to `none` to hide the element.
 	 */
-	display?: 'flex' | 'none';
+	readonly display?: 'flex' | 'none';
 
 	/**
 	 * Add a border with a specified style.
 	 * If `borderStyle` is `undefined` (which it is by default), no border will be added.
 	 */
-	borderStyle?: keyof Boxes;
+	readonly borderStyle?: keyof Boxes;
 
 	/**
 	 * Change border color.
 	 * Accepts the same values as `color` in <Text> component.
 	 */
-	borderColor?: typeof ForegroundColor;
+	readonly borderColor?: typeof ForegroundColor;
 }
 
 const applyPositionStyles = (node: Yoga.YogaNode, style: Styles): void => {

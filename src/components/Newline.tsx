@@ -7,7 +7,7 @@ export interface Props {
 	 *
 	 * @default 1
 	 */
-	count?: number;
+	readonly count?: number;
 }
 
 /**

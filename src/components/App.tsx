@@ -14,26 +14,26 @@ const SHIFT_TAB = '\u001B[Z';
 const ESC = '\u001B';
 
 interface Props {
-	children: ReactNode;
-	stdin: NodeJS.ReadStream;
-	stdout: NodeJS.WriteStream;
-	stderr: NodeJS.WriteStream;
-	writeToStdout: (data: string) => void;
-	writeToStderr: (data: string) => void;
-	exitOnCtrlC: boolean;
-	onExit: (error?: Error) => void;
+	readonly children: ReactNode;
+	readonly stdin: NodeJS.ReadStream;
+	readonly stdout: NodeJS.WriteStream;
+	readonly stderr: NodeJS.WriteStream;
+	readonly writeToStdout: (data: string) => void;
+	readonly writeToStderr: (data: string) => void;
+	readonly exitOnCtrlC: boolean;
+	readonly onExit: (error?: Error) => void;
 }
 
 interface State {
-	isFocusEnabled: boolean;
-	activeFocusId?: string;
-	focusables: Focusable[];
-	error?: Error;
+	readonly isFocusEnabled: boolean;
+	readonly activeFocusId?: string;
+	readonly focusables: Focusable[];
+	readonly error?: Error;
 }
 
 interface Focusable {
-	id: string;
-	isActive: boolean;
+	readonly id: string;
+	readonly isActive: boolean;
 }
 
 // Root component for all Ink apps

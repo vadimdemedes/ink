@@ -12,7 +12,7 @@ const stackUtils = new StackUtils({
 });
 
 interface Props {
-	error: Error;
+	readonly error: Error;
 }
 
 const ErrorOverview: FC<Props> = ({error}) => {

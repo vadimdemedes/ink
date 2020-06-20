@@ -4,7 +4,7 @@ export interface Props {
 	/**
 	 * Exit (unmount) the whole Ink app.
 	 */
-	exit: (error?: Error) => void;
+	readonly exit: (error?: Error) => void;
 }
 
 /**

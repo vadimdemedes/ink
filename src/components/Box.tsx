@@ -10,42 +10,42 @@ export type Props = Except<Styles, 'textWrap'> & {
 	 *
 	 * @default 0
 	 */
-	margin?: number;
+	readonly margin?: number;
 
 	/**
 	 * Horizontal margin. Equivalent to setting `marginLeft` and `marginRight`.
 	 *
 	 * @default 0
 	 */
-	marginX?: number;
+	readonly marginX?: number;
 
 	/**
 	 * Vertical margin. Equivalent to setting `marginTop` and `marginBottom`.
 	 *
 	 * @default 0
 	 */
-	marginY?: number;
+	readonly marginY?: number;
 
 	/**
 	 * Padding on all sides. Equivalent to setting `paddingTop`, `paddingBottom`, `paddingLeft` and `paddingRight`.
 	 *
 	 * @default 0
 	 */
-	padding?: number;
+	readonly padding?: number;
 
 	/**
 	 * Horizontal padding. Equivalent to setting `paddingLeft` and `paddingRight`.
 	 *
 	 * @default 0
 	 */
-	paddingX?: number;
+	readonly paddingX?: number;
 
 	/**
 	 * Vertical padding. Equivalent to setting `paddingTop` and `paddingBottom`.
 	 *
 	 * @default 0
 	 */
-	paddingY?: number;
+	readonly paddingY?: number;
 };
 
 /**

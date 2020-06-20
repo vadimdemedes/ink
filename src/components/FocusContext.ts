@@ -1,15 +1,15 @@
 import {createContext} from 'react';
 
 export interface Props {
-	activeId?: string;
-	add: (id: string, options: {autoFocus: boolean}) => void;
-	remove: (id: string) => void;
-	activate: (id: string) => void;
-	deactivate: (id: string) => void;
-	enableFocus: () => void;
-	disableFocus: () => void;
-	focusNext: () => void;
-	focusPrevious: () => void;
+	readonly activeId?: string;
+	readonly add: (id: string, options: {autoFocus: boolean}) => void;
+	readonly remove: (id: string) => void;
+	readonly activate: (id: string) => void;
+	readonly deactivate: (id: string) => void;
+	readonly enableFocus: () => void;
+	readonly disableFocus: () => void;
+	readonly focusNext: () => void;
+	readonly focusPrevious: () => void;
 }
 
 const FocusContext = createContext<Props>({
