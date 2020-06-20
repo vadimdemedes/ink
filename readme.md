@@ -987,10 +987,16 @@ For example, you might want to apply a [gradient to text](https://github.com/sin
 These use cases can't accept React nodes as input, they are expecting a string.
 That's what `<Transform>` component does, it gives you an output string of its child components and lets you transform it in any way.
 
+**Note:** `<Transform>` must be applied only to `<Text>` children components and shouldn't change the dimensions of the output, otherwise layout will be incorrect.
+
 ```jsx
-<Transform transform={output => output.toUpperCase()}>
-	<Text>Hello World</Text>
-</Transform>
+import {Transform} from 'ink';
+
+const Example = () => (
+	<Transform transform={output => output.toUpperCase()}>
+		<Text>Hello World</Text>
+	</Transform>
+);
 ```
 
 Since `transform` function converts all characters to upper case, final output that's rendered to the terminal will be "HELLO WORLD", not "Hello World".
