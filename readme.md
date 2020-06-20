@@ -1585,6 +1585,38 @@ const {clear} = render(<MyApp />);
 clear();
 ```
 
+#### measureElement(ref)
+
+Measure dimensions of a particular `<Box>` element.
+It returns an object with `width` and `height` properties.
+This function is useful when your component needs to know the amount of available space it has before it can start rendering or when you need to change your layout based on the length of the content.
+
+**Note:** `measureElement()` returns correct results after initial render, when layout has been calculated.
+
+##### ref
+
+Type: `MutableRef`
+
+Reference to `<Box>` element captured via `ref` property.
+
+```jsx
+import {Box, measureElement} from 'ink';
+
+const Example = () => {
+	const ref = useRef();
+
+	useEffect(() => {
+		const {width} = measureElement(ref.current);
+	}, []);
+
+	return (
+		<Box width={100}>
+			<Box ref={ref}>{/* This box will stretch to 100 width */}</Box>
+		</Box>
+	);
+};
+```
+
 ## Testing
 
 Ink components are simple to test with [ink-testing-library](https://github.com/vadimdemedes/ink-testing-library).
