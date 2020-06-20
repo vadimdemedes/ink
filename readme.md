@@ -1587,11 +1587,11 @@ clear();
 
 #### measureElement(ref)
 
-Measure dimensions of a particular `<Box>` element.
+Measure the dimensions of a particular `<Box>` element.
 It returns an object with `width` and `height` properties.
 This function is useful when your component needs to know the amount of available space it has before it can start rendering or when you need to change your layout based on the length of the content.
 
-**Note:** `measureElement()` returns correct results after initial render, when layout has been calculated.
+**Note:** `measureElement()` returns correct results only after the initial render, when layout has been calculated. Until then, `width` and `height` equal to zero. It's recommended to call `measureElement()` in a `useEffect` hook, which fires after component has rendered.
 
 ##### ref
 

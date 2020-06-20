@@ -2,18 +2,18 @@ import type {DOMElement} from './dom';
 
 interface Output {
 	/**
-	 * Element width
+	 * Element width.
 	 */
 	width: number;
 
 	/**
-	 * Element height
+	 * Element height.
 	 */
 	height: number;
 }
 
 /**
- * Measure dimensions of a particular `<Box>` element.
+ * Measure the dimensions of a particular `<Box>` element.
  */
 export default (node: DOMElement): Output => ({
 	width: node.yogaNode?.getComputedWidth() ?? 0,
