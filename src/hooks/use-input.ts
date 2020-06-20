@@ -1,21 +1,65 @@
 import {useEffect} from 'react';
 import useStdin from './use-stdin';
 
+/**
+ * Handy information about a key that was pressed.
+ */
 export interface Key {
+	/**
+	 * Up arrow key was pressed.
+	 */
 	upArrow: boolean;
+
+	/**
+	 * Down arrow key was pressed.
+	 */
 	downArrow: boolean;
+
+	/**
+	 * Left arrow key was pressed.
+	 */
 	leftArrow: boolean;
+
+	/**
+	 * Right arrow key was pressed.
+	 */
 	rightArrow: boolean;
+
+	/**
+	 * Return (Enter) key was pressed.
+	 */
 	return: boolean;
+
+	/**
+	 * Escape key was pressed.
+	 */
 	escape: boolean;
+
+	/**
+	 * Ctrl key was pressed.
+	 */
 	ctrl: boolean;
+
+	/**
+	 * Shift key was pressed.
+	 */
 	shift: boolean;
+
+	/**
+	 * [Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
+	 */
 	meta: boolean;
 }
 
 type Handler = (input: string, key: Key) => void;
 
 interface Options {
+	/**
+	 * Enable or disable capturing of user input.
+	 * Useful when there are multiple useInput hooks used at once to avoid handling the same input several times.
+	 *
+	 * @default true
+	 */
 	isActive?: boolean;
 }
 

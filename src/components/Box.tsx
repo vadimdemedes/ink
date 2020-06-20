@@ -5,11 +5,46 @@ import type {Except} from 'type-fest';
 import type {Styles} from '../styles';
 
 export type Props = Except<Styles, 'textWrap'> & {
+	/**
+	 * Margin on all sides. Equivalent to setting `marginTop`, `marginBottom`, `marginLeft` and `marginRight`.
+	 *
+	 * @default 0
+	 */
 	margin?: number;
+
+	/**
+	 * Horizontal margin. Equivalent to setting `marginLeft` and `marginRight`.
+	 *
+	 * @default 0
+	 */
 	marginX?: number;
+
+	/**
+	 * Vertical margin. Equivalent to setting `marginTop` and `marginBottom`.
+	 *
+	 * @default 0
+	 */
 	marginY?: number;
+
+	/**
+	 * Padding on all sides. Equivalent to setting `paddingTop`, `paddingBottom`, `paddingLeft` and `paddingRight`.
+	 *
+	 * @default 0
+	 */
 	padding?: number;
+
+	/**
+	 * Horizontal padding. Equivalent to setting `paddingLeft` and `paddingRight`.
+	 *
+	 * @default 0
+	 */
 	paddingX?: number;
+
+	/**
+	 * Vertical padding. Equivalent to setting `paddingTop` and `paddingBottom`.
+	 *
+	 * @default 0
+	 */
 	paddingY?: number;
 };
 

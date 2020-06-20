@@ -2,10 +2,17 @@ import React from 'react';
 import type {FC} from 'react';
 
 export interface Props {
+	/**
+	 * Number of newlines to insert.
+	 *
+	 * @default 1
+	 */
 	count?: number;
 }
 
-// Add a newline
+/**
+ * Adds one or more newline (\n) characters. Must be used within <Text> components.
+ */
 const Newline: FC<Props> = ({count = 1}) => (
 	<ink-text>{'\n'.repeat(count)}</ink-text>
 );

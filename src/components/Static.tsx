@@ -3,8 +3,21 @@ import type {ReactNode} from 'react';
 import type {Styles} from '../styles';
 
 export interface Props<T> extends Styles {
+	/**
+	 * Array of items of any type to render using a function you pass as a component child.
+	 */
 	items: T[];
+
+	/**
+	 * Styles to apply to a container of child elements. See <Box> for supported properties.
+	 */
 	style?: Styles;
+
+	/**
+	 * Function that is called to render every item in `items` array.
+	 * First argument is an item itself and second argument is index of that item in `items` array.
+	 * Note that `key` must be assigned to the root component.
+	 */
 	children: (item: T, index: number) => ReactNode;
 }
 

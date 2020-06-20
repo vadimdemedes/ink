@@ -14,32 +14,131 @@ export interface Styles {
 		| 'truncate-middle'
 		| 'truncate-start';
 	position?: 'absolute' | 'relative';
+
+	/**
+	 * Top margin.
+	 */
 	marginTop?: number;
+
+	/**
+	 * Bottom margin.
+	 */
 	marginBottom?: number;
+
+	/**
+	 * Left margin.
+	 */
 	marginLeft?: number;
+
+	/**
+	 * Right margin.
+	 */
 	marginRight?: number;
+
+	/**
+	 * Top padding.
+	 */
 	paddingTop?: number;
+
+	/**
+	 * Bottom padding.
+	 */
 	paddingBottom?: number;
+
+	/**
+	 * Left padding.
+	 */
 	paddingLeft?: number;
+
+	/**
+	 * Right padding.
+	 */
 	paddingRight?: number;
+
+	/**
+	 * This property defines the ability for a flex item to grow if necessary.
+	 * See [flex-grow](https://css-tricks.com/almanac/properties/f/flex-grow/).
+	 */
 	flexGrow?: number;
+
+	/**
+	 * It specifies the “flex shrink factor”, which determines how much the flex item will shrink relative to the rest of the flex items in the flex container when there isn’t enough space on the row.
+	 * See [flex-shrink](https://css-tricks.com/almanac/properties/f/flex-shrink/).
+	 */
 	flexShrink?: number;
+
+	/**
+	 * It establishes the main-axis, thus defining the direction flex items are placed in the flex container.
+	 * See [flex-direction](https://css-tricks.com/almanac/properties/f/flex-direction/).
+	 */
 	flexDirection?: 'row' | 'column' | 'row-reverse' | 'column-reverse';
+
+	/**
+	 * It specifies the initial size of the flex item, before any available space is distributed according to the flex factors.
+	 * See [flex-basis](https://css-tricks.com/almanac/properties/f/flex-basis/).
+	 */
 	flexBasis?: number | string;
+
+	/**
+	 * The align-items property defines the default behavior for how items are laid out along the cross axis (perpendicular to the main axis).
+	 * See [align-items](https://css-tricks.com/almanac/properties/a/align-items/).
+	 */
 	alignItems?: 'flex-start' | 'center' | 'flex-end' | 'stretch';
+
+	/**
+	 * It makes possible to override the align-items value for specific flex items.
+	 * See [align-self](https://css-tricks.com/almanac/properties/a/align-self/).
+	 */
 	alignSelf?: 'flex-start' | 'center' | 'flex-end' | 'auto';
+
+	/**
+	 * It defines the alignment along the main axis.
+	 * See [justify-content](https://css-tricks.com/almanac/properties/j/justify-content/).
+	 */
 	justifyContent?:
 		| 'flex-start'
 		| 'flex-end'
 		| 'space-between'
 		| 'space-around'
 		| 'center';
+
+	/**
+	 * Width of the element in spaces.
+	 * You can also set it in percent, which will calculate the width based on the width of parent element.
+	 */
 	width?: number | string;
+
+	/**
+	 * Height of the element in lines (rows).
+	 * You can also set it in percent, which will calculate the height based on the height of parent element.
+	 */
 	height?: number | string;
+
+	/**
+	 * Sets a minimum width of the element.
+	 */
 	minWidth?: number | string;
+
+	/**
+	 * Sets a minimum height of the element.
+	 */
 	minHeight?: number | string;
+
+	/**
+	 * Set this property to `none` to hide the element.
+	 */
 	display?: 'flex' | 'none';
+
+	/**
+	 * Add a border with a specified style.
+	 * If `borderStyle` is `undefined` (which it is by default), no border will be added.
+	 */
 	borderStyle?: keyof Boxes;
+
+	/**
+	 * Change border color.
+	 * Accepts the same values as `color` in <Text> component.
+	 */
 	borderColor?: typeof ForegroundColor;
 }
 

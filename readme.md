@@ -251,20 +251,28 @@ Dim the color (emit a small amount of light).
 Type: `boolean`\
 Default: `false`
 
+Make the text bold.
+
 #### italic
 
 Type: `boolean`\
 Default: `false`
+
+Make the text italic.
 
 #### underline
 
 Type: `boolean`\
 Default: `false`
 
+Make the text underlined.
+
 #### strikethrough
 
 Type: `boolean`\
 Default: `false`
+
+Make the text crossed with a line.
 
 #### wrap
 
@@ -608,7 +616,7 @@ See [flex-direction](https://css-tricks.com/almanac/properties/f/flex-direction/
 Type: `string`\
 Allowed values: `flex-start` `center` `flex-end`
 
-See [align-items](https://css-tricks.com/almanac/properties/f/align-items/).
+See [align-items](https://css-tricks.com/almanac/properties/a/align-items/).
 
 ```jsx
 <Box alignItems="flex-start">
@@ -666,7 +674,7 @@ Type: `string`\
 Default: `auto`\
 Allowed vales: `auto` `flex-start` `center` `flex-end`
 
-See [align-self](https://css-tricks.com/almanac/properties/f/align-self/).
+See [align-self](https://css-tricks.com/almanac/properties/a/align-self/).
 
 ```jsx
 <Box height={3}>
@@ -702,7 +710,7 @@ See [align-self](https://css-tricks.com/almanac/properties/f/align-self/).
 Type: `string`\
 Allowed values: `flex-start` `center` `flex-end` `space-between` `space-around`
 
-See [justify-content](https://css-tricks.com/almanac/properties/f/justify-content/).
+See [justify-content](https://css-tricks.com/almanac/properties/j/justify-content/).
 
 ```jsx
 <Box justifyContent="flex-start">
@@ -1100,6 +1108,13 @@ Type: `boolean`\
 Default: `false`
 
 Return (Enter) key was pressed.
+
+###### key.escape
+
+Type: `boolean`\
+Default: `false`
+
+Escape key was pressed.
 
 ###### key.ctrl
 
