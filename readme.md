@@ -1598,6 +1598,7 @@ This function is useful when your component needs to know the amount of availabl
 Type: `MutableRef`
 
 Reference to `<Box>` element captured via `ref` property.
+See [Refs](https://reactjs.org/docs/refs-and-the-dom.html) for more information on how to capture references.
 
 ```jsx
 import {Box, measureElement} from 'ink';
