@@ -14,7 +14,7 @@ export type Props = Except<Styles, 'textWrap'> & {
 };
 
 /**
- * `<Box>` it's an essential Ink component to build your layout. It's like a `<div style="display: flex">` in a browser.
+ * `<Box>` is an essential Ink component to build your layout. It's like `<div style="display: flex">` in the browser.
  */
 const Box: FC<Props> = ({children, ...style}) => {
 	const transformedStyle = {
