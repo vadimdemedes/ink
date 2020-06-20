@@ -1601,7 +1601,7 @@ Reference to `<Box>` element captured via `ref` property.
 See [Refs](https://reactjs.org/docs/refs-and-the-dom.html) for more information on how to capture references.
 
 ```jsx
-import {Box, measureElement} from 'ink';
+import {render, measureElement, Box} from 'ink';
 
 const Example = () => {
 	const ref = useRef();
@@ -1616,6 +1616,8 @@ const Example = () => {
 		</Box>
 	);
 };
+
+render(<Example />);
 ```
 
 ## Testing
