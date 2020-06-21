@@ -50,6 +50,16 @@ const UserInput: FC<{test: string}> = ({test}) => {
 			return;
 		}
 
+		if (test === 'tab' && input === '' && key.tab) {
+			exit();
+			return;
+		}
+
+		if (test === 'shiftTab' && input === '' && key.tab && key.shift) {
+			exit();
+			return;
+		}
+
 		throw new Error('Crash');
 	});
 

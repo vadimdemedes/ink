@@ -107,6 +107,20 @@ test('useInput - handle right arrow', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test('useInput - handle Tab', async t => {
+	const ps = term('use-input', ['tab']);
+	ps.write('\t');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test('useInput - handle Shift+Tab', async t => {
+	const ps = term('use-input', ['shiftTab']);
+	ps.write('\u001B[Z');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test('useInput - ignore input if not active', async t => {
 	const ps = term('use-input-multiple');
 	ps.write('x');
