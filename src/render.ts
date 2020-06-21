@@ -56,9 +56,11 @@ export interface Instance {
 	 * Returns a promise, which resolves when app is unmounted.
 	 */
 	waitUntilExit: Ink['waitUntilExit'];
-	cleanup?: () => void;
+	cleanup: () => void;
 
-	// Clear output
+	/**
+	 * Clear output.
+	 */
 	clear: () => void;
 }
 
@@ -85,6 +87,7 @@ const render: RenderFunction = (node, options): Instance => {
 		inkOptions.stdout,
 		() => new Ink(inkOptions)
 	);
+
 	instance.render(node);
 
 	return {
