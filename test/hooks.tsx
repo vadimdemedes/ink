@@ -121,6 +121,13 @@ test('useInput - handle Shift+Tab', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test('useInput - handle backspace', async t => {
+	const ps = term('use-input', ['backspace']);
+	ps.write('\u0008');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test('useInput - ignore input if not active', async t => {
 	const ps = term('use-input-multiple');
 	ps.write('x');

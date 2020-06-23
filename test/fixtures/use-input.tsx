@@ -60,6 +60,11 @@ const UserInput: FC<{test: string}> = ({test}) => {
 			return;
 		}
 
+		if (test === 'backspace' && input === '' && key.backspace) {
+			exit();
+			return;
+		}
+
 		throw new Error('Crash');
 	});
 
