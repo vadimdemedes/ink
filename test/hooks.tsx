@@ -23,7 +23,12 @@ const term = (fixture: string, args: string[] = []) => {
 	});
 
 	const result = {
-		write: (input: string) => ps.write(input),
+		write: (input: string) => {
+			// Give TS and Ink time to start up and render UI
+			setTimeout(() => {
+				ps.write(input);
+			}, 1000);
+		},
 		output: '',
 		waitForExit: () => exitPromise
 	};
