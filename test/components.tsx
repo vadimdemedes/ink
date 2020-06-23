@@ -279,6 +279,16 @@ test('squash empty `<Text>` nodes', t => {
 	t.is(output, '');
 });
 
+test('<Transform> with undefined children', t => {
+	const output = renderToString(<Transform />);
+	t.is(output, '');
+});
+
+test('<Transform> with null children', t => {
+	const output = renderToString(<Transform />);
+	t.is(output, '');
+});
+
 test('hooks', t => {
 	const WithHooks = () => {
 		const [value] = useState('Hello');

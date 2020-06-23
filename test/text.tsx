@@ -4,6 +4,16 @@ import chalk from 'chalk';
 import {renderToString} from './helpers/render-to-string';
 import {Text} from '../src';
 
+test('<Text> with undefined children', t => {
+	const output = renderToString(<Text />);
+	t.is(output, '');
+});
+
+test('<Text> with null children', t => {
+	const output = renderToString(<Text>{null}</Text>);
+	t.is(output, '');
+});
+
 test('text with standard color', t => {
 	const output = renderToString(<Text color="green">Test</Text>);
 	t.is(output, chalk.green('Test'));

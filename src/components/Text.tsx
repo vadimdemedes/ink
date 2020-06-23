@@ -46,7 +46,7 @@ export interface Props {
 	 * If `truncate-*` is passed, Ink will truncate text instead, which will result in one line of text with the rest cut off.
 	 */
 	readonly wrap?: Styles['textWrap'];
-	readonly children: ReactNode;
+	readonly children?: ReactNode;
 }
 
 /**
@@ -63,6 +63,10 @@ const Text: FC<Props> = ({
 	wrap,
 	children
 }) => {
+	if (children === undefined || children === null) {
+		return null;
+	}
+
 	const transform = (children: string): string => {
 		if (dimColor) {
 			children = chalk.dim(children);
