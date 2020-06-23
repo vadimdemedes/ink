@@ -23,7 +23,12 @@ const term = (fixture: string, args: string[] = []) => {
 	});
 
 	const result = {
-		write: (input: string) => ps.write(input),
+		write: (input: string) => {
+			// Give TS and Ink time to start up and render UI
+			setTimeout(() => {
+				ps.write(input);
+			}, 1000);
+		},
 		output: '',
 		waitForExit: () => exitPromise
 	};
@@ -124,6 +129,13 @@ test('useInput - handle Shift+Tab', async t => {
 test('useInput - handle backspace', async t => {
 	const ps = term('use-input', ['backspace']);
 	ps.write('\u0008');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test('useInput - handle delete', async t => {
+	const ps = term('use-input', ['delete']);
+	ps.write('\u007F');
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
