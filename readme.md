@@ -1130,6 +1130,20 @@ Default: `false`
 
 Shift key was pressed.
 
+###### key.tab
+
+Type: `boolean`\
+Default: `false`
+
+Tab key was pressed.
+
+###### key.backspace
+
+Type: `boolean`\
+Default: `false`
+
+Backspace key was pressed.
+
 ###### key.meta
 
 Type: `boolean`\

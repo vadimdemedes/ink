@@ -46,6 +46,16 @@ export interface Key {
 	shift: boolean;
 
 	/**
+	 * Tab key was pressed.
+	 */
+	tab: boolean;
+
+	/**
+	 * Backspace key was pressed.
+	 */
+	backspace: boolean;
+
+	/**
 	 * [Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 	 */
 	meta: boolean;
@@ -109,6 +119,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 
 		const handleData = (data: Buffer) => {
 			let input = String(data);
+
 			const key = {
 				upArrow: input === '\u001B[A',
 				downArrow: input === '\u001B[B',
@@ -118,6 +129,8 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				escape: input === '\u001B',
 				ctrl: false,
 				shift: false,
+				tab: input === '\t' || input === '\u001B[Z',
+				backspace: input === '\u0008',
 				meta: false
 			};
 
@@ -138,6 +151,15 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			const isCyrillicUppercase = input >= 'А' && input <= 'Я';
 			if (input.length === 1 && (isLatinUppercase || isCyrillicUppercase)) {
 				key.shift = true;
+			}
+
+			// Shift+Tab
+			if (key.tab && input === '[Z') {
+				key.shift = true;
+			}
+
+			if (key.tab || key.backspace) {
+				input = '';
 			}
 
 			inputHandler(input, key);
