@@ -1690,7 +1690,6 @@ You can even inspect and change the props of components, and see the results imm
 - [ink-spinner](https://github.com/vadimdemedes/ink-spinner) - Spinner.
 - [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
 - [ink-link](https://github.com/sindresorhus/ink-link) - Link component.
-- [ink-box](https://github.com/sindresorhus/ink-box) - Styled box component.
 - [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color component.
 - [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
 - [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
