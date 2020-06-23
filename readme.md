@@ -1144,6 +1144,13 @@ Default: `false`
 
 Backspace key was pressed.
 
+###### key.delete
+
+Type: `boolean`\
+Default: `false`
+
+Delete key was pressed.
+
 ###### key.meta
 
 Type: `boolean`\

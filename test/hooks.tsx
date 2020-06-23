@@ -128,6 +128,13 @@ test('useInput - handle backspace', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test('useInput - handle delete', async t => {
+	const ps = term('use-input', ['delete']);
+	ps.write('\u007F');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test('useInput - ignore input if not active', async t => {
 	const ps = term('use-input-multiple');
 	ps.write('x');

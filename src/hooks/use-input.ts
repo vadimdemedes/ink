@@ -56,6 +56,11 @@ export interface Key {
 	backspace: boolean;
 
 	/**
+	 * Delete key was pressed.
+	 */
+	delete: boolean;
+
+	/**
 	 * [Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 	 */
 	meta: boolean;
@@ -131,6 +136,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				shift: false,
 				tab: input === '\t' || input === '\u001B[Z',
 				backspace: input === '\u0008',
+				delete: input === '\u007F',
 				meta: false
 			};
 
@@ -158,7 +164,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				key.shift = true;
 			}
 
-			if (key.tab || key.backspace) {
+			if (key.tab || key.backspace || key.delete) {
 				input = '';
 			}
 
