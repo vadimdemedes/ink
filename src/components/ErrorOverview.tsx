@@ -21,7 +21,7 @@ const ErrorOverview: FC<Props> = ({error}) => {
 	let excerpt: ExcerptLine[] | undefined;
 	let lineWidth = 0;
 
-	if (origin?.file && origin?.line) {
+	if (origin?.file && origin?.line && fs.existsSync(origin.file)) {
 		const sourceCode = fs.readFileSync(origin.file, 'utf8');
 		excerpt = codeExcerpt(sourceCode, origin.line);
 
