@@ -1,6 +1,6 @@
 'use strict';
 const React = require('react');
-const {render, Box, Color} = require('..');
+const {render, Box, Text} = require('..');
 
 class Counter extends React.PureComponent {
 	constructor() {
@@ -18,16 +18,20 @@ class Counter extends React.PureComponent {
 			React.createElement(
 				Box,
 				{},
-				React.createElement(Color, {blue: true}, '~/Projects/ink ')
+				React.createElement(Text, {color: 'blue'}, '~/Projects/ink ')
 			),
 			React.createElement(
 				Box,
 				{},
-				React.createElement(Color, {red: true}, 'λ '),
-				React.createElement(Color, {green: true}, 'node '),
-				React.createElement(Box, {}, 'media/example')
+				React.createElement(Text, {color: 'magenta'}, '❯ '),
+				React.createElement(Text, {color: 'green'}, 'node '),
+				React.createElement(Text, {}, 'media/example')
 			),
-			React.createElement(Color, {green: true}, `${this.state.i} tests passed`)
+			React.createElement(
+				Text,
+				{color: 'green'},
+				`${this.state.i} tests passed`
+			)
 		);
 	}
 
