@@ -75,6 +75,7 @@
 	},
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "0.7.0",
+		"@vdemedes/prettier-config": "^1.0.1",
 		"ava": "^3.5.0",
 		"babel-eslint": "^10.0.1",
 		"benchmark": "^2.1.4",
@@ -168,12 +169,5 @@
 			}
 		]
 	},
-	"prettier": {
-		"useTabs": true,
-		"singleQuote": true,
-		"quoteProps": "as-needed",
-		"trailingComma": "none",
-		"bracketSpacing": false,
-		"arrowParens": "avoid"
-	}
+	"prettier": "@vdemedes/prettier-config"
 }
