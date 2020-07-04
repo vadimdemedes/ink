@@ -1,7 +1,7 @@
 <h1 align="center">
 	<br>
 	<br>
-	<img width="240" alt="Ink" src="media/logo.png">
+	<img width="200" alt="Ink" src="media/logo.png">
 	<br>
 	<br>
 	<br>
