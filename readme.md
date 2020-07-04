@@ -1714,7 +1714,7 @@ You can even inspect and change the props of components, and see the results imm
 - [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms [(live demo)](https://ink-counter-demo.vadimdemedes.repl.run/).
 - [Form with Validation](https://github.com/final-form/rff-cli-example) - Manage form state using [Final Form](https://github.com/final-form/final-form#-final-form).
 - [Borders](examples/borders/border.js) - Add borders to `<Box>` component.
-- [Suspense](examples/suspense/suspenes.js) - Use React Suspense.
+- [Suspense](examples/suspense/suspense.js) - Use React Suspense.
 - [Table](examples/table/table.js) - Render a table with multiple columns and rows.
 - [Focus Management](examples/use-focus/use-focus.js) - Use `useFocus` hook to manage focus between components.
 - [User Input](examples/use-input/use-input.js) - Listen to user input.
