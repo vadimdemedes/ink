@@ -67,7 +67,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Typewriter](https://github.com/segmentio/typewriter) - Generates strongly-typed [Segment](https://segment.com) analytics clients from arbitrary JSON Schema.
 - [Prisma](https://www.prisma.io) - The unified data layer for modern applications.
 - [Wallace](https://www.projectwallace.com) - Pretty CSS analytics on the CLI.
-- [Blitz](https://blitzjs.com) - The Fullstack React Framework — built on Next.js.
+- [Blitz](https://blitzjs.com) - The Fullstack React Framework.
 - [New York Times](https://github.com/nytimes/kyt) - NYT uses Ink `kyt` - a toolkit that encapsulates and manages the configuration for web apps.
 - [tink](https://github.com/npm/tink) - Next-generation runtime and package manager.
 - [loki](https://github.com/oblador/loki) - Visual Regression Testing for Storybook.
