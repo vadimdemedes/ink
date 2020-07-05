@@ -168,7 +168,9 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				input = '';
 			}
 
-			inputHandler(input, key);
+			if (!(input === 'c' && key.ctrl)) {
+				inputHandler(input, key);
+			}
 		};
 
 		stdin?.on('data', handleData);
