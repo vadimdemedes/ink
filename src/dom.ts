@@ -88,6 +88,10 @@ export const appendChildNode = (
 			node.yogaNode.getChildCount()
 		);
 	}
+
+	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
+		markNodeAsDirty(node);
+	}
 };
 
 export const insertBeforeNode = (
@@ -119,6 +123,10 @@ export const insertBeforeNode = (
 			node.yogaNode.getChildCount()
 		);
 	}
+
+	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
+		markNodeAsDirty(node);
+	}
 };
 
 export const removeChildNode = (
@@ -134,6 +142,10 @@ export const removeChildNode = (
 	const index = node.childNodes.indexOf(removeNode);
 	if (index >= 0) {
 		node.childNodes.splice(index, 1);
+	}
+
+	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {
+		markNodeAsDirty(node);
 	}
 };
 
@@ -193,12 +205,18 @@ const measureTextNode = function (
 	return measureText(wrappedText);
 };
 
-const findParentYogaNode = (node?: DOMNode): YogaNode | undefined => {
+const findClosestYogaNode = (node?: DOMNode): YogaNode | undefined => {
 	if (!node || !node.parentNode) {
 		return undefined;
 	}
 
-	return node.yogaNode ?? findParentYogaNode(node.parentNode);
+	return node.yogaNode ?? findClosestYogaNode(node.parentNode);
+};
+
+const markNodeAsDirty = (node?: DOMNode): void => {
+	// Mark closest Yoga node as dirty to measure text dimensions again
+	const yogaNode = findClosestYogaNode(node);
+	yogaNode?.markDirty();
 };
 
 export const setTextNodeValue = (node: TextNode, text: string): void => {
@@ -207,8 +225,5 @@ export const setTextNodeValue = (node: TextNode, text: string): void => {
 	}
 
 	node.nodeValue = text;
-
-	// Mark parent Yoga node as dirty to measure text dimensions again
-	const parentYogaNode = findParentYogaNode(node);
-	parentYogaNode?.markDirty();
+	markNodeAsDirty(node);
 };

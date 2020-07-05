@@ -2,7 +2,8 @@ import React from 'react';
 import test from 'ava';
 import chalk from 'chalk';
 import {renderToString} from './helpers/render-to-string';
-import {Text} from '../src';
+import {render, Box, Text} from '../src';
+import createStdout from './helpers/create-stdout';
 
 test('<Text> with undefined children', t => {
 	const output = renderToString(<Text />);
@@ -117,4 +118,37 @@ test('text with ansi256 background color', t => {
 	);
 
 	t.is(output, chalk.bgAnsi256(194)('Test'));
+});
+
+test('remeasure text when text is changed', t => {
+	const Test = ({add}) => (
+		<Box>
+			<Text>{add ? 'abcx' : 'abc'}</Text>
+		</Box>
+	);
+
+	const stdout = createStdout();
+	const {rerender} = render(<Test />, {stdout, debug: true});
+	t.is(stdout.write.lastCall.args[0], 'abc');
+
+	rerender(<Test add />);
+	t.is(stdout.write.lastCall.args[0], 'abcx');
+});
+
+test('remeasure text when text nodes are changed', t => {
+	const Test = ({add}) => (
+		<Box>
+			<Text>
+				abc
+				{add && <Text>x</Text>}
+			</Text>
+		</Box>
+	);
+
+	const stdout = createStdout();
+	const {rerender} = render(<Test />, {stdout, debug: true});
+	t.is(stdout.write.lastCall.args[0], 'abc');
+
+	rerender(<Test add />);
+	t.is(stdout.write.lastCall.args[0], 'abcx');
 });
