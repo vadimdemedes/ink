@@ -11,7 +11,7 @@ $ npm install ink@next react
 
 ## Breaking changes
 
-### Text must be wrapped in `<Text>` component (#299)
+### Text must be wrapped in `<Text>` component ([#299](https://github.com/vadimdemedes/ink/pull/299))
 
 There are much more details on this change in the linked PR above, but the TLDR is that all text must be wrapped in [`<Text>`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#text) component now. Otherwise Ink will throw an error like this:
 
@@ -29,7 +29,7 @@ If you've used to building apps with React Native, Ink now has the same requirem
 
 **Note:** It's allowed to have nested `<Text>` components.
 
-### Merged `<Color>` component functionality into `<Text>` (#301)
+### Merged `<Color>` component functionality into `<Text>` ([#301](https://github.com/vadimdemedes/ink/pull/301))
 
 In Ink 3 there's no more `<Color>` component. Instead, you can use [`color`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#color) and [`backgroundColor`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#backgroundcolor) props directly in [`<Text>`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#text). The way you specify colors has also changed a bit. Before there was a separate prop for each color, now there are just two props, which accept CSS-like values.
 
@@ -55,11 +55,11 @@ In Ink 3 there's no more `<Color>` component. Instead, you can use [`color`](htt
 <Text color="white" backgroundColor="green">Hello World</Text>
 ```
 
-### Removed `<div>` and `<span>` (#306)
+### Removed `<div>` and `<span>` ([#306](https://github.com/vadimdemedes/ink/pull/306))
 
 It was "illegal" to use these tags directly before, but now they're removed completely. If you are using them, switch from `<div>` to [`<Box>`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#box) and from `<span>` to [`<Text>`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#text).
 
-### Removed `unstable__transformChildren` from `<Box>` and `<Text>` (ab36e7f)
+### Removed `unstable__transformChildren` from `<Box>` and `<Text>` ([ab36e7f](https://github.com/vadimdemedes/ink/commit/ab36e7f))
 
 Previously this function was used to transform the string representation of component's `children`. You can still do the same stuff, but you should use [`<Transform>`](https://github.com/vadimdemedes/ink#transform) component instead.
 
@@ -75,7 +75,7 @@ Previously this function was used to transform the string representation of comp
 </Transform>
 ```
 
-### Removed `AppContext`, `StdinContext` and `StdoutContext` in favor of `useApp`, `useStdin` and `useStdout` hooks 055a196
+### Removed `AppContext`, `StdinContext` and `StdoutContext` in favor of `useApp`, `useStdin` and `useStdout` hooks ([055a196](https://github.com/vadimdemedes/ink/commit/055a196))
 
 Hooks are the future.
 
@@ -111,7 +111,7 @@ const Example = () => {
 };
 ```
 
-### New `<Static>` component (#281)
+### New `<Static>` component ([#281](https://github.com/vadimdemedes/ink/pull/281))
 
 Functionality has remained the same, but API has changed and performance has significantly improved. New API looks very similar to the one commonly used in virtual list libraries, like `react-tiny-virtual-list`.
 
@@ -135,7 +135,7 @@ Functionality has remained the same, but API has changed and performance has sig
 </Static>
 ```
 
-### Log interception (acb6ed2)
+### Log interception ([acb6ed2](https://github.com/vadimdemedes/ink/commit/acb6ed2))
 
 Ink 3 intercepts all output coming from `console.log`, `console.error` and other `console` methods to display them above main Ink output.
 If this is not a desired behavior, you can disable it using `patchConsole` parameter:
@@ -146,7 +146,7 @@ import {render} from 'ink';
 render(<MyApp />, {patchConsole: false});
 ```
 
-### Use `<Transform>` component instead of `unstable__transformChildren` (#277)
+### Use `<Transform>` component instead of `unstable__transformChildren` ([#277](https://github.com/vadimdemedes/ink/pull/277))
 
 Ink 3 introduces a new way to transform the output of text components - [`<Transform>`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#transform).
 The migration should be painless as it accepts the same transformation function as before.
@@ -167,7 +167,7 @@ import {Transform} from 'ink';
 
 Note that it's no longer recommended to apply transformations on `<Box>` components due to unpredictable rendering results.
 
-### Use `measureElement` to measure box dimensions (#307)
+### Use `measureElement` to measure box dimensions ([#307](https://github.com/vadimdemedes/ink/pull/307))
 
 There's a new function exported by `ink` called [`measureElement`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#measureelementref) to measure the dimensions of any `<Box>` component.
 Previously you had to use the undocumented `unstable__getComputedWidth` method.
