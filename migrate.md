@@ -1,6 +1,6 @@
 # Migrate from Ink 2
 
-Ink 3 has a lot of exciting new features, but unfortunately there are some breaking changes.
+Ink 3 has a lot of exciting new features, but unfortunately, there are some breaking changes.
 If you're migrating your app and running into issues that this guide doesn't cover, feel free to open an issue.
 
 ## Install
@@ -11,13 +11,13 @@ $ npm install ink@next react
 
 ## Breaking changes
 
-### Text must be wrapped in `<Text>` component ([#299](https://github.com/vadimdemedes/ink/pull/299))
+### Text must be wrapped in a `<Text>` component ([#299](https://github.com/vadimdemedes/ink/pull/299))
 
-There are much more details on this change in the linked PR above, but the TLDR is that all text must be wrapped in [`<Text>`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#text) component now. Otherwise Ink will throw an error like this:
+There are many more details on this change in the linked PR above, but the TLDR is that all text must be wrapped in a [`<Text>`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#text) component now. Otherwise, Ink will throw an error like this:
 
 > Text string "Hello World" must be rendered inside <Text> component
 
-If you've used to building apps with React Native, Ink now has the same requirement in regards to text so it should feel familiar to you.
+If you're used to building apps with React Native, Ink now has the same requirement in regards to text so it should feel familiar to you.
 
 ```jsx
 // Before
@@ -31,7 +31,7 @@ If you've used to building apps with React Native, Ink now has the same requirem
 
 ### Merged `<Color>` component functionality into `<Text>` ([#301](https://github.com/vadimdemedes/ink/pull/301))
 
-In Ink 3 there's no more `<Color>` component. Instead, you can use [`color`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#color) and [`backgroundColor`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#backgroundcolor) props directly in [`<Text>`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#text). The way you specify colors has also changed a bit. Before there was a separate prop for each color, now there are just two props, which accept CSS-like values.
+In Ink 3 there's no more `<Color>` component. Instead, you can use the [`color`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#color) and [`backgroundColor`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#backgroundcolor) props directly in [`<Text>`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#text). The way you specify colors has also changed a bit. Before there was a separate prop for each color, now there are just two props, which accept CSS-like values.
 
 ```jsx
 // Before
@@ -57,11 +57,11 @@ In Ink 3 there's no more `<Color>` component. Instead, you can use [`color`](htt
 
 ### Removed `<div>` and `<span>` ([#306](https://github.com/vadimdemedes/ink/pull/306))
 
-It was "illegal" to use these tags directly before, but now they're removed completely. If you are using them, switch from `<div>` to [`<Box>`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#box) and from `<span>` to [`<Text>`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#text).
+It was “illegal” to use these tags directly before, but now they're removed completely. If you are using them, switch from `<div>` to [`<Box>`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#box) and from `<span>` to [`<Text>`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#text).
 
 ### Removed `unstable__transformChildren` from `<Box>` and `<Text>` ([ab36e7f](https://github.com/vadimdemedes/ink/commit/ab36e7f))
 
-Previously this function was used to transform the string representation of component's `children`. You can still do the same stuff, but you should use [`<Transform>`](https://github.com/vadimdemedes/ink#transform) component instead.
+Previously this function was used to transform the string representation of a component's `children`. You can achieve the same with the [`<Transform>`](https://github.com/vadimdemedes/ink#transform) component.
 
 ```jsx
 // Before
@@ -113,7 +113,7 @@ const Example = () => {
 
 ### New `<Static>` component ([#281](https://github.com/vadimdemedes/ink/pull/281))
 
-Functionality has remained the same, but API has changed and performance has significantly improved. New API looks very similar to the one commonly used in virtual list libraries, like `react-tiny-virtual-list`.
+The functionality has remained the same, but the API has changed and performance has significantly improved. The new API looks very similar to the one commonly used in virtual list libraries, like `react-tiny-virtual-list`.
 
 ```jsx
 // Before
@@ -138,7 +138,7 @@ Functionality has remained the same, but API has changed and performance has sig
 ### Log interception ([acb6ed2](https://github.com/vadimdemedes/ink/commit/acb6ed2))
 
 Ink 3 intercepts all output coming from `console.log`, `console.error` and other `console` methods to display them above main Ink output.
-If this is not a desired behavior, you can disable it using `patchConsole` parameter:
+If this is not the desired behavior, you can disable it using the `patchConsole` option:
 
 ```jsx
 import {render} from 'ink';
@@ -169,7 +169,7 @@ Note that it's no longer recommended to apply transformations on `<Box>` compone
 
 ### Use `measureElement` to measure box dimensions ([#307](https://github.com/vadimdemedes/ink/pull/307))
 
-There's a new function exported by `ink` called [`measureElement`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#measureelementref) to measure the dimensions of any `<Box>` component.
+There's a new function exported by Ink called [`measureElement`](https://github.com/vadimdemedes/ink/tree/0efbf248d98e680c266d96b624c56490ae280936#measureelementref) that measures the dimensions of any `<Box>` component.
 Previously you had to use the undocumented `unstable__getComputedWidth` method.
 
 ```jsx
