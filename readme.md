@@ -63,10 +63,17 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Gatsby](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing fast websites.
 - [Parcel](https://parceljs.org) - Blazing fast, zero configuration web application bundler.
 - [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
+- [Yarn 2](https://yarnpkg.com) - Fast, reliable, and secure dependency management for JavaScript.
 - [Typewriter](https://github.com/segmentio/typewriter) - Generates strongly-typed [Segment](https://segment.com) analytics clients from arbitrary JSON Schema.
 - [Prisma](https://www.prisma.io) - The unified data layer for modern applications.
 - [Wallace](https://www.projectwallace.com) - Pretty CSS analytics on the CLI.
+- [Blitz](https://blitzjs.com) - The Fullstack React Framework — built on Next.js.
+- [New York Times](https://github.com/nytimes/kyt) - NYT uses Ink `kyt` - a toolkit that encapsulates and manages the configuration for web apps.
 - [tink](https://github.com/npm/tink) - Next-generation runtime and package manager.
+- [loki](https://github.com/oblador/loki) - Visual Regression Testing for Storybook.
+- [Bit](https://github.com/teambit/bit) - Build, distribute and collaborate on components.
+- [Remirror](https://github.com/remirror/remirror) - Your friendly, world-class editor toolkit.
+- [Prime CSS](https://github.com/birkir/prime) - Open Source GraphQL CMS.
 - [Splash](https://github.com/Shopify/polaris-react/tree/master/scripts/splash) - Observe the splash zone of a change across the Shopify's [Polaris](https://polaris.shopify.com) component library.
 - [emoj](https://github.com/sindresorhus/emoj) - Find relevant emoji on the command-line.
 - [emma](https://github.com/maticzav/emma-cli) - Terminal assistant to find and install npm packages.
