@@ -16,8 +16,8 @@ interface Props {
 }
 
 const ErrorOverview: FC<Props> = ({error}) => {
-	const stack = error.stack!.split('\n').slice(1);
-	const origin = stackUtils.parseLine(stack[0]);
+	const stack = error.stack ? error.stack.split('\n').slice(1) : undefined;
+	const origin = stack ? stackUtils.parseLine(stack[0]) : undefined;
 	let excerpt: ExcerptLine[] | undefined;
 	let lineWidth = 0;
 
@@ -77,27 +77,29 @@ const ErrorOverview: FC<Props> = ({error}) => {
 				</Box>
 			)}
 
-			<Box marginTop={1} flexDirection="column">
-				{error
-					.stack!.split('\n')
-					.slice(1)
-					.map(line => {
-						const parsedLine = stackUtils.parseLine(line)!;
+			{error.stack && (
+				<Box marginTop={1} flexDirection="column">
+					{error.stack
+						.split('\n')
+						.slice(1)
+						.map(line => {
+							const parsedLine = stackUtils.parseLine(line)!;
 
-						return (
-							<Box key={line}>
-								<Text dimColor>- </Text>
-								<Text dimColor bold>
-									{parsedLine.function}
-								</Text>
-								<Text dimColor color="gray">
-									{' '}
-									({parsedLine.file}:{parsedLine.line}:{parsedLine.column})
-								</Text>
-							</Box>
-						);
-					})}
-			</Box>
+							return (
+								<Box key={line}>
+									<Text dimColor>- </Text>
+									<Text dimColor bold>
+										{parsedLine.function}
+									</Text>
+									<Text dimColor color="gray">
+										{' '}
+										({parsedLine.file}:{parsedLine.line}:{parsedLine.column})
+									</Text>
+								</Box>
+							);
+						})}
+				</Box>
+			)}
 		</Box>
 	);
 };
