@@ -9,7 +9,7 @@
 
 > React for CLIs. Build and test your CLI output using components.
 
-[![Build Status](https://github.com/vadimdemedes/ink/workflows/tests/badge.svg)](https://github.com/vadimdemedes/ink/actions)
+[![Build Status](https://github.com/vadimdemedes/ink/workflows/test/badge.svg)](https://github.com/vadimdemedes/ink/actions)
 [![npm](https://img.shields.io/npm/dm/ink?logo=npm)](https://npmjs.com/package/ink)
 
 Ink provides the same component-based UI building experience that React offers in the browser, but for command-line apps.
