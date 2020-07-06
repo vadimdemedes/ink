@@ -15,6 +15,12 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node_version }}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.npm
+            **/node_modules
+          key: cache-${{ matrix.node_version }}-${{ hashFiles('**/package.json') }}
       - run: npm install
       - run: npm test -- --serial
         env:
