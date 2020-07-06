@@ -10,12 +10,12 @@ jobs:
         node_version: [10, 12]
 
     steps:
-    - uses: actions/checkout@master
-    - name: Use Node.js ${{ matrix.node_version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node_version }}
-    - run: npm install
-    - run: npm test
-      env:
-        FORCE_COLOR: true
+      - uses: actions/checkout@master
+      - name: Use Node.js ${{ matrix.node_version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node_version }}
+      - run: npm install
+      - run: npm test -- --serial
+        env:
+          FORCE_COLOR: true
