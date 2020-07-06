@@ -83,7 +83,19 @@ const ErrorOverview: FC<Props> = ({error}) => {
 						.split('\n')
 						.slice(1)
 						.map(line => {
-							const parsedLine = stackUtils.parseLine(line)!;
+							const parsedLine = stackUtils.parseLine(line);
+
+							// If the line from the stack cannot be parsed, we print out the unparsed line.
+							if (!parsedLine) {
+								return (
+									<Box key={line}>
+										<Text dimColor>- </Text>
+										<Text dimColor bold>
+											{line}
+										</Text>
+									</Box>
+								);
+							}
 
 							return (
 								<Box key={line}>
