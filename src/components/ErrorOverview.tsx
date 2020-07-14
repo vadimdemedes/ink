@@ -85,6 +85,8 @@ const ErrorOverview: FC<Props> = ({error}) => {
 						.map(line => {
 							const parsedLine = stackUtils.parseLine(line);
 
+							if (!parsedLine) return null;
+
 							// If the line from the stack cannot be parsed, we print out the unparsed line.
 							if (!parsedLine) {
 								return (
