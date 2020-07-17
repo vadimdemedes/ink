@@ -87,6 +87,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [startd](https://github.com/mgrip/startd) - Turn your React component into a web app from the command-line.
 - [wiki-cli](https://github.com/hexrcs/wiki-cli) - Search Wikipedia and read summaries directly in your terminal.
 - [garson](https://github.com/goliney/garson) - Build interactive config-based command-line interfaces.
+- [Terraform CDK](https://github.com/hashicorp/terraform-cdk) - CDK (Cloud Development Kit) for HashiCorp Terraform.
 
 ## Contents
 
