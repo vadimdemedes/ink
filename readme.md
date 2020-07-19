@@ -114,7 +114,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Useful Hooks](#useful-hooks)
 - [Examples](#examples)
 
-## Getting Started
+## Getting Started[⬆](#contents)<!-- Link generated with jump2header -->
 
 Use [create-ink-app](https://github.com/vadimdemedes/create-ink-app) to quickly scaffold a new Ink-based CLI.
 
@@ -185,9 +185,9 @@ Think of it as if each `<div>` in the browser had `display: flex`.
 See [`<Box>`](#box) built-in component below for documentation on how to use Flexbox layouts in Ink.
 Note that all text must be wrapped in a [`<Text>`](#text) component.
 
-## Components
+## Components[⬆](#contents)<!-- Link generated with jump2header -->
 
-### `<Text>`
+### `<Text>`[⬆](#contents)<!-- Link generated with jump2header -->
 
 This component can display text, and change its style to make it bold, underline, italic or strikethrough.
 
@@ -316,7 +316,7 @@ If `truncate-*` is passed, Ink will truncate text instead, which will result in 
 //=> '…World'
 ```
 
-### `<Box>`
+### `<Box>`[⬆](#contents)<!-- Link generated with jump2header -->
 
 `<Box>` is an essential Ink component to build your layout.
 It's like `<div style="display: flex">` in the browser.
@@ -826,7 +826,7 @@ Accepts the same values as [`color`](#color) in `<Text>` component.
 
 <img src="media/box-borderColor.jpg" width="228">
 
-### `<Newline>`
+### `<Newline>`[⬆](#contents)<!-- Link generated with jump2header -->
 
 Adds one or more newline (`\n`) characters.
 Must be used within `<Text>` components.
@@ -859,7 +859,7 @@ Hello
 World
 ```
 
-### `<Spacer>`
+### `<Spacer>`[⬆](#contents)<!-- Link generated with jump2header -->
 
 A flexible space that expands along the major axis of its containing layout.
 It's useful as a shortcut for filling all the available spaces between elements.
@@ -897,7 +897,7 @@ const Example = () => (
 render(<Example />);
 ```
 
-### `<Static>`
+### `<Static>`[⬆](#contents)<!-- Link generated with jump2header -->
 
 `<Static>` component permanently renders its output above everything else.
 It's useful for displaying activity like completed tasks or logs - things that
@@ -1015,7 +1015,7 @@ Note that `key` must be assigned to the root component.
 </Static>
 ```
 
-### `<Transform>`
+### `<Transform>`[⬆](#contents)<!-- Link generated with jump2header -->
 
 Transform a string representation of React components before they are written to output.
 For example, you might want to apply a [gradient to text](https://github.com/sindresorhus/ink-gradient), [add a clickable link](https://github.com/sindresorhus/ink-link) or [create some text effects](https://github.com/sindresorhus/ink-big-text).
@@ -1051,9 +1051,9 @@ Type: `string`
 
 Output of child components.
 
-## Hooks
+## Hooks[⬆](#contents)<!-- Link generated with jump2header -->
 
-### useInput(inputHandler, options?)
+### useInput(inputHandler, options?)[⬆](#contents)<!-- Link generated with jump2header -->
 
 This hook is used for handling user input.
 It's a more convienient alternative to using `useStdin` and listening to `data` events.
@@ -1179,7 +1179,7 @@ Default: `true`
 Enable or disable capturing of user input.
 Useful when there are multiple `useInput` hooks used at once to avoid handling the same input several times.
 
-### useApp()
+### useApp()[⬆](#contents)<!-- Link generated with jump2header -->
 
 `useApp` is a React hook, which exposes a method to manually exit the app (unmount).
 
@@ -1212,7 +1212,7 @@ const Example = () => {
 };
 ```
 
-### useStdin()
+### useStdin()[⬆](#contents)<!-- Link generated with jump2header -->
 
 `useStdin` is a React hook, which exposes stdin stream.
 
@@ -1286,7 +1286,7 @@ const Example = () => {
 };
 ```
 
-### useStdout()
+### useStdout()[⬆](#contents)<!-- Link generated with jump2header -->
 
 `useStdout` is a React hook, which exposes stdout stream, where Ink renders your app.
 
@@ -1334,7 +1334,7 @@ const Example = () => {
 
 See additional usage example in [examples/use-stdout](examples/use-stdout/use-stdout.js).
 
-### useStderr()
+### useStderr()[⬆](#contents)<!-- Link generated with jump2header -->
 
 `useStderr` is a React hook, which exposes stderr stream.
 
@@ -1383,7 +1383,7 @@ const Example = () => {
 };
 ```
 
-### useFocus(options?)
+### useFocus(options?)[⬆](#contents)<!-- Link generated with jump2header -->
 
 Component that uses `useFocus` hook becomes "focusable" to Ink, so when user presses <kbd>Tab</kbd>, Ink will switch focus to this component.
 If there are multiple components that execute `useFocus` hook, focus will be given to them in the order that these components are rendered in.
@@ -1420,7 +1420,7 @@ render(<Example />);
 
 See example in [examples/use-focus](examples/use-focus/use-focus.js).
 
-### useFocusManager()
+### useFocusManager()[⬆](#contents)<!-- Link generated with jump2header -->
 
 This hook exposes methods to enable or disable focus management for all components or manually switch focus to next or previous components.
 
@@ -1507,7 +1507,7 @@ const Example = () => {
 };
 ```
 
-## API
+## API[⬆](#contents)<!-- Link generated with jump2header -->
 
 #### render(tree, options?)
 
@@ -1653,7 +1653,7 @@ const Example = () => {
 render(<Example />);
 ```
 
-## Testing
+## Testing[⬆](#contents)<!-- Link generated with jump2header -->
 
 Ink components are simple to test with [ink-testing-library](https://github.com/vadimdemedes/ink-testing-library).
 Here's a simple example that checks how component is rendered:
@@ -1671,7 +1671,7 @@ lastFrame() === 'Hello World'; //=> true
 
 Check out [ink-testing-library](https://github.com/vadimdemedes/ink-testing-library) for more examples and full documentation.
 
-## Using React Devtools
+## Using React Devtools[⬆](#contents)<!-- Link generated with jump2header -->
 
 ![](media/devtools.jpg)
 
@@ -1693,7 +1693,7 @@ You can even inspect and change the props of components, and see the results imm
 
 **Note**: You must manually quit your CLI via <kbd>Ctrl</kbd>+<kbd>C</kbd> after you're done testing.
 
-## Useful Components
+## Useful Components[⬆](#contents)<!-- Link generated with jump2header -->
 
 - [ink-text-input](https://github.com/vadimdemedes/ink-text-input) - Text input.
 - [ink-spinner](https://github.com/vadimdemedes/ink-spinner) - Spinner.
@@ -1713,11 +1713,11 @@ You can even inspect and change the props of components, and see the results imm
 - [ink-quicksearch-input](https://github.com/Eximchain/ink-quicksearch-input) - Select component with fast quicksearch-like navigation.
 - [ink-confirm-input](https://github.com/kevva/ink-confirm-input) - Yes/No confirmation input.
 
-## Useful Hooks
+## Useful Hooks[⬆](#contents)<!-- Link generated with jump2header -->
 
 - [ink-use-stdout-dimensions](https://github.com/cameronhunter/ink-monorepo/tree/master/packages/ink-use-stdout-dimensions) - Subscribe to stdout dimensions.
 
-## Examples
+## Examples[⬆](#contents)<!-- Link generated with jump2header -->
 
 - [Jest](examples/jest/jest.js) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
 - [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms [(live demo)](https://ink-counter-demo.vadimdemedes.repl.run/).
