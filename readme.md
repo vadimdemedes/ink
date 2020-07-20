@@ -64,6 +64,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Parcel](https://parceljs.org) - Blazing fast, zero configuration web application bundler.
 - [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
 - [Yarn 2](https://yarnpkg.com) - Fast, reliable, and secure dependency management for JavaScript.
+- [Terraform CDK](https://github.com/hashicorp/terraform-cdk) - CDK (Cloud Development Kit) for HashiCorp Terraform.
 - [Typewriter](https://github.com/segmentio/typewriter) - Generates strongly-typed [Segment](https://segment.com) analytics clients from arbitrary JSON Schema.
 - [Prisma](https://www.prisma.io) - The unified data layer for modern applications.
 - [Wallace](https://www.projectwallace.com) - Pretty CSS analytics on the CLI.
@@ -87,7 +88,6 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [startd](https://github.com/mgrip/startd) - Turn your React component into a web app from the command-line.
 - [wiki-cli](https://github.com/hexrcs/wiki-cli) - Search Wikipedia and read summaries directly in your terminal.
 - [garson](https://github.com/goliney/garson) - Build interactive config-based command-line interfaces.
-- [Terraform CDK](https://github.com/hashicorp/terraform-cdk) - CDK (Cloud Development Kit) for HashiCorp Terraform.
 
 ## Contents
 
