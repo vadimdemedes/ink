@@ -31,7 +31,7 @@ export interface Key {
 	pageDown: boolean;
 
 	/**
-	 * Page Up key was pressed
+	 * Page Up key was pressed.
 	 */
 	pageUp: boolean;
 
