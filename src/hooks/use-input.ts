@@ -26,7 +26,7 @@ export interface Key {
 	rightArrow: boolean;
 
 	/**
-	 * Page Down key was pressed
+	 * Page Down key was pressed.
 	 */
 	pageDown: boolean;
 
