@@ -2,7 +2,7 @@ import {
 	unstable_scheduleCallback as schedulePassiveEffects,
 	unstable_cancelCallback as cancelPassiveEffects
 } from 'scheduler';
-import createReconciler from 'react-reconciler';
+import createReconciler = require('react-reconciler');
 import Yoga from 'yoga-layout-prebuilt';
 import {
 	createTextNode,

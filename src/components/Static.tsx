@@ -1,4 +1,4 @@
-import React, {useMemo, useState, useEffect} from 'react';
+import * as React from 'react';
 import type {ReactNode} from 'react';
 import type {Styles} from '../styles';
 
@@ -35,13 +35,13 @@ export interface Props<T> extends Styles {
  */
 const Static = <T,>(props: Props<T>) => {
 	const {items, children: render, style: customStyle} = props;
-	const [index, setIndex] = useState(0);
+	const [index, setIndex] = React.useState(0);
 
-	const itemsToRender: T[] = useMemo(() => {
+	const itemsToRender: T[] = React.useMemo(() => {
 		return items.slice(index);
 	}, [items, index]);
 
-	useEffect(() => {
+	React.useEffect(() => {
 		setIndex(items.length);
 	}, [items.length]);
 
@@ -49,7 +49,7 @@ const Static = <T,>(props: Props<T>) => {
 		return render(item, index + itemIndex);
 	});
 
-	const style: Styles = useMemo(
+	const style: Styles = React.useMemo(
 		() => ({
 			position: 'absolute',
 			flexDirection: 'column',

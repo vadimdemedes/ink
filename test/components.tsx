@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
 import React, {useState, Component, FC} from 'react';
 import test from 'ava';
-import chalk from 'chalk';
+import chalk = require('chalk');
 import {spy} from 'sinon';
 import {renderToString} from './helpers/render-to-string';
 import {run} from './helpers/run';

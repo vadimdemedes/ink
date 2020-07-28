@@ -154,7 +154,7 @@ $ npm install --save-dev @babel/preset-react
 Next, create a file `source.js`, where you'll type code that uses Ink:
 
 ```jsx
-import React from 'react';
+import * as React from 'react';
 import {render, Text} from 'ink';
 
 const Demo = () => <Text>Hello World</Text>;
@@ -1659,7 +1659,7 @@ Ink components are simple to test with [ink-testing-library](https://github.com/
 Here's a simple example that checks how component is rendered:
 
 ```jsx
-import React from 'react';
+import * as React from 'react';
 import {Text} from 'ink';
 import {render} from 'ink-testing-library';
 

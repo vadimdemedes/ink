@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import type {FC} from 'react';
 
 export interface Props {

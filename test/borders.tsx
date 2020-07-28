@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import test from 'ava';
 import boxen from 'boxen';
 import type {Options} from 'boxen';

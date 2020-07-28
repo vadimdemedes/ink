@@ -1,6 +1,6 @@
 import React, {Suspense} from 'react';
 import test from 'ava';
-import chalk from 'chalk';
+import chalk = require('chalk');
 import {Box, Text, render} from '../src';
 import createStdout from './helpers/create-stdout';
 

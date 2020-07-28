@@ -1,12 +1,12 @@
 import Yoga from 'yoga-layout-prebuilt';
 import widestLine from 'widest-line';
-import indentString from 'indent-string';
+import indentString = require('indent-string');
 import wrapText from './wrap-text';
 import getMaxWidth from './get-max-width';
 import squashTextNodes from './squash-text-nodes';
 import renderBorder from './render-border';
 import type {DOMElement} from './dom';
-import Output from './output';
+import type Output from './output';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.

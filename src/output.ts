@@ -1,4 +1,4 @@
-import sliceAnsi from 'slice-ansi';
+import sliceAnsi = require('slice-ansi');
 import stringLength from 'string-length';
 import type {OutputTransformer} from './render-node-to-output';
 

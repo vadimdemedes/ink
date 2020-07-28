@@ -1,6 +1,6 @@
-import React from 'react';
+import * as React from 'react';
 import type {FC, ReactNode} from 'react';
-import chalk from 'chalk';
+import chalk = require('chalk');
 import colorize from '../colorize';
 import type {Styles} from '../styles';
 

@@ -1,9 +1,10 @@
 {
 	"extends": "@sindresorhus/tsconfig",
 	"compilerOptions": {
-		"esModuleInterop": true,
 		"outDir": "build",
-		"sourceMap": true
+		"sourceMap": true,
+		"isolatedModules": true,
+		"importsNotUsedAsValues": "error"
 	},
 	"include": ["src"]
 }

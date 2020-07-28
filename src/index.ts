@@ -1,18 +1,22 @@
-export {default as render, RenderOptions, Instance} from './render';
-export {default as Box, Props as BoxProps} from './components/Box';
-export {default as Text, Props as TextProps} from './components/Text';
-export {Props as AppProps} from './components/AppContext';
-export {Props as StdinProps} from './components/StdinContext';
-export {Props as StdoutProps} from './components/StdoutContext';
-export {Props as StderrProps} from './components/StderrContext';
-export {default as Static, Props as StaticProps} from './components/Static';
-export {
-	default as Transform,
-	Props as TransformProps
-} from './components/Transform';
-export {default as Newline, Props as NewlineProps} from './components/Newline';
+export {default as render} from './render';
+export {default as Box} from './components/Box';
+export {default as Text} from './components/Text';
+export type {RenderOptions, Instance} from './render';
+export type {Props as BoxProps} from './components/Box';
+export type {Props as TextProps} from './components/Text';
+export type {Props as AppProps} from './components/AppContext';
+export type {Props as StdinProps} from './components/StdinContext';
+export type {Props as StdoutProps} from './components/StdoutContext';
+export type {Props as StderrProps} from './components/StderrContext';
+export {default as Static} from './components/Static';
+export type {Props as StaticProps} from './components/Static';
+export {default as Transform} from './components/Transform';
+export type {Props as TransformProps} from './components/Transform';
+export {default as Newline} from './components/Newline';
+export type {Props as NewlineProps} from './components/Newline';
 export {default as Spacer} from './components/Spacer';
-export {default as useInput, Key} from './hooks/use-input';
+export {default as useInput} from './hooks/use-input';
+export type {Key} from './hooks/use-input';
 export {default as useApp} from './hooks/use-app';
 export {default as useStdin} from './hooks/use-stdin';
 export {default as useStdout} from './hooks/use-stdout';

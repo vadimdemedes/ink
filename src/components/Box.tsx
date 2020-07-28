@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import React, {forwardRef} from 'react';
-import type {PropsWithChildren} from 'react';
+import * as React from 'react';
 import type {Except} from 'type-fest';
 import type {Styles} from '../styles';
 import type {DOMElement} from '../dom';
@@ -52,7 +51,7 @@ export type Props = Except<Styles, 'textWrap'> & {
 /**
  * `<Box>` is an essential Ink component to build your layout. It's like `<div style="display: flex">` in the browser.
  */
-const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
+const Box = React.forwardRef<DOMElement, React.PropsWithChildren<Props>>(
 	({children, ...style}, ref) => {
 		const transformedStyle = {
 			...style,

@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import {render, Text, useApp, useStdin} from '../..';
 
 class Exit extends React.Component<{
