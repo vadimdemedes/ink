@@ -191,6 +191,32 @@ test('fail when text node is not within <Text> component', t => {
 	);
 });
 
+test('fail when <Box> is inside <Text> component', t => {
+	let error;
+
+	class ErrorBoundary extends Component {
+		render() {
+			return this.props.children;
+		}
+
+		componentDidCatch(reactError) {
+			error = reactError;
+		}
+	}
+
+	renderToString(
+		<ErrorBoundary>
+			<Text>
+				Hello World
+				<Box />
+			</Text>
+		</ErrorBoundary>
+	);
+
+	t.truthy(error);
+	t.is(error.message, '<Box> can’t be nested inside <Text> component');
+});
+
 test('remesure text dimensions on text change', t => {
 	const stdout = createStdout();
 
