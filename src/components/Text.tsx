@@ -3,17 +3,19 @@ import type {FC, ReactNode} from 'react';
 import chalk from 'chalk';
 import colorize from '../colorize';
 import type {Styles} from '../styles';
+import type {LiteralUnion} from 'type-fest';
+import type {ForegroundColor, BackgroundColor} from 'chalk';
 
 export interface Props {
 	/**
 	 * Change text color. Ink uses chalk under the hood, so all its functionality is supported.
 	 */
-	readonly color?: string;
+	readonly color?: LiteralUnion<typeof ForegroundColor, string>;
 
 	/**
 	 * Same as `color`, but for background.
 	 */
-	readonly backgroundColor?: string;
+	readonly backgroundColor?: LiteralUnion<typeof BackgroundColor, string>;
 
 	/**
 	 * Dim the color (emit a small amount of light).
