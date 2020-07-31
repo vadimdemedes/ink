@@ -211,6 +211,8 @@ const Example = () => (
 render(<Example />);
 ```
 
+**Note:** `<Text>` allows only text nodes and nested `<Text>` components inside of it. For example, `<Box>` component can't be used inside `<Text>`.
+
 #### color
 
 Type: `string`

@@ -27,7 +27,7 @@ If you're used to building apps with React Native, Ink now has the same requirem
 <Text>Hello World</Text>
 ```
 
-**Note:** It's allowed to have nested `<Text>` components.
+**Note:** It's allowed to have nested `<Text>` components. `<Box>` can't be used inside `<Text>` component.
 
 ### Merged `<Color>` component functionality into `<Text>` ([#301](https://github.com/vadimdemedes/ink/pull/301))
 

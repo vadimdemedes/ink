@@ -90,6 +90,10 @@ export default createReconciler<
 	},
 	shouldSetTextContent: () => false,
 	createInstance: (originalType, newProps, _root, hostContext) => {
+		if (hostContext.isInsideText && originalType === 'ink-box') {
+			throw new Error(`<Box> can’t be nested inside <Text> component`);
+		}
+
 		const type =
 			originalType === 'ink-text' && hostContext.isInsideText
 				? 'ink-virtual-text'
