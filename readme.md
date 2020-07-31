@@ -205,6 +205,7 @@ const Example = () => (
 		<Text italic>I am italic</Text>
 		<Text underline>I am underline</Text>
 		<Text strikethrough>I am strikethrough</Text>
+		<Text inverse>I am inversed</Text>
 	</>
 );
 
@@ -254,6 +255,21 @@ Dim the color (emit a small amount of light).
 ```
 
 <img src="media/text-dimColor.jpg" width="138">
+
+#### inverse
+
+Type: `boolean`\
+Default: `false`
+
+Inverse background and foreground colors.
+
+```jsx
+<Text color="yellow" inverse>
+	Inversed Yellow
+</Text>
+```
+
+<img src="media/text-inverse.png" width="138">
 
 #### bold
 
