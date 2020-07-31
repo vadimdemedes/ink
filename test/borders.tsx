@@ -1,10 +1,12 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import test from 'ava';
 import boxen from 'boxen';
 import type {Options} from 'boxen';
 import indentString from 'indent-string';
+import delay from 'delay';
 import {renderToString} from './helpers/render-to-string';
-import {Box, Text} from '../src';
+import createStdout from './helpers/create-stdout';
+import {render, Box, Text} from '../src';
 
 const box = (text: string, options?: Options): string => {
 	return boxen(text, {
@@ -226,4 +228,35 @@ test('nested boxes', t => {
 
 	const nestedBox = indentString(box('\n Hello World \n'), 1);
 	t.is(output, box(`${' '.repeat(38)}\n${nestedBox}\n`));
+});
+
+test('render border after update', async t => {
+	const stdout = createStdout();
+
+	const Test = () => {
+		const [borderColor, setBorderColor] = useState();
+
+		useEffect(() => {
+			setBorderColor('green');
+		}, []);
+
+		return (
+			<Box borderStyle="round" borderColor={borderColor}>
+				<Text>Hello World</Text>
+			</Box>
+		);
+	};
+
+	render(<Test />, {
+		stdout,
+		debug: true
+	});
+
+	t.is(stdout.write.lastCall.args[0], box('Hello World'.padEnd(98, ' ')));
+	await delay(100);
+
+	t.is(
+		stdout.write.lastCall.args[0],
+		box('Hello World'.padEnd(98, ' '), {borderColor: 'green'})
+	);
 });
