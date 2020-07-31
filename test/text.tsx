@@ -120,6 +120,11 @@ test('text with ansi256 background color', t => {
 	t.is(output, chalk.bgAnsi256(194)('Test'));
 });
 
+test('text with inversion', t => {
+	const output = renderToString(<Text inverse>Test</Text>);
+	t.is(output, chalk.inverse('Test'));
+});
+
 test('remeasure text when text is changed', t => {
 	const Test = ({add}) => (
 		<Box>
