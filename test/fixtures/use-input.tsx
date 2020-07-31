@@ -50,6 +50,16 @@ const UserInput: FC<{test: string}> = ({test}) => {
 			return;
 		}
 
+		if (test === 'pageDown' && key.pageDown) {
+			exit();
+			return;
+		}
+
+		if (test === 'pageUp' && key.pageUp) {
+			exit();
+			return;
+		}
+
 		if (test === 'tab' && input === '' && key.tab) {
 			exit();
 			return;

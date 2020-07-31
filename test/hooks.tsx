@@ -112,6 +112,20 @@ test('useInput - handle right arrow', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test('useInput - handle page down', async t => {
+	const ps = term('use-input', ['pageDown']);
+	ps.write('\u001B[6~');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test('useInput - handle page up', async t => {
+	const ps = term('use-input', ['pageUp']);
+	ps.write('\u001B[5~');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test('useInput - handle Tab', async t => {
 	const ps = term('use-input', ['tab']);
 	ps.write('\t');

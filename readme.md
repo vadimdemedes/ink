@@ -1160,6 +1160,16 @@ Default: `false`
 
 Delete key was pressed.
 
+###### key.pageDown
+
+###### key.pageUp
+
+Type: `boolean`\
+Default: `false`
+
+If Page Up or Page Down key was pressed, the corresponding property will be `true`.
+For example, if user presses Page Down, `key.pageDown` equals `true`.
+
 ###### key.meta
 
 Type: `boolean`\

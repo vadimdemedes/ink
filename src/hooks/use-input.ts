@@ -26,6 +26,16 @@ export interface Key {
 	rightArrow: boolean;
 
 	/**
+	 * Page Down key was pressed.
+	 */
+	pageDown: boolean;
+
+	/**
+	 * Page Up key was pressed.
+	 */
+	pageUp: boolean;
+
+	/**
 	 * Return (Enter) key was pressed.
 	 */
 	return: boolean;
@@ -130,6 +140,8 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				downArrow: input === '\u001B[B',
 				leftArrow: input === '\u001B[D',
 				rightArrow: input === '\u001B[C',
+				pageDown: input === '\u001B[6~',
+				pageUp: input === '\u001B[5~',
 				return: input === '\r',
 				escape: input === '\u001B',
 				ctrl: false,
