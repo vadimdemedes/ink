@@ -1111,16 +1111,6 @@ Default: `false`
 If an arrow key was pressed, the corresponding property will be `true`.
 For example, if user presses left arrow key, `key.leftArrow` equals `true`.
 
-###### key.pageDown
-
-###### key.pageUp
-
-Type: `boolean`\
-Default: `false`
-
-If PageUp or PageDown was pressed, the corresponding property will be `true`.
-For example, if user presses PageDown, `key.pageDown` equals `true`.
-
 ###### key.return
 
 Type: `boolean`\
@@ -1169,6 +1159,16 @@ Type: `boolean`\
 Default: `false`
 
 Delete key was pressed.
+
+###### key.pageDown
+
+###### key.pageUp
+
+Type: `boolean`\
+Default: `false`
+
+If PageUp or PageDown was pressed, the corresponding property will be `true`.
+For example, if user presses PageDown, `key.pageDown` equals `true`.
 
 ###### key.meta
 
