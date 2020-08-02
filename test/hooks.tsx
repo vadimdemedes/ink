@@ -28,7 +28,7 @@ const term = (fixture: string, args: string[] = []) => {
 			// TODO: Send a signal from the Ink process when it's ready to accept input instead
 			setTimeout(() => {
 				ps.write(input);
-			}, 2000);
+			}, 3000);
 		},
 		output: '',
 		waitForExit: () => exitPromise
