@@ -16,6 +16,8 @@ export interface Props {
 	 * A boolean flag determining if the current `stdin` supports `setRawMode`. A component using `setRawMode` might want to use `isRawModeSupported` to nicely fall back in environments where raw mode is not supported.
 	 */
 	readonly isRawModeSupported: boolean;
+
+	readonly internal_exitOnCtrlC: boolean;
 }
 
 /**
@@ -24,7 +26,8 @@ export interface Props {
 const StdinContext = createContext<Props>({
 	stdin: undefined,
 	setRawMode: () => {},
-	isRawModeSupported: false
+	isRawModeSupported: false,
+	internal_exitOnCtrlC: true
 });
 
 StdinContext.displayName = 'InternalStdinContext';

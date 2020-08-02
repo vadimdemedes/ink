@@ -163,6 +163,13 @@ test('useInput - ignore input if not active', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test('useInput - handle Ctrl+C when `exitOnCtrlC` is `false`', async t => {
+	const ps = term('use-input-ctrl-c');
+	ps.write('\u0003');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test('useStdout - write to stdout', async t => {
 	const ps = term('use-stdout');
 	await ps.waitForExit();
