@@ -264,7 +264,7 @@ Default: `false`
 Inverse background and foreground colors.
 
 ```jsx
-<Text color="yellow" inverse>
+<Text inverse color="yellow">
 	Inversed Yellow
 </Text>
 ```
