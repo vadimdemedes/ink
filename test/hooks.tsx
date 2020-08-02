@@ -25,9 +25,10 @@ const term = (fixture: string, args: string[] = []) => {
 	const result = {
 		write: (input: string) => {
 			// Give TS and Ink time to start up and render UI
+			// TODO: Send a signal from the Ink process when it's ready to accept input instead
 			setTimeout(() => {
 				ps.write(input);
-			}, 1000);
+			}, 3000);
 		},
 		output: '',
 		waitForExit: () => exitPromise
@@ -160,6 +161,13 @@ test('useInput - ignore input if not active', async t => {
 	await ps.waitForExit();
 	t.false(ps.output.includes('xx'));
 	t.true(ps.output.includes('x'));
+	t.true(ps.output.includes('exited'));
+});
+
+test('useInput - handle Ctrl+C when `exitOnCtrlC` is `false`', async t => {
+	const ps = term('use-input-ctrl-c');
+	ps.write('\u0003');
+	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
 

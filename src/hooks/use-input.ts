@@ -113,7 +113,7 @@ interface Options {
  * ```
  */
 const useInput = (inputHandler: Handler, options: Options = {}) => {
-	const {stdin, setRawMode} = useStdin();
+	const {stdin, setRawMode, internal_exitOnCtrlC} = useStdin();
 
 	useEffect(() => {
 		if (options.isActive === false) {
@@ -180,7 +180,8 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				input = '';
 			}
 
-			if (!(input === 'c' && key.ctrl)) {
+			// If app is not supposed to exit on Ctrl+C, then let input listener handle it
+			if (!(input === 'c' && key.ctrl) || !internal_exitOnCtrlC) {
 				inputHandler(input, key);
 			}
 		};
@@ -190,7 +191,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 		return () => {
 			stdin?.off('data', handleData);
 		};
-	}, [options.isActive, stdin, inputHandler]);
+	}, [options.isActive, stdin, internal_exitOnCtrlC, inputHandler]);
 };
 
 export default useInput;
