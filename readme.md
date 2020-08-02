@@ -205,6 +205,7 @@ const Example = () => (
 		<Text italic>I am italic</Text>
 		<Text underline>I am underline</Text>
 		<Text strikethrough>I am strikethrough</Text>
+		<Text inverse>I am inversed</Text>
 	</>
 );
 
@@ -284,6 +285,21 @@ Type: `boolean`\
 Default: `false`
 
 Make the text crossed with a line.
+
+#### inverse
+
+Type: `boolean`\
+Default: `false`
+
+Inverse background and foreground colors.
+
+```jsx
+<Text inverse color="yellow">
+	Inversed Yellow
+</Text>
+```
+
+<img src="media/text-inverse.jpg" width="138">
 
 #### wrap
 
