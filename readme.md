@@ -269,7 +269,7 @@ Inverse background and foreground colors.
 </Text>
 ```
 
-<img src="media/text-inverse.png" width="138">
+<img src="media/text-inverse.jpg" width="138">
 
 #### bold
 
