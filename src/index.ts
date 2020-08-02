@@ -20,3 +20,4 @@ export {default as useStderr} from './hooks/use-stderr';
 export {default as useFocus} from './hooks/use-focus';
 export {default as useFocusManager} from './hooks/use-focus-manager';
 export {default as measureElement} from './measure-element';
+export {DOMElement} from './dom';
