@@ -74,7 +74,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [loki](https://github.com/oblador/loki) - Visual Regression Testing for Storybook.
 - [Bit](https://github.com/teambit/bit) - Build, distribute and collaborate on components.
 - [Remirror](https://github.com/remirror/remirror) - Your friendly, world-class editor toolkit.
-- [Prime CSS](https://github.com/birkir/prime) - Open Source GraphQL CMS.
+- [Prime](https://github.com/birkir/prime) - Open source GraphQL CMS.
 - [Splash](https://github.com/Shopify/polaris-react/tree/master/scripts/splash) - Observe the splash zone of a change across the Shopify's [Polaris](https://polaris.shopify.com) component library.
 - [emoj](https://github.com/sindresorhus/emoj) - Find relevant emoji on the command-line.
 - [emma](https://github.com/maticzav/emma-cli) - Terminal assistant to find and install npm packages.
