@@ -19,7 +19,7 @@ const Example = () => {
 					}
 				]);
 
-				setTimeout(run, 100);
+				timer = setTimeout(run, 100);
 			}
 		};
 
