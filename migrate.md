@@ -199,3 +199,19 @@ const Example = () => {
 	return <Box ref={boxRef}>Hello World</Box>;
 };
 ```
+
+### Text is wrapped by default
+
+Previously, [`<Box>`](https://github.com/vadimdemedes/ink/tree/v2.7.1#box) had a [`textWrap`](https://github.com/vadimdemedes/ink/tree/v2.7.1#textwrap) property, which would specify if and how text inside that element should be wrapped.
+In Ink 3 all text is wrapped by default based on container's dimensions and `textWrap` property has moved to [`<Text>`](https://github.com/vadimdemedes/ink#text) component instead and is now named [`wrap`](https://github.com/vadimdemedes/ink#wrap).
+It acceps the same values as before.
+
+```jsx
+// Before
+<Box textWrap="wrap">Hello World</Box>
+<Box textWrap="truncate">Hello World</Box>
+
+// After
+<Text>Hello World</Text>
+<Text wrap="truncate">Hello World</Text>
+```
