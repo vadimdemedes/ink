@@ -360,6 +360,28 @@ test('skip previous output when rendering new static output', t => {
 	t.is(stdout.write.lastCall.args[0], 'A\nB\n');
 });
 
+test('render only new items in static output on final render', t => {
+	const stdout = createStdout();
+
+	const Dynamic: FC<{items: string[]}> = ({items}) => (
+		<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
+	);
+
+	const {rerender, unmount} = render(<Dynamic items={[]} />, {
+		stdout,
+		debug: true
+	});
+
+	t.is(stdout.write.lastCall.args[0], '');
+
+	rerender(<Dynamic items={['A']} />);
+	t.is(stdout.write.lastCall.args[0], 'A\n');
+
+	rerender(<Dynamic items={['A', 'B']} />);
+	unmount();
+	t.is(stdout.write.lastCall.args[0], 'A\nB\n');
+});
+
 // See https://github.com/chalk/wrap-ansi/issues/27
 test('ensure wrap-ansi doesn’t trim leading whitespace', t => {
 	const output = renderToString(<Text color="red">{' ERROR '}</Text>);

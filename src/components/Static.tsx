@@ -1,4 +1,4 @@
-import React, {useMemo, useState, useEffect} from 'react';
+import React, {useMemo, useState, useLayoutEffect} from 'react';
 import type {ReactNode} from 'react';
 import type {Styles} from '../styles';
 
@@ -41,7 +41,7 @@ const Static = <T,>(props: Props<T>) => {
 		return items.slice(index);
 	}, [items, index]);
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		setIndex(items.length);
 	}, [items.length]);
 
