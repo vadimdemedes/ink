@@ -148,7 +148,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				shift: false,
 				tab: input === '\t' || input === '\u001B[Z',
 				backspace: input === '\u0008',
-				delete: input === '\u007F',
+				delete: input === '\u007F' || input === '\u001B[3~',
 				meta: false
 			};
 
