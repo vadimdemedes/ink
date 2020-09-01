@@ -1,6 +1,7 @@
 import React from 'react';
 import type {ReactNode} from 'react';
 import throttle from 'lodash.throttle';
+import type {DebouncedFunc} from 'lodash';
 import logUpdate from './log-update';
 import type {LogUpdate} from './log-update';
 import ansiEscapes from 'ansi-escapes';
@@ -31,7 +32,7 @@ export interface Options {
 export default class Ink {
 	private readonly options: Options;
 	private readonly log: LogUpdate;
-	private readonly throttledLog: LogUpdate;
+	private readonly throttledLog: LogUpdate | DebouncedFunc<LogUpdate>;
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
 	private lastOutput: string;
