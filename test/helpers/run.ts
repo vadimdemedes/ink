@@ -2,7 +2,7 @@ import {spawn} from 'node-pty';
 
 type Run = (
 	fixture: string,
-	props?: {env?: Record<string, unknown>}
+	props?: {env?: Record<string, unknown>; columns?: number}
 ) => Promise<string>;
 
 export const run: Run = (fixture, props) => {
@@ -14,7 +14,7 @@ export const run: Run = (fixture, props) => {
 	return new Promise<string>((resolve, reject) => {
 		const term = spawn('ts-node', [`${__dirname}/../fixtures/${fixture}.tsx`], {
 			name: 'xterm-color',
-			cols: 100,
+			cols: typeof props?.columns === 'number' ? props.columns : 100,
 			cwd: __dirname,
 			env
 		});
