@@ -116,9 +116,9 @@ export default class Ink {
 
 		const {output, outputHeight, staticOutput} = render(
 			this.rootNode,
-			// The 'columns' property can be undefined when not using a TTY.
+			// The 'columns' property can be undefined or 0 when not using a TTY.
 			// In that case we fall back to 80.
-			this.options.stdout.columns ?? 80
+			this.options.stdout.columns || 80
 		);
 
 		// If <Static> output isn't empty, it means new children have been added to it
