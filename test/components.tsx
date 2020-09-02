@@ -598,7 +598,8 @@ test('render different component based on whether stdin is a TTY or not', t => {
 
 test('render only last frame when run in CI', async t => {
 	const output = await run('ci', {
-		env: {CI: 'true'}
+		env: {CI: 'true'},
+		columns: 0
 	});
 
 	for (const num of [0, 1, 2, 3, 4]) {
@@ -610,7 +611,8 @@ test('render only last frame when run in CI', async t => {
 
 test('render all frames if CI environment variable equals false', async t => {
 	const output = await run('ci', {
-		env: {CI: 'false'}
+		env: {CI: 'false'},
+		columns: 0
 	});
 
 	for (const num of [0, 1, 2, 3, 4, 5]) {

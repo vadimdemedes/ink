@@ -1,6 +1,7 @@
 import React from 'react';
 import type {ReactNode} from 'react';
 import throttle from 'lodash.throttle';
+import type {DebouncedFunc} from 'lodash';
 import logUpdate from './log-update';
 import type {LogUpdate} from './log-update';
 import ansiEscapes from 'ansi-escapes';
@@ -31,7 +32,7 @@ export interface Options {
 export default class Ink {
 	private readonly options: Options;
 	private readonly log: LogUpdate;
-	private readonly throttledLog: LogUpdate;
+	private readonly throttledLog: LogUpdate | DebouncedFunc<LogUpdate>;
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
 	private lastOutput: string;
@@ -115,9 +116,9 @@ export default class Ink {
 
 		const {output, outputHeight, staticOutput} = render(
 			this.rootNode,
-			// The 'columns' property can be undefined when not using a TTY.
+			// The 'columns' property can be undefined or 0 when not using a TTY.
 			// In that case we fall back to 80.
-			this.options.stdout.columns ?? 80
+			this.options.stdout.columns || 80
 		);
 
 		// If <Static> output isn't empty, it means new children have been added to it
