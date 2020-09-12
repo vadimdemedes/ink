@@ -22,7 +22,7 @@ Only Ink's methods will be documented in this readme.
 
 **Note:** This is documentation for Ink 3. If you're looking for docs on Ink 2, check out [this release](https://github.com/vadimdemedes/ink/tree/v2.7.1). There's also a [migration guide](migrate.md) from Ink 2 available.
 
-The bundled TypeScript types requires TypeScript 4 or later.
+The bundled TypeScript types require TypeScript 4 or later.
 
 ## Install
 
