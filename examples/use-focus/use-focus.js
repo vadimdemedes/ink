@@ -5,7 +5,10 @@ const {render, Box, Text, useFocus} = require('../..');
 const Focus = () => (
 	<Box flexDirection="column" padding={1}>
 		<Box marginBottom={1}>
-			<Text>Press Tab to focus next element, Shift+Tab to focus previous element, Esc to reset focus.</Text>
+			<Text>
+				Press Tab to focus next element, Shift+Tab to focus previous element,
+				Esc to reset focus.
+			</Text>
 		</Box>
 		<Item label="First" />
 		<Item label="Second" />
