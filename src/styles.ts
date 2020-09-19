@@ -2,6 +2,7 @@
 import Yoga from 'yoga-layout-prebuilt';
 import type {YogaNode} from 'yoga-layout-prebuilt';
 import type {Boxes} from 'cli-boxes';
+import type {LiteralUnion} from 'type-fest';
 import type {ForegroundColor} from 'chalk';
 
 export interface Styles {
@@ -140,7 +141,7 @@ export interface Styles {
 	 * Change border color.
 	 * Accepts the same values as `color` in <Text> component.
 	 */
-	readonly borderColor?: typeof ForegroundColor;
+	readonly borderColor?: LiteralUnion<typeof ForegroundColor, string>;
 }
 
 const applyPositionStyles = (node: Yoga.YogaNode, style: Styles): void => {
