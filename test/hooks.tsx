@@ -155,6 +155,13 @@ test('useInput - handle delete', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test('useInput - handle remove (delete)', async t => {
+	const ps = term('use-input', ['remove']);
+	ps.write('\u001B[3~');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test('useInput - ignore input if not active', async t => {
 	const ps = term('use-input-multiple');
 	ps.write('x');

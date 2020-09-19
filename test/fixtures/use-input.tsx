@@ -80,6 +80,11 @@ const UserInput: FC<{test: string}> = ({test}) => {
 			return;
 		}
 
+		if (test === 'remove' && input === '' && key.delete) {
+			exit();
+			return;
+		}
+
 		throw new Error('Crash');
 	});
 
