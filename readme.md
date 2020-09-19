@@ -126,6 +126,9 @@ $ npx create-ink-app
 ```
 
 <details><summary>Manual setup</summary>
+
+<h3>Node.js</h3>
+
 <p>
 Ink requires the same Babel setup as you would do for regular React-based apps in the browser.
 
@@ -178,6 +181,53 @@ $ node cli
 If you don't like transpiling files during development, you can use [import-jsx](https://github.com/vadimdemedes/import-jsx) to `require()` a JSX file and transpile it on the fly.
 
 </p>
+
+<h3>TypeScript</h3>
+
+<p>
+TypeScript natively supports JSX, it's very easy to create an app.
+
+```
+$ npm install --save-dev @types/react typescript
+```
+
+Next, create a directory `source`, put an `index.tsx` file in it:
+
+```tsx
+import React, {FC} from 'react';
+import {render, Text} from 'ink';
+
+const TsDemo: FC = () => <Text>Hello TypeScript</Text>;
+
+render(<TsDemo />);
+```
+
+Then, compile this file with `tsc`:
+
+```
+$ tsc --jsx react --esModuleInterop --outDir dist
+```
+
+Now you can run `dist/index.js` with Node.js:
+
+```
+$ node dist/cli.js
+```
+
+For creating an Ink component, we recommend you to use [@sindresorhus/tsconfig](https://github.com/sindresorhus/tsconfig) for creating a component, it will help you generate declaration files, etc.
+
+```tsx
+import React, {FC} from 'react'
+import {Text} from 'ink';
+
+const TsDemo: FC = () => <Text>Hello World</Text>;
+
+module.exports = TsDemo
+export default TsDemo
+```
+
+</p>
+
 </details>
 
 Ink uses [Yoga](https://github.com/facebook/yoga) - a Flexbox layout engine to build great user interfaces for your CLIs using familiar CSS-like props you've used when building apps for the browser.
