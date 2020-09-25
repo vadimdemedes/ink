@@ -29,7 +29,7 @@ import type {OutputTransformer} from './render-node-to-output';
 // See https://github.com/vadimdemedes/ink/issues/384
 
 if (process.env.DEV === 'true') {
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	// eslint-disable-next-line import/no-unassigned-import
 	require('./devtools');
 }
 
