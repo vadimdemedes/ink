@@ -25,9 +25,8 @@ import type {Styles} from './styles';
 import type {OutputTransformer} from './render-node-to-output';
 
 // We need to conditionally perform devtools connection to avoid
-// accidentally breaking other third party code.
+// accidentally breaking other third-party code.
 // See https://github.com/vadimdemedes/ink/issues/384
-
 if (process.env.DEV === 'true') {
 	// eslint-disable-next-line import/no-unassigned-import
 	require('./devtools');
