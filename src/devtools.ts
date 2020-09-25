@@ -1,6 +1,8 @@
 // Ignoring missing types error to avoid adding another dependency for this hack to work
 // @ts-ignore
 import ws from 'ws';
+// @ts-ignore
+import {connectToDevTools} from 'react-devtools-core';
 
 const customGlobal = global as any;
 
@@ -69,10 +71,4 @@ customGlobal.window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = [
 	}
 ];
 
-// Ignoring missing types error to avoid adding another dependency for this hack to work
-// @ts-ignore
-import {connectToDevTools} from 'react-devtools-core';
-
-if (process.env.DEV === 'true') {
-	connectToDevTools();
-}
+connectToDevTools();
