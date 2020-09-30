@@ -78,7 +78,6 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Splash](https://github.com/Shopify/polaris-react/tree/master/scripts/splash) - Observe the splash zone of a change across the Shopify's [Polaris](https://polaris.shopify.com) component library.
 - [emoj](https://github.com/sindresorhus/emoj) - Find relevant emoji on the command-line.
 - [emma](https://github.com/maticzav/emma-cli) - Terminal assistant to find and install npm packages.
-- [sindresorhus](https://github.com/sindresorhus/sindresorhus) - The Sindre Sorhus CLI.
 - [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command line tools for time-saving web developers.
 - [share](https://github.com/marionebl/share-cli) - Quickly share files from your command line.
 - [Kubelive](https://github.com/ameerthehacker/kubelive) - CLI for Kubernetes to provide live data about the cluster and its resources.
