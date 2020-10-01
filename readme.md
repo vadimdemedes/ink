@@ -65,6 +65,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
 - [Yarn 2](https://yarnpkg.com) - Fast, reliable, and secure dependency management for JavaScript.
 - [Terraform CDK](https://github.com/hashicorp/terraform-cdk) - CDK (Cloud Development Kit) for HashiCorp Terraform.
+- [Twilio's SIGNAL](https://github.com/twilio-labs/plugin-signal2020) - CLI for Twilio's SIGNAL conference. [Blog post](https://www.twilio.com/blog/building-conference-cli-in-react).
 - [Typewriter](https://github.com/segmentio/typewriter) - Generates strongly-typed [Segment](https://segment.com) analytics clients from arbitrary JSON Schema.
 - [Prisma](https://www.prisma.io) - The unified data layer for modern applications.
 - [Wallace](https://www.projectwallace.com) - Pretty CSS analytics on the CLI.
