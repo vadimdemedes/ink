@@ -1,6 +1,5 @@
 import * as fs from 'fs';
-import React from 'react';
-import type {FC} from 'react';
+import React, {FC} from 'react';
 import StackUtils from 'stack-utils';
 import codeExcerpt, {ExcerptLine} from 'code-excerpt';
 import Box from './Box';

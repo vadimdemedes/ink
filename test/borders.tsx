@@ -1,7 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import test from 'ava';
-import boxen from 'boxen';
-import type {Options} from 'boxen';
+import boxen, {Options} from 'boxen';
 import indentString from 'indent-string';
 import delay from 'delay';
 import {renderToString} from './helpers/render-to-string';

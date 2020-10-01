@@ -12,17 +12,15 @@ import {
 	setStyle,
 	setTextNodeValue,
 	createNode,
-	setAttribute
-} from './dom';
-import type {
+	setAttribute,
 	DOMNode,
 	DOMNodeAttribute,
 	TextNode,
 	ElementNames,
 	DOMElement
 } from './dom';
-import type {Styles} from './styles';
-import type {OutputTransformer} from './render-node-to-output';
+import {Styles} from './styles';
+import {OutputTransformer} from './render-node-to-output';
 
 // We need to conditionally perform devtools connection to avoid
 // accidentally breaking other third-party code.

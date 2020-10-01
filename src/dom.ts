@@ -1,11 +1,9 @@
-import Yoga from 'yoga-layout-prebuilt';
-import type {YogaNode} from 'yoga-layout-prebuilt';
+import Yoga, {YogaNode} from 'yoga-layout-prebuilt';
 import measureText from './measure-text';
-import applyStyles from './styles';
+import applyStyles, {Styles} from './styles';
 import wrapText from './wrap-text';
 import squashTextNodes from './squash-text-nodes';
-import type {OutputTransformer} from './render-node-to-output';
-import type {Styles} from './styles';
+import {OutputTransformer} from './render-node-to-output';
 
 interface InkNode {
 	parentNode: DOMElement | null;

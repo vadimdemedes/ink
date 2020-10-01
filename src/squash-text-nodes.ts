@@ -1,4 +1,4 @@
-import type {DOMElement} from './dom';
+import {DOMElement} from './dom';
 
 // Squashing text nodes allows to combine multiple text nodes into one and write
 // to `Output` instance only once. For example, <Text>hello{' '}world</Text>

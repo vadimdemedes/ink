@@ -1,10 +1,8 @@
-import React from 'react';
-import type {FC, ReactNode} from 'react';
-import chalk from 'chalk';
+import React, {FC, ReactNode} from 'react';
+import chalk, {ForegroundColor, BackgroundColor} from 'chalk';
 import colorize from '../colorize';
-import type {Styles} from '../styles';
-import type {LiteralUnion} from 'type-fest';
-import type {ForegroundColor, BackgroundColor} from 'chalk';
+import {Styles} from '../styles';
+import {LiteralUnion} from 'type-fest';
 
 export interface Props {
 	/**

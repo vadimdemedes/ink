@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import React, {PureComponent} from 'react';
-import type {ReactNode} from 'react';
+import React, {PureComponent, ReactNode} from 'react';
 import cliCursor from 'cli-cursor';
 import AppContext from './AppContext';
 import StdinContext from './StdinContext';

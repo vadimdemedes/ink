@@ -1,6 +1,5 @@
-import React, {useMemo, useState, useLayoutEffect} from 'react';
-import type {ReactNode} from 'react';
-import type {Styles} from '../styles';
+import React, {useMemo, useState, useLayoutEffect, ReactNode} from 'react';
+import {Styles} from '../styles';
 
 export interface Props<T> extends Styles {
 	/**

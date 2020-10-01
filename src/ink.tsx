@@ -1,9 +1,6 @@
-import React from 'react';
-import type {ReactNode} from 'react';
-import throttle from 'lodash.throttle';
-import type {DebouncedFunc} from 'lodash';
-import logUpdate from './log-update';
-import type {LogUpdate} from './log-update';
+import React, {ReactNode} from 'react';
+import {throttle, DebouncedFunc} from 'lodash';
+import logUpdate, {LogUpdate} from './log-update';
 import ansiEscapes from 'ansi-escapes';
 import originalIsCI from 'is-ci';
 import autoBind from 'auto-bind';
@@ -12,7 +9,7 @@ import render from './renderer';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
 import * as dom from './dom';
-import type {FiberRoot} from 'react-reconciler';
+import {FiberRoot} from 'react-reconciler';
 import instances from './instances';
 import App from './components/App';
 

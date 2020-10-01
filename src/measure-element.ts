@@ -1,4 +1,4 @@
-import type {DOMElement} from './dom';
+import {DOMElement} from './dom';
 
 interface Output {
 	/**

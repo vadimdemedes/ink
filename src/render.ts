@@ -1,6 +1,5 @@
-import type {ReactElement} from 'react';
-import Ink from './ink';
-import type {Options as InkOptions} from './ink';
+import {ReactElement} from 'react';
+import Ink, {Options as InkOptions} from './ink';
 import instances from './instances';
 import {Stream} from 'stream';
 

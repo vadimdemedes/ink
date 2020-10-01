@@ -1,6 +1,5 @@
 import {useContext} from 'react';
-import FocusContext from '../components/FocusContext';
-import type {Props} from '../components/FocusContext';
+import FocusContext, {Props} from '../components/FocusContext';
 
 interface Output {
 	/**

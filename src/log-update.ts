@@ -1,4 +1,4 @@
-import type {Writable} from 'stream';
+import {Writable} from 'stream';
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
 

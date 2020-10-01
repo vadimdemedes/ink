@@ -1,6 +1,5 @@
 import EventEmitter from 'events';
-import React, {useEffect} from 'react';
-import type {FC} from 'react';
+import React, {useEffect, FC} from 'react';
 import delay from 'delay';
 import test from 'ava';
 import {spy} from 'sinon';
