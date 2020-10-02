@@ -1727,7 +1727,7 @@ You can even inspect and change the props of components, and see the results imm
 - [ink-text-input](https://github.com/vadimdemedes/ink-text-input) - Text input.
 - [ink-spinner](https://github.com/vadimdemedes/ink-spinner) - Spinner.
 - [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
-- [ink-select-input-horizontal](https://github.com/H3RSKO/ink-select-input-horizontal) - Mod of the above component adding color and orientation customization.
+- [ink-select-input-horizontal](https://github.com/H3RSKO/ink-select-input-horizontal) - Modification of the above component adding color and orientation customization.
 - [ink-link](https://github.com/sindresorhus/ink-link) - Link component.
 - [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color component.
 - [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
