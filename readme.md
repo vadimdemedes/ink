@@ -123,6 +123,9 @@ Use [create-ink-app](https://github.com/vadimdemedes/create-ink-app) to quickly 
 $ mkdir my-ink-cli
 $ cd my-ink-cli
 $ npx create-ink-app
+
+# Or create with TypeScript React
+$ npx create-ink-app --typescript
 ```
 
 <details><summary>Manual setup</summary>
