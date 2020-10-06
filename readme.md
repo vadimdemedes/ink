@@ -123,8 +123,11 @@ Use [create-ink-app](https://github.com/vadimdemedes/create-ink-app) to quickly 
 $ mkdir my-ink-cli
 $ cd my-ink-cli
 $ npx create-ink-app
+```
 
-# Or create with TypeScript React
+Alternatively, create a TypeScript project:
+
+```
 $ npx create-ink-app --typescript
 ```
 
