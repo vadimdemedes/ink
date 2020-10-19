@@ -1583,7 +1583,28 @@ Patch console methods to ensure console output doesn't mix with Ink output.
 When any of `console.*` methods are called (like `console.log()`), Ink intercepts their output, clears main output, renders output from the console method and then rerenders main output again.
 That way both are visible and are not overlapping each other.
 
-This functionality is powered by [patch-console](https://github.com/vadimdemedes/patch-console), so if you need to disable Ink's interception of output but want to build something custom, you can use it. You can also provide your own patch function to `patchConsole` with the same API.
+This functionality is powered by [patch-console](https://github.com/vadimdemedes/patch-console), so if you need to disable Ink's interception of output but want to build something custom, you can use it.
+
+You can also provide your own patch function to `patchConsole` using the same API.
+
+```jsx
+import {render} from 'ink';
+
+render(<Example />, {
+	// Turn all logs into errors as an example
+	patchConsole(callback) {
+		const oldLog = console.log;
+
+		console.log = message => {
+			callback('stderr', message);
+		};
+
+		return () => {
+			console.log = oldLog;
+		};
+	}
+});
+```
 
 ###### debug
 
