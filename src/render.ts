@@ -1,4 +1,5 @@
 import {ReactElement} from 'react';
+import patchConsole from 'patch-console';
 import Ink, {Options as InkOptions} from './ink';
 import instances from './instances';
 import {Stream} from 'stream';
@@ -39,7 +40,7 @@ export interface RenderOptions {
 	 *
 	 * @default true
 	 */
-	patchConsole?: boolean;
+	patchConsole?: boolean | typeof patchConsole;
 }
 
 export interface Instance {

@@ -22,7 +22,7 @@ export interface Options {
 	stderr: NodeJS.WriteStream;
 	debug: boolean;
 	exitOnCtrlC: boolean;
-	patchConsole: boolean;
+	patchConsole: boolean | typeof patchConsole;
 	waitUntilExit?: () => Promise<void>;
 }
 
@@ -282,7 +282,12 @@ export default class Ink {
 			return;
 		}
 
-		this.restoreConsole = patchConsole((stream, data) => {
+		const patch =
+			typeof this.options.patchConsole === 'function'
+				? this.options.patchConsole
+				: patchConsole;
+
+		this.restoreConsole = patch((stream, data) => {
 			if (stream === 'stdout') {
 				this.writeToStdout(data);
 			}
