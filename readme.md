@@ -125,6 +125,12 @@ $ cd my-ink-cli
 $ npx create-ink-app
 ```
 
+Alternatively, create a TypeScript project:
+
+```
+$ npx create-ink-app --typescript
+```
+
 <details><summary>Manual setup</summary>
 <p>
 Ink requires the same Babel setup as you would do for regular React-based apps in the browser.
