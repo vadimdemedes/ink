@@ -2,8 +2,15 @@ import cliBoxes from 'cli-boxes';
 import colorize from './colorize';
 import {DOMNode} from './dom';
 import Output from './output';
+import {Bounds} from './render-node-to-output';
 
-export default (x: number, y: number, node: DOMNode, output: Output): void => {
+export default (
+	x: number,
+	y: number,
+	node: DOMNode,
+	output: Output,
+	bounds?: Bounds
+): void => {
 	if (typeof node.style.borderStyle === 'string') {
 		const width = node.yogaNode!.getComputedWidth();
 		const height = node.yogaNode!.getComputedHeight();
@@ -26,9 +33,21 @@ export default (x: number, y: number, node: DOMNode, output: Output): void => {
 			'foreground'
 		);
 
-		output.write(x, y, topBorder, {transformers: []});
-		output.write(x, y + 1, verticalBorder, {transformers: []});
-		output.write(x + width - 1, y + 1, verticalBorder, {transformers: []});
-		output.write(x, y + height - 1, bottomBorder, {transformers: []});
+		output.write(x, y, topBorder, {
+			transformers: [],
+			bounds
+		});
+		output.write(x, y + 1, verticalBorder, {
+			transformers: [],
+			bounds
+		});
+		output.write(x + width - 1, y + 1, verticalBorder, {
+			transformers: [],
+			bounds
+		});
+		output.write(x, y + height - 1, bottomBorder, {
+			transformers: [],
+			bounds
+		});
 	}
 };

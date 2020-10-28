@@ -28,6 +28,8 @@ const applyPaddingToText = (node: DOMElement, text: string): string => {
 
 export type OutputTransformer = (s: string) => string;
 
+export type Bounds = {left: number; top: number; right: number; bottom: number};
+
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
 const renderNodeToOutput = (
 	node: DOMElement,
@@ -36,6 +38,7 @@ const renderNodeToOutput = (
 		offsetX?: number;
 		offsetY?: number;
 		transformers?: OutputTransformer[];
+		bounds?: Bounds;
 		skipStaticElements: boolean;
 	}
 ) => {
@@ -43,6 +46,7 @@ const renderNodeToOutput = (
 		offsetX = 0,
 		offsetY = 0,
 		transformers = [],
+		bounds,
 		skipStaticElements
 	} = options;
 
@@ -82,14 +86,40 @@ const renderNodeToOutput = (
 				}
 
 				text = applyPaddingToText(node, text);
-				output.write(x, y, text, {transformers: newTransformers});
+				output.write(x, y, text, {transformers: newTransformers, bounds});
 			}
 
 			return;
 		}
 
+		let newBounds = bounds;
 		if (node.nodeName === 'ink-box') {
-			renderBorder(x, y, node, output);
+			renderBorder(x, y, node, output, bounds);
+
+			if (node.style.overflow === 'hidden') {
+				const border = {
+					left: yogaNode.getComputedBorder(Yoga.EDGE_LEFT),
+					right: yogaNode.getComputedBorder(Yoga.EDGE_RIGHT),
+					top: yogaNode.getComputedBorder(Yoga.EDGE_TOP),
+					bottom: yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
+				};
+
+				newBounds = {
+					left: x + border.left,
+					top: y + border.top,
+					right: x + yogaNode.getComputedWidth() - border.right,
+					bottom: y + yogaNode.getComputedHeight() - border.bottom
+				};
+
+				if (bounds) {
+					newBounds = {
+						left: Math.max(bounds.left, newBounds.left),
+						top: Math.max(bounds.top, newBounds.top),
+						right: Math.min(bounds.right, newBounds.right),
+						bottom: Math.min(bounds.bottom, newBounds.bottom)
+					};
+				}
+			}
 		}
 
 		if (node.nodeName === 'ink-root' || node.nodeName === 'ink-box') {
@@ -98,6 +128,7 @@ const renderNodeToOutput = (
 					offsetX: x,
 					offsetY: y,
 					transformers: newTransformers,
+					bounds: newBounds,
 					skipStaticElements
 				});
 			}

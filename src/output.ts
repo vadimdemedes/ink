@@ -1,6 +1,6 @@
 import sliceAnsi from 'slice-ansi';
 import stringLength from 'string-length';
-import {OutputTransformer} from './render-node-to-output';
+import {Bounds, OutputTransformer} from './render-node-to-output';
 
 /**
  * "Virtual" output class
@@ -21,6 +21,7 @@ interface Writes {
 	y: number;
 	text: string;
 	transformers: OutputTransformer[];
+	bounds?: Bounds;
 }
 
 export default class Output {
@@ -41,15 +42,15 @@ export default class Output {
 		x: number,
 		y: number,
 		text: string,
-		options: {transformers: OutputTransformer[]}
+		options: {transformers: OutputTransformer[]; bounds?: Bounds}
 	): void {
-		const {transformers} = options;
+		const {transformers, bounds} = options;
 
 		if (!text) {
 			return;
 		}
 
-		this.writes.push({x, y, text, transformers});
+		this.writes.push({x, y, text, transformers, bounds});
 	}
 
 	get(): {output: string; height: number} {
@@ -60,28 +61,53 @@ export default class Output {
 		}
 
 		for (const write of this.writes) {
-			const {x, y, text, transformers} = write;
+			const {x, y, text, transformers, bounds} = write;
 			const lines = text.split('\n');
 			let offsetY = 0;
 
 			for (let line of lines) {
+				if (
+					bounds &&
+					(y + offsetY < bounds.top || y + offsetY >= bounds.bottom)
+				) {
+					offsetY++;
+					continue;
+				}
+
 				const currentLine = output[y + offsetY];
 
 				// Line can be missing if `text` is taller than height of pre-initialized `this.output`
 				if (!currentLine) {
+					offsetY++;
 					continue;
 				}
-
-				const length = stringLength(line);
 
 				for (const transformer of transformers) {
 					line = transformer(line);
 				}
 
+				const length = stringLength(line);
+
+				let startX = x;
+				let endX = x + length;
+				if (bounds) {
+					startX = Math.max(bounds.left, startX);
+					endX = Math.min(bounds.right, endX);
+
+					if (endX <= startX) {
+						offsetY++;
+						continue;
+					}
+
+					if (endX - startX < length) {
+						line = sliceAnsi(line, startX - x, endX - startX);
+					}
+				}
+
 				output[y + offsetY] =
-					sliceAnsi(currentLine, 0, x) +
+					sliceAnsi(currentLine, 0, startX) +
 					line +
-					sliceAnsi(currentLine, x + length);
+					sliceAnsi(currentLine, endX);
 
 				offsetY++;
 			}

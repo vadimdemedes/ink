@@ -785,6 +785,14 @@ Default: `flex`
 
 Set this property to `none` to hide the element.
 
+##### overflow
+
+Type: `string`\
+Allowed values: `visible` `hidden`\
+Default: `visible`
+
+Set this property to `hidden` to hide content that overflows this element.
+
 #### Borders
 
 ##### borderStyle
