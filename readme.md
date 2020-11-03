@@ -349,11 +349,11 @@ It's like `<div style="display: flex">` in the browser.
 ```jsx
 import {render, Box, Text} from 'ink';
 
-const Example = () => {
+const Example = () => (
 	<Box margin={2}>
 		<Text>This is a box with margin</Text>
 	</Box>;
-};
+);
 
 render(<Example />);
 ```
