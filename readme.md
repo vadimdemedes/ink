@@ -1820,7 +1820,7 @@ const AppWrapper = () => {
 
 For actual use, the additional package [ink-select-input](https://github.com/vadimdemedes/ink-select-input) with `history.push` is an efficient way to provide routing to your Ink app. [Example](examples/router/select-input.js).
 
-It is important to have in mind routing done following this pattern in Ink should not be mistaken with broswer-based url-routing. It is merely an abstraction layer to provide conditional rendering to your Ink application while keeping the same API you are familiar with. Subsequently, it is recommended not to call the routes' children 'Pages' in the same way the terminal is not a Browser. A better naming pattern would be to call the routes' children 'Sections'.
+It is important to have in mind routing done following this pattern in Ink should not be mistaken for browser-based url-routing. It is merely an abstraction layer to provide conditional rendering to your Ink application while keeping the same API you are familiar with. Subsequently, it is recommended not to call the routes' children 'Pages' in the same way the terminal is not a Browser. A better naming pattern would be to call the routes' children 'Sections'.
 
 Keep in mind :
 - `Link` from the `react-router` package are not a usable component in the terminal as we are not in the DOM.
