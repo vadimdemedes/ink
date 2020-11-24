@@ -89,7 +89,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [garson](https://github.com/goliney/garson) - Build interactive config-based command-line interfaces.
 - [git-contrib-calendar](https://github.com/giannisp/git-contrib-calendar) - Display a contributions calendar for any git repository.
 - [gitgud](https://github.com/GitGud-org/GitGud) - An interactive command-line GUI for Git.
-- [adrianv.sh](https://github.com/advl/adrianv.sh) - An interactive command-line resume. Uses [MemoryRouter](#recipe--routing-using-memoryrouter) to conditionally render parts of the program.
+- [adrianv.sh](https://github.com/advl/adrianv.sh) - The interactive command-line resume of a full-stack developper.
 
 ## Contents
 
