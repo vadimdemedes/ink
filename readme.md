@@ -1755,7 +1755,7 @@ You can even inspect and change the props of components, and see the results imm
 
 ## Recipe : Routing using MemoryRouter
 
-If you desire to mirror in Ink the routing done in a browser React app, the package `react-router` provides the useful `MemoryRouter`. 
+If you desire to mirror the routing of a browser React app, the package `react-router` provides the useful `MemoryRouter`. 
 
 The following example provides a basic implementation.
 
