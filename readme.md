@@ -1805,7 +1805,6 @@ const App = () => {
         </Text>
       </Box>
     </>
-  
   );
 };
 
@@ -1819,7 +1818,7 @@ const AppWrapper = () => {
 };
 ```
 
-For actual use, the additional package [ink-select-input](https://github.com/vadimdemedes/ink-select-input) with `history.push` is an efficient way to provide routing to your Ink app. [Example](examples/router/select-input.js)
+For actual use, the additional package [ink-select-input](https://github.com/vadimdemedes/ink-select-input) with `history.push` is an efficient way to provide routing to your Ink app. [Example](examples/router/select-input.js).
 
 It is important to have in mind routing done following this pattern in Ink should not be mistaken with broswer-based url-routing. It is merely an abstraction layer to provide conditional rendering to your Ink application while keeping the same API you are familiar with. Subsequently, it is recommended not to call the routes' children 'Pages' in the same way the terminal is not a Browser. A better naming pattern would be to call the routes' children 'Sections'.
 
@@ -1827,7 +1826,7 @@ Keep in mind :
 - `Link` from the `react-router` package are not a usable component in the terminal as we are not in the DOM.
 - All navigation should be done using the `history` object returned from the `useHistory` hook. For instance using `history.push` or `history.goBack`. Please refer to [react-router docs](https://reactrouter.com/core/api/history) for API reference.
 - By default, MemoryRouter instantiates a history using `createMemoryHistory` with the intial path stack `['/']`. It is recommended to be aware of this behaviour. You can change the initial path stack by providing a [custom history object](https://github.com/ReactTraining/history/blob/master/docs/api-reference.md#creatememoryhistory) to the Router component. 
-- Leverage the Router to add Google Analytics to your app with the `universal-analytics` package. [Example](examples/router/google-analytics.js)
+- Leverage the Router to add Google Analytics to your app with the `universal-analytics` package. [Example](examples/router/google-analytics.js).
 
 ## Examples
 
