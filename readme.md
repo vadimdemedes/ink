@@ -89,6 +89,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [garson](https://github.com/goliney/garson) - Build interactive config-based command-line interfaces.
 - [git-contrib-calendar](https://github.com/giannisp/git-contrib-calendar) - Display a contributions calendar for any git repository.
 - [gitgud](https://github.com/GitGud-org/GitGud) - An interactive command-line GUI for Git.
+- [adrianv.sh](https://github.com/advl/adrianv.sh) - An interactive resume. Uses MemoryRouter to conditionally render parts of the program.
 
 ## Contents
 
@@ -1752,6 +1753,82 @@ You can even inspect and change the props of components, and see the results imm
 
 - [ink-use-stdout-dimensions](https://github.com/cameronhunter/ink-monorepo/tree/master/packages/ink-use-stdout-dimensions) - Subscribe to stdout dimensions.
 
+## Recipe : Routing using MemoryRouter
+
+If you desire to mirror in Ink the routing done in a browser React app, the package `react-router` provides the useful `MemoryRouter`. 
+
+The following example provides a basic implementation.
+
+```jsx
+import * as React from 'react';
+
+import {
+  MemoryRouter,
+  Switch,
+  Route,
+  useHistory
+} from 'react-router';
+
+import { Text, Newline, Box, useInput } from 'ink';
+
+const App = () => {
+
+  const history = useHistory();
+
+  useInput((input, key) => {
+    if (key.return) {
+      history.push('/main');
+    };
+    if (input === 'h') {
+      history.push('/help');
+    };
+  
+  });
+  
+  return(
+    <>
+      <Switch>
+        <Route path='/main'>
+          <Text>The main program executes here</Text>
+        </Route>
+        <Route path='/help'>
+          <Text>This is the help section</Text>
+        </Route>
+      </Switch>
+      <Box margin={2}>
+        <Text>
+          <Text bold>Menu.</Text>
+          <Newline/>
+          <Text>Press h for help</Text>
+          <Newline/>
+          <Text>Or press enter to continue</Text>
+        </Text>
+      </Box>
+    </>
+  
+  );
+};
+
+const AppWrapper = () => {
+
+  return(
+    <MemoryRouter>
+        <App />
+    </MemoryRouter>
+  );
+};
+```
+
+For actual use, the additional package [ink-select-input](https://github.com/vadimdemedes/ink-select-input) with `history.push` is an efficient way to provide routing to your Ink app. [Example](examples/router/select-input.js)
+
+It is important to have in mind routing done following this pattern in Ink should not be mistaken with broswer-based url-routing. It is merely an abstraction layer to provide conditional rendering to your Ink application while keeping the same API you are familiar with. Subsequently, it is recommended not to call the routes' children 'Pages' in the same way the terminal is not a Browser. A better naming pattern would be to call the routes' children 'Sections'.
+
+Keep in mind :
+- `Link` from the `react-router` package are not a usable component in the terminal as we are not in the DOM.
+- All navigation should be done using the `history` object returned from the `useHistory` hook. For instance using `history.push` or `history.goBack`. Please refer to [react-router docs](https://reactrouter.com/core/api/history) for API reference.
+- By default, MemoryRouter instantiates a history using `createMemoryHistory` with the intial path stack `['/']`. It is recommended to be aware of this behaviour. You can change the initial path stack by providing a [custom history object](https://github.com/ReactTraining/history/blob/master/docs/api-reference.md#creatememoryhistory) to the Router component. 
+- Leverage the Router to add Google Analytics to your app with the `universal-analytics` package. [Example](examples/router/google-analytics.js)
+
 ## Examples
 
 - [Jest](examples/jest/jest.js) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
@@ -1765,6 +1842,8 @@ You can even inspect and change the props of components, and see the results imm
 - [Write to stdout](examples/use-stdout/use-stdout.js) - Write to stdout bypassing main Ink output.
 - [Write to stderr](examples/use-stderr/use-stderr.js) - Write to stderr bypassing main Ink output.
 - [Static](examples/static/static.js) - Use `<Static>` to render permanent output.
+- [Router with Select Input](examples/router/select-input.js) - Change the url of the Router with a UI menu. Requires the additional packages `react-router` and [ink-select-input](https://github.com/vadimdemedes/ink-select-input).
+- [Router with Google Analytics](examples/router/google-analytics.js) - Add Google Analytics to your Ink routing interface. Requires the additional packages `reaact-router` and `universal-analytics`.
 
 ## Maintainers
 
