@@ -1823,10 +1823,10 @@ For actual use, the additional package [ink-select-input](https://github.com/vad
 It is important to have in mind routing done following this pattern in Ink should not be mistaken for browser-based url-routing. Terminal-based routing is merely an abstraction layer to provide conditional rendering to your Ink application while keeping the same API you are familiar with. Subsequently, it is recommended not to call the routes' children 'Pages' in the same way the terminal is not a Browser. A better naming pattern would be to call the routes' children 'Sections'.
 
 Keep in mind :
-- `Link` from the `react-router` package are not a usable component in the terminal as we are not in the DOM.
-- All navigation should be done using the `history` object returned from the `useHistory` hook. For instance using `history.push` or `history.goBack`. Please refer to [react-router docs](https://reactrouter.com/core/api/history) for API reference.
+- `Link` from the `react-router` package cannot be used in Ink since we do not render in the DOM.
+- All navigation should be done using the `history` object returned from the `useHistory` hook, for instance using `history.push` or `history.goBack`. For all available methods, please refer to the [react-router API Reference(https://reactrouter.com/core/api/history).
 - By default, MemoryRouter instantiates a history using `createMemoryHistory` with the intial path stack `['/']`. It is recommended to be aware of this behaviour. You can change the initial path stack by providing a [custom history object](https://github.com/ReactTraining/history/blob/master/docs/api-reference.md#creatememoryhistory) to the Router component. 
-- Leverage the Router to add Google Analytics to your app with the `universal-analytics` package. [Example](examples/router/google-analytics.js).
+- You can leverage the MemoryRouter to add Google Analytics to your app with the `universal-analytics` package. [Example](examples/router/google-analytics.js).
 
 ## Examples
 
