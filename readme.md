@@ -1825,7 +1825,6 @@ Keep in mind :
 - `Link` from the `react-router` package cannot be used in Ink since we do not render in the DOM.
 - All navigation should be done using the `history` object returned from the `useHistory` hook, for instance using `history.push` or `history.goBack`. For all available methods, please refer to the [react-router API Reference](https://reactrouter.com/core/api/history).
 - By default, MemoryRouter instantiates a history using `createMemoryHistory` with the intial path stack `['/']`. It is recommended to be aware of this behaviour. You can change the initial path stack by providing a [custom history object](https://github.com/ReactTraining/history/blob/master/docs/api-reference.md#creatememoryhistory) to the Router component. 
-- You can leverage the MemoryRouter to add Google Analytics to your app with the `universal-analytics` package. [Example](examples/router/google-analytics.js).
 
 ## Examples
 
@@ -1841,7 +1840,6 @@ Keep in mind :
 - [Write to stderr](examples/use-stderr/use-stderr.js) - Write to stderr bypassing main Ink output.
 - [Static](examples/static/static.js) - Use `<Static>` to render permanent output.
 - [Router with Select Input](examples/router/select-input.js) - Change the url of the Router with a UI menu. Requires the additional packages `react-router` and [ink-select-input](https://github.com/vadimdemedes/ink-select-input).
-- [Router with Google Analytics](examples/router/google-analytics.js) - Add Google Analytics to your Ink routing interface. Requires the additional packages `reaact-router` and `universal-analytics`.
 
 ## Maintainers
 
