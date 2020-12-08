@@ -1762,58 +1762,58 @@ The following example provides a basic implementation.
 import * as React from 'react';
 
 import {
-  MemoryRouter,
-  Switch,
-  Route,
-  useHistory
+	MemoryRouter,
+	Switch,
+	Route,
+	useHistory
 } from 'react-router';
 
 import { Text, Newline, Box, useInput } from 'ink';
 
 const App = () => {
 
-  const history = useHistory();
+	const history = useHistory();
 
-  useInput((input, key) => {
-    if (key.return) {
-      history.push('/main');
-    };
-    if (input === 'h') {
-      history.push('/help');
-    };
-  
-  });
-  
-  return(
-    <>
-      <Switch>
-        <Route path='/main'>
-          <Text>The main program executes here</Text>
-        </Route>
-        <Route path='/help'>
-          <Text>This is the help section</Text>
-        </Route>
-      </Switch>
-      <Box margin={2}>
-        <Text>
-          <Text bold>Menu.</Text>
-          <Newline/>
-          <Text>Press h for help</Text>
-          <Newline/>
-          <Text>Or press enter to continue</Text>
-        </Text>
-      </Box>
-    </>
-  );
+	useInput((input, key) => {
+		if (key.return) {
+			history.push('/main');
+		};
+		if (input === 'h') {
+			history.push('/help');
+		};
+	
+	});
+	
+	return(
+		<>
+			<Switch>
+				<Route path='/main'>
+					<Text>The main program executes here</Text>
+				</Route>
+				<Route path='/help'>
+					<Text>This is the help section</Text>
+				</Route>
+			</Switch>
+			<Box margin={2}>
+				<Text>
+					<Text bold>Menu.</Text>
+					<Newline/>
+					<Text>Press h for help</Text>
+					<Newline/>
+					<Text>Or press enter to continue</Text>
+				</Text>
+			</Box>
+		</>
+	);
 };
 
 const AppWrapper = () => {
 
-  return(
-    <MemoryRouter>
-        <App />
-    </MemoryRouter>
-  );
+	return(
+		<MemoryRouter>
+				<App />
+		</MemoryRouter>
+	);
 };
 ```
 
