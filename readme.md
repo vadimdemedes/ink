@@ -1823,7 +1823,7 @@ It is important to have in mind routing done following this pattern in Ink shoul
 
 Keep in mind :
 - `Link` from the `react-router` package cannot be used in Ink since we do not render in the DOM.
-- All navigation should be done using the `history` object returned from the `useHistory` hook, for instance using `history.push` or `history.goBack`. For all available methods, please refer to the [react-router API Reference(https://reactrouter.com/core/api/history).
+- All navigation should be done using the `history` object returned from the `useHistory` hook, for instance using `history.push` or `history.goBack`. For all available methods, please refer to the [react-router API Reference](https://reactrouter.com/core/api/history).
 - By default, MemoryRouter instantiates a history using `createMemoryHistory` with the intial path stack `['/']`. It is recommended to be aware of this behaviour. You can change the initial path stack by providing a [custom history object](https://github.com/ReactTraining/history/blob/master/docs/api-reference.md#creatememoryhistory) to the Router component. 
 - You can leverage the MemoryRouter to add Google Analytics to your app with the `universal-analytics` package. [Example](examples/router/google-analytics.js).
 
