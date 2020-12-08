@@ -39,8 +39,8 @@ const App = () => {
 				<Route path="/help">
 					<Text>This is the help section</Text>
 				</Route>
-        <Route path="/configuration">
-          <Text>Some configuration settings here</Text>
+				<Route path="/configuration">
+					<Text>Some configuration settings here</Text>
 				</Route>
 			</Switch>
 			<Box margin={2}>
