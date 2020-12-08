@@ -15,12 +15,12 @@ const App = () => {
 			value: '/main'
 		},
 		{
-			label: 'Options',
-			value: '/options'
-		},
-		{
 			label: 'Help',
 			value: '/help'
+		},
+		{
+			label: 'Configuration',
+			value: '/configuration'
 		}
 	];
 
@@ -39,8 +39,8 @@ const App = () => {
 				<Route path="/help">
 					<Text>This is the help section</Text>
 				</Route>
-				<Route path="/options">
-					<Text>Here are the available options</Text>
+        <Route path="/configuration">
+          <Text>Some configuration settings here</Text>
 				</Route>
 			</Switch>
 			<Box margin={2}>
