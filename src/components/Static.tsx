@@ -1,7 +1,7 @@
 import React, {useMemo, useState, useLayoutEffect, ReactNode} from 'react';
 import {Styles} from '../styles';
 
-export interface Props<T> extends Styles {
+export interface Props<T> {
 	/**
 	 * Array of items of any type to render using a function you pass as a component child.
 	 */
