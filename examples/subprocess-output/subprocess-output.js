@@ -8,20 +8,20 @@ const SubprocessOutput = () => {
 	const [output, setOutput] = React.useState('');
 
 	React.useEffect(() => {
-		const subProcess = childProcess.spawn('traceroute', ['google.com']);
+		const subProcess = childProcess.spawn('node', ['examples/jest']);
 
 		subProcess.stdout.on('data', newOutput => {
 			const lines = stripAnsi(newOutput.toString('utf8')).split('\n');
-			setOutput(lines.slice(0, 5).join('\n'));
+			setOutput(lines.slice(-5).join('\n'));
 		});
 	}, [setOutput]);
 
 	return (
 		<Box flexDirection="column" padding={1}>
 			<Text>
-				My <Text bold>ping</Text> output:
+				My <Text bold>command</Text> output:
 			</Text>
-			<Box marginTop="1">
+			<Box marginTop={1}>
 				<Text>{output}</Text>
 			</Box>
 		</Box>
