@@ -18,9 +18,7 @@ const SubprocessOutput = () => {
 
 	return (
 		<Box flexDirection="column" padding={1}>
-			<Text>
-				Сommand output:
-			</Text>
+			<Text>Сommand output:</Text>
 			<Box marginTop={1}>
 				<Text>{output}</Text>
 			</Box>
