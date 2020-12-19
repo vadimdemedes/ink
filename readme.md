@@ -1766,6 +1766,7 @@ You can even inspect and change the props of components, and see the results imm
 - [Write to stdout](examples/use-stdout/use-stdout.js) - Write to stdout bypassing main Ink output.
 - [Write to stderr](examples/use-stderr/use-stderr.js) - Write to stderr bypassing main Ink output.
 - [Static](examples/static/static.js) - Use `<Static>` to render permanent output.
+- [Child process](examples/subprocess-output) - Render output from a child process.
 
 ## Maintainers
 
