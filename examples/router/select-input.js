@@ -1,9 +1,6 @@
 import * as React from 'react';
-
 import {MemoryRouter, Switch, Route, useHistory} from 'react-router';
-
 import {Box, Text} from 'ink';
-
 import SelectInput from 'ink-select-input';
 
 const App = () => {
