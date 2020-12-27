@@ -1761,16 +1761,13 @@ The following example provides a basic implementation.
 ```jsx
 import * as React from 'react';
 
-import {
-	MemoryRouter,
-	Switch,
-	Route,
-	useHistory
-} from 'react-router';
+import { MemoryRouter, Switch, Route, useHistory } from 'react-router';
 
-import { Text, Newline, Box, useInput } from 'ink';
+import { Text, Box, useInput } from 'ink';
 
 const App = () => {
+
+  /* For us to consume the history api here, we need this component to be a descendent of MemoryRouter.*/
 
 	const history = useHistory();
 
@@ -1781,7 +1778,6 @@ const App = () => {
 		if (input === 'h') {
 			history.push('/help');
 		};
-	
 	});
 	
 	return(
@@ -1791,27 +1787,24 @@ const App = () => {
 					<Text>The main program executes here</Text>
 				</Route>
 				<Route path='/help'>
-					<Text>This is the help section</Text>
+					<Text>Help and documentation</Text>
 				</Route>
 			</Switch>
 			<Box margin={2}>
 				<Text>
-					<Text bold>Menu.</Text>
-					<Newline/>
-					<Text>Press h for help</Text>
-					<Newline/>
-					<Text>Or press enter to continue</Text>
+					Press h for help or press enter to continue
 				</Text>
 			</Box>
 		</>
 	);
 };
 
-const AppWrapper = () => {
+/* Ensuring MemoryRouter is provided at a higher level of the tree. This can be in a different file */
 
+export default (props) => {
 	return(
 		<MemoryRouter>
-				<App />
+				<App {...props}/>
 		</MemoryRouter>
 	);
 };
@@ -1839,7 +1832,7 @@ Keep in mind :
 - [Write to stdout](examples/use-stdout/use-stdout.js) - Write to stdout bypassing main Ink output.
 - [Write to stderr](examples/use-stderr/use-stderr.js) - Write to stderr bypassing main Ink output.
 - [Static](examples/static/static.js) - Use `<Static>` to render permanent output.
-- [Router with Select Input](examples/router/select-input.js) - Change the url of the Router with a UI menu. Requires the additional packages `react-router` and [ink-select-input](https://github.com/vadimdemedes/ink-select-input).
+- [Router with Select Input](examples/router/select-input.js) - Menu-based navigation using MemoryRouter and [ink-select-input](https://github.com/vadimdemedes/ink-select-input).
 
 ## Maintainers
 
