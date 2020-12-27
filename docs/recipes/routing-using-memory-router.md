@@ -4,7 +4,7 @@ If you desire to mirror the routing of a browser React app, the package `react-r
 
 ## Pattern
 
-The following example provides a basic implementation.
+The following example provides a basic implementation using `history.push` to trigger router state changes.
 
 ```jsx
 import * as React from 'react';
@@ -15,7 +15,7 @@ import { Text, Box, useInput } from 'ink';
 
 const App = () => {
 
-  /* For us to consume the history api here, we need this component to be a descendent of MemoryRouter.*/
+  /* To consume the history api, we need this component to be a descendent of MemoryRouter.*/
 
 	const history = useHistory();
 
@@ -47,7 +47,7 @@ const App = () => {
 	);
 };
 
-/* Ensuring MemoryRouter is provided at a higher level of the tree. This can be in a different file */
+/* Ensuring MemoryRouter is provided at a higher level of the tree. This can be in a separate file */
 
 export default (props) => {
 	return(
