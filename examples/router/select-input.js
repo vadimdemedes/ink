@@ -1,9 +1,12 @@
-import * as React from 'react';
-import {MemoryRouter, Switch, Route, useHistory} from 'react-router';
-import {Box, Text} from 'ink';
-import SelectInput from 'ink-select-input';
+/* This examples relies on the external packages `react-router` and `ink-select-input` */
+'use strict';
+const React = require('react');
+const {Box, Text} = require('ink');
 
-const App = () => {
+const {MemoryRouter, Switch, Route, useHistory} = require('react-router');
+const SelectInput = require('ink-select-input').default;
+
+const Main = () => {
 	const history = useHistory();
 
 	const items = [
@@ -48,10 +51,14 @@ const App = () => {
 	);
 };
 
-export default () => {
+const App = () => {
 	return (
 		<MemoryRouter>
-			<App />
+			<Main />
 		</MemoryRouter>
 	);
 };
+
+module.exports = App;
+
+/* Render(<App/>); */
