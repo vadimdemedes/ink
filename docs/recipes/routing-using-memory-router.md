@@ -15,7 +15,7 @@ import { Text, Box, useInput } from 'ink';
 
 const App = () => {
 
-  /* To consume the history api, we need this component to be a descendent of MemoryRouter.*/
+	/* To consume the history api, we need this component to be a descendent of MemoryRouter.*/
 
 	const history = useHistory();
 
