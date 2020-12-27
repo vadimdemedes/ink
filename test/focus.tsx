@@ -12,6 +12,7 @@ const createStdin = () => {
 	stdin.setRawMode = spy();
 	stdin.setEncoding = () => {};
 	stdin.resume = () => {};
+	stdin.pause = () => {};
 
 	return stdin;
 };
@@ -23,6 +24,7 @@ interface TestProps {
 	disabled?: boolean;
 	focusNext?: boolean;
 	focusPrevious?: boolean;
+	unmountChildren?: boolean;
 }
 
 const Test: FC<TestProps> = ({
@@ -31,7 +33,8 @@ const Test: FC<TestProps> = ({
 	autoFocus = false,
 	disabled = false,
 	focusNext = false,
-	focusPrevious = false
+	focusPrevious = false,
+	unmountChildren = false
 }) => {
 	const focusManager = useFocusManager();
 
@@ -54,6 +57,10 @@ const Test: FC<TestProps> = ({
 			focusManager.focusPrevious();
 		}
 	}, [focusPrevious]);
+
+	if (unmountChildren) {
+		return null;
+	}
 
 	return (
 		<Box flexDirection="column">
@@ -384,4 +391,36 @@ test('manually focus previous component', async t => {
 		stdout.write.lastCall.args[0],
 		['First', 'Second', 'Third ✔'].join('\n')
 	);
+});
+
+test('doesnt crash when focusing next on unmounted children', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	const {rerender} = render(<Test autoFocus />, {
+		stdout,
+		stdin,
+		debug: true
+	});
+
+	await delay(100);
+	rerender(<Test focusNext unmountChildren />);
+	await delay(100);
+
+	t.is(stdout.write.lastCall.args[0], '');
+});
+
+test('doesnt crash when focusing previous on unmounted children', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	const {rerender} = render(<Test autoFocus />, {
+		stdout,
+		stdin,
+		debug: true
+	});
+
+	await delay(100);
+	rerender(<Test focusPrevious unmountChildren />);
+	await delay(100);
+
+	t.is(stdout.write.lastCall.args[0], '');
 });

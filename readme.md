@@ -89,6 +89,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [garson](https://github.com/goliney/garson) - Build interactive config-based command-line interfaces.
 - [git-contrib-calendar](https://github.com/giannisp/git-contrib-calendar) - Display a contributions calendar for any git repository.
 - [gitgud](https://github.com/GitGud-org/GitGud) - An interactive command-line GUI for Git.
+- [Autarky](https://github.com/pranshuchittora/autarky) - An interactive CLI to find and delete old `node_modules` directories in order to free up disk space.
 
 ## Contents
 
@@ -1081,7 +1082,7 @@ Output of child components.
 ### useInput(inputHandler, options?)
 
 This hook is used for handling user input.
-It's a more convienient alternative to using `useStdin` and listening to `data` events.
+It's a more convenient alternative to using `useStdin` and listening to `data` events.
 The callback you pass to `useInput` is called for each character when user enters any input.
 However, if user pastes text and it's more than one character, the callback will be called only once and the whole string will be passed as `input`.
 You can find a full example of using `useInput` at [examples/use-input](examples/use-input/use-input.js).
@@ -1768,6 +1769,7 @@ You can even inspect and change the props of components, and see the results imm
 - [Write to stdout](examples/use-stdout/use-stdout.js) - Write to stdout bypassing main Ink output.
 - [Write to stderr](examples/use-stderr/use-stderr.js) - Write to stderr bypassing main Ink output.
 - [Static](examples/static/static.js) - Use `<Static>` to render permanent output.
+- [Child process](examples/subprocess-output) - Render output from a child process.
 - [Router with Select Input](examples/router/select-input.js) - Menu-based navigation using MemoryRouter and [ink-select-input](https://github.com/vadimdemedes/ink-select-input).
 
 ## Maintainers
