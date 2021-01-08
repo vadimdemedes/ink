@@ -61,7 +61,6 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 ## Who's Using Ink?
 
 - [Gatsby](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing fast websites.
-- [Parcel](https://parceljs.org) - Blazing fast, zero configuration web application bundler.
 - [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
 - [Yarn 2](https://yarnpkg.com) - Fast, reliable, and secure dependency management for JavaScript.
 - [Terraform CDK](https://github.com/hashicorp/terraform-cdk) - CDK (Cloud Development Kit) for HashiCorp Terraform.
