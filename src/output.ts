@@ -100,7 +100,7 @@ export default class Output {
 					}
 
 					if (endX - startX < length) {
-						line = sliceAnsi(line, startX - x, endX - startX);
+						line = sliceAnsi(line, startX - x, endX - x);
 					}
 				}
 
