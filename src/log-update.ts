@@ -26,35 +26,19 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 
 		const previousLines = previousOutput.split('\n');
 		const newLines = output.split('\n');
-		let updateSequence = ansiEscapes.cursorUp(previousLineCount);
+		let updateSequence = ansiEscapes.cursorUp(previousLineCount) + 'h';
 
 		newLines.forEach((line, index) => {
-			const isPotentialRowUpdate = index < previousLines.length;
-			if (isPotentialRowUpdate) {
-				const previousChars = previousLines[index].split('');
-				const newChars = line.split('');
-				let cursor = 0;
-				let i = 0;
-				while (i < newChars.length) {
-					const isNewChar = i < previousChars.length;
-					const char = newChars[i];
-					if (isNewChar) {
-						updateSequence += char;
-						cursor += 1;
-					} else {
-						const isSameChar = newChars[i] === previousChars[i];
-						if (!isSameChar) {
-							updateSequence += ansiEscapes.cursorMove(i - cursor);
-							cursor = i;
-						}
-					}
-					i++;
+			const isPotentialUpdate = index < previousLines.length;
+			if (isPotentialUpdate) {
+				if (line !== previousLines[index]) {
+					updateSequence += ansiEscapes.eraseLine + line;
 				}
 			} else {
 				updateSequence += line;
 			}
 
-			updateSequence += ansiEscapes.cursorDown() + ansiEscapes.cursorLeft;
+			updateSequence += ansiEscapes.cursorDown() + ansiEscapes.cursorTo(0);
 		});
 
 		if (previousLineCount > newLines.length) {
