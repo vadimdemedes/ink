@@ -26,7 +26,7 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 
 		const previousLines = previousOutput.split('\n');
 		const newLines = output.split('\n');
-		let updateSequence = ansiEscapes.cursorUp(previousLineCount) + 'h';
+		let updateSequence = ansiEscapes.cursorUp(previousLineCount);
 
 		newLines.forEach((line, index) => {
 			const isPotentialUpdate = index < previousLines.length;
