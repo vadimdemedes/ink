@@ -1,7 +1,6 @@
 import React, {ReactNode} from 'react';
 import {throttle, DebouncedFunc} from 'lodash';
 import logUpdate, {LogUpdate} from './log-update';
-import ansiEscapes from 'ansi-escapes';
 import originalIsCI from 'is-ci';
 import autoBind from 'auto-bind';
 import reconciler from './reconciler';
@@ -60,7 +59,7 @@ export default class Ink {
 		this.throttledLog = options.debug
 			? this.log
 			: throttle(this.log, undefined, {
-					leading: true,
+					leading: false,
 					trailing: true
 			  });
 
@@ -111,7 +110,7 @@ export default class Ink {
 			return;
 		}
 
-		const {output, outputHeight, staticOutput} = render(
+		const {output, staticOutput} = render(
 			this.rootNode,
 			// The 'columns' property can be undefined or 0 when not using a TTY.
 			// In that case we fall back to 80.
@@ -143,13 +142,13 @@ export default class Ink {
 			this.fullStaticOutput += staticOutput;
 		}
 
-		if (outputHeight >= this.options.stdout.rows) {
+		/* 		if (outputHeight >= this.options.stdout.rows) {
 			this.options.stdout.write(
 				ansiEscapes.clearTerminal + this.fullStaticOutput + output
 			);
 			this.lastOutput = output;
 			return;
-		}
+		} */
 
 		// To ensure static output is cleanly rendered before main output, clear main output first
 		if (hasStaticOutput) {
