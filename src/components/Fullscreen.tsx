@@ -16,10 +16,8 @@ const Fullscreen: FC = ({children}) => {
 		}
 
 		process.stdout.on('resize', onResize);
-		process.stdout.write('\u001B[?1049h');
 		return () => {
 			process.stdout.off('resize', onResize);
-			process.stdout.write('\u001B[?1049l');
 		};
 	}, []);
 
