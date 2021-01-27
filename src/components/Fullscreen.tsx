@@ -8,12 +8,12 @@ const Fullscreen: FC = ({children}) => {
 	});
 
 	useEffect(() => {
-		function onResize() {
+		const onResize = () => {
 			setSize({
 				columns: process.stdout.columns,
 				rows: process.stdout.rows
 			});
-		}
+		};
 
 		process.stdout.on('resize', onResize);
 		return () => {
