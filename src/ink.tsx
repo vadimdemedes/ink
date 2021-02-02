@@ -11,6 +11,7 @@ import * as dom from './dom';
 import {FiberRoot} from 'react-reconciler';
 import instances from './instances';
 import App from './components/App';
+import ansiEscapes from 'ansi-escapes';
 
 const isCI = process.env.CI === 'false' ? false : originalIsCI;
 const noop = () => {};
@@ -110,7 +111,7 @@ export default class Ink {
 			return;
 		}
 
-		const {output, staticOutput} = render(
+		const {output, outputHeight, staticOutput} = render(
 			this.rootNode,
 			// The 'columns' property can be undefined or 0 when not using a TTY.
 			// In that case we fall back to 80.
@@ -142,13 +143,13 @@ export default class Ink {
 			this.fullStaticOutput += staticOutput;
 		}
 
-		/* 		if (outputHeight >= this.options.stdout.rows) {
+		if (outputHeight > this.options.stdout.rows) {
 			this.options.stdout.write(
 				ansiEscapes.clearTerminal + this.fullStaticOutput + output
 			);
 			this.lastOutput = output;
 			return;
-		} */
+		}
 
 		// To ensure static output is cleanly rendered before main output, clear main output first
 		if (hasStaticOutput) {
