@@ -60,35 +60,35 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 
 ## Who's Using Ink?
 
+- [Autarky](https://github.com/pranshuchittora/autarky) - An interactive CLI to find and delete old `node_modules` directories in order to free up disk space.
+- [Bit](https://github.com/teambit/bit) - Build, distribute and collaborate on components.
+- [Blitz](https://blitzjs.com) - The Fullstack React Framework.
+- [cfpush](https://github.com/mamachanko/cfpush) - An interactive Cloud Foundry tutorial in your terminal.
+- [changelog-view](https://github.com/jdeniau/changelog-view) - Tool view changelog in console.
+- [emma](https://github.com/maticzav/emma-cli) - Terminal assistant to find and install npm packages.
+- [emoj](https://github.com/sindresorhus/emoj) - Find relevant emoji on the command-line.
+- [garson](https://github.com/goliney/garson) - Build interactive config-based command-line interfaces.
 - [Gatsby](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing fast websites.
+- [git-contrib-calendar](https://github.com/giannisp/git-contrib-calendar) - Display a contributions calendar for any git repository.
+- [gitgud](https://github.com/GitGud-org/GitGud) - An interactive command-line GUI for Git.
+- [Kubelive](https://github.com/ameerthehacker/kubelive) - CLI for Kubernetes to provide live data about the cluster and its resources.
+- [loki](https://github.com/oblador/loki) - Visual Regression Testing for Storybook.
+- [New York Times](https://github.com/nytimes/kyt) - NYT uses Ink `kyt` - a toolkit that encapsulates and manages the configuration for web apps.
+- [Prime](https://github.com/birkir/prime) - Open source GraphQL CMS.
+- [Prisma](https://www.prisma.io) - The unified data layer for modern applications.
+- [Remirror](https://github.com/remirror/remirror) - Your friendly, world-class editor toolkit.
+- [share](https://github.com/marionebl/share-cli) - Quickly share files from your command line.
+- [Splash](https://github.com/Shopify/polaris-react/tree/master/scripts/splash) - Observe the splash zone of a change across the Shopify's [Polaris](https://polaris.shopify.com) component library.
+- [startd](https://github.com/mgrip/startd) - Turn your React component into a web app from the command-line.
+- [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command line tools for time-saving web developers.
 - [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
-- [Yarn 2](https://yarnpkg.com) - Fast, reliable, and secure dependency management for JavaScript.
+- [tink](https://github.com/npm/tink) - Next-generation runtime and package manager.
 - [Terraform CDK](https://github.com/hashicorp/terraform-cdk) - CDK (Cloud Development Kit) for HashiCorp Terraform.
 - [Twilio's SIGNAL](https://github.com/twilio-labs/plugin-signal2020) - CLI for Twilio's SIGNAL conference. [Blog post](https://www.twilio.com/blog/building-conference-cli-in-react).
 - [Typewriter](https://github.com/segmentio/typewriter) - Generates strongly-typed [Segment](https://segment.com) analytics clients from arbitrary JSON Schema.
-- [Prisma](https://www.prisma.io) - The unified data layer for modern applications.
 - [Wallace](https://www.projectwallace.com) - Pretty CSS analytics on the CLI.
-- [Blitz](https://blitzjs.com) - The Fullstack React Framework.
-- [New York Times](https://github.com/nytimes/kyt) - NYT uses Ink `kyt` - a toolkit that encapsulates and manages the configuration for web apps.
-- [tink](https://github.com/npm/tink) - Next-generation runtime and package manager.
-- [loki](https://github.com/oblador/loki) - Visual Regression Testing for Storybook.
-- [Bit](https://github.com/teambit/bit) - Build, distribute and collaborate on components.
-- [Remirror](https://github.com/remirror/remirror) - Your friendly, world-class editor toolkit.
-- [Prime](https://github.com/birkir/prime) - Open source GraphQL CMS.
-- [Splash](https://github.com/Shopify/polaris-react/tree/master/scripts/splash) - Observe the splash zone of a change across the Shopify's [Polaris](https://polaris.shopify.com) component library.
-- [emoj](https://github.com/sindresorhus/emoj) - Find relevant emoji on the command-line.
-- [emma](https://github.com/maticzav/emma-cli) - Terminal assistant to find and install npm packages.
-- [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command line tools for time-saving web developers.
-- [share](https://github.com/marionebl/share-cli) - Quickly share files from your command line.
-- [Kubelive](https://github.com/ameerthehacker/kubelive) - CLI for Kubernetes to provide live data about the cluster and its resources.
-- [changelog-view](https://github.com/jdeniau/changelog-view) - Tool view changelog in console.
-- [cfpush](https://github.com/mamachanko/cfpush) - An interactive Cloud Foundry tutorial in your terminal.
-- [startd](https://github.com/mgrip/startd) - Turn your React component into a web app from the command-line.
 - [wiki-cli](https://github.com/hexrcs/wiki-cli) - Search Wikipedia and read summaries directly in your terminal.
-- [garson](https://github.com/goliney/garson) - Build interactive config-based command-line interfaces.
-- [git-contrib-calendar](https://github.com/giannisp/git-contrib-calendar) - Display a contributions calendar for any git repository.
-- [gitgud](https://github.com/GitGud-org/GitGud) - An interactive command-line GUI for Git.
-- [Autarky](https://github.com/pranshuchittora/autarky) - An interactive CLI to find and delete old `node_modules` directories in order to free up disk space.
+- [Yarn 2](https://yarnpkg.com) - Fast, reliable, and secure dependency management for JavaScript.
 
 ## Contents
 
