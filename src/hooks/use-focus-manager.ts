@@ -28,7 +28,7 @@ interface Output {
 
 	/**
 	 * Switch focus to the element with provided `id`.
-	 * If there's no element with thad `id`, focus will be given to the first focusable component.
+	 * If there's no element with that `id`, focus will be given to the first focusable component.
 	 */
 	focus: Props['focus'];
 }
