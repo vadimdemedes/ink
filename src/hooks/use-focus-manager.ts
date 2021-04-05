@@ -25,6 +25,12 @@ interface Output {
 	 * If active component is the first in the list of focusable components, focus will be switched to the last component.
 	 */
 	focusPrevious: Props['focusPrevious'];
+
+	/**
+	 * Switch focus to the element with provided `id`.
+	 * If there's no element with thad `id`, focus will be given to the first focusable component.
+	 */
+	focus: Props['focus'];
 }
 
 /**
@@ -38,7 +44,8 @@ const useFocusManager = (): Output => {
 		enableFocus: focusContext.enableFocus,
 		disableFocus: focusContext.disableFocus,
 		focusNext: focusContext.focusNext,
-		focusPrevious: focusContext.focusPrevious
+		focusPrevious: focusContext.focusPrevious,
+		focus: focusContext.focus
 	};
 };
 

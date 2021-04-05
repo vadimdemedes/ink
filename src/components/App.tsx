@@ -98,7 +98,8 @@ export default class App extends PureComponent<Props, State> {
 									enableFocus: this.enableFocus,
 									disableFocus: this.disableFocus,
 									focusNext: this.focusNext,
-									focusPrevious: this.focusPrevious
+									focusPrevious: this.focusPrevious,
+									focus: this.focus
 								}}
 							>
 								{this.state.error ? (
@@ -210,6 +211,17 @@ export default class App extends PureComponent<Props, State> {
 	disableFocus = (): void => {
 		this.setState({
 			isFocusEnabled: false
+		});
+	};
+
+	focus = (id: string): void => {
+		this.setState(previousState => {
+			const elementWithIdOrNext =
+				previousState.focusables.find(e => e?.id === id)?.id ||
+				this.findNextFocusable(previousState);
+			return {
+				activeFocusId: elementWithIdOrNext
+			};
 		});
 	};
 
