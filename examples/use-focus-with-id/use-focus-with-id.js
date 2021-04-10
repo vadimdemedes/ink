@@ -11,10 +11,19 @@ const {
 
 const Focus = () => {
 	const {focus} = useFocusManager();
+
 	useInput(input => {
-		if (input === '1') focus('1');
-		if (input === '2') focus('2');
-		if (input === '3') focus('3');
+		if (input === '1') {
+			focus('1');
+		}
+
+		if (input === '2') {
+			focus('2');
+		}
+
+		if (input === '3') {
+			focus('3');
+		}
 	});
 
 	return (
