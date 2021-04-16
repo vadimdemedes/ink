@@ -78,7 +78,12 @@ Box.displayName = 'Box';
 Box.defaultProps = {
 	flexDirection: 'row',
 	flexGrow: 0,
-	flexShrink: 1
+	flexShrink: 1,
+	
+	borderRight: true,
+	borderLeft:true,
+	borderBottom:true,
+	borderTop:true
 };
 
 export default Box;
