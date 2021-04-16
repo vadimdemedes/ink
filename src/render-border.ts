@@ -4,7 +4,6 @@ import {DOMNode} from './dom';
 import Output from './output';
 
 export default (x: number, y: number, node: DOMNode, output: Output): void => {
-	console.log(node.style.borderStyle)
 	if (node.style.borderStyle) {
 		const width = node.yogaNode!.getComputedWidth();
 		const height = node.yogaNode!.getComputedHeight();

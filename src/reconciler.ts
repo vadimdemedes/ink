@@ -190,7 +190,7 @@ export default createReconciler<
 						// otherwise resulting `updatePayload` may not contain them
 						// if they weren't changed during this update
 
-						const styleKeyArray: (keyof Styles)[] = [
+						const styleKeyArray: Array<keyof Styles> = [
 							'borderStyle',
 							'borderColor',
 							'borderTop',
