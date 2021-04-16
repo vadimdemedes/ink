@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import Yoga, {YogaNode} from 'yoga-layout-prebuilt';
-import {Boxes} from 'cli-boxes';
+import {Boxes, BoxStyle} from 'cli-boxes';
 import {LiteralUnion} from 'type-fest';
 import {ForegroundColor} from 'chalk';
 
@@ -131,10 +131,10 @@ export interface Styles {
 	readonly display?: 'flex' | 'none';
 
 	/**
-	 * Add a border with a specified style.
+	 * Add a border with a specified style, chosen from a predefined preset. Alternatively, provide your own style.
 	 * If `borderStyle` is `undefined` (which it is by default), no border will be added.
 	 */
-	readonly borderStyle?: keyof Boxes;
+	readonly borderStyle?: BoxStyle | keyof Boxes;
 
 	/**
 	 * Change border color.
@@ -355,9 +355,8 @@ const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
 };
 
 const applyBorderStyles = (node: YogaNode, style: Styles): void => {
-
 	if ('borderStyle' in style) {
-		const borderWidth = typeof style.borderStyle === 'string' ? 1 : 0;
+		const borderWidth = style.borderStyle ? 1 : 0;
 
 		if (style.borderTop) node.setBorder(Yoga.EDGE_TOP, borderWidth);
 		if (style.borderBottom) node.setBorder(Yoga.EDGE_BOTTOM, borderWidth);

@@ -4,11 +4,15 @@ import {DOMNode} from './dom';
 import Output from './output';
 
 export default (x: number, y: number, node: DOMNode, output: Output): void => {
-	if (typeof node.style.borderStyle === 'string') {
+	console.log(node.style.borderStyle)
+	if (node.style.borderStyle) {
 		const width = node.yogaNode!.getComputedWidth();
 		const height = node.yogaNode!.getComputedHeight();
 		const color = node.style.borderColor;
-		const box = cliBoxes[node.style.borderStyle];
+		const box =
+			typeof node.style.borderStyle === 'string'
+				? cliBoxes[node.style.borderStyle]
+				: node.style.borderStyle;
 
 		const {borderTop, borderBottom, borderRight, borderLeft} = node.style;
 
@@ -39,7 +43,6 @@ export default (x: number, y: number, node: DOMNode, output: Output): void => {
 			color,
 			'foreground'
 		);
-
 
 		const offsetY = borderTop ? 0 : -1;
 		if (borderTop) output.write(x, y, topBorder, {transformers: []});
