@@ -1749,6 +1749,7 @@ You can even inspect and change the props of components, and see the results imm
 - [ink-confirm-input](https://github.com/kevva/ink-confirm-input) - Yes/No confirmation input.
 - [ink-syntax-highlight](https://github.com/vsashyn/ink-syntax-highlight) - Code syntax highlighting.
 - [ink-form](https://github.com/lukasbach/ink-form) - Form component.
+- [ink-task-list](https://github.com/privatenumber/ink-task-list) - Task list component.
 
 ## Useful Hooks
 
