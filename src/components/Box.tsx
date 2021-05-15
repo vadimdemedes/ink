@@ -52,21 +52,21 @@ export type Props = Except<Styles, 'textWrap'> & {
  * `<Box>` is an essential Ink component to build your layout. It's like `<div style="display: flex">` in the browser.
  */
 const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
-	({children, ...style}, ref) => {
+	({children, ...props}, ref) => {
 		const transformedStyle = {
-			...style,
-			marginLeft: style.marginLeft || style.marginX || style.margin || 0,
-			marginRight: style.marginRight || style.marginX || style.margin || 0,
-			marginTop: style.marginTop || style.marginY || style.margin || 0,
-			marginBottom: style.marginBottom || style.marginY || style.margin || 0,
-			paddingLeft: style.paddingLeft || style.paddingX || style.padding || 0,
-			paddingRight: style.paddingRight || style.paddingX || style.padding || 0,
-			paddingTop: style.paddingTop || style.paddingY || style.padding || 0,
-			paddingBottom: style.paddingBottom || style.paddingY || style.padding || 0
+			...props,
+			marginLeft: props.marginLeft || props.marginX || props.margin || 0,
+			marginRight: props.marginRight || props.marginX || props.margin || 0,
+			marginTop: props.marginTop || props.marginY || props.margin || 0,
+			marginBottom: props.marginBottom || props.marginY || props.margin || 0,
+			paddingLeft: props.paddingLeft || props.paddingX || props.padding || 0,
+			paddingRight: props.paddingRight || props.paddingX || props.padding || 0,
+			paddingTop: props.paddingTop || props.paddingY || props.padding || 0,
+			paddingBottom: props.paddingBottom || props.paddingY || props.padding || 0
 		};
 
 		return (
-			<ink-box ref={ref} style={transformedStyle}>
+			<ink-box {...props} ref={ref} style={transformedStyle}>
 				{children}
 			</ink-box>
 		);
