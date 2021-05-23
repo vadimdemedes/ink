@@ -1,5 +1,5 @@
 import {useEffect} from 'react';
-import readline from 'readline';
+import readline, {Key as KeyInfo} from 'readline';
 import useStdin from './use-stdin';
 
 /**
@@ -79,16 +79,6 @@ export interface Key {
 
 type Handler = (input: string, key: Key) => void;
 
-// Taken from https://nodejs.org/api/readline.html#readline_rl_write_data_key
-interface ReadlineKeyInfo {
-	sequence: string;
-	ctrl: boolean;
-	meta: boolean;
-	shift: boolean;
-	name: string;
-	code?: string;
-}
-
 interface Options {
 	/**
 	 * Enable or disable capturing of user input.
@@ -147,37 +137,37 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			return;
 		}
 
-		const handleKeyPress = (data: string, keyData: ReadlineKeyInfo) => {
+		const handleKeyPress = (data: string, keyInfo: KeyInfo) => {
 			let input = '';
 
-			if (keyData.ctrl || keyData.meta) {
-				input = keyData.name;
+			if ((keyInfo.ctrl || keyInfo.meta) && keyInfo.name) {
+				input = keyInfo.name;
 			} else {
 				input = String(data);
 			}
 
-			if (keyData.meta && keyData.shift) {
+			if (keyInfo.meta && keyInfo.shift) {
 				// If caps lock is on, then `shift` will be true on `meta` events
 				input = input.toUpperCase();
 			}
 
 			const key = {
-				upArrow: keyData.name === 'up',
-				downArrow: keyData.name === 'down',
-				leftArrow: keyData.name === 'left',
-				rightArrow: keyData.name === 'right',
-				pageDown: keyData.name === 'pagedown',
-				pageUp: keyData.name === 'pageup',
+				upArrow: keyInfo.name === 'up',
+				downArrow: keyInfo.name === 'down',
+				leftArrow: keyInfo.name === 'left',
+				rightArrow: keyInfo.name === 'right',
+				pageDown: keyInfo.name === 'pagedown',
+				pageUp: keyInfo.name === 'pageup',
 				return: input === 'return',
-				escape: keyData.name === 'escape',
-				ctrl: keyData.ctrl,
-				shift: keyData.shift,
-				tab: keyData.name === 'tab',
+				escape: keyInfo.name === 'escape',
+				ctrl: keyInfo.ctrl ?? false,
+				shift: keyInfo.shift ?? false,
+				tab: keyInfo.name === 'tab',
 				// Replacing Node's version of '\u007F' from `backspace` to `delete`:
 				// https://github.com/nodejs/node/blob/54dfdbcccf1f2844974bdcdedbfa1f45d75c55d5/lib/internal/readline/utils.js#L328
-				backspace: keyData.name === 'backspace' && input !== '\u007F',
-				delete: keyData.name === 'delete' || input === '\u007F',
-				meta: keyData.meta
+				backspace: keyInfo.name === 'backspace' && input !== '\u007F',
+				delete: keyInfo.name === 'delete' || input === '\u007F',
+				meta: keyInfo.meta ?? false
 			};
 
 			if (key.tab || key.backspace || key.delete) {
