@@ -1,4 +1,5 @@
 import {useEffect} from 'react';
+import readline from 'readline';
 import useStdin from './use-stdin';
 
 /**
@@ -78,6 +79,16 @@ export interface Key {
 
 type Handler = (input: string, key: Key) => void;
 
+// Taken from https://nodejs.org/api/readline.html#readline_rl_write_data_key
+interface ReadlineKeyInfo {
+	sequence: string;
+	ctrl: boolean;
+	meta: boolean;
+	shift: boolean;
+	name: string;
+	code?: string;
+}
+
 interface Options {
 	/**
 	 * Enable or disable capturing of user input.
@@ -120,6 +131,10 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			return;
 		}
 
+		if (stdin) {
+			readline.emitKeypressEvents(stdin);
+		}
+
 		setRawMode(true);
 
 		return () => {
@@ -132,49 +147,38 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			return;
 		}
 
-		const handleData = (data: Buffer) => {
-			let input = String(data);
+		const handleKeyPress = (data: string, keyData: ReadlineKeyInfo) => {
+			let input = '';
+
+			if (keyData.ctrl || keyData.meta) {
+				input = keyData.name;
+			} else {
+				input = String(data);
+			}
+
+			if (keyData.meta && keyData.shift) {
+				// If caps lock is on, then `shift` will be true on `meta` events
+				input = input.toUpperCase();
+			}
 
 			const key = {
-				upArrow: input === '\u001B[A',
-				downArrow: input === '\u001B[B',
-				leftArrow: input === '\u001B[D',
-				rightArrow: input === '\u001B[C',
-				pageDown: input === '\u001B[6~',
-				pageUp: input === '\u001B[5~',
-				return: input === '\r',
-				escape: input === '\u001B',
-				ctrl: false,
-				shift: false,
-				tab: input === '\t' || input === '\u001B[Z',
-				backspace: input === '\u0008',
-				delete: input === '\u007F' || input === '\u001B[3~',
-				meta: false
+				upArrow: keyData.name === 'up',
+				downArrow: keyData.name === 'down',
+				leftArrow: keyData.name === 'left',
+				rightArrow: keyData.name === 'right',
+				pageDown: keyData.name === 'pagedown',
+				pageUp: keyData.name === 'pageup',
+				return: input === 'return',
+				escape: keyData.name === 'escape',
+				ctrl: keyData.ctrl,
+				shift: keyData.shift,
+				tab: keyData.name === 'tab',
+				// Replacing Node's version of '\u007F' from `backspace` to `delete`:
+				// https://github.com/nodejs/node/blob/54dfdbcccf1f2844974bdcdedbfa1f45d75c55d5/lib/internal/readline/utils.js#L328
+				backspace: keyData.name === 'backspace' && input !== '\u007F',
+				delete: keyData.name === 'delete' || input === '\u007F',
+				meta: keyData.meta
 			};
-
-			// Copied from `keypress` module
-			if (input <= '\u001A' && !key.return) {
-				input = String.fromCharCode(
-					input.charCodeAt(0) + 'a'.charCodeAt(0) - 1
-				);
-				key.ctrl = true;
-			}
-
-			if (input.startsWith('\u001B')) {
-				input = input.slice(1);
-				key.meta = true;
-			}
-
-			const isLatinUppercase = input >= 'A' && input <= 'Z';
-			const isCyrillicUppercase = input >= 'А' && input <= 'Я';
-			if (input.length === 1 && (isLatinUppercase || isCyrillicUppercase)) {
-				key.shift = true;
-			}
-
-			// Shift+Tab
-			if (key.tab && input === '[Z') {
-				key.shift = true;
-			}
 
 			if (key.tab || key.backspace || key.delete) {
 				input = '';
@@ -186,10 +190,10 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			}
 		};
 
-		stdin?.on('data', handleData);
+		stdin?.on('keypress', handleKeyPress);
 
 		return () => {
-			stdin?.off('data', handleData);
+			stdin?.off('keypress', handleKeyPress);
 		};
 	}, [options.isActive, stdin, internal_exitOnCtrlC, inputHandler]);
 };
