@@ -85,6 +85,16 @@ const UserInput: FC<{test: string}> = ({test}) => {
 			return;
 		}
 
+		if (test === 'meta without char' && input === '' && key.meta) {
+			exit();
+			return;
+		}
+
+		if (test === 'multiple meta with char' && input === 'Z' && key.meta) {
+			exit();
+			return;
+		}
+
 		throw new Error('Crash');
 	});
 

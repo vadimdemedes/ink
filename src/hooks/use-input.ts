@@ -138,17 +138,21 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 		}
 
 		const handleKeyPress = (data: string, keyInfo: KeyInfo) => {
-			let input = '';
+			let input: string;
 
-			if ((keyInfo.ctrl || keyInfo.meta) && keyInfo.name) {
-				input = keyInfo.name;
+			if (keyInfo.ctrl) {
+				if (keyInfo.name) {
+					// Name is always the name of the key pressed with `ctrl`
+					input = keyInfo.name;
+				} else {
+					input = '';
+				}
+			} else if (keyInfo.meta) {
+				// This handles the case where a sequence is made of multiple escape keys
+				// eslint-disable-next-line no-control-regex
+				input = keyInfo.sequence?.replace(/^(\u001B)+/, '') ?? '';
 			} else {
 				input = String(data);
-			}
-
-			if (keyInfo.meta && keyInfo.shift) {
-				// If caps lock is on, then `shift` will be true on `meta` events
-				input = input.toUpperCase();
 			}
 
 			const key = {
