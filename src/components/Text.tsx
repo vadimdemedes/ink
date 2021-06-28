@@ -67,7 +67,8 @@ const Text: FC<Props> = ({
 	strikethrough,
 	inverse,
 	wrap,
-	children
+	children,
+	...props
 }) => {
 	if (children === undefined || children === null) {
 		return null;
@@ -111,6 +112,7 @@ const Text: FC<Props> = ({
 
 	return (
 		<ink-text
+			{...props}
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap}}
 			internal_transform={transform}
 		>
