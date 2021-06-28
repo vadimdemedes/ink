@@ -55,7 +55,7 @@
 		"signal-exit": "^3.0.2",
 		"slice-ansi": "^3.0.0",
 		"stack-utils": "^2.0.2",
-		"string-length": "^3.1.0",
+		"string-width": "^4.2.2",
 		"type-fest": "^0.12.0",
 		"widest-line": "^3.1.0",
 		"wrap-ansi": "^6.2.0",

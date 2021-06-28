@@ -1,5 +1,5 @@
 import sliceAnsi from 'slice-ansi';
-import stringLength from 'string-length';
+import stringWidth from 'string-width';
 import {OutputTransformer} from './render-node-to-output';
 
 /**
@@ -72,7 +72,7 @@ export default class Output {
 					continue;
 				}
 
-				const length = stringLength(line);
+				const width = stringWidth(line);
 
 				for (const transformer of transformers) {
 					line = transformer(line);
@@ -81,7 +81,7 @@ export default class Output {
 				output[y + offsetY] =
 					sliceAnsi(currentLine, 0, x) +
 					line +
-					sliceAnsi(currentLine, x + length);
+					sliceAnsi(currentLine, x + width);
 
 				offsetY++;
 			}
