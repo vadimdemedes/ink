@@ -24,9 +24,22 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 			return;
 		}
 
-		previousOutput = output;
-		stream.write(ansiEscapes.eraseLines(previousLineCount) + output);
-		previousLineCount = output.split('\n').length;
+		const newLines = output.split('\n');
+		let updateSequence = ansiEscapes.cursorUp(previousLineCount);
+
+		newLines.forEach(line => {
+			updateSequence += ansiEscapes.eraseLine + line;
+			updateSequence += ansiEscapes.cursorDown() + ansiEscapes.cursorTo(0);
+		});
+
+		if (previousLineCount > newLines.length) {
+			updateSequence += ansiEscapes.eraseLines(
+				previousLineCount - newLines.length
+			);
+		}
+
+		stream.write(updateSequence);
+		previousLineCount = newLines.length;
 	};
 
 	render.clear = () => {
