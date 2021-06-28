@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import Yoga, {YogaNode} from 'yoga-layout-prebuilt';
-import {Boxes} from 'cli-boxes';
+import {Boxes, BoxStyle} from 'cli-boxes';
 import {LiteralUnion} from 'type-fest';
 import {ForegroundColor} from 'chalk';
 
@@ -131,16 +131,36 @@ export interface Styles {
 	readonly display?: 'flex' | 'none';
 
 	/**
-	 * Add a border with a specified style.
+	 * Add a border with a specified style, chosen from a predefined preset. Alternatively, provide your own style.
 	 * If `borderStyle` is `undefined` (which it is by default), no border will be added.
 	 */
-	readonly borderStyle?: keyof Boxes;
+	readonly borderStyle?: BoxStyle | keyof Boxes;
 
 	/**
 	 * Change border color.
 	 * Accepts the same values as `color` in <Text> component.
 	 */
 	readonly borderColor?: LiteralUnion<typeof ForegroundColor, string>;
+
+	/**
+	 * Change whether the top border is present. Works only if `borderStyle` is already present. True by default
+	 */
+	readonly borderTop?: boolean;
+
+	/**
+	 * Change whether the bottom border is present. Works only if `borderStyle` is already present. True by default
+	 */
+	readonly borderBottom?: boolean;
+
+	/**
+	 * Change whether the left border is present. Works only if `borderStyle` is already present. True by default
+	 */
+	readonly borderLeft?: boolean;
+
+	/**
+	 * Change whether the right border is present. Works only if `borderStyle` is already present. True by default
+	 */
+	readonly borderRight?: boolean;
 }
 
 const applyPositionStyles = (node: Yoga.YogaNode, style: Styles): void => {
@@ -336,12 +356,12 @@ const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
 
 const applyBorderStyles = (node: YogaNode, style: Styles): void => {
 	if ('borderStyle' in style) {
-		const borderWidth = typeof style.borderStyle === 'string' ? 1 : 0;
+		const borderWidth = style.borderStyle ? 1 : 0;
 
-		node.setBorder(Yoga.EDGE_TOP, borderWidth);
-		node.setBorder(Yoga.EDGE_BOTTOM, borderWidth);
-		node.setBorder(Yoga.EDGE_LEFT, borderWidth);
-		node.setBorder(Yoga.EDGE_RIGHT, borderWidth);
+		if (style.borderTop) node.setBorder(Yoga.EDGE_TOP, borderWidth);
+		if (style.borderBottom) node.setBorder(Yoga.EDGE_BOTTOM, borderWidth);
+		if (style.borderLeft) node.setBorder(Yoga.EDGE_LEFT, borderWidth);
+		if (style.borderRight) node.setBorder(Yoga.EDGE_RIGHT, borderWidth);
 	}
 };
 
