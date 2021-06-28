@@ -12,6 +12,11 @@ interface Input {
 	 * Auto focus this component, if there's no active (focused) component right now.
 	 */
 	autoFocus?: boolean;
+
+	/**
+	 * Assign an ID to this component, so it can be programmatically focused with `focus(id)`.
+	 */
+	id?: string;
 }
 
 interface Output {
@@ -19,6 +24,11 @@ interface Output {
 	 * Determines whether this component is focused or not.
 	 */
 	isFocused: boolean;
+
+	/**
+	 * Allows focusing a specific element with the provided `id`.
+	 */
+	focus: (id: string) => void;
 }
 
 /**
@@ -29,29 +39,35 @@ interface Output {
  * This hook returns an object with `isFocused` boolean property, which
  * determines if this component is focused or not.
  */
-const useFocus = ({isActive = true, autoFocus = false}: Input = {}): Output => {
+const useFocus = ({
+	isActive = true,
+	autoFocus = false,
+	id
+}: Input = {}): Output => {
 	const {isRawModeSupported, setRawMode} = useStdin();
-	const {activeId, add, remove, activate, deactivate} = useContext(
+	const {activeId, add, remove, activate, deactivate, focus} = useContext(
 		FocusContext
 	);
 
-	const id = useMemo(() => Math.random().toString().slice(2, 7), []);
+	const resolvedId = useMemo(() => id ?? Math.random().toString().slice(2, 7), [
+		id
+	]);
 
 	useEffect(() => {
-		add(id, {autoFocus});
+		add(resolvedId, {autoFocus});
 
 		return () => {
-			remove(id);
+			remove(resolvedId);
 		};
-	}, [id, autoFocus]);
+	}, [resolvedId, autoFocus]);
 
 	useEffect(() => {
 		if (isActive) {
-			activate(id);
+			activate(resolvedId);
 		} else {
-			deactivate(id);
+			deactivate(resolvedId);
 		}
-	}, [isActive, id]);
+	}, [isActive, resolvedId]);
 
 	useEffect(() => {
 		if (!isRawModeSupported || !isActive) {
@@ -66,7 +82,8 @@ const useFocus = ({isActive = true, autoFocus = false}: Input = {}): Output => {
 	}, [isActive]);
 
 	return {
-		isFocused: Boolean(id) && activeId === id
+		isFocused: Boolean(resolvedId) && activeId === resolvedId,
+		focus
 	};
 };
 
