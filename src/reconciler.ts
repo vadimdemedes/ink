@@ -189,7 +189,11 @@ export default createReconciler<
 						// Always include `borderColor` and `borderStyle` to ensure border is rendered,
 						// otherwise resulting `updatePayload` may not contain them
 						// if they weren't changed during this update
-						if (styleKey === 'borderStyle' || styleKey === 'borderColor') {
+						if (
+							styleKey === 'borderStyle' ||
+							styleKey === 'borderColor' ||
+							styleKey === 'overflow'
+						) {
 							if (typeof updatePayload.style !== 'object') {
 								// Linter didn't like `= {} as Style`
 								const style: Styles = {};
@@ -198,6 +202,7 @@ export default createReconciler<
 
 							(updatePayload.style as any).borderStyle = newStyle.borderStyle;
 							(updatePayload.style as any).borderColor = newStyle.borderColor;
+							(updatePayload.style as any).overflow = newStyle.overflow;
 						}
 
 						if (newStyle[styleKey] !== oldStyle[styleKey]) {
