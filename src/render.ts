@@ -55,8 +55,18 @@ export interface Instance {
 	 * Returns a promise, which resolves when app is unmounted.
 	 */
 	waitUntilExit: Ink['waitUntilExit'];
+	/**
+	 * Write to stdout without disrupting the render cycle.
+	 */
+	writeToStdout: Ink['writeToStdout'];
+	/**
+	 * Write to stderr without disrupting the render cycle.
+	 */
+	writeToStderr: Ink['writeToStderr'];
+	/**
+	 * Delete this instance.
+	 */
 	cleanup: () => void;
-
 	/**
 	 * Clear output.
 	 */
@@ -93,6 +103,8 @@ const render: RenderFunction = (node, options): Instance => {
 		rerender: instance.render,
 		unmount: () => instance.unmount(),
 		waitUntilExit: instance.waitUntilExit,
+		writeToStdout: data => instance.writeToStdout(data),
+		writeToStderr: data => instance.writeToStderr(data),
 		cleanup: () => instances.delete(inkOptions.stdout),
 		clear: instance.clear
 	};
