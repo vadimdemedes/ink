@@ -162,6 +162,20 @@ test('useInput - handle remove (delete)', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test('useInput - handle meta without char', async t => {
+	const ps = term('use-input', ['meta without char']);
+	ps.write('\u001B');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test('useInput - handle multiple meta inputs with char', async t => {
+	const ps = term('use-input', ['multiple meta with char']);
+	ps.write('\u001B\u001BZ');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test('useInput - ignore input if not active', async t => {
 	const ps = term('use-input-multiple');
 	ps.write('x');

@@ -30,32 +30,32 @@ const UserInput: FC<{test: string}> = ({test}) => {
 			return;
 		}
 
-		if (test === 'upArrow' && key.upArrow) {
+		if (test === 'upArrow' && key.upArrow && !key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'downArrow' && key.downArrow) {
+		if (test === 'downArrow' && key.downArrow && !key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'leftArrow' && key.leftArrow) {
+		if (test === 'leftArrow' && key.leftArrow && !key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'rightArrow' && key.rightArrow) {
+		if (test === 'rightArrow' && key.rightArrow && !key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'pageDown' && key.pageDown) {
+		if (test === 'pageDown' && key.pageDown && !key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'pageUp' && key.pageUp) {
+		if (test === 'pageUp' && key.pageUp && !key.meta) {
 			exit();
 			return;
 		}
@@ -81,6 +81,16 @@ const UserInput: FC<{test: string}> = ({test}) => {
 		}
 
 		if (test === 'remove' && input === '' && key.delete) {
+			exit();
+			return;
+		}
+
+		if (test === 'meta without char' && input === '' && key.meta) {
+			exit();
+			return;
+		}
+
+		if (test === 'multiple meta with char' && input === 'Z' && key.meta) {
 			exit();
 			return;
 		}
