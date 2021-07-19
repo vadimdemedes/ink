@@ -216,12 +216,15 @@ export default class App extends PureComponent<Props, State> {
 
 	focus = (id: string): void => {
 		this.setState(previousState => {
-			const targetIdOrNext =
-				previousState.focusables.find(focusable => focusable.id === id)?.id ||
-				this.findNextFocusable(previousState);
-			return {
-				activeFocusId: targetIdOrNext
-			};
+			const hasFocusableId = previousState.focusables.some(
+				focusable => focusable?.id === id
+			);
+
+			if (!hasFocusableId) {
+				return previousState;
+			}
+
+			return {activeFocusId: id};
 		});
 	};
 
