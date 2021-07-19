@@ -44,6 +44,26 @@ test('single node - fit-content box', t => {
 	t.is(output, box('Hello World'));
 });
 
+test('single node - fit-content box with wide characters', t => {
+	const output = renderToString(
+		<Box borderStyle="round" alignSelf="flex-start">
+			<Text>こんにちは</Text>
+		</Box>
+	);
+
+	t.is(output, box('こんにちは'));
+});
+
+test('single node - fit-content box with emojis', t => {
+	const output = renderToString(
+		<Box borderStyle="round" alignSelf="flex-start">
+			<Text>🌊🌊</Text>
+		</Box>
+	);
+
+	t.is(output, box('🌊🌊'));
+});
+
 test('single node - fixed width box', t => {
 	const output = renderToString(
 		<Box borderStyle="round" width={20}>
