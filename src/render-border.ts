@@ -9,9 +9,10 @@ export default (x: number, y: number, node: DOMNode, output: Output): void => {
 		const height = node.yogaNode!.getComputedHeight();
 		const color = node.style.borderColor;
 		const box = cliBoxes[node.style.borderStyle];
+		const title = (node.style.title || "").substr(0, width - 3);
 
 		const topBorder = colorize(
-			box.topLeft + box.horizontal.repeat(width - 2) + box.topRight,
+			box.topLeft + box.horizontal + title + box.horizontal.repeat(width - 3 - title.length) + box.topRight,
 			color,
 			'foreground'
 		);

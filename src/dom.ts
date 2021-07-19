@@ -156,7 +156,7 @@ export const setAttribute = (
 };
 
 export const setStyle = (node: DOMNode, style: Styles): void => {
-	node.style = style;
+	node.style = {...node.style, ...style};
 
 	if (node.yogaNode) {
 		applyStyles(node.yogaNode, style);

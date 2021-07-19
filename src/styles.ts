@@ -141,6 +141,9 @@ export interface Styles {
 	 * Accepts the same values as `color` in <Text> component.
 	 */
 	readonly borderColor?: LiteralUnion<typeof ForegroundColor, string>;
+
+
+	readonly title?: string;
 }
 
 const applyPositionStyles = (node: Yoga.YogaNode, style: Styles): void => {
