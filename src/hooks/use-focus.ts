@@ -42,32 +42,32 @@ interface Output {
 const useFocus = ({
 	isActive = true,
 	autoFocus = false,
-	id
+	id: customId
 }: Input = {}): Output => {
 	const {isRawModeSupported, setRawMode} = useStdin();
 	const {activeId, add, remove, activate, deactivate, focus} = useContext(
 		FocusContext
 	);
 
-	const resolvedId = useMemo(() => id ?? Math.random().toString().slice(2, 7), [
-		id
+	const id = useMemo(() => customId ?? Math.random().toString().slice(2, 7), [
+		customId
 	]);
 
 	useEffect(() => {
-		add(resolvedId, {autoFocus});
+		add(id, {autoFocus});
 
 		return () => {
-			remove(resolvedId);
+			remove(id);
 		};
-	}, [resolvedId, autoFocus]);
+	}, [id, autoFocus]);
 
 	useEffect(() => {
 		if (isActive) {
-			activate(resolvedId);
+			activate(id);
 		} else {
-			deactivate(resolvedId);
+			deactivate(id);
 		}
-	}, [isActive, resolvedId]);
+	}, [isActive, id]);
 
 	useEffect(() => {
 		if (!isRawModeSupported || !isActive) {
@@ -82,7 +82,7 @@ const useFocus = ({
 	}, [isActive]);
 
 	return {
-		isFocused: Boolean(resolvedId) && activeId === resolvedId,
+		isFocused: Boolean(id) && activeId === id,
 		focus
 	};
 };
