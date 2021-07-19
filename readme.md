@@ -1551,7 +1551,11 @@ const Example = () => {
 
 #### focus(id)
 
-Switch focus to the component with the given `id`.
+##### id
+
+Type: `string`
+
+Switch focus to the component with the given [`id`](#id).
 If there's no component with that ID, focus will be given to the next focusable component.
 
 ```js
