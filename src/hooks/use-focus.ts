@@ -45,9 +45,8 @@ const useFocus = ({
 	id: customId
 }: Input = {}): Output => {
 	const {isRawModeSupported, setRawMode} = useStdin();
-	const {activeId, add, remove, activate, deactivate, focus} = useContext(
-		FocusContext
-	);
+	const {activeId, add, remove, activate, deactivate, focus} =
+        useContext(FocusContext);
 
 	const id = useMemo(() => customId ?? Math.random().toString().slice(2, 7), [
 		customId

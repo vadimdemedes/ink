@@ -1,5 +1,5 @@
 import React, {FC, ReactNode} from 'react';
-import chalk, {ForegroundColor, BackgroundColor} from 'chalk';
+import chalk, {ForegroundColor} from 'chalk';
 import colorize from '../colorize';
 import {Styles} from '../styles';
 import {LiteralUnion} from 'type-fest';
@@ -13,7 +13,7 @@ export interface Props {
 	/**
 	 * Same as `color`, but for background.
 	 */
-	readonly backgroundColor?: LiteralUnion<typeof BackgroundColor, string>;
+	readonly backgroundColor?: LiteralUnion<typeof ForegroundColor, string>;
 
 	/**
 	 * Dim the color (emit a small amount of light).

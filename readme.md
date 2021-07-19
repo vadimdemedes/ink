@@ -62,7 +62,6 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 
 - [Gatsby](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing fast websites.
 - [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
-- [Yarn 2](https://yarnpkg.com) - Fast, reliable, and secure dependency management for JavaScript.
 - [Terraform CDK](https://github.com/hashicorp/terraform-cdk) - CDK (Cloud Development Kit) for HashiCorp Terraform.
 - [Twilio's SIGNAL](https://github.com/twilio-labs/plugin-signal2020) - CLI for Twilio's SIGNAL conference. [Blog post](https://www.twilio.com/blog/building-conference-cli-in-react).
 - [Typewriter](https://github.com/segmentio/typewriter) - Generates strongly-typed [Segment](https://segment.com) analytics clients from arbitrary JSON Schema.
@@ -89,6 +88,8 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [git-contrib-calendar](https://github.com/giannisp/git-contrib-calendar) - Display a contributions calendar for any git repository.
 - [gitgud](https://github.com/GitGud-org/GitGud) - An interactive command-line GUI for Git.
 - [Autarky](https://github.com/pranshuchittora/autarky) - An interactive CLI to find and delete old `node_modules` directories in order to free up disk space.
+- [fast-cli](https://github.com/sindresorhus/fast-cli) - Test your download and upload speed.
+- [tasuku](https://github.com/privatenumber/tasuku) - Minimal task runner.
 
 ## Contents
 
@@ -1782,6 +1783,7 @@ You can even inspect and change the props of components, and see the results imm
 - [ink-confirm-input](https://github.com/kevva/ink-confirm-input) - Yes/No confirmation input.
 - [ink-syntax-highlight](https://github.com/vsashyn/ink-syntax-highlight) - Code syntax highlighting.
 - [ink-form](https://github.com/lukasbach/ink-form) - Form component.
+- [ink-task-list](https://github.com/privatenumber/ink-task-list) - Task list component.
 
 ## Useful Hooks
 
