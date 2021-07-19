@@ -31,9 +31,8 @@ interface Output {
  */
 const useFocus = ({isActive = true, autoFocus = false}: Input = {}): Output => {
 	const {isRawModeSupported, setRawMode} = useStdin();
-	const {activeId, add, remove, activate, deactivate} = useContext(
-		FocusContext
-	);
+	const {activeId, add, remove, activate, deactivate} =
+		useContext(FocusContext);
 
 	const id = useMemo(() => Math.random().toString().slice(2, 7), []);
 
