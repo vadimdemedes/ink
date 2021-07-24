@@ -2,8 +2,8 @@ import chalk from 'chalk';
 
 type ColorType = 'foreground' | 'background';
 
-const RGB_LIKE_REGEX = /^(rgb|hsl|hsv|hwb)\(\s?(\d+),\s?(\d+),\s?(\d+)\s?\)$/;
-const ANSI_REGEX = /^(ansi|ansi256)\(\s?(\d+)\s?\)$/;
+const RGB_LIKE_REGEX = /^(rgb)\(\s?(\d+),\s?(\d+),\s?(\d+)\s?\)$/;
+const ANSI_REGEX = /^(ansi256)\(\s?(\d+)\s?\)$/;
 
 const getMethod = (name: string, type: ColorType): string => {
 	if (type === 'foreground') {
@@ -32,7 +32,7 @@ export default (
 		return (chalk as any)[method](color)(str);
 	}
 
-	if (color.startsWith('ansi')) {
+	if (color.startsWith('ansi256')) {
 		const matches = ANSI_REGEX.exec(color);
 
 		if (!matches) {
@@ -45,11 +45,7 @@ export default (
 		return (chalk as any)[method](value)(str);
 	}
 
-	const isRgbLike =
-		color.startsWith('rgb') ||
-		color.startsWith('hsl') ||
-		color.startsWith('hsv') ||
-		color.startsWith('hwb');
+	const isRgbLike = color.startsWith('rgb');
 
 	if (isRgbLike) {
 		const matches = RGB_LIKE_REGEX.exec(color);
