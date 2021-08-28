@@ -1,6 +1,6 @@
 import {ReactNode, Key, LegacyRef} from 'react';
 import {Except} from 'type-fest';
-import {DOMElement} from './dom';
+import {DirectRenderFunc, DOMElement} from './dom';
 import {Styles} from './styles';
 
 declare global {
@@ -18,6 +18,7 @@ declare namespace Ink {
 		key?: Key;
 		ref?: LegacyRef<DOMElement>;
 		style?: Except<Styles, 'textWrap'>;
+		unsafeDirectRender?: DirectRenderFunc;
 	}
 
 	interface Text {

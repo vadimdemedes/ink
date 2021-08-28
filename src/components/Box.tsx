@@ -2,7 +2,7 @@
 import React, {forwardRef, PropsWithChildren} from 'react';
 import {Except} from 'type-fest';
 import {Styles} from '../styles';
-import {DOMElement} from '../dom';
+import {DirectRenderFunc, DOMElement} from '../dom';
 
 export type Props = Except<Styles, 'textWrap'> & {
 	/**
@@ -46,13 +46,18 @@ export type Props = Except<Styles, 'textWrap'> & {
 	 * @default 0
 	 */
 	readonly paddingY?: number;
+
+	/**
+	 * Specify a custom render function that will be called by the renderer before border and children are rendered.
+	 */
+	readonly unsafeDirectRender?: DirectRenderFunc;
 };
 
 /**
  * `<Box>` is an essential Ink component to build your layout. It's like `<div style="display: flex">` in the browser.
  */
 const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
-	({children, ...style}, ref) => {
+	({children, unsafeDirectRender, ...style}, ref) => {
 		const transformedStyle = {
 			...style,
 			marginLeft: style.marginLeft || style.marginX || style.margin || 0,
@@ -66,7 +71,11 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 		};
 
 		return (
-			<ink-box ref={ref} style={transformedStyle}>
+			<ink-box
+				ref={ref}
+				style={transformedStyle}
+				unsafeDirectRender={unsafeDirectRender}
+			>
 				{children}
 			</ink-box>
 		);

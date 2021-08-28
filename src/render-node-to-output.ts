@@ -89,6 +89,10 @@ const renderNodeToOutput = (
 		}
 
 		if (node.nodeName === 'ink-box') {
+			if (node.internal_pre_render) {
+				node.internal_pre_render(x, y, node, output);
+			}
+
 			renderBorder(x, y, node, output);
 		}
 

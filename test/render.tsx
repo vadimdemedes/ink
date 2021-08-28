@@ -8,6 +8,7 @@ import boxen from 'boxen';
 import delay from 'delay';
 import {render, Box, Text} from '../src';
 import createStdout from './helpers/create-stdout';
+import {DirectRenderFunc} from '../src/dom';
 
 const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: unknown) => void;
@@ -141,4 +142,25 @@ test('rerender on resize', async t => {
 
 	unmount();
 	t.is(stdout.listeners('resize').length, 0);
+});
+
+test('manual render', t => {
+	const stdout = createStdout(10);
+
+	const custRender: DirectRenderFunc = (x, y, node, output) => {
+		const width = node.yogaNode!.getComputedWidth();
+		output.write(x, y, '$'.repeat(width), {transformers: []});
+	};
+
+	const Test = () => (
+		<Box unsafeDirectRender={custRender}>
+			<Text>Test</Text>
+		</Box>
+	);
+
+	const {unmount} = render(<Test />, {stdout});
+
+	t.is(stripAnsi(stdout.write.firstCall.args[0]), 'Test$$$$$$\n');
+
+	unmount();
 });
