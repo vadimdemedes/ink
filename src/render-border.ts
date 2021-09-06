@@ -28,12 +28,14 @@ export default (x: number, y: number, node: DOMNode, output: Output): void => {
 	if (top) {
 		const cornersWidth = Number(shouldDrawTopLeft) + Number(shouldDrawTopRight);
 		const border = colorize(
-			(shouldDrawTopLeft ? topLeft! : '') +
+			(
+				(shouldDrawTopLeft ? topLeft! : '') +
 				top.repeat(Math.max(width - cornersWidth, 0)) +
-				(shouldDrawTopRight ? topRight! : ''),
+				(shouldDrawTopRight ? topRight! : '')
+			).slice(0, width),
 			color,
 			'foreground'
-		).slice(0, width);
+		);
 
 		output.write(x, y, border, {transformers: []});
 
@@ -46,12 +48,14 @@ export default (x: number, y: number, node: DOMNode, output: Output): void => {
 		const cornersWidth =
 			Number(shouldDrawBottomLeft) + Number(shouldDrawBottomRight);
 		const border = colorize(
-			(shouldDrawBottomLeft ? bottomLeft! : '') +
+			(
+				(shouldDrawBottomLeft ? bottomLeft! : '') +
 				bottom.repeat(Math.max(width - cornersWidth, 0)) +
-				(shouldDrawBottomRight ? bottomRight! : ''),
+				(shouldDrawBottomRight ? bottomRight! : '')
+			).slice(0, width),
 			color,
 			'foreground'
-		).slice(0, width);
+		);
 
 		output.write(x, y + height - 1, border, {
 			transformers: []

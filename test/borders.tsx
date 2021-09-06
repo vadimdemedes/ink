@@ -1,18 +1,9 @@
 import React, {useState, useEffect} from 'react';
 import test from 'ava';
-import boxen, {Options} from 'boxen';
-import indentString from 'indent-string';
 import delay from 'delay';
 import {renderToString} from './helpers/render-to-string';
 import createStdout from './helpers/create-stdout';
-import {render, Box, Text} from '../src';
-
-const box = (text: string, options?: Options): string => {
-	return boxen(text, {
-		...options,
-		borderStyle: 'round'
-	});
-};
+import {render, Box, Text, Newline} from '../src';
 
 test('single node - full width box', t => {
 	const output = renderToString(
@@ -21,7 +12,7 @@ test('single node - full width box', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'.padEnd(98, ' ')));
+	t.snapshot(output);
 });
 
 test('single node - full width box with colorful border', t => {
@@ -31,7 +22,7 @@ test('single node - full width box with colorful border', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'.padEnd(98, ' '), {borderColor: 'green'}));
+	t.snapshot(output);
 });
 
 test('single node - fit-content box', t => {
@@ -41,7 +32,7 @@ test('single node - fit-content box', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'));
+	t.snapshot(output);
 });
 
 test('single node - fit-content box with wide characters', t => {
@@ -51,7 +42,7 @@ test('single node - fit-content box with wide characters', t => {
 		</Box>
 	);
 
-	t.is(output, box('こんにちは'));
+	t.snapshot(output);
 });
 
 test('single node - fit-content box with emojis', t => {
@@ -61,7 +52,7 @@ test('single node - fit-content box with emojis', t => {
 		</Box>
 	);
 
-	t.is(output, box('🌊🌊'));
+	t.snapshot(output);
 });
 
 test('single node - fixed width box', t => {
@@ -70,7 +61,7 @@ test('single node - fixed width box', t => {
 			<Text>Hello World</Text>
 		</Box>
 	);
-	t.is(output, box('Hello World'.padEnd(18, ' ')));
+	t.snapshot(output);
 });
 
 test('single node - fixed width and height box', t => {
@@ -79,7 +70,7 @@ test('single node - fixed width and height box', t => {
 			<Text>Hello World</Text>
 		</Box>
 	);
-	t.is(output, box('Hello World'.padEnd(18, ' ') + '\n'.repeat(17)));
+	t.snapshot(output);
 });
 
 test('single node - box with padding', t => {
@@ -88,7 +79,7 @@ test('single node - box with padding', t => {
 			<Text>Hello World</Text>
 		</Box>
 	);
-	t.is(output, box('\n Hello World \n'));
+	t.snapshot(output);
 });
 
 test('single node - box with horizontal alignment', t => {
@@ -97,7 +88,7 @@ test('single node - box with horizontal alignment', t => {
 			<Text>Hello World</Text>
 		</Box>
 	);
-	t.is(output, box('   Hello World    '));
+	t.snapshot(output);
 });
 
 test('single node - box with vertical alignment', t => {
@@ -112,7 +103,7 @@ test('single node - box with vertical alignment', t => {
 		</Box>
 	);
 
-	t.is(output, box('\n'.repeat(8) + 'Hello World' + '\n'.repeat(9)));
+	t.snapshot(output);
 });
 
 test('single node - box with wrapping', t => {
@@ -122,7 +113,7 @@ test('single node - box with wrapping', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello   \nWorld'));
+	t.snapshot(output);
 });
 
 test('multiple nodes - full width box', t => {
@@ -132,7 +123,7 @@ test('multiple nodes - full width box', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'.padEnd(98, ' ')));
+	t.snapshot(output);
 });
 
 test('multiple nodes - full width box with colorful border', t => {
@@ -142,7 +133,7 @@ test('multiple nodes - full width box with colorful border', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'.padEnd(98, ' '), {borderColor: 'green'}));
+	t.snapshot(output);
 });
 
 test('multiple nodes - fit-content box', t => {
@@ -152,7 +143,7 @@ test('multiple nodes - fit-content box', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'));
+	t.snapshot(output);
 });
 
 test('multiple nodes - fixed width box', t => {
@@ -161,7 +152,7 @@ test('multiple nodes - fixed width box', t => {
 			<Text>{'Hello '}World</Text>
 		</Box>
 	);
-	t.is(output, box('Hello World'.padEnd(18, ' ')));
+	t.snapshot(output);
 });
 
 test('multiple nodes - fixed width and height box', t => {
@@ -170,7 +161,7 @@ test('multiple nodes - fixed width and height box', t => {
 			<Text>{'Hello '}World</Text>
 		</Box>
 	);
-	t.is(output, box('Hello World'.padEnd(18, ' ') + '\n'.repeat(17)));
+	t.snapshot(output);
 });
 
 test('multiple nodes - box with padding', t => {
@@ -179,7 +170,7 @@ test('multiple nodes - box with padding', t => {
 			<Text>{'Hello '}World</Text>
 		</Box>
 	);
-	t.is(output, box('\n Hello World \n'));
+	t.snapshot(output);
 });
 
 test('multiple nodes - box with horizontal alignment', t => {
@@ -188,7 +179,7 @@ test('multiple nodes - box with horizontal alignment', t => {
 			<Text>{'Hello '}World</Text>
 		</Box>
 	);
-	t.is(output, box('   Hello World    '));
+	t.snapshot(output);
 });
 
 test('multiple nodes - box with vertical alignment', t => {
@@ -203,7 +194,7 @@ test('multiple nodes - box with vertical alignment', t => {
 		</Box>
 	);
 
-	t.is(output, box('\n'.repeat(8) + 'Hello World' + '\n'.repeat(9)));
+	t.snapshot(output);
 });
 
 test('multiple nodes - box with wrapping', t => {
@@ -213,7 +204,7 @@ test('multiple nodes - box with wrapping', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello   \nWorld'));
+	t.snapshot(output);
 });
 
 test('multiple nodes - box with wrapping and long first node', t => {
@@ -223,7 +214,7 @@ test('multiple nodes - box with wrapping and long first node', t => {
 		</Box>
 	);
 
-	t.is(output, box('Helloooo\noo World'));
+	t.snapshot(output);
 });
 
 test('multiple nodes - box with wrapping and very long first node', t => {
@@ -233,7 +224,7 @@ test('multiple nodes - box with wrapping and very long first node', t => {
 		</Box>
 	);
 
-	t.is(output, box('Helloooo\noooooooo\no World'));
+	t.snapshot(output);
 });
 
 test('nested boxes', t => {
@@ -245,15 +236,139 @@ test('nested boxes', t => {
 		</Box>
 	);
 
-	const nestedBox = indentString(box('\n Hello World \n'), 1);
-	t.is(output, box(`${' '.repeat(38)}\n${nestedBox}\n`));
+	t.snapshot(output);
+});
+
+test('custom borders - complete box', t => {
+	const output = renderToString(
+		<Box
+			borderStyle={{
+				top: '-',
+				left: '|',
+				bottom: '=',
+				right: '║',
+				topLeft: '´',
+				topRight: '•',
+				bottomLeft: '+',
+				bottomRight: '/'
+			}}
+			alignSelf="flex-start"
+		>
+			<Text>Hello World</Text>
+		</Box>
+	);
+	t.snapshot(output);
+});
+
+test('custom borders - only top', t => {
+	const output = renderToString(
+		<Box borderStyle={{top: '-'}} alignSelf="flex-start">
+			<Text>Hello World</Text>
+		</Box>
+	);
+	t.snapshot(output);
+});
+
+test('custom borders - only top with corners', t => {
+	const output1char = renderToString(
+		<Box
+			borderStyle={{top: '─', topLeft: '╭', topRight: '╮'}}
+			alignSelf="flex-start"
+		>
+			<Text>1</Text>
+		</Box>
+	);
+	t.snapshot(output1char);
+
+	const output2chars = renderToString(
+		<Box
+			borderStyle={{top: '─', topLeft: '╭', topRight: '╮'}}
+			alignSelf="flex-start"
+		>
+			<Text>12</Text>
+		</Box>
+	);
+	t.snapshot(output2chars);
+
+	const output3chars = renderToString(
+		<Box
+			borderStyle={{top: '─', topLeft: '╭', topRight: '╮'}}
+			alignSelf="flex-start"
+		>
+			<Text>123</Text>
+		</Box>
+	);
+	t.snapshot(output3chars);
+});
+
+test('custom borders - only bottom', t => {
+	const output = renderToString(
+		<Box borderStyle={{bottom: '-'}} alignSelf="flex-start">
+			<Text>Hello World</Text>
+		</Box>
+	);
+	t.snapshot(output);
+});
+
+test('custom borders - only left', t => {
+	const output = renderToString(
+		<Box borderStyle={{left: '|'}} alignSelf="flex-start">
+			<Text>Hello World</Text>
+		</Box>
+	);
+	t.snapshot(output);
+});
+
+test('custom borders - only left with corners', t => {
+	const output1Line = renderToString(
+		<Box
+			borderStyle={{left: '│', topLeft: '╭', bottomLeft: '╰'}}
+			alignSelf="flex-start"
+		>
+			<Text>1</Text>
+		</Box>
+	);
+	t.snapshot(output1Line);
+
+	const output2Lines = renderToString(
+		<Box
+			borderStyle={{left: '│', topLeft: '╭', bottomLeft: '╰'}}
+			alignSelf="flex-start"
+		>
+			<Text>
+				1<Newline />2
+			</Text>
+		</Box>
+	);
+	t.snapshot(output2Lines);
+
+	const output3Lines = renderToString(
+		<Box
+			borderStyle={{left: '│', topLeft: '╭', bottomLeft: '╰'}}
+			alignSelf="flex-start"
+		>
+			<Text>
+				1<Newline />2<Newline />3
+			</Text>
+		</Box>
+	);
+	t.snapshot(output3Lines);
+});
+
+test('custom borders - only right', t => {
+	const output = renderToString(
+		<Box borderStyle={{right: '|'}} alignSelf="flex-start">
+			<Text>Hello World</Text>
+		</Box>
+	);
+	t.snapshot(output);
 });
 
 test('render border after update', async t => {
 	const stdout = createStdout();
 
 	const Test = () => {
-		const [borderColor, setBorderColor] = useState();
+		const [borderColor, setBorderColor] = useState<string | undefined>();
 
 		useEffect(() => {
 			setBorderColor('green');
@@ -271,11 +386,8 @@ test('render border after update', async t => {
 		debug: true
 	});
 
-	t.is(stdout.write.lastCall.args[0], box('Hello World'.padEnd(98, ' ')));
+	t.snapshot(stdout.write.lastCall.args[0]);
 	await delay(100);
 
-	t.is(
-		stdout.write.lastCall.args[0],
-		box('Hello World'.padEnd(98, ' '), {borderColor: 'green'})
-	);
+	t.snapshot(stdout.write.lastCall.args[0]);
 });
