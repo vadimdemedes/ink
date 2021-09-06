@@ -192,6 +192,7 @@ export default createReconciler<
 						// Always include `borderColor` and `borderStyle` to ensure border is rendered,
 						// otherwise resulting `updatePayload` may not contain them
 						// if they weren't changed during this update
+
 						if (styleKey === 'borderStyle' || styleKey === 'borderColor') {
 							if (typeof updatePayload.style !== 'object') {
 								// Linter didn't like `= {} as Style`

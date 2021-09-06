@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import Yoga, {YogaNode} from 'yoga-layout-prebuilt';
-import {Boxes} from 'cli-boxes';
+import type {BoxStyle} from './cli-boxes';
+import * as boxStyles from './cli-boxes';
 import {LiteralUnion} from 'type-fest';
 import {ForegroundColor} from 'chalk';
 
@@ -131,10 +132,10 @@ export interface Styles {
 	readonly display?: 'flex' | 'none';
 
 	/**
-	 * Add a border with a specified style.
+	 * Add a border with a specified style, chosen from a predefined preset. Alternatively, provide your own style.
 	 * If `borderStyle` is `undefined` (which it is by default), no border will be added.
 	 */
-	readonly borderStyle?: keyof Boxes;
+	readonly borderStyle?: Partial<BoxStyle> | keyof typeof boxStyles;
 
 	/**
 	 * Change border color.
@@ -334,15 +335,18 @@ const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
-const applyBorderStyles = (node: YogaNode, style: Styles): void => {
-	if ('borderStyle' in style) {
-		const borderWidth = typeof style.borderStyle === 'string' ? 1 : 0;
+const hasBorder = (
+	style: Exclude<Styles['borderStyle'], undefined>,
+	part: keyof BoxStyle
+): boolean => typeof style === 'string' || typeof style[part] !== 'undefined';
 
-		node.setBorder(Yoga.EDGE_TOP, borderWidth);
-		node.setBorder(Yoga.EDGE_BOTTOM, borderWidth);
-		node.setBorder(Yoga.EDGE_LEFT, borderWidth);
-		node.setBorder(Yoga.EDGE_RIGHT, borderWidth);
-	}
+const applyBorderStyles = (node: YogaNode, {borderStyle}: Styles): void => {
+	if (!borderStyle) return;
+
+	if (hasBorder(borderStyle, 'top')) node.setBorder(Yoga.EDGE_TOP, 1);
+	if (hasBorder(borderStyle, 'bottom')) node.setBorder(Yoga.EDGE_BOTTOM, 1);
+	if (hasBorder(borderStyle, 'left')) node.setBorder(Yoga.EDGE_LEFT, 1);
+	if (hasBorder(borderStyle, 'right')) node.setBorder(Yoga.EDGE_RIGHT, 1);
 };
 
 export default (node: YogaNode, style: Styles = {}): void => {
