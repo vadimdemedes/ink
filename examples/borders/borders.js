@@ -35,6 +35,35 @@ const Borders = () => (
 				<Text>classic</Text>
 			</Box>
 		</Box>
+
+		<Box marginTop={1}>
+			<Box
+				borderStyle={{
+					topLeft: '┌',
+					topRight: '╮',
+					bottomRight: '╯',
+					bottomLeft: '╰',
+					left: '│',
+					right: '│',
+					top: '─',
+					bottom: '─'
+				}}
+				marginRight={2}
+			>
+				<Text>custom</Text>
+			</Box>
+
+			<Box
+				borderStyle={{
+					left: '|',
+					right: '|'
+				}}
+				alignSelf="flex-start"
+				marginTop={1}
+			>
+				<Text>only some borders</Text>
+			</Box>
+		</Box>
 	</Box>
 );
 

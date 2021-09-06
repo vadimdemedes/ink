@@ -790,12 +790,11 @@ Set this property to `none` to hide the element.
 
 ##### borderStyle
 
-Type: `string`\
+Type: `string` `object`\
 Allowed values: `single` `double` `round` `bold` `singleDouble` `doubleSingle` `classic`
 
 Add a border with a specified style.
-If `borderStyle` is `undefined` (which it is by default), no border will be added.
-Ink uses border styles from [`cli-boxes`](https://github.com/sindresorhus/cli-boxes) module.
+If `borderStyle` is `undefined` (which it is by default), no border will be added. It's also possible to specify a custom border style, by passing an object that specifies which characters are used to render the sides (`top`/`bottom`/`left`/`right`) and corners (`topLeft`/`topRight`/`bottomLeft`/`bottomRight`) of the border. If any of the keys are omitted, that portion of the border will not be added.
 
 ```jsx
 <Box flexDirection="column">
@@ -830,10 +829,41 @@ Ink uses border styles from [`cli-boxes`](https://github.com/sindresorhus/cli-bo
 			<Text>classic</Text>
 		</Box>
 	</Box>
+
+	<Box>
+		<Box marginTop={1}>
+			<Box
+				borderStyle={{
+					topLeft: '┌',
+					topRight: '╮',
+					bottomRight: '╯',
+					bottomLeft: '╰',
+					left: '│',
+					right: '│',
+					top: '─',
+					bottom: '─'
+				}}
+				marginRight={2}
+			>
+				<Text>custom</Text>
+			</Box>
+
+			<Box
+				borderStyle={{
+					left: '|',
+					right: '|'
+				}}
+				alignSelf="flex-start"
+				marginTop={1}
+			>
+				<Text>only some borders</Text>
+			</Box>
+		</Box>
+	</Box>
 </Box>
 ```
 
-<img src="media/box-borderStyle.jpg" width="521">
+<img src="media/box-borderStyle.png" width="340">
 
 See example in [examples/borders](examples/borders/borders.js).
 

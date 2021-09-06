@@ -13,12 +13,12 @@ export interface BoxStyle {
 }
 
 /**
- *	@example
- *	```
- *	┌────┐
- *	│    │
- *	└────┘
- *	```
+ * @example
+ * ```
+ * ┌────┐
+ * │    │
+ * └────┘
+ * ```
  */
 export const single: BoxStyle = {
 	topLeft: '┌',
@@ -51,12 +51,12 @@ export const double: BoxStyle = {
 };
 
 /**
- *	@example
- *	```
- *	╭────╮
- *	│    │
- *	╰────╯
- *	```
+ * @example
+ * ```
+ * ╭────╮
+ * │    │
+ * ╰────╯
+ * ```
  */
 export const round: BoxStyle = {
 	topLeft: '╭',
@@ -89,12 +89,12 @@ export const bold: BoxStyle = {
 };
 
 /**
- *	@example
- *	```
- *	╓────╖
- *	║    ║
- *	╙────╜
- *	```
+ * @example
+ * ```
+ * ╓────╖
+ * ║    ║
+ * ╙────╜
+ * ```
  */
 export const singleDouble: BoxStyle = {
 	topLeft: '╓',
