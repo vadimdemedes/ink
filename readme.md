@@ -353,7 +353,7 @@ import {render, Box, Text} from 'ink';
 const Example = () => (
 	<Box margin={2}>
 		<Text>This is a box with margin</Text>
-	</Box>;
+	</Box>
 );
 
 render(<Example />);
