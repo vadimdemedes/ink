@@ -76,6 +76,7 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 Box.displayName = 'Box';
 
 Box.defaultProps = {
+	flexWrap: 'nowrap',
 	flexDirection: 'row',
 	flexGrow: 0,
 	flexShrink: 1

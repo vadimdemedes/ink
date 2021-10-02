@@ -5,6 +5,8 @@ import {LiteralUnion} from 'type-fest';
 import {ForegroundColor} from 'chalk';
 
 export interface Styles {
+	readonly flexWrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
+
 	readonly textWrap?:
 		| 'wrap'
 		| 'end'
@@ -198,6 +200,20 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 		node.setFlexShrink(
 			typeof style.flexShrink === 'number' ? style.flexShrink : 1
 		);
+	}
+
+	if ('flexWrap' in style) {
+		if (style.flexWrap === 'nowrap') {
+			node.setFlexWrap(Yoga.WRAP_NO_WRAP);
+		}
+
+		if (style.flexWrap === 'wrap') {
+			node.setFlexWrap(Yoga.WRAP_WRAP);
+		}
+
+		if (style.flexWrap === 'wrap-reverse') {
+			node.setFlexWrap(Yoga.WRAP_WRAP_REVERSE);
+		}
 	}
 
 	if ('flexDirection' in style) {
