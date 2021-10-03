@@ -150,6 +150,7 @@
 					],
 					"unicorn/filename-case": "off",
 					"react/prop-types": "off",
+					"react/default-props-match-prop-types": "off",
 					"unicorn/prevent-abbreviations": "off",
 					"react/require-default-props": "warn",
 					"react/jsx-curly-brace-presence": "off",
