@@ -63,12 +63,12 @@ test('column - wrap content reverse', t => {
 
 test('row - wrap content reverse', t => {
 	const output = renderToString(
-		<Box flexDirection="column" height={2} width={3} flexWrap="wrap-reverse">
+		<Box flexDirection="row" height={3} width={2} flexWrap="wrap-reverse">
 			<Text>A</Text>
 			<Text>B</Text>
 			<Text>C</Text>
 		</Box>
 	);
 
-	t.is(output, ' CA\n  B');
+	t.is(output, '\nC\nAB');
 });
