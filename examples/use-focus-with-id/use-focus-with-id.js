@@ -43,7 +43,7 @@ const Focus = () => {
 
 const Item = ({label, id}) => {
 	const {isFocused} = useFocus({id});
-	
+
 	return (
 		<Text>
 			{label} {isFocused && <Text color="green">(focused)</Text>}
