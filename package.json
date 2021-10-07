@@ -17,8 +17,7 @@
 	"scripts": {
 		"build": "tsc",
 		"prepare": "npm run build",
-		"test": "tsc --noEmit && xo && FORCE_COLOR=true ava",
-		"cast": "svg-term --command='node media/demo.js' --out=media/demo.svg --from=100 --window --width=50 --height=8 --term=iterm2 --profile=Snazzy"
+		"test": "tsc --noEmit && xo && FORCE_COLOR=true ava"
 	},
 	"files": [
 		"build"
@@ -95,7 +94,6 @@
 		"react": "^16.9.0",
 		"sinon": "^8.1.1",
 		"strip-ansi": "^6.0.0",
-		"svg-term-cli": "^2.1.1",
 		"ts-node": "7.0.0",
 		"typescript": "^3.8.3",
 		"xo": "^0.28.0"
