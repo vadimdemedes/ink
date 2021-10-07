@@ -48,9 +48,9 @@ const useFocus = ({
 	const {activeId, add, remove, activate, deactivate, focus} =
         useContext(FocusContext);
 
-	const id = useMemo(() => customId ?? Math.random().toString().slice(2, 7), [
-		customId
-	]);
+	const id = useMemo(() => {
+		return customId ?? Math.random().toString().slice(2, 7)
+	}, [customId]);
 
 	useEffect(() => {
 		add(id, {autoFocus});
