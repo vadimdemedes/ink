@@ -1565,7 +1565,7 @@ import {useFocusManager, useInput} from 'ink';
 const Example = () => {
 	const {focus} = useFocusManager();
 
-	useInput((input) => {
+	useInput(input => {
 		if (input === 's') {
 			// Focus the component with focus ID 'someId'
 			focus('someId');
