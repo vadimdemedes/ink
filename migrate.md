@@ -5,8 +5,8 @@ If you're migrating your app and running into issues that this guide doesn't cov
 
 ## Install
 
-```
-$ npm install ink@next react
+```sh
+npm install ink@next react
 ```
 
 ## Breaking changes
