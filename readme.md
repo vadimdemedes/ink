@@ -342,6 +342,26 @@ If `truncate-*` is passed, Ink will truncate text instead, which will result in 
 //=> '…World'
 ```
 
+#### truncationCharacter
+
+Type: `string`\
+Default: `…`
+
+If the `wrap` option is passed `truncate-*`, you can use this option to cut
+off the text with a different character (or string) instead of an ellipsis.
+
+```jsx
+<Box width={7}>
+	<Text wrap="truncate" truncationCharacter=".">Hello World</Text>
+</Box>
+//=> 'Hello.'
+
+<Box width={7}>
+	<Text wrap="truncate" truncationCharacter="+++">Hello World</Text>
+</Box>
+//=> 'Hel+++'
+```
+
 ### `<Box>`
 
 `<Box>` is an essential Ink component to build your layout.
