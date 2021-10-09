@@ -43,7 +43,7 @@
 		"chalk": "^4.1.0",
 		"cli-boxes": "^2.2.0",
 		"cli-cursor": "^3.1.0",
-		"cli-truncate": "^2.1.0",
+		"cli-truncate": "^3.1.0",
 		"code-excerpt": "^3.0.0",
 		"indent-string": "^4.0.0",
 		"is-ci": "^2.0.0",
