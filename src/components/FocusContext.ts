@@ -10,6 +10,7 @@ export interface Props {
 	readonly disableFocus: () => void;
 	readonly focusNext: () => void;
 	readonly focusPrevious: () => void;
+	readonly focus: (id: string) => void;
 }
 
 const FocusContext = createContext<Props>({
@@ -21,7 +22,8 @@ const FocusContext = createContext<Props>({
 	enableFocus: () => {},
 	disableFocus: () => {},
 	focusNext: () => {},
-	focusPrevious: () => {}
+	focusPrevious: () => {},
+	focus: () => {}
 });
 
 FocusContext.displayName = 'InternalFocusContext';

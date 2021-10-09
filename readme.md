@@ -1442,6 +1442,13 @@ Default: `true`
 Enable or disable this component's focus, while still maintaining its position in the list of focusable components.
 This is useful for inputs that are temporarily disabled.
 
+##### id
+
+Type: `string`\
+Required: `false`
+
+Set a component's focus ID, which can be used to programmatically focus the component. This is useful for large interfaces with many focusable elements, to avoid having to cycle through all of them.
+
 ```jsx
 import {render, useFocus, Text} from 'ink';
 
@@ -1454,7 +1461,7 @@ const Example = () => {
 render(<Example />);
 ```
 
-See example in [examples/use-focus](examples/use-focus/use-focus.js).
+See example in [examples/use-focus](examples/use-focus/use-focus.js) and [examples/use-focus-with-id](examples/use-focus/use-focus-with-id.js).
 
 ### useFocusManager()
 
@@ -1538,6 +1545,32 @@ const Example = () => {
 	useEffect(() => {
 		focusPrevious();
 	}, []);
+
+	return …
+};
+```
+
+#### focus(id)
+
+##### id
+
+Type: `string`
+
+Switch focus to the component with the given [`id`](#id).
+If there's no component with that ID, focus will be given to the next focusable component.
+
+```js
+import {useFocusManager, useInput} from 'ink';
+
+const Example = () => {
+	const {focus} = useFocusManager();
+
+	useInput(input => {
+		if (input === 's') {
+			// Focus the component with focus ID 'someId'
+			focus('someId');
+		}
+	});
 
 	return …
 };

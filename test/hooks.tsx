@@ -171,11 +171,35 @@ test('useInput - ignore input if not active', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+// For some reason this test is flaky, so we have to resort to using `t.try` to run it multiple times
 test('useInput - handle Ctrl+C when `exitOnCtrlC` is `false`', async t => {
-	const ps = term('use-input-ctrl-c');
-	ps.write('\u0003');
-	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	const run = async tt => {
+		const ps = term('use-input-ctrl-c');
+		ps.write('\u0003');
+		await ps.waitForExit();
+		tt.true(ps.output.includes('exited'));
+	};
+
+	const firstTry = await t.try(run);
+
+	if (firstTry.passed) {
+		firstTry.commit();
+		return;
+	}
+
+	firstTry.discard();
+
+	const secondTry = await t.try(run);
+
+	if (secondTry.passed) {
+		secondTry.commit();
+		return;
+	}
+
+	secondTry.discard();
+
+	const thirdTry = await t.try(run);
+	thirdTry.commit();
 });
 
 test('useStdout - write to stdout', async t => {
