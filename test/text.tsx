@@ -157,3 +157,10 @@ test('remeasure text when text nodes are changed', t => {
 	rerender(<Test add />);
 	t.is(stdout.write.lastCall.args[0], 'abcx');
 });
+
+test('truncationCharacter option', t => {
+	t.is(renderToString(<Box width={5}><Text wrap="truncate">Hello World</Text></Box>), 'Hell…');
+	t.is(renderToString(<Box width={5} truncationCharacter="."><Text wrap="truncate">Hello World</Text></Box>), 'Hell.');
+	t.is(renderToString(<Box width={5} truncationCharacter=""><Text wrap="truncate">Hello World</Text></Box>), 'Hello');
+	t.is(renderToString(<Box width={5} truncationCharacter=".."><Text wrap="truncate">Hello World</Text></Box>), 'Hel..');
+});
