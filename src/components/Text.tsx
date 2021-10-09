@@ -51,6 +51,12 @@ export interface Props {
 	 * If `truncate-*` is passed, Ink will truncate text instead, which will result in one line of text with the rest cut off.
 	 */
 	readonly wrap?: Styles['textWrap'];
+
+	/**
+	 * If the `wrap` option is passed `truncate-*`, you can use this option to cut
+	 * off the text with a different character (or string) instead of an ellipsis
+	 */
+	readonly truncationCharacter?: string;
 	readonly children?: ReactNode;
 }
 
@@ -67,6 +73,7 @@ const Text: FC<Props> = ({
 	strikethrough,
 	inverse,
 	wrap,
+	truncationCharacter,
 	children
 }) => {
 	if (children === undefined || children === null) {
@@ -111,7 +118,7 @@ const Text: FC<Props> = ({
 
 	return (
 		<ink-text
-			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap}}
+			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap, truncationCharacter: truncationCharacter}}
 			internal_transform={transform}
 		>
 			{children}

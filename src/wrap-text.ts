@@ -7,7 +7,8 @@ const cache: Record<string, string> = {};
 export default (
 	text: string,
 	maxWidth: number,
-	wrapType: Styles['textWrap']
+	wrapType: Styles['textWrap'],
+	truncationCharacter: Styles['truncationCharacter']
 ): string => {
 	const cacheKey = text + String(maxWidth) + String(wrapType);
 
@@ -35,7 +36,7 @@ export default (
 			position = 'start';
 		}
 
-		wrappedText = cliTruncate(text, maxWidth, {position});
+		wrappedText = cliTruncate(text, maxWidth, {position, truncationCharacter});
 	}
 
 	cache[cacheKey] = wrappedText;

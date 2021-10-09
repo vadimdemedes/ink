@@ -198,7 +198,8 @@ const measureTextNode = function (
 	}
 
 	const textWrap = node.style?.textWrap ?? 'wrap';
-	const wrappedText = wrapText(text, width, textWrap);
+	const truncationCharacter = node.style?.truncationCharacter ?? '…';
+	const wrappedText = wrapText(text, width, textWrap, truncationCharacter);
 
 	return measureText(wrappedText);
 };

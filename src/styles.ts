@@ -14,6 +14,8 @@ export interface Styles {
 		| 'truncate-middle'
 		| 'truncate-start';
 
+	readonly truncationCharacter?: string;
+
 	readonly position?: 'absolute' | 'relative';
 
 	/**

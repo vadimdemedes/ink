@@ -78,7 +78,8 @@ const renderNodeToOutput = (
 
 				if (currentWidth > maxWidth) {
 					const textWrap = node.style.textWrap ?? 'wrap';
-					text = wrapText(text, maxWidth, textWrap);
+					const truncationCharacter = node.style.truncationCharacter ?? '…';
+					text = wrapText(text, maxWidth, textWrap, truncationCharacter);
 				}
 
 				text = applyPaddingToText(node, text);
