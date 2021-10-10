@@ -1,6 +1,6 @@
 {
 	"name": "ink",
-	"version": "3.0.9",
+	"version": "3.2.0",
 	"description": "React for CLI",
 	"license": "MIT",
 	"repository": "vadimdemedes/ink",
@@ -17,8 +17,7 @@
 	"scripts": {
 		"build": "tsc",
 		"prepare": "npm run build",
-		"test": "tsc --noEmit && xo && FORCE_COLOR=true ava",
-		"cast": "svg-term --command='node media/demo.js' --out=media/demo.svg --from=100 --window --width=50 --height=8 --term=iterm2 --profile=Snazzy"
+		"test": "tsc --noEmit && xo && FORCE_COLOR=true ava"
 	},
 	"files": [
 		"build"
@@ -49,9 +48,9 @@
 		"is-ci": "^2.0.0",
 		"lodash": "^4.17.20",
 		"patch-console": "^1.0.0",
-		"react-devtools-core": "^4.6.0",
-		"react-reconciler": "^0.24.0",
-		"scheduler": "^0.18.0",
+		"react-devtools-core": "^4.19.1",
+		"react-reconciler": "^0.26.2",
+		"scheduler": "^0.20.2",
 		"signal-exit": "^3.0.2",
 		"slice-ansi": "^3.0.0",
 		"stack-utils": "^2.0.2",
@@ -59,7 +58,7 @@
 		"type-fest": "^0.12.0",
 		"widest-line": "^3.1.0",
 		"wrap-ansi": "^6.2.0",
-		"ws": "^7.2.5",
+		"ws": "^7.5.5",
 		"yoga-layout-prebuilt": "^1.9.6"
 	},
 	"devDependencies": {
@@ -67,9 +66,9 @@
 		"@types/is-ci": "^2.0.0",
 		"@types/lodash": "^4.14.161",
 		"@types/node": "*",
-		"@types/react": "^16.9.41",
-		"@types/react-reconciler": "^0.18.0",
-		"@types/scheduler": "^0.16.1",
+		"@types/react": "^17.0.27",
+		"@types/react-reconciler": "^0.26.4",
+		"@types/scheduler": "^0.16.2",
 		"@types/signal-exit": "^3.0.0",
 		"@types/sinon": "^9.0.4",
 		"@types/slice-ansi": "^4.0.0",
@@ -89,13 +88,12 @@
 		"eslint-plugin-react-hooks": "^2.3.0",
 		"import-jsx": "3.1.0",
 		"ms": "^2.1.1",
-		"node-pty": "^0.9.0",
+		"node-pty": "^0.10.0",
 		"p-queue": "^6.2.1",
 		"prettier": "^2.0.4",
-		"react": "^16.9.0",
+		"react": "^17.0.2",
 		"sinon": "^8.1.1",
 		"strip-ansi": "^6.0.0",
-		"svg-term-cli": "^2.1.1",
 		"ts-node": "7.0.0",
 		"typescript": "^3.8.3",
 		"xo": "^0.28.0"
