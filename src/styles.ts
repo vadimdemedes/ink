@@ -209,9 +209,13 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 	if ('flexWrap' in style) {
 		if (style.flexWrap === 'nowrap') {
 			node.setFlexWrap(Yoga.WRAP_NO_WRAP);
-		} else if (style.flexWrap === 'wrap') {
+		}
+
+		if (style.flexWrap === 'wrap') {
 			node.setFlexWrap(Yoga.WRAP_WRAP);
-		} else if (style.flexWrap === 'wrap-reverse') {
+		}
+
+		if (style.flexWrap === 'wrap-reverse') {
 			node.setFlexWrap(Yoga.WRAP_WRAP_REVERSE);
 		}
 	}
