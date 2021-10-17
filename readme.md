@@ -24,8 +24,8 @@ Only Ink's methods will be documented in this readme.
 
 ## Install
 
-```
-$ npm install ink react
+```sh
+npm install ink react
 ```
 
 ## Usage
@@ -120,16 +120,16 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 
 Use [create-ink-app](https://github.com/vadimdemedes/create-ink-app) to quickly scaffold a new Ink-based CLI.
 
-```
-$ mkdir my-ink-cli
-$ cd my-ink-cli
-$ npx create-ink-app
+```sh
+mkdir my-ink-cli
+cd my-ink-cli
+npx create-ink-app
 ```
 
 Alternatively, create a TypeScript project:
 
-```
-$ npx create-ink-app --typescript
+```sh
+npx create-ink-app --typescript
 ```
 
 <details><summary>Manual setup</summary>
@@ -139,8 +139,8 @@ Ink requires the same Babel setup as you would do for regular React-based apps i
 Set up Babel with a React preset to ensure all examples in this readme work as expected.
 After [installing Babel](https://babeljs.io/docs/en/usage), install `@babel/preset-react` and insert the following configuration in `babel.config.json`:
 
-```
-$ npm install --save-dev @babel/preset-react
+```sh
+npm install --save-dev @babel/preset-react
 ```
 
 ```json
@@ -172,14 +172,14 @@ render(<Demo />);
 
 Then, transpile this file with Babel:
 
-```
-$ npx babel source.js -o cli.js
+```sh
+npx babel source.js -o cli.js
 ```
 
 Now you can run `cli.js` with Node.js:
 
-```
-$ node cli
+```sh
+node cli
 ```
 
 If you don't like transpiling files during development, you can use [import-jsx](https://github.com/vadimdemedes/import-jsx) to `require()` a JSX file and transpile it on the fly.
