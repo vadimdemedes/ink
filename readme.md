@@ -1792,7 +1792,7 @@ You can even inspect and change the props of components, and see the results imm
 ## Examples
 
 - [Jest](examples/jest/jest.js) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
-- [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms [(live demo)](https://ink-counter-demo.vadimdemedes.repl.run/).
+- [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms [(live demo)](https://ink-counter-demo.vadimdemedes.repl.run/) [(live demo with `ink-big-text`)](https://replit.com/@hangtwenty/ink-big-text-demo?v=1).
 - [Form with Validation](https://github.com/final-form/rff-cli-example) - Manage form state using [Final Form](https://github.com/final-form/final-form#-final-form).
 - [Borders](examples/borders/borders.js) - Add borders to `<Box>` component.
 - [Suspense](examples/suspense/suspense.js) - Use React Suspense.
