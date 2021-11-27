@@ -90,6 +90,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Autarky](https://github.com/pranshuchittora/autarky) - An interactive CLI to find and delete old `node_modules` directories in order to free up disk space.
 - [fast-cli](https://github.com/sindresorhus/fast-cli) - Test your download and upload speed.
 - [tasuku](https://github.com/privatenumber/tasuku) - Minimal task runner.
+- [mnswpr](https://github.com/mordv/mnswpr) - Minesweeper game in your terminal.
 
 ## Contents
 
