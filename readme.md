@@ -1463,7 +1463,7 @@ const Example = () => {
 render(<Example />);
 ```
 
-See example in [examples/use-focus](examples/use-focus/use-focus.js) and [examples/use-focus-with-id](examples/use-focus/use-focus-with-id.js).
+See example in [examples/use-focus](examples/use-focus/use-focus.js) and [examples/use-focus-with-id](examples/use-focus-with-id/use-focus-with-id.js).
 
 ### useFocusManager()
 
