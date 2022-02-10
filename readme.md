@@ -5,6 +5,26 @@
 	<br>
 	<br>
 	<br>
+</div>
+
+> React for CLIs. Build and test your CLI output using components.
+
+[![Build Status](https://github.com/vadimdemedes/ink/workflows/test/badge.svg)](https://github.com/vadimdemedes/ink/actions)
+[![npm](https://img.shields.io/npm/dm/ink?logo=npm)](https://npmjs.com/package/ink)
+
+Ink provides the same component-based UI building experience that React offers in the browser, but for command-line apps.
+It uses [Yoga](https://github.com/facebook/yoga) to build Flexbox layouts in the terminal, so most CSS-like props are available in Ink as well.
+If you are already familiar with React, you already know Ink.
+
+Since Ink is a React renderer, it means that all features of React are supported.
+Head over to [React](https://reactjs.org) website for documentation on how to use it.
+Only Ink's methods will be documented in this readme.
+
+**Note:** This is documentation for Ink 3. If you're looking for docs on Ink 2, check out [this release](https://github.com/vadimdemedes/ink/tree/v2.7.1). There's also a [migration guide](migrate.md) from Ink 2 available.
+
+---
+
+<div align="center">
 	<p>
 		<p>
 			<sup>
@@ -28,21 +48,6 @@
 	<br>
 	<br>
 </div>
-
-> React for CLIs. Build and test your CLI output using components.
-
-[![Build Status](https://github.com/vadimdemedes/ink/workflows/test/badge.svg)](https://github.com/vadimdemedes/ink/actions)
-[![npm](https://img.shields.io/npm/dm/ink?logo=npm)](https://npmjs.com/package/ink)
-
-Ink provides the same component-based UI building experience that React offers in the browser, but for command-line apps.
-It uses [Yoga](https://github.com/facebook/yoga) to build Flexbox layouts in the terminal, so most CSS-like props are available in Ink as well.
-If you are already familiar with React, you already know Ink.
-
-Since Ink is a React renderer, it means that all features of React are supported.
-Head over to [React](https://reactjs.org) website for documentation on how to use it.
-Only Ink's methods will be documented in this readme.
-
-**Note:** This is documentation for Ink 3. If you're looking for docs on Ink 2, check out [this release](https://github.com/vadimdemedes/ink/tree/v2.7.1). There's also a [migration guide](migrate.md) from Ink 2 available.
 
 ## Install
 
