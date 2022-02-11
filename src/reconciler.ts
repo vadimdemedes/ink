@@ -25,8 +25,22 @@ import {OutputTransformer} from './render-node-to-output';
 // accidentally breaking other third-party code.
 // See https://github.com/vadimdemedes/ink/issues/384
 if (process.env.DEV === 'true') {
-	// eslint-disable-next-line import/no-unassigned-import
-	require('./devtools');
+	try {
+		// eslint-disable-next-line import/no-unassigned-import
+		require('./devtools');
+	} catch (error) {
+		if (error.code === 'MODULE_NOT_FOUND') {
+			console.warn(
+				`
+Debugging with React Devtools requires \`react-devtools-core\` dependency to be installed.
+
+$ npm install --save-dev react-devtools-core
+				`.trim()
+			);
+		} else {
+			throw error;
+		}
+	}
 }
 
 const cleanupYogaNode = (node?: Yoga.YogaNode): void => {
