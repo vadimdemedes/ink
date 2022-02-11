@@ -91,6 +91,7 @@
 		"p-queue": "^6.2.1",
 		"prettier": "^2.0.4",
 		"react": "^17.0.2",
+		"react-devtools-core": "^4.19.1",
 		"sinon": "^8.1.1",
 		"strip-ansi": "^6.0.0",
 		"ts-node": "7.0.0",
