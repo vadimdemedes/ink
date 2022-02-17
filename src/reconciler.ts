@@ -35,7 +35,7 @@ if (process.env.DEV === 'true') {
 Debugging with React Devtools requires \`react-devtools-core\` dependency to be installed.
 
 $ npm install --save-dev react-devtools-core
-				`.trim()
+				`.trim() + '\n'
 			);
 		} else {
 			throw error;
