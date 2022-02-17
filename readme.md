@@ -822,6 +822,30 @@ Default: `flex`
 
 Set this property to `none` to hide the element.
 
+##### overflowX
+
+Type: `string`\
+Allowed values: `visible` `hidden`\
+Default: `visible`
+
+Behavior for an element's overflow in horizontal direction.
+
+##### overflowY
+
+Type: `string`\
+Allowed values: `visible` `hidden`\
+Default: `visible`
+
+Behavior for an element's overflow in vertical direction.
+
+##### overflow
+
+Type: `string`\
+Allowed values: `visible` `hidden`\
+Default: `visible`
+
+Shortcut for setting `overflowX` and `overflowY` at the same time.
+
 #### Borders
 
 ##### borderStyle
