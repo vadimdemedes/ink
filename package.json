@@ -48,7 +48,6 @@
 		"is-ci": "^2.0.0",
 		"lodash": "^4.17.20",
 		"patch-console": "^1.0.0",
-		"react-devtools-core": "^4.19.1",
 		"react-reconciler": "^0.26.2",
 		"scheduler": "^0.20.2",
 		"signal-exit": "^3.0.2",
@@ -92,6 +91,7 @@
 		"p-queue": "^6.2.1",
 		"prettier": "^2.0.4",
 		"react": "^17.0.2",
+		"react-devtools-core": "^4.19.1",
 		"sinon": "^8.1.1",
 		"strip-ansi": "^6.0.0",
 		"ts-node": "7.0.0",
@@ -100,10 +100,14 @@
 	},
 	"peerDependencies": {
 		"@types/react": ">=16.8.0",
-		"react": ">=16.8.0"
+		"react": ">=16.8.0",
+		"react-devtools-core": "^4.19.1"
 	},
 	"peerDependenciesMeta": {
 		"@types/react": {
+			"optional": true
+		},
+		"react-devtools-core": {
 			"optional": true
 		}
 	},
