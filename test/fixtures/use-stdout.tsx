@@ -1,10 +1,10 @@
-import React, {FC, useEffect} from 'react';
+import * as React from 'react';
 import {render, useStdout, Text} from '../..';
 
-const WriteToStdout: FC = () => {
+const WriteToStdout: React.FC = () => {
 	const {write} = useStdout();
 
-	useEffect(() => {
+	React.useEffect(() => {
 		write('Hello from Ink to stdout\n');
 	}, []);
 

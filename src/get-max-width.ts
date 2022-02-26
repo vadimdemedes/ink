@@ -1,4 +1,4 @@
-import Yoga from 'yoga-layout-prebuilt';
+import Yoga = require('yoga-layout-prebuilt');
 
 export default (yogaNode: Yoga.YogaNode) => {
 	return (

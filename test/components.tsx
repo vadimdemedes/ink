@@ -1,7 +1,7 @@
-import EventEmitter from 'events';
-import React, {useState, Component, FC} from 'react';
+import {EventEmitter} from 'events';
+import * as React from 'react';
 import test from 'ava';
-import chalk from 'chalk';
+import chalk = require('chalk');
 import {spy} from 'sinon';
 import {renderToString} from './helpers/render-to-string';
 import {run} from './helpers/run';
@@ -139,7 +139,7 @@ test('number', t => {
 test('fail when text nodes are not within <Text> component', t => {
 	let error;
 
-	class ErrorBoundary extends Component {
+	class ErrorBoundary extends React.Component {
 		render() {
 			return this.props.children;
 		}
@@ -168,7 +168,7 @@ test('fail when text nodes are not within <Text> component', t => {
 test('fail when text node is not within <Text> component', t => {
 	let error;
 
-	class ErrorBoundary extends Component {
+	class ErrorBoundary extends React.Component {
 		render() {
 			return this.props.children;
 		}
@@ -194,7 +194,7 @@ test('fail when text node is not within <Text> component', t => {
 test('fail when <Box> is inside <Text> component', t => {
 	let error;
 
-	class ErrorBoundary extends Component {
+	class ErrorBoundary extends React.Component {
 		render() {
 			return this.props.children;
 		}
@@ -317,7 +317,7 @@ test('<Transform> with null children', t => {
 
 test('hooks', t => {
 	const WithHooks = () => {
-		const [value] = useState('Hello');
+		const [value] = React.useState('Hello');
 
 		return <Text>{value}</Text>;
 	};
@@ -345,7 +345,7 @@ test('static output', t => {
 test('skip previous output when rendering new static output', t => {
 	const stdout = createStdout();
 
-	const Dynamic: FC<{items: string[]}> = ({items}) => (
+	const Dynamic: React.FC<{items: string[]}> = ({items}) => (
 		<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
 	);
 
@@ -363,7 +363,7 @@ test('skip previous output when rendering new static output', t => {
 test('render only new items in static output on final render', t => {
 	const stdout = createStdout();
 
-	const Dynamic: FC<{items: string[]}> = ({items}) => (
+	const Dynamic: React.FC<{items: string[]}> = ({items}) => (
 		<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
 	);
 
@@ -411,7 +411,7 @@ test('replace child node with text', t => {
 test('disable raw mode when all input components are unmounted', t => {
 	const stdout = createStdout();
 
-	const stdin = new EventEmitter();
+	const stdin = new EventEmitter() as typeof process.stdin;
 	stdin.setEncoding = () => {};
 	stdin.setRawMode = spy();
 	stdin.isTTY = true; // Without this, setRawMode will throw
@@ -476,7 +476,7 @@ test('disable raw mode when all input components are unmounted', t => {
 test('setRawMode() should throw if raw mode is not supported', t => {
 	const stdout = createStdout();
 
-	const stdin = new EventEmitter();
+	const stdin = new EventEmitter() as typeof process.stdin;
 	stdin.setEncoding = () => {};
 	stdin.setRawMode = spy();
 	stdin.isTTY = false;
@@ -532,7 +532,7 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 test('render different component based on whether stdin is a TTY or not', t => {
 	const stdout = createStdout();
 
-	const stdin = new EventEmitter();
+	const stdin = new EventEmitter() as typeof process.stdin;
 	stdin.setEncoding = () => {};
 	stdin.setRawMode = spy();
 	stdin.isTTY = false;

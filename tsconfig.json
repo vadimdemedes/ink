@@ -1,7 +1,7 @@
 {
 	"extends": "@sindresorhus/tsconfig",
 	"compilerOptions": {
-		"esModuleInterop": true,
+		"esModuleInterop": false,
 		"outDir": "build",
 		"sourceMap": true
 	},

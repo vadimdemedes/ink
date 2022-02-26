@@ -1,4 +1,4 @@
-import {useEffect} from 'react';
+import * as React from 'react';
 import useStdin from './use-stdin';
 
 /**
@@ -115,7 +115,7 @@ interface Options {
 const useInput = (inputHandler: Handler, options: Options = {}) => {
 	const {stdin, setRawMode, internal_exitOnCtrlC} = useStdin();
 
-	useEffect(() => {
+	React.useEffect(() => {
 		if (options.isActive === false) {
 			return;
 		}
@@ -127,7 +127,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 		};
 	}, [options.isActive, setRawMode]);
 
-	useEffect(() => {
+	React.useEffect(() => {
 		if (options.isActive === false) {
 			return;
 		}

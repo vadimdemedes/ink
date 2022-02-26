@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import {Text, render} from '../..';
 
 const {waitUntilExit} = render(<Text>Hello World</Text>);

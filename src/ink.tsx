@@ -1,13 +1,13 @@
-import React, {ReactNode} from 'react';
+import * as React from 'react';
 import {throttle, DebouncedFunc} from 'lodash';
 import logUpdate, {LogUpdate} from './log-update';
-import ansiEscapes from 'ansi-escapes';
-import originalIsCI from 'is-ci';
-import autoBind from 'auto-bind';
+import ansiEscapes = require('ansi-escapes');
+import originalIsCI = require('is-ci');
+import autoBind = require('auto-bind');
 import reconciler from './reconciler';
 import render from './renderer';
-import signalExit from 'signal-exit';
-import patchConsole from 'patch-console';
+import signalExit = require('signal-exit');
+import patchConsole = require('patch-console');
 import * as dom from './dom';
 import {FiberRoot} from 'react-reconciler';
 import instances from './instances';
@@ -171,7 +171,7 @@ export default class Ink {
 		this.lastOutput = output;
 	};
 
-	render(node: ReactNode): void {
+	render(node: React.ReactNode): void {
 		const tree = (
 			<App
 				stdin={this.options.stdin}

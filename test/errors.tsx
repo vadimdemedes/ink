@@ -1,8 +1,8 @@
 /* eslint-disable unicorn/string-content */
-import React from 'react';
+import * as React from 'react';
 import test from 'ava';
-import patchConsole from 'patch-console';
-import stripAnsi from 'strip-ansi';
+import patchConsole = require('patch-console');
+import stripAnsi = require('strip-ansi');
 import {render} from '../src';
 import createStdout from './helpers/create-stdout';
 

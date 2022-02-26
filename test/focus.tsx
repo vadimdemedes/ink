@@ -1,13 +1,13 @@
-import EventEmitter from 'events';
-import React, {useEffect, FC} from 'react';
-import delay from 'delay';
+import {EventEmitter} from 'events';
+import * as React from 'react';
+import delay = require('delay');
 import test from 'ava';
 import {spy} from 'sinon';
 import {render, Box, Text, useFocus, useFocusManager} from '..';
 import createStdout from './helpers/create-stdout';
 
 const createStdin = () => {
-	const stdin = new EventEmitter();
+	const stdin = new EventEmitter() as typeof process.stdin;
 	stdin.isTTY = true;
 	stdin.setRawMode = spy();
 	stdin.setEncoding = () => {};
@@ -27,7 +27,7 @@ interface TestProps {
 	unmountChildren?: boolean;
 }
 
-const Test: FC<TestProps> = ({
+const Test: React.FC<TestProps> = ({
 	showFirst = true,
 	disableSecond = false,
 	autoFocus = false,
@@ -38,7 +38,7 @@ const Test: FC<TestProps> = ({
 }) => {
 	const focusManager = useFocusManager();
 
-	useEffect(() => {
+	React.useEffect(() => {
 		if (disabled) {
 			focusManager.disableFocus();
 		} else {
@@ -46,13 +46,13 @@ const Test: FC<TestProps> = ({
 		}
 	}, [disabled]);
 
-	useEffect(() => {
+	React.useEffect(() => {
 		if (focusNext) {
 			focusManager.focusNext();
 		}
 	}, [focusNext]);
 
-	useEffect(() => {
+	React.useEffect(() => {
 		if (focusPrevious) {
 			focusManager.focusPrevious();
 		}
@@ -77,7 +77,7 @@ interface ItemProps {
 	disabled?: boolean;
 }
 
-const Item: FC<ItemProps> = ({label, autoFocus, disabled = false}) => {
+const Item: React.FC<ItemProps> = ({label, autoFocus, disabled = false}) => {
 	const {isFocused} = useFocus({
 		autoFocus,
 		isActive: !disabled

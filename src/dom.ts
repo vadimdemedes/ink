@@ -1,4 +1,4 @@
-import Yoga, {YogaNode} from 'yoga-layout-prebuilt';
+import Yoga = require('yoga-layout-prebuilt');
 import measureText from './measure-text';
 import applyStyles, {Styles} from './styles';
 import wrapText from './wrap-text';
@@ -203,7 +203,7 @@ const measureTextNode = function (
 	return measureText(wrappedText);
 };
 
-const findClosestYogaNode = (node?: DOMNode): YogaNode | undefined => {
+const findClosestYogaNode = (node?: DOMNode): Yoga.YogaNode | undefined => {
 	if (!node || !node.parentNode) {
 		return undefined;
 	}

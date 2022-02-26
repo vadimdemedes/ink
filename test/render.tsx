@@ -1,11 +1,11 @@
 delete process.env.CI;
-import React from 'react';
+import * as React from 'react';
 import {serial as test} from 'ava';
 import {spawn} from 'node-pty';
-import ansiEscapes from 'ansi-escapes';
-import stripAnsi from 'strip-ansi';
-import boxen from 'boxen';
-import delay from 'delay';
+import ansiEscapes = require('ansi-escapes');
+import stripAnsi = require('strip-ansi');
+import boxen = require('boxen');
+import delay = require('delay');
 import {render, Box, Text} from '../src';
 import createStdout from './helpers/create-stdout';
 

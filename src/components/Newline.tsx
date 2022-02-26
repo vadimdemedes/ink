@@ -1,4 +1,4 @@
-import React, {FC} from 'react';
+import * as React from 'react';
 
 export interface Props {
 	/**
@@ -12,7 +12,7 @@ export interface Props {
 /**
  * Adds one or more newline (\n) characters. Must be used within <Text> components.
  */
-const Newline: FC<Props> = ({count = 1}) => (
+const Newline: React.FC<Props> = ({count = 1}) => (
 	<ink-text>{'\n'.repeat(count)}</ink-text>
 );
 

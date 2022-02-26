@@ -1,4 +1,4 @@
-import {useEffect, useContext, useMemo} from 'react';
+import * as React from 'react';
 import FocusContext from '../components/FocusContext';
 import useStdin from './use-stdin';
 
@@ -46,13 +46,13 @@ const useFocus = ({
 }: Input = {}): Output => {
 	const {isRawModeSupported, setRawMode} = useStdin();
 	const {activeId, add, remove, activate, deactivate, focus} =
-		useContext(FocusContext);
+		React.useContext(FocusContext);
 
-	const id = useMemo(() => {
+	const id = React.useMemo(() => {
 		return customId ?? Math.random().toString().slice(2, 7);
 	}, [customId]);
 
-	useEffect(() => {
+	React.useEffect(() => {
 		add(id, {autoFocus});
 
 		return () => {
@@ -60,7 +60,7 @@ const useFocus = ({
 		};
 	}, [id, autoFocus]);
 
-	useEffect(() => {
+	React.useEffect(() => {
 		if (isActive) {
 			activate(id);
 		} else {
@@ -68,7 +68,7 @@ const useFocus = ({
 		}
 	}, [isActive, id]);
 
-	useEffect(() => {
+	React.useEffect(() => {
 		if (!isRawModeSupported || !isActive) {
 			return;
 		}

@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import chalk = require('chalk');
 
 type ColorType = 'foreground' | 'background';
 

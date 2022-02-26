@@ -1,6 +1,6 @@
 import {Writable} from 'stream';
-import ansiEscapes from 'ansi-escapes';
-import cliCursor from 'cli-cursor';
+import ansiEscapes = require('ansi-escapes');
+import cliCursor = require('cli-cursor');
 
 export interface LogUpdate {
 	clear: () => void;

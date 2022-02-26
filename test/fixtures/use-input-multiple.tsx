@@ -1,18 +1,18 @@
-import React, {FC, useState, useCallback, useEffect} from 'react';
+import * as React from 'react';
 import {render, useInput, useApp, Text} from '../..';
 
-const App: FC = () => {
+const App: React.FC = () => {
 	const {exit} = useApp();
-	const [input, setInput] = useState('');
+	const [input, setInput] = React.useState('');
 
-	const handleInput = useCallback((input: string) => {
+	const handleInput = React.useCallback((input: string) => {
 		setInput((previousInput: string) => previousInput + input);
 	}, []);
 
 	useInput(handleInput);
 	useInput(handleInput, {isActive: false});
 
-	useEffect(() => {
+	React.useEffect(() => {
 		setTimeout(exit, 1000);
 	}, []);
 

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import React, {PureComponent, ReactNode} from 'react';
-import cliCursor from 'cli-cursor';
+import * as React from 'react';
+import cliCursor = require('cli-cursor');
 import AppContext from './AppContext';
 import StdinContext from './StdinContext';
 import StdoutContext from './StdoutContext';
@@ -13,7 +13,7 @@ const SHIFT_TAB = '\u001B[Z';
 const ESC = '\u001B';
 
 interface Props {
-	readonly children: ReactNode;
+	readonly children: React.ReactNode;
 	readonly stdin: NodeJS.ReadStream;
 	readonly stdout: NodeJS.WriteStream;
 	readonly stderr: NodeJS.WriteStream;
@@ -38,7 +38,7 @@ interface Focusable {
 // Root component for all Ink apps
 // It renders stdin and stdout contexts, so that children can access them if needed
 // It also handles Ctrl+C exiting and cursor visibility
-export default class App extends PureComponent<Props, State> {
+export default class App extends React.PureComponent<Props, State> {
 	static displayName = 'InternalApp';
 
 	state = {

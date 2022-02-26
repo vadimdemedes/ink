@@ -1,13 +1,13 @@
-import React, {useState, useEffect} from 'react';
+import * as React from 'react';
 import test from 'ava';
-import boxen, {Options} from 'boxen';
-import indentString from 'indent-string';
-import delay from 'delay';
+import boxen = require('boxen');
+import indentString = require('indent-string');
+import delay = require('delay');
 import {renderToString} from './helpers/render-to-string';
 import createStdout from './helpers/create-stdout';
 import {render, Box, Text} from '../src';
 
-const box = (text: string, options?: Options): string => {
+const box = (text: string, options?: boxen.Options): string => {
 	return boxen(text, {
 		...options,
 		borderStyle: 'round'
@@ -253,9 +253,9 @@ test('render border after update', async t => {
 	const stdout = createStdout();
 
 	const Test = () => {
-		const [borderColor, setBorderColor] = useState();
+		const [borderColor, setBorderColor] = React.useState();
 
-		useEffect(() => {
+		React.useEffect(() => {
 			setBorderColor('green');
 		}, []);
 

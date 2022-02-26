@@ -1,7 +1,7 @@
-import React, {FC} from 'react';
+import * as React from 'react';
 import {render, useInput, useApp} from '../..';
 
-const UserInput: FC = () => {
+const UserInput: React.FC = () => {
 	const {exit} = useApp();
 
 	useInput((input, key) => {

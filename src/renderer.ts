@@ -1,4 +1,4 @@
-import Yoga from 'yoga-layout-prebuilt';
+import Yoga = require('yoga-layout-prebuilt');
 import renderNodeToOutput from './render-node-to-output';
 import Output from './output';
 import {DOMElement} from './dom';

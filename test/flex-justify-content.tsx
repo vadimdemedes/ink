@@ -1,6 +1,6 @@
-import React from 'react';
+import * as React from 'react';
 import test from 'ava';
-import chalk from 'chalk';
+import chalk = require('chalk');
 import {renderToString} from './helpers/render-to-string';
 import {Box, Text} from '../src';
 

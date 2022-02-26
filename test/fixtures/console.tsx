@@ -1,8 +1,8 @@
-import React, {useEffect} from 'react';
+import * as React from 'react';
 import {Text, render} from '../..';
 
 const App = () => {
-	useEffect(() => {
+	React.useEffect(() => {
 		const timer = setTimeout(() => {}, 1000);
 
 		return () => {

@@ -1,6 +1,6 @@
-import React, {Suspense} from 'react';
+import * as React from 'react';
 import test from 'ava';
-import chalk from 'chalk';
+import chalk = require('chalk');
 import {Box, Text, render} from '../src';
 import createStdout from './helpers/create-stdout';
 
@@ -351,9 +351,9 @@ test('support suspense', async t => {
 	const Suspendable = () => <Text>{read()}</Text>;
 
 	const Test = () => (
-		<Suspense fallback={<Text>Loading</Text>}>
+		<React.Suspense fallback={<Text>Loading</Text>}>
 			<Suspendable />
-		</Suspense>
+		</React.Suspense>
 	);
 
 	const out = render(<Test />, {

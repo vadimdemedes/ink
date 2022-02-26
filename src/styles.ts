@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import Yoga, {YogaNode} from 'yoga-layout-prebuilt';
+import Yoga = require('yoga-layout-prebuilt');
 import {Boxes} from 'cli-boxes';
 import {LiteralUnion} from 'type-fest';
 import {ForegroundColor} from 'chalk';
@@ -189,7 +189,7 @@ const applyPaddingStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	}
 };
 
-const applyFlexStyles = (node: YogaNode, style: Styles): void => {
+const applyFlexStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	if ('flexGrow' in style) {
 		node.setFlexGrow(style.flexGrow ?? 0);
 	}
@@ -288,7 +288,7 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
-const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
+const applyDimensionStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	if ('width' in style) {
 		if (typeof style.width === 'number') {
 			node.setWidth(style.width);
@@ -326,7 +326,7 @@ const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
-const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
+const applyDisplayStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	if ('display' in style) {
 		node.setDisplay(
 			style.display === 'flex' ? Yoga.DISPLAY_FLEX : Yoga.DISPLAY_NONE
@@ -334,7 +334,7 @@ const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
-const applyBorderStyles = (node: YogaNode, style: Styles): void => {
+const applyBorderStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	if ('borderStyle' in style) {
 		const borderWidth = typeof style.borderStyle === 'string' ? 1 : 0;
 
@@ -345,7 +345,7 @@ const applyBorderStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
-export default (node: YogaNode, style: Styles = {}): void => {
+export default (node: Yoga.YogaNode, style: Styles = {}): void => {
 	applyPositionStyles(node, style);
 	applyMarginStyles(node, style);
 	applyPaddingStyles(node, style);

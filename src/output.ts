@@ -1,5 +1,5 @@
-import sliceAnsi from 'slice-ansi';
-import stringWidth from 'string-width';
+import sliceAnsi = require('slice-ansi');
+import stringWidth = require('string-width');
 import {OutputTransformer} from './render-node-to-output';
 
 /**

@@ -1,6 +1,6 @@
 import {serial as test} from 'ava';
 import {spawn} from 'node-pty';
-import stripAnsi from 'strip-ansi';
+import stripAnsi = require('strip-ansi');
 
 const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: any) => void;
