@@ -99,8 +99,8 @@
 		"xo": "^0.28.0"
 	},
 	"peerDependencies": {
-		"@types/react": ">=16.8.0",
-		"react": ">=16.8.0",
+		"@types/react": "^17.0.2",
+		"react": "^17.0.0",
 		"react-devtools-core": "^4.19.1"
 	},
 	"peerDependenciesMeta": {
