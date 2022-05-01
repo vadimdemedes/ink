@@ -1,5 +1,6 @@
 import React, {ReactNode} from 'react';
-import {throttle, DebouncedFunc} from 'lodash';
+import type {DebouncedFunc} from 'lodash';
+import throttle from 'lodash.throttle';
 import logUpdate, {LogUpdate} from './log-update';
 import ansiEscapes from 'ansi-escapes';
 import originalIsCI from 'is-ci';
@@ -59,7 +60,7 @@ export default class Ink {
 		this.log = logUpdate.create(options.stdout);
 		this.throttledLog = options.debug
 			? this.log
-			: throttle(this.log, undefined, {
+			: throttle(this.log, 0, {
 					leading: true,
 					trailing: true
 			  });
