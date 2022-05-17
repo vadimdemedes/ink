@@ -91,6 +91,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 
 ## Who's Using Ink?
 
+- [Cloudflare's Wrangler](https://github.com/cloudflare/wrangler2) - The CLI for Cloudflare Workers.
 - [Gatsby](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing fast websites.
 - [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
 - [Terraform CDK](https://github.com/hashicorp/terraform-cdk) - CDK (Cloud Development Kit) for HashiCorp Terraform.
@@ -101,6 +102,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Blitz](https://blitzjs.com) - The Fullstack React Framework.
 - [New York Times](https://github.com/nytimes/kyt) - NYT uses Ink `kyt` - a toolkit that encapsulates and manages the configuration for web apps.
 - [tink](https://github.com/npm/tink) - Next-generation runtime and package manager.
+- [Inkle](https://github.com/jrr/inkle) - Wordle in your Terminal.
 - [loki](https://github.com/oblador/loki) - Visual Regression Testing for Storybook.
 - [Bit](https://github.com/teambit/bit) - Build, distribute and collaborate on components.
 - [Remirror](https://github.com/remirror/remirror) - Your friendly, world-class editor toolkit.
