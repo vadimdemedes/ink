@@ -742,7 +742,7 @@ See [align-items](https://css-tricks.com/almanac/properties/a/align-items/).
 
 Type: `string`\
 Default: `auto`\
-Allowed vales: `auto` `flex-start` `center` `flex-end`
+Allowed values: `auto` `flex-start` `center` `flex-end`
 
 See [align-self](https://css-tricks.com/almanac/properties/a/align-self/).
 
