@@ -2,6 +2,15 @@
 const React = require('react');
 const {render, Box, Text, useFocus} = require('../..');
 
+const Item = ({label}) => {
+	const {isFocused} = useFocus();
+	return (
+		<Text>
+			{label} {isFocused && <Text color="green">(focused)</Text>}
+		</Text>
+	);
+};
+
 const Focus = () => (
 	<Box flexDirection="column" padding={1}>
 		<Box marginBottom={1}>
@@ -15,14 +24,5 @@ const Focus = () => (
 		<Item label="Third" />
 	</Box>
 );
-
-const Item = ({label}) => {
-	const {isFocused} = useFocus();
-	return (
-		<Text>
-			{label} {isFocused && <Text color="green">(focused)</Text>}
-		</Text>
-	);
-};
 
 render(<Focus />);
