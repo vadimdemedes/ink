@@ -29,7 +29,7 @@ class Test extends React.Component<Record<string, unknown>, {counter: number}> {
 	}
 
 	componentWillUnmount() {
-		clearTimeout(this.timer!);
+		clearTimeout(this.timer);
 	}
 }
 
