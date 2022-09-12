@@ -125,7 +125,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [tasuku](https://github.com/privatenumber/tasuku) - Minimal task runner.
 - [mnswpr](https://github.com/mordv/mnswpr) - Minesweeper game in your terminal.
 - [lrn](https://github.com/krychu/lrn) - Command-line tool for learning by repetition.
-
+- [sql-multi-db-query](https://github.com/faridprogrammer/multiple-db-sql-query) Command-line tool to query multiple Sql Server databases at once
 ## Contents
 
 - [Getting Started](#getting-started)
