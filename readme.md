@@ -98,53 +98,53 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Twilio's SIGNAL](https://github.com/twilio-labs/plugin-signal2020) - CLI for Twilio's SIGNAL conference. [Blog post](https://www.twilio.com/blog/building-conference-cli-in-react).
 - [Typewriter](https://github.com/segmentio/typewriter) - Generates strongly-typed [Segment](https://segment.com) analytics clients from arbitrary JSON Schema.
 - [Prisma](https://www.prisma.io) - The unified data layer for modern applications.
-- [Wallace](https://www.projectwallace.com) - Pretty CSS analytics on the CLI.
+- [Wallace](https://www.projectwallace.com) - Pretty CSS analytics.
 - [Blitz](https://blitzjs.com) - The Fullstack React Framework.
 - [New York Times](https://github.com/nytimes/kyt) - NYT uses Ink `kyt` - a toolkit that encapsulates and manages the configuration for web apps.
 - [tink](https://github.com/npm/tink) - Next-generation runtime and package manager.
-- [Inkle](https://github.com/jrr/inkle) - Wordle in your Terminal.
-- [loki](https://github.com/oblador/loki) - Visual Regression Testing for Storybook.
+- [Inkle](https://github.com/jrr/inkle) - Wordle game.
+- [loki](https://github.com/oblador/loki) - Visual regression testing for Storybook.
 - [Bit](https://github.com/teambit/bit) - Build, distribute and collaborate on components.
 - [Remirror](https://github.com/remirror/remirror) - Your friendly, world-class editor toolkit.
 - [Prime](https://github.com/birkir/prime) - Open source GraphQL CMS.
 - [Splash](https://github.com/Shopify/polaris-react/tree/master/scripts/splash) - Observe the splash zone of a change across the Shopify's [Polaris](https://polaris.shopify.com) component library.
-- [emoj](https://github.com/sindresorhus/emoj) - Find relevant emoji on the command-line.
-- [emma](https://github.com/maticzav/emma-cli) - Terminal assistant to find and install npm packages.
+- [emoj](https://github.com/sindresorhus/emoj) - Find relevant emojis.
+- [emma](https://github.com/maticzav/emma-cli) - Find and install npm packages.
 - [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command line tools for time-saving web developers.
-- [share](https://github.com/marionebl/share-cli) - Quickly share files from your command line.
+- [share](https://github.com/marionebl/share-cli) - Quickly share files.
 - [Kubelive](https://github.com/ameerthehacker/kubelive) - CLI for Kubernetes to provide live data about the cluster and its resources.
-- [changelog-view](https://github.com/jdeniau/changelog-view) - Tool view changelog in console.
-- [cfpush](https://github.com/mamachanko/cfpush) - An interactive Cloud Foundry tutorial in your terminal.
-- [startd](https://github.com/mgrip/startd) - Turn your React component into a web app from the command-line.
-- [wiki-cli](https://github.com/hexrcs/wiki-cli) - Search Wikipedia and read summaries directly in your terminal.
+- [changelog-view](https://github.com/jdeniau/changelog-view) - View changelogs.
+- [cfpush](https://github.com/mamachanko/cfpush) - An interactive Cloud Foundry tutorial.
+- [startd](https://github.com/mgrip/startd) - Turn your React component into a web app.
+- [wiki-cli](https://github.com/hexrcs/wiki-cli) - Search Wikipedia and read summaries.
 - [garson](https://github.com/goliney/garson) - Build interactive config-based command-line interfaces.
 - [git-contrib-calendar](https://github.com/giannisp/git-contrib-calendar) - Display a contributions calendar for any git repository.
 - [gitgud](https://github.com/GitGud-org/GitGud) - An interactive command-line GUI for Git.
-- [Autarky](https://github.com/pranshuchittora/autarky) - An interactive CLI to find and delete old `node_modules` directories in order to free up disk space.
+- [Autarky](https://github.com/pranshuchittora/autarky) - Find and delete old `node_modules` directories in order to free up disk space.
 - [fast-cli](https://github.com/sindresorhus/fast-cli) - Test your download and upload speed.
 - [tasuku](https://github.com/privatenumber/tasuku) - Minimal task runner.
-- [mnswpr](https://github.com/mordv/mnswpr) - Minesweeper game in your terminal.
-- [lrn](https://github.com/krychu/lrn) - Command-line tool for learning by repetition.
-- [turdle](https://github.com/mynameisankit/turdle) - Wordle game for your command-line.
+- [mnswpr](https://github.com/mordv/mnswpr) - Minesweeper game.
+- [lrn](https://github.com/krychu/lrn) - Learning by repetition.
+- [turdle](https://github.com/mynameisankit/turdle) - Wordle game.
 
 ## Contents
 
 - [Getting Started](#getting-started)
 - [Components](#components)
-  - [`<Text>`](#text)
-  - [`<Box>`](#box)
-  - [`<Newline>`](#newline)
-  - [`<Spacer>`](#spacer)
-  - [`<Static>`](#static)
-  - [`<Transform>`](#transform)
+	- [`<Text>`](#text)
+	- [`<Box>`](#box)
+	- [`<Newline>`](#newline)
+	- [`<Spacer>`](#spacer)
+	- [`<Static>`](#static)
+	- [`<Transform>`](#transform)
 - [Hooks](#hooks)
-  - [`useInput`](#useinputinputhandler-options)
-  - [`useApp`](#useapp)
-  - [`useStdin`](#usestdin)
-  - [`useStdout`](#usestdout)
-  - [`useStderr`](#usestderr)
-  - [`useFocus`](#usefocusoptions)
-  - [`useFocusManager`](#usefocusmanager)
+	- [`useInput`](#useinputinputhandler-options)
+	- [`useApp`](#useapp)
+	- [`useStdin`](#usestdin)
+	- [`useStdout`](#usestdout)
+	- [`useStderr`](#usestderr)
+	- [`useFocus`](#usefocusoptions)
+	- [`useFocusManager`](#usefocusmanager)
 - [API](#api)
 - [Testing](#testing)
 - [Using React Devtools](#using-react-devtools)
@@ -1783,14 +1783,14 @@ Check out [ink-testing-library](https://github.com/vadimdemedes/ink-testing-libr
 Ink supports [React Devtools](https://github.com/facebook/react/tree/master/packages/react-devtools) out-of-the-box.
 To enable integration with React Devtools in your Ink-based CLI, run it with `DEV=true` environment variable:
 
-```
-$ DEV=true my-cli
+```sh
+DEV=true my-cli
 ```
 
 Then, start React Devtools itself:
 
-```
-$ npx react-devtools
+```sh
+npx react-devtools
 ```
 
 After it starts up, you should see the component tree of your CLI.
@@ -1803,23 +1803,23 @@ You can even inspect and change the props of components, and see the results imm
 - [ink-text-input](https://github.com/vadimdemedes/ink-text-input) - Text input.
 - [ink-spinner](https://github.com/vadimdemedes/ink-spinner) - Spinner.
 - [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
-- [ink-link](https://github.com/sindresorhus/ink-link) - Link component.
-- [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color component.
-- [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
+- [ink-link](https://github.com/sindresorhus/ink-link) - Link.
+- [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color.
+- [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text.
 - [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
-- [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
-- [ink-color-pipe](https://github.com/LitoMore/ink-color-pipe) - Create color text with simpler style strings in Ink.
+- [ink-tab](https://github.com/jdeniau/ink-tab) - Tab.
+- [ink-color-pipe](https://github.com/LitoMore/ink-color-pipe) - Create color text with simpler style strings.
 - [ink-multi-select](https://github.com/karaggeorge/ink-multi-select) - Select one or more values from a list
-- [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider component.
-- [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Configurable component for rendering progress bars.
-- [ink-table](https://github.com/maticzav/ink-table) - Table component.
+- [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider.
+- [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Progress bar.
+- [ink-table](https://github.com/maticzav/ink-table) - Table.
 - [ink-ascii](https://github.com/hexrcs/ink-ascii) - Awesome text component with more font choices, based on Figlet.
 - [ink-markdown](https://github.com/cameronhunter/ink-markdown) - Render syntax highlighted Markdown.
 - [ink-quicksearch-input](https://github.com/Eximchain/ink-quicksearch-input) - Select component with fast quicksearch-like navigation.
 - [ink-confirm-input](https://github.com/kevva/ink-confirm-input) - Yes/No confirmation input.
 - [ink-syntax-highlight](https://github.com/vsashyn/ink-syntax-highlight) - Code syntax highlighting.
-- [ink-form](https://github.com/lukasbach/ink-form) - Form component.
-- [ink-task-list](https://github.com/privatenumber/ink-task-list) - Task list component.
+- [ink-form](https://github.com/lukasbach/ink-form) - Form.
+- [ink-task-list](https://github.com/privatenumber/ink-task-list) - Task list.
 
 ## Useful Hooks
 
