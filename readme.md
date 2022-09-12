@@ -125,6 +125,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [tasuku](https://github.com/privatenumber/tasuku) - Minimal task runner.
 - [mnswpr](https://github.com/mordv/mnswpr) - Minesweeper game in your terminal.
 - [lrn](https://github.com/krychu/lrn) - Command-line tool for learning by repetition.
+- [turdle](https://github.com/mynameisankit/turdle) - Wordle game for your command-line.
 
 ## Contents
 
