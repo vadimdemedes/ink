@@ -66,7 +66,7 @@
 		"@types/lodash": "^4.14.161",
 		"@types/node": "*",
 		"@types/react": "^17.0.27",
-		"@types/react-reconciler": "^0.26.4",
+		"@types/react-reconciler": "0.26.3",
 		"@types/scheduler": "^0.16.2",
 		"@types/signal-exit": "^3.0.0",
 		"@types/sinon": "^9.0.4",

@@ -26,7 +26,7 @@ class Exit extends React.Component<
 	}
 
 	componentWillUnmount() {
-		clearInterval(this.timer!);
+		clearInterval(this.timer);
 	}
 }
 
