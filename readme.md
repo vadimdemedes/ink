@@ -1826,6 +1826,10 @@ You can even inspect and change the props of components, and see the results imm
 
 - [ink-use-stdout-dimensions](https://github.com/cameronhunter/ink-monorepo/tree/master/packages/ink-use-stdout-dimensions) - Subscribe to stdout dimensions.
 
+## Recipes
+
+- [Routing using `MemoryRouter`](docs/recipes/routing-using-memory-router.md) - If you wish to implement routing in your app, the popular 'react-router' library can be used out of the box, with some caveats.
+
 ## Examples
 
 - [Jest](examples/jest/jest.js) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
@@ -1840,6 +1844,7 @@ You can even inspect and change the props of components, and see the results imm
 - [Write to stderr](examples/use-stderr/use-stderr.js) - Write to stderr bypassing main Ink output.
 - [Static](examples/static/static.js) - Use `<Static>` to render permanent output.
 - [Child process](examples/subprocess-output) - Render output from a child process.
+- [Router with Select Input](examples/router/select-input.js) - Menu-based navigation using `MemoryRouter` and [`ink-select-input`](https://github.com/vadimdemedes/ink-select-input).
 
 ## Maintainers
 
