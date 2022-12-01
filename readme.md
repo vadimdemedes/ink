@@ -1372,7 +1372,7 @@ Default: `process.stdout`
 import {useStdout} from 'ink';
 
 const Example = () => {
-	const {stdout} = useStdout;
+	const {stdout} = useStdout();
 
 	return …
 };
