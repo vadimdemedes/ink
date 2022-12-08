@@ -1,7 +1,6 @@
 import React, {ReactNode} from 'react';
 import {throttle, DebouncedFunc} from 'lodash';
 import logUpdate, {LogUpdate} from './log-update';
-import ansiEscapes from 'ansi-escapes';
 import originalIsCI from 'is-ci';
 import autoBind from 'auto-bind';
 import reconciler from './reconciler';
@@ -12,6 +11,7 @@ import * as dom from './dom';
 import {FiberRoot} from 'react-reconciler';
 import instances from './instances';
 import App from './components/App';
+import ansiEscapes from 'ansi-escapes';
 
 const isCI = process.env.CI === 'false' ? false : originalIsCI;
 const noop = () => {};
@@ -60,7 +60,7 @@ export default class Ink {
 		this.throttledLog = options.debug
 			? this.log
 			: throttle(this.log, undefined, {
-					leading: true,
+					leading: false,
 					trailing: true
 			  });
 
@@ -149,7 +149,7 @@ export default class Ink {
 			this.fullStaticOutput += staticOutput;
 		}
 
-		if (outputHeight >= this.options.stdout.rows) {
+		if (outputHeight > this.options.stdout.rows) {
 			this.options.stdout.write(
 				ansiEscapes.clearTerminal + this.fullStaticOutput + output
 			);
