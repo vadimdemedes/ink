@@ -4,12 +4,21 @@ import applyStyles, {Styles} from './styles';
 import wrapText from './wrap-text';
 import squashTextNodes from './squash-text-nodes';
 import {OutputTransformer} from './render-node-to-output';
+import Output from './output';
+
+export type DirectRenderFunc = (
+	x: number,
+	y: number,
+	node: DOMNode,
+	output: Output
+) => void;
 
 interface InkNode {
 	parentNode: DOMElement | null;
 	yogaNode?: Yoga.YogaNode;
 	internal_static?: boolean;
 	style: Styles;
+	internal_pre_render?: DirectRenderFunc;
 }
 
 export const TEXT_NAME = '#text';

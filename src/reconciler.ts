@@ -131,6 +131,8 @@ export default createReconciler<
 				node.internal_transform = value as OutputTransformer;
 			} else if (key === 'internal_static') {
 				node.internal_static = true;
+			} else if (key === 'unsafeDirectRender') {
+				node.internal_pre_render = value as any;
 			} else {
 				setAttribute(node, key, value as DOMNodeAttribute);
 			}
@@ -247,6 +249,8 @@ export default createReconciler<
 				node.internal_transform = value as OutputTransformer;
 			} else if (key === 'internal_static') {
 				node.internal_static = true;
+			} else if (key === 'unsafeDirectRender') {
+				node.internal_pre_render = value as any;
 			} else {
 				setAttribute(node, key, value as DOMNodeAttribute);
 			}
