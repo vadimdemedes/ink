@@ -1,5 +1,6 @@
 import React, {ReactNode} from 'react';
-import {throttle, DebouncedFunc} from 'lodash';
+import type {DebouncedFunc} from 'lodash';
+import throttle from 'lodash.throttle';
 import logUpdate, {LogUpdate} from './log-update';
 import ansiEscapes from 'ansi-escapes';
 import originalIsCI from 'is-ci';
