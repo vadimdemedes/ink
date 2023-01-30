@@ -61,7 +61,7 @@
 		"yoga-layout-prebuilt": "^1.9.6"
 	},
 	"devDependencies": {
-		"@sindresorhus/tsconfig": "0.7.0",
+		"@sindresorhus/tsconfig": "3.0.1",
 		"@types/is-ci": "^2.0.0",
 		"@types/lodash": "^4.14.161",
 		"@types/node": "*",
