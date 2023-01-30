@@ -78,7 +78,11 @@ export default class Ink {
 			this.rootNode,
 			// Legacy mode
 			0,
+			null,
 			false,
+			null,
+			'id',
+			_error => {},
 			null
 		);
 
