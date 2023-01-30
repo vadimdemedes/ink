@@ -10,7 +10,10 @@ export {
 	default as Transform,
 	Props as TransformProps
 } from './components/Transform.js';
-export {default as Newline, Props as NewlineProps} from './components/Newline.js';
+export {
+	default as Newline,
+	Props as NewlineProps
+} from './components/Newline.js';
 export {default as Spacer} from './components/Spacer.js';
 export {default as useInput, Key} from './hooks/use-input.js';
 export {default as useApp} from './hooks/use-app.js';

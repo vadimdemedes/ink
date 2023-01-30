@@ -38,28 +38,28 @@
 		"text"
 	],
 	"dependencies": {
-		"ansi-escapes": "^4.2.1",
-		"auto-bind": "4.0.0",
-		"chalk": "^4.1.0",
-		"cli-boxes": "^2.2.0",
-		"cli-cursor": "^3.1.0",
-		"cli-truncate": "^2.1.0",
-		"code-excerpt": "^3.0.0",
-		"indent-string": "^4.0.0",
-		"is-ci": "^2.0.0",
+		"ansi-escapes": "^6.0.0",
+		"auto-bind": "^5.0.1",
+		"chalk": "^5.2.0",
+		"cli-boxes": "^3.0.0",
+		"cli-cursor": "^4.0.0",
+		"cli-truncate": "^3.1.0",
+		"code-excerpt": "^4.0.0",
+		"indent-string": "^5.0.0",
+		"is-ci": "^3.0.1",
 		"lodash-es": "^4.17.21",
-		"patch-console": "^1.0.0",
+		"patch-console": "^2.0.0",
 		"react-reconciler": "^0.26.2",
-		"scheduler": "^0.20.2",
-		"signal-exit": "^3.0.2",
-		"slice-ansi": "^3.0.0",
-		"stack-utils": "^2.0.2",
-		"string-width": "^4.2.2",
+		"scheduler": "^0.23.0",
+		"signal-exit": "^3.0.7",
+		"slice-ansi": "^5.0.0",
+		"stack-utils": "^2.0.6",
+		"string-width": "^5.1.2",
 		"type-fest": "^0.12.0",
-		"widest-line": "^3.1.0",
-		"wrap-ansi": "^6.2.0",
-		"ws": "^7.5.5",
-		"yoga-layout-prebuilt": "^1.9.6"
+		"widest-line": "^4.0.1",
+		"wrap-ansi": "^8.1.0",
+		"ws": "^8.12.0",
+		"yoga-layout-prebuilt": "^1.10.0"
 	},
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "3.0.1",
@@ -75,10 +75,10 @@
 		"@types/stack-utils": "^1.0.1",
 		"@types/wrap-ansi": "^3.0.0",
 		"@vdemedes/prettier-config": "^1.0.1",
-		"ava": "^3.5.0",
+		"ava": "^5.1.1",
 		"babel-eslint": "^10.0.1",
 		"benchmark": "^2.1.4",
-		"boxen": "^4.2.0",
+		"boxen": "^7.0.1",
 		"chance": "^1.1.6",
 		"delay": "^4.1.0",
 		"eslint-config-xo": "0.29.1",
@@ -95,7 +95,7 @@
 		"react-devtools-core": "^4.19.1",
 		"sinon": "^8.1.1",
 		"strip-ansi": "^6.0.0",
-		"ts-node": "7.0.0",
+		"ts-node": "10.9.1",
 		"typescript": "^4.9.4",
 		"xo": "^0.28.0"
 	},
@@ -113,12 +113,12 @@
 		}
 	},
 	"ava": {
-		"extensions": [
-			"ts",
-			"tsx"
-		],
-		"require": [
-			"ts-node/register/transpile-only"
+		"extensions": {
+			"ts": "module",
+			"tsx": "module"
+		},
+		"nodeArguments": [
+			"--loader=ts-node/esm"
 		]
 	},
 	"xo": {
@@ -160,7 +160,8 @@
 					"@typescript-eslint/no-empty-function": "warn",
 					"@typescript-eslint/promise-function-async": "warn",
 					"@typescript-eslint/explicit-function-return": "off",
-					"@typescript-eslint/explicit-function-return-type": "off"
+					"@typescript-eslint/explicit-function-return-type": "off",
+					"dot-notation": "off"
 				}
 			},
 			{

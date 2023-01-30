@@ -213,8 +213,10 @@ export default createReconciler<
 								updatePayload['style'] = style;
 							}
 
-							(updatePayload['style'] as any).borderStyle = newStyle.borderStyle;
-							(updatePayload['style'] as any).borderColor = newStyle.borderColor;
+							(updatePayload['style'] as any).borderStyle =
+								newStyle.borderStyle;
+							(updatePayload['style'] as any).borderColor =
+								newStyle.borderColor;
 						}
 
 						if (newStyle[styleKey] !== oldStyle[styleKey]) {

@@ -2,7 +2,7 @@
 import Yoga, {YogaNode} from 'yoga-layout-prebuilt';
 import {Boxes} from 'cli-boxes';
 import {LiteralUnion} from 'type-fest';
-import {ForegroundColor} from 'chalk';
+import {ForegroundColorName} from 'chalk';
 
 export interface Styles {
 	readonly textWrap?:
@@ -140,7 +140,7 @@ export interface Styles {
 	 * Change border color.
 	 * Accepts the same values as `color` in <Text> component.
 	 */
-	readonly borderColor?: LiteralUnion<typeof ForegroundColor, string>;
+	readonly borderColor?: LiteralUnion<ForegroundColorName, string>;
 }
 
 const applyPositionStyles = (node: Yoga.YogaNode, style: Styles): void => {

@@ -11,17 +11,17 @@ export default (x: number, y: number, node: DOMNode, output: Output): void => {
 		const box = cliBoxes[node.style.borderStyle];
 
 		const topBorder = colorize(
-			box.topLeft + box.horizontal.repeat(width - 2) + box.topRight,
+			box.topLeft + box.top.repeat(width - 2) + box.topRight,
 			color,
 			'foreground'
 		);
 
 		const verticalBorder = (
-			colorize(box.vertical, color, 'foreground') + '\n'
+			colorize(box.left, color, 'foreground') + '\n'
 		).repeat(height - 2);
 
 		const bottomBorder = colorize(
-			box.bottomLeft + box.horizontal.repeat(width - 2) + box.bottomRight,
+			box.bottomLeft + box.bottom.repeat(width - 2) + box.bottomRight,
 			color,
 			'foreground'
 		);

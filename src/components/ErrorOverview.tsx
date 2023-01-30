@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import React, {FC} from 'react';
 import StackUtils from 'stack-utils';
-import codeExcerpt, {ExcerptLine} from 'code-excerpt';
+import codeExcerpt, {CodeExcerpt} from 'code-excerpt';
 import Box from './Box.js';
 import Text from './Text.js';
 
@@ -17,7 +17,7 @@ interface Props {
 const ErrorOverview: FC<Props> = ({error}) => {
 	const stack = error.stack ? error.stack.split('\n').slice(1) : undefined;
 	const origin = stack ? stackUtils.parseLine(stack[0] as string) : undefined;
-	let excerpt: ExcerptLine[] | undefined;
+	let excerpt: CodeExcerpt[] | undefined;
 	let lineWidth = 0;
 
 	if (origin?.file && origin?.line && fs.existsSync(origin.file)) {

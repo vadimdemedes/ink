@@ -103,7 +103,7 @@ export default class App extends PureComponent<Props, State> {
 								}}
 							>
 								{this.state.error ? (
-									<ErrorOverview error={this.state.error! as Error} />
+									<ErrorOverview error={this.state.error as Error} />
 								) : (
 									this.props.children
 								)}
