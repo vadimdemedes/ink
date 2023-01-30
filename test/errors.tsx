@@ -3,8 +3,8 @@ import React from 'react';
 import test from 'ava';
 import patchConsole from 'patch-console';
 import stripAnsi from 'strip-ansi';
-import {render} from '../src';
-import createStdout from './helpers/create-stdout';
+import {render} from '../src/index.js';
+import createStdout from './helpers/create-stdout.js';
 
 let restore;
 

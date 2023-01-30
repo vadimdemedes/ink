@@ -1,5 +1,5 @@
-import {render} from '../../src';
-import createStdout from './create-stdout';
+import {render} from '../../src/index.js';
+import createStdout from './create-stdout.js';
 
 export const renderToString: (
 	node: JSX.Element,

@@ -3,9 +3,9 @@ import test from 'ava';
 import boxen, {Options} from 'boxen';
 import indentString from 'indent-string';
 import delay from 'delay';
-import {renderToString} from './helpers/render-to-string';
-import createStdout from './helpers/create-stdout';
-import {render, Box, Text} from '../src';
+import {renderToString} from './helpers/render-to-string.js';
+import createStdout from './helpers/create-stdout.js';
+import {render, Box, Text} from '../src/index.js';
 
 const box = (text: string, options?: Options): string => {
 	return boxen(text, {

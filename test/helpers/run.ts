@@ -2,13 +2,13 @@ import {spawn} from 'node-pty';
 
 type Run = (
 	fixture: string,
-	props?: {env?: Record<string, unknown>; columns?: number}
+	props?: {env?: Record<string, string>; columns?: number}
 ) => Promise<string>;
 
 export const run: Run = (fixture, props) => {
-	const env = {
-		...process.env,
-		...props?.env
+	const env: Record<string, string> = {
+		...(process.env as Record<string, string>),
+		...(props?.env ?? {})
 	};
 
 	return new Promise<string>((resolve, reject) => {

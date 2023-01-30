@@ -1,9 +1,9 @@
 import React from 'react';
 import test from 'ava';
 import chalk from 'chalk';
-import {renderToString} from './helpers/render-to-string';
-import {render, Box, Text} from '../src';
-import createStdout from './helpers/create-stdout';
+import {renderToString} from './helpers/render-to-string.js';
+import {render, Box, Text} from '../src/index.js';
+import createStdout from './helpers/create-stdout.js';
 
 test('<Text> with undefined children', t => {
 	const output = renderToString(<Text />);

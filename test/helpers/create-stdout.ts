@@ -11,9 +11,13 @@ interface Stream extends EventEmitter {
 
 export default (columns?: number): Stream => {
 	const stdout = new EventEmitter();
+	// @ts-ignore
 	stdout.columns = columns ?? 100;
+	// @ts-ignore
 	stdout.write = spy();
+	// @ts-ignore
 	stdout.get = () => stdout.write.lastCall.args[0];
 
+	// @ts-ignore
 	return stdout;
 };
