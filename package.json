@@ -65,7 +65,7 @@
 		"@types/is-ci": "^2.0.0",
 		"@types/lodash": "^4.14.161",
 		"@types/node": "*",
-		"@types/react": "^17.0.27",
+		"@types/react": "^18.0.0",
 		"@types/react-reconciler": "0.26.3",
 		"@types/scheduler": "^0.16.2",
 		"@types/signal-exit": "^3.0.0",
@@ -90,7 +90,7 @@
 		"node-pty": "^0.10.0",
 		"p-queue": "^6.2.1",
 		"prettier": "^2.0.4",
-		"react": "^17.0.2",
+		"react": "^18.0.0",
 		"react-devtools-core": "^4.19.1",
 		"sinon": "^8.1.1",
 		"strip-ansi": "^6.0.0",
@@ -99,7 +99,7 @@
 		"xo": "^0.28.0"
 	},
 	"peerDependencies": {
-		"@types/react": ">=16.8.0",
+		"@types/react": ">=18.0.0",
 		"react": ">=16.8.0",
 		"react-devtools-core": "^4.19.1"
 	},
