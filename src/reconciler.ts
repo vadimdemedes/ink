@@ -176,6 +176,7 @@ export default createReconciler<
 		return false;
 	},
 	supportsMutation: true,
+	detachDeletedInstance: () => {},
 	appendChildToContainer: appendChildNode,
 	insertInContainerBefore: insertBeforeNode,
 	removeChildFromContainer: (node, removeNode) => {

@@ -48,7 +48,7 @@
 		"is-ci": "^2.0.0",
 		"lodash": "^4.17.20",
 		"patch-console": "^1.0.0",
-		"react-reconciler": "^0.29.0",
+		"react-reconciler": "0.29.0",
 		"scheduler": "^0.20.2",
 		"signal-exit": "^3.0.2",
 		"slice-ansi": "^3.0.0",
