@@ -9,7 +9,8 @@
 		"email": "vdemedes@gmail.com",
 		"url": "https://github.com/vadimdemedes"
 	},
-	"main": "build",
+	"type": "module",
+	"exports": "./build/index.js",
 	"types": "build/index.d.ts",
 	"engines": {
 		"node": ">=10"
@@ -46,7 +47,7 @@
 		"code-excerpt": "^3.0.0",
 		"indent-string": "^4.0.0",
 		"is-ci": "^2.0.0",
-		"lodash": "^4.17.20",
+		"lodash-es": "^4.17.21",
 		"patch-console": "^1.0.0",
 		"react-reconciler": "^0.26.2",
 		"scheduler": "^0.20.2",
@@ -63,7 +64,7 @@
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "3.0.1",
 		"@types/is-ci": "^2.0.0",
-		"@types/lodash": "^4.14.161",
+		"@types/lodash-es": "^4.17.6",
 		"@types/node": "*",
 		"@types/react": "^17.0.27",
 		"@types/react-reconciler": "0.26.3",

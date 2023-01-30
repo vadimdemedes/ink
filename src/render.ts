@@ -1,6 +1,6 @@
 import {ReactElement} from 'react';
-import Ink, {Options as InkOptions} from './ink';
-import instances from './instances';
+import Ink, {Options as InkOptions} from './ink.js';
+import instances from './instances.js';
 import {Stream} from 'stream';
 
 export interface RenderOptions {

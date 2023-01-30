@@ -1,6 +1,6 @@
 import sliceAnsi from 'slice-ansi';
 import stringWidth from 'string-width';
-import {OutputTransformer} from './render-node-to-output';
+import {OutputTransformer} from './render-node-to-output.js';
 
 /**
  * "Virtual" output class

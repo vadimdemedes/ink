@@ -1,7 +1,7 @@
 import React, {FC, ReactNode} from 'react';
 import chalk, {ForegroundColor} from 'chalk';
-import colorize from '../colorize';
-import {Styles} from '../styles';
+import colorize from '../colorize.js';
+import {Styles} from '../styles.js';
 import {LiteralUnion} from 'type-fest';
 
 export interface Props {

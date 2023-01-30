@@ -1,6 +1,8 @@
 {
 	"extends": "@sindresorhus/tsconfig",
 	"compilerOptions": {
+		"moduleResolution": "node16",
+		"module": "node16",
 		"esModuleInterop": true,
 		"outDir": "build",
 		"sourceMap": true

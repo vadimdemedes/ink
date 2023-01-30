@@ -1,5 +1,5 @@
 import React, {useMemo, useState, useLayoutEffect, ReactNode} from 'react';
-import {Styles} from '../styles';
+import {Styles} from '../styles.js';
 
 export interface Props<T> {
 	/**

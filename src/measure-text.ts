@@ -16,7 +16,7 @@ export default (text: string): Output => {
 	}
 
 	if (cache[text]) {
-		return cache[text];
+		return cache[text] as Output;
 	}
 
 	const width = widestLine(text);

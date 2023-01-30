@@ -10,7 +10,7 @@ const getMethod = (name: string, type: ColorType): string => {
 		return name;
 	}
 
-	return 'bg' + name[0].toUpperCase() + name.slice(1);
+	return 'bg' + (name[0] as string).toUpperCase() + name.slice(1);
 };
 
 export default (
@@ -39,7 +39,7 @@ export default (
 			return str;
 		}
 
-		const method = getMethod(matches[1], type);
+		const method = getMethod(matches[1] as string, type);
 		const value = Number(matches[2]);
 
 		return (chalk as any)[method](value)(str);
@@ -58,7 +58,7 @@ export default (
 			return str;
 		}
 
-		const method = getMethod(matches[1], type);
+		const method = getMethod(matches[1] as string, type);
 		const firstValue = Number(matches[2]);
 		const secondValue = Number(matches[3]);
 		const thirdValue = Number(matches[4]);

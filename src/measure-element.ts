@@ -1,4 +1,4 @@
-import {DOMElement} from './dom';
+import {DOMElement} from './dom.js';
 
 interface Output {
 	/**

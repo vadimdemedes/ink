@@ -1,19 +1,19 @@
 import React, {ReactNode} from 'react';
-import {throttle, DebouncedFunc} from 'lodash';
-import logUpdate, {LogUpdate} from './log-update';
+import {throttle, DebouncedFunc} from 'lodash-es';
+import logUpdate, {LogUpdate} from './log-update.js';
 import ansiEscapes from 'ansi-escapes';
 import originalIsCI from 'is-ci';
 import autoBind from 'auto-bind';
-import reconciler from './reconciler';
-import render from './renderer';
+import reconciler from './reconciler.js';
+import render from './renderer.js';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
-import * as dom from './dom';
+import * as dom from './dom.js';
 import {FiberRoot} from 'react-reconciler';
-import instances from './instances';
-import App from './components/App';
+import instances from './instances.js';
+import App from './components/App.js';
 
-const isCI = process.env.CI === 'false' ? false : originalIsCI;
+const isCI = process.env['CI'] === 'false' ? false : originalIsCI;
 const noop = () => {};
 
 export interface Options {
@@ -85,7 +85,7 @@ export default class Ink {
 		// Unmount when process exits
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 
-		if (process.env.DEV === 'true') {
+		if (process.env['DEV'] === 'true') {
 			reconciler.injectIntoDevTools({
 				bundleType: 0,
 				// Reporting React DOM's version, not Ink's

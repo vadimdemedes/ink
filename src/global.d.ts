@@ -1,6 +1,6 @@
 import {ReactNode, Key, LegacyRef} from 'react';
 import {Except} from 'type-fest';
-import {DOMElement} from './dom';
+import {DOMElement} from './dom.js';
 import {Styles} from './styles';
 
 declare global {

@@ -1,7 +1,7 @@
 import cliBoxes from 'cli-boxes';
-import colorize from './colorize';
-import {DOMNode} from './dom';
-import Output from './output';
+import colorize from './colorize.js';
+import {DOMNode} from './dom.js';
+import Output from './output.js';
 
 export default (x: number, y: number, node: DOMNode, output: Output): void => {
 	if (typeof node.style.borderStyle === 'string') {

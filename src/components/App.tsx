@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import React, {PureComponent, ReactNode} from 'react';
 import cliCursor from 'cli-cursor';
-import AppContext from './AppContext';
-import StdinContext from './StdinContext';
-import StdoutContext from './StdoutContext';
-import StderrContext from './StderrContext';
-import FocusContext from './FocusContext';
-import ErrorOverview from './ErrorOverview';
+import AppContext from './AppContext.js';
+import StdinContext from './StdinContext.js';
+import StdoutContext from './StdoutContext.js';
+import StderrContext from './StderrContext.js';
+import FocusContext from './FocusContext.js';
+import ErrorOverview from './ErrorOverview.js';
 
 const TAB = '\t';
 const SHIFT_TAB = '\u001B[Z';
@@ -41,7 +41,7 @@ interface Focusable {
 export default class App extends PureComponent<Props, State> {
 	static displayName = 'InternalApp';
 
-	state = {
+	override state = {
 		isFocusEnabled: true,
 		activeFocusId: undefined,
 		focusables: [],
@@ -61,7 +61,7 @@ export default class App extends PureComponent<Props, State> {
 		return this.props.stdin.isTTY;
 	}
 
-	render() {
+	override render() {
 		return (
 			<AppContext.Provider
 				value={{
@@ -115,11 +115,11 @@ export default class App extends PureComponent<Props, State> {
 		);
 	}
 
-	componentDidMount() {
+	override componentDidMount() {
 		cliCursor.hide(this.props.stdout);
 	}
 
-	componentWillUnmount() {
+	override componentWillUnmount() {
 		cliCursor.show(this.props.stdout);
 
 		// ignore calling setRawMode on an handle stdin it cannot be called
@@ -128,7 +128,7 @@ export default class App extends PureComponent<Props, State> {
 		}
 	}
 
-	componentDidCatch(error: Error) {
+	override componentDidCatch(error: Error) {
 		this.handleExit(error);
 	}
 
@@ -329,7 +329,7 @@ export default class App extends PureComponent<Props, State> {
 			index++
 		) {
 			if (state.focusables[index]?.isActive) {
-				return state.focusables[index].id;
+				return (state.focusables[index] as Focusable).id;
 			}
 		}
 
@@ -343,7 +343,7 @@ export default class App extends PureComponent<Props, State> {
 
 		for (let index = activeIndex - 1; index >= 0; index--) {
 			if (state.focusables[index]?.isActive) {
-				return state.focusables[index].id;
+				return (state.focusables[index] as Focusable).id;
 			}
 		}
 

@@ -17,18 +17,18 @@ import {
 	TextNode,
 	ElementNames,
 	DOMElement
-} from './dom';
-import {Styles} from './styles';
-import {OutputTransformer} from './render-node-to-output';
+} from './dom.js';
+import {Styles} from './styles.js';
+import {OutputTransformer} from './render-node-to-output.js';
 
 // We need to conditionally perform devtools connection to avoid
 // accidentally breaking other third-party code.
 // See https://github.com/vadimdemedes/ink/issues/384
-if (process.env.DEV === 'true') {
+if (process.env['DEV'] === 'true') {
 	try {
 		// eslint-disable-next-line import/no-unassigned-import
 		require('./devtools');
-	} catch (error) {
+	} catch (error: any) {
 		if (error.code === 'MODULE_NOT_FOUND') {
 			console.warn(
 				`
@@ -194,12 +194,12 @@ export default createReconciler<
 			if (newProps[key] !== oldProps[key]) {
 				const isStyle =
 					key === 'style' &&
-					typeof newProps.style === 'object' &&
-					typeof oldProps.style === 'object';
+					typeof newProps['style'] === 'object' &&
+					typeof oldProps['style'] === 'object';
 
 				if (isStyle) {
-					const newStyle = newProps.style as Styles;
-					const oldStyle = oldProps.style as Styles;
+					const newStyle = newProps['style'] as Styles;
+					const oldStyle = oldProps['style'] as Styles;
 					const styleKeys = Object.keys(newStyle) as Array<keyof Styles>;
 
 					for (const styleKey of styleKeys) {
@@ -207,24 +207,24 @@ export default createReconciler<
 						// otherwise resulting `updatePayload` may not contain them
 						// if they weren't changed during this update
 						if (styleKey === 'borderStyle' || styleKey === 'borderColor') {
-							if (typeof updatePayload.style !== 'object') {
+							if (typeof updatePayload['style'] !== 'object') {
 								// Linter didn't like `= {} as Style`
 								const style: Styles = {};
-								updatePayload.style = style;
+								updatePayload['style'] = style;
 							}
 
-							(updatePayload.style as any).borderStyle = newStyle.borderStyle;
-							(updatePayload.style as any).borderColor = newStyle.borderColor;
+							(updatePayload['style'] as any).borderStyle = newStyle.borderStyle;
+							(updatePayload['style'] as any).borderColor = newStyle.borderColor;
 						}
 
 						if (newStyle[styleKey] !== oldStyle[styleKey]) {
-							if (typeof updatePayload.style !== 'object') {
+							if (typeof updatePayload['style'] !== 'object') {
 								// Linter didn't like `= {} as Style`
 								const style: Styles = {};
-								updatePayload.style = style;
+								updatePayload['style'] = style;
 							}
 
-							(updatePayload.style as any)[styleKey] = newStyle[styleKey];
+							(updatePayload['style'] as any)[styleKey] = newStyle[styleKey];
 						}
 					}
 

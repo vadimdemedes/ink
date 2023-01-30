@@ -1,7 +1,7 @@
 import Yoga from 'yoga-layout-prebuilt';
-import renderNodeToOutput from './render-node-to-output';
-import Output from './output';
-import {DOMElement} from './dom';
+import renderNodeToOutput from './render-node-to-output.js';
+import Output from './output.js';
+import {DOMElement} from './dom.js';
 
 interface Result {
 	output: string;
