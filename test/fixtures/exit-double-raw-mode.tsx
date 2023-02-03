@@ -1,14 +1,14 @@
 import React from 'react';
-import {Text, render, useStdin} from '../..';
+import {Text, render, useStdin} from '../../src/index.js';
 
 class ExitDoubleRawMode extends React.Component<{
 	setRawMode: (value: boolean) => void;
 }> {
-	render() {
+	override render() {
 		return <Text>Hello World</Text>;
 	}
 
-	componentDidMount() {
+	override componentDidMount() {
 		const {setRawMode} = this.props;
 
 		setRawMode(true);

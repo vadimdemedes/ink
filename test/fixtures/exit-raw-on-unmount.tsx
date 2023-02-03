@@ -1,14 +1,14 @@
 import React from 'react';
-import {render, Text, useStdin} from '../..';
+import {render, Text, useStdin} from '../../src/index.js';
 
 class Exit extends React.Component<{
 	onSetRawMode: (value: boolean) => void;
 }> {
-	render() {
+	override render() {
 		return <Text>Hello World</Text>;
 	}
 
-	componentDidMount() {
+	override componentDidMount() {
 		this.props.onSetRawMode(true);
 	}
 }

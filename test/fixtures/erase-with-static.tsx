@@ -1,5 +1,5 @@
 import React from 'react';
-import {Static, Box, Text, render} from '../..';
+import {Static, Box, Text, render} from '../../src/index.js';
 
 const EraseWithStatic = () => (
 	<>

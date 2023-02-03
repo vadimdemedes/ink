@@ -132,7 +132,9 @@
 		"rules": {
 			"react/no-unescaped-entities": "off",
 			"react/state-in-constructor": "off",
-			"react/jsx-indent": "off"
+			"react/jsx-indent": "off",
+			"unicorn/import-index": "off",
+			"import/no-useless-path-segments": "off"
 		},
 		"overrides": [
 			{

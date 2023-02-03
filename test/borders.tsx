@@ -7,6 +7,7 @@ import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
 import {render, Box, Text} from '../src/index.js';
 
+console.log("yayy")
 const box = (text: string, options?: Options): string => {
 	return boxen(text, {
 		...options,
@@ -256,6 +257,7 @@ test('render border after update', async t => {
 		const [borderColor, setBorderColor] = useState();
 
 		useEffect(() => {
+			// @ts-ignore
 			setBorderColor('green');
 		}, []);
 
@@ -267,15 +269,15 @@ test('render border after update', async t => {
 	};
 
 	render(<Test />, {
-		stdout,
+		stdout: stdout as any,
 		debug: true
 	});
 
-	t.is(stdout.write.lastCall.args[0], box('Hello World'.padEnd(98, ' ')));
+	t.is((stdout.write as any).lastCall.args[0], box('Hello World'.padEnd(98, ' ')));
 	await delay(100);
 
 	t.is(
-		stdout.write.lastCall.args[0],
+		(stdout.write as any).lastCall.args[0],
 		box('Hello World'.padEnd(98, ' '), {borderColor: 'green'})
 	);
 });

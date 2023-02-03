@@ -1,5 +1,5 @@
 import React, {FC, useEffect} from 'react';
-import {render, useStdout, Text} from '../..';
+import {render, useStdout, Text} from '../../src/index.js';
 
 const WriteToStdout: FC = () => {
 	const {write} = useStdout();

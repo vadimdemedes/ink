@@ -6,10 +6,10 @@ import stripAnsi from 'strip-ansi';
 import {render} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
-let restore;
+let restore: any;
 
 test.before(() => {
-	restore = patchConsole();
+	restore = patchConsole(() => {});
 });
 
 test.after(() => {
@@ -23,10 +23,10 @@ test('catch and display error', t => {
 		throw new Error('Oh no');
 	};
 
-	render(<Test />, {stdout});
+	render(<Test />, {stdout: stdout as any});
 
 	t.deepEqual(
-		stripAnsi(stdout.write.lastCall.args[0]).split('\n').slice(0, 14),
+		stripAnsi((stdout.write as any).lastCall.args[0]).split('\n').slice(0, 14),
 		[
 			'',
 			'  ERROR  Oh no',

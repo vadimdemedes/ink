@@ -110,6 +110,7 @@ const Text: FC<Props> = ({
 	};
 
 	return (
+		// @ts-ignore
 		<ink-text
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap}}
 			internal_transform={transform}

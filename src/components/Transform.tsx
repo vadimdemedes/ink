@@ -20,6 +20,7 @@ const Transform: FC<Props> = ({children, transform}) => {
 	}
 
 	return (
+		// @ts-ignore
 		<ink-text
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row'}}
 			internal_transform={transform}

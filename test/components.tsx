@@ -3,8 +3,8 @@ import React, {useState, Component, FC} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
 import {spy} from 'sinon';
-import {renderToString} from './helpers/render-to-string';
-import {run} from './helpers/run';
+import {renderToString} from './helpers/render-to-string.js';
+import {run} from './helpers/run.js';
 import {
 	Box,
 	Text,
@@ -14,8 +14,8 @@ import {
 	Spacer,
 	useStdin,
 	render
-} from '../src';
-import createStdout from './helpers/create-stdout';
+} from '../src/index.js';
+import createStdout from './helpers/create-stdout.js';
 
 test('text', t => {
 	const output = renderToString(<Text>Hello World</Text>);
@@ -140,11 +140,11 @@ test('fail when text nodes are not within <Text> component', t => {
 	let error;
 
 	class ErrorBoundary extends Component {
-		render() {
+		override render() {
 			return this.props.children;
 		}
 
-		componentDidCatch(reactError) {
+		override componentDidCatch(reactError: any) {
 			error = reactError;
 		}
 	}
@@ -160,7 +160,7 @@ test('fail when text nodes are not within <Text> component', t => {
 
 	t.truthy(error);
 	t.is(
-		error.message,
+		(error as any).message,
 		'Text string "Hello" must be rendered inside <Text> component'
 	);
 });
@@ -169,11 +169,11 @@ test('fail when text node is not within <Text> component', t => {
 	let error;
 
 	class ErrorBoundary extends Component {
-		render() {
+		override render() {
 			return this.props.children;
 		}
 
-		componentDidCatch(reactError) {
+		override componentDidCatch(reactError: any) {
 			error = reactError;
 		}
 	}
@@ -186,7 +186,7 @@ test('fail when text node is not within <Text> component', t => {
 
 	t.truthy(error);
 	t.is(
-		error.message,
+		(error as any).message,
 		'Text string "Hello World" must be rendered inside <Text> component'
 	);
 });
@@ -195,11 +195,11 @@ test('fail when <Box> is inside <Text> component', t => {
 	let error;
 
 	class ErrorBoundary extends Component {
-		render() {
+		override render() {
 			return this.props.children;
 		}
 
-		componentDidCatch(reactError) {
+		override componentDidCatch(reactError: any) {
 			error = reactError;
 		}
 	}
@@ -214,7 +214,7 @@ test('fail when <Box> is inside <Text> component', t => {
 	);
 
 	t.truthy(error);
-	t.is(error.message, '<Box> can’t be nested inside <Text> component');
+	t.is((error as any).message, '<Box> can’t be nested inside <Text> component');
 });
 
 test('remesure text dimensions on text change', t => {
@@ -224,16 +224,16 @@ test('remesure text dimensions on text change', t => {
 		<Box>
 			<Text>Hello</Text>
 		</Box>,
-		{stdout, debug: true}
+		{stdout: stdout as any, debug: true}
 	);
-	t.is(stdout.write.lastCall.args[0], 'Hello');
+	t.is((stdout.write as any).lastCall.args[0], 'Hello');
 
 	rerender(
 		<Box>
 			<Text>Hello World</Text>
 		</Box>
 	);
-	t.is(stdout.write.lastCall.args[0], 'Hello World');
+	t.is((stdout.write as any).lastCall.args[0], 'Hello World');
 });
 
 test('fragment', t => {
@@ -306,11 +306,13 @@ test('squash empty `<Text>` nodes', t => {
 });
 
 test('<Transform> with undefined children', t => {
+	// @ts-ignore
 	const output = renderToString(<Transform />);
 	t.is(output, '');
 });
 
 test('<Transform> with null children', t => {
+	// @ts-ignore
 	const output = renderToString(<Transform />);
 	t.is(output, '');
 });
@@ -350,14 +352,14 @@ test('skip previous output when rendering new static output', t => {
 	);
 
 	const {rerender} = render(<Dynamic items={['A']} />, {
-		stdout,
+		stdout: stdout as any,
 		debug: true
 	});
 
-	t.is(stdout.write.lastCall.args[0], 'A\n');
+	t.is((stdout.write as any).lastCall.args[0], 'A\n');
 
 	rerender(<Dynamic items={['A', 'B']} />);
-	t.is(stdout.write.lastCall.args[0], 'A\nB\n');
+	t.is((stdout.write as any).lastCall.args[0], 'A\nB\n');
 });
 
 test('render only new items in static output on final render', t => {
@@ -368,18 +370,18 @@ test('render only new items in static output on final render', t => {
 	);
 
 	const {rerender, unmount} = render(<Dynamic items={[]} />, {
-		stdout,
+		stdout: stdout as any,
 		debug: true
 	});
 
-	t.is(stdout.write.lastCall.args[0], '');
+	t.is((stdout.write as any).lastCall.args[0], '');
 
 	rerender(<Dynamic items={['A']} />);
-	t.is(stdout.write.lastCall.args[0], 'A\n');
+	t.is((stdout.write as any).lastCall.args[0], 'A\n');
 
 	rerender(<Dynamic items={['A', 'B']} />);
 	unmount();
-	t.is(stdout.write.lastCall.args[0], 'A\nB\n');
+	t.is((stdout.write as any).lastCall.args[0], 'A\nB\n');
 });
 
 // See https://github.com/chalk/wrap-ansi/issues/27
@@ -392,26 +394,27 @@ test('ensure wrap-ansi doesn’t trim leading whitespace', t => {
 test('replace child node with text', t => {
 	const stdout = createStdout();
 
-	const Dynamic = ({replace}) => (
+	const Dynamic = ({replace}: {replace: any}) => (
 		<Text>{replace ? 'x' : <Text color="green">test</Text>}</Text>
 	);
 
+	// @ts-ignore
 	const {rerender} = render(<Dynamic />, {
-		stdout,
+		stdout: stdout as any,
 		debug: true
 	});
 
-	t.is(stdout.write.lastCall.args[0], chalk.green('test'));
+	t.is((stdout.write as any).lastCall.args[0], chalk.green('test'));
 
 	rerender(<Dynamic replace />);
-	t.is(stdout.write.lastCall.args[0], 'x');
+	t.is((stdout.write as any).lastCall.args[0], 'x');
 });
 
 // See https://github.com/vadimdemedes/ink/issues/145
 test('disable raw mode when all input components are unmounted', t => {
 	const stdout = createStdout();
 
-	const stdin = new EventEmitter();
+	const stdin: any = new EventEmitter();
 	stdin.setEncoding = () => {};
 	stdin.setRawMode = spy();
 	stdin.isTTY = true; // Without this, setRawMode will throw
@@ -424,21 +427,23 @@ test('disable raw mode when all input components are unmounted', t => {
 		debug: true
 	};
 
-	class Input extends React.Component {
-		render() {
+	class Input extends React.Component<{setRawMode: (mode: boolean) => void}> {
+		override render() {
 			return <Text>Test</Text>;
 		}
 
-		componentDidMount() {
+		override componentDidMount() {
+			// @ts-ignore
 			this.props.setRawMode(true);
 		}
 
-		componentWillUnmount() {
+		override componentWillUnmount() {
+			// @ts-ignore
 			this.props.setRawMode(false);
 		}
 	}
 
-	const Test = ({renderFirstInput, renderSecondInput}) => {
+	const Test = ({renderFirstInput, renderSecondInput}: {renderFirstInput: any, renderSecondInput: any}) => {
 		const {setRawMode} = useStdin();
 
 		return (
@@ -451,7 +456,7 @@ test('disable raw mode when all input components are unmounted', t => {
 
 	const {rerender} = render(
 		<Test renderFirstInput renderSecondInput />,
-		options
+		options as any
 	);
 
 	t.true(stdin.setRawMode.calledOnce);
@@ -459,12 +464,14 @@ test('disable raw mode when all input components are unmounted', t => {
 	t.true(stdin.resume.calledOnce);
 	t.false(stdin.pause.called);
 
+	// @ts-ignore
 	rerender(<Test renderFirstInput />);
 
 	t.true(stdin.setRawMode.calledOnce);
 	t.true(stdin.resume.calledOnce);
 	t.false(stdin.pause.called);
 
+	// @ts-ignore
 	rerender(<Test />);
 
 	t.true(stdin.setRawMode.calledTwice);
@@ -476,7 +483,7 @@ test('disable raw mode when all input components are unmounted', t => {
 test('setRawMode() should throw if raw mode is not supported', t => {
 	const stdout = createStdout();
 
-	const stdin = new EventEmitter();
+	const stdin: any = new EventEmitter();
 	stdin.setEncoding = () => {};
 	stdin.setRawMode = spy();
 	stdin.isTTY = false;
@@ -492,21 +499,23 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 		debug: true
 	};
 
-	class Input extends React.Component {
-		render() {
+	class Input extends React.Component<{setRawMode: (mode: boolean) => void}> {
+		override render() {
 			return <Text>Test</Text>;
 		}
 
-		componentDidMount() {
+		override componentDidMount() {
 			try {
+				// @ts-ignore
 				this.props.setRawMode(true);
 			} catch (error) {
 				didCatchInMount(error);
 			}
 		}
 
-		componentWillUnmount() {
+		override componentWillUnmount() {
 			try {
+				// @ts-ignore
 				this.props.setRawMode(false);
 			} catch (error) {
 				didCatchInUnmount(error);
@@ -519,7 +528,7 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 		return <Input setRawMode={setRawMode} />;
 	};
 
-	const {unmount} = render(<Test />, options);
+	const {unmount} = render(<Test />, options as any);
 	unmount();
 
 	t.is(didCatchInMount.callCount, 1);
@@ -532,7 +541,7 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 test('render different component based on whether stdin is a TTY or not', t => {
 	const stdout = createStdout();
 
-	const stdin = new EventEmitter();
+	const stdin: any = new EventEmitter();
 	stdin.setEncoding = () => {};
 	stdin.setRawMode = spy();
 	stdin.isTTY = false;
@@ -545,21 +554,23 @@ test('render different component based on whether stdin is a TTY or not', t => {
 		debug: true
 	};
 
-	class Input extends React.Component {
-		render() {
+	class Input extends React.Component<{setRawMode: (mode: boolean) => void}> {
+		override render() {
 			return <Text>Test</Text>;
 		}
 
-		componentDidMount() {
+		override componentDidMount() {
+			// @ts-ignore
 			this.props.setRawMode(true);
 		}
 
-		componentWillUnmount() {
+		override componentWillUnmount() {
+			// @ts-ignore
 			this.props.setRawMode(false);
 		}
 	}
 
-	const Test = ({renderFirstInput, renderSecondInput}) => {
+	const Test = ({renderFirstInput, renderSecondInput}: {renderFirstInput: any, renderSecondInput: any}) => {
 		const {isRawModeSupported, setRawMode} = useStdin();
 
 		return (
@@ -576,19 +587,21 @@ test('render different component based on whether stdin is a TTY or not', t => {
 
 	const {rerender} = render(
 		<Test renderFirstInput renderSecondInput />,
-		options
+		options as any
 	);
 
 	t.false(stdin.setRawMode.called);
 	t.false(stdin.resume.called);
 	t.false(stdin.pause.called);
 
+	// @ts-ignore
 	rerender(<Test renderFirstInput />);
 
 	t.false(stdin.setRawMode.called);
 	t.false(stdin.resume.called);
 	t.false(stdin.pause.called);
 
+	// @ts-ignore
 	rerender(<Test />);
 
 	t.false(stdin.setRawMode.called);
@@ -623,7 +636,7 @@ test('render all frames if CI environment variable equals false', async t => {
 test('reset prop when it’s removed from the element', t => {
 	const stdout = createStdout();
 
-	const Dynamic = ({remove}) => (
+	const Dynamic = ({remove}: {remove: any}) => (
 		<Box
 			flexDirection="column"
 			justifyContent="flex-end"
@@ -633,15 +646,16 @@ test('reset prop when it’s removed from the element', t => {
 		</Box>
 	);
 
+	// @ts-ignore
 	const {rerender} = render(<Dynamic />, {
-		stdout,
+		stdout: stdout as any,
 		debug: true
 	});
 
-	t.is(stdout.write.lastCall.args[0], '\n\n\nx');
+	t.is((stdout.write as any).lastCall.args[0], '\n\n\nx');
 
 	rerender(<Dynamic remove />);
-	t.is(stdout.write.lastCall.args[0], 'x');
+	t.is((stdout.write as any).lastCall.args[0], 'x');
 });
 
 test('newline', t => {

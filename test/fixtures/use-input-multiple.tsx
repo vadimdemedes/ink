@@ -1,5 +1,5 @@
 import React, {FC, useState, useCallback, useEffect} from 'react';
-import {render, useInput, useApp, Text} from '../..';
+import {render, useInput, useApp, Text} from '../../src/index.js';
 
 const App: FC = () => {
 	const {exit} = useApp();

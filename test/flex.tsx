@@ -1,7 +1,7 @@
 import React from 'react';
 import test from 'ava';
-import {renderToString} from './helpers/render-to-string';
-import {Box, Text} from '../src';
+import {renderToString} from './helpers/render-to-string.js';
+import {Box, Text} from '../src/index.js';
 
 test('grow equally', t => {
 	const output = renderToString(

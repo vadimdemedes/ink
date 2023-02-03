@@ -58,6 +58,7 @@ const Static = <T,>(props: Props<T>) => {
 	);
 
 	return (
+		// @ts-ignore
 		<ink-box
 			// @ts-ignore
 			internal_static

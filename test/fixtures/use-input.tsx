@@ -1,5 +1,5 @@
 import React, {FC} from 'react';
-import {render, useInput, useApp} from '../..';
+import {render, useInput, useApp} from '../../src/index.js';
 
 const UserInput: FC<{test: string}> = ({test}) => {
 	const {exit} = useApp();
@@ -91,6 +91,7 @@ const UserInput: FC<{test: string}> = ({test}) => {
 	return null;
 };
 
+// @ts-ignore
 const app = render(<UserInput test={process.argv[2]} />);
 
 (async () => {

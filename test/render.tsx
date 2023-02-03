@@ -1,13 +1,14 @@
+// @ts-ignore
 delete process.env.CI;
 import React from 'react';
-import {serial as test} from 'ava';
+import test from 'ava';
 import {spawn} from 'node-pty';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
-import {render, Box, Text} from '../src';
-import createStdout from './helpers/create-stdout';
+import {render, Box, Text} from '../src/index.js';
+import createStdout from './helpers/create-stdout.js';
 
 const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: unknown) => void;
@@ -23,11 +24,11 @@ const term = (fixture: string, args: string[] = []) => {
 		name: 'xterm-color',
 		cols: 100,
 		cwd: __dirname,
-		env: process.env
+		env: process.env as {[key: string]: string}
 	});
 
 	const result = {
-		write: input => ps.write(input),
+		write: (input: any) => ps.write(input),
 		output: '',
 		waitForExit: () => exitPromise
 	};
@@ -48,7 +49,7 @@ const term = (fixture: string, args: string[] = []) => {
 	return result;
 };
 
-test('do not erase screen', async t => {
+test.serial('do not erase screen', async t => {
 	const ps = term('erase', ['4']);
 	await ps.waitForExit();
 	t.false(ps.output.includes(ansiEscapes.clearTerminal));
@@ -58,7 +59,7 @@ test('do not erase screen', async t => {
 	});
 });
 
-test('do not erase screen where <Static> is taller than viewport', async t => {
+test.serial('do not erase screen where <Static> is taller than viewport', async t => {
 	const ps = term('erase-with-static', ['4']);
 
 	await ps.waitForExit();
@@ -69,7 +70,7 @@ test('do not erase screen where <Static> is taller than viewport', async t => {
 	});
 });
 
-test('erase screen', async t => {
+test.serial('erase screen', async t => {
 	const ps = term('erase', ['3']);
 	await ps.waitForExit();
 	t.true(ps.output.includes(ansiEscapes.clearTerminal));
@@ -79,7 +80,7 @@ test('erase screen', async t => {
 	});
 });
 
-test('erase screen where <Static> exists but interactive part is taller than viewport', async t => {
+test.serial('erase screen where <Static> exists but interactive part is taller than viewport', async t => {
 	const ps = term('erase', ['3']);
 	await ps.waitForExit();
 	t.true(ps.output.includes(ansiEscapes.clearTerminal));
@@ -89,18 +90,18 @@ test('erase screen where <Static> exists but interactive part is taller than vie
 	});
 });
 
-test('clear output', async t => {
+test.serial('clear output', async t => {
 	const ps = term('clear');
 	await ps.waitForExit();
 
 	const secondFrame = ps.output.split(ansiEscapes.eraseLines(4))[1];
 
 	['A', 'B', 'C'].forEach(letter => {
-		t.false(secondFrame.includes(letter));
+		t.false(secondFrame?.includes(letter));
 	});
 });
 
-test('intercept console methods and display result above output', async t => {
+test.serial('intercept console methods and display result above output', async t => {
 	const ps = term('console');
 	await ps.waitForExit();
 
@@ -112,7 +113,7 @@ test('intercept console methods and display result above output', async t => {
 	]);
 });
 
-test('rerender on resize', async t => {
+test.serial('rerender on resize', async t => {
 	const stdout = createStdout(10);
 
 	const Test = () => (
@@ -121,10 +122,10 @@ test('rerender on resize', async t => {
 		</Box>
 	);
 
-	const {unmount} = render(<Test />, {stdout});
+	const {unmount} = render(<Test />, {stdout: stdout as any});
 
 	t.is(
-		stripAnsi(stdout.write.firstCall.args[0]),
+		stripAnsi((stdout.write as any).firstCall.args[0]),
 		boxen('Test'.padEnd(8), {borderStyle: 'round'}) + '\n'
 	);
 
@@ -135,7 +136,7 @@ test('rerender on resize', async t => {
 	await delay(100);
 
 	t.is(
-		stripAnsi(stdout.write.lastCall.args[0]),
+		stripAnsi((stdout.write as any).lastCall.args[0]),
 		boxen('Test'.padEnd(6), {borderStyle: 'round'}) + '\n'
 	);
 
