@@ -1,9 +1,10 @@
-import {ReactElement} from 'react';
-import Ink, {Options as InkOptions} from './ink.js';
+import {Stream} from 'node:stream';
+import * as process from 'node:process';
+import {type ReactElement} from 'react';
+import Ink, {type Options as InkOptions} from './ink.js';
 import instances from './instances.js';
-import {Stream} from 'stream';
 
-export interface RenderOptions {
+export type RenderOptions = {
 	/**
 	 * Output stream where app will be rendered.
 	 *
@@ -40,9 +41,9 @@ export interface RenderOptions {
 	 * @default true
 	 */
 	patchConsole?: boolean;
-}
+};
 
-export interface Instance {
+export type Instance = {
 	/**
 	 * Replace previous root node with a new one or update props of the current root node.
 	 */
@@ -61,7 +62,7 @@ export interface Instance {
 	 * Clear output.
 	 */
 	clear: () => void;
-}
+};
 
 type RenderFunction = <Props, K extends NodeJS.WriteStream | RenderOptions>(
 	tree: ReactElement<Props>,
@@ -91,7 +92,9 @@ const render: RenderFunction = (node, options): Instance => {
 
 	return {
 		rerender: instance.render,
-		unmount: () => instance.unmount(),
+		unmount() {
+			instance.unmount();
+		},
 		waitUntilExit: instance.waitUntilExit,
 		cleanup: () => instances.delete(inkOptions.stdout),
 		clear: instance.clear
@@ -120,6 +123,7 @@ const getInstance = (
 	let instance: Ink;
 
 	if (instances.has(stdout)) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		instance = instances.get(stdout);
 	} else {
 		instance = createInstance();

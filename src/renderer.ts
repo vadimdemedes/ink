@@ -1,15 +1,15 @@
 import Yoga from 'yoga-layout-prebuilt';
 import renderNodeToOutput from './render-node-to-output.js';
 import Output from './output.js';
-import {DOMElement} from './dom.js';
+import {type DOMElement} from './dom.js';
 
-interface Result {
+type Result = {
 	output: string;
 	outputHeight: number;
 	staticOutput: string;
-}
+};
 
-export default (node: DOMElement, terminalWidth: number): Result => {
+const renderer = (node: DOMElement, terminalWidth: number): Result => {
 	node.yogaNode!.setWidth(terminalWidth);
 
 	if (node.yogaNode) {
@@ -26,7 +26,9 @@ export default (node: DOMElement, terminalWidth: number): Result => {
 
 		if (node.staticNode?.yogaNode) {
 			staticOutput = new Output({
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 				width: node.staticNode.yogaNode.getComputedWidth(),
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 				height: node.staticNode.yogaNode.getComputedHeight()
 			});
 
@@ -52,3 +54,5 @@ export default (node: DOMElement, terminalWidth: number): Result => {
 		staticOutput: ''
 	};
 };
+
+export default renderer;

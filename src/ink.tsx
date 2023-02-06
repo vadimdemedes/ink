@@ -1,22 +1,24 @@
-import React, {ReactNode} from 'react';
-import {throttle, DebouncedFunc} from 'lodash-es';
-import logUpdate, {LogUpdate} from './log-update.js';
+import * as process from 'node:process';
+import React, {type ReactNode} from 'react';
+import {throttle, type DebouncedFunc} from 'lodash-es';
 import ansiEscapes from 'ansi-escapes';
 import originalIsCI from 'is-ci';
 import autoBind from 'auto-bind';
-import reconciler from './reconciler.js';
-import render from './renderer.js';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
+import {type FiberRoot} from 'react-reconciler';
+import reconciler from './reconciler.js';
+import render from './renderer.js';
 import * as dom from './dom.js';
-import {FiberRoot} from 'react-reconciler';
+import logUpdate, {type LogUpdate} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const isCI = process.env['CI'] === 'false' ? false : originalIsCI;
 const noop = () => {};
 
-export interface Options {
+export type Options = {
 	stdout: NodeJS.WriteStream;
 	stdin: NodeJS.ReadStream;
 	stderr: NodeJS.WriteStream;
@@ -24,7 +26,7 @@ export interface Options {
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
 	waitUntilExit?: () => Promise<void>;
-}
+};
 
 export default class Ink {
 	private readonly options: Options;
@@ -74,6 +76,7 @@ export default class Ink {
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
 		this.fullStaticOutput = '';
 
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		this.container = reconciler.createContainer(
 			this.rootNode,
 			// Legacy mode
@@ -87,6 +90,8 @@ export default class Ink {
 		);
 
 		// Unmount when process exits
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
+		// @ts-ignore
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 
 		if (process.env['DEV'] === 'true') {
@@ -234,7 +239,7 @@ export default class Ink {
 		this.log(this.lastOutput);
 	}
 
-	unmount(error?: Error | number | null): void {
+	unmount(error?: Error | number | undefined): void {
 		if (this.isUnmounted) {
 			return;
 		}
@@ -270,7 +275,7 @@ export default class Ink {
 		}
 	}
 
-	waitUntilExit(): Promise<void> {
+	async waitUntilExit(): Promise<void> {
 		if (!this.exitPromise) {
 			this.exitPromise = new Promise((resolve, reject) => {
 				this.resolveExitPromise = resolve;

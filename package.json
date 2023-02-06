@@ -98,7 +98,7 @@
 		"strip-ansi": "^6.0.0",
 		"ts-node": "10.9.1",
 		"typescript": "^4.9.4",
-		"xo": "^0.28.0",
+		"xo": "^0.53.0",
 		"node-pty": "0.10.1"
 	},
 	"peerDependencies": {
@@ -141,7 +141,8 @@
 			"react/state-in-constructor": "off",
 			"react/jsx-indent": "off",
 			"unicorn/import-index": "off",
-			"import/no-useless-path-segments": "off"
+			"import/no-useless-path-segments": "off",
+			"react-hooks/exhaustive-deps": "off"
 		},
 		"overrides": [
 			{

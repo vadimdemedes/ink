@@ -1,9 +1,14 @@
 import cliBoxes from 'cli-boxes';
 import colorize from './colorize.js';
-import {DOMNode} from './dom.js';
-import Output from './output.js';
+import {type DOMNode} from './dom.js';
+import type Output from './output.js';
 
-export default (x: number, y: number, node: DOMNode, output: Output): void => {
+const renderBorder = (
+	x: number,
+	y: number,
+	node: DOMNode,
+	output: Output
+): void => {
 	if (typeof node.style.borderStyle === 'string') {
 		const width = node.yogaNode!.getComputedWidth();
 		const height = node.yogaNode!.getComputedHeight();
@@ -32,3 +37,5 @@ export default (x: number, y: number, node: DOMNode, output: Output): void => {
 		output.write(x, y + height - 1, bottomBorder, {transformers: []});
 	}
 };
+
+export default renderBorder;

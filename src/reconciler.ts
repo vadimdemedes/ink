@@ -1,3 +1,4 @@
+import * as process from 'node:process';
 import {
 	unstable_scheduleCallback as schedulePassiveEffects,
 	unstable_cancelCallback as cancelPassiveEffects
@@ -13,21 +14,21 @@ import {
 	setTextNodeValue,
 	createNode,
 	setAttribute,
-	DOMNodeAttribute,
-	TextNode,
-	ElementNames,
-	DOMElement
+	type DOMNodeAttribute,
+	type TextNode,
+	type ElementNames,
+	type DOMElement
 } from './dom.js';
-import {Styles} from './styles.js';
-import {OutputTransformer} from './render-node-to-output.js';
+import {type Styles} from './styles.js';
+import {type OutputTransformer} from './render-node-to-output.js';
 
 // We need to conditionally perform devtools connection to avoid
 // accidentally breaking other third-party code.
 // See https://github.com/vadimdemedes/ink/issues/384
 if (process.env['DEV'] === 'true') {
 	try {
-		// eslint-disable-next-line import/no-unassigned-import
-		require('./devtools');
+		await import('./devtools.js');
+		// eslint-disable-next-line @typescript-eslint/no-implicit-any-catch
 	} catch (error: any) {
 		if (error.code === 'MODULE_NOT_FOUND') {
 			console.warn(
@@ -38,6 +39,7 @@ $ npm install --save-dev react-devtools-core
 				`.trim() + '\n'
 			);
 		} else {
+			// eslint-disable-next-line @typescript-eslint/no-throw-literal
 			throw error;
 		}
 	}
@@ -48,13 +50,11 @@ const cleanupYogaNode = (node?: Yoga.YogaNode): void => {
 	node?.freeRecursive();
 };
 
-interface Props {
-	[key: string]: unknown;
-}
+type Props = Record<string, unknown>;
 
-interface HostContext {
+type HostContext = {
 	isInsideText: boolean;
-}
+};
 
 export default createReconciler<
 	ElementNames,
@@ -71,7 +71,8 @@ export default createReconciler<
 	unknown,
 	unknown
 >({
-	// @ts-ignore
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-expect-error
 	schedulePassiveEffects,
 	cancelPassiveEffects,
 	now: Date.now,
@@ -82,7 +83,7 @@ export default createReconciler<
 	preparePortalMount: () => null,
 	clearContainer: () => false,
 	shouldDeprioritizeSubtree: () => false,
-	resetAfterCommit: rootNode => {
+	resetAfterCommit(rootNode) {
 		// Since renders are throttled at the instance level and <Static> component children
 		// are rendered only once and then get deleted, we need an escape hatch to
 		// trigger an immediate render to ensure <Static> children are written to output before they get erased
@@ -99,7 +100,7 @@ export default createReconciler<
 			rootNode.onRender();
 		}
 	},
-	getChildHostContext: (parentHostContext, type) => {
+	getChildHostContext(parentHostContext, type) {
 		const previousIsInsideText = parentHostContext.isInsideText;
 		const isInsideText = type === 'ink-text' || type === 'ink-virtual-text';
 
@@ -110,7 +111,7 @@ export default createReconciler<
 		return {isInsideText};
 	},
 	shouldSetTextContent: () => false,
-	createInstance: (originalType, newProps, _root, hostContext) => {
+	createInstance(originalType, newProps, _root, hostContext) {
 		if (hostContext.isInsideText && originalType === 'ink-box') {
 			throw new Error(`<Box> can’t be nested inside <Text> component`);
 		}
@@ -123,22 +124,38 @@ export default createReconciler<
 		const node = createNode(type);
 
 		for (const [key, value] of Object.entries(newProps)) {
-			if (key === 'children') {
-				continue;
-			} else if (key === 'style') {
-				setStyle(node, value as Styles);
-			} else if (key === 'internal_transform') {
-				node.internal_transform = value as OutputTransformer;
-			} else if (key === 'internal_static') {
-				node.internal_static = true;
-			} else {
-				setAttribute(node, key, value as DOMNodeAttribute);
+			switch (key) {
+				case 'children': {
+					continue;
+				}
+
+				case 'style': {
+					setStyle(node, value as Styles);
+
+					break;
+				}
+
+				case 'internal_transform': {
+					node.internal_transform = value as OutputTransformer;
+
+					break;
+				}
+
+				case 'internal_static': {
+					node.internal_static = true;
+
+					break;
+				}
+
+				default: {
+					setAttribute(node, key, value as DOMNodeAttribute);
+				}
 			}
 		}
 
 		return node;
 	},
-	createTextInstance: (text, _root, hostContext) => {
+	createTextInstance(text, _root, hostContext) {
 		if (!hostContext.isInsideText) {
 			throw new Error(
 				`Text string "${text}" must be rendered inside <Text> component`
@@ -147,24 +164,24 @@ export default createReconciler<
 
 		return createTextNode(text);
 	},
-	resetTextContent: () => {},
-	hideTextInstance: node => {
+	resetTextContent() {},
+	hideTextInstance(node) {
 		setTextNodeValue(node, '');
 	},
-	unhideTextInstance: (node, text) => {
+	unhideTextInstance(node, text) {
 		setTextNodeValue(node, text);
 	},
 	getPublicInstance: instance => instance,
-	hideInstance: node => {
+	hideInstance(node) {
 		node.yogaNode?.setDisplay(Yoga.DISPLAY_NONE);
 	},
-	unhideInstance: node => {
+	unhideInstance(node) {
 		node.yogaNode?.setDisplay(Yoga.DISPLAY_FLEX);
 	},
 	appendInitialChild: appendChildNode,
 	appendChild: appendChildNode,
 	insertBefore: insertBeforeNode,
-	finalizeInitialChildren: (node, _type, _props, rootNode) => {
+	finalizeInitialChildren(node, _type, _props, rootNode) {
 		if (node.internal_static) {
 			rootNode.isStaticDirty = true;
 
@@ -176,14 +193,14 @@ export default createReconciler<
 		return false;
 	},
 	supportsMutation: true,
-	detachDeletedInstance: () => {},
+	detachDeletedInstance() {},
 	appendChildToContainer: appendChildNode,
 	insertInContainerBefore: insertBeforeNode,
-	removeChildFromContainer: (node, removeNode) => {
+	removeChildFromContainer(node, removeNode) {
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
 	},
-	prepareUpdate: (node, _type, oldProps, newProps, rootNode) => {
+	prepareUpdate(node, _type, oldProps, newProps, rootNode) {
 		if (node.internal_static) {
 			rootNode.isStaticDirty = true;
 		}
@@ -240,25 +257,41 @@ export default createReconciler<
 
 		return updatePayload;
 	},
-	commitUpdate: (node, updatePayload) => {
+	commitUpdate(node, updatePayload) {
 		for (const [key, value] of Object.entries(updatePayload)) {
-			if (key === 'children') {
-				continue;
-			} else if (key === 'style') {
-				setStyle(node, value as Styles);
-			} else if (key === 'internal_transform') {
-				node.internal_transform = value as OutputTransformer;
-			} else if (key === 'internal_static') {
-				node.internal_static = true;
-			} else {
-				setAttribute(node, key, value as DOMNodeAttribute);
+			switch (key) {
+				case 'children': {
+					continue;
+				}
+
+				case 'style': {
+					setStyle(node, value as Styles);
+
+					break;
+				}
+
+				case 'internal_transform': {
+					node.internal_transform = value as OutputTransformer;
+
+					break;
+				}
+
+				case 'internal_static': {
+					node.internal_static = true;
+
+					break;
+				}
+
+				default: {
+					setAttribute(node, key, value as DOMNodeAttribute);
+				}
 			}
 		}
 	},
-	commitTextUpdate: (node, _oldText, newText) => {
+	commitTextUpdate(node, _oldText, newText) {
 		setTextNodeValue(node, newText);
 	},
-	removeChild: (node, removeNode) => {
+	removeChild(node, removeNode) {
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
 	}

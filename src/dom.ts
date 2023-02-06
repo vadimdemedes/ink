@@ -1,17 +1,18 @@
-import Yoga, {YogaNode} from 'yoga-layout-prebuilt';
+import Yoga, {type YogaNode} from 'yoga-layout-prebuilt';
 import measureText from './measure-text.js';
-import applyStyles, {Styles} from './styles.js';
+import applyStyles, {type Styles} from './styles.js';
 import wrapText from './wrap-text.js';
 import squashTextNodes from './squash-text-nodes.js';
-import {OutputTransformer} from './render-node-to-output.js';
+import {type OutputTransformer} from './render-node-to-output.js';
 
-interface InkNode {
-	parentNode: DOMElement | null;
+type InkNode = {
+	parentNode: DOMElement | undefined;
 	yogaNode?: Yoga.YogaNode;
 	internal_static?: boolean;
 	style: Styles;
-}
+};
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const TEXT_NAME = '#text';
 export type TextName = '#text';
 export type ElementNames =
@@ -22,11 +23,10 @@ export type ElementNames =
 
 export type NodeNames = ElementNames | TextName;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMElement = {
 	nodeName: ElementNames;
-	attributes: {
-		[key: string]: DOMNodeAttribute;
-	};
+	attributes: Record<string, DOMNodeAttribute>;
 	childNodes: DOMNode[];
 	internal_transform?: OutputTransformer;
 
@@ -42,6 +42,7 @@ export type TextNode = {
 	nodeValue: string;
 } & InkNode;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMNode<T = {nodeName: NodeNames}> = T extends {
 	nodeName: infer U;
 }
@@ -50,6 +51,7 @@ export type DOMNode<T = {nodeName: NodeNames}> = T extends {
 		: DOMElement
 	: never;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMNodeAttribute = boolean | string | number;
 
 export const createNode = (nodeName: ElementNames): DOMElement => {
@@ -58,7 +60,7 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		style: {},
 		attributes: {},
 		childNodes: [],
-		parentNode: null,
+		parentNode: undefined,
 		yogaNode: nodeName === 'ink-virtual-text' ? undefined : Yoga.Node.create()
 	};
 
@@ -135,7 +137,7 @@ export const removeChildNode = (
 		removeNode.parentNode?.yogaNode?.removeChild(removeNode.yogaNode);
 	}
 
-	removeNode.parentNode = null;
+	removeNode.parentNode = undefined;
 
 	const index = node.childNodes.indexOf(removeNode);
 	if (index >= 0) {
@@ -168,7 +170,7 @@ export const createTextNode = (text: string): TextNode => {
 		nodeName: '#text',
 		nodeValue: text,
 		yogaNode: undefined,
-		parentNode: null,
+		parentNode: undefined,
 		style: {}
 	};
 
@@ -204,7 +206,7 @@ const measureTextNode = function (
 };
 
 const findClosestYogaNode = (node?: DOMNode): YogaNode | undefined => {
-	if (!node || !node.parentNode) {
+	if (!node?.parentNode) {
 		return undefined;
 	}
 

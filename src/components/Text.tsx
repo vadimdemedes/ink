@@ -1,10 +1,10 @@
-import React, {FC, ReactNode} from 'react';
-import chalk, {ForegroundColorName} from 'chalk';
+import React, {type FC, type ReactNode} from 'react';
+import chalk, {type ForegroundColorName} from 'chalk';
+import {type LiteralUnion} from 'type-fest';
 import colorize from '../colorize.js';
-import {Styles} from '../styles.js';
-import {LiteralUnion} from 'type-fest';
+import {type Styles} from '../styles.js';
 
-export interface Props {
+export type Props = {
 	/**
 	 * Change text color. Ink uses chalk under the hood, so all its functionality is supported.
 	 */
@@ -18,31 +18,37 @@ export interface Props {
 	/**
 	 * Dim the color (emit a small amount of light).
 	 */
+	// eslint-disable-next-line react/boolean-prop-naming
 	readonly dimColor?: boolean;
 
 	/**
 	 * Make the text bold.
 	 */
+	// eslint-disable-next-line react/boolean-prop-naming
 	readonly bold?: boolean;
 
 	/**
 	 * Make the text italic.
 	 */
+	// eslint-disable-next-line react/boolean-prop-naming
 	readonly italic?: boolean;
 
 	/**
 	 * Make the text underlined.
 	 */
+	// eslint-disable-next-line react/boolean-prop-naming
 	readonly underline?: boolean;
 
 	/**
 	 * Make the text crossed with a line.
 	 */
+	// eslint-disable-next-line react/boolean-prop-naming
 	readonly strikethrough?: boolean;
 
 	/**
 	 * Inverse background and foreground colors.
 	 */
+	// eslint-disable-next-line react/boolean-prop-naming
 	readonly inverse?: boolean;
 
 	/**
@@ -52,7 +58,7 @@ export interface Props {
 	 */
 	readonly wrap?: Styles['textWrap'];
 	readonly children?: ReactNode;
-}
+};
 
 /**
  * This component can display text, and change its style to make it colorful, bold, underline, italic or strikethrough.
@@ -110,7 +116,6 @@ const Text: FC<Props> = ({
 	};
 
 	return (
-		// @ts-ignore
 		<ink-text
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap}}
 			internal_transform={transform}

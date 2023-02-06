@@ -1,4 +1,4 @@
-export type { RenderOptions, Instance} from "./render.js"
+export type {RenderOptions, Instance} from './render.js';
 export {default as render} from './render.js';
 export type {Props as BoxProps} from './components/Box.js';
 export {default as Box} from './components/Box.js';
@@ -10,18 +10,10 @@ export type {Props as StdoutProps} from './components/StdoutContext.js';
 export type {Props as StderrProps} from './components/StderrContext.js';
 export type {Props as StaticProps} from './components/Static.js';
 export {default as Static} from './components/Static.js';
-export type {
-	Props as TransformProps
-} from './components/Transform.js';
-export {
-	default as Transform,
-} from './components/Transform.js';
-export type {
-	Props as NewlineProps
-} from './components/Newline.js';
-export {
-	default as Newline
-} from './components/Newline.js';
+export type {Props as TransformProps} from './components/Transform.js';
+export {default as Transform} from './components/Transform.js';
+export type {Props as NewlineProps} from './components/Newline.js';
+export {default as Newline} from './components/Newline.js';
 export {default as Spacer} from './components/Spacer.js';
 export type {Key} from './hooks/use-input.js';
 export {default as useInput} from './hooks/use-input.js';

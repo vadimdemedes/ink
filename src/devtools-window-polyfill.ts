@@ -1,11 +1,14 @@
 // Ignoring missing types error to avoid adding another dependency for this hack to work
-// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
 import ws from 'ws';
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const customGlobal = global as any;
 
 // These things must exist before importing `react-devtools-core`
 if (!customGlobal.WebSocket) {
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	customGlobal.WebSocket = ws;
 }
 

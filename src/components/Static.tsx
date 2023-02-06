@@ -1,7 +1,7 @@
-import React, {useMemo, useState, useLayoutEffect, ReactNode} from 'react';
-import {Styles} from '../styles.js';
+import React, {useMemo, useState, useLayoutEffect, type ReactNode} from 'react';
+import {type Styles} from '../styles.js';
 
-export interface Props<T> {
+export type Props<T> = {
 	/**
 	 * Array of items of any type to render using a function you pass as a component child.
 	 */
@@ -18,7 +18,7 @@ export interface Props<T> {
 	 * Note that `key` must be assigned to the root component.
 	 */
 	readonly children: (item: T, index: number) => ReactNode;
-}
+};
 
 /**
  * `<Static>` component permanently renders its output above everything else.
@@ -58,12 +58,9 @@ const Static = <T,>(props: Props<T>) => {
 	);
 
 	return (
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
 		// @ts-ignore
-		<ink-box
-			// @ts-ignore
-			internal_static
-			style={style}
-		>
+		<ink-box internal_static style={style}>
 			{children}
 		</ink-box>
 	);

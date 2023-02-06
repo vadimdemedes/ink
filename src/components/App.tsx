@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import React, {PureComponent, ReactNode} from 'react';
+import * as process from 'node:process';
+import React, {PureComponent, type ReactNode} from 'react';
 import cliCursor from 'cli-cursor';
 import AppContext from './AppContext.js';
 import StdinContext from './StdinContext.js';
@@ -8,11 +9,14 @@ import StderrContext from './StderrContext.js';
 import FocusContext from './FocusContext.js';
 import ErrorOverview from './ErrorOverview.js';
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const TAB = '\t';
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const SHIFT_TAB = '\u001B[Z';
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const ESC = '\u001B';
 
-interface Props {
+type Props = {
 	readonly children: ReactNode;
 	readonly stdin: NodeJS.ReadStream;
 	readonly stdout: NodeJS.WriteStream;
@@ -21,25 +25,29 @@ interface Props {
 	readonly writeToStderr: (data: string) => void;
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (error?: Error) => void;
-}
+};
 
-interface State {
+type State = {
 	readonly isFocusEnabled: boolean;
 	readonly activeFocusId?: string;
 	readonly focusables: Focusable[];
 	readonly error?: Error;
-}
+};
 
-interface Focusable {
+type Focusable = {
 	readonly id: string;
 	readonly isActive: boolean;
-}
+};
 
 // Root component for all Ink apps
 // It renders stdin and stdout contexts, so that children can access them if needed
 // It also handles Ctrl+C exiting and cursor visibility
 export default class App extends PureComponent<Props, State> {
 	static displayName = 'InternalApp';
+
+	static getDerivedStateFromError(error: Error) {
+		return {error};
+	}
 
 	override state = {
 		isFocusEnabled: true,
@@ -51,10 +59,6 @@ export default class App extends PureComponent<Props, State> {
 	// Count how many components enabled raw mode to avoid disabling
 	// raw mode until all components don't need it anymore
 	rawModeEnabledCount = 0;
-
-	static getDerivedStateFromError(error: Error) {
-		return {error};
-	}
 
 	// Determines if TTY is supported on the provided stdin
 	isRawModeSupported(): boolean {
@@ -73,6 +77,7 @@ export default class App extends PureComponent<Props, State> {
 						stdin: this.props.stdin,
 						setRawMode: this.handleSetRawMode,
 						isRawModeSupported: this.isRawModeSupported(),
+						// eslint-disable-next-line @typescript-eslint/naming-convention
 						internal_exitOnCtrlC: this.props.exitOnCtrlC
 					}}
 				>
@@ -329,7 +334,7 @@ export default class App extends PureComponent<Props, State> {
 			index++
 		) {
 			if (state.focusables[index]?.isActive) {
-				return (state.focusables[index] as Focusable).id;
+				return state.focusables[index]!.id;
 			}
 		}
 
@@ -343,7 +348,7 @@ export default class App extends PureComponent<Props, State> {
 
 		for (let index = activeIndex - 1; index >= 0; index--) {
 			if (state.focusables[index]?.isActive) {
-				return (state.focusables[index] as Focusable).id;
+				return state.focusables[index]!.id;
 			}
 		}
 

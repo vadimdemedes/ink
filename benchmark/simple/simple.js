@@ -1,8 +1,8 @@
 /* eslint-disable react/jsx-curly-brace-presence */
 'use strict';
 const React = require('react');
-const {render, Box, Text} = require('../..');
 const Benchmark = require('benchmark');
+const {render, Box, Text} = require('../..');
 
 const App = () => (
 	<Box flexDirection="column" padding={1}>

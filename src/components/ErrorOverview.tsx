@@ -1,22 +1,23 @@
-import * as fs from 'fs';
-import React, {FC} from 'react';
+import * as fs from 'node:fs';
+import {cwd} from 'node:process';
+import React, {type FC} from 'react';
 import StackUtils from 'stack-utils';
-import codeExcerpt, {CodeExcerpt} from 'code-excerpt';
+import codeExcerpt, {type CodeExcerpt} from 'code-excerpt';
 import Box from './Box.js';
 import Text from './Text.js';
 
 const stackUtils = new StackUtils({
-	cwd: process.cwd(),
+	cwd: cwd(),
 	internals: StackUtils.nodeInternals()
 });
 
-interface Props {
+type Props = {
 	readonly error: Error;
-}
+};
 
 const ErrorOverview: FC<Props> = ({error}) => {
 	const stack = error.stack ? error.stack.split('\n').slice(1) : undefined;
-	const origin = stack ? stackUtils.parseLine(stack[0] as string) : undefined;
+	const origin = stack ? stackUtils.parseLine(stack[0]!) : undefined;
 	let excerpt: CodeExcerpt[] | undefined;
 	let lineWidth = 0;
 
