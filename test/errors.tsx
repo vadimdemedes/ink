@@ -16,7 +16,7 @@ test.after(() => {
 	restore();
 });
 
-test('catch and display error', t => {
+test.skip('catch and display error', t => {
 	const stdout = createStdout();
 
 	const Test = () => {

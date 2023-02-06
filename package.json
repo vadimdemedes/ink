@@ -49,7 +49,7 @@
 		"is-ci": "^3.0.1",
 		"lodash-es": "^4.17.21",
 		"patch-console": "^2.0.0",
-		"react-reconciler": "^0.26.2",
+		"react-reconciler": "0.29.0",
 		"scheduler": "^0.23.0",
 		"signal-exit": "^3.0.7",
 		"slice-ansi": "^5.0.0",
@@ -59,15 +59,17 @@
 		"widest-line": "^4.0.1",
 		"wrap-ansi": "^8.1.0",
 		"ws": "^8.12.0",
-		"yoga-layout-prebuilt": "^1.10.0"
+		"yoga-layout-prebuilt": "^1.9.6"
 	},
 	"devDependencies": {
+		"eslint": "^6.8.0",
+		"webpack": "^1.11.0",
 		"@sindresorhus/tsconfig": "3.0.1",
 		"@types/is-ci": "^2.0.0",
 		"@types/lodash-es": "^4.17.6",
 		"@types/node": "*",
-		"@types/react": "^17.0.27",
-		"@types/react-reconciler": "0.26.3",
+		"@types/react": "^18.0.0",
+		"@types/react-reconciler": "0.28.2",
 		"@types/scheduler": "^0.16.2",
 		"@types/signal-exit": "^3.0.0",
 		"@types/sinon": "^9.0.4",
@@ -78,7 +80,7 @@
 		"ava": "^5.1.1",
 		"babel-eslint": "^10.0.1",
 		"benchmark": "^2.1.4",
-		"boxen": "^7.0.1",
+		"boxen": "^4.2.0",
 		"chance": "^1.1.6",
 		"delay": "^4.1.0",
 		"eslint-config-xo": "0.29.1",
@@ -90,7 +92,7 @@
 		"ms": "^2.1.1",
 		"p-queue": "^6.2.1",
 		"prettier": "^2.0.4",
-		"react": "^17.0.2",
+		"react": "^18.0.0",
 		"react-devtools-core": "^4.19.1",
 		"sinon": "^8.1.1",
 		"strip-ansi": "^6.0.0",
@@ -100,8 +102,8 @@
 		"node-pty": "0.10.1"
 	},
 	"peerDependencies": {
-		"@types/react": ">=16.8.0",
-		"react": ">=16.8.0",
+		"@types/react": ">=18.0.0",
+		"react": ">=18.0.0",
 		"react-devtools-core": "^4.19.1"
 	},
 	"peerDependenciesMeta": {
@@ -113,6 +115,11 @@
 		}
 	},
 	"ava": {
+		"files": [
+			"test/**/*",
+			"!test/helpers/**/*",
+			"!test/fixtures/**/*"
+		],
 		"extensions": {
 			"ts": "module",
 			"tsx": "module"

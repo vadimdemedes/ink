@@ -2,14 +2,14 @@ import EventEmitter from 'events';
 import React, {useEffect, FC} from 'react';
 import delay from 'delay';
 import test from 'ava';
-import {spy} from 'sinon';
+import sinon from 'sinon';
 import {render, Box, Text, useFocus, useFocusManager} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
 const createStdin = () => {
 	const stdin: any = new EventEmitter();
 	stdin.isTTY = true;
-	stdin.setRawMode = spy();
+	stdin.setRawMode = sinon.spy();
 	stdin.setEncoding = () => {};
 	stdin.resume = () => {};
 	stdin.pause = () => {};

@@ -7,11 +7,11 @@ import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
 import {render, Box, Text} from '../src/index.js';
 
-console.log("yayy")
 const box = (text: string, options?: Options): string => {
 	return boxen(text, {
 		...options,
-		borderStyle: 'round'
+		// @ts-ignore
+		borderStyle: "round"
 	});
 };
 
