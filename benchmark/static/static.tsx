@@ -1,7 +1,9 @@
+#!/usr/bin/env npx ts-node-esm
+
 /* eslint-disable react/jsx-curly-brace-presence */
 'use strict';
-const React = require('react');
-const {render, Static, Box, Text} = require('../..');
+import React from "react";
+import {render, Box, Text, Static} from '../../src/index.js';
 
 const App = () => {
 	const [items, setItems] = React.useState([]);
@@ -15,6 +17,7 @@ const App = () => {
 				return;
 			}
 
+			// @ts-ignore
 			setItems(previousItems => [
 				...previousItems,
 				{
@@ -35,7 +38,7 @@ const App = () => {
 	return (
 		<Box flexDirection="column">
 			<Static items={items}>
-				{(item, index) => (
+				{(item: any, index) => (
 					<Box key={item.id} padding={1} flexDirection="column">
 						<Text color="green">Item #{index}</Text>
 						<Text>Item content</Text>

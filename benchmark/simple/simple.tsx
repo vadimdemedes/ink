@@ -1,8 +1,13 @@
+#!/usr/bin/env npx ts-node-esm
+
 /* eslint-disable react/jsx-curly-brace-presence */
 'use strict';
-const React = require('react');
+import React from "react";
+import {createRequire} from "node:module";
+import {render, Box, Text} from '../../src/index.js';
+
+const require = createRequire(import.meta.url);
 const Benchmark = require('benchmark');
-const {render, Box, Text} = require('../..');
 
 const App = () => (
 	<Box flexDirection="column" padding={1}>
@@ -39,8 +44,10 @@ const App = () => (
 );
 
 const stdout = {
-	write() {}
-};
+	write() {},
+	on() {},
+	off() {}
+} as any;
 
 const {rerender} = render(<App />, {stdout});
 const suite = new Benchmark.Suite();
