@@ -1,6 +1,8 @@
 import test from 'ava';
 import {spawn} from 'node-pty';
 import stripAnsi from 'strip-ansi';
+import * as url from 'url';
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: any) => void;

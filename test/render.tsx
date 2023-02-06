@@ -9,6 +9,8 @@ import boxen from 'boxen';
 import delay from 'delay';
 import {render, Box, Text} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
+import * as url from 'url';
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: unknown) => void;

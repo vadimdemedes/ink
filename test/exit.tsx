@@ -1,6 +1,8 @@
 import test from 'ava';
 import {spawn} from 'node-pty';
 import {run} from './helpers/run.js';
+import * as url from 'url';
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 test.serial('exit normally without unmount() or exit()', async t => {
 	const output = await run('exit-normally');

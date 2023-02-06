@@ -1,4 +1,6 @@
 import {spawn} from 'node-pty';
+import * as url from 'url';
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 type Run = (
 	fixture: string,

@@ -7,5 +7,10 @@
 		"outDir": "build",
 		"sourceMap": true
 	},
-	"include": ["src"]
+	"include": ["src"],
+	"ts-node": {
+		"transpileOnly": true,
+		"files": true,
+		"experimentalResolver": true
+	}
 }

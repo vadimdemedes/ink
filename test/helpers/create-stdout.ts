@@ -1,5 +1,5 @@
 import EventEmitter from 'events';
-import {spy} from 'sinon';
+import sinon from 'sinon';
 
 // Fake process.stdout
 interface Stream extends EventEmitter {
@@ -14,7 +14,7 @@ export default (columns?: number): Stream => {
 	// @ts-ignore
 	stdout.columns = columns ?? 100;
 	// @ts-ignore
-	stdout.write = spy();
+	stdout.write = sinon.spy();
 	// @ts-ignore
 	stdout.get = () => stdout.write.lastCall.args[0];
 
