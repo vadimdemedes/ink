@@ -16,7 +16,7 @@ test.after(() => {
 	restore();
 });
 
-test.skip('catch and display error', t => {
+test.only('catch and display error', t => {
 	const stdout = createStdout();
 
 	const Test = () => {
@@ -39,7 +39,7 @@ test.skip('catch and display error', t => {
 			" 23:     throw new Error('Oh no');",
 			' 24:   };',
 			' 25:',
-			' 26:   render(<Test />, {stdout});',
+			' 26:   render(<Test />, {stdout: stdout as any});',
 			'',
 			' - Test (test/errors.tsx:23:9)'
 		]
