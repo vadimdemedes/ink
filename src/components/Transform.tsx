@@ -1,4 +1,4 @@
-import React, {type FC, type ReactNode} from 'react';
+import React, {type ReactNode} from 'react';
 
 export type Props = {
 	/**
@@ -14,7 +14,7 @@ export type Props = {
  * These use cases can't accept React nodes as input, they are expecting a string.
  * That's what <Transform> component does, it gives you an output string of its child components and lets you transform it in any way.
  */
-const Transform: FC<Props> = ({children, transform}) => {
+function Transform({children, transform}: Props) {
 	if (children === undefined || children === null) {
 		return null;
 	}
@@ -27,7 +27,7 @@ const Transform: FC<Props> = ({children, transform}) => {
 			{children}
 		</ink-text>
 	);
-};
+}
 
 Transform.displayName = 'Transform';
 

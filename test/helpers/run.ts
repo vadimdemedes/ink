@@ -17,7 +17,8 @@ export const run: Run = (fixture, props) => {
 	};
 
 	return new Promise<string>((resolve, reject) => {
-		const executable = path.join(__dirname, "../../node_modules/bin/ts-node-esm")
+		const executable = path.join(__dirname, "../../node_modules/.bin/ts-node-esm")
+
 		const args = [path.join(__dirname, `/../fixtures/${fixture}.tsx`)]
 		const term = spawn(executable, args, {
 			name: 'xterm-color',
@@ -26,7 +27,6 @@ export const run: Run = (fixture, props) => {
 			env
 		});
 
-		console.log("term");
 		let output = '';
 
 		term.on('data', (data: any) => {

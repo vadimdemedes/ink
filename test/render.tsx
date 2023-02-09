@@ -8,6 +8,7 @@ import {render, Box, Text} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 import * as url from 'url';
 import * as path from "path";
+import React from "react";
 
 const require = createRequire(import.meta.url)
 const {spawn} = require('node-pty');

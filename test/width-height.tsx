@@ -63,7 +63,6 @@ test.failing('set min width in percent', t => {
 		</Box>
 	);
 
-	console.log(output)
 	t.is(output, 'A    B');
 });
 

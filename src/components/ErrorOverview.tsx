@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import {cwd} from 'node:process';
-import React, {type FC} from 'react';
+import React from 'react';
 import StackUtils from 'stack-utils';
 import codeExcerpt, {type CodeExcerpt} from 'code-excerpt';
 import Box from './Box.js';
@@ -21,7 +21,7 @@ type Props = {
 	readonly error: Error;
 };
 
-const ErrorOverview: FC<Props> = ({error}) => {
+function ErrorOverview({error}: Props) {
 	const stack = error.stack ? error.stack.split('\n').slice(1) : undefined;
 	const origin = stack ? stackUtils.parseLine(stack[0]!) : undefined;
 	const filePath = cleanupPath(origin?.file);
@@ -122,6 +122,6 @@ const ErrorOverview: FC<Props> = ({error}) => {
 			)}
 		</Box>
 	);
-};
+}
 
 export default ErrorOverview;

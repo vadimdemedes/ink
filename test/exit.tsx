@@ -55,7 +55,7 @@ test.serial('exit with thrown error', async t => {
 test.serial('don’t exit while raw mode is active', async t => {
 	await new Promise<void>((resolve, _reject) => {
 		const term = spawn(
-			path.join(__dirname, '../node_modules/.bin/ts-node'),
+			path.join(__dirname, '../node_modules/.bin/ts-node-esm'),
 			[path.join(__dirname, './fixtures/exit-double-raw-mode.tsx')],
 			{
 				name: 'xterm-color',

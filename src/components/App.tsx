@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-constructed-context-values */
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import process from 'node:process';
 import React, {PureComponent, type ReactNode} from 'react';

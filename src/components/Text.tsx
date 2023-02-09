@@ -1,4 +1,4 @@
-import React, {type FC, type ReactNode} from 'react';
+import React, {type ReactNode} from 'react';
 import chalk, {type ForegroundColorName} from 'chalk';
 import {type LiteralUnion} from 'type-fest';
 import colorize from '../colorize.js';
@@ -63,7 +63,7 @@ export type Props = {
 /**
  * This component can display text, and change its style to make it colorful, bold, underline, italic or strikethrough.
  */
-const Text: FC<Props> = ({
+function Text({
 	color,
 	backgroundColor,
 	dimColor,
@@ -74,7 +74,7 @@ const Text: FC<Props> = ({
 	inverse,
 	wrap,
 	children
-}) => {
+}: Props) {
 	if (children === undefined || children === null) {
 		return null;
 	}
@@ -123,7 +123,7 @@ const Text: FC<Props> = ({
 			{children}
 		</ink-text>
 	);
-};
+}
 
 Text.displayName = 'Text';
 
