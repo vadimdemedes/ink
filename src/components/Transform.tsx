@@ -22,7 +22,7 @@ const Transform: FC<Props> = ({children, transform}) => {
 	return (
 		<ink-text
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row'}}
-			internal_transform={transform}
+			internalTransform={transform}
 		>
 			{children}
 		</ink-text>

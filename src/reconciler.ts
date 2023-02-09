@@ -1,4 +1,4 @@
-import * as process from 'node:process';
+import process from 'node:process';
 import {
 	unstable_scheduleCallback as schedulePassiveEffects,
 	unstable_cancelCallback as cancelPassiveEffects
@@ -135,14 +135,14 @@ export default createReconciler<
 					break;
 				}
 
-				case 'internal_transform': {
-					node.internal_transform = value as OutputTransformer;
+				case 'internalTransform': {
+					node.internalTransform = value as OutputTransformer;
 
 					break;
 				}
 
-				case 'internal_static': {
-					node.internal_static = true;
+				case 'internalStatic': {
+					node.internalStatic = true;
 
 					break;
 				}
@@ -182,7 +182,7 @@ export default createReconciler<
 	appendChild: appendChildNode,
 	insertBefore: insertBeforeNode,
 	finalizeInitialChildren(node, _type, _props, rootNode) {
-		if (node.internal_static) {
+		if (node.internalStatic) {
 			rootNode.isStaticDirty = true;
 
 			// Save reference to <Static> node to skip traversal of entire
@@ -201,7 +201,7 @@ export default createReconciler<
 		cleanupYogaNode(removeNode.yogaNode);
 	},
 	prepareUpdate(node, _type, oldProps, newProps, rootNode) {
-		if (node.internal_static) {
+		if (node.internalStatic) {
 			rootNode.isStaticDirty = true;
 		}
 
@@ -270,14 +270,14 @@ export default createReconciler<
 					break;
 				}
 
-				case 'internal_transform': {
-					node.internal_transform = value as OutputTransformer;
+				case 'internalTransform': {
+					node.internalTransform = value as OutputTransformer;
 
 					break;
 				}
 
-				case 'internal_static': {
-					node.internal_static = true;
+				case 'internalStatic': {
+					node.internalStatic = true;
 
 					break;
 				}

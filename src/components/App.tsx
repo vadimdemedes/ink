@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import * as process from 'node:process';
+import process from 'node:process';
 import React, {PureComponent, type ReactNode} from 'react';
 import cliCursor from 'cli-cursor';
 import AppContext from './AppContext.js';

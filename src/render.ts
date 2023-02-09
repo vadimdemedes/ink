@@ -1,5 +1,5 @@
 import {Stream} from 'node:stream';
-import * as process from 'node:process';
+import process from 'node:process';
 import {type ReactElement} from 'react';
 import Ink, {type Options as InkOptions} from './ink.js';
 import instances from './instances.js';

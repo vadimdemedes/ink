@@ -27,9 +27,9 @@ const squashTextNodes = (node: DOMElement): string => {
 				// apply children transform, so we have to do it manually here for each text node
 				if (
 					nodeText.length > 0 &&
-					typeof childNode.internal_transform === 'function'
+					typeof childNode.internalTransform === 'function'
 				) {
-					nodeText = childNode.internal_transform(nodeText);
+					nodeText = childNode.internalTransform(nodeText);
 				}
 			}
 

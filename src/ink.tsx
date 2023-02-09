@@ -1,4 +1,4 @@
-import * as process from 'node:process';
+import process from 'node:process';
 import React, {type ReactNode} from 'react';
 import {throttle, type DebouncedFunc} from 'lodash-es';
 import ansiEscapes from 'ansi-escapes';

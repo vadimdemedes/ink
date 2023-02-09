@@ -58,9 +58,7 @@ const Static = <T,>(props: Props<T>) => {
 	);
 
 	return (
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
-		// @ts-ignore
-		<ink-box internal_static style={style}>
+		<ink-box internalStatic style={style}>
 			{children}
 		</ink-box>
 	);
