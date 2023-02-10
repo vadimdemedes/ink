@@ -1,7 +1,7 @@
 import test from 'ava';
-import {createRequire} from "node:module"
+import {createRequire} from 'node:module';
 import stripAnsi from 'strip-ansi';
-import * as url from 'url';
+import url from 'url';
 import * as path from "path";
 
 const require = createRequire(import.meta.url)

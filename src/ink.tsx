@@ -90,8 +90,7 @@ export default class Ink {
 		);
 
 		// Unmount when process exits
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
-		// @ts-ignore
+		// @ts-expect-error signalExit returns a 'number | undefined', which this.unmount can process.
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 
 		if (process.env['DEV'] === 'true') {

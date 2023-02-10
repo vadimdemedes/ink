@@ -3,7 +3,7 @@
 /* eslint-disable react/jsx-curly-brace-presence */
 'use strict';
 import React from "react";
-import {createRequire} from "node:module";
+import {createRequire} from 'node:module';
 import {render, Box, Text} from '../../src/index.js';
 
 const require = createRequire(import.meta.url);

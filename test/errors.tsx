@@ -16,7 +16,7 @@ test.after(() => {
 	restore();
 });
 
-test.only('catch and display error', t => {
+test('catch and display error', t => {
 	const stdout = createStdout();
 
 	const Test = () => {

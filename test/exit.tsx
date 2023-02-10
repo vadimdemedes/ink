@@ -1,7 +1,7 @@
 import { createRequire } from 'module';
 import test from "ava";
 import {run} from './helpers/run.js';
-import * as url from 'url';
+import url from 'url';
 import * as path from "path";
 const require = createRequire(import.meta.url);
 const {spawn} = require('node-pty');

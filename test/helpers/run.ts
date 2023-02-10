@@ -1,8 +1,8 @@
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const {spawn} = require('node-pty');
-import * as path from 'path'
-import * as url from 'url';
+import path from 'path'
+import url from 'url';
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 type Run = (

@@ -10,12 +10,9 @@ interface Stream extends EventEmitter {
 }
 
 export default (columns?: number): Stream => {
-	const stdout = new EventEmitter();
-	// @ts-ignore
+	const stdout: any = new EventEmitter();
 	stdout.columns = columns ?? 100;
-	// @ts-ignore
 	stdout.write = sinon.spy();
-	// @ts-ignore
 	stdout.get = () => stdout.write.lastCall.args[0];
 
 	// @ts-ignore

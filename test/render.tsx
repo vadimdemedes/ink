@@ -1,12 +1,12 @@
 import test from 'ava';
-import {createRequire} from "node:module"
+import {createRequire} from 'node:module';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
 import {render, Box, Text} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
-import * as url from 'url';
+import url from 'url';
 import * as path from "path";
 import React from "react";
 
