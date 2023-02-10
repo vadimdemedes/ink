@@ -6,4 +6,9 @@ const Test = () => {
 };
 
 const app = render(<Test />);
-app.waitUntilExit().catch(error => console.log(error.message));
+
+try {
+	await app.waitUntilExit();
+} catch (error: unknown) {
+	console.log((error as any).message);
+}

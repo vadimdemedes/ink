@@ -5,9 +5,9 @@ import {Box, Text, render} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
 test('update child', t => {
-	const Test = ({update}: {update?: boolean}) => (
-		<Text>{update ? 'B' : 'A'}</Text>
-	);
+	function Test({update}: {update?: boolean}) {
+		return <Text>{update ? 'B' : 'A'}</Text>;
+	}
 
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
@@ -37,12 +37,14 @@ test('update child', t => {
 });
 
 test('update text node', t => {
-	const Test = ({update}: {update?: boolean}) => (
-		<Box>
-			<Text>Hello </Text>
-			<Text>{update ? 'B' : 'A'}</Text>
-		</Box>
-	);
+	function Test({update}: {update?: boolean}) {
+		return (
+			<Box>
+				<Text>Hello </Text>
+				<Text>{update ? 'B' : 'A'}</Text>
+			</Box>
+		);
+	}
 
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
@@ -72,7 +74,7 @@ test('update text node', t => {
 });
 
 test('append child', t => {
-	const Test = ({append}: {append?: boolean}) => {
+	function Test({append}: {append?: boolean}) {
 		if (append) {
 			return (
 				<Box flexDirection="column">
@@ -87,7 +89,7 @@ test('append child', t => {
 				<Text>A</Text>
 			</Box>
 		);
-	};
+	}
 
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
@@ -128,7 +130,7 @@ test('append child', t => {
 });
 
 test('insert child between other children', t => {
-	const Test = ({insert}: {insert?: boolean}) => {
+	function Test({insert}: {insert?: boolean}) {
 		if (insert) {
 			return (
 				<Box flexDirection="column">
@@ -145,7 +147,7 @@ test('insert child between other children', t => {
 				<Text key="c">C</Text>
 			</Box>
 		);
-	};
+	}
 
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
@@ -188,7 +190,7 @@ test('insert child between other children', t => {
 });
 
 test('remove child', t => {
-	const Test = ({remove}: {remove?: boolean}) => {
+	function Test({remove}: {remove?: boolean}) {
 		if (remove) {
 			return (
 				<Box flexDirection="column">
@@ -203,7 +205,7 @@ test('remove child', t => {
 				<Text>B</Text>
 			</Box>
 		);
-	};
+	}
 
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
@@ -244,7 +246,7 @@ test('remove child', t => {
 });
 
 test('reorder children', t => {
-	const Test = ({reorder}: {reorder?: boolean}) => {
+	function Test({reorder}: {reorder?: boolean}) {
 		if (reorder) {
 			return (
 				<Box flexDirection="column">
@@ -260,7 +262,7 @@ test('reorder children', t => {
 				<Text key="b">B</Text>
 			</Box>
 		);
-	};
+	}
 
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
@@ -304,9 +306,9 @@ test('reorder children', t => {
 test('replace child node with text', t => {
 	const stdout = createStdout();
 
-	const Dynamic = ({replace}: {replace?: boolean}) => (
-		<Text>{replace ? 'x' : <Text color="green">test</Text>}</Text>
-	);
+	function Dynamic({replace}: {replace?: boolean}) {
+		return <Text>{replace ? 'x' : <Text color="green">test</Text>}</Text>;
+	}
 
 	const {rerender} = render(<Dynamic />, {
 		stdout,
@@ -334,8 +336,7 @@ test('support suspense', async t => {
 
 			state = 'pending';
 
-			// eslint-disable-next-line promise/prefer-await-to-then
-			promise.then(() => {
+			void promise.then(() => {
 				state = 'done';
 				value = 'Hello World';
 			});
@@ -345,16 +346,21 @@ test('support suspense', async t => {
 			return value;
 		}
 
+		// eslint-disable-next-line @typescript-eslint/no-throw-literal
 		throw promise;
 	};
 
-	const Suspendable = () => <Text>{read()}</Text>;
+	function Suspendable() {
+		return <Text>{read()}</Text>;
+	}
 
-	const Test = () => (
-		<Suspense fallback={<Text>Loading</Text>}>
-			<Suspendable />
-		</Suspense>
-	);
+	function Test() {
+		return (
+			<Suspense fallback={<Text>Loading</Text>}>
+				<Suspendable />
+			</Suspense>
+		);
+	}
 
 	const out = render(<Test />, {
 		stdout,
@@ -363,7 +369,6 @@ test('support suspense', async t => {
 
 	t.is((stdout.write as any).lastCall.args[0], 'Loading');
 
-	// eslint-disable-next-line @typescript-eslint/await-thenable
 	await promise;
 	out.rerender(<Test />);
 

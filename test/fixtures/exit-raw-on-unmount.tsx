@@ -13,11 +13,16 @@ class Exit extends React.Component<{
 	}
 }
 
-const Test = () => {
+function Test() {
 	const {setRawMode} = useStdin();
 	return <Exit onSetRawMode={setRawMode} />;
-};
+}
 
 const app = render(<Test />);
-setTimeout(() => app.unmount(), 500);
-app.waitUntilExit().then(() => console.log('exited'));
+
+setTimeout(() => {
+	app.unmount();
+}, 500);
+
+await app.waitUntilExit();
+console.log('exited');

@@ -1,8 +1,9 @@
-import test, {ExecutionContext} from 'ava';
+import process from 'node:process';
 import {createRequire} from 'node:module';
+import url from 'node:url';
+import * as path from 'node:path';
+import test, {type ExecutionContext} from 'ava';
 import stripAnsi from 'strip-ansi';
-import url from 'url';
-import * as path from 'path';
 
 const require = createRequire(import.meta.url);
 const {spawn} = require('node-pty');
@@ -13,13 +14,14 @@ const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: any) => void;
 	let reject: (error?: Error) => void;
 
-	// eslint-disable-next-line promise/param-names
 	const exitPromise = new Promise((resolve2, reject2) => {
 		resolve = resolve2;
 		reject = reject2;
 	});
 
 	const env = {...process.env};
+
+	// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 	delete env['CI'];
 
 	const executable = path.join(__dirname, '../node_modules/.bin/ts-node-esm');
@@ -35,7 +37,7 @@ const term = (fixture: string, args: string[] = []) => {
 	);
 
 	const result = {
-		write: (input: string) => {
+		write(input: string) {
 			// Give TS and Ink time to start up and render UI
 			// TODO: Send a signal from the Ink process when it's ready to accept input instead
 			setTimeout(() => {

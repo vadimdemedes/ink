@@ -1,15 +1,15 @@
-import EventEmitter from 'events';
-import React, {useEffect, FC} from 'react';
+import EventEmitter from 'node:events';
+import React, {useEffect} from 'react';
 import delay from 'delay';
 import test from 'ava';
-import sinon from 'sinon';
+import {spy} from 'sinon';
 import {render, Box, Text, useFocus, useFocusManager} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
 const createStdin = () => {
-	const stdin: any = new EventEmitter();
+	const stdin = new EventEmitter() as NodeJS.WriteStream;
 	stdin.isTTY = true;
-	stdin.setRawMode = sinon.spy();
+	stdin.setRawMode = spy();
 	stdin.setEncoding = () => {};
 	stdin.resume = () => {};
 	stdin.pause = () => {};
@@ -17,7 +17,7 @@ const createStdin = () => {
 	return stdin;
 };
 
-interface TestProps {
+type TestProps = {
 	showFirst?: boolean;
 	disableSecond?: boolean;
 	autoFocus?: boolean;
@@ -25,9 +25,9 @@ interface TestProps {
 	focusNext?: boolean;
 	focusPrevious?: boolean;
 	unmountChildren?: boolean;
-}
+};
 
-const Test: FC<TestProps> = ({
+function Test({
 	showFirst = true,
 	disableSecond = false,
 	autoFocus = false,
@@ -35,7 +35,7 @@ const Test: FC<TestProps> = ({
 	focusNext = false,
 	focusPrevious = false,
 	unmountChildren = false
-}) => {
+}: TestProps) {
 	const focusManager = useFocusManager();
 
 	useEffect(() => {
@@ -69,15 +69,15 @@ const Test: FC<TestProps> = ({
 			<Item label="Third" autoFocus={autoFocus} />
 		</Box>
 	);
-};
+}
 
-interface ItemProps {
+type ItemProps = {
 	label: string;
 	autoFocus: boolean;
 	disabled?: boolean;
-}
+};
 
-const Item: FC<ItemProps> = ({label, autoFocus, disabled = false}) => {
+function Item({label, autoFocus, disabled = false}: ItemProps) {
 	const {isFocused} = useFocus({
 		autoFocus,
 		isActive: !disabled
@@ -88,7 +88,7 @@ const Item: FC<ItemProps> = ({label, autoFocus, disabled = false}) => {
 			{label} {isFocused && '✔'}
 		</Text>
 	);
-};
+}
 
 test('dont focus on register when auto focus is off', async t => {
 	const stdout = createStdout();

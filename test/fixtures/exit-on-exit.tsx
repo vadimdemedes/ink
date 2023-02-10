@@ -30,10 +30,12 @@ class Exit extends React.Component<
 	}
 }
 
-const Test = () => {
+function Test() {
 	const {exit} = useApp();
 	return <Exit onExit={exit} />;
-};
+}
 
 const app = render(<Test />);
-app.waitUntilExit().then(() => console.log('exited'));
+
+await app.waitUntilExit();
+console.log('exited');

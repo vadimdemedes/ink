@@ -1,8 +1,8 @@
 import React from 'react';
 import test from 'ava';
 import chalk from 'chalk';
-import {renderToString} from './helpers/render-to-string.js';
 import {render, Box, Text} from '../src/index.js';
+import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
 
 test('<Text> with undefined children', t => {
@@ -77,11 +77,13 @@ test('text with inversion', t => {
 });
 
 test('remeasure text when text is changed', t => {
-	const Test = ({add}: {add?: boolean}) => (
-		<Box>
-			<Text>{add ? 'abcx' : 'abc'}</Text>
-		</Box>
-	);
+	function Test({add}: {add?: boolean}) {
+		return (
+			<Box>
+				<Text>{add ? 'abcx' : 'abc'}</Text>
+			</Box>
+		);
+	}
 
 	const stdout = createStdout();
 	const {rerender} = render(<Test />, {stdout, debug: true});
@@ -92,14 +94,16 @@ test('remeasure text when text is changed', t => {
 });
 
 test('remeasure text when text nodes are changed', t => {
-	const Test = ({add}: {add?: boolean}) => (
-		<Box>
-			<Text>
-				abc
-				{add && <Text>x</Text>}
-			</Text>
-		</Box>
-	);
+	function Test({add}: {add?: boolean}) {
+		return (
+			<Box>
+				<Text>
+					abc
+					{add && <Text>x</Text>}
+				</Text>
+			</Box>
+		);
+	}
 
 	const stdout = createStdout();
 

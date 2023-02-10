@@ -1,14 +1,15 @@
-import test from 'ava';
+import process from 'node:process';
+import url from 'node:url';
+import * as path from 'node:path';
 import {createRequire} from 'node:module';
+import test from 'ava';
+import React from 'react';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
 import {render, Box, Text} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
-import url from 'url';
-import * as path from 'path';
-import React from 'react';
 
 const require = createRequire(import.meta.url);
 const {spawn} = require('node-pty');
@@ -19,7 +20,6 @@ const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: unknown) => void;
 	let reject: (error: Error) => void;
 
-	// eslint-disable-next-line promise/param-names
 	const exitPromise = new Promise((resolve2, reject2) => {
 		resolve = resolve2;
 		reject = reject2;
@@ -64,9 +64,9 @@ test.serial('do not erase screen', async t => {
 	await ps.waitForExit();
 	t.false(ps.output.includes(ansiEscapes.clearTerminal));
 
-	['A', 'B', 'C'].forEach(letter => {
+	for (const letter of ['A', 'B', 'C']) {
 		t.true(ps.output.includes(letter));
-	});
+	}
 });
 
 test.serial(
@@ -77,9 +77,9 @@ test.serial(
 		await ps.waitForExit();
 		t.false(ps.output.includes(ansiEscapes.clearTerminal));
 
-		['A', 'B', 'C', 'D', 'E', 'F'].forEach(letter => {
+		for (const letter of ['A', 'B', 'C', 'D', 'E', 'F']) {
 			t.true(ps.output.includes(letter));
-		});
+		}
 	}
 );
 
@@ -88,9 +88,9 @@ test.serial('erase screen', async t => {
 	await ps.waitForExit();
 	t.true(ps.output.includes(ansiEscapes.clearTerminal));
 
-	['A', 'B', 'C'].forEach(letter => {
+	for (const letter of ['A', 'B', 'C']) {
 		t.true(ps.output.includes(letter));
-	});
+	}
 });
 
 test.serial(
@@ -100,9 +100,9 @@ test.serial(
 		await ps.waitForExit();
 		t.true(ps.output.includes(ansiEscapes.clearTerminal));
 
-		['A', 'B', 'C'].forEach(letter => {
+		for (const letter of ['A', 'B', 'C']) {
 			t.true(ps.output.includes(letter));
-		});
+		}
 	}
 );
 
@@ -112,9 +112,9 @@ test.serial('clear output', async t => {
 
 	const secondFrame = ps.output.split(ansiEscapes.eraseLines(4))[1];
 
-	['A', 'B', 'C'].forEach(letter => {
+	for (const letter of ['A', 'B', 'C']) {
 		t.false(secondFrame?.includes(letter));
-	});
+	}
 });
 
 test.serial(
@@ -123,7 +123,9 @@ test.serial(
 		const ps = term('console');
 		await ps.waitForExit();
 
-		const frames = ps.output.split(ansiEscapes.eraseLines(2)).map(stripAnsi);
+		const frames = ps.output.split(ansiEscapes.eraseLines(2)).map(line => {
+			return stripAnsi(line);
+		});
 
 		t.deepEqual(frames, [
 			'Hello World\r\n',
@@ -135,11 +137,13 @@ test.serial(
 test.serial('rerender on resize', async t => {
 	const stdout = createStdout(10);
 
-	const Test = () => (
-		<Box borderStyle="round">
-			<Text>Test</Text>
-		</Box>
-	);
+	function Test() {
+		return (
+			<Box borderStyle="round">
+				<Text>Test</Text>
+			</Box>
+		);
+	}
 
 	const {unmount} = render(<Test />, {stdout});
 

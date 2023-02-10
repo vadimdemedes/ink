@@ -16,7 +16,9 @@ class Exit extends React.Component<
 	}
 
 	override componentDidMount() {
-		setTimeout(() => this.props.onExit(new Error('errored')), 500);
+		setTimeout(() => {
+			this.props.onExit(new Error('errored'));
+		}, 500);
 
 		this.timer = setInterval(() => {
 			this.setState(prevState => ({
@@ -30,10 +32,15 @@ class Exit extends React.Component<
 	}
 }
 
-const Test = () => {
+function Test() {
 	const {exit} = useApp();
 	return <Exit onExit={exit} />;
-};
+}
 
 const app = render(<Test />);
-app.waitUntilExit().catch((error: Error) => console.log(error.message));
+
+try {
+	await app.waitUntilExit();
+} catch (error: unknown) {
+	console.log((error as any).message);
+}

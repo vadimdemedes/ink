@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect, FC} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import test from 'ava';
 import delay from 'delay';
 import {Box, Text, render, measureElement} from '../src/index.js';
@@ -7,7 +7,7 @@ import createStdout from './helpers/create-stdout.js';
 test('measure element', async t => {
 	const stdout = createStdout();
 
-	const Test: FC = () => {
+	function Test() {
 		const [width, setWidth] = useState(0);
 		const ref = useRef(null);
 
@@ -20,7 +20,7 @@ test('measure element', async t => {
 				<Text>Width: {width}</Text>
 			</Box>
 		);
-	};
+	}
 
 	render(<Test />, {stdout, debug: true});
 	t.is((stdout.write as any).firstCall.args[0], 'Width: 0');

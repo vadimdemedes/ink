@@ -1,8 +1,9 @@
-import {createRequire} from 'module';
+import process from 'node:process';
+import * as path from 'node:path';
+import url from 'node:url';
+import {createRequire} from 'node:module';
 import test from 'ava';
 import {run} from './helpers/run.js';
-import url from 'url';
-import * as path from 'path';
 
 const require = createRequire(import.meta.url);
 const {spawn} = require('node-pty');
@@ -63,7 +64,7 @@ test.serial('don’t exit while raw mode is active', async t => {
 				name: 'xterm-color',
 				cols: 100,
 				cwd: __dirname,
-				env: process.env as {[variable: string]: string}
+				env: process.env
 			}
 		);
 

@@ -1,9 +1,7 @@
-import EventEmitter from 'events';
+import EventEmitter from 'node:events';
 import React, {useState, Component, FC} from 'react';
 import chalk from 'chalk';
-import sinon from 'sinon';
-import {renderToString} from './helpers/render-to-string.js';
-import {run} from './helpers/run.js';
+import {spy} from 'sinon';
 import test from 'ava';
 import {
 	Box,
@@ -15,6 +13,8 @@ import {
 	useStdin,
 	render
 } from '../src/index.js';
+import {renderToString} from './helpers/render-to-string.js';
+import {run} from './helpers/run.js';
 import createStdout from './helpers/create-stdout.js';
 
 test('text', t => {
@@ -41,7 +41,9 @@ test('multiple text nodes', t => {
 });
 
 test('text with component', t => {
-	const World = () => <Text>World</Text>;
+	function World() {
+		return <Text>World</Text>;
+	}
 
 	const output = renderToString(
 		<Text>
@@ -224,8 +226,9 @@ test('remesure text dimensions on text change', t => {
 		<Box>
 			<Text>Hello</Text>
 		</Box>,
-		{stdout: stdout as any, debug: true}
+		{stdout, debug: true}
 	);
+
 	t.is((stdout.write as any).lastCall.args[0], 'Hello');
 
 	rerender(
@@ -233,6 +236,7 @@ test('remesure text dimensions on text change', t => {
 			<Text>Hello World</Text>
 		</Box>
 	);
+
 	t.is((stdout.write as any).lastCall.args[0], 'Hello World');
 });
 
@@ -316,11 +320,11 @@ test('<Transform> with null children', t => {
 });
 
 test('hooks', t => {
-	const WithHooks = () => {
-		const [value] = useState('Hello');
+	function WithHooks() {
+		const [value, setValue] = useState('Hello');
 
 		return <Text>{value}</Text>;
-	};
+	}
 
 	const output = renderToString(<WithHooks />);
 	t.is(output, 'Hello');
@@ -345,12 +349,14 @@ test('static output', t => {
 test('skip previous output when rendering new static output', t => {
 	const stdout = createStdout();
 
-	const Dynamic: FC<{items: string[]}> = ({items}) => (
-		<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
-	);
+	function Dynamic({items}: {items: string[]}) {
+		return (
+			<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
+		);
+	}
 
 	const {rerender} = render(<Dynamic items={['A']} />, {
-		stdout: stdout as any,
+		stdout,
 		debug: true
 	});
 
@@ -363,12 +369,14 @@ test('skip previous output when rendering new static output', t => {
 test('render only new items in static output on final render', t => {
 	const stdout = createStdout();
 
-	const Dynamic: FC<{items: string[]}> = ({items}) => (
-		<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
-	);
+	function Dynamic({items}: {items: string[]}) {
+		return (
+			<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
+		);
+	}
 
 	const {rerender, unmount} = render(<Dynamic items={[]} />, {
-		stdout: stdout as any,
+		stdout,
 		debug: true
 	});
 
@@ -392,9 +400,9 @@ test('ensure wrap-ansi doesn’t trim leading whitespace', t => {
 test('replace child node with text', t => {
 	const stdout = createStdout();
 
-	const Dynamic = ({replace}: {replace?: boolean}) => (
-		<Text>{replace ? 'x' : <Text color="green">test</Text>}</Text>
-	);
+	function Dynamic({replace}: {replace?: boolean}) {
+		return <Text>{replace ? 'x' : <Text color="green">test</Text>}</Text>;
+	}
 
 	const {rerender} = render(<Dynamic />, {
 		stdout,
@@ -411,12 +419,12 @@ test('replace child node with text', t => {
 test('disable raw mode when all input components are unmounted', t => {
 	const stdout = createStdout();
 
-	const stdin: any = new EventEmitter();
+	const stdin = new EventEmitter() as NodeJS.WriteStream;
 	stdin.setEncoding = () => {};
-	stdin.setRawMode = sinon.spy();
+	stdin.setRawMode = spy();
 	stdin.isTTY = true; // Without this, setRawMode will throw
-	stdin.resume = sinon.spy();
-	stdin.pause = sinon.spy();
+	stdin.resume = spy();
+	stdin.pause = spy();
 
 	const options = {
 		stdout,
@@ -430,23 +438,21 @@ test('disable raw mode when all input components are unmounted', t => {
 		}
 
 		override componentDidMount() {
-			// @ts-ignore
 			this.props.setRawMode(true);
 		}
 
 		override componentWillUnmount() {
-			// @ts-ignore
 			this.props.setRawMode(false);
 		}
 	}
 
-	const Test = ({
+	function Test({
 		renderFirstInput,
 		renderSecondInput
 	}: {
 		renderFirstInput?: boolean;
 		renderSecondInput?: boolean;
-	}) => {
+	}) {
 		const {setRawMode} = useStdin();
 
 		return (
@@ -455,7 +461,7 @@ test('disable raw mode when all input components are unmounted', t => {
 				{renderSecondInput && <Input setRawMode={setRawMode} />}
 			</>
 		);
-	};
+	}
 
 	const {rerender} = render(
 		<Test renderFirstInput renderSecondInput />,
@@ -484,15 +490,15 @@ test('disable raw mode when all input components are unmounted', t => {
 test('setRawMode() should throw if raw mode is not supported', t => {
 	const stdout = createStdout();
 
-	const stdin: any = new EventEmitter();
+	const stdin = new EventEmitter() as NodeJS.ReadStream;
 	stdin.setEncoding = () => {};
-	stdin.setRawMode = sinon.spy();
+	stdin.setRawMode = spy();
 	stdin.isTTY = false;
-	stdin.resume = sinon.spy();
-	stdin.pause = sinon.spy();
+	stdin.resume = spy();
+	stdin.pause = spy();
 
-	const didCatchInMount = sinon.spy();
-	const didCatchInUnmount = sinon.spy();
+	const didCatchInMount = spy();
+	const didCatchInUnmount = spy();
 
 	const options = {
 		stdout,
@@ -508,7 +514,7 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 		override componentDidMount() {
 			try {
 				this.props.setRawMode(true);
-			} catch (error) {
+			} catch (error: unknown) {
 				didCatchInMount(error);
 			}
 		}
@@ -516,16 +522,16 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 		override componentWillUnmount() {
 			try {
 				this.props.setRawMode(false);
-			} catch (error) {
+			} catch (error: unknown) {
 				didCatchInUnmount(error);
 			}
 		}
 	}
 
-	const Test = () => {
+	function Test() {
 		const {setRawMode} = useStdin();
 		return <Input setRawMode={setRawMode} />;
-	};
+	}
 
 	const {unmount} = render(<Test />, options);
 	unmount();
@@ -540,12 +546,12 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 test('render different component based on whether stdin is a TTY or not', t => {
 	const stdout = createStdout();
 
-	const stdin: any = new EventEmitter();
+	const stdin = new EventEmitter() as NodeJS.WriteStream;
 	stdin.setEncoding = () => {};
-	stdin.setRawMode = sinon.spy();
+	stdin.setRawMode = spy();
 	stdin.isTTY = false;
-	stdin.resume = sinon.spy();
-	stdin.pause = sinon.spy();
+	stdin.resume = spy();
+	stdin.pause = spy();
 
 	const options = {
 		stdout,
@@ -567,13 +573,13 @@ test('render different component based on whether stdin is a TTY or not', t => {
 		}
 	}
 
-	const Test = ({
+	function Test({
 		renderFirstInput,
 		renderSecondInput
 	}: {
 		renderFirstInput?: boolean;
 		renderSecondInput?: boolean;
-	}) => {
+	}) {
 		const {isRawModeSupported, setRawMode} = useStdin();
 
 		return (
@@ -586,7 +592,7 @@ test('render different component based on whether stdin is a TTY or not', t => {
 				)}
 			</>
 		);
-	};
+	}
 
 	const {rerender} = render(
 		<Test renderFirstInput renderSecondInput />,
@@ -612,6 +618,7 @@ test('render different component based on whether stdin is a TTY or not', t => {
 
 test('render only last frame when run in CI', async t => {
 	const output = await run('ci', {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		env: {CI: 'true'},
 		columns: 0
 	});
@@ -625,6 +632,7 @@ test('render only last frame when run in CI', async t => {
 
 test('render all frames if CI environment variable equals false', async t => {
 	const output = await run('ci', {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		env: {CI: 'false'},
 		columns: 0
 	});
@@ -637,15 +645,17 @@ test('render all frames if CI environment variable equals false', async t => {
 test('reset prop when it’s removed from the element', t => {
 	const stdout = createStdout();
 
-	const Dynamic = ({remove}: {remove?: boolean}) => (
-		<Box
-			flexDirection="column"
-			justifyContent="flex-end"
-			height={remove ? undefined : 4}
-		>
-			<Text>x</Text>
-		</Box>
-	);
+	function Dynamic({remove}: {remove?: boolean}) {
+		return (
+			<Box
+				flexDirection="column"
+				justifyContent="flex-end"
+				height={remove ? undefined : 4}
+			>
+				<Text>x</Text>
+			</Box>
+		);
+	}
 
 	const {rerender} = render(<Dynamic />, {
 		stdout,

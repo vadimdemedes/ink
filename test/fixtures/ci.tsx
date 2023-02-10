@@ -1,10 +1,10 @@
 import React from 'react';
 import {render, Static, Text} from '../../src/index.js';
 
-interface TestState {
+type TestState = {
 	counter: number;
 	items: string[];
-}
+};
 
 class Test extends React.Component<Record<string, unknown>, TestState> {
 	timer?: NodeJS.Timeout;

@@ -1,6 +1,7 @@
-import {createRequire} from 'module';
-import path from 'path';
-import url from 'url';
+import process from 'node:process';
+import {createRequire} from 'node:module';
+import path from 'node:path';
+import url from 'node:url';
 
 const require = createRequire(import.meta.url);
 const {spawn} = require('node-pty');
@@ -15,7 +16,7 @@ type Run = (
 export const run: Run = (fixture, props) => {
 	const env: Record<string, string> = {
 		...(process.env as Record<string, string>),
-		...(props?.env ?? {})
+		...props?.env
 	};
 
 	return new Promise<string>((resolve, reject) => {

@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/string-content */
 import React from 'react';
 import test from 'ava';
 import patchConsole from 'patch-console';
@@ -33,17 +32,17 @@ test('catch and display error', t => {
 			'',
 			'  ERROR  Oh no',
 			'',
-			' test/errors.tsx:23:9',
+			' test/errors.tsx:22:9',
 			'',
-			' 20:   const stdout = createStdout();',
-			' 21:',
-			' 22:   const Test = () => {',
-			" 23:     throw new Error('Oh no');",
-			' 24:   };',
-			' 25:',
-			' 26:   render(<Test />, {stdout});',
+			' 19:   const stdout = createStdout();',
+			' 20:',
+			' 21:   const Test = () => {',
+			" 22:     throw new Error('Oh no');",
+			' 23:   };',
+			' 24:',
+			' 25:   render(<Test />, {stdout});',
 			'',
-			' - Test (test/errors.tsx:23:9)'
+			' - Test (test/errors.tsx:22:9)'
 		]
 	);
 });
