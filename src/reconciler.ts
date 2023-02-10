@@ -4,6 +4,8 @@ import {
 	unstable_cancelCallback as cancelPassiveEffects
 } from 'scheduler';
 import createReconciler from 'react-reconciler';
+// @ts-expect-error `react-reconciler` isn't an ES module, but we can still import `constants`
+import {DefaultEventPriority} from 'react-reconciler/constants';
 import Yoga from 'yoga-layout-prebuilt';
 import {
 	createTextNode,
@@ -75,7 +77,6 @@ export default createReconciler<
 	// @ts-expect-error
 	schedulePassiveEffects,
 	cancelPassiveEffects,
-	now: Date.now,
 	getRootHostContext: () => ({
 		isInsideText: false
 	}),
@@ -192,7 +193,16 @@ export default createReconciler<
 
 		return false;
 	},
+	isPrimaryRenderer: true,
 	supportsMutation: true,
+	supportsPersistence: false,
+	supportsHydration: false,
+	scheduleTimeout: setTimeout,
+	cancelTimeout: clearTimeout,
+	noTimeout: -1,
+	getCurrentEventPriority: () => DefaultEventPriority as number,
+	beforeActiveInstanceBlur() {},
+	afterActiveInstanceBlur() {},
 	detachDeletedInstance() {},
 	appendChildToContainer: appendChildNode,
 	insertInContainerBefore: insertBeforeNode,
