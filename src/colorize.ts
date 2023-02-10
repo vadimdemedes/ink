@@ -3,9 +3,9 @@ import chalk from 'chalk';
 type ColorType = 'foreground' | 'background';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const RGB_LIKE_REGEX = /^(rgb|hsl|hsv|hwb)\(\s?(\d+),\s?(\d+),\s?(\d+)\s?\)$/;
+const RGB_LIKE_REGEX = /^rgb\(\s?(\d+),\s?(\d+),\s?(\d+)\s?\)$/;
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const ANSI_REGEX = /^(ansi|ansi256)\(\s?(\d+)\s?\)$/;
+const ANSI_REGEX = /^ansi256\(\s?(\d+)\s?\)$/;
 
 const getMethod = (name: string, type: ColorType): string => {
 	if (type === 'foreground') {
@@ -36,7 +36,7 @@ const colorize = (
 		return (chalk as any)[method](color)(str);
 	}
 
-	if (color.startsWith('ansi')) {
+	if (color.startsWith('ansi256')) {
 		const matches = ANSI_REGEX.exec(color);
 
 		if (!matches) {
@@ -50,13 +50,7 @@ const colorize = (
 		return (chalk as any)[method](value)(str);
 	}
 
-	const isRgbLike =
-		color.startsWith('rgb') ||
-		color.startsWith('hsl') ||
-		color.startsWith('hsv') ||
-		color.startsWith('hwb');
-
-	if (isRgbLike) {
+	if (color.startsWith('rgb')) {
 		const matches = RGB_LIKE_REGEX.exec(color);
 
 		if (!matches) {
