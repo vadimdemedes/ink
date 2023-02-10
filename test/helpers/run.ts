@@ -4,7 +4,9 @@ import path from 'node:path';
 import url from 'node:url';
 
 const require = createRequire(import.meta.url);
-const {spawn} = require('node-pty');
+
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+const {spawn} = require('node-pty') as typeof import('node-pty');
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
@@ -13,7 +15,7 @@ type Run = (
 	props?: {env?: Record<string, string>; columns?: number}
 ) => Promise<string>;
 
-export const run: Run = (fixture, props) => {
+export const run: Run = async (fixture, props) => {
 	const env: Record<string, string> = {
 		...(process.env as Record<string, string>),
 		...props?.env

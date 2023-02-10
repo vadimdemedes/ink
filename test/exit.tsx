@@ -6,7 +6,9 @@ import test from 'ava';
 import {run} from './helpers/run.js';
 
 const require = createRequire(import.meta.url);
-const {spawn} = require('node-pty');
+
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+const {spawn} = require('node-pty') as typeof import('node-pty');
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
@@ -64,13 +66,13 @@ test.serial('don’t exit while raw mode is active', async t => {
 				name: 'xterm-color',
 				cols: 100,
 				cwd: __dirname,
-				env: process.env
+				env: process.env as Record<string, string>
 			}
 		);
 
 		let output = '';
 
-		term.on('data', (data: any) => {
+		term.on('data', (data: string) => {
 			if (data === 's') {
 				setTimeout(() => {
 					t.false(isExited);

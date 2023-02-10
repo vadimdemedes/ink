@@ -12,7 +12,9 @@ import {render, Box, Text} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
 const require = createRequire(import.meta.url);
-const {spawn} = require('node-pty');
+
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+const {spawn} = require('node-pty') as typeof import('node-pty');
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
@@ -33,12 +35,14 @@ const term = (fixture: string, args: string[] = []) => {
 			name: 'xterm-color',
 			cols: 100,
 			cwd: __dirname,
-			env: process.env
+			env: process.env as Record<string, string>
 		}
 	);
 
 	const result = {
-		write: (input: string) => ps.write(input),
+		write(input: string) {
+			ps.write(input);
+		},
 		output: '',
 		waitForExit: () => exitPromise
 	};

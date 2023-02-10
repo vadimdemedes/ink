@@ -6,7 +6,9 @@ import test, {type ExecutionContext} from 'ava';
 import stripAnsi from 'strip-ansi';
 
 const require = createRequire(import.meta.url);
-const {spawn} = require('node-pty');
+
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+const {spawn} = require('node-pty') as typeof import('node-pty');
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
@@ -32,7 +34,7 @@ const term = (fixture: string, args: string[] = []) => {
 			name: 'xterm-color',
 			cols: 100,
 			cwd: __dirname,
-			env
+			env: env as Record<string, string>
 		}
 	);
 

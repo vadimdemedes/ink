@@ -2,11 +2,18 @@ import EventEmitter from 'node:events';
 import {spy} from 'sinon';
 
 // Fake process.stdout
-const createStdout = (columns?: number): NodeJS.WriteStream => {
-	const stdout: any = new EventEmitter();
+type FakeStdout = {
+	get: () => string;
+} & NodeJS.WriteStream;
+
+const createStdout = (columns?: number): FakeStdout => {
+	const stdout = new EventEmitter() as FakeStdout;
 	stdout.columns = columns ?? 100;
-	stdout.write = spy();
-	stdout.get = () => stdout.write.lastCall.args[0];
+
+	const write = spy();
+	stdout.write = write;
+
+	stdout.get = () => write.lastCall.args[0] as string;
 
 	return stdout;
 };

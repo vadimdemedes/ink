@@ -12,6 +12,6 @@ export const renderToString: (
 		debug: true
 	});
 
-	const output = (stdout as any).get() as string;
+	const output = stdout.get();
 	return output;
 };
