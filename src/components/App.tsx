@@ -1,5 +1,3 @@
-/* eslint-disable react/jsx-no-constructed-context-values */
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import process from 'node:process';
 import React, {PureComponent, type ReactNode} from 'react';
 import cliCursor from 'cli-cursor';
@@ -10,12 +8,9 @@ import StderrContext from './StderrContext.js';
 import FocusContext from './FocusContext.js';
 import ErrorOverview from './ErrorOverview.js';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const TAB = '\t';
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const SHIFT_TAB = '\u001B[Z';
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const ESC = '\u001B';
+const tab = '\t';
+const shiftTab = '\u001B[Z';
+const escape = '\u001B';
 
 type Props = {
 	readonly children: ReactNode;
@@ -69,11 +64,13 @@ export default class App extends PureComponent<Props, State> {
 	override render() {
 		return (
 			<AppContext.Provider
+				// eslint-disable-next-line react/jsx-no-constructed-context-values
 				value={{
 					exit: this.handleExit
 				}}
 			>
 				<StdinContext.Provider
+					// eslint-disable-next-line react/jsx-no-constructed-context-values
 					value={{
 						stdin: this.props.stdin,
 						setRawMode: this.handleSetRawMode,
@@ -83,18 +80,21 @@ export default class App extends PureComponent<Props, State> {
 					}}
 				>
 					<StdoutContext.Provider
+						// eslint-disable-next-line react/jsx-no-constructed-context-values
 						value={{
 							stdout: this.props.stdout,
 							write: this.props.writeToStdout
 						}}
 					>
 						<StderrContext.Provider
+							// eslint-disable-next-line react/jsx-no-constructed-context-values
 							value={{
 								stderr: this.props.stderr,
 								write: this.props.writeToStderr
 							}}
 						>
 							<FocusContext.Provider
+								// eslint-disable-next-line react/jsx-no-constructed-context-values
 								value={{
 									activeId: this.state.activeFocusId,
 									add: this.addFocusable,
@@ -183,18 +183,18 @@ export default class App extends PureComponent<Props, State> {
 		}
 
 		// Reset focus when there's an active focused component on Esc
-		if (input === ESC && this.state.activeFocusId) {
+		if (input === escape && this.state.activeFocusId) {
 			this.setState({
 				activeFocusId: undefined
 			});
 		}
 
 		if (this.state.isFocusEnabled && this.state.focusables.length > 0) {
-			if (input === TAB) {
+			if (input === tab) {
 				this.focusNext();
 			}
 
-			if (input === SHIFT_TAB) {
+			if (input === shiftTab) {
 				this.focusPrevious();
 			}
 		}
@@ -240,7 +240,7 @@ export default class App extends PureComponent<Props, State> {
 			const nextFocusableId = this.findNextFocusable(previousState);
 
 			return {
-				activeFocusId: nextFocusableId || firstFocusableId
+				activeFocusId: nextFocusableId ?? firstFocusableId
 			};
 		});
 	};
@@ -252,7 +252,7 @@ export default class App extends PureComponent<Props, State> {
 			const previousFocusableId = this.findPreviousFocusable(previousState);
 
 			return {
-				activeFocusId: previousFocusableId || lastFocusableId
+				activeFocusId: previousFocusableId ?? lastFocusableId
 			};
 		});
 	};
@@ -334,8 +334,10 @@ export default class App extends PureComponent<Props, State> {
 			index < state.focusables.length;
 			index++
 		) {
-			if (state.focusables[index]?.isActive) {
-				return state.focusables[index]!.id;
+			const focusable = state.focusables[index];
+
+			if (focusable?.isActive) {
+				return focusable.id;
 			}
 		}
 
@@ -348,8 +350,10 @@ export default class App extends PureComponent<Props, State> {
 		});
 
 		for (let index = activeIndex - 1; index >= 0; index--) {
-			if (state.focusables[index]?.isActive) {
-				return state.focusables[index]!.id;
+			const focusable = state.focusables[index];
+
+			if (focusable?.isActive) {
+				return focusable.id;
 			}
 		}
 
