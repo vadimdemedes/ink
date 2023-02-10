@@ -12,10 +12,6 @@ export type Props = {
 /**
  * Adds one or more newline (\n) characters. Must be used within <Text> components.
  */
-function Newline({count = 1}: Props) {
+export default function Newline({count = 1}: Props) {
 	return <ink-text>{'\n'.repeat(count)}</ink-text>;
 }
-
-Newline.displayName = 'Newline';
-
-export default Newline;

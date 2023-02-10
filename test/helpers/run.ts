@@ -1,8 +1,10 @@
-import { createRequire } from 'module';
+import {createRequire} from 'module';
+import path from 'path';
+import url from 'url';
+
 const require = createRequire(import.meta.url);
 const {spawn} = require('node-pty');
-import path from 'path'
-import url from 'url';
+
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 type Run = (
@@ -17,9 +19,12 @@ export const run: Run = (fixture, props) => {
 	};
 
 	return new Promise<string>((resolve, reject) => {
-		const executable = path.join(__dirname, "../../node_modules/.bin/ts-node-esm")
+		const executable = path.join(
+			__dirname,
+			'../../node_modules/.bin/ts-node-esm'
+		);
 
-		const args = [path.join(__dirname, `/../fixtures/${fixture}.tsx`)]
+		const args = [path.join(__dirname, `/../fixtures/${fixture}.tsx`)];
 		const term = spawn(executable, args, {
 			name: 'xterm-color',
 			cols: typeof props?.columns === 'number' ? props.columns : 100,
@@ -29,11 +34,11 @@ export const run: Run = (fixture, props) => {
 
 		let output = '';
 
-		term.on('data', (data: any) => {
+		term.on('data', (data: string) => {
 			output += data;
 		});
 
-		term.on('exit', (code: any) => {
+		term.on('exit', (code: number) => {
 			if (code === 0) {
 				resolve(output);
 				return;

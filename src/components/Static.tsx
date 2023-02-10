@@ -32,7 +32,7 @@ export type Props<T> = {
  * a list of completed tests. [Gatsby](https://github.com/gatsbyjs/gatsby) uses it
  * to display a list of generated pages, while still displaying a live progress bar.
  */
-function Static<T>(props: Props<T>) {
+export default function Static<T>(props: Props<T>) {
 	const {items, children: render, style: customStyle} = props;
 	const [index, setIndex] = useState(0);
 
@@ -63,7 +63,3 @@ function Static<T>(props: Props<T>) {
 		</ink-box>
 	);
 }
-
-Static.displayName = 'Static';
-
-export default Static;

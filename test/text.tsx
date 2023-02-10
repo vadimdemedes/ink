@@ -84,7 +84,7 @@ test('remeasure text when text is changed', t => {
 	);
 
 	const stdout = createStdout();
-	const {rerender} = render(<Test />, {stdout: stdout as any, debug: true});
+	const {rerender} = render(<Test />, {stdout, debug: true});
 	t.is((stdout.write as any).lastCall.args[0], 'abc');
 
 	rerender(<Test add />);
@@ -102,8 +102,8 @@ test('remeasure text when text nodes are changed', t => {
 	);
 
 	const stdout = createStdout();
-	// @ts-ignore
-	const {rerender} = render(<Test />, {stdout: stdout as any, debug: true});
+
+	const {rerender} = render(<Test />, {stdout, debug: true});
 	t.is((stdout.write as any).lastCall.args[0], 'abc');
 
 	rerender(<Test add />);

@@ -94,21 +94,24 @@ test('dont focus on register when auto focus is off', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
 
 	await delay(100);
 
-	t.is((stdout.write as any).lastCall.args[0], ['First', 'Second', 'Third'].join('\n'));
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		['First', 'Second', 'Third'].join('\n')
+	);
 });
 
 test('focus the first component to register', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test autoFocus />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
@@ -125,7 +128,7 @@ test('unfocus active component on Esc', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
@@ -133,14 +136,17 @@ test('unfocus active component on Esc', async t => {
 	await delay(100);
 	stdin.emit('data', '\u001B');
 	await delay(100);
-	t.is((stdout.write as any).lastCall.args[0], ['First', 'Second', 'Third'].join('\n'));
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		['First', 'Second', 'Third'].join('\n')
+	);
 });
 
 test('switch focus to first component on Tab', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
@@ -159,7 +165,7 @@ test('switch focus to the next component on Tab', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
@@ -179,7 +185,7 @@ test('switch focus to the first component if currently focused component is the 
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test autoFocus />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
@@ -207,7 +213,7 @@ test('skip disabled component on Tab', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test autoFocus disableSecond />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
@@ -226,7 +232,7 @@ test('switch focus to the previous component on Shift+Tab', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test autoFocus />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
@@ -253,7 +259,7 @@ test('switch focus to the last component if currently focused component is the f
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test autoFocus />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
@@ -271,7 +277,7 @@ test('skip disabled component on Shift+Tab', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test autoFocus disableSecond />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
@@ -291,7 +297,7 @@ test('reset focus when focused component unregisters', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	const {rerender} = render(<Test autoFocus />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
@@ -307,7 +313,7 @@ test('focus first component after focused component unregisters', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	const {rerender} = render(<Test autoFocus />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
@@ -321,14 +327,17 @@ test('focus first component after focused component unregisters', async t => {
 	stdin.emit('data', '\t');
 	await delay(100);
 
-	t.is((stdout.write as any).lastCall.args[0], ['Second ✔', 'Third'].join('\n'));
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		['Second ✔', 'Third'].join('\n')
+	);
 });
 
 test('toggle focus management', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	const {rerender} = render(<Test autoFocus />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
@@ -359,7 +368,7 @@ test('manually focus next component', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	const {rerender} = render(<Test autoFocus />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
@@ -378,7 +387,7 @@ test('manually focus previous component', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	const {rerender} = render(<Test autoFocus />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
@@ -397,7 +406,7 @@ test('doesnt crash when focusing next on unmounted children', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	const {rerender} = render(<Test autoFocus />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});
@@ -413,7 +422,7 @@ test('doesnt crash when focusing previous on unmounted children', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	const {rerender} = render(<Test autoFocus />, {
-		stdout: stdout as any,
+		stdout,
 		stdin,
 		debug: true
 	});

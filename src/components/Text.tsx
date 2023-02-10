@@ -18,37 +18,31 @@ export type Props = {
 	/**
 	 * Dim the color (emit a small amount of light).
 	 */
-	// eslint-disable-next-line react/boolean-prop-naming
 	readonly dimColor?: boolean;
 
 	/**
 	 * Make the text bold.
 	 */
-	// eslint-disable-next-line react/boolean-prop-naming
 	readonly bold?: boolean;
 
 	/**
 	 * Make the text italic.
 	 */
-	// eslint-disable-next-line react/boolean-prop-naming
 	readonly italic?: boolean;
 
 	/**
 	 * Make the text underlined.
 	 */
-	// eslint-disable-next-line react/boolean-prop-naming
 	readonly underline?: boolean;
 
 	/**
 	 * Make the text crossed with a line.
 	 */
-	// eslint-disable-next-line react/boolean-prop-naming
 	readonly strikethrough?: boolean;
 
 	/**
 	 * Inverse background and foreground colors.
 	 */
-	// eslint-disable-next-line react/boolean-prop-naming
 	readonly inverse?: boolean;
 
 	/**
@@ -57,22 +51,23 @@ export type Props = {
 	 * If `truncate-*` is passed, Ink will truncate text instead, which will result in one line of text with the rest cut off.
 	 */
 	readonly wrap?: Styles['textWrap'];
+
 	readonly children?: ReactNode;
 };
 
 /**
  * This component can display text, and change its style to make it colorful, bold, underline, italic or strikethrough.
  */
-function Text({
+export default function Text({
 	color,
 	backgroundColor,
-	dimColor,
-	bold,
-	italic,
-	underline,
-	strikethrough,
-	inverse,
-	wrap,
+	dimColor = false,
+	bold = false,
+	italic = false,
+	underline = false,
+	strikethrough = false,
+	inverse = false,
+	wrap = 'wrap',
 	children
 }: Props) {
 	if (children === undefined || children === null) {
@@ -124,16 +119,3 @@ function Text({
 		</ink-text>
 	);
 }
-
-Text.displayName = 'Text';
-
-Text.defaultProps = {
-	dimColor: false,
-	bold: false,
-	italic: false,
-	underline: false,
-	strikethrough: false,
-	wrap: 'wrap'
-};
-
-export default Text;

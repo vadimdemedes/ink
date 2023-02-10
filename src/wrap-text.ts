@@ -10,9 +10,10 @@ const wrapText = (
 	wrapType: Styles['textWrap']
 ): string => {
 	const cacheKey = text + String(maxWidth) + String(wrapType);
+	const cachedText = cache[cacheKey];
 
-	if (cache[cacheKey]) {
-		return cache[cacheKey]!;
+	if (cachedText) {
+		return cachedText;
 	}
 
 	let wrappedText = text;

@@ -120,12 +120,9 @@ const getInstance = (
 	stdout: NodeJS.WriteStream,
 	createInstance: () => Ink
 ): Ink => {
-	let instance: Ink;
+	let instance = instances.get(stdout);
 
-	if (instances.has(stdout)) {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-		instance = instances.get(stdout);
-	} else {
+	if (!instance) {
 		instance = createInstance();
 		instances.set(stdout, instance);
 	}

@@ -1,8 +1,4 @@
 import process from 'node:process';
-import {
-	unstable_scheduleCallback as schedulePassiveEffects,
-	unstable_cancelCallback as cancelPassiveEffects
-} from 'scheduler';
 import createReconciler from 'react-reconciler';
 // @ts-expect-error `react-reconciler` isn't an ES module, but we can still import `constants`
 import {DefaultEventPriority} from 'react-reconciler/constants';
@@ -73,17 +69,12 @@ export default createReconciler<
 	unknown,
 	unknown
 >({
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-expect-error
-	schedulePassiveEffects,
-	cancelPassiveEffects,
 	getRootHostContext: () => ({
 		isInsideText: false
 	}),
 	prepareForCommit: () => null,
 	preparePortalMount: () => null,
 	clearContainer: () => false,
-	shouldDeprioritizeSubtree: () => false,
 	resetAfterCommit(rootNode) {
 		// Since renders are throttled at the instance level and <Static> component children
 		// are rendered only once and then get deleted, we need an escape hatch to
@@ -125,33 +116,26 @@ export default createReconciler<
 		const node = createNode(type);
 
 		for (const [key, value] of Object.entries(newProps)) {
-			switch (key) {
-				case 'children': {
-					continue;
-				}
-
-				case 'style': {
-					setStyle(node, value as Styles);
-
-					break;
-				}
-
-				case 'internalTransform': {
-					node.internalTransform = value as OutputTransformer;
-
-					break;
-				}
-
-				case 'internalStatic': {
-					node.internalStatic = true;
-
-					break;
-				}
-
-				default: {
-					setAttribute(node, key, value as DOMNodeAttribute);
-				}
+			if (key === 'children') {
+				continue;
 			}
+
+			if (key === 'style') {
+				setStyle(node, value as Styles);
+				continue;
+			}
+
+			if (key === 'internalTransform') {
+				node.internalTransform = value as OutputTransformer;
+				continue;
+			}
+
+			if (key === 'internalStatic') {
+				node.internalStatic = true;
+				continue;
+			}
+
+			setAttribute(node, key, value as DOMNodeAttribute);
 		}
 
 		return node;
@@ -204,6 +188,9 @@ export default createReconciler<
 	beforeActiveInstanceBlur() {},
 	afterActiveInstanceBlur() {},
 	detachDeletedInstance() {},
+	getInstanceFromNode: () => null,
+	prepareScopeUpdate() {},
+	getInstanceFromScope: () => null,
 	appendChildToContainer: appendChildNode,
 	insertInContainerBefore: insertBeforeNode,
 	removeChildFromContainer(node, removeNode) {
@@ -269,33 +256,26 @@ export default createReconciler<
 	},
 	commitUpdate(node, updatePayload) {
 		for (const [key, value] of Object.entries(updatePayload)) {
-			switch (key) {
-				case 'children': {
-					continue;
-				}
-
-				case 'style': {
-					setStyle(node, value as Styles);
-
-					break;
-				}
-
-				case 'internalTransform': {
-					node.internalTransform = value as OutputTransformer;
-
-					break;
-				}
-
-				case 'internalStatic': {
-					node.internalStatic = true;
-
-					break;
-				}
-
-				default: {
-					setAttribute(node, key, value as DOMNodeAttribute);
-				}
+			if (key === 'children') {
+				continue;
 			}
+
+			if (key === 'style') {
+				setStyle(node, value as Styles);
+				continue;
+			}
+
+			if (key === 'internalTransform') {
+				node.internalTransform = value as OutputTransformer;
+				continue;
+			}
+
+			if (key === 'internalStatic') {
+				node.internalStatic = true;
+				continue;
+			}
+
+			setAttribute(node, key, value as DOMNodeAttribute);
 		}
 	},
 	commitTextUpdate(node, _oldText, newText) {

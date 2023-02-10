@@ -5,19 +5,20 @@ import {Box, Text, render} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
 test('update child', t => {
-	const Test = ({update}: {update: boolean}) => <Text>{update ? 'B' : 'A'}</Text>;
+	const Test = ({update}: {update?: boolean}) => (
+		<Text>{update ? 'B' : 'A'}</Text>
+	);
 
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
 
-	// @ts-ignore
 	const actual = render(<Test />, {
-		stdout: stdoutActual as any as any,
+		stdout: stdoutActual,
 		debug: true
 	});
 
 	const expected = render(<Text>A</Text>, {
-		stdout: stdoutExpected as any as any,
+		stdout: stdoutExpected,
 		debug: true
 	});
 
@@ -36,7 +37,7 @@ test('update child', t => {
 });
 
 test('update text node', t => {
-	const Test = ({update}: {update: any}) => (
+	const Test = ({update}: {update?: boolean}) => (
 		<Box>
 			<Text>Hello </Text>
 			<Text>{update ? 'B' : 'A'}</Text>
@@ -46,14 +47,13 @@ test('update text node', t => {
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
 
-	// @ts-ignore
 	const actual = render(<Test />, {
-		stdout: stdoutActual as any,
+		stdout: stdoutActual,
 		debug: true
 	});
 
 	const expected = render(<Text>Hello A</Text>, {
-		stdout: stdoutExpected as any,
+		stdout: stdoutExpected,
 		debug: true
 	});
 
@@ -72,7 +72,7 @@ test('update text node', t => {
 });
 
 test('append child', t => {
-	const Test = ({append}: {append: any}) => {
+	const Test = ({append}: {append?: boolean}) => {
 		if (append) {
 			return (
 				<Box flexDirection="column">
@@ -92,9 +92,8 @@ test('append child', t => {
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
 
-	// @ts-ignore
 	const actual = render(<Test />, {
-		stdout: stdoutActual as any,
+		stdout: stdoutActual,
 		debug: true
 	});
 
@@ -103,7 +102,7 @@ test('append child', t => {
 			<Text>A</Text>
 		</Box>,
 		{
-			stdout: stdoutExpected as any,
+			stdout: stdoutExpected,
 			debug: true
 		}
 	);
@@ -129,7 +128,7 @@ test('append child', t => {
 });
 
 test('insert child between other children', t => {
-	const Test = ({insert}: {insert: any}) => {
+	const Test = ({insert}: {insert?: boolean}) => {
 		if (insert) {
 			return (
 				<Box flexDirection="column">
@@ -151,9 +150,8 @@ test('insert child between other children', t => {
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
 
-	// @ts-ignore
 	const actual = render(<Test />, {
-		stdout: stdoutActual as any,
+		stdout: stdoutActual,
 		debug: true
 	});
 
@@ -163,7 +161,7 @@ test('insert child between other children', t => {
 			<Text>C</Text>
 		</Box>,
 		{
-			stdout: stdoutExpected as any,
+			stdout: stdoutExpected,
 			debug: true
 		}
 	);
@@ -190,7 +188,7 @@ test('insert child between other children', t => {
 });
 
 test('remove child', t => {
-	const Test = ({remove}: {remove: any}) => {
+	const Test = ({remove}: {remove?: boolean}) => {
 		if (remove) {
 			return (
 				<Box flexDirection="column">
@@ -210,9 +208,8 @@ test('remove child', t => {
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
 
-	// @ts-ignore
 	const actual = render(<Test />, {
-		stdout: stdoutActual as any,
+		stdout: stdoutActual,
 		debug: true
 	});
 
@@ -222,7 +219,7 @@ test('remove child', t => {
 			<Text>B</Text>
 		</Box>,
 		{
-			stdout: stdoutExpected as any,
+			stdout: stdoutExpected,
 			debug: true
 		}
 	);
@@ -247,7 +244,7 @@ test('remove child', t => {
 });
 
 test('reorder children', t => {
-	const Test = ({reorder}: {reorder: any}) => {
+	const Test = ({reorder}: {reorder?: boolean}) => {
 		if (reorder) {
 			return (
 				<Box flexDirection="column">
@@ -268,9 +265,8 @@ test('reorder children', t => {
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
 
-	// @ts-ignore
 	const actual = render(<Test />, {
-		stdout: stdoutActual as any,
+		stdout: stdoutActual,
 		debug: true
 	});
 
@@ -280,7 +276,7 @@ test('reorder children', t => {
 			<Text>B</Text>
 		</Box>,
 		{
-			stdout: stdoutExpected as any,
+			stdout: stdoutExpected,
 			debug: true
 		}
 	);
@@ -313,7 +309,7 @@ test('replace child node with text', t => {
 	);
 
 	const {rerender} = render(<Dynamic />, {
-		stdout: stdout as any,
+		stdout,
 		debug: true
 	});
 
@@ -326,9 +322,9 @@ test('replace child node with text', t => {
 test('support suspense', async t => {
 	const stdout = createStdout();
 
-	let promise: any;
-	let state: any;
-	let value: any;
+	let promise: Promise<void> | undefined;
+	let state: 'pending' | 'done' | undefined;
+	let value: string | undefined;
 
 	const read = () => {
 		if (!promise) {
@@ -345,13 +341,11 @@ test('support suspense', async t => {
 			});
 		}
 
-		if (state === 'pending') {
-			throw promise;
-		}
-
 		if (state === 'done') {
 			return value;
 		}
+
+		throw promise;
 	};
 
 	const Suspendable = () => <Text>{read()}</Text>;
@@ -363,7 +357,7 @@ test('support suspense', async t => {
 	);
 
 	const out = render(<Test />, {
-		stdout: stdout as any,
+		stdout,
 		debug: true
 	});
 

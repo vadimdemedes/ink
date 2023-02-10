@@ -21,7 +21,7 @@ type Props = {
 	readonly error: Error;
 };
 
-function ErrorOverview({error}: Props) {
+export default function ErrorOverview({error}: Props) {
 	const stack = error.stack ? error.stack.split('\n').slice(1) : undefined;
 	const origin = stack ? stackUtils.parseLine(stack[0]!) : undefined;
 	const filePath = cleanupPath(origin?.file);
@@ -123,5 +123,3 @@ function ErrorOverview({error}: Props) {
 		</Box>
 	);
 }
-
-export default ErrorOverview;

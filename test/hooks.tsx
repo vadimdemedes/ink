@@ -1,11 +1,12 @@
-import test from 'ava';
+import test, {ExecutionContext} from 'ava';
 import {createRequire} from 'node:module';
 import stripAnsi from 'strip-ansi';
 import url from 'url';
-import * as path from "path";
+import * as path from 'path';
 
-const require = createRequire(import.meta.url)
+const require = createRequire(import.meta.url);
 const {spawn} = require('node-pty');
+
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 const term = (fixture: string, args: string[] = []) => {
@@ -19,16 +20,19 @@ const term = (fixture: string, args: string[] = []) => {
 	});
 
 	const env = {...process.env};
-	// @ts-ignore
-	delete env.CI;
+	delete env['CI'];
 
-	const executable = path.join(__dirname, "../node_modules/.bin/ts-node-esm")
-	const ps = spawn(executable, [path.join(__dirname, `./fixtures/${fixture}.tsx`), ...args], {
-		name: 'xterm-color',
-		cols: 100,
-		cwd: __dirname,
-		env: env as {[variable: string]: string}
-	});
+	const executable = path.join(__dirname, '../node_modules/.bin/ts-node-esm');
+	const ps = spawn(
+		executable,
+		[path.join(__dirname, `./fixtures/${fixture}.tsx`), ...args],
+		{
+			name: 'xterm-color',
+			cols: 100,
+			cwd: __dirname,
+			env
+		}
+	);
 
 	const result = {
 		write: (input: string) => {
@@ -42,11 +46,11 @@ const term = (fixture: string, args: string[] = []) => {
 		waitForExit: () => exitPromise
 	};
 
-	ps.on('data', (data: any) => {
+	ps.on('data', (data: string) => {
 		result.output += data;
 	});
 
-	ps.on('exit', (code: any) => {
+	ps.on('exit', (code: number) => {
 		if (code === 0) {
 			resolve();
 			return;
@@ -180,35 +184,38 @@ test.serial('useInput - ignore input if not active', async t => {
 });
 
 // For some reason this test is flaky, so we have to resort to using `t.try` to run it multiple times
-test.serial('useInput - handle Ctrl+C when `exitOnCtrlC` is `false`', async t => {
-	const run = async (tt: any) => {
-		const ps = term('use-input-ctrl-c');
-		ps.write('\u0003');
-		await ps.waitForExit();
-		tt.true(ps.output.includes('exited'));
-	};
+test.serial(
+	'useInput - handle Ctrl+C when `exitOnCtrlC` is `false`',
+	async t => {
+		const run = async (tt: ExecutionContext) => {
+			const ps = term('use-input-ctrl-c');
+			ps.write('\u0003');
+			await ps.waitForExit();
+			tt.true(ps.output.includes('exited'));
+		};
 
-	const firstTry = await t.try(run);
+		const firstTry = await t.try(run);
 
-	if (firstTry.passed) {
-		firstTry.commit();
-		return;
+		if (firstTry.passed) {
+			firstTry.commit();
+			return;
+		}
+
+		firstTry.discard();
+
+		const secondTry = await t.try(run);
+
+		if (secondTry.passed) {
+			secondTry.commit();
+			return;
+		}
+
+		secondTry.discard();
+
+		const thirdTry = await t.try(run);
+		thirdTry.commit();
 	}
-
-	firstTry.discard();
-
-	const secondTry = await t.try(run);
-
-	if (secondTry.passed) {
-		secondTry.commit();
-		return;
-	}
-
-	secondTry.discard();
-
-	const thirdTry = await t.try(run);
-	thirdTry.commit();
-});
+);
 
 test.serial('useStdout - write to stdout', async t => {
 	const ps = term('use-stdout');

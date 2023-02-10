@@ -137,14 +137,14 @@ test('number', t => {
 });
 
 test('fail when text nodes are not within <Text> component', t => {
-	let error;
+	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
 		override render() {
 			return this.props.children;
 		}
 
-		override componentDidCatch(reactError: any) {
+		override componentDidCatch(reactError: Error) {
 			error = reactError;
 		}
 	}
@@ -160,20 +160,20 @@ test('fail when text nodes are not within <Text> component', t => {
 
 	t.truthy(error);
 	t.is(
-		(error as any).message,
+		error?.message,
 		'Text string "Hello" must be rendered inside <Text> component'
 	);
 });
 
 test('fail when text node is not within <Text> component', t => {
-	let error;
+	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
 		override render() {
 			return this.props.children;
 		}
 
-		override componentDidCatch(reactError: any) {
+		override componentDidCatch(reactError: Error) {
 			error = reactError;
 		}
 	}
@@ -186,20 +186,20 @@ test('fail when text node is not within <Text> component', t => {
 
 	t.truthy(error);
 	t.is(
-		(error as any).message,
+		error?.message,
 		'Text string "Hello World" must be rendered inside <Text> component'
 	);
 });
 
 test('fail when <Box> is inside <Text> component', t => {
-	let error;
+	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
 		override render() {
 			return this.props.children;
 		}
 
-		override componentDidCatch(reactError: any) {
+		override componentDidCatch(reactError: Error) {
 			error = reactError;
 		}
 	}
@@ -306,14 +306,12 @@ test('squash empty `<Text>` nodes', t => {
 });
 
 test('<Transform> with undefined children', t => {
-	// @ts-ignore
-	const output = renderToString(<Transform />);
+	const output = renderToString(<Transform transform={children => children} />);
 	t.is(output, '');
 });
 
 test('<Transform> with null children', t => {
-	// @ts-ignore
-	const output = renderToString(<Transform />);
+	const output = renderToString(<Transform transform={children => children} />);
 	t.is(output, '');
 });
 
@@ -394,13 +392,12 @@ test('ensure wrap-ansi doesn’t trim leading whitespace', t => {
 test('replace child node with text', t => {
 	const stdout = createStdout();
 
-	const Dynamic = ({replace}: {replace: any}) => (
+	const Dynamic = ({replace}: {replace?: boolean}) => (
 		<Text>{replace ? 'x' : <Text color="green">test</Text>}</Text>
 	);
 
-	// @ts-ignore
 	const {rerender} = render(<Dynamic />, {
-		stdout: stdout as any,
+		stdout,
 		debug: true
 	});
 
@@ -443,7 +440,13 @@ test('disable raw mode when all input components are unmounted', t => {
 		}
 	}
 
-	const Test = ({renderFirstInput, renderSecondInput}: {renderFirstInput: any, renderSecondInput: any}) => {
+	const Test = ({
+		renderFirstInput,
+		renderSecondInput
+	}: {
+		renderFirstInput?: boolean;
+		renderSecondInput?: boolean;
+	}) => {
 		const {setRawMode} = useStdin();
 
 		return (
@@ -464,14 +467,12 @@ test('disable raw mode when all input components are unmounted', t => {
 	t.true(stdin.resume.calledOnce);
 	t.false(stdin.pause.called);
 
-	// @ts-ignore
 	rerender(<Test renderFirstInput />);
 
 	t.true(stdin.setRawMode.calledOnce);
 	t.true(stdin.resume.calledOnce);
 	t.false(stdin.pause.called);
 
-	// @ts-ignore
 	rerender(<Test />);
 
 	t.true(stdin.setRawMode.calledTwice);
@@ -506,7 +507,6 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 
 		override componentDidMount() {
 			try {
-				// @ts-ignore
 				this.props.setRawMode(true);
 			} catch (error) {
 				didCatchInMount(error);
@@ -515,7 +515,6 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 
 		override componentWillUnmount() {
 			try {
-				// @ts-ignore
 				this.props.setRawMode(false);
 			} catch (error) {
 				didCatchInUnmount(error);
@@ -528,7 +527,7 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 		return <Input setRawMode={setRawMode} />;
 	};
 
-	const {unmount} = render(<Test />, options as any);
+	const {unmount} = render(<Test />, options);
 	unmount();
 
 	t.is(didCatchInMount.callCount, 1);
@@ -560,17 +559,21 @@ test('render different component based on whether stdin is a TTY or not', t => {
 		}
 
 		override componentDidMount() {
-			// @ts-ignore
 			this.props.setRawMode(true);
 		}
 
 		override componentWillUnmount() {
-			// @ts-ignore
 			this.props.setRawMode(false);
 		}
 	}
 
-	const Test = ({renderFirstInput, renderSecondInput}: {renderFirstInput: any, renderSecondInput: any}) => {
+	const Test = ({
+		renderFirstInput,
+		renderSecondInput
+	}: {
+		renderFirstInput?: boolean;
+		renderSecondInput?: boolean;
+	}) => {
 		const {isRawModeSupported, setRawMode} = useStdin();
 
 		return (
@@ -594,14 +597,12 @@ test('render different component based on whether stdin is a TTY or not', t => {
 	t.false(stdin.resume.called);
 	t.false(stdin.pause.called);
 
-	// @ts-ignore
 	rerender(<Test renderFirstInput />);
 
 	t.false(stdin.setRawMode.called);
 	t.false(stdin.resume.called);
 	t.false(stdin.pause.called);
 
-	// @ts-ignore
 	rerender(<Test />);
 
 	t.false(stdin.setRawMode.called);
@@ -636,7 +637,7 @@ test('render all frames if CI environment variable equals false', async t => {
 test('reset prop when it’s removed from the element', t => {
 	const stdout = createStdout();
 
-	const Dynamic = ({remove}: {remove: any}) => (
+	const Dynamic = ({remove}: {remove?: boolean}) => (
 		<Box
 			flexDirection="column"
 			justifyContent="flex-end"
@@ -646,9 +647,8 @@ test('reset prop when it’s removed from the element', t => {
 		</Box>
 	);
 
-	// @ts-ignore
 	const {rerender} = render(<Dynamic />, {
-		stdout: stdout as any,
+		stdout,
 		debug: true
 	});
 

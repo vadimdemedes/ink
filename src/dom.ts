@@ -12,8 +12,6 @@ type InkNode = {
 	style: Styles;
 };
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const TEXT_NAME = '#text';
 export type TextName = '#text';
 export type ElementNames =
 	| 'ink-root'
@@ -32,7 +30,7 @@ export type DOMElement = {
 
 	// Internal properties
 	isStaticDirty?: boolean;
-	staticNode?: any;
+	staticNode?: DOMElement;
 	onRender?: () => void;
 	onImmediateRender?: () => void;
 } & InkNode;

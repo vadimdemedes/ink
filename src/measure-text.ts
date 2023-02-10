@@ -15,8 +15,10 @@ const measureText = (text: string): Output => {
 		};
 	}
 
-	if (cache[text]) {
-		return cache[text]!;
+	const cachedDimensions = cache[text];
+
+	if (cachedDimensions) {
+		return cachedDimensions;
 	}
 
 	const width = widestLine(text);

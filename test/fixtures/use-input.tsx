@@ -1,7 +1,7 @@
 import React, {FC} from 'react';
 import {render, useInput, useApp} from '../../src/index.js';
 
-const UserInput: FC<{test: string}> = ({test}) => {
+const UserInput: FC<{test: string | undefined}> = ({test}) => {
 	const {exit} = useApp();
 
 	useInput((input, key) => {
@@ -91,7 +91,6 @@ const UserInput: FC<{test: string}> = ({test}) => {
 	return null;
 };
 
-// @ts-ignore
 const app = render(<UserInput test={process.argv[2]} />);
 
 (async () => {

@@ -9,21 +9,20 @@ test('measure element', async t => {
 
 	const Test: FC = () => {
 		const [width, setWidth] = useState(0);
-		const ref = useRef();
+		const ref = useRef(null);
 
 		useEffect(() => {
 			setWidth(measureElement(ref.current as any).width);
 		}, []);
 
 		return (
-			// @ts-ignore
 			<Box ref={ref}>
 				<Text>Width: {width}</Text>
 			</Box>
 		);
 	};
 
-	render(<Test />, {stdout: stdout as any, debug: true});
+	render(<Test />, {stdout, debug: true});
 	t.is((stdout.write as any).firstCall.args[0], 'Width: 0');
 	await delay(100);
 	t.is((stdout.write as any).lastCall.args[0], 'Width: 100');

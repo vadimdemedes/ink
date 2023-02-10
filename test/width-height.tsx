@@ -92,8 +92,7 @@ test('set height in percent', t => {
 
 test('cut text over the set height', t => {
 	const output = renderToString(
-		// @ts-ignore
-		<Box textWrap="wrap" height={2}>
+		<Box height={2}>
 			<Text>AAAABBBBCCCC</Text>
 		</Box>,
 		{columns: 4}

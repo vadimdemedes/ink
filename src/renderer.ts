@@ -26,9 +26,7 @@ const renderer = (node: DOMElement, terminalWidth: number): Result => {
 
 		if (node.staticNode?.yogaNode) {
 			staticOutput = new Output({
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 				width: node.staticNode.yogaNode.getComputedWidth(),
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 				height: node.staticNode.yogaNode.getComputedHeight()
 			});
 

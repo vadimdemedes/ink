@@ -10,8 +10,7 @@ import {render, Box, Text} from '../src/index.js';
 const box = (text: string, options?: Options): string => {
 	return boxen(text, {
 		...options,
-		// @ts-ignore
-		borderStyle: "round"
+		borderStyle: 'round'
 	});
 };
 
@@ -22,7 +21,7 @@ test('single node - full width box', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'.padEnd(98, ' ')));
+	t.is(output, box('Hello World', {width: 100}));
 });
 
 test('single node - full width box with colorful border', t => {
@@ -32,7 +31,7 @@ test('single node - full width box with colorful border', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'.padEnd(98, ' '), {borderColor: 'green'}));
+	t.is(output, box('Hello World', {width: 100, borderColor: 'green'}));
 });
 
 test('single node - fit-content box', t => {
@@ -133,7 +132,7 @@ test('multiple nodes - full width box', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'.padEnd(98, ' ')));
+	t.is(output, box('Hello World', {width: 100}));
 });
 
 test('multiple nodes - full width box with colorful border', t => {
@@ -143,7 +142,7 @@ test('multiple nodes - full width box with colorful border', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'.padEnd(98, ' '), {borderColor: 'green'}));
+	t.is(output, box('Hello World', {width: 100, borderColor: 'green'}));
 });
 
 test('multiple nodes - fit-content box', t => {
@@ -254,10 +253,9 @@ test('render border after update', async t => {
 	const stdout = createStdout();
 
 	const Test = () => {
-		const [borderColor, setBorderColor] = useState();
+		const [borderColor, setBorderColor] = useState<string | undefined>();
 
 		useEffect(() => {
-			// @ts-ignore
 			setBorderColor('green');
 		}, []);
 
@@ -269,15 +267,18 @@ test('render border after update', async t => {
 	};
 
 	render(<Test />, {
-		stdout: stdout as any,
+		stdout,
 		debug: true
 	});
 
-	t.is((stdout.write as any).lastCall.args[0], box('Hello World'.padEnd(98, ' ')));
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		box('Hello World', {width: 100})
+	);
 	await delay(100);
 
 	t.is(
 		(stdout.write as any).lastCall.args[0],
-		box('Hello World'.padEnd(98, ' '), {borderColor: 'green'})
+		box('Hello World', {width: 100, borderColor: 'green'})
 	);
 });

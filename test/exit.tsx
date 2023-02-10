@@ -1,10 +1,12 @@
-import { createRequire } from 'module';
-import test from "ava";
+import {createRequire} from 'module';
+import test from 'ava';
 import {run} from './helpers/run.js';
 import url from 'url';
-import * as path from "path";
+import * as path from 'path';
+
 const require = createRequire(import.meta.url);
 const {spawn} = require('node-pty');
+
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 test.serial('exit normally without unmount() or exit()', async t => {
@@ -99,5 +101,5 @@ test.serial('don’t exit while raw mode is active', async t => {
 			t.fail();
 			resolve();
 		});
-	})
+	});
 });

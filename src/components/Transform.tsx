@@ -5,6 +5,7 @@ export type Props = {
 	 * Function which transforms children output. It accepts children and must return transformed children too.
 	 */
 	readonly transform: (children: string) => string;
+
 	readonly children?: ReactNode;
 };
 
@@ -14,7 +15,7 @@ export type Props = {
  * These use cases can't accept React nodes as input, they are expecting a string.
  * That's what <Transform> component does, it gives you an output string of its child components and lets you transform it in any way.
  */
-function Transform({children, transform}: Props) {
+export default function Transform({children, transform}: Props) {
 	if (children === undefined || children === null) {
 		return null;
 	}
@@ -28,7 +29,3 @@ function Transform({children, transform}: Props) {
 		</ink-text>
 	);
 }
-
-Transform.displayName = 'Transform';
-
-export default Transform;

@@ -2,7 +2,7 @@ import process from 'node:process';
 import React, {type ReactNode} from 'react';
 import {throttle, type DebouncedFunc} from 'lodash-es';
 import ansiEscapes from 'ansi-escapes';
-import originalIsCI from 'is-ci';
+import originalIsCi from 'is-ci';
 import autoBind from 'auto-bind';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
@@ -14,8 +14,7 @@ import logUpdate, {type LogUpdate} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const isCI = process.env['CI'] === 'false' ? false : originalIsCI;
+const isCi = process.env['CI'] === 'false' ? false : originalIsCi;
 const noop = () => {};
 
 export type Options = {
@@ -85,12 +84,11 @@ export default class Ink {
 			false,
 			null,
 			'id',
-			_error => {},
+			() => {},
 			null
 		);
 
 		// Unmount when process exits
-		// @ts-expect-error signalExit returns a 'number | undefined', which this.unmount can process.
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 
 		if (process.env['DEV'] === 'true') {
@@ -107,7 +105,7 @@ export default class Ink {
 			this.patchConsole();
 		}
 
-		if (!isCI) {
+		if (!isCi) {
 			options.stdout.on('resize', this.onRender);
 
 			this.unsubscribeResize = () => {
@@ -144,7 +142,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isCI) {
+		if (isCi) {
 			if (hasStaticOutput) {
 				this.options.stdout.write(staticOutput);
 			}
@@ -207,7 +205,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isCI) {
+		if (isCi) {
 			this.options.stdout.write(data);
 			return;
 		}
@@ -228,7 +226,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isCI) {
+		if (isCi) {
 			this.options.stderr.write(data);
 			return;
 		}
@@ -238,7 +236,8 @@ export default class Ink {
 		this.log(this.lastOutput);
 	}
 
-	unmount(error?: Error | number | undefined): void {
+	// eslint-disable-next-line @typescript-eslint/ban-types
+	unmount(error?: Error | number | null): void {
 		if (this.isUnmounted) {
 			return;
 		}
@@ -256,7 +255,7 @@ export default class Ink {
 
 		// CIs don't handle erasing ansi escapes well, so it's better to
 		// only render last frame of non-static output
-		if (isCI) {
+		if (isCi) {
 			this.options.stdout.write(this.lastOutput + '\n');
 		} else if (!this.options.debug) {
 			this.log.done();
@@ -286,7 +285,7 @@ export default class Ink {
 	}
 
 	clear(): void {
-		if (!isCI && !this.options.debug) {
+		if (!isCi && !this.options.debug) {
 			this.log.clear();
 		}
 	}
