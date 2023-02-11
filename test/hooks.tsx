@@ -226,8 +226,8 @@ test.serial('useStdout - write to stdout', async t => {
 	await ps.waitForExit();
 
 	const lines = stripAnsi(ps.output).split('\r\n');
-	console.log(lines);
-	t.deepEqual(lines.slice(1, -1), [
+
+	t.deepEqual(lines.slice(0, -1), [
 		'Hello from Ink to stdout',
 		'Hello World',
 		'exited'
