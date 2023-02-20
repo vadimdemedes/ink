@@ -1,8 +1,7 @@
-'use strict';
-const React = require('react');
-const {render, Static, Box, Text} = require('../..');
+import React from 'react';
+import {Box, Text, render, Static} from 'ink';
 
-const Example = () => {
+function Example() {
 	const [tests, setTests] = React.useState([]);
 
 	React.useEffect(() => {
@@ -45,6 +44,6 @@ const Example = () => {
 			</Box>
 		</>
 	);
-};
+}
 
 render(<Example />);

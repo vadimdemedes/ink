@@ -1,10 +1,13 @@
-'use strict';
-const React = require('react');
+import {createRequire} from 'node:module';
+import React from 'react';
+
+import {Static, Box, render} from 'ink';
+
+const require = createRequire(import.meta.url);
 const {default: PQueue} = require('p-queue');
 const delay = require('delay');
 const ms = require('ms');
 const importJsx = require('import-jsx');
-const {Static, Box, render} = require('../..');
 
 const Summary = importJsx('./summary');
 const Test = importJsx('./test');
@@ -65,9 +68,9 @@ class Jest extends React.Component {
 	componentDidMount() {
 		const queue = new PQueue({concurrency: 4});
 
-		paths.forEach(path => {
+		for (const path of paths) {
 			queue.add(this.runTest.bind(this, path));
-		});
+		}
 	}
 
 	async runTest(path) {

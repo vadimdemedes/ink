@@ -1,28 +1,29 @@
-'use strict';
-const React = require('react');
-const {render, Box, Text, useFocus} = require('../..');
+import React from 'react';
+import {Box, Text, render, useFocus} from 'ink';
 
-const Focus = () => (
-	<Box flexDirection="column" padding={1}>
-		<Box marginBottom={1}>
-			<Text>
-				Press Tab to focus next element, Shift+Tab to focus previous element,
-				Esc to reset focus.
-			</Text>
+function Focus() {
+	return (
+		<Box flexDirection="column" padding={1}>
+			<Box marginBottom={1}>
+				<Text>
+					Press Tab to focus next element, Shift+Tab to focus previous element,
+					Esc to reset focus.
+				</Text>
+			</Box>
+			<Item label="First" />
+			<Item label="Second" />
+			<Item label="Third" />
 		</Box>
-		<Item label="First" />
-		<Item label="Second" />
-		<Item label="Third" />
-	</Box>
-);
+	);
+}
 
-const Item = ({label}) => {
+function Item({label}) {
 	const {isFocused} = useFocus();
 	return (
 		<Text>
 			{label} {isFocused && <Text color="green">(focused)</Text>}
 		</Text>
 	);
-};
+}
 
 render(<Focus />);

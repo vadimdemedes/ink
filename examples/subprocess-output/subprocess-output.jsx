@@ -1,10 +1,9 @@
-'use strict';
-const childProcess = require('child_process');
-const React = require('react');
-const stripAnsi = require('strip-ansi');
-const {render, Text, Box} = require('../..');
+import childProcess from 'node:child_process';
+import React from 'react';
+import stripAnsi from 'strip-ansi';
+import {render, Text, Box} from 'ink';
 
-const SubprocessOutput = () => {
+function SubprocessOutput() {
 	const [output, setOutput] = React.useState('');
 
 	React.useEffect(() => {
@@ -24,6 +23,6 @@ const SubprocessOutput = () => {
 			</Box>
 		</Box>
 	);
-};
+}
 
 render(<SubprocessOutput />);

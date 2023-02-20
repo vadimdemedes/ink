@@ -1,34 +1,42 @@
-'use strict';
-const React = require('react');
-const {Box, Text} = require('../..');
+import React from 'react';
+import {Box, Text} from 'ink';
 
 const getBackgroundForStatus = status => {
 	switch (status) {
-		case 'runs':
+		case 'runs': {
 			return 'yellow';
-		case 'pass':
+		}
+
+		case 'pass': {
 			return 'green';
-		case 'fail':
+		}
+
+		case 'fail': {
 			return 'red';
-		default:
+		}
+
+		default: {
 			return undefined;
+		}
 	}
 };
 
-const Test = ({status, path}) => (
-	<Box>
-		<Text color="black" backgroundColor={getBackgroundForStatus(status)}>
-			{` ${status.toUpperCase()} `}
-		</Text>
-
-		<Box marginLeft={1}>
-			<Text dimColor>{path.split('/')[0]}/</Text>
-
-			<Text bold color="white">
-				{path.split('/')[1]}
+function Test({status, path}) {
+	return (
+		<Box>
+			<Text color="black" backgroundColor={getBackgroundForStatus(status)}>
+				{` ${status.toUpperCase()} `}
 			</Text>
-		</Box>
-	</Box>
-);
 
-module.exports = Test;
+			<Box marginLeft={1}>
+				<Text dimColor>{path.split('/')[0]}/</Text>
+
+				<Text bold color="white">
+					{path.split('/')[1]}
+				</Text>
+			</Box>
+		</Box>
+	);
+}
+
+export default Test;

@@ -20,7 +20,8 @@
 	"scripts": {
 		"build": "tsc",
 		"prepare": "npm run build",
-		"test": "tsc --noEmit && xo && FORCE_COLOR=true ava"
+		"test": "tsc --noEmit && xo && FORCE_COLOR=true ava",
+		"esbuild-node": "node --loader @esbuild-kit/esm-loader"
 	},
 	"files": [
 		"build"
@@ -64,6 +65,7 @@
 		"yoga-layout-prebuilt": "^1.9.6"
 	},
 	"devDependencies": {
+		"@esbuild-kit/esm-loader": "^2.5.5",
 		"@sindresorhus/tsconfig": "3.0.1",
 		"@types/benchmark": "^2.1.2",
 		"@types/is-ci": "^2.0.0",

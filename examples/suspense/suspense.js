@@ -1,6 +1,5 @@
-'use strict';
-const React = require('react');
-const {render, Text} = require('../..');
+import React from 'react';
+import {render, Text} from 'ink';
 
 let promise;
 let state;
@@ -14,7 +13,6 @@ const read = () => {
 
 		state = 'pending';
 
-		// eslint-disable-next-line promise/prefer-await-to-then
 		promise.then(() => {
 			state = 'done';
 			value = 'Hello World';
@@ -30,12 +28,14 @@ const read = () => {
 	}
 };
 
-const Example = () => {
+function Example() {
 	const message = read();
 	return <Text>{message}</Text>;
-};
+}
 
-const Fallback = () => <Text>Loading...</Text>;
+function Fallback() {
+	return <Text>Loading...</Text>;
+}
 
 render(
 	<React.Suspense fallback={<Fallback />}>
