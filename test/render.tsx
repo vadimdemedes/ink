@@ -44,7 +44,7 @@ const term = (fixture: string, args: string[] = []) => {
 			ps.write(input);
 		},
 		output: '',
-		waitForExit: () => exitPromise
+		waitForExit: async () => exitPromise
 	};
 
 	ps.on('data', (data: string) => {

@@ -1,12 +1,11 @@
 #!/usr/bin/env npx ts-node-esm
 
 /* eslint-disable react/jsx-curly-brace-presence */
-'use strict';
-import React from "react";
+import React from 'react';
 import {render, Box, Text, Static} from '../../src/index.js';
 
-const App = () => {
-	const [items, setItems] = React.useState([]);
+function App() {
+	const [items, setItems] = React.useState<Array<{id: number}>>([]);
 	const itemCountRef = React.useRef(0);
 
 	React.useEffect(() => {
@@ -17,7 +16,6 @@ const App = () => {
 				return;
 			}
 
-			// @ts-ignore
 			setItems(previousItems => [
 				...previousItems,
 				{
@@ -38,7 +36,7 @@ const App = () => {
 	return (
 		<Box flexDirection="column">
 			<Static items={items}>
-				{(item: any, index) => (
+				{(item, index) => (
 					<Box key={item.id} padding={1} flexDirection="column">
 						<Text color="green">Item #{index}</Text>
 						<Text>Item content</Text>
@@ -81,6 +79,6 @@ const App = () => {
 			</Box>
 		</Box>
 	);
-};
+}
 
 render(<App />);

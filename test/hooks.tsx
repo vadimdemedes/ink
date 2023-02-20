@@ -47,7 +47,7 @@ const term = (fixture: string, args: string[] = []) => {
 			}, 3000);
 		},
 		output: '',
-		waitForExit: () => exitPromise
+		waitForExit: async () => exitPromise
 	};
 
 	ps.on('data', (data: string) => {

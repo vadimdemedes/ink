@@ -65,6 +65,7 @@
 	},
 	"devDependencies": {
 		"@sindresorhus/tsconfig": "3.0.1",
+		"@types/benchmark": "^2.1.2",
 		"@types/is-ci": "^2.0.0",
 		"@types/lodash-es": "^4.17.6",
 		"@types/node": "*",
