@@ -1,5 +1,6 @@
 import React from 'react';
 import {Box, Text} from 'ink';
+import PropTypes from 'prop-types';
 
 const getBackgroundForStatus = status => {
 	switch (status) {
@@ -38,5 +39,10 @@ function Test({status, path}) {
 		</Box>
 	);
 }
+
+Test.propTypes = {
+	status: PropTypes.string.isRequired,
+	path: PropTypes.string.isRequired
+};
 
 export default Test;

@@ -1,5 +1,6 @@
 import React from 'react';
 import {Box, Text, render, useFocus} from 'ink';
+import PropTypes from 'prop-types';
 
 function Focus() {
 	return (
@@ -25,5 +26,9 @@ function Item({label}) {
 		</Text>
 	);
 }
+
+Item.propTypes = {
+	label: PropTypes.string
+};
 
 render(<Focus />);

@@ -1828,6 +1828,13 @@ You can even inspect and change the props of components, and see the results imm
 
 ## Examples
 
+The [`examples`](/examples) directory contains a set of real examples. You can run them with:
+
+```bash
+EXAMPLE={example-name} npm run example
+# E.g., EXAMPLE=static npm run example
+```
+
 - [Jest](examples/jest/jest.js) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
 - [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms [(live demo)](https://ink-counter-demo.vadimdemedes.repl.run/).
 - [Form with Validation](https://github.com/final-form/rff-cli-example) - Manage form state using [Final Form](https://github.com/final-form/final-form#-final-form).

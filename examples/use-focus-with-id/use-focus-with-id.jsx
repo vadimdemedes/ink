@@ -1,5 +1,6 @@
 import React from 'react';
 import {render, Box, Text, useFocus, useInput, useFocusManager} from 'ink';
+import PropTypes from 'prop-types';
 
 function Focus() {
 	const {focus} = useFocusManager();
@@ -42,5 +43,10 @@ function Item({label, id}) {
 		</Text>
 	);
 }
+
+Item.propTypes = {
+	label: PropTypes.string,
+	id: PropTypes.string.isRequired
+};
 
 render(<Focus />);

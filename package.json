@@ -21,7 +21,7 @@
 		"build": "tsc",
 		"prepare": "npm run build",
 		"test": "tsc --noEmit && xo && FORCE_COLOR=true ava",
-		"esbuild-node": "node --loader @esbuild-kit/esm-loader"
+		"example": "ESBK_DISABLE_CACHE=1 node --loader @esbuild-kit/esm-loader examples/$EXAMPLE/$EXAMPLE.jsx"
 	},
 	"files": [
 		"build"
@@ -93,6 +93,7 @@
 		"node-pty": "0.10.1",
 		"p-queue": "^6.2.1",
 		"prettier": "^2.0.4",
+		"prop-types": "^15.8.1",
 		"react": "^18.0.0",
 		"react-devtools-core": "^4.19.1",
 		"sinon": "^12.0.1",
