@@ -21,7 +21,8 @@
 		"build": "tsc",
 		"prepare": "npm run build",
 		"test": "tsc --noEmit && xo && FORCE_COLOR=true ava",
-		"example": "node --loader @esbuild-kit/esm-loader"
+		"example": "node --loader @esbuild-kit/esm-loader",
+		"benchmark": "node --loader @esbuild-kit/esm-loader"
 	},
 	"files": [
 		"build"
@@ -83,7 +84,6 @@
 		"@types/ws": "^8.5.4",
 		"@vdemedes/prettier-config": "^1.0.1",
 		"ava": "^5.1.1",
-		"benchmark": "^2.1.4",
 		"boxen": "^7.0.1",
 		"delay": "^5.0.0",
 		"eslint-config-xo-react": "^0.27.0",
@@ -179,7 +179,8 @@
 			},
 			{
 				"files": [
-					"examples/**/*.{js,jsx}"
+					"examples/**/*.{js,jsx}",
+					"benchmark/**/*.{js,jsx}"
 				],
 				"rules": {
 					"import/no-unassigned-import": "off"

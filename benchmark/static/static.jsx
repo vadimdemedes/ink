@@ -1,11 +1,8 @@
-#!/usr/bin/env npx ts-node-esm
-
-/* eslint-disable react/jsx-curly-brace-presence */
 import React from 'react';
-import {render, Box, Text, Static} from '../../src/index.js';
+import {render, Box, Text, Static} from 'ink';
 
 function App() {
-	const [items, setItems] = React.useState<Array<{id: number}>>([]);
+	const [items, setItems] = React.useState([]);
 	const itemCountRef = React.useRef(0);
 
 	React.useEffect(() => {
@@ -46,6 +43,7 @@ function App() {
 
 			<Box flexDirection="column" padding={1}>
 				<Text underline bold color="red">
+					{/* eslint-disable-next-line react/jsx-curly-brace-presence */}
 					{'Hello'} {'World'}
 				</Text>
 
