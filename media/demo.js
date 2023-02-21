@@ -1,4 +1,5 @@
-import React from 'react'
+import process from 'node:process';
+import React from 'react';
 import {render, Box, Text} from 'ink';
 
 class Counter extends React.PureComponent {
