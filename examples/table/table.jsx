@@ -1,18 +1,13 @@
-import {createRequire} from 'node:module';
 import React from 'react';
 import {Box, Text, render} from 'ink';
-
-const require = createRequire(import.meta.url);
-const Chance = require('chance');
-
-const chance = new Chance();
+import {faker} from '@faker-js/faker';
 
 const users = Array.from({length: 10})
 	.fill(true)
 	.map((_, index) => ({
 		id: index,
-		name: chance.name(),
-		email: chance.email()
+		name: faker.internet.userName(),
+		email: faker.internet.email()
 	}));
 
 function Table() {

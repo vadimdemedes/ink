@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import {Box, Text} from 'ink';
 
 function Summary({isFinished, passed, failed, time}) {
@@ -38,12 +37,5 @@ function Summary({isFinished, passed, failed, time}) {
 		</Box>
 	);
 }
-
-Summary.propTypes = {
-	isFinished: PropTypes.bool.isRequired,
-	passed: PropTypes.number.isRequired,
-	failed: PropTypes.number.isRequired,
-	time: PropTypes.string.isRequired
-};
 
 export default Summary;

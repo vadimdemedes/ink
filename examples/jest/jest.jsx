@@ -1,13 +1,10 @@
-import {createRequire} from 'node:module';
 import React from 'react';
 import {Static, Box, render} from 'ink';
+import PQueue from 'p-queue';
+import delay from 'delay';
+import ms from 'ms';
 import Summary from './summary.jsx';
 import Test from './test.jsx';
-
-const require = createRequire(import.meta.url);
-const {default: PQueue} = require('p-queue');
-const delay = require('delay');
-const ms = require('ms');
 
 const paths = [
 	'tests/login.js',

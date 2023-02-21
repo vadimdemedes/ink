@@ -7,7 +7,11 @@ function SubprocessOutput() {
 	const [output, setOutput] = React.useState('');
 
 	React.useEffect(() => {
-		const subProcess = childProcess.spawn('node', ['examples/jest']);
+		const subProcess = childProcess.spawn('npm', [
+			'run',
+			'example',
+			'examples/jest'
+		]);
 
 		subProcess.stdout.on('data', newOutput => {
 			const lines = stripAnsi(newOutput.toString('utf8')).split('\n');

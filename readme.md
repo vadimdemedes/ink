@@ -132,20 +132,20 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 
 - [Getting Started](#getting-started)
 - [Components](#components)
-	- [`<Text>`](#text)
-	- [`<Box>`](#box)
-	- [`<Newline>`](#newline)
-	- [`<Spacer>`](#spacer)
-	- [`<Static>`](#static)
-	- [`<Transform>`](#transform)
+  - [`<Text>`](#text)
+  - [`<Box>`](#box)
+  - [`<Newline>`](#newline)
+  - [`<Spacer>`](#spacer)
+  - [`<Static>`](#static)
+  - [`<Transform>`](#transform)
 - [Hooks](#hooks)
-	- [`useInput`](#useinputinputhandler-options)
-	- [`useApp`](#useapp)
-	- [`useStdin`](#usestdin)
-	- [`useStdout`](#usestdout)
-	- [`useStderr`](#usestderr)
-	- [`useFocus`](#usefocusoptions)
-	- [`useFocusManager`](#usefocusmanager)
+  - [`useInput`](#useinputinputhandler-options)
+  - [`useApp`](#useapp)
+  - [`useStdin`](#usestdin)
+  - [`useStdout`](#usestdout)
+  - [`useStderr`](#usestderr)
+  - [`useFocus`](#usefocusoptions)
+  - [`useFocusManager`](#usefocusmanager)
 - [API](#api)
 - [Testing](#testing)
 - [Using React Devtools](#using-react-devtools)
@@ -1831,8 +1831,8 @@ You can even inspect and change the props of components, and see the results imm
 The [`examples`](/examples) directory contains a set of real examples. You can run them with:
 
 ```bash
-EXAMPLE={example-name} npm run example
-# E.g., EXAMPLE=static npm run example
+npm run example examples/[example name]
+# e.g. npm run example examples/borders
 ```
 
 - [Jest](examples/jest/jest.js) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
