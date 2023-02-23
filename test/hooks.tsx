@@ -228,11 +228,13 @@ test.serial(
 	}
 );
 
-test.serial('useStdout - write to stdout', async t => {
+test.serial.only('useStdout - write to stdout', async t => {
 	const ps = term('use-stdout');
 	await ps.waitForExit();
 
 	const lines = stripAnsi(ps.output).split('\r\n');
+
+	console.log(lines);
 
 	t.deepEqual(lines.slice(1, -1), [
 		'Hello from Ink to stdout',
