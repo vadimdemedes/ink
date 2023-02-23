@@ -126,7 +126,8 @@
 		},
 		"nodeArguments": [
 			"--loader=ts-node/esm"
-		]
+		],
+		"serial": true
 	},
 	"xo": {
 		"extends": [
