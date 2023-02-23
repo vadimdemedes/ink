@@ -21,20 +21,27 @@ const term = (fixture: string, args: string[] = []) => {
 		reject = reject2;
 	});
 
-	const env = {...process.env};
+	const env: Record<string, string> = {
+		...process.env,
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		NODE_NO_WARNINGS: '1'
+	};
 
 	// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 	delete env['CI'];
 
-	const executable = path.join(__dirname, '../node_modules/.bin/ts-node-esm');
 	const ps = spawn(
-		executable,
-		[path.join(__dirname, `./fixtures/${fixture}.tsx`), ...args],
+		'node',
+		[
+			'--loader=ts-node/esm',
+			path.join(__dirname, `./fixtures/${fixture}.tsx`),
+			...args
+		],
 		{
 			name: 'xterm-color',
 			cols: 100,
 			cwd: __dirname,
-			env: env as Record<string, string>
+			env
 		}
 	);
 

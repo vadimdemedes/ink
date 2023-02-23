@@ -59,14 +59,23 @@ test.serial('exit with thrown error', async t => {
 
 test.serial('don’t exit while raw mode is active', async t => {
 	await new Promise<void>((resolve, _reject) => {
+		const env: Record<string, string> = {
+			...process.env,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			NODE_NO_WARNINGS: '1'
+		};
+
 		const term = spawn(
-			path.join(__dirname, '../node_modules/.bin/ts-node-esm'),
-			[path.join(__dirname, './fixtures/exit-double-raw-mode.tsx')],
+			'node',
+			[
+				'--loader=ts-node/esm',
+				path.join(__dirname, './fixtures/exit-double-raw-mode.tsx')
+			],
 			{
 				name: 'xterm-color',
 				cols: 100,
 				cwd: __dirname,
-				env: process.env as Record<string, string>
+				env
 			}
 		);
 

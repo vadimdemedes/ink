@@ -27,15 +27,24 @@ const term = (fixture: string, args: string[] = []) => {
 		reject = reject2;
 	});
 
-	const executable = path.join(__dirname, '../node_modules/.bin/ts-node-esm');
+	const env = {
+		...process.env,
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		NODE_NO_WARNINGS: '1'
+	};
+
 	const ps = spawn(
-		executable,
-		[path.join(__dirname, `./fixtures/${fixture}.tsx`), ...args],
+		'node',
+		[
+			'--loader=ts-node/esm',
+			path.join(__dirname, `./fixtures/${fixture}.tsx`),
+			...args
+		],
 		{
 			name: 'xterm-color',
 			cols: 100,
 			cwd: __dirname,
-			env: process.env as Record<string, string>
+			env
 		}
 	);
 

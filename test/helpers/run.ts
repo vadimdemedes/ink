@@ -18,22 +18,25 @@ type Run = (
 export const run: Run = async (fixture, props) => {
 	const env: Record<string, string> = {
 		...(process.env as Record<string, string>),
-		...props?.env
+		...props?.env,
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		NODE_NO_WARNINGS: '1'
 	};
 
 	return new Promise<string>((resolve, reject) => {
-		const executable = path.join(
-			__dirname,
-			'../../node_modules/.bin/ts-node-esm'
+		const term = spawn(
+			'node',
+			[
+				'--loader=ts-node/esm',
+				path.join(__dirname, `/../fixtures/${fixture}.tsx`)
+			],
+			{
+				name: 'xterm-color',
+				cols: typeof props?.columns === 'number' ? props.columns : 100,
+				cwd: __dirname,
+				env
+			}
 		);
-
-		const args = [path.join(__dirname, `/../fixtures/${fixture}.tsx`)];
-		const term = spawn(executable, args, {
-			name: 'xterm-color',
-			cols: typeof props?.columns === 'number' ? props.columns : 100,
-			cwd: __dirname,
-			env
-		});
 
 		let output = '';
 
