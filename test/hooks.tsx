@@ -58,6 +58,7 @@ const term = (fixture: string, args: string[] = []) => {
 	};
 
 	ps.on('data', (data: string) => {
+		console.log('data', [data]);
 		result.output += data;
 	});
 
