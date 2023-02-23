@@ -1,4 +1,5 @@
 import React, {useEffect} from 'react';
+import delay from 'delay';
 import {render, useStdout, Text} from '../../src/index.js';
 
 function WriteToStdout() {
@@ -11,6 +12,7 @@ function WriteToStdout() {
 	return <Text>Hello World</Text>;
 }
 
+await delay(1000);
 const app = render(<WriteToStdout />);
 
 await app.waitUntilExit();
