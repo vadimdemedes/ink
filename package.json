@@ -20,7 +20,7 @@
 	"scripts": {
 		"build": "tsc",
 		"prepare": "npm run build",
-		"test": "tsc --noEmit && FORCE_COLOR=true ava test/hooks.tsx",
+		"test": "tsc --noEmit && node --loader=ts-node/esm test/fixtures/use-stdout.tsx && FORCE_COLOR=true ava test/hooks.tsx",
 		"example": "NODE_NO_WARNINGS=1 node --loader ts-node/esm",
 		"benchmark": "NODE_NO_WARNINGS=1 node --loader ts-node/esm"
 	},
