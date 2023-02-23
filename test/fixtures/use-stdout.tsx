@@ -6,7 +6,12 @@ function WriteToStdout() {
 	const {write} = useStdout();
 
 	useEffect(() => {
-		write('Hello from Ink to stdout\n');
+		const run = async () => {
+			await delay(1000);
+			write('Hello from Ink to stdout\n');
+		};
+
+		void run();
 	}, []);
 
 	return <Text>Hello World</Text>;
