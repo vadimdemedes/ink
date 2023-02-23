@@ -1,0 +1,1 @@
+import './use-stdout.js';

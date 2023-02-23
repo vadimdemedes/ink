@@ -1,0 +1,1 @@
+import './suspense.js';

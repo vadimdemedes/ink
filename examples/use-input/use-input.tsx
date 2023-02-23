@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, useInput, useApp, Box, Text} from 'ink';
+import {render, useInput, useApp, Box, Text} from '../../src/index.js';
 
 function Robot() {
 	const {exit} = useApp();

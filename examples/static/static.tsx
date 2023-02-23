@@ -1,5 +1,5 @@
 import React from 'react';
-import {Box, Text, render, Static} from 'ink';
+import {Box, Text, render, Static} from '../../src/index.js';
 
 function Example() {
 	const [tests, setTests] = React.useState([]);

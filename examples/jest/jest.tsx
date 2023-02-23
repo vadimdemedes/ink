@@ -1,10 +1,10 @@
 import React from 'react';
-import {Static, Box, render} from 'ink';
+import {Static, Box, render} from '../../src/index.js';
 import PQueue from 'p-queue';
 import delay from 'delay';
 import ms from 'ms';
 import Summary from './summary.jsx';
-import Test from './test.jsx';
+import Test from './test.js';
 
 const paths = [
 	'tests/login.js',

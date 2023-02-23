@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, Text, useStderr} from 'ink';
+import {render, Text, useStderr} from '../../src/index.js';
 
 function Example() {
 	const {write} = useStderr();

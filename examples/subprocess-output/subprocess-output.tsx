@@ -1,7 +1,7 @@
 import childProcess from 'node:child_process';
 import React from 'react';
 import stripAnsi from 'strip-ansi';
-import {render, Text, Box} from 'ink';
+import {render, Text, Box} from '../../src/index.js';
 
 function SubprocessOutput() {
 	const [output, setOutput] = React.useState('');

@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, Text} from 'ink';
+import {render, Text} from '../../src/index.js';
 
 let promise;
 let state;

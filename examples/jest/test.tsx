@@ -1,5 +1,5 @@
 import React from 'react';
-import {Box, Text} from 'ink';
+import {Box, Text} from '../../src/index.js';
 
 const getBackgroundForStatus = status => {
 	switch (status) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, Box, Text, useStdout} from 'ink';
+import {render, Box, Text, useStdout} from '../../src/index.js';
 
 function Example() {
 	const {stdout, write} = useStdout();

@@ -1,5 +1,12 @@
 import React from 'react';
-import {render, Box, Text, useFocus, useInput, useFocusManager} from 'ink';
+import {
+	render,
+	Box,
+	Text,
+	useFocus,
+	useInput,
+	useFocusManager
+} from '../../src/index.js';
 
 function Focus() {
 	const {focus} = useFocusManager();
