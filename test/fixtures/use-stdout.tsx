@@ -1,13 +1,11 @@
 import React, {useEffect} from 'react';
 import delay from 'delay';
-import {render, useStdout, Text} from '../../src/index.js';
+import {render, useStdout, Box, Text} from '../../src/index.js';
 
 function WriteToStdout() {
-	console.log('render');
 	const {write} = useStdout();
 
 	useEffect(() => {
-		console.log('useEffect');
 		const run = async () => {
 			await delay(1000);
 			write('Hello from Ink to stdout\n');
@@ -16,7 +14,11 @@ function WriteToStdout() {
 		void run();
 	}, []);
 
-	return <Text>Hello World</Text>;
+	return (
+		<Box paddingBottom={1}>
+			<Text>Hello World</Text>
+		</Box>
+	);
 }
 
 await delay(1000);
