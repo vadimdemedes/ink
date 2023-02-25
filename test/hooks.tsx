@@ -237,11 +237,13 @@ test.serial.only('useStdout - write to stdout', async t => {
 
 	console.log(lines);
 
-	t.deepEqual(lines.slice(1, -1), [
-		'Hello from Ink to stdout',
-		'Hello World',
-		'exited'
-	]);
+	t.fail();
+
+	// t.deepEqual(lines.slice(1, -1), [
+	// 	'Hello from Ink to stdout',
+	// 	'Hello World',
+	// 	'exited'
+	// ]);
 });
 
 // `node-pty` doesn't support streaming stderr output, so I need to figure out

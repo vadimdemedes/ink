@@ -3,9 +3,11 @@ import delay from 'delay';
 import {render, useStdout, Text} from '../../src/index.js';
 
 function WriteToStdout() {
+	console.log('render');
 	const {write} = useStdout();
 
 	useEffect(() => {
+		console.log('useEffect');
 		const run = async () => {
 			await delay(1000);
 			write('Hello from Ink to stdout\n');
