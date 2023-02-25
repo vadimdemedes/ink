@@ -57,18 +57,18 @@ const term = (fixture: string, args: string[] = []) => {
 		waitForExit: async () => exitPromise
 	};
 
-	ps.on('data', (data: string) => {
+	ps.onData(data => {
 		console.log('data', [data]);
 		result.output += data;
 	});
 
-	ps.on('exit', (code: number) => {
-		if (code === 0) {
+	ps.onExit(({exitCode}) => {
+		if (exitCode === 0) {
 			resolve();
 			return;
 		}
 
-		reject(new Error(`Process exited with non-zero exit code: ${code}`));
+		reject(new Error(`Process exited with non-zero exit code: ${exitCode}`));
 	});
 
 	return result;
