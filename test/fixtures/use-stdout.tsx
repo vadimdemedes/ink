@@ -20,7 +20,7 @@ function WriteToStdout() {
 }
 
 await delay(1000);
-const app = render(<WriteToStdout />);
+const app = render(<WriteToStdout />, {debug: true});
 
 await app.waitUntilExit();
 console.log('exited');
