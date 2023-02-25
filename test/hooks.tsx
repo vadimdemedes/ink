@@ -24,11 +24,9 @@ const term = (fixture: string, args: string[] = []) => {
 	const env: Record<string, string> = {
 		...process.env,
 		// eslint-disable-next-line @typescript-eslint/naming-convention
-		NODE_NO_WARNINGS: '1'
+		NODE_NO_WARNINGS: '1',
+		CI: 'false'
 	};
-
-	// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-	delete env['CI'];
 
 	const ps = spawn(
 		'node',
