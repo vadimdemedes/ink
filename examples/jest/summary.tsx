@@ -1,7 +1,14 @@
 import React from 'react';
 import {Box, Text} from '../../src/index.js';
 
-function Summary({isFinished, passed, failed, time}) {
+type Props = {
+	isFinished: boolean;
+	passed: number;
+	failed: number;
+	time: string;
+};
+
+function Summary({isFinished, passed, failed, time}: Props) {
 	return (
 		<Box flexDirection="column" marginTop={1}>
 			<Box>

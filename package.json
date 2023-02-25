@@ -71,6 +71,7 @@
 		"@types/benchmark": "^2.1.2",
 		"@types/is-ci": "^2.0.0",
 		"@types/lodash-es": "^4.17.6",
+		"@types/ms": "^0.7.31",
 		"@types/node": "*",
 		"@types/react": "^18.0.0",
 		"@types/react-reconciler": "^0.28.2",
@@ -178,8 +179,8 @@
 			},
 			{
 				"files": [
-					"examples/**/*.{js,jsx}",
-					"benchmark/**/*.{js,jsx}"
+					"examples/**/*.{ts,tsx}",
+					"benchmark/**/*.{ts,tsx}"
 				],
 				"rules": {
 					"import/no-unassigned-import": "off"

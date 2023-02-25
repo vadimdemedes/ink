@@ -1,8 +1,12 @@
 import React from 'react';
-import {render, Box, Text, Static} from 'ink';
+import {render, Box, Text, Static} from '../../src/index.js';
 
 function App() {
-	const [items, setItems] = React.useState([]);
+	const [items, setItems] = React.useState<
+		Array<{
+			id: number;
+		}>
+	>([]);
 	const itemCountRef = React.useRef(0);
 
 	React.useEffect(() => {

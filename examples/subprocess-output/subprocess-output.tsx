@@ -1,4 +1,5 @@
 import childProcess from 'node:child_process';
+import type Buffer from 'node:buffer';
 import React from 'react';
 import stripAnsi from 'strip-ansi';
 import {render, Text, Box} from '../../src/index.js';
@@ -13,7 +14,7 @@ function SubprocessOutput() {
 			'examples/jest'
 		]);
 
-		subProcess.stdout.on('data', newOutput => {
+		subProcess.stdout.on('data', (newOutput: Buffer) => {
 			const lines = stripAnsi(newOutput.toString('utf8')).split('\n');
 			setOutput(lines.slice(-5).join('\n'));
 		});

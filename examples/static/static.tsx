@@ -2,7 +2,12 @@ import React from 'react';
 import {Box, Text, render, Static} from '../../src/index.js';
 
 function Example() {
-	const [tests, setTests] = React.useState([]);
+	const [tests, setTests] = React.useState<
+		Array<{
+			id: number;
+			title: string;
+		}>
+	>([]);
 
 	React.useEffect(() => {
 		let completedTests = 0;

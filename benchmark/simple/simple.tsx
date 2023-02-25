@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, Box, Text} from 'ink';
+import {render, Box, Text} from '../../src/index.js';
 
 function App() {
 	return (

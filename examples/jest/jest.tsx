@@ -1,8 +1,8 @@
 import React from 'react';
-import {Static, Box, render} from '../../src/index.js';
 import PQueue from 'p-queue';
 import delay from 'delay';
 import ms from 'ms';
+import {Static, Box, render} from '../../src/index.js';
 import Summary from './summary.jsx';
 import Test from './test.js';
 
@@ -19,9 +19,21 @@ const paths = [
 	'tests/comments.js'
 ];
 
-class Jest extends React.Component {
-	constructor() {
-		super();
+type State = {
+	startTime: number;
+	completedTests: Array<{
+		path: string;
+		status: string;
+	}>;
+	runningTests: Array<{
+		path: string;
+		status: string;
+	}>;
+};
+
+class Jest extends React.Component<Record<string, unknown>, State> {
+	constructor(props) {
+		super(props);
 
 		this.state = {
 			startTime: Date.now(),
@@ -63,11 +75,11 @@ class Jest extends React.Component {
 		const queue = new PQueue({concurrency: 4});
 
 		for (const path of paths) {
-			queue.add(this.runTest.bind(this, path));
+			void queue.add(this.runTest.bind(this, path));
 		}
 	}
 
-	async runTest(path) {
+	async runTest(path: string) {
 		this.setState(previousState => ({
 			runningTests: [
 				...previousState.runningTests,

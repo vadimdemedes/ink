@@ -25,6 +25,7 @@ const term = (fixture: string, args: string[] = []) => {
 		...process.env,
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		NODE_NO_WARNINGS: '1',
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		CI: 'false'
 	};
 

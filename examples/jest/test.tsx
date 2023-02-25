@@ -1,7 +1,7 @@
 import React from 'react';
 import {Box, Text} from '../../src/index.js';
 
-const getBackgroundForStatus = status => {
+const getBackgroundForStatus = (status: string): string | undefined => {
 	switch (status) {
 		case 'runs': {
 			return 'yellow';
@@ -21,7 +21,12 @@ const getBackgroundForStatus = status => {
 	}
 };
 
-function Test({status, path}) {
+type Props = {
+	status: string;
+	path: string;
+};
+
+function Test({status, path}: Props) {
 	return (
 		<Box>
 			<Text color="black" backgroundColor={getBackgroundForStatus(status)}>

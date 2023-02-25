@@ -1,9 +1,9 @@
 import React from 'react';
 import {render, Text} from '../../src/index.js';
 
-let promise;
-let state;
-let value;
+let promise: Promise<void> | undefined;
+let state: string | undefined;
+let value: string | undefined;
 
 const read = () => {
 	if (!promise) {
@@ -13,13 +13,14 @@ const read = () => {
 
 		state = 'pending';
 
-		promise.then(() => {
+		void promise.then(() => {
 			state = 'done';
 			value = 'Hello World';
 		});
 	}
 
 	if (state === 'pending') {
+		// eslint-disable-next-line @typescript-eslint/no-throw-literal
 		throw promise;
 	}
 

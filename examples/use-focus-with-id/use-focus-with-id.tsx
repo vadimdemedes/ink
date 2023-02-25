@@ -40,7 +40,12 @@ function Focus() {
 	);
 }
 
-function Item({label, id}) {
+type ItemProps = {
+	id: number;
+	label: string;
+};
+
+function Item({label, id}: ItemProps) {
 	const {isFocused} = useFocus({id});
 
 	return (
