@@ -15,6 +15,9 @@ import instances from './instances.js';
 import App from './components/App.js';
 
 const isCi = process.env['CI'] === 'false' ? false : originalIsCi;
+
+console.log({isCi});
+
 const noop = () => {};
 
 export type Options = {
@@ -119,6 +122,8 @@ export default class Ink {
 	unsubscribeExit: () => void = () => {};
 
 	onRender: () => void = () => {
+		console.log('onRender');
+
 		if (this.isUnmounted) {
 			return;
 		}
@@ -129,6 +134,8 @@ export default class Ink {
 			// In that case we fall back to 80.
 			this.options.stdout.columns || 80
 		);
+
+		console.log({output, outputHeight, staticOutput});
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
@@ -171,6 +178,7 @@ export default class Ink {
 		}
 
 		if (!hasStaticOutput && output !== this.lastOutput) {
+			console.log('throttledLog', {output});
 			this.throttledLog(output);
 		}
 
@@ -210,6 +218,7 @@ export default class Ink {
 			return;
 		}
 
+		console.log('writeToStdout', {data});
 		this.log.clear();
 		this.options.stdout.write(data);
 		this.log(this.lastOutput);
