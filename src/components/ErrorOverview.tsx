@@ -1,27 +1,35 @@
-import * as fs from 'fs';
-import React, {FC} from 'react';
+import * as fs from 'node:fs';
+import {cwd} from 'node:process';
+import React from 'react';
 import StackUtils from 'stack-utils';
-import codeExcerpt, {ExcerptLine} from 'code-excerpt';
-import Box from './Box';
-import Text from './Text';
+import codeExcerpt, {type CodeExcerpt} from 'code-excerpt';
+import Box from './Box.js';
+import Text from './Text.js';
+
+// Error's source file is reported as file:///home/user/file.js
+// This function removes the file://[cwd] part
+const cleanupPath = (path: string | undefined): string | undefined => {
+	return path?.replace(`file://${cwd()}/`, '');
+};
 
 const stackUtils = new StackUtils({
-	cwd: process.cwd(),
+	cwd: cwd(),
 	internals: StackUtils.nodeInternals()
 });
 
-interface Props {
+type Props = {
 	readonly error: Error;
-}
+};
 
-const ErrorOverview: FC<Props> = ({error}) => {
+export default function ErrorOverview({error}: Props) {
 	const stack = error.stack ? error.stack.split('\n').slice(1) : undefined;
-	const origin = stack ? stackUtils.parseLine(stack[0]) : undefined;
-	let excerpt: ExcerptLine[] | undefined;
+	const origin = stack ? stackUtils.parseLine(stack[0]!) : undefined;
+	const filePath = cleanupPath(origin?.file);
+	let excerpt: CodeExcerpt[] | undefined;
 	let lineWidth = 0;
 
-	if (origin?.file && origin?.line && fs.existsSync(origin.file)) {
-		const sourceCode = fs.readFileSync(origin.file, 'utf8');
+	if (filePath && origin?.line && fs.existsSync(filePath)) {
+		const sourceCode = fs.readFileSync(filePath, 'utf8');
 		excerpt = codeExcerpt(sourceCode, origin.line);
 
 		if (excerpt) {
@@ -42,10 +50,10 @@ const ErrorOverview: FC<Props> = ({error}) => {
 				<Text> {error.message}</Text>
 			</Box>
 
-			{origin && (
+			{origin && filePath && (
 				<Box marginTop={1}>
 					<Text dimColor>
-						{origin.file}:{origin.line}:{origin.column}
+						{filePath}:{origin.line}:{origin.column}
 					</Text>
 				</Box>
 			)}
@@ -104,7 +112,8 @@ const ErrorOverview: FC<Props> = ({error}) => {
 									</Text>
 									<Text dimColor color="gray">
 										{' '}
-										({parsedLine.file}:{parsedLine.line}:{parsedLine.column})
+										({cleanupPath(parsedLine.file) ?? ''}:{parsedLine.line}:
+										{parsedLine.column})
 									</Text>
 								</Box>
 							);
@@ -113,6 +122,4 @@ const ErrorOverview: FC<Props> = ({error}) => {
 			)}
 		</Box>
 	);
-};
-
-export default ErrorOverview;
+}

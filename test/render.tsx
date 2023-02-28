@@ -1,42 +1,66 @@
-delete process.env.CI;
+import process from 'node:process';
+import url from 'node:url';
+import * as path from 'node:path';
+import {createRequire} from 'node:module';
+import test from 'ava';
 import React from 'react';
-import {serial as test} from 'ava';
-import {spawn} from 'node-pty';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
-import {render, Box, Text} from '../src';
-import createStdout from './helpers/create-stdout';
+import {render, Box, Text} from '../src/index.js';
+import createStdout from './helpers/create-stdout.js';
+
+const require = createRequire(import.meta.url);
+
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+const {spawn} = require('node-pty') as typeof import('node-pty');
+
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: unknown) => void;
 	let reject: (error: Error) => void;
 
-	// eslint-disable-next-line promise/param-names
 	const exitPromise = new Promise((resolve2, reject2) => {
 		resolve = resolve2;
 		reject = reject2;
 	});
 
-	const ps = spawn('ts-node', [`./fixtures/${fixture}.tsx`, ...args], {
-		name: 'xterm-color',
-		cols: 100,
-		cwd: __dirname,
-		env: process.env
-	});
-
-	const result = {
-		write: input => ps.write(input),
-		output: '',
-		waitForExit: () => exitPromise
+	const env = {
+		...process.env,
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		NODE_NO_WARNINGS: '1'
 	};
 
-	ps.on('data', data => {
+	const ps = spawn(
+		'node',
+		[
+			'--loader=ts-node/esm',
+			path.join(__dirname, `./fixtures/${fixture}.tsx`),
+			...args
+		],
+		{
+			name: 'xterm-color',
+			cols: 100,
+			cwd: __dirname,
+			env
+		}
+	);
+
+	const result = {
+		write(input: string) {
+			ps.write(input);
+		},
+		output: '',
+		waitForExit: async () => exitPromise
+	};
+
+	ps.on('data', (data: string) => {
 		result.output += data;
 	});
 
-	ps.on('exit', code => {
+	ps.on('exit', (code: number) => {
 		if (code === 0) {
 			resolve();
 			return;
@@ -48,83 +72,96 @@ const term = (fixture: string, args: string[] = []) => {
 	return result;
 };
 
-test('do not erase screen', async t => {
+test.serial('do not erase screen', async t => {
 	const ps = term('erase', ['4']);
 	await ps.waitForExit();
 	t.false(ps.output.includes(ansiEscapes.clearTerminal));
 
-	['A', 'B', 'C'].forEach(letter => {
+	for (const letter of ['A', 'B', 'C']) {
 		t.true(ps.output.includes(letter));
-	});
+	}
 });
 
-test('do not erase screen where <Static> is taller than viewport', async t => {
-	const ps = term('erase-with-static', ['4']);
+test.serial(
+	'do not erase screen where <Static> is taller than viewport',
+	async t => {
+		const ps = term('erase-with-static', ['4']);
 
-	await ps.waitForExit();
-	t.false(ps.output.includes(ansiEscapes.clearTerminal));
+		await ps.waitForExit();
+		t.false(ps.output.includes(ansiEscapes.clearTerminal));
 
-	['A', 'B', 'C', 'D', 'E', 'F'].forEach(letter => {
-		t.true(ps.output.includes(letter));
-	});
-});
+		for (const letter of ['A', 'B', 'C', 'D', 'E', 'F']) {
+			t.true(ps.output.includes(letter));
+		}
+	}
+);
 
-test('erase screen', async t => {
+test.serial('erase screen', async t => {
 	const ps = term('erase', ['3']);
 	await ps.waitForExit();
 	t.true(ps.output.includes(ansiEscapes.clearTerminal));
 
-	['A', 'B', 'C'].forEach(letter => {
+	for (const letter of ['A', 'B', 'C']) {
 		t.true(ps.output.includes(letter));
-	});
+	}
 });
 
-test('erase screen where <Static> exists but interactive part is taller than viewport', async t => {
-	const ps = term('erase', ['3']);
-	await ps.waitForExit();
-	t.true(ps.output.includes(ansiEscapes.clearTerminal));
+test.serial(
+	'erase screen where <Static> exists but interactive part is taller than viewport',
+	async t => {
+		const ps = term('erase', ['3']);
+		await ps.waitForExit();
+		t.true(ps.output.includes(ansiEscapes.clearTerminal));
 
-	['A', 'B', 'C'].forEach(letter => {
-		t.true(ps.output.includes(letter));
-	});
-});
+		for (const letter of ['A', 'B', 'C']) {
+			t.true(ps.output.includes(letter));
+		}
+	}
+);
 
-test('clear output', async t => {
+test.serial('clear output', async t => {
 	const ps = term('clear');
 	await ps.waitForExit();
 
 	const secondFrame = ps.output.split(ansiEscapes.eraseLines(4))[1];
 
-	['A', 'B', 'C'].forEach(letter => {
-		t.false(secondFrame.includes(letter));
-	});
+	for (const letter of ['A', 'B', 'C']) {
+		t.false(secondFrame?.includes(letter));
+	}
 });
 
-test('intercept console methods and display result above output', async t => {
-	const ps = term('console');
-	await ps.waitForExit();
+test.serial(
+	'intercept console methods and display result above output',
+	async t => {
+		const ps = term('console');
+		await ps.waitForExit();
 
-	const frames = ps.output.split(ansiEscapes.eraseLines(2)).map(stripAnsi);
+		const frames = ps.output.split(ansiEscapes.eraseLines(2)).map(line => {
+			return stripAnsi(line);
+		});
 
-	t.deepEqual(frames, [
-		'Hello World\r\n',
-		'First log\r\nHello World\r\nSecond log\r\n'
-	]);
-});
+		t.deepEqual(frames, [
+			'Hello World\r\n',
+			'First log\r\nHello World\r\nSecond log\r\n'
+		]);
+	}
+);
 
-test('rerender on resize', async t => {
+test.serial('rerender on resize', async t => {
 	const stdout = createStdout(10);
 
-	const Test = () => (
-		<Box borderStyle="round">
-			<Text>Test</Text>
-		</Box>
-	);
+	function Test() {
+		return (
+			<Box borderStyle="round">
+				<Text>Test</Text>
+			</Box>
+		);
+	}
 
 	const {unmount} = render(<Test />, {stdout});
 
 	t.is(
-		stripAnsi(stdout.write.firstCall.args[0]),
+		stripAnsi((stdout.write as any).firstCall.args[0]),
 		boxen('Test'.padEnd(8), {borderStyle: 'round'}) + '\n'
 	);
 
@@ -135,7 +172,7 @@ test('rerender on resize', async t => {
 	await delay(100);
 
 	t.is(
-		stripAnsi(stdout.write.lastCall.args[0]),
+		stripAnsi((stdout.write as any).lastCall.args[0]),
 		boxen('Test'.padEnd(6), {borderStyle: 'round'}) + '\n'
 	);
 

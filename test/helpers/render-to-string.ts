@@ -1,17 +1,17 @@
-import {render} from '../../src';
-import createStdout from './create-stdout';
+import {render} from '../../src/index.js';
+import createStdout from './create-stdout.js';
 
 export const renderToString: (
 	node: JSX.Element,
 	options?: {columns: number}
-) => string = (node, options = {columns: 100}) => {
-	const stdout = createStdout(options.columns);
+) => string = (node, options) => {
+	const stdout = createStdout(options?.columns ?? 100);
 
 	render(node, {
-		// @ts-ignore
 		stdout,
 		debug: true
 	});
 
-	return stdout.get();
+	const output = stdout.get();
+	return output;
 };

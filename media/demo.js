@@ -1,6 +1,6 @@
-'use strict';
-const React = require('react');
-const {render, Box, Text} = require('..');
+import process from 'node:process';
+import React from 'react';
+import {render, Box, Text} from 'ink';
 
 class Counter extends React.PureComponent {
 	constructor() {

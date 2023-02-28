@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, Text, useApp} from '../..';
+import {render, Text, useApp} from '../../src/index.js';
 
 class Exit extends React.Component<
 	{onExit: (error: Error) => void},
@@ -7,16 +7,18 @@ class Exit extends React.Component<
 > {
 	timer?: NodeJS.Timeout;
 
-	state = {
+	override state = {
 		counter: 0
 	};
 
-	render() {
+	override render() {
 		return <Text>Counter: {this.state.counter}</Text>;
 	}
 
-	componentDidMount() {
-		setTimeout(() => this.props.onExit(new Error('errored')), 500);
+	override componentDidMount() {
+		setTimeout(() => {
+			this.props.onExit(new Error('errored'));
+		}, 500);
 
 		this.timer = setInterval(() => {
 			this.setState(prevState => ({
@@ -25,15 +27,20 @@ class Exit extends React.Component<
 		}, 100);
 	}
 
-	componentWillUnmount() {
+	override componentWillUnmount() {
 		clearInterval(this.timer);
 	}
 }
 
-const Test = () => {
+function Test() {
 	const {exit} = useApp();
 	return <Exit onExit={exit} />;
-};
+}
 
 const app = render(<Test />);
-app.waitUntilExit().catch((error: Error) => console.log(error.message));
+
+try {
+	await app.waitUntilExit();
+} catch (error: unknown) {
+	console.log((error as any).message);
+}

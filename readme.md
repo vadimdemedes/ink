@@ -24,7 +24,7 @@ Since Ink is a React renderer, it means that all features of React are supported
 Head over to [React](https://reactjs.org) website for documentation on how to use it.
 Only Ink's methods will be documented in this readme.
 
-**Note:** This is documentation for Ink 3. If you're looking for docs on Ink 2, check out [this release](https://github.com/vadimdemedes/ink/tree/v2.7.1). There's also a [migration guide](migrate.md) from Ink 2 available.
+**Note:** This is documentation for Ink 4. If you're looking for docs on Ink 3, check out [this release](https://github.com/vadimdemedes/ink/tree/v3.2.0).
 
 ---
 
@@ -132,20 +132,20 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 
 - [Getting Started](#getting-started)
 - [Components](#components)
-	- [`<Text>`](#text)
-	- [`<Box>`](#box)
-	- [`<Newline>`](#newline)
-	- [`<Spacer>`](#spacer)
-	- [`<Static>`](#static)
-	- [`<Transform>`](#transform)
+  - [`<Text>`](#text)
+  - [`<Box>`](#box)
+  - [`<Newline>`](#newline)
+  - [`<Spacer>`](#spacer)
+  - [`<Static>`](#static)
+  - [`<Transform>`](#transform)
 - [Hooks](#hooks)
-	- [`useInput`](#useinputinputhandler-options)
-	- [`useApp`](#useapp)
-	- [`useStdin`](#usestdin)
-	- [`useStdout`](#usestdout)
-	- [`useStderr`](#usestderr)
-	- [`useFocus`](#usefocusoptions)
-	- [`useFocusManager`](#usefocusmanager)
+  - [`useInput`](#useinputinputhandler-options)
+  - [`useApp`](#useapp)
+  - [`useStdin`](#usestdin)
+  - [`useStdout`](#usestdout)
+  - [`useStderr`](#usestderr)
+  - [`useFocus`](#usefocusoptions)
+  - [`useFocusManager`](#usefocusmanager)
 - [API](#api)
 - [Testing](#testing)
 - [Using React Devtools](#using-react-devtools)
@@ -158,15 +158,13 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 Use [create-ink-app](https://github.com/vadimdemedes/create-ink-app) to quickly scaffold a new Ink-based CLI.
 
 ```sh
-mkdir my-ink-cli
-cd my-ink-cli
-npx create-ink-app
+npx create-ink-app my-ink-cli
 ```
 
 Alternatively, create a TypeScript project:
 
 ```sh
-npx create-ink-app --typescript
+npx create-ink-app --typescript my-ink-cli
 ```
 
 <details><summary>Manual setup</summary>
@@ -219,7 +217,7 @@ Now you can run `cli.js` with Node.js:
 node cli
 ```
 
-If you don't like transpiling files during development, you can use [import-jsx](https://github.com/vadimdemedes/import-jsx) to `require()` a JSX file and transpile it on the fly.
+If you don't like transpiling files during development, you can use [import-jsx](https://github.com/vadimdemedes/import-jsx) or [@esbuild-kit/esm-loader](https://github.com/esbuild-kit/esm-loader) to `import` a JSX file and transpile it on the fly.
 
 </p>
 </details>
@@ -1828,14 +1826,21 @@ You can even inspect and change the props of components, and see the results imm
 
 ## Examples
 
+The [`examples`](/examples) directory contains a set of real examples. You can run them with:
+
+```bash
+npm run example examples/[example name]
+# e.g. npm run example examples/borders
+```
+
 - [Jest](examples/jest/jest.js) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
 - [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms [(live demo)](https://ink-counter-demo.vadimdemedes.repl.run/).
-- [Form with Validation](https://github.com/final-form/rff-cli-example) - Manage form state using [Final Form](https://github.com/final-form/final-form#-final-form).
+- [Form with validation](https://github.com/final-form/rff-cli-example) - Manage form state using [Final Form](https://github.com/final-form/final-form#-final-form).
 - [Borders](examples/borders/borders.js) - Add borders to `<Box>` component.
 - [Suspense](examples/suspense/suspense.js) - Use React Suspense.
 - [Table](examples/table/table.js) - Render a table with multiple columns and rows.
-- [Focus Management](examples/use-focus/use-focus.js) - Use `useFocus` hook to manage focus between components.
-- [User Input](examples/use-input/use-input.js) - Listen to user input.
+- [Focus management](examples/use-focus/use-focus.js) - Use `useFocus` hook to manage focus between components.
+- [User input](examples/use-input/use-input.js) - Listen to user input.
 - [Write to stdout](examples/use-stdout/use-stdout.js) - Write to stdout bypassing main Ink output.
 - [Write to stderr](examples/use-stderr/use-stderr.js) - Write to stderr bypassing main Ink output.
 - [Static](examples/static/static.js) - Use `<Static>` to render permanent output.

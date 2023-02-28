@@ -1,12 +1,13 @@
-import React, {FC, ReactNode} from 'react';
+import React, {type ReactNode} from 'react';
 
-export interface Props {
+export type Props = {
 	/**
 	 * Function which transforms children output. It accepts children and must return transformed children too.
 	 */
 	readonly transform: (children: string) => string;
+
 	readonly children?: ReactNode;
-}
+};
 
 /**
  * Transform a string representation of React components before they are written to output.
@@ -14,7 +15,7 @@ export interface Props {
  * These use cases can't accept React nodes as input, they are expecting a string.
  * That's what <Transform> component does, it gives you an output string of its child components and lets you transform it in any way.
  */
-const Transform: FC<Props> = ({children, transform}) => {
+export default function Transform({children, transform}: Props) {
 	if (children === undefined || children === null) {
 		return null;
 	}
@@ -27,8 +28,4 @@ const Transform: FC<Props> = ({children, transform}) => {
 			{children}
 		</ink-text>
 	);
-};
-
-Transform.displayName = 'Transform';
-
-export default Transform;
+}

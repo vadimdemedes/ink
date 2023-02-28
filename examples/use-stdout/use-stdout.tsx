@@ -1,8 +1,7 @@
-'use strict';
-const React = require('react');
-const {render, Box, Text, useStdout} = require('../..');
+import React from 'react';
+import {render, Box, Text, useStdout} from '../../src/index.js';
 
-const Example = () => {
+function Example() {
 	const {stdout, write} = useStdout();
 
 	React.useEffect(() => {
@@ -33,6 +32,6 @@ const Example = () => {
 			</Box>
 		</Box>
 	);
-};
+}
 
 render(<Example />);

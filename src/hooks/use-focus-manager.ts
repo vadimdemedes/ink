@@ -1,7 +1,7 @@
 import {useContext} from 'react';
-import FocusContext, {Props} from '../components/FocusContext';
+import FocusContext, {type Props} from '../components/FocusContext.js';
 
-interface Output {
+type Output = {
 	/**
 	 * Enable focus management for all components.
 	 */
@@ -31,7 +31,7 @@ interface Output {
 	 * If there's no element with that `id`, focus will be given to the first focusable component.
 	 */
 	focus: Props['focus'];
-}
+};
 
 /**
  * This hook exposes methods to enable or disable focus management for all

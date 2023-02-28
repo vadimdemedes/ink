@@ -1,10 +1,11 @@
+import {type Buffer} from 'node:buffer';
 import {useEffect} from 'react';
-import useStdin from './use-stdin';
+import useStdin from './use-stdin.js';
 
 /**
  * Handy information about a key that was pressed.
  */
-export interface Key {
+export type Key = {
 	/**
 	 * Up arrow key was pressed.
 	 */
@@ -74,11 +75,11 @@ export interface Key {
 	 * [Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 	 */
 	meta: boolean;
-}
+};
 
 type Handler = (input: string, key: Key) => void;
 
-interface Options {
+type Options = {
 	/**
 	 * Enable or disable capturing of user input.
 	 * Useful when there are multiple useInput hooks used at once to avoid handling the same input several times.
@@ -86,7 +87,7 @@ interface Options {
 	 * @default true
 	 */
 	isActive?: boolean;
-}
+};
 
 /**
  * This hook is used for handling user input.
@@ -113,6 +114,7 @@ interface Options {
  * ```
  */
 const useInput = (inputHandler: Handler, options: Options = {}) => {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const {stdin, setRawMode, internal_exitOnCtrlC} = useStdin();
 
 	useEffect(() => {
@@ -154,7 +156,9 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 
 			// Copied from `keypress` module
 			if (input <= '\u001A' && !key.return) {
+				// eslint-disable-next-line unicorn/prefer-code-point
 				input = String.fromCharCode(
+					// eslint-disable-next-line unicorn/prefer-code-point
 					input.charCodeAt(0) + 'a'.charCodeAt(0) - 1
 				);
 				key.ctrl = true;

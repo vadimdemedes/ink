@@ -3,4 +3,8 @@
 //
 // This map has to be stored in a separate file, because render.js creates instances,
 // but instance.js should delete itself from the map on unmount
-export default new WeakMap();
+
+import type Ink from './ink.js';
+
+const instances = new WeakMap<NodeJS.WriteStream, Ink>();
+export default instances;

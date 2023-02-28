@@ -1,6 +1,6 @@
 import {createContext} from 'react';
 
-export interface Props {
+export type Props = {
 	/**
 	 * Stdin stream passed to `render()` in `options.stdin` or `process.stdin` by default. Useful if your app needs to handle user input.
 	 */
@@ -18,15 +18,17 @@ export interface Props {
 	readonly isRawModeSupported: boolean;
 
 	readonly internal_exitOnCtrlC: boolean;
-}
+};
 
 /**
  * `StdinContext` is a React context, which exposes input stream.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const StdinContext = createContext<Props>({
 	stdin: undefined,
-	setRawMode: () => {},
+	setRawMode() {},
 	isRawModeSupported: false,
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	internal_exitOnCtrlC: true
 });
 

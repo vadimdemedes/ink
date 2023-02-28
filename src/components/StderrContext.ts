@@ -1,6 +1,6 @@
 import {createContext} from 'react';
 
-export interface Props {
+export type Props = {
 	/**
 	 * Stderr stream passed to `render()` in `options.stderr` or `process.stderr` by default.
 	 */
@@ -12,14 +12,15 @@ export interface Props {
 	 * It's similar to `<Static>`, except it can't accept components, it only works with strings.
 	 */
 	readonly write: (data: string) => void;
-}
+};
 
 /**
  * `StderrContext` is a React context, which exposes stderr stream.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const StderrContext = createContext<Props>({
 	stderr: undefined,
-	write: () => {}
+	write() {}
 });
 
 StderrContext.displayName = 'InternalStderrContext';

@@ -1,8 +1,7 @@
-'use strict';
-const React = require('react');
-const {render, Text} = require('../..');
+import React from 'react';
+import {render, Text} from '../../src/index.js';
 
-const Counter = () => {
+function Counter() {
 	const [counter, setCounter] = React.useState(0);
 
 	React.useEffect(() => {
@@ -16,6 +15,6 @@ const Counter = () => {
 	}, []);
 
 	return <Text color="green">{counter} tests passed</Text>;
-};
+}
 
 render(<Counter />);

@@ -1,18 +1,11 @@
 import React, {useState, useEffect} from 'react';
 import test from 'ava';
-import boxen, {Options} from 'boxen';
+import boxen, {type Options} from 'boxen';
 import indentString from 'indent-string';
 import delay from 'delay';
-import {renderToString} from './helpers/render-to-string';
-import createStdout from './helpers/create-stdout';
-import {render, Box, Text} from '../src';
-
-const box = (text: string, options?: Options): string => {
-	return boxen(text, {
-		...options,
-		borderStyle: 'round'
-	});
-};
+import {render, Box, Text} from '../src/index.js';
+import {renderToString} from './helpers/render-to-string.js';
+import createStdout from './helpers/create-stdout.js';
 
 test('single node - full width box', t => {
 	const output = renderToString(
@@ -21,7 +14,7 @@ test('single node - full width box', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'.padEnd(98, ' ')));
+	t.is(output, boxen('Hello World', {width: 100, borderStyle: 'round'}));
 });
 
 test('single node - full width box with colorful border', t => {
@@ -31,7 +24,14 @@ test('single node - full width box with colorful border', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'.padEnd(98, ' '), {borderColor: 'green'}));
+	t.is(
+		output,
+		boxen('Hello World', {
+			width: 100,
+			borderStyle: 'round',
+			borderColor: 'green'
+		})
+	);
 });
 
 test('single node - fit-content box', t => {
@@ -41,7 +41,7 @@ test('single node - fit-content box', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'));
+	t.is(output, boxen('Hello World', {borderStyle: 'round'}));
 });
 
 test('single node - fit-content box with wide characters', t => {
@@ -51,7 +51,7 @@ test('single node - fit-content box with wide characters', t => {
 		</Box>
 	);
 
-	t.is(output, box('こんにちは'));
+	t.is(output, boxen('こんにちは', {borderStyle: 'round'}));
 });
 
 test('single node - fit-content box with emojis', t => {
@@ -61,7 +61,7 @@ test('single node - fit-content box with emojis', t => {
 		</Box>
 	);
 
-	t.is(output, box('🌊🌊'));
+	t.is(output, boxen('🌊🌊', {borderStyle: 'round'}));
 });
 
 test('single node - fixed width box', t => {
@@ -70,7 +70,8 @@ test('single node - fixed width box', t => {
 			<Text>Hello World</Text>
 		</Box>
 	);
-	t.is(output, box('Hello World'.padEnd(18, ' ')));
+
+	t.is(output, boxen('Hello World'.padEnd(18, ' '), {borderStyle: 'round'}));
 });
 
 test('single node - fixed width and height box', t => {
@@ -79,7 +80,13 @@ test('single node - fixed width and height box', t => {
 			<Text>Hello World</Text>
 		</Box>
 	);
-	t.is(output, box('Hello World'.padEnd(18, ' ') + '\n'.repeat(17)));
+
+	t.is(
+		output,
+		boxen('Hello World'.padEnd(18, ' ') + '\n'.repeat(17), {
+			borderStyle: 'round'
+		})
+	);
 });
 
 test('single node - box with padding', t => {
@@ -88,7 +95,8 @@ test('single node - box with padding', t => {
 			<Text>Hello World</Text>
 		</Box>
 	);
-	t.is(output, box('\n Hello World \n'));
+
+	t.is(output, boxen('\n Hello World \n', {borderStyle: 'round'}));
 });
 
 test('single node - box with horizontal alignment', t => {
@@ -97,7 +105,8 @@ test('single node - box with horizontal alignment', t => {
 			<Text>Hello World</Text>
 		</Box>
 	);
-	t.is(output, box('   Hello World    '));
+
+	t.is(output, boxen('   Hello World    ', {borderStyle: 'round'}));
 });
 
 test('single node - box with vertical alignment', t => {
@@ -112,7 +121,12 @@ test('single node - box with vertical alignment', t => {
 		</Box>
 	);
 
-	t.is(output, box('\n'.repeat(8) + 'Hello World' + '\n'.repeat(9)));
+	t.is(
+		output,
+		boxen('\n'.repeat(8) + 'Hello World' + '\n'.repeat(9), {
+			borderStyle: 'round'
+		})
+	);
 });
 
 test('single node - box with wrapping', t => {
@@ -122,7 +136,7 @@ test('single node - box with wrapping', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello   \nWorld'));
+	t.is(output, boxen('Hello   \nWorld', {borderStyle: 'round'}));
 });
 
 test('multiple nodes - full width box', t => {
@@ -132,7 +146,7 @@ test('multiple nodes - full width box', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'.padEnd(98, ' ')));
+	t.is(output, boxen('Hello World', {width: 100, borderStyle: 'round'}));
 });
 
 test('multiple nodes - full width box with colorful border', t => {
@@ -142,7 +156,14 @@ test('multiple nodes - full width box with colorful border', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'.padEnd(98, ' '), {borderColor: 'green'}));
+	t.is(
+		output,
+		boxen('Hello World', {
+			width: 100,
+			borderStyle: 'round',
+			borderColor: 'green'
+		})
+	);
 });
 
 test('multiple nodes - fit-content box', t => {
@@ -152,7 +173,7 @@ test('multiple nodes - fit-content box', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello World'));
+	t.is(output, boxen('Hello World', {borderStyle: 'round'}));
 });
 
 test('multiple nodes - fixed width box', t => {
@@ -161,7 +182,7 @@ test('multiple nodes - fixed width box', t => {
 			<Text>{'Hello '}World</Text>
 		</Box>
 	);
-	t.is(output, box('Hello World'.padEnd(18, ' ')));
+	t.is(output, boxen('Hello World'.padEnd(18, ' '), {borderStyle: 'round'}));
 });
 
 test('multiple nodes - fixed width and height box', t => {
@@ -170,7 +191,12 @@ test('multiple nodes - fixed width and height box', t => {
 			<Text>{'Hello '}World</Text>
 		</Box>
 	);
-	t.is(output, box('Hello World'.padEnd(18, ' ') + '\n'.repeat(17)));
+	t.is(
+		output,
+		boxen('Hello World'.padEnd(18, ' ') + '\n'.repeat(17), {
+			borderStyle: 'round'
+		})
+	);
 });
 
 test('multiple nodes - box with padding', t => {
@@ -179,7 +205,8 @@ test('multiple nodes - box with padding', t => {
 			<Text>{'Hello '}World</Text>
 		</Box>
 	);
-	t.is(output, box('\n Hello World \n'));
+
+	t.is(output, boxen('\n Hello World \n', {borderStyle: 'round'}));
 });
 
 test('multiple nodes - box with horizontal alignment', t => {
@@ -188,7 +215,8 @@ test('multiple nodes - box with horizontal alignment', t => {
 			<Text>{'Hello '}World</Text>
 		</Box>
 	);
-	t.is(output, box('   Hello World    '));
+
+	t.is(output, boxen('   Hello World    ', {borderStyle: 'round'}));
 });
 
 test('multiple nodes - box with vertical alignment', t => {
@@ -203,7 +231,12 @@ test('multiple nodes - box with vertical alignment', t => {
 		</Box>
 	);
 
-	t.is(output, box('\n'.repeat(8) + 'Hello World' + '\n'.repeat(9)));
+	t.is(
+		output,
+		boxen('\n'.repeat(8) + 'Hello World' + '\n'.repeat(9), {
+			borderStyle: 'round'
+		})
+	);
 });
 
 test('multiple nodes - box with wrapping', t => {
@@ -213,7 +246,7 @@ test('multiple nodes - box with wrapping', t => {
 		</Box>
 	);
 
-	t.is(output, box('Hello   \nWorld'));
+	t.is(output, boxen('Hello   \nWorld', {borderStyle: 'round'}));
 });
 
 test('multiple nodes - box with wrapping and long first node', t => {
@@ -223,7 +256,7 @@ test('multiple nodes - box with wrapping and long first node', t => {
 		</Box>
 	);
 
-	t.is(output, box('Helloooo\noo World'));
+	t.is(output, boxen('Helloooo\noo World', {borderStyle: 'round'}));
 });
 
 test('multiple nodes - box with wrapping and very long first node', t => {
@@ -233,7 +266,7 @@ test('multiple nodes - box with wrapping and very long first node', t => {
 		</Box>
 	);
 
-	t.is(output, box('Helloooo\noooooooo\no World'));
+	t.is(output, boxen('Helloooo\noooooooo\no World', {borderStyle: 'round'}));
 });
 
 test('nested boxes', t => {
@@ -245,15 +278,22 @@ test('nested boxes', t => {
 		</Box>
 	);
 
-	const nestedBox = indentString(box('\n Hello World \n'), 1);
-	t.is(output, box(`${' '.repeat(38)}\n${nestedBox}\n`));
+	const nestedBox = indentString(
+		boxen('\n Hello World \n', {borderStyle: 'round'}),
+		1
+	);
+
+	t.is(
+		output,
+		boxen(`${' '.repeat(38)}\n${nestedBox}\n`, {borderStyle: 'round'})
+	);
 });
 
 test('render border after update', async t => {
 	const stdout = createStdout();
 
-	const Test = () => {
-		const [borderColor, setBorderColor] = useState();
+	function Test() {
+		const [borderColor, setBorderColor] = useState<string | undefined>();
 
 		useEffect(() => {
 			setBorderColor('green');
@@ -264,18 +304,26 @@ test('render border after update', async t => {
 				<Text>Hello World</Text>
 			</Box>
 		);
-	};
+	}
 
 	render(<Test />, {
 		stdout,
 		debug: true
 	});
 
-	t.is(stdout.write.lastCall.args[0], box('Hello World'.padEnd(98, ' ')));
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		boxen('Hello World', {width: 100, borderStyle: 'round'})
+	);
+
 	await delay(100);
 
 	t.is(
-		stdout.write.lastCall.args[0],
-		box('Hello World'.padEnd(98, ' '), {borderColor: 'green'})
+		(stdout.write as any).lastCall.args[0],
+		boxen('Hello World', {
+			width: 100,
+			borderStyle: 'round',
+			borderColor: 'green'
+		})
 	);
 });

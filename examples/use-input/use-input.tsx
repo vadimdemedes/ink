@@ -1,8 +1,7 @@
-'use strict';
-const React = require('react');
-const {render, useInput, useApp, Box, Text} = require('../..');
+import React from 'react';
+import {render, useInput, useApp, Box, Text} from '../../src/index.js';
 
-const Robot = () => {
+function Robot() {
 	const {exit} = useApp();
 	const [x, setX] = React.useState(1);
 	const [y, setY] = React.useState(1);
@@ -37,6 +36,6 @@ const Robot = () => {
 			</Box>
 		</Box>
 	);
-};
+}
 
 render(<Robot />);

@@ -1,7 +1,7 @@
-import React, {FC, useState, useCallback, useEffect} from 'react';
-import {render, useInput, useApp, Text} from '../..';
+import React, {useState, useCallback, useEffect} from 'react';
+import {render, useInput, useApp, Text} from '../../src/index.js';
 
-const App: FC = () => {
+function App() {
 	const {exit} = useApp();
 	const [input, setInput] = useState('');
 
@@ -17,11 +17,9 @@ const App: FC = () => {
 	}, []);
 
 	return <Text>{input}</Text>;
-};
+}
 
 const app = render(<App />);
 
-(async () => {
-	await app.waitUntilExit();
-	console.log('exited');
-})();
+await app.waitUntilExit();
+console.log('exited');

@@ -1,22 +1,23 @@
-import React, {ReactNode} from 'react';
-import {throttle, DebouncedFunc} from 'lodash';
-import logUpdate, {LogUpdate} from './log-update';
+import process from 'node:process';
+import React, {type ReactNode} from 'react';
+import {throttle, type DebouncedFunc} from 'lodash-es';
 import ansiEscapes from 'ansi-escapes';
-import originalIsCI from 'is-ci';
+import originalIsCi from 'is-ci';
 import autoBind from 'auto-bind';
-import reconciler from './reconciler';
-import render from './renderer';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
-import * as dom from './dom';
-import {FiberRoot} from 'react-reconciler';
-import instances from './instances';
-import App from './components/App';
+import {type FiberRoot} from 'react-reconciler';
+import reconciler from './reconciler.js';
+import render from './renderer.js';
+import * as dom from './dom.js';
+import logUpdate, {type LogUpdate} from './log-update.js';
+import instances from './instances.js';
+import App from './components/App.js';
 
-const isCI = process.env.CI === 'false' ? false : originalIsCI;
+const isCi = process.env['CI'] === 'false' ? false : originalIsCi;
 const noop = () => {};
 
-export interface Options {
+export type Options = {
 	stdout: NodeJS.WriteStream;
 	stdin: NodeJS.ReadStream;
 	stderr: NodeJS.WriteStream;
@@ -24,7 +25,7 @@ export interface Options {
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
 	waitUntilExit?: () => Promise<void>;
-}
+};
 
 export default class Ink {
 	private readonly options: Options;
@@ -74,18 +75,23 @@ export default class Ink {
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
 		this.fullStaticOutput = '';
 
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		this.container = reconciler.createContainer(
 			this.rootNode,
 			// Legacy mode
 			0,
+			null,
 			false,
+			null,
+			'id',
+			() => {},
 			null
 		);
 
 		// Unmount when process exits
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 
-		if (process.env.DEV === 'true') {
+		if (process.env['DEV'] === 'true') {
 			reconciler.injectIntoDevTools({
 				bundleType: 0,
 				// Reporting React DOM's version, not Ink's
@@ -99,7 +105,7 @@ export default class Ink {
 			this.patchConsole();
 		}
 
-		if (!isCI) {
+		if (!isCi) {
 			options.stdout.on('resize', this.onRender);
 
 			this.unsubscribeResize = () => {
@@ -136,7 +142,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isCI) {
+		if (isCi) {
 			if (hasStaticOutput) {
 				this.options.stdout.write(staticOutput);
 			}
@@ -199,7 +205,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isCI) {
+		if (isCi) {
 			this.options.stdout.write(data);
 			return;
 		}
@@ -220,7 +226,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isCI) {
+		if (isCi) {
 			this.options.stderr.write(data);
 			return;
 		}
@@ -230,6 +236,7 @@ export default class Ink {
 		this.log(this.lastOutput);
 	}
 
+	// eslint-disable-next-line @typescript-eslint/ban-types
 	unmount(error?: Error | number | null): void {
 		if (this.isUnmounted) {
 			return;
@@ -248,7 +255,7 @@ export default class Ink {
 
 		// CIs don't handle erasing ansi escapes well, so it's better to
 		// only render last frame of non-static output
-		if (isCI) {
+		if (isCi) {
 			this.options.stdout.write(this.lastOutput + '\n');
 		} else if (!this.options.debug) {
 			this.log.done();
@@ -266,7 +273,7 @@ export default class Ink {
 		}
 	}
 
-	waitUntilExit(): Promise<void> {
+	async waitUntilExit(): Promise<void> {
 		if (!this.exitPromise) {
 			this.exitPromise = new Promise((resolve, reject) => {
 				this.resolveExitPromise = resolve;
@@ -278,7 +285,7 @@ export default class Ink {
 	}
 
 	clear(): void {
-		if (!isCI && !this.options.debug) {
+		if (!isCi && !this.options.debug) {
 			this.log.clear();
 		}
 	}

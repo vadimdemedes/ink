@@ -1,18 +1,18 @@
 import React from 'react';
-import {render, Text} from '../..';
+import {render, Text} from '../../src/index.js';
 
 class Test extends React.Component<Record<string, unknown>, {counter: number}> {
 	timer?: NodeJS.Timeout;
 
-	state = {
+	override state = {
 		counter: 0
 	};
 
-	render() {
+	override render() {
 		return <Text>Counter: {this.state.counter}</Text>;
 	}
 
-	componentDidMount() {
+	override componentDidMount() {
 		const onTimeout = () => {
 			if (this.state.counter > 4) {
 				return;
@@ -28,7 +28,7 @@ class Test extends React.Component<Record<string, unknown>, {counter: number}> {
 		this.timer = setTimeout(onTimeout, 100);
 	}
 
-	componentWillUnmount() {
+	override componentWillUnmount() {
 		clearTimeout(this.timer);
 	}
 }

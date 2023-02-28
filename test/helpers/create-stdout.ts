@@ -1,19 +1,21 @@
-import EventEmitter from 'events';
+import EventEmitter from 'node:events';
 import {spy} from 'sinon';
 
 // Fake process.stdout
-interface Stream extends EventEmitter {
-	output: string;
-	columns: number;
-	write(str: string): void;
-	get(): string;
-}
+type FakeStdout = {
+	get: () => string;
+} & NodeJS.WriteStream;
 
-export default (columns?: number): Stream => {
-	const stdout = new EventEmitter();
+const createStdout = (columns?: number): FakeStdout => {
+	const stdout = new EventEmitter() as FakeStdout;
 	stdout.columns = columns ?? 100;
-	stdout.write = spy();
-	stdout.get = () => stdout.write.lastCall.args[0];
+
+	const write = spy();
+	stdout.write = write;
+
+	stdout.get = () => write.lastCall.args[0] as string;
 
 	return stdout;
 };
+
+export default createStdout;

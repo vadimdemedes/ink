@@ -1,6 +1,6 @@
 import sliceAnsi from 'slice-ansi';
 import stringWidth from 'string-width';
-import {OutputTransformer} from './render-node-to-output';
+import {type OutputTransformer} from './render-node-to-output.js';
 
 /**
  * "Virtual" output class
@@ -11,17 +11,17 @@ import {OutputTransformer} from './render-node-to-output';
  * Used to generate the final output of all nodes before writing it to actual output stream (e.g. stdout)
  */
 
-interface Options {
+type Options = {
 	width: number;
 	height: number;
-}
+};
 
-interface Writes {
+type Writes = {
 	x: number;
 	y: number;
 	text: string;
 	transformers: OutputTransformer[];
-}
+};
 
 export default class Output {
 	width: number;
@@ -87,8 +87,7 @@ export default class Output {
 			}
 		}
 
-		// eslint-disable-next-line unicorn/prefer-trim-start-end
-		const generatedOutput = output.map(line => line.trimRight()).join('\n');
+		const generatedOutput = output.map(line => line.trimEnd()).join('\n');
 
 		return {
 			output: generatedOutput,

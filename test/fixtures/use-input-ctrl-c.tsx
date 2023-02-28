@@ -1,7 +1,7 @@
-import React, {FC} from 'react';
-import {render, useInput, useApp} from '../..';
+import React from 'react';
+import {render, useInput, useApp} from '../../src/index.js';
 
-const UserInput: FC = () => {
+function UserInput() {
 	const {exit} = useApp();
 
 	useInput((input, key) => {
@@ -14,11 +14,9 @@ const UserInput: FC = () => {
 	});
 
 	return null;
-};
+}
 
 const app = render(<UserInput />, {exitOnCtrlC: false});
 
-(async () => {
-	await app.waitUntilExit();
-	console.log('exited');
-})();
+await app.waitUntilExit();
+console.log('exited');

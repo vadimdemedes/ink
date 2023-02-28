@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import React, {forwardRef, PropsWithChildren} from 'react';
-import {Except} from 'type-fest';
-import {Styles} from '../styles';
-import {DOMElement} from '../dom';
+import React, {forwardRef, type PropsWithChildren} from 'react';
+import {type Except} from 'type-fest';
+import {type Styles} from '../styles.js';
+import {type DOMElement} from '../dom.js';
 
 export type Props = Except<Styles, 'textWrap'> & {
 	/**
