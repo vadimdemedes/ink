@@ -1,7 +1,6 @@
 import process from 'node:process';
 import createReconciler from 'react-reconciler';
-// @ts-expect-error `react-reconciler` isn't an ES module, but we can still import `constants`
-import {DefaultEventPriority} from 'react-reconciler/constants';
+import {DefaultEventPriority} from 'react-reconciler/constants.js';
 import Yoga from 'yoga-layout-prebuilt';
 import {
 	createTextNode,
@@ -184,7 +183,7 @@ export default createReconciler<
 	scheduleTimeout: setTimeout,
 	cancelTimeout: clearTimeout,
 	noTimeout: -1,
-	getCurrentEventPriority: () => DefaultEventPriority as number,
+	getCurrentEventPriority: () => DefaultEventPriority,
 	beforeActiveInstanceBlur() {},
 	afterActiveInstanceBlur() {},
 	detachDeletedInstance() {},
