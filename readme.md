@@ -217,7 +217,7 @@ Now you can run `cli.js` with Node.js:
 node cli
 ```
 
-If you don't like transpiling files during development, you can use [import-jsx](https://github.com/vadimdemedes/import-jsx) to `import` a JSX file and transpile it on the fly.
+If you don't like transpiling files during development, you can use [import-jsx](https://github.com/vadimdemedes/import-jsx) or [@esbuild-kit/esm-loader](https://github.com/esbuild-kit/esm-loader) to `import` a JSX file and transpile it on the fly.
 
 </p>
 </details>
