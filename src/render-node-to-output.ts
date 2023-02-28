@@ -46,7 +46,7 @@ const renderNodeToOutput = (
 		skipStaticElements
 	} = options;
 
-	if (skipStaticElements && node.internalStatic) {
+	if (skipStaticElements && node.internal_static) {
 		return;
 	}
 
@@ -65,8 +65,8 @@ const renderNodeToOutput = (
 		// See Output class for logic that applies transformers
 		let newTransformers = transformers;
 
-		if (typeof node.internalTransform === 'function') {
-			newTransformers = [node.internalTransform, ...transformers];
+		if (typeof node.internal_transform === 'function') {
+			newTransformers = [node.internal_transform, ...transformers];
 		}
 
 		if (node.nodeName === 'ink-text') {

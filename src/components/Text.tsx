@@ -113,7 +113,7 @@ export default function Text({
 	return (
 		<ink-text
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap}}
-			internalTransform={transform}
+			internal_transform={transform}
 		>
 			{children}
 		</ink-text>

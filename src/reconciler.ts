@@ -125,13 +125,13 @@ export default createReconciler<
 				continue;
 			}
 
-			if (key === 'internalTransform') {
-				node.internalTransform = value as OutputTransformer;
+			if (key === 'internal_transform') {
+				node.internal_transform = value as OutputTransformer;
 				continue;
 			}
 
-			if (key === 'internalStatic') {
-				node.internalStatic = true;
+			if (key === 'internal_static') {
+				node.internal_static = true;
 				continue;
 			}
 
@@ -167,7 +167,7 @@ export default createReconciler<
 	appendChild: appendChildNode,
 	insertBefore: insertBeforeNode,
 	finalizeInitialChildren(node, _type, _props, rootNode) {
-		if (node.internalStatic) {
+		if (node.internal_static) {
 			rootNode.isStaticDirty = true;
 
 			// Save reference to <Static> node to skip traversal of entire
@@ -198,7 +198,7 @@ export default createReconciler<
 		cleanupYogaNode(removeNode.yogaNode);
 	},
 	prepareUpdate(node, _type, oldProps, newProps, rootNode) {
-		if (node.internalStatic) {
+		if (node.internal_static) {
 			rootNode.isStaticDirty = true;
 		}
 
@@ -265,13 +265,13 @@ export default createReconciler<
 				continue;
 			}
 
-			if (key === 'internalTransform') {
-				node.internalTransform = value as OutputTransformer;
+			if (key === 'internal_transform') {
+				node.internal_transform = value as OutputTransformer;
 				continue;
 			}
 
-			if (key === 'internalStatic') {
-				node.internalStatic = true;
+			if (key === 'internal_static') {
+				node.internal_static = true;
 				continue;
 			}
 

@@ -8,7 +8,7 @@ import {type OutputTransformer} from './render-node-to-output.js';
 type InkNode = {
 	parentNode: DOMElement | undefined;
 	yogaNode?: Yoga.YogaNode;
-	internalStatic?: boolean;
+	internal_static?: boolean;
 	style: Styles;
 };
 
@@ -26,7 +26,7 @@ export type DOMElement = {
 	nodeName: ElementNames;
 	attributes: Record<string, DOMNodeAttribute>;
 	childNodes: DOMNode[];
-	internalTransform?: OutputTransformer;
+	internal_transform?: OutputTransformer;
 
 	// Internal properties
 	isStaticDirty?: boolean;

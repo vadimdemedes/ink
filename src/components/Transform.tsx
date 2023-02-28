@@ -23,7 +23,7 @@ export default function Transform({children, transform}: Props) {
 	return (
 		<ink-text
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row'}}
-			internalTransform={transform}
+			internal_transform={transform}
 		>
 			{children}
 		</ink-text>

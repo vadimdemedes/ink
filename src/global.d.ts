@@ -15,7 +15,7 @@ declare global {
 
 declare namespace Ink {
 	type Box = {
-		internalStatic?: boolean;
+		internal_static?: boolean;
 		children?: ReactNode;
 		key?: Key;
 		ref?: LegacyRef<DOMElement>;
@@ -26,6 +26,6 @@ declare namespace Ink {
 		children?: ReactNode;
 		key?: Key;
 		style?: Styles;
-		internalTransform?: (children: string) => string;
+		internal_transform?: (children: string) => string;
 	};
 }
