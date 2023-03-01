@@ -1,6 +1,6 @@
-import Yoga from 'yoga-layout-prebuilt';
 import widestLine from 'widest-line';
 import indentString from 'indent-string';
+import {DISPLAY_NONE} from './yoga.js';
 import wrapText from './wrap-text.js';
 import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';
@@ -53,7 +53,7 @@ const renderNodeToOutput = (
 	const {yogaNode} = node;
 
 	if (yogaNode) {
-		if (yogaNode.getDisplay() === Yoga.DISPLAY_NONE) {
+		if (yogaNode.getDisplay() === DISPLAY_NONE) {
 			return;
 		}
 

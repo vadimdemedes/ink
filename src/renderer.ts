@@ -1,4 +1,4 @@
-import Yoga from 'yoga-layout-prebuilt';
+import {DIRECTION_LTR} from './yoga.js';
 import renderNodeToOutput from './render-node-to-output.js';
 import Output from './output.js';
 import {type DOMElement} from './dom.js';
@@ -13,7 +13,7 @@ const renderer = (node: DOMElement, terminalWidth: number): Result => {
 	node.yogaNode!.setWidth(terminalWidth);
 
 	if (node.yogaNode) {
-		node.yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
+		node.yogaNode.calculateLayout(undefined, undefined, DIRECTION_LTR);
 
 		const output = new Output({
 			width: node.yogaNode.getComputedWidth(),

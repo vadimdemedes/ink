@@ -1,8 +1,34 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import Yoga, {type YogaNode} from 'yoga-layout-prebuilt';
 import {type Boxes} from 'cli-boxes';
 import {type LiteralUnion} from 'type-fest';
 import {type ForegroundColorName} from 'chalk';
+import {
+	ALIGN_AUTO,
+	ALIGN_CENTER,
+	ALIGN_FLEX_END,
+	ALIGN_FLEX_START,
+	ALIGN_STRETCH,
+	DISPLAY_FLEX,
+	DISPLAY_NONE,
+	EDGE_BOTTOM,
+	EDGE_END,
+	EDGE_LEFT,
+	EDGE_RIGHT,
+	EDGE_TOP,
+	FLEX_DIRECTION_COLUMN,
+	FLEX_DIRECTION_COLUMN_REVERSE,
+	FLEX_DIRECTION_ROW,
+	FLEX_DIRECTION_ROW_REVERSE,
+	JUSTIFY_CENTER,
+	JUSTIFY_FLEX_END,
+	JUSTIFY_FLEX_START,
+	JUSTIFY_SPACE_AROUND,
+	JUSTIFY_SPACE_BETWEEN,
+	POSITION_TYPE_ABSOLUTE,
+	POSITION_TYPE_RELATIVE,
+	EDGE_START,
+	type YogaNode
+} from './yoga.js';
 
 export type Styles = {
 	readonly textWrap?:
@@ -143,49 +169,49 @@ export type Styles = {
 	readonly borderColor?: LiteralUnion<ForegroundColorName, string>;
 };
 
-const applyPositionStyles = (node: Yoga.YogaNode, style: Styles): void => {
+const applyPositionStyles = (node: YogaNode, style: Styles): void => {
 	if ('position' in style) {
 		node.setPositionType(
 			style.position === 'absolute'
-				? Yoga.POSITION_TYPE_ABSOLUTE
-				: Yoga.POSITION_TYPE_RELATIVE
+				? POSITION_TYPE_ABSOLUTE
+				: POSITION_TYPE_RELATIVE
 		);
 	}
 };
 
-const applyMarginStyles = (node: Yoga.YogaNode, style: Styles): void => {
+const applyMarginStyles = (node: YogaNode, style: Styles): void => {
 	if ('marginLeft' in style) {
-		node.setMargin(Yoga.EDGE_START, style.marginLeft || 0);
+		node.setMargin(EDGE_START, style.marginLeft || 0);
 	}
 
 	if ('marginRight' in style) {
-		node.setMargin(Yoga.EDGE_END, style.marginRight || 0);
+		node.setMargin(EDGE_END, style.marginRight || 0);
 	}
 
 	if ('marginTop' in style) {
-		node.setMargin(Yoga.EDGE_TOP, style.marginTop || 0);
+		node.setMargin(EDGE_TOP, style.marginTop || 0);
 	}
 
 	if ('marginBottom' in style) {
-		node.setMargin(Yoga.EDGE_BOTTOM, style.marginBottom || 0);
+		node.setMargin(EDGE_BOTTOM, style.marginBottom || 0);
 	}
 };
 
-const applyPaddingStyles = (node: Yoga.YogaNode, style: Styles): void => {
+const applyPaddingStyles = (node: YogaNode, style: Styles): void => {
 	if ('paddingLeft' in style) {
-		node.setPadding(Yoga.EDGE_LEFT, style.paddingLeft || 0);
+		node.setPadding(EDGE_LEFT, style.paddingLeft || 0);
 	}
 
 	if ('paddingRight' in style) {
-		node.setPadding(Yoga.EDGE_RIGHT, style.paddingRight || 0);
+		node.setPadding(EDGE_RIGHT, style.paddingRight || 0);
 	}
 
 	if ('paddingTop' in style) {
-		node.setPadding(Yoga.EDGE_TOP, style.paddingTop || 0);
+		node.setPadding(EDGE_TOP, style.paddingTop || 0);
 	}
 
 	if ('paddingBottom' in style) {
-		node.setPadding(Yoga.EDGE_BOTTOM, style.paddingBottom || 0);
+		node.setPadding(EDGE_BOTTOM, style.paddingBottom || 0);
 	}
 };
 
@@ -202,19 +228,19 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 
 	if ('flexDirection' in style) {
 		if (style.flexDirection === 'row') {
-			node.setFlexDirection(Yoga.FLEX_DIRECTION_ROW);
+			node.setFlexDirection(FLEX_DIRECTION_ROW);
 		}
 
 		if (style.flexDirection === 'row-reverse') {
-			node.setFlexDirection(Yoga.FLEX_DIRECTION_ROW_REVERSE);
+			node.setFlexDirection(FLEX_DIRECTION_ROW_REVERSE);
 		}
 
 		if (style.flexDirection === 'column') {
-			node.setFlexDirection(Yoga.FLEX_DIRECTION_COLUMN);
+			node.setFlexDirection(FLEX_DIRECTION_COLUMN);
 		}
 
 		if (style.flexDirection === 'column-reverse') {
-			node.setFlexDirection(Yoga.FLEX_DIRECTION_COLUMN_REVERSE);
+			node.setFlexDirection(FLEX_DIRECTION_COLUMN_REVERSE);
 		}
 	}
 
@@ -231,59 +257,59 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 
 	if ('alignItems' in style) {
 		if (style.alignItems === 'stretch' || !style.alignItems) {
-			node.setAlignItems(Yoga.ALIGN_STRETCH);
+			node.setAlignItems(ALIGN_STRETCH);
 		}
 
 		if (style.alignItems === 'flex-start') {
-			node.setAlignItems(Yoga.ALIGN_FLEX_START);
+			node.setAlignItems(ALIGN_FLEX_START);
 		}
 
 		if (style.alignItems === 'center') {
-			node.setAlignItems(Yoga.ALIGN_CENTER);
+			node.setAlignItems(ALIGN_CENTER);
 		}
 
 		if (style.alignItems === 'flex-end') {
-			node.setAlignItems(Yoga.ALIGN_FLEX_END);
+			node.setAlignItems(ALIGN_FLEX_END);
 		}
 	}
 
 	if ('alignSelf' in style) {
 		if (style.alignSelf === 'auto' || !style.alignSelf) {
-			node.setAlignSelf(Yoga.ALIGN_AUTO);
+			node.setAlignSelf(ALIGN_AUTO);
 		}
 
 		if (style.alignSelf === 'flex-start') {
-			node.setAlignSelf(Yoga.ALIGN_FLEX_START);
+			node.setAlignSelf(ALIGN_FLEX_START);
 		}
 
 		if (style.alignSelf === 'center') {
-			node.setAlignSelf(Yoga.ALIGN_CENTER);
+			node.setAlignSelf(ALIGN_CENTER);
 		}
 
 		if (style.alignSelf === 'flex-end') {
-			node.setAlignSelf(Yoga.ALIGN_FLEX_END);
+			node.setAlignSelf(ALIGN_FLEX_END);
 		}
 	}
 
 	if ('justifyContent' in style) {
 		if (style.justifyContent === 'flex-start' || !style.justifyContent) {
-			node.setJustifyContent(Yoga.JUSTIFY_FLEX_START);
+			node.setJustifyContent(JUSTIFY_FLEX_START);
 		}
 
 		if (style.justifyContent === 'center') {
-			node.setJustifyContent(Yoga.JUSTIFY_CENTER);
+			node.setJustifyContent(JUSTIFY_CENTER);
 		}
 
 		if (style.justifyContent === 'flex-end') {
-			node.setJustifyContent(Yoga.JUSTIFY_FLEX_END);
+			node.setJustifyContent(JUSTIFY_FLEX_END);
 		}
 
 		if (style.justifyContent === 'space-between') {
-			node.setJustifyContent(Yoga.JUSTIFY_SPACE_BETWEEN);
+			node.setJustifyContent(JUSTIFY_SPACE_BETWEEN);
 		}
 
 		if (style.justifyContent === 'space-around') {
-			node.setJustifyContent(Yoga.JUSTIFY_SPACE_AROUND);
+			node.setJustifyContent(JUSTIFY_SPACE_AROUND);
 		}
 	}
 };
@@ -328,9 +354,7 @@ const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
 
 const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
 	if ('display' in style) {
-		node.setDisplay(
-			style.display === 'flex' ? Yoga.DISPLAY_FLEX : Yoga.DISPLAY_NONE
-		);
+		node.setDisplay(style.display === 'flex' ? DISPLAY_FLEX : DISPLAY_NONE);
 	}
 };
 
@@ -338,10 +362,10 @@ const applyBorderStyles = (node: YogaNode, style: Styles): void => {
 	if ('borderStyle' in style) {
 		const borderWidth = typeof style.borderStyle === 'string' ? 1 : 0;
 
-		node.setBorder(Yoga.EDGE_TOP, borderWidth);
-		node.setBorder(Yoga.EDGE_BOTTOM, borderWidth);
-		node.setBorder(Yoga.EDGE_LEFT, borderWidth);
-		node.setBorder(Yoga.EDGE_RIGHT, borderWidth);
+		node.setBorder(EDGE_TOP, borderWidth);
+		node.setBorder(EDGE_BOTTOM, borderWidth);
+		node.setBorder(EDGE_LEFT, borderWidth);
+		node.setBorder(EDGE_RIGHT, borderWidth);
 	}
 };
 

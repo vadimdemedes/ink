@@ -1,4 +1,4 @@
-import Yoga, {type YogaNode} from 'yoga-layout-prebuilt';
+import Yoga, {type YogaNode} from './yoga.js';
 import measureText from './measure-text.js';
 import applyStyles, {type Styles} from './styles.js';
 import wrapText from './wrap-text.js';
@@ -7,7 +7,7 @@ import {type OutputTransformer} from './render-node-to-output.js';
 
 type InkNode = {
 	parentNode: DOMElement | undefined;
-	yogaNode?: Yoga.YogaNode;
+	yogaNode?: YogaNode;
 	internal_static?: boolean;
 	style: Styles;
 };

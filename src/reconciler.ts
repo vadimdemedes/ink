@@ -1,7 +1,7 @@
 import process from 'node:process';
 import createReconciler from 'react-reconciler';
 import {DefaultEventPriority} from 'react-reconciler/constants.js';
-import Yoga from 'yoga-layout-prebuilt';
+import {DISPLAY_FLEX, DISPLAY_NONE, type YogaNode} from './yoga.js';
 import {
 	createTextNode,
 	appendChildNode,
@@ -42,7 +42,7 @@ $ npm install --save-dev react-devtools-core
 	}
 }
 
-const cleanupYogaNode = (node?: Yoga.YogaNode): void => {
+const cleanupYogaNode = (node?: YogaNode): void => {
 	node?.unsetMeasureFunc();
 	node?.freeRecursive();
 };
@@ -157,10 +157,10 @@ export default createReconciler<
 	},
 	getPublicInstance: instance => instance,
 	hideInstance(node) {
-		node.yogaNode?.setDisplay(Yoga.DISPLAY_NONE);
+		node.yogaNode?.setDisplay(DISPLAY_NONE);
 	},
 	unhideInstance(node) {
-		node.yogaNode?.setDisplay(Yoga.DISPLAY_FLEX);
+		node.yogaNode?.setDisplay(DISPLAY_FLEX);
 	},
 	appendInitialChild: appendChildNode,
 	appendChild: appendChildNode,
