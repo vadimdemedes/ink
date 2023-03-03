@@ -127,6 +127,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [lrn](https://github.com/krychu/lrn) - Learning by repetition.
 - [turdle](https://github.com/mynameisankit/turdle) - Wordle game.
 - [Shopify CLI](https://github.com/Shopify/cli) - Build apps, themes, and storefronts for Shopify.
+- [ToDesktop CLI](https://www.todesktop.com/electron) - An all-in-one platform for building Electron apps.
 
 ## Contents
 
