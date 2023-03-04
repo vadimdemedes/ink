@@ -19,29 +19,29 @@ type Options = {
 
 type Operation = WriteOperation | ClipOperation | UnclipOperation;
 
-interface WriteOperation {
+type WriteOperation = {
 	type: 'write';
 	x: number;
 	y: number;
 	text: string;
 	transformers: OutputTransformer[];
-}
+};
 
-interface ClipOperation {
+type ClipOperation = {
 	type: 'clip';
 	clip: Clip;
-}
+};
 
-interface Clip {
+type Clip = {
 	x1: number | undefined;
 	x2: number | undefined;
 	y1: number | undefined;
 	y2: number | undefined;
-}
+};
 
-interface UnclipOperation {
+type UnclipOperation = {
 	type: 'unclip';
-}
+};
 
 export default class Output {
 	width: number;

@@ -1,8 +1,8 @@
 import React from 'react';
 import test from 'ava';
-import boxen, {Options} from 'boxen';
-import {renderToString} from './helpers/render-to-string.js';
+import boxen, {type Options} from 'boxen';
 import {Box, Text} from '../src/index.js';
+import {renderToString} from './helpers/render-to-string.js';
 
 const box = (text: string, options?: Options): string => {
 	return boxen(text, {
