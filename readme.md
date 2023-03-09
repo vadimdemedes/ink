@@ -1834,17 +1834,17 @@ npm run example examples/[example name]
 # e.g. npm run example examples/borders
 ```
 
-- [Jest](examples/jest/jest.js) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
-- [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms [(live demo)](https://ink-counter-demo.vadimdemedes.repl.run/).
+- [Jest](examples/jest/jest.tsx) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
+- [Counter](examples/counter/counter.tsx) - Simple counter that increments every 100ms [(live demo)](https://ink-counter-demo.vadimdemedes.repl.run/).
 - [Form with validation](https://github.com/final-form/rff-cli-example) - Manage form state using [Final Form](https://github.com/final-form/final-form#-final-form).
-- [Borders](examples/borders/borders.js) - Add borders to `<Box>` component.
-- [Suspense](examples/suspense/suspense.js) - Use React Suspense.
-- [Table](examples/table/table.js) - Render a table with multiple columns and rows.
-- [Focus management](examples/use-focus/use-focus.js) - Use `useFocus` hook to manage focus between components.
-- [User input](examples/use-input/use-input.js) - Listen to user input.
-- [Write to stdout](examples/use-stdout/use-stdout.js) - Write to stdout bypassing main Ink output.
-- [Write to stderr](examples/use-stderr/use-stderr.js) - Write to stderr bypassing main Ink output.
-- [Static](examples/static/static.js) - Use `<Static>` to render permanent output.
+- [Borders](examples/borders/borders.tsx) - Add borders to `<Box>` component.
+- [Suspense](examples/suspense/suspense.tsx) - Use React Suspense.
+- [Table](examples/table/table.tsx) - Render a table with multiple columns and rows.
+- [Focus management](examples/use-focus/use-focus.tsx) - Use `useFocus` hook to manage focus between components.
+- [User input](examples/use-input/use-input.tsx) - Listen to user input.
+- [Write to stdout](examples/use-stdout/use-stdout.tsx) - Write to stdout bypassing main Ink output.
+- [Write to stderr](examples/use-stderr/use-stderr.tsx) - Write to stderr bypassing main Ink output.
+- [Static](examples/static/static.tsx) - Use `<Static>` to render permanent output.
 - [Child process](examples/subprocess-output) - Render output from a child process.
 
 ## Maintainers
