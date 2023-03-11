@@ -3,6 +3,7 @@ import test from 'ava';
 import boxen, {type Options} from 'boxen';
 import indentString from 'indent-string';
 import delay from 'delay';
+import widestLine from 'widest-line';
 import {render, Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
@@ -313,7 +314,7 @@ test('nested boxes - fit-content box with wide characters on flex-direction row'
 			.split('\n')
 			.map(
 				(line, index) =>
-					line + box2.split('\n')[index] + box3.split('\n')[index]
+					line + box2.split('\n')[index]! + box3.split('\n')[index]!
 			)
 			.join('\n'),
 		{borderStyle: 'round'}
@@ -346,7 +347,7 @@ test('nested boxes - fit-content box with emojis on flex-direction row', t => {
 			.split('\n')
 			.map(
 				(line, index) =>
-					line + box2.split('\n')[index] + box3.split('\n')[index]
+					line + box2.split('\n')[index]! + box3.split('\n')[index]!
 			)
 			.join('\n'),
 		{borderStyle: 'round'}
