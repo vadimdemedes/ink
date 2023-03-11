@@ -1,7 +1,10 @@
 import sliceAnsi from 'slice-ansi';
 import stringWidth from 'string-width';
 import widestLine from 'widest-line';
+import createEmojiRegex from 'emoji-regex';
 import {type OutputTransformer} from './render-node-to-output.js';
+
+const emojiRegex = createEmojiRegex();
 
 /**
  * "Virtual" output class
@@ -184,10 +187,14 @@ export default class Output {
 						line = transformer(line);
 					}
 
+					// `slice-ansi` counts emojis as one character, not two, so
+					// indexes must be adjusted to subtract number of emojis
+					const emojiCount = currentLine.match(emojiRegex)?.length ?? 0;
+
 					output[y + offsetY] =
-						sliceAnsi(currentLine, 0, x) +
+						sliceAnsi(currentLine, 0, x - emojiCount) +
 						line +
-						sliceAnsi(currentLine, x + width);
+						sliceAnsi(currentLine, x - emojiCount + width);
 
 					offsetY++;
 				}
