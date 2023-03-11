@@ -187,6 +187,8 @@ export default class Output {
 						line = transformer(line);
 					}
 
+					// `slice-ansi` counts emojis as one character, not two, so
+					// indexes must be adjusted to subtract number of emojis
 					const emojiCount = currentLine.match(emojiRegex)?.length ?? 0;
 
 					output[y + offsetY] =
