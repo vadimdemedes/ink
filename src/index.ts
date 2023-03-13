@@ -2,6 +2,8 @@ export type {RenderOptions, Instance} from './render.js';
 export {default as render} from './render.js';
 export type {Props as BoxProps} from './components/Box.js';
 export {default as Box} from './components/Box.js';
+export type {Props as LineProps} from './components/Line.js';
+export {default as Line} from './components/Line.js';
 export type {Props as TextProps} from './components/Text.js';
 export {default as Text} from './components/Text.js';
 export type {Props as AppProps} from './components/AppContext.js';

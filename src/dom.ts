@@ -16,6 +16,7 @@ export type TextName = '#text';
 export type ElementNames =
 	| 'ink-root'
 	| 'ink-box'
+	| 'ink-line'
 	| 'ink-text'
 	| 'ink-virtual-text';
 
@@ -159,7 +160,8 @@ export const setStyle = (node: DOMNode, style: Styles): void => {
 	node.style = style;
 
 	if (node.yogaNode) {
-		applyStyles(node.yogaNode, style);
+		// @ts-expect-error we did check that node.yogaNode exists
+		applyStyles(node, style);
 	}
 };
 

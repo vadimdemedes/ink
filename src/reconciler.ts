@@ -107,6 +107,10 @@ export default createReconciler<
 			throw new Error(`<Box> can’t be nested inside <Text> component`);
 		}
 
+		if (hostContext.isInsideText && originalType === 'ink-line') {
+			throw new Error(`<Line> can’t be nested inside <Text> component`);
+		}
+
 		const type =
 			originalType === 'ink-text' && hostContext.isInsideText
 				? 'ink-virtual-text'

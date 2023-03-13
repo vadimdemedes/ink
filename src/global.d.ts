@@ -9,6 +9,7 @@ declare global {
 		interface IntrinsicElements {
 			'ink-box': Ink.Box;
 			'ink-text': Ink.Text;
+			'ink-line': Ink.Line;
 		}
 	}
 }
@@ -20,6 +21,24 @@ declare namespace Ink {
 		key?: Key;
 		ref?: LegacyRef<DOMElement>;
 		style?: Except<Styles, 'textWrap'>;
+	};
+
+	type Line = {
+		key?: Key;
+		ref?: LegacyRef<DOMElement>;
+		orientation?: 'horizontal' | 'vertical';
+		style?: Pick<
+			Styles,
+			| 'position'
+			| 'marginTop'
+			| 'marginBottom'
+			| 'marginLeft'
+			| 'marginRight'
+			| 'borderStyle'
+			| 'borderColor'
+			| 'width'
+			| 'height'
+		>;
 	};
 
 	type Text = {

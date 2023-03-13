@@ -3,6 +3,7 @@ import Yoga, {type YogaNode} from 'yoga-layout-prebuilt';
 import {type Boxes} from 'cli-boxes';
 import {type LiteralUnion} from 'type-fest';
 import {type ForegroundColorName} from 'chalk';
+import {DOMNode} from './dom.js';
 
 export type Styles = {
 	readonly textWrap?:
@@ -153,7 +154,12 @@ export type Styles = {
 	readonly overflowY?: 'visible' | 'hidden';
 };
 
-const applyPositionStyles = (node: Yoga.YogaNode, style: Styles): void => {
+const applyPositionStyles = (
+	domNode: DOMNode & {yogaNode: YogaNode},
+	style: Styles
+): void => {
+	const node = domNode.yogaNode;
+
 	if ('position' in style) {
 		node.setPositionType(
 			style.position === 'absolute'
@@ -163,7 +169,12 @@ const applyPositionStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	}
 };
 
-const applyMarginStyles = (node: Yoga.YogaNode, style: Styles): void => {
+const applyMarginStyles = (
+	domNode: DOMNode & {yogaNode: YogaNode},
+	style: Styles
+): void => {
+	const node = domNode.yogaNode;
+
 	if ('marginLeft' in style) {
 		node.setMargin(Yoga.EDGE_START, style.marginLeft || 0);
 	}
@@ -181,7 +192,12 @@ const applyMarginStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	}
 };
 
-const applyPaddingStyles = (node: Yoga.YogaNode, style: Styles): void => {
+const applyPaddingStyles = (
+	domNode: DOMNode & {yogaNode: YogaNode},
+	style: Styles
+): void => {
+	const node = domNode.yogaNode;
+
 	if ('paddingLeft' in style) {
 		node.setPadding(Yoga.EDGE_LEFT, style.paddingLeft || 0);
 	}
@@ -199,7 +215,12 @@ const applyPaddingStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	}
 };
 
-const applyFlexStyles = (node: YogaNode, style: Styles): void => {
+const applyFlexStyles = (
+	domNode: DOMNode & {yogaNode: YogaNode},
+	style: Styles
+): void => {
+	const node = domNode.yogaNode;
+
 	if ('flexGrow' in style) {
 		node.setFlexGrow(style.flexGrow ?? 0);
 	}
@@ -298,7 +319,12 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
-const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
+const applyDimensionStyles = (
+	domNode: DOMNode & {yogaNode: YogaNode},
+	style: Styles
+): void => {
+	const node = domNode.yogaNode;
+
 	if ('width' in style) {
 		if (typeof style.width === 'number') {
 			node.setWidth(style.width);
@@ -336,7 +362,12 @@ const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
-const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
+const applyDisplayStyles = (
+	domNode: DOMNode & {yogaNode: YogaNode},
+	style: Styles
+): void => {
+	const node = domNode.yogaNode;
+
 	if ('display' in style) {
 		node.setDisplay(
 			style.display === 'flex' ? Yoga.DISPLAY_FLEX : Yoga.DISPLAY_NONE
@@ -344,9 +375,19 @@ const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
-const applyBorderStyles = (node: YogaNode, style: Styles): void => {
+const applyBorderStyles = (
+	domNode: DOMNode & {yogaNode: YogaNode},
+	style: Styles
+): void => {
+	const node = domNode.yogaNode;
+
 	if ('borderStyle' in style) {
-		const borderWidth = typeof style.borderStyle === 'string' ? 1 : 0;
+		const borderWidth =
+			domNode.nodeName === 'ink-line'
+				? 0
+				: typeof style.borderStyle === 'string'
+				? 1
+				: 0;
 
 		node.setBorder(Yoga.EDGE_TOP, borderWidth);
 		node.setBorder(Yoga.EDGE_BOTTOM, borderWidth);
@@ -355,7 +396,10 @@ const applyBorderStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
-const styles = (node: YogaNode, style: Styles = {}): void => {
+const styles = (
+	node: DOMNode & {yogaNode: YogaNode},
+	style: Styles = {}
+): void => {
 	applyPositionStyles(node, style);
 	applyMarginStyles(node, style);
 	applyPaddingStyles(node, style);
