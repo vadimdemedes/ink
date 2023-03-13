@@ -127,6 +127,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [lrn](https://github.com/krychu/lrn) - Learning by repetition.
 - [turdle](https://github.com/mynameisankit/turdle) - Wordle game.
 - [Shopify CLI](https://github.com/Shopify/cli) - Build apps, themes, and storefronts for Shopify.
+- [ToDesktop CLI](https://www.todesktop.com/electron) - An all-in-one platform for building Electron apps.
 
 ## Contents
 
@@ -820,6 +821,30 @@ Allowed values: `flex` `none`\
 Default: `flex`
 
 Set this property to `none` to hide the element.
+
+##### overflowX
+
+Type: `string`\
+Allowed values: `visible` `hidden`\
+Default: `visible`
+
+Behavior for an element's overflow in horizontal direction.
+
+##### overflowY
+
+Type: `string`\
+Allowed values: `visible` `hidden`\
+Default: `visible`
+
+Behavior for an element's overflow in vertical direction.
+
+##### overflow
+
+Type: `string`\
+Allowed values: `visible` `hidden`\
+Default: `visible`
+
+Shortcut for setting `overflowX` and `overflowY` at the same time.
 
 #### Borders
 
@@ -1833,17 +1858,17 @@ npm run example examples/[example name]
 # e.g. npm run example examples/borders
 ```
 
-- [Jest](examples/jest/jest.js) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
-- [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms [(live demo)](https://ink-counter-demo.vadimdemedes.repl.run/).
+- [Jest](examples/jest/jest.tsx) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
+- [Counter](examples/counter/counter.tsx) - Simple counter that increments every 100ms [(live demo)](https://ink-counter-demo.vadimdemedes.repl.run/).
 - [Form with validation](https://github.com/final-form/rff-cli-example) - Manage form state using [Final Form](https://github.com/final-form/final-form#-final-form).
-- [Borders](examples/borders/borders.js) - Add borders to `<Box>` component.
-- [Suspense](examples/suspense/suspense.js) - Use React Suspense.
-- [Table](examples/table/table.js) - Render a table with multiple columns and rows.
-- [Focus management](examples/use-focus/use-focus.js) - Use `useFocus` hook to manage focus between components.
-- [User input](examples/use-input/use-input.js) - Listen to user input.
-- [Write to stdout](examples/use-stdout/use-stdout.js) - Write to stdout bypassing main Ink output.
-- [Write to stderr](examples/use-stderr/use-stderr.js) - Write to stderr bypassing main Ink output.
-- [Static](examples/static/static.js) - Use `<Static>` to render permanent output.
+- [Borders](examples/borders/borders.tsx) - Add borders to `<Box>` component.
+- [Suspense](examples/suspense/suspense.tsx) - Use React Suspense.
+- [Table](examples/table/table.tsx) - Render a table with multiple columns and rows.
+- [Focus management](examples/use-focus/use-focus.tsx) - Use `useFocus` hook to manage focus between components.
+- [User input](examples/use-input/use-input.tsx) - Listen to user input.
+- [Write to stdout](examples/use-stdout/use-stdout.tsx) - Write to stdout bypassing main Ink output.
+- [Write to stderr](examples/use-stderr/use-stderr.tsx) - Write to stderr bypassing main Ink output.
+- [Static](examples/static/static.tsx) - Use `<Static>` to render permanent output.
 - [Child process](examples/subprocess-output) - Render output from a child process.
 
 ## Maintainers

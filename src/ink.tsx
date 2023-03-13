@@ -1,6 +1,7 @@
 import process from 'node:process';
 import React, {type ReactNode} from 'react';
-import {throttle, type DebouncedFunc} from 'lodash-es';
+import throttle from 'lodash/throttle.js';
+import {type DebouncedFunc} from 'lodash';
 import ansiEscapes from 'ansi-escapes';
 import originalIsCi from 'is-ci';
 import autoBind from 'auto-bind';

@@ -3,6 +3,7 @@ import test from 'ava';
 import boxen, {type Options} from 'boxen';
 import indentString from 'indent-string';
 import delay from 'delay';
+import widestLine from 'widest-line';
 import {render, Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
@@ -287,6 +288,126 @@ test('nested boxes', t => {
 		output,
 		boxen(`${' '.repeat(38)}\n${nestedBox}\n`, {borderStyle: 'round'})
 	);
+});
+
+test('nested boxes - fit-content box with wide characters on flex-direction row', t => {
+	const output = renderToString(
+		<Box borderStyle="round" alignSelf="flex-start">
+			<Box borderStyle="round">
+				<Text>ミスター</Text>
+			</Box>
+			<Box borderStyle="round">
+				<Text>スポック</Text>
+			</Box>
+			<Box borderStyle="round">
+				<Text>カーク船長</Text>
+			</Box>
+		</Box>
+	);
+
+	const box1 = boxen('ミスター', {borderStyle: 'round'});
+	const box2 = boxen('スポック', {borderStyle: 'round'});
+	const box3 = boxen('カーク船長', {borderStyle: 'round'});
+
+	const expected = boxen(
+		box1
+			.split('\n')
+			.map(
+				(line, index) =>
+					line + box2.split('\n')[index]! + box3.split('\n')[index]!
+			)
+			.join('\n'),
+		{borderStyle: 'round'}
+	);
+
+	t.is(output, expected);
+});
+
+test('nested boxes - fit-content box with emojis on flex-direction row', t => {
+	const output = renderToString(
+		<Box borderStyle="round" alignSelf="flex-start">
+			<Box borderStyle="round">
+				<Text>🦾</Text>
+			</Box>
+			<Box borderStyle="round">
+				<Text>🌏</Text>
+			</Box>
+			<Box borderStyle="round">
+				<Text>😋</Text>
+			</Box>
+		</Box>
+	);
+
+	const box1 = boxen('🦾', {borderStyle: 'round'});
+	const box2 = boxen('🌏', {borderStyle: 'round'});
+	const box3 = boxen('😋', {borderStyle: 'round'});
+
+	const expected = boxen(
+		box1
+			.split('\n')
+			.map(
+				(line, index) =>
+					line + box2.split('\n')[index]! + box3.split('\n')[index]!
+			)
+			.join('\n'),
+		{borderStyle: 'round'}
+	);
+
+	t.is(output, expected);
+});
+
+test('nested boxes - fit-content box with wide characters on flex-direction column', t => {
+	const output = renderToString(
+		<Box borderStyle="round" alignSelf="flex-start" flexDirection="column">
+			<Box borderStyle="round">
+				<Text>ミスター</Text>
+			</Box>
+			<Box borderStyle="round">
+				<Text>スポック</Text>
+			</Box>
+			<Box borderStyle="round">
+				<Text>カーク船長</Text>
+			</Box>
+		</Box>
+	);
+
+	const expected = boxen(
+		boxen('ミスター  ', {borderStyle: 'round'}) +
+			'\n' +
+			boxen('スポック  ', {borderStyle: 'round'}) +
+			'\n' +
+			boxen('カーク船長', {borderStyle: 'round'}),
+		{borderStyle: 'round'}
+	);
+
+	t.is(output, expected);
+});
+
+test('nested boxes - fit-content box with emojis on flex-direction column', t => {
+	const output = renderToString(
+		<Box borderStyle="round" alignSelf="flex-start" flexDirection="column">
+			<Box borderStyle="round">
+				<Text>🦾</Text>
+			</Box>
+			<Box borderStyle="round">
+				<Text>🌏</Text>
+			</Box>
+			<Box borderStyle="round">
+				<Text>😋</Text>
+			</Box>
+		</Box>
+	);
+
+	const expected = boxen(
+		boxen('🦾', {borderStyle: 'round'}) +
+			'\n' +
+			boxen('🌏', {borderStyle: 'round'}) +
+			'\n' +
+			boxen('😋', {borderStyle: 'round'}),
+		{borderStyle: 'round'}
+	);
+
+	t.is(output, expected);
 });
 
 test('render border after update', async t => {

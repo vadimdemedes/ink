@@ -1,10 +1,11 @@
+import process from 'node:process';
 import {createContext} from 'react';
 
 export type Props = {
 	/**
 	 * Stdout stream passed to `render()` in `options.stdout` or `process.stdout` by default.
 	 */
-	readonly stdout?: NodeJS.WriteStream;
+	readonly stdout: NodeJS.WriteStream;
 
 	/**
 	 * Write any string to stdout, while preserving Ink's output.
@@ -19,7 +20,7 @@ export type Props = {
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const StdoutContext = createContext<Props>({
-	stdout: undefined,
+	stdout: process.stdout,
 	write() {}
 });
 

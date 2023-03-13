@@ -46,6 +46,27 @@ export type Props = Except<Styles, 'textWrap'> & {
 	 * @default 0
 	 */
 	readonly paddingY?: number;
+
+	/**
+	 * Behavior for an element's overflow in both directions.
+	 *
+	 * @default 'visible'
+	 */
+	readonly overflow?: 'visible' | 'hidden';
+
+	/**
+	 * Behavior for an element's overflow in horizontal direction.
+	 *
+	 * @default 'visible'
+	 */
+	readonly overflowX?: 'visible' | 'hidden';
+
+	/**
+	 * Behavior for an element's overflow in vertical direction.
+	 *
+	 * @default 'visible'
+	 */
+	readonly overflowY?: 'visible' | 'hidden';
 };
 
 /**
@@ -62,7 +83,10 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 			paddingLeft: style.paddingLeft || style.paddingX || style.padding || 0,
 			paddingRight: style.paddingRight || style.paddingX || style.padding || 0,
 			paddingTop: style.paddingTop || style.paddingY || style.padding || 0,
-			paddingBottom: style.paddingBottom || style.paddingY || style.padding || 0
+			paddingBottom:
+				style.paddingBottom || style.paddingY || style.padding || 0,
+			overflowX: style.overflowX || style.overflow || 'visible',
+			overflowY: style.overflowY || style.overflow || 'visible'
 		};
 
 		return (

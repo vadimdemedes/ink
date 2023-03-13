@@ -82,14 +82,45 @@ const renderNodeToOutput = (
 				}
 
 				text = applyPaddingToText(node, text);
+
 				output.write(x, y, text, {transformers: newTransformers});
 			}
 
 			return;
 		}
 
+		let clipped = false;
+
 		if (node.nodeName === 'ink-box') {
 			renderBorder(x, y, node, output);
+
+			const clipHorizontally = node.style.overflowX === 'hidden';
+			const clipVertically = node.style.overflowY === 'hidden';
+
+			if (clipHorizontally || clipVertically) {
+				const x1 = clipHorizontally
+					? x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT)
+					: undefined;
+
+				const x2 = clipHorizontally
+					? x +
+					  yogaNode.getComputedWidth() -
+					  yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
+					: undefined;
+
+				const y1 = clipVertically
+					? y + yogaNode.getComputedBorder(Yoga.EDGE_TOP)
+					: undefined;
+
+				const y2 = clipVertically
+					? y +
+					  yogaNode.getComputedHeight() -
+					  yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
+					: undefined;
+
+				output.clip({x1, x2, y1, y2});
+				clipped = true;
+			}
 		}
 
 		if (node.nodeName === 'ink-root' || node.nodeName === 'ink-box') {
@@ -100,6 +131,10 @@ const renderNodeToOutput = (
 					transformers: newTransformers,
 					skipStaticElements
 				});
+			}
+
+			if (clipped) {
+				output.unclip();
 			}
 		}
 	}

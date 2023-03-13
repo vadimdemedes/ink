@@ -218,6 +218,7 @@ export default createReconciler<
 
 					for (const styleKey of styleKeys) {
 						// Always include `borderColor` and `borderStyle` to ensure border is rendered,
+						// and `overflowX` and `overflowY` to ensure content is clipped,
 						// otherwise resulting `updatePayload` may not contain them
 						// if they weren't changed during this update
 						if (styleKey === 'borderStyle' || styleKey === 'borderColor') {
@@ -231,6 +232,8 @@ export default createReconciler<
 								newStyle.borderStyle;
 							(updatePayload['style'] as any).borderColor =
 								newStyle.borderColor;
+							(updatePayload['style'] as any).overflowX = newStyle.overflowX;
+							(updatePayload['style'] as any).overflowY = newStyle.overflowY;
 						}
 
 						if (newStyle[styleKey] !== oldStyle[styleKey]) {
