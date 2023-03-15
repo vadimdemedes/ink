@@ -1,1 +1,1 @@
-import './use-input.js';
+import './use-input.tsx';

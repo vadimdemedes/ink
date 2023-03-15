@@ -1,1 +1,1 @@
-import './table.js';
+import './table.tsx';

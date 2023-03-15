@@ -1,1 +1,1 @@
-import './use-stderr.js';
+import './use-stderr.tsx';

@@ -1,1 +1,1 @@
-import './static.js';
+import './static.tsx';

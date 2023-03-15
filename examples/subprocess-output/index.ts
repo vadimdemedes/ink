@@ -1,1 +1,1 @@
-import './subprocess-output.js';
+import './subprocess-output.tsx';

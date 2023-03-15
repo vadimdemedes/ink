@@ -1,1 +1,1 @@
-import './counter.js';
+import './counter.tsx';

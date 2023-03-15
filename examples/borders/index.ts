@@ -1,1 +1,1 @@
-import './borders.js';
+import './borders.tsx';

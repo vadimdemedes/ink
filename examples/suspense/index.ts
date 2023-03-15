@@ -1,1 +1,1 @@
-import './suspense.js';
+import './suspense.tsx';

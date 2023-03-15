@@ -1,1 +1,1 @@
-import './use-focus.js';
+import './use-focus.tsx';

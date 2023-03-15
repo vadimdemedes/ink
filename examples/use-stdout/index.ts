@@ -1,1 +1,1 @@
-import './use-stdout.js';
+import './use-stdout.tsx';
