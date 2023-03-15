@@ -1,6 +1,7 @@
 import widestLine from 'widest-line';
 import indentString from 'indent-string';
-import * as Yoga from './yoga.js';
+// eslint-disable-next-line n/file-extension-in-import
+import Yoga from 'yoga-wasm-web/auto';
 import wrapText from './wrap-text.js';
 import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';

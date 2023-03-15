@@ -1,4 +1,5 @@
-import Yoga, {type YogaNode} from './yoga.js';
+// eslint-disable-next-line n/file-extension-in-import
+import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
 import measureText from './measure-text.js';
 import applyStyles, {type Styles} from './styles.js';
 import wrapText from './wrap-text.js';

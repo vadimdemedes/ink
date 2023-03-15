@@ -1,7 +1,8 @@
 import process from 'node:process';
 import createReconciler from 'react-reconciler';
 import {DefaultEventPriority} from 'react-reconciler/constants.js';
-import {DISPLAY_FLEX, DISPLAY_NONE, type YogaNode} from './yoga.js';
+// eslint-disable-next-line n/file-extension-in-import
+import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
 import {
 	createTextNode,
 	appendChildNode,
@@ -157,10 +158,10 @@ export default createReconciler<
 	},
 	getPublicInstance: instance => instance,
 	hideInstance(node) {
-		node.yogaNode?.setDisplay(DISPLAY_NONE);
+		node.yogaNode?.setDisplay(Yoga.DISPLAY_NONE);
 	},
 	unhideInstance(node) {
-		node.yogaNode?.setDisplay(DISPLAY_FLEX);
+		node.yogaNode?.setDisplay(Yoga.DISPLAY_FLEX);
 	},
 	appendInitialChild: appendChildNode,
 	appendChild: appendChildNode,
