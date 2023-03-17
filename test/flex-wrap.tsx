@@ -5,7 +5,7 @@ import {Box, Text} from '../src';
 
 test('row - no wrap', t => {
 	const output = renderToString(
-		<Box flexDirection="row" width={2}>
+		<Box width={2}>
 			<Text>A</Text>
 			<Text>BC</Text>
 		</Box>
@@ -28,7 +28,7 @@ test('column - no wrap', t => {
 
 test('row - wrap content', t => {
 	const output = renderToString(
-		<Box flexDirection="row" width={2} flexWrap="wrap">
+		<Box width={2} flexWrap="wrap">
 			<Text>A</Text>
 			<Text>BC</Text>
 		</Box>
@@ -63,7 +63,7 @@ test('column - wrap content reverse', t => {
 
 test('row - wrap content reverse', t => {
 	const output = renderToString(
-		<Box flexDirection="row" height={3} width={2} flexWrap="wrap-reverse">
+		<Box height={3} width={2} flexWrap="wrap-reverse">
 			<Text>A</Text>
 			<Text>B</Text>
 			<Text>C</Text>

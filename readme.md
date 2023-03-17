@@ -690,13 +690,15 @@ Allowed values: `nowrap` `wrap` `wrap-reverse`
 See [flex-wrap](https://css-tricks.com/almanac/properties/f/flex-wrap/).
 
 ```jsx
-<Box flexDirection="row" width={2} flexWrap="wrap">
+<Box width={2} flexWrap="wrap">
 	<Text>A</Text>
 	<Text>BC</Text>
 </Box>
 // A
 // B C
+```
 
+```jsx
 <Box flexDirection="column" height={2} flexWrap="wrap">
 	<Text>A</Text>
 	<Text>B</Text>
