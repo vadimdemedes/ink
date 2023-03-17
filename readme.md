@@ -581,6 +581,58 @@ Margin on all sides. Equivalent to setting `marginTop`, `marginBottom`, `marginL
 <Box margin={2}>Top, bottom, left and right</Box>
 ```
 
+#### Gap
+
+#### gap
+
+Type: `number`\
+Default: `0`
+
+Size of the gap between an element's columns and rows. Shorthand for `columnGap` and `rowGap`.
+
+```jsx
+<Box gap={1} width={3} flexWrap="wrap">
+	<Text>A</Text>
+	<Text>B</Text>
+	<Text>C</Text>
+</Box>
+// A B
+//
+// C
+```
+
+#### columnGap
+
+Type: `number`\
+Default: `0`
+
+Size of the gap between an element's columns.
+
+```jsx
+<Box gap={1}>
+	<Text>A</Text>
+	<Text>B</Text>
+</Box>
+// A B
+```
+
+#### rowGap
+
+Type: `number`\
+Default: `0`
+
+Size of the gap between element's rows.
+
+```jsx
+<Box flexDirection="column" gap={1}>
+	<Text>A</Text>
+	<Text>B</Text>
+</Box>
+// A
+//
+// B
+```
+
 #### Flex
 
 ##### flexGrow

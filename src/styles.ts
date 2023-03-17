@@ -18,6 +18,16 @@ export type Styles = {
 	readonly position?: 'absolute' | 'relative';
 
 	/**
+	 * Gap between element's columns.
+	 */
+	readonly columnGap?: number;
+
+	/**
+	 * Gap between element's rows.
+	 */
+	readonly rowGap?: number;
+
+	/**
 	 * Top margin.
 	 */
 	readonly marginTop?: number;
@@ -376,6 +386,16 @@ const applyBorderStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
+const applyGapStyles = (node: YogaNode, style: Styles): void => {
+	if ('columnGap' in style) {
+		node.setGap(Yoga.GUTTER_COLUMN, style.columnGap ?? 0);
+	}
+
+	if ('rowGap' in style) {
+		node.setGap(Yoga.GUTTER_ROW, style.rowGap ?? 0);
+	}
+};
+
 const styles = (node: YogaNode, style: Styles = {}): void => {
 	applyPositionStyles(node, style);
 	applyMarginStyles(node, style);
@@ -384,6 +404,7 @@ const styles = (node: YogaNode, style: Styles = {}): void => {
 	applyDimensionStyles(node, style);
 	applyDisplayStyles(node, style);
 	applyBorderStyles(node, style);
+	applyGapStyles(node, style);
 };
 
 export default styles;
