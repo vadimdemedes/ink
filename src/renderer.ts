@@ -1,4 +1,5 @@
-import Yoga from 'yoga-layout-prebuilt';
+// eslint-disable-next-line n/file-extension-in-import
+import Yoga from 'yoga-wasm-web/auto';
 import renderNodeToOutput from './render-node-to-output.js';
 import Output from './output.js';
 import {type DOMElement} from './dom.js';

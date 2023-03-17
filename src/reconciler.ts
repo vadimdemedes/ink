@@ -1,7 +1,8 @@
 import process from 'node:process';
 import createReconciler from 'react-reconciler';
 import {DefaultEventPriority} from 'react-reconciler/constants.js';
-import Yoga from 'yoga-layout-prebuilt';
+// eslint-disable-next-line n/file-extension-in-import
+import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
 import {
 	createTextNode,
 	appendChildNode,
@@ -42,7 +43,7 @@ $ npm install --save-dev react-devtools-core
 	}
 }
 
-const cleanupYogaNode = (node?: Yoga.YogaNode): void => {
+const cleanupYogaNode = (node?: YogaNode): void => {
 	node?.unsetMeasureFunc();
 	node?.freeRecursive();
 };

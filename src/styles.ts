@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import Yoga, {type YogaNode} from 'yoga-layout-prebuilt';
 import {type Boxes} from 'cli-boxes';
 import {type LiteralUnion} from 'type-fest';
 import {type ForegroundColorName} from 'chalk';
+// eslint-disable-next-line n/file-extension-in-import
+import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
 
 export type Styles = {
 	readonly textWrap?:
@@ -153,7 +154,7 @@ export type Styles = {
 	readonly overflowY?: 'visible' | 'hidden';
 };
 
-const applyPositionStyles = (node: Yoga.YogaNode, style: Styles): void => {
+const applyPositionStyles = (node: YogaNode, style: Styles): void => {
 	if ('position' in style) {
 		node.setPositionType(
 			style.position === 'absolute'
@@ -163,7 +164,7 @@ const applyPositionStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	}
 };
 
-const applyMarginStyles = (node: Yoga.YogaNode, style: Styles): void => {
+const applyMarginStyles = (node: YogaNode, style: Styles): void => {
 	if ('marginLeft' in style) {
 		node.setMargin(Yoga.EDGE_START, style.marginLeft || 0);
 	}
@@ -181,7 +182,7 @@ const applyMarginStyles = (node: Yoga.YogaNode, style: Styles): void => {
 	}
 };
 
-const applyPaddingStyles = (node: Yoga.YogaNode, style: Styles): void => {
+const applyPaddingStyles = (node: YogaNode, style: Styles): void => {
 	if ('paddingLeft' in style) {
 		node.setPadding(Yoga.EDGE_LEFT, style.paddingLeft || 0);
 	}

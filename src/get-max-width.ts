@@ -1,6 +1,7 @@
-import Yoga from 'yoga-layout-prebuilt';
+// eslint-disable-next-line n/file-extension-in-import
+import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
 
-const getMaxWidth = (yogaNode: Yoga.YogaNode) => {
+const getMaxWidth = (yogaNode: YogaNode) => {
 	return (
 		yogaNode.getComputedWidth() -
 		yogaNode.getComputedPadding(Yoga.EDGE_LEFT) -
