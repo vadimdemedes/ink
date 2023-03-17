@@ -1,5 +1,3 @@
-// eslint-disable-next-line n/file-extension-in-import
-import Yoga from 'yoga-wasm-web/auto';
 import renderNodeToOutput from './render-node-to-output.js';
 import Output from './output.js';
 import {type DOMElement} from './dom.js';
@@ -10,12 +8,8 @@ type Result = {
 	staticOutput: string;
 };
 
-const renderer = (node: DOMElement, terminalWidth: number): Result => {
-	node.yogaNode!.setWidth(terminalWidth);
-
+const renderer = (node: DOMElement): Result => {
 	if (node.yogaNode) {
-		node.yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
-
 		const output = new Output({
 			width: node.yogaNode.getComputedWidth(),
 			height: node.yogaNode.getComputedHeight()
