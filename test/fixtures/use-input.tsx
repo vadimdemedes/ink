@@ -1,7 +1,8 @@
-import React, {FC} from 'react';
-import {render, useInput, useApp} from '../..';
+import process from 'node:process';
+import React from 'react';
+import {render, useInput, useApp} from '../../src/index.js';
 
-const UserInput: FC<{test: string}> = ({test}) => {
+function UserInput({test}: {test: string | undefined}) {
 	const {exit} = useApp();
 
 	useInput((input, key) => {
@@ -89,11 +90,9 @@ const UserInput: FC<{test: string}> = ({test}) => {
 	});
 
 	return null;
-};
+}
 
 const app = render(<UserInput test={process.argv[2]} />);
 
-(async () => {
-	await app.waitUntilExit();
-	console.log('exited');
-})();
+await app.waitUntilExit();
+console.log('exited');

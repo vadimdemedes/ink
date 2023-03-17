@@ -1,8 +1,7 @@
-'use strict';
-const React = require('react');
-const {render, Text, useStderr} = require('../..');
+import React from 'react';
+import {render, Text, useStderr} from '../../src/index.js';
 
-const Example = () => {
+function Example() {
 	const {write} = useStderr();
 
 	React.useEffect(() => {
@@ -16,6 +15,6 @@ const Example = () => {
 	}, []);
 
 	return <Text>Hello World</Text>;
-};
+}
 
 render(<Example />);

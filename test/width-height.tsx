@@ -1,7 +1,7 @@
 import React from 'react';
 import test from 'ava';
-import {renderToString} from './helpers/render-to-string';
-import {Box, Text} from '../src';
+import {Box, Text} from '../src/index.js';
+import {renderToString} from './helpers/render-to-string.js';
 
 test('set width', t => {
 	const output = renderToString(
@@ -92,7 +92,7 @@ test('set height in percent', t => {
 
 test('cut text over the set height', t => {
 	const output = renderToString(
-		<Box textWrap="wrap" height={2}>
+		<Box height={2}>
 			<Text>AAAABBBBCCCC</Text>
 		</Box>,
 		{columns: 4}

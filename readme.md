@@ -1,11 +1,15 @@
-<h1 align="center">
+[![](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner2-direct.svg)](https://github.com/vshymanskyy/StandWithUkraine/blob/main/docs/README.md)
+
+---
+
+<div align="center">
 	<br>
 	<br>
-	<img width="200" alt="Ink" src="media/logo.png">
+	<img width="240" alt="Ink" src="media/logo.png">
 	<br>
 	<br>
 	<br>
-</h1>
+</div>
 
 > React for CLIs. Build and test your CLI output using components.
 
@@ -20,12 +24,39 @@ Since Ink is a React renderer, it means that all features of React are supported
 Head over to [React](https://reactjs.org) website for documentation on how to use it.
 Only Ink's methods will be documented in this readme.
 
-**Note:** This is documentation for Ink 3. If you're looking for docs on Ink 2, check out [this release](https://github.com/vadimdemedes/ink/tree/v2.7.1). There's also a [migration guide](migrate.md) from Ink 2 available.
+**Note:** This is documentation for Ink 4. If you're looking for docs on Ink 3, check out [this release](https://github.com/vadimdemedes/ink/tree/v3.2.0).
+
+---
+
+<div align="center">
+	<p>
+		<p>
+			<sup>
+				<a href="https://opencollective.com/vadimdemedes">My open source work is supported by the community ❤️</a>
+			</sup>
+		</p>
+		<sup>Special thanks to:</sup>
+		<br>
+		<a href="https://workos.com/?utm_campaign=github_repo&utm_medium=referral&utm_content=ink&utm_source=github">
+			<div>
+				<img src="https://vadimdemedes.com/github/workos.svg" width="200" alt="WorkOS">
+			</div>
+			<b>Your app, enterprise-ready.</b>
+			<div>
+				<sub>Start selling to enterprise customers with just a few lines of code.</sub>
+				<br>
+				<sup>Add Single Sign-On (and more) in minutes instead of months.</sup>
+			</div>
+		</a>
+	</p>
+	<br>
+	<br>
+</div>
 
 ## Install
 
-```
-$ npm install ink react
+```sh
+npm install ink react
 ```
 
 ## Usage
@@ -60,36 +91,43 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 
 ## Who's Using Ink?
 
+- [Cloudflare's Wrangler](https://github.com/cloudflare/wrangler2) - The CLI for Cloudflare Workers.
 - [Gatsby](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing fast websites.
 - [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
 - [Terraform CDK](https://github.com/hashicorp/terraform-cdk) - CDK (Cloud Development Kit) for HashiCorp Terraform.
 - [Twilio's SIGNAL](https://github.com/twilio-labs/plugin-signal2020) - CLI for Twilio's SIGNAL conference. [Blog post](https://www.twilio.com/blog/building-conference-cli-in-react).
 - [Typewriter](https://github.com/segmentio/typewriter) - Generates strongly-typed [Segment](https://segment.com) analytics clients from arbitrary JSON Schema.
 - [Prisma](https://www.prisma.io) - The unified data layer for modern applications.
-- [Wallace](https://www.projectwallace.com) - Pretty CSS analytics on the CLI.
+- [Wallace](https://www.projectwallace.com) - Pretty CSS analytics.
 - [Blitz](https://blitzjs.com) - The Fullstack React Framework.
 - [New York Times](https://github.com/nytimes/kyt) - NYT uses Ink `kyt` - a toolkit that encapsulates and manages the configuration for web apps.
 - [tink](https://github.com/npm/tink) - Next-generation runtime and package manager.
-- [loki](https://github.com/oblador/loki) - Visual Regression Testing for Storybook.
+- [Inkle](https://github.com/jrr/inkle) - Wordle game.
+- [loki](https://github.com/oblador/loki) - Visual regression testing for Storybook.
 - [Bit](https://github.com/teambit/bit) - Build, distribute and collaborate on components.
 - [Remirror](https://github.com/remirror/remirror) - Your friendly, world-class editor toolkit.
 - [Prime](https://github.com/birkir/prime) - Open source GraphQL CMS.
 - [Splash](https://github.com/Shopify/polaris-react/tree/master/scripts/splash) - Observe the splash zone of a change across the Shopify's [Polaris](https://polaris.shopify.com) component library.
-- [emoj](https://github.com/sindresorhus/emoj) - Find relevant emoji on the command-line.
-- [emma](https://github.com/maticzav/emma-cli) - Terminal assistant to find and install npm packages.
+- [emoj](https://github.com/sindresorhus/emoj) - Find relevant emojis.
+- [emma](https://github.com/maticzav/emma-cli) - Find and install npm packages.
 - [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command line tools for time-saving web developers.
-- [share](https://github.com/marionebl/share-cli) - Quickly share files from your command line.
+- [share](https://github.com/marionebl/share-cli) - Quickly share files.
 - [Kubelive](https://github.com/ameerthehacker/kubelive) - CLI for Kubernetes to provide live data about the cluster and its resources.
-- [changelog-view](https://github.com/jdeniau/changelog-view) - Tool view changelog in console.
-- [cfpush](https://github.com/mamachanko/cfpush) - An interactive Cloud Foundry tutorial in your terminal.
-- [startd](https://github.com/mgrip/startd) - Turn your React component into a web app from the command-line.
-- [wiki-cli](https://github.com/hexrcs/wiki-cli) - Search Wikipedia and read summaries directly in your terminal.
+- [changelog-view](https://github.com/jdeniau/changelog-view) - View changelogs.
+- [cfpush](https://github.com/mamachanko/cfpush) - An interactive Cloud Foundry tutorial.
+- [startd](https://github.com/mgrip/startd) - Turn your React component into a web app.
+- [wiki-cli](https://github.com/hexrcs/wiki-cli) - Search Wikipedia and read summaries.
 - [garson](https://github.com/goliney/garson) - Build interactive config-based command-line interfaces.
 - [git-contrib-calendar](https://github.com/giannisp/git-contrib-calendar) - Display a contributions calendar for any git repository.
 - [gitgud](https://github.com/GitGud-org/GitGud) - An interactive command-line GUI for Git.
-- [Autarky](https://github.com/pranshuchittora/autarky) - An interactive CLI to find and delete old `node_modules` directories in order to free up disk space.
+- [Autarky](https://github.com/pranshuchittora/autarky) - Find and delete old `node_modules` directories in order to free up disk space.
 - [fast-cli](https://github.com/sindresorhus/fast-cli) - Test your download and upload speed.
 - [tasuku](https://github.com/privatenumber/tasuku) - Minimal task runner.
+- [mnswpr](https://github.com/mordv/mnswpr) - Minesweeper game.
+- [lrn](https://github.com/krychu/lrn) - Learning by repetition.
+- [turdle](https://github.com/mynameisankit/turdle) - Wordle game.
+- [Shopify CLI](https://github.com/Shopify/cli) - Build apps, themes, and storefronts for Shopify.
+- [ToDesktop CLI](https://www.todesktop.com/electron) - An all-in-one platform for building Electron apps.
 
 ## Contents
 
@@ -120,16 +158,14 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 
 Use [create-ink-app](https://github.com/vadimdemedes/create-ink-app) to quickly scaffold a new Ink-based CLI.
 
-```
-$ mkdir my-ink-cli
-$ cd my-ink-cli
-$ npx create-ink-app
+```sh
+npx create-ink-app my-ink-cli
 ```
 
 Alternatively, create a TypeScript project:
 
-```
-$ npx create-ink-app --typescript
+```sh
+npx create-ink-app --typescript my-ink-cli
 ```
 
 <details><summary>Manual setup</summary>
@@ -139,8 +175,8 @@ Ink requires the same Babel setup as you would do for regular React-based apps i
 Set up Babel with a React preset to ensure all examples in this readme work as expected.
 After [installing Babel](https://babeljs.io/docs/en/usage), install `@babel/preset-react` and insert the following configuration in `babel.config.json`:
 
-```
-$ npm install --save-dev @babel/preset-react
+```sh
+npm install --save-dev @babel/preset-react
 ```
 
 ```json
@@ -172,17 +208,17 @@ render(<Demo />);
 
 Then, transpile this file with Babel:
 
-```
-$ npx babel source.js -o cli.js
+```sh
+npx babel source.js -o cli.js
 ```
 
 Now you can run `cli.js` with Node.js:
 
-```
-$ node cli
+```sh
+node cli
 ```
 
-If you don't like transpiling files during development, you can use [import-jsx](https://github.com/vadimdemedes/import-jsx) to `require()` a JSX file and transpile it on the fly.
+If you don't like transpiling files during development, you can use [import-jsx](https://github.com/vadimdemedes/import-jsx) or [@esbuild-kit/esm-loader](https://github.com/esbuild-kit/esm-loader) to `import` a JSX file and transpile it on the fly.
 
 </p>
 </details>
@@ -731,7 +767,7 @@ See [align-items](https://css-tricks.com/almanac/properties/a/align-items/).
 
 Type: `string`\
 Default: `auto`\
-Allowed vales: `auto` `flex-start` `center` `flex-end`
+Allowed values: `auto` `flex-start` `center` `flex-end`
 
 See [align-self](https://css-tricks.com/almanac/properties/a/align-self/).
 
@@ -809,6 +845,30 @@ Allowed values: `flex` `none`\
 Default: `flex`
 
 Set this property to `none` to hide the element.
+
+##### overflowX
+
+Type: `string`\
+Allowed values: `visible` `hidden`\
+Default: `visible`
+
+Behavior for an element's overflow in horizontal direction.
+
+##### overflowY
+
+Type: `string`\
+Allowed values: `visible` `hidden`\
+Default: `visible`
+
+Behavior for an element's overflow in vertical direction.
+
+##### overflow
+
+Type: `string`\
+Allowed values: `visible` `hidden`\
+Default: `visible`
+
+Shortcut for setting `overflowX` and `overflowY` at the same time.
 
 #### Borders
 
@@ -1359,7 +1419,7 @@ Default: `process.stdout`
 import {useStdout} from 'ink';
 
 const Example = () => {
-	const {stdout} = useStdout;
+	const {stdout} = useStdout();
 
 	return …
 };
@@ -1485,7 +1545,7 @@ const Example = () => {
 render(<Example />);
 ```
 
-See example in [examples/use-focus](examples/use-focus/use-focus.js) and [examples/use-focus-with-id](examples/use-focus/use-focus-with-id.js).
+See example in [examples/use-focus](examples/use-focus/use-focus.js) and [examples/use-focus-with-id](examples/use-focus-with-id/use-focus-with-id.js).
 
 ### useFocusManager()
 
@@ -1771,14 +1831,14 @@ Check out [ink-testing-library](https://github.com/vadimdemedes/ink-testing-libr
 Ink supports [React Devtools](https://github.com/facebook/react/tree/master/packages/react-devtools) out-of-the-box.
 To enable integration with React Devtools in your Ink-based CLI, run it with `DEV=true` environment variable:
 
-```
-$ DEV=true my-cli
+```sh
+DEV=true my-cli
 ```
 
 Then, start React Devtools itself:
 
-```
-$ npx react-devtools
+```sh
+npx react-devtools
 ```
 
 After it starts up, you should see the component tree of your CLI.
@@ -1791,23 +1851,23 @@ You can even inspect and change the props of components, and see the results imm
 - [ink-text-input](https://github.com/vadimdemedes/ink-text-input) - Text input.
 - [ink-spinner](https://github.com/vadimdemedes/ink-spinner) - Spinner.
 - [ink-select-input](https://github.com/vadimdemedes/ink-select-input) - Select (dropdown) input.
-- [ink-link](https://github.com/sindresorhus/ink-link) - Link component.
-- [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color component.
-- [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text component.
+- [ink-link](https://github.com/sindresorhus/ink-link) - Link.
+- [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color.
+- [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text.
 - [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
-- [ink-tab](https://github.com/jdeniau/ink-tab) - Tab component.
-- [ink-color-pipe](https://github.com/LitoMore/ink-color-pipe) - Create color text with simpler style strings in Ink.
+- [ink-tab](https://github.com/jdeniau/ink-tab) - Tab.
+- [ink-color-pipe](https://github.com/LitoMore/ink-color-pipe) - Create color text with simpler style strings.
 - [ink-multi-select](https://github.com/karaggeorge/ink-multi-select) - Select one or more values from a list
-- [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider component.
-- [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Configurable component for rendering progress bars.
-- [ink-table](https://github.com/maticzav/ink-table) - Table component.
+- [ink-divider](https://github.com/JureSotosek/ink-divider) - A divider.
+- [ink-progress-bar](https://github.com/brigand/ink-progress-bar) - Progress bar.
+- [ink-table](https://github.com/maticzav/ink-table) - Table.
 - [ink-ascii](https://github.com/hexrcs/ink-ascii) - Awesome text component with more font choices, based on Figlet.
 - [ink-markdown](https://github.com/cameronhunter/ink-markdown) - Render syntax highlighted Markdown.
 - [ink-quicksearch-input](https://github.com/Eximchain/ink-quicksearch-input) - Select component with fast quicksearch-like navigation.
 - [ink-confirm-input](https://github.com/kevva/ink-confirm-input) - Yes/No confirmation input.
 - [ink-syntax-highlight](https://github.com/vsashyn/ink-syntax-highlight) - Code syntax highlighting.
-- [ink-form](https://github.com/lukasbach/ink-form) - Form component.
-- [ink-task-list](https://github.com/privatenumber/ink-task-list) - Task list component.
+- [ink-form](https://github.com/lukasbach/ink-form) - Form.
+- [ink-task-list](https://github.com/privatenumber/ink-task-list) - Task list.
 
 ## Useful Hooks
 
@@ -1815,17 +1875,24 @@ You can even inspect and change the props of components, and see the results imm
 
 ## Examples
 
-- [Jest](examples/jest/jest.js) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
-- [Counter](examples/counter/counter.js) - Simple counter that increments every 100ms [(live demo)](https://ink-counter-demo.vadimdemedes.repl.run/).
-- [Form with Validation](https://github.com/final-form/rff-cli-example) - Manage form state using [Final Form](https://github.com/final-form/final-form#-final-form).
-- [Borders](examples/borders/borders.js) - Add borders to `<Box>` component.
-- [Suspense](examples/suspense/suspense.js) - Use React Suspense.
-- [Table](examples/table/table.js) - Render a table with multiple columns and rows.
-- [Focus Management](examples/use-focus/use-focus.js) - Use `useFocus` hook to manage focus between components.
-- [User Input](examples/use-input/use-input.js) - Listen to user input.
-- [Write to stdout](examples/use-stdout/use-stdout.js) - Write to stdout bypassing main Ink output.
-- [Write to stderr](examples/use-stderr/use-stderr.js) - Write to stderr bypassing main Ink output.
-- [Static](examples/static/static.js) - Use `<Static>` to render permanent output.
+The [`examples`](/examples) directory contains a set of real examples. You can run them with:
+
+```bash
+npm run example examples/[example name]
+# e.g. npm run example examples/borders
+```
+
+- [Jest](examples/jest/jest.tsx) - Implementation of basic Jest UI [(live demo)](https://ink-jest-demo.vadimdemedes.repl.run/).
+- [Counter](examples/counter/counter.tsx) - Simple counter that increments every 100ms [(live demo)](https://ink-counter-demo.vadimdemedes.repl.run/).
+- [Form with validation](https://github.com/final-form/rff-cli-example) - Manage form state using [Final Form](https://github.com/final-form/final-form#-final-form).
+- [Borders](examples/borders/borders.tsx) - Add borders to `<Box>` component.
+- [Suspense](examples/suspense/suspense.tsx) - Use React Suspense.
+- [Table](examples/table/table.tsx) - Render a table with multiple columns and rows.
+- [Focus management](examples/use-focus/use-focus.tsx) - Use `useFocus` hook to manage focus between components.
+- [User input](examples/use-input/use-input.tsx) - Listen to user input.
+- [Write to stdout](examples/use-stdout/use-stdout.tsx) - Write to stdout bypassing main Ink output.
+- [Write to stderr](examples/use-stderr/use-stderr.tsx) - Write to stderr bypassing main Ink output.
+- [Static](examples/static/static.tsx) - Use `<Static>` to render permanent output.
 - [Child process](examples/subprocess-output) - Render output from a child process.
 
 ## Maintainers

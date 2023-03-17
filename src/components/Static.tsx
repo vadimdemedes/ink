@@ -1,7 +1,7 @@
-import React, {useMemo, useState, useLayoutEffect, ReactNode} from 'react';
-import {Styles} from '../styles';
+import React, {useMemo, useState, useLayoutEffect, type ReactNode} from 'react';
+import {type Styles} from '../styles.js';
 
-export interface Props<T> {
+export type Props<T> = {
 	/**
 	 * Array of items of any type to render using a function you pass as a component child.
 	 */
@@ -18,7 +18,7 @@ export interface Props<T> {
 	 * Note that `key` must be assigned to the root component.
 	 */
 	readonly children: (item: T, index: number) => ReactNode;
-}
+};
 
 /**
  * `<Static>` component permanently renders its output above everything else.
@@ -32,7 +32,7 @@ export interface Props<T> {
  * a list of completed tests. [Gatsby](https://github.com/gatsbyjs/gatsby) uses it
  * to display a list of generated pages, while still displaying a live progress bar.
  */
-const Static = <T,>(props: Props<T>) => {
+export default function Static<T>(props: Props<T>) {
 	const {items, children: render, style: customStyle} = props;
 	const [index, setIndex] = useState(0);
 
@@ -58,16 +58,8 @@ const Static = <T,>(props: Props<T>) => {
 	);
 
 	return (
-		<ink-box
-			// @ts-ignore
-			internal_static
-			style={style}
-		>
+		<ink-box internal_static style={style}>
 			{children}
 		</ink-box>
 	);
-};
-
-Static.displayName = 'Static';
-
-export default Static;
+}

@@ -1,9 +1,8 @@
-import {
-	unstable_scheduleCallback as schedulePassiveEffects,
-	unstable_cancelCallback as cancelPassiveEffects
-} from 'scheduler';
+import process from 'node:process';
 import createReconciler from 'react-reconciler';
-import Yoga from 'yoga-layout-prebuilt';
+import {DefaultEventPriority} from 'react-reconciler/constants.js';
+// eslint-disable-next-line n/file-extension-in-import
+import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
 import {
 	createTextNode,
 	appendChildNode,
@@ -13,34 +12,47 @@ import {
 	setTextNodeValue,
 	createNode,
 	setAttribute,
-	DOMNodeAttribute,
-	TextNode,
-	ElementNames,
-	DOMElement
-} from './dom';
-import {Styles} from './styles';
-import {OutputTransformer} from './render-node-to-output';
+	type DOMNodeAttribute,
+	type TextNode,
+	type ElementNames,
+	type DOMElement
+} from './dom.js';
+import {type Styles} from './styles.js';
+import {type OutputTransformer} from './render-node-to-output.js';
 
 // We need to conditionally perform devtools connection to avoid
 // accidentally breaking other third-party code.
 // See https://github.com/vadimdemedes/ink/issues/384
-if (process.env.DEV === 'true') {
-	// eslint-disable-next-line import/no-unassigned-import
-	require('./devtools');
+if (process.env['DEV'] === 'true') {
+	try {
+		await import('./devtools.js');
+		// eslint-disable-next-line @typescript-eslint/no-implicit-any-catch
+	} catch (error: any) {
+		if (error.code === 'MODULE_NOT_FOUND') {
+			console.warn(
+				`
+Debugging with React Devtools requires \`react-devtools-core\` dependency to be installed.
+
+$ npm install --save-dev react-devtools-core
+				`.trim() + '\n'
+			);
+		} else {
+			// eslint-disable-next-line @typescript-eslint/no-throw-literal
+			throw error;
+		}
+	}
 }
 
-const cleanupYogaNode = (node?: Yoga.YogaNode): void => {
+const cleanupYogaNode = (node?: YogaNode): void => {
 	node?.unsetMeasureFunc();
 	node?.freeRecursive();
 };
 
-interface Props {
-	[key: string]: unknown;
-}
+type Props = Record<string, unknown>;
 
-interface HostContext {
+type HostContext = {
 	isInsideText: boolean;
-}
+};
 
 export default createReconciler<
 	ElementNames,
@@ -57,18 +69,17 @@ export default createReconciler<
 	unknown,
 	unknown
 >({
-	// @ts-ignore
-	schedulePassiveEffects,
-	cancelPassiveEffects,
-	now: Date.now,
 	getRootHostContext: () => ({
 		isInsideText: false
 	}),
 	prepareForCommit: () => null,
 	preparePortalMount: () => null,
 	clearContainer: () => false,
-	shouldDeprioritizeSubtree: () => false,
-	resetAfterCommit: rootNode => {
+	resetAfterCommit(rootNode) {
+		if (typeof rootNode.onComputeLayout === 'function') {
+			rootNode.onComputeLayout();
+		}
+
 		// Since renders are throttled at the instance level and <Static> component children
 		// are rendered only once and then get deleted, we need an escape hatch to
 		// trigger an immediate render to ensure <Static> children are written to output before they get erased
@@ -85,7 +96,7 @@ export default createReconciler<
 			rootNode.onRender();
 		}
 	},
-	getChildHostContext: (parentHostContext, type) => {
+	getChildHostContext(parentHostContext, type) {
 		const previousIsInsideText = parentHostContext.isInsideText;
 		const isInsideText = type === 'ink-text' || type === 'ink-virtual-text';
 
@@ -96,7 +107,7 @@ export default createReconciler<
 		return {isInsideText};
 	},
 	shouldSetTextContent: () => false,
-	createInstance: (originalType, newProps, _root, hostContext) => {
+	createInstance(originalType, newProps, _root, hostContext) {
 		if (hostContext.isInsideText && originalType === 'ink-box') {
 			throw new Error(`<Box> can’t be nested inside <Text> component`);
 		}
@@ -111,20 +122,29 @@ export default createReconciler<
 		for (const [key, value] of Object.entries(newProps)) {
 			if (key === 'children') {
 				continue;
-			} else if (key === 'style') {
-				setStyle(node, value as Styles);
-			} else if (key === 'internal_transform') {
-				node.internal_transform = value as OutputTransformer;
-			} else if (key === 'internal_static') {
-				node.internal_static = true;
-			} else {
-				setAttribute(node, key, value as DOMNodeAttribute);
 			}
+
+			if (key === 'style') {
+				setStyle(node, value as Styles);
+				continue;
+			}
+
+			if (key === 'internal_transform') {
+				node.internal_transform = value as OutputTransformer;
+				continue;
+			}
+
+			if (key === 'internal_static') {
+				node.internal_static = true;
+				continue;
+			}
+
+			setAttribute(node, key, value as DOMNodeAttribute);
 		}
 
 		return node;
 	},
-	createTextInstance: (text, _root, hostContext) => {
+	createTextInstance(text, _root, hostContext) {
 		if (!hostContext.isInsideText) {
 			throw new Error(
 				`Text string "${text}" must be rendered inside <Text> component`
@@ -133,24 +153,24 @@ export default createReconciler<
 
 		return createTextNode(text);
 	},
-	resetTextContent: () => {},
-	hideTextInstance: node => {
+	resetTextContent() {},
+	hideTextInstance(node) {
 		setTextNodeValue(node, '');
 	},
-	unhideTextInstance: (node, text) => {
+	unhideTextInstance(node, text) {
 		setTextNodeValue(node, text);
 	},
 	getPublicInstance: instance => instance,
-	hideInstance: node => {
+	hideInstance(node) {
 		node.yogaNode?.setDisplay(Yoga.DISPLAY_NONE);
 	},
-	unhideInstance: node => {
+	unhideInstance(node) {
 		node.yogaNode?.setDisplay(Yoga.DISPLAY_FLEX);
 	},
 	appendInitialChild: appendChildNode,
 	appendChild: appendChildNode,
 	insertBefore: insertBeforeNode,
-	finalizeInitialChildren: (node, _type, _props, rootNode) => {
+	finalizeInitialChildren(node, _type, _props, rootNode) {
 		if (node.internal_static) {
 			rootNode.isStaticDirty = true;
 
@@ -161,14 +181,27 @@ export default createReconciler<
 
 		return false;
 	},
+	isPrimaryRenderer: true,
 	supportsMutation: true,
+	supportsPersistence: false,
+	supportsHydration: false,
+	scheduleTimeout: setTimeout,
+	cancelTimeout: clearTimeout,
+	noTimeout: -1,
+	getCurrentEventPriority: () => DefaultEventPriority,
+	beforeActiveInstanceBlur() {},
+	afterActiveInstanceBlur() {},
+	detachDeletedInstance() {},
+	getInstanceFromNode: () => null,
+	prepareScopeUpdate() {},
+	getInstanceFromScope: () => null,
 	appendChildToContainer: appendChildNode,
 	insertInContainerBefore: insertBeforeNode,
-	removeChildFromContainer: (node, removeNode) => {
+	removeChildFromContainer(node, removeNode) {
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
 	},
-	prepareUpdate: (node, _type, oldProps, newProps, rootNode) => {
+	prepareUpdate(node, _type, oldProps, newProps, rootNode) {
 		if (node.internal_static) {
 			rootNode.isStaticDirty = true;
 		}
@@ -180,37 +213,42 @@ export default createReconciler<
 			if (newProps[key] !== oldProps[key]) {
 				const isStyle =
 					key === 'style' &&
-					typeof newProps.style === 'object' &&
-					typeof oldProps.style === 'object';
+					typeof newProps['style'] === 'object' &&
+					typeof oldProps['style'] === 'object';
 
 				if (isStyle) {
-					const newStyle = newProps.style as Styles;
-					const oldStyle = oldProps.style as Styles;
+					const newStyle = newProps['style'] as Styles;
+					const oldStyle = oldProps['style'] as Styles;
 					const styleKeys = Object.keys(newStyle) as Array<keyof Styles>;
 
 					for (const styleKey of styleKeys) {
 						// Always include `borderColor` and `borderStyle` to ensure border is rendered,
+						// and `overflowX` and `overflowY` to ensure content is clipped,
 						// otherwise resulting `updatePayload` may not contain them
 						// if they weren't changed during this update
 						if (styleKey === 'borderStyle' || styleKey === 'borderColor') {
-							if (typeof updatePayload.style !== 'object') {
+							if (typeof updatePayload['style'] !== 'object') {
 								// Linter didn't like `= {} as Style`
 								const style: Styles = {};
-								updatePayload.style = style;
+								updatePayload['style'] = style;
 							}
 
-							(updatePayload.style as any).borderStyle = newStyle.borderStyle;
-							(updatePayload.style as any).borderColor = newStyle.borderColor;
+							(updatePayload['style'] as any).borderStyle =
+								newStyle.borderStyle;
+							(updatePayload['style'] as any).borderColor =
+								newStyle.borderColor;
+							(updatePayload['style'] as any).overflowX = newStyle.overflowX;
+							(updatePayload['style'] as any).overflowY = newStyle.overflowY;
 						}
 
 						if (newStyle[styleKey] !== oldStyle[styleKey]) {
-							if (typeof updatePayload.style !== 'object') {
+							if (typeof updatePayload['style'] !== 'object') {
 								// Linter didn't like `= {} as Style`
 								const style: Styles = {};
-								updatePayload.style = style;
+								updatePayload['style'] = style;
 							}
 
-							(updatePayload.style as any)[styleKey] = newStyle[styleKey];
+							(updatePayload['style'] as any)[styleKey] = newStyle[styleKey];
 						}
 					}
 
@@ -223,25 +261,34 @@ export default createReconciler<
 
 		return updatePayload;
 	},
-	commitUpdate: (node, updatePayload) => {
+	commitUpdate(node, updatePayload) {
 		for (const [key, value] of Object.entries(updatePayload)) {
 			if (key === 'children') {
 				continue;
-			} else if (key === 'style') {
-				setStyle(node, value as Styles);
-			} else if (key === 'internal_transform') {
-				node.internal_transform = value as OutputTransformer;
-			} else if (key === 'internal_static') {
-				node.internal_static = true;
-			} else {
-				setAttribute(node, key, value as DOMNodeAttribute);
 			}
+
+			if (key === 'style') {
+				setStyle(node, value as Styles);
+				continue;
+			}
+
+			if (key === 'internal_transform') {
+				node.internal_transform = value as OutputTransformer;
+				continue;
+			}
+
+			if (key === 'internal_static') {
+				node.internal_static = true;
+				continue;
+			}
+
+			setAttribute(node, key, value as DOMNodeAttribute);
 		}
 	},
-	commitTextUpdate: (node, _oldText, newText) => {
+	commitTextUpdate(node, _oldText, newText) {
 		setTextNodeValue(node, newText);
 	},
-	removeChild: (node, removeNode) => {
+	removeChild(node, removeNode) {
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
 	}

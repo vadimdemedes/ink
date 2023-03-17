@@ -1,10 +1,11 @@
+import process from 'node:process';
 import {createContext} from 'react';
 
-export interface Props {
+export type Props = {
 	/**
 	 * Stdout stream passed to `render()` in `options.stdout` or `process.stdout` by default.
 	 */
-	readonly stdout?: NodeJS.WriteStream;
+	readonly stdout: NodeJS.WriteStream;
 
 	/**
 	 * Write any string to stdout, while preserving Ink's output.
@@ -12,14 +13,15 @@ export interface Props {
 	 * It's similar to `<Static>`, except it can't accept components, it only works with strings.
 	 */
 	readonly write: (data: string) => void;
-}
+};
 
 /**
  * `StdoutContext` is a React context, which exposes stdout stream, where Ink renders your app.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const StdoutContext = createContext<Props>({
-	stdout: undefined,
-	write: () => {}
+	stdout: process.stdout,
+	write() {}
 });
 
 StdoutContext.displayName = 'InternalStdoutContext';

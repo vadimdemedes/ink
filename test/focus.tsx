@@ -1,13 +1,13 @@
-import EventEmitter from 'events';
-import React, {useEffect, FC} from 'react';
+import EventEmitter from 'node:events';
+import React, {useEffect} from 'react';
 import delay from 'delay';
 import test from 'ava';
 import {spy} from 'sinon';
-import {render, Box, Text, useFocus, useFocusManager} from '..';
-import createStdout from './helpers/create-stdout';
+import {render, Box, Text, useFocus, useFocusManager} from '../src/index.js';
+import createStdout from './helpers/create-stdout.js';
 
 const createStdin = () => {
-	const stdin = new EventEmitter();
+	const stdin = new EventEmitter() as NodeJS.WriteStream;
 	stdin.isTTY = true;
 	stdin.setRawMode = spy();
 	stdin.setEncoding = () => {};
@@ -17,7 +17,7 @@ const createStdin = () => {
 	return stdin;
 };
 
-interface TestProps {
+type TestProps = {
 	showFirst?: boolean;
 	disableSecond?: boolean;
 	autoFocus?: boolean;
@@ -25,9 +25,9 @@ interface TestProps {
 	focusNext?: boolean;
 	focusPrevious?: boolean;
 	unmountChildren?: boolean;
-}
+};
 
-const Test: FC<TestProps> = ({
+function Test({
 	showFirst = true,
 	disableSecond = false,
 	autoFocus = false,
@@ -35,7 +35,7 @@ const Test: FC<TestProps> = ({
 	focusNext = false,
 	focusPrevious = false,
 	unmountChildren = false
-}) => {
+}: TestProps) {
 	const focusManager = useFocusManager();
 
 	useEffect(() => {
@@ -69,15 +69,15 @@ const Test: FC<TestProps> = ({
 			<Item label="Third" autoFocus={autoFocus} />
 		</Box>
 	);
-};
+}
 
-interface ItemProps {
+type ItemProps = {
 	label: string;
 	autoFocus: boolean;
 	disabled?: boolean;
-}
+};
 
-const Item: FC<ItemProps> = ({label, autoFocus, disabled = false}) => {
+function Item({label, autoFocus, disabled = false}: ItemProps) {
 	const {isFocused} = useFocus({
 		autoFocus,
 		isActive: !disabled
@@ -88,7 +88,7 @@ const Item: FC<ItemProps> = ({label, autoFocus, disabled = false}) => {
 			{label} {isFocused && '✔'}
 		</Text>
 	);
-};
+}
 
 test('dont focus on register when auto focus is off', async t => {
 	const stdout = createStdout();
@@ -101,7 +101,10 @@ test('dont focus on register when auto focus is off', async t => {
 
 	await delay(100);
 
-	t.is(stdout.write.lastCall.args[0], ['First', 'Second', 'Third'].join('\n'));
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		['First', 'Second', 'Third'].join('\n')
+	);
 });
 
 test('focus the first component to register', async t => {
@@ -116,7 +119,7 @@ test('focus the first component to register', async t => {
 	await delay(100);
 
 	t.is(
-		stdout.write.lastCall.args[0],
+		(stdout.write as any).lastCall.args[0],
 		['First ✔', 'Second', 'Third'].join('\n')
 	);
 });
@@ -133,7 +136,10 @@ test('unfocus active component on Esc', async t => {
 	await delay(100);
 	stdin.emit('data', '\u001B');
 	await delay(100);
-	t.is(stdout.write.lastCall.args[0], ['First', 'Second', 'Third'].join('\n'));
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		['First', 'Second', 'Third'].join('\n')
+	);
 });
 
 test('switch focus to first component on Tab', async t => {
@@ -150,7 +156,7 @@ test('switch focus to first component on Tab', async t => {
 	await delay(100);
 
 	t.is(
-		stdout.write.lastCall.args[0],
+		(stdout.write as any).lastCall.args[0],
 		['First ✔', 'Second', 'Third'].join('\n')
 	);
 });
@@ -170,7 +176,7 @@ test('switch focus to the next component on Tab', async t => {
 	await delay(100);
 
 	t.is(
-		stdout.write.lastCall.args[0],
+		(stdout.write as any).lastCall.args[0],
 		['First', 'Second ✔', 'Third'].join('\n')
 	);
 });
@@ -190,7 +196,7 @@ test('switch focus to the first component if currently focused component is the 
 	await delay(100);
 
 	t.is(
-		stdout.write.lastCall.args[0],
+		(stdout.write as any).lastCall.args[0],
 		['First', 'Second', 'Third ✔'].join('\n')
 	);
 
@@ -198,7 +204,7 @@ test('switch focus to the first component if currently focused component is the 
 	await delay(100);
 
 	t.is(
-		stdout.write.lastCall.args[0],
+		(stdout.write as any).lastCall.args[0],
 		['First ✔', 'Second', 'Third'].join('\n')
 	);
 });
@@ -217,7 +223,7 @@ test('skip disabled component on Tab', async t => {
 	await delay(100);
 
 	t.is(
-		stdout.write.lastCall.args[0],
+		(stdout.write as any).lastCall.args[0],
 		['First', 'Second', 'Third ✔'].join('\n')
 	);
 });
@@ -236,7 +242,7 @@ test('switch focus to the previous component on Shift+Tab', async t => {
 	await delay(100);
 
 	t.is(
-		stdout.write.lastCall.args[0],
+		(stdout.write as any).lastCall.args[0],
 		['First', 'Second ✔', 'Third'].join('\n')
 	);
 
@@ -244,7 +250,7 @@ test('switch focus to the previous component on Shift+Tab', async t => {
 	await delay(100);
 
 	t.is(
-		stdout.write.lastCall.args[0],
+		(stdout.write as any).lastCall.args[0],
 		['First ✔', 'Second', 'Third'].join('\n')
 	);
 });
@@ -262,7 +268,7 @@ test('switch focus to the last component if currently focused component is the f
 	stdin.emit('data', '\u001B[Z');
 
 	t.is(
-		stdout.write.lastCall.args[0],
+		(stdout.write as any).lastCall.args[0],
 		['First', 'Second', 'Third ✔'].join('\n')
 	);
 });
@@ -282,7 +288,7 @@ test('skip disabled component on Shift+Tab', async t => {
 	await delay(100);
 
 	t.is(
-		stdout.write.lastCall.args[0],
+		(stdout.write as any).lastCall.args[0],
 		['First ✔', 'Second', 'Third'].join('\n')
 	);
 });
@@ -300,7 +306,7 @@ test('reset focus when focused component unregisters', async t => {
 	rerender(<Test autoFocus showFirst={false} />);
 	await delay(100);
 
-	t.is(stdout.write.lastCall.args[0], ['Second', 'Third'].join('\n'));
+	t.is((stdout.write as any).lastCall.args[0], ['Second', 'Third'].join('\n'));
 });
 
 test('focus first component after focused component unregisters', async t => {
@@ -316,12 +322,15 @@ test('focus first component after focused component unregisters', async t => {
 	rerender(<Test autoFocus showFirst={false} />);
 	await delay(100);
 
-	t.is(stdout.write.lastCall.args[0], ['Second', 'Third'].join('\n'));
+	t.is((stdout.write as any).lastCall.args[0], ['Second', 'Third'].join('\n'));
 
 	stdin.emit('data', '\t');
 	await delay(100);
 
-	t.is(stdout.write.lastCall.args[0], ['Second ✔', 'Third'].join('\n'));
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		['Second ✔', 'Third'].join('\n')
+	);
 });
 
 test('toggle focus management', async t => {
@@ -340,7 +349,7 @@ test('toggle focus management', async t => {
 	await delay(100);
 
 	t.is(
-		stdout.write.lastCall.args[0],
+		(stdout.write as any).lastCall.args[0],
 		['First ✔', 'Second', 'Third'].join('\n')
 	);
 
@@ -350,7 +359,7 @@ test('toggle focus management', async t => {
 	await delay(100);
 
 	t.is(
-		stdout.write.lastCall.args[0],
+		(stdout.write as any).lastCall.args[0],
 		['First', 'Second ✔', 'Third'].join('\n')
 	);
 });
@@ -369,7 +378,7 @@ test('manually focus next component', async t => {
 	await delay(100);
 
 	t.is(
-		stdout.write.lastCall.args[0],
+		(stdout.write as any).lastCall.args[0],
 		['First', 'Second ✔', 'Third'].join('\n')
 	);
 });
@@ -388,7 +397,7 @@ test('manually focus previous component', async t => {
 	await delay(100);
 
 	t.is(
-		stdout.write.lastCall.args[0],
+		(stdout.write as any).lastCall.args[0],
 		['First', 'Second', 'Third ✔'].join('\n')
 	);
 });
@@ -406,7 +415,7 @@ test('doesnt crash when focusing next on unmounted children', async t => {
 	rerender(<Test focusNext unmountChildren />);
 	await delay(100);
 
-	t.is(stdout.write.lastCall.args[0], '');
+	t.is((stdout.write as any).lastCall.args[0], '');
 });
 
 test('doesnt crash when focusing previous on unmounted children', async t => {
@@ -422,5 +431,5 @@ test('doesnt crash when focusing previous on unmounted children', async t => {
 	rerender(<Test focusPrevious unmountChildren />);
 	await delay(100);
 
-	t.is(stdout.write.lastCall.args[0], '');
+	t.is((stdout.write as any).lastCall.args[0], '');
 });

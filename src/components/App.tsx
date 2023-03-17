@@ -1,18 +1,18 @@
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import React, {PureComponent, ReactNode} from 'react';
+import process from 'node:process';
+import React, {PureComponent, type ReactNode} from 'react';
 import cliCursor from 'cli-cursor';
-import AppContext from './AppContext';
-import StdinContext from './StdinContext';
-import StdoutContext from './StdoutContext';
-import StderrContext from './StderrContext';
-import FocusContext from './FocusContext';
-import ErrorOverview from './ErrorOverview';
+import AppContext from './AppContext.js';
+import StdinContext from './StdinContext.js';
+import StdoutContext from './StdoutContext.js';
+import StderrContext from './StderrContext.js';
+import FocusContext from './FocusContext.js';
+import ErrorOverview from './ErrorOverview.js';
 
-const TAB = '\t';
-const SHIFT_TAB = '\u001B[Z';
-const ESC = '\u001B';
+const tab = '\t';
+const shiftTab = '\u001B[Z';
+const escape = '\u001B';
 
-interface Props {
+type Props = {
 	readonly children: ReactNode;
 	readonly stdin: NodeJS.ReadStream;
 	readonly stdout: NodeJS.WriteStream;
@@ -21,19 +21,19 @@ interface Props {
 	readonly writeToStderr: (data: string) => void;
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (error?: Error) => void;
-}
+};
 
-interface State {
+type State = {
 	readonly isFocusEnabled: boolean;
 	readonly activeFocusId?: string;
 	readonly focusables: Focusable[];
 	readonly error?: Error;
-}
+};
 
-interface Focusable {
+type Focusable = {
 	readonly id: string;
 	readonly isActive: boolean;
-}
+};
 
 // Root component for all Ink apps
 // It renders stdin and stdout contexts, so that children can access them if needed
@@ -41,7 +41,11 @@ interface Focusable {
 export default class App extends PureComponent<Props, State> {
 	static displayName = 'InternalApp';
 
-	state = {
+	static getDerivedStateFromError(error: Error) {
+		return {error};
+	}
+
+	override state = {
 		isFocusEnabled: true,
 		activeFocusId: undefined,
 		focusables: [],
@@ -52,43 +56,45 @@ export default class App extends PureComponent<Props, State> {
 	// raw mode until all components don't need it anymore
 	rawModeEnabledCount = 0;
 
-	static getDerivedStateFromError(error: Error) {
-		return {error};
-	}
-
 	// Determines if TTY is supported on the provided stdin
 	isRawModeSupported(): boolean {
 		return this.props.stdin.isTTY;
 	}
 
-	render() {
+	override render() {
 		return (
 			<AppContext.Provider
+				// eslint-disable-next-line react/jsx-no-constructed-context-values
 				value={{
 					exit: this.handleExit
 				}}
 			>
 				<StdinContext.Provider
+					// eslint-disable-next-line react/jsx-no-constructed-context-values
 					value={{
 						stdin: this.props.stdin,
 						setRawMode: this.handleSetRawMode,
 						isRawModeSupported: this.isRawModeSupported(),
+						// eslint-disable-next-line @typescript-eslint/naming-convention
 						internal_exitOnCtrlC: this.props.exitOnCtrlC
 					}}
 				>
 					<StdoutContext.Provider
+						// eslint-disable-next-line react/jsx-no-constructed-context-values
 						value={{
 							stdout: this.props.stdout,
 							write: this.props.writeToStdout
 						}}
 					>
 						<StderrContext.Provider
+							// eslint-disable-next-line react/jsx-no-constructed-context-values
 							value={{
 								stderr: this.props.stderr,
 								write: this.props.writeToStderr
 							}}
 						>
 							<FocusContext.Provider
+								// eslint-disable-next-line react/jsx-no-constructed-context-values
 								value={{
 									activeId: this.state.activeFocusId,
 									add: this.addFocusable,
@@ -103,7 +109,7 @@ export default class App extends PureComponent<Props, State> {
 								}}
 							>
 								{this.state.error ? (
-									<ErrorOverview error={this.state.error! as Error} />
+									<ErrorOverview error={this.state.error as Error} />
 								) : (
 									this.props.children
 								)}
@@ -115,11 +121,11 @@ export default class App extends PureComponent<Props, State> {
 		);
 	}
 
-	componentDidMount() {
+	override componentDidMount() {
 		cliCursor.hide(this.props.stdout);
 	}
 
-	componentWillUnmount() {
+	override componentWillUnmount() {
 		cliCursor.show(this.props.stdout);
 
 		// ignore calling setRawMode on an handle stdin it cannot be called
@@ -128,7 +134,7 @@ export default class App extends PureComponent<Props, State> {
 		}
 	}
 
-	componentDidCatch(error: Error) {
+	override componentDidCatch(error: Error) {
 		this.handleExit(error);
 	}
 
@@ -177,18 +183,18 @@ export default class App extends PureComponent<Props, State> {
 		}
 
 		// Reset focus when there's an active focused component on Esc
-		if (input === ESC && this.state.activeFocusId) {
+		if (input === escape && this.state.activeFocusId) {
 			this.setState({
 				activeFocusId: undefined
 			});
 		}
 
 		if (this.state.isFocusEnabled && this.state.focusables.length > 0) {
-			if (input === TAB) {
+			if (input === tab) {
 				this.focusNext();
 			}
 
-			if (input === SHIFT_TAB) {
+			if (input === shiftTab) {
 				this.focusPrevious();
 			}
 		}
@@ -234,7 +240,7 @@ export default class App extends PureComponent<Props, State> {
 			const nextFocusableId = this.findNextFocusable(previousState);
 
 			return {
-				activeFocusId: nextFocusableId || firstFocusableId
+				activeFocusId: nextFocusableId ?? firstFocusableId
 			};
 		});
 	};
@@ -246,7 +252,7 @@ export default class App extends PureComponent<Props, State> {
 			const previousFocusableId = this.findPreviousFocusable(previousState);
 
 			return {
-				activeFocusId: previousFocusableId || lastFocusableId
+				activeFocusId: previousFocusableId ?? lastFocusableId
 			};
 		});
 	};
@@ -328,8 +334,10 @@ export default class App extends PureComponent<Props, State> {
 			index < state.focusables.length;
 			index++
 		) {
-			if (state.focusables[index]?.isActive) {
-				return state.focusables[index].id;
+			const focusable = state.focusables[index];
+
+			if (focusable?.isActive) {
+				return focusable.id;
 			}
 		}
 
@@ -342,8 +350,10 @@ export default class App extends PureComponent<Props, State> {
 		});
 
 		for (let index = activeIndex - 1; index >= 0; index--) {
-			if (state.focusables[index]?.isActive) {
-				return state.focusables[index].id;
+			const focusable = state.focusables[index];
+
+			if (focusable?.isActive) {
+				return focusable.id;
 			}
 		}
 

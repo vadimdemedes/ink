@@ -1,10 +1,11 @@
+import process from 'node:process';
 import {createContext} from 'react';
 
-export interface Props {
+export type Props = {
 	/**
 	 * Stderr stream passed to `render()` in `options.stderr` or `process.stderr` by default.
 	 */
-	readonly stderr?: NodeJS.WriteStream;
+	readonly stderr: NodeJS.WriteStream;
 
 	/**
 	 * Write any string to stderr, while preserving Ink's output.
@@ -12,14 +13,15 @@ export interface Props {
 	 * It's similar to `<Static>`, except it can't accept components, it only works with strings.
 	 */
 	readonly write: (data: string) => void;
-}
+};
 
 /**
  * `StderrContext` is a React context, which exposes stderr stream.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const StderrContext = createContext<Props>({
-	stderr: undefined,
-	write: () => {}
+	stderr: process.stderr,
+	write() {}
 });
 
 StderrContext.displayName = 'InternalStderrContext';

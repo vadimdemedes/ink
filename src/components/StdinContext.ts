@@ -1,10 +1,11 @@
+import process from 'node:process';
 import {createContext} from 'react';
 
-export interface Props {
+export type Props = {
 	/**
 	 * Stdin stream passed to `render()` in `options.stdin` or `process.stdin` by default. Useful if your app needs to handle user input.
 	 */
-	readonly stdin?: NodeJS.ReadStream;
+	readonly stdin: NodeJS.ReadStream;
 
 	/**
 	 * Ink exposes this function via own `<StdinContext>` to be able to handle Ctrl+C, that's why you should use Ink's `setRawMode` instead of `process.stdin.setRawMode`.
@@ -18,15 +19,17 @@ export interface Props {
 	readonly isRawModeSupported: boolean;
 
 	readonly internal_exitOnCtrlC: boolean;
-}
+};
 
 /**
  * `StdinContext` is a React context, which exposes input stream.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const StdinContext = createContext<Props>({
-	stdin: undefined,
-	setRawMode: () => {},
+	stdin: process.stdin,
+	setRawMode() {},
 	isRawModeSupported: false,
+	// eslint-disable-next-line @typescript-eslint/naming-convention
 	internal_exitOnCtrlC: true
 });
 

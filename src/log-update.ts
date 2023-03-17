@@ -1,12 +1,12 @@
-import {Writable} from 'stream';
+import {type Writable} from 'node:stream';
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
 
-export interface LogUpdate {
+export type LogUpdate = {
 	clear: () => void;
 	done: () => void;
 	(str: string): void;
-}
+};
 
 const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 	let previousLineCount = 0;
@@ -48,4 +48,5 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 	return render;
 };
 
-export default {create};
+const logUpdate = {create};
+export default logUpdate;

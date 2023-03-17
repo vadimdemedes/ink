@@ -1,19 +1,19 @@
-import React, {FC, ReactNode} from 'react';
-import chalk, {ForegroundColor} from 'chalk';
-import colorize from '../colorize';
-import {Styles} from '../styles';
-import {LiteralUnion} from 'type-fest';
+import React, {type ReactNode} from 'react';
+import chalk, {type ForegroundColorName} from 'chalk';
+import {type LiteralUnion} from 'type-fest';
+import colorize from '../colorize.js';
+import {type Styles} from '../styles.js';
 
-export interface Props {
+export type Props = {
 	/**
 	 * Change text color. Ink uses chalk under the hood, so all its functionality is supported.
 	 */
-	readonly color?: LiteralUnion<typeof ForegroundColor, string>;
+	readonly color?: LiteralUnion<ForegroundColorName, string>;
 
 	/**
 	 * Same as `color`, but for background.
 	 */
-	readonly backgroundColor?: LiteralUnion<typeof ForegroundColor, string>;
+	readonly backgroundColor?: LiteralUnion<ForegroundColorName, string>;
 
 	/**
 	 * Dim the color (emit a small amount of light).
@@ -51,24 +51,25 @@ export interface Props {
 	 * If `truncate-*` is passed, Ink will truncate text instead, which will result in one line of text with the rest cut off.
 	 */
 	readonly wrap?: Styles['textWrap'];
+
 	readonly children?: ReactNode;
-}
+};
 
 /**
  * This component can display text, and change its style to make it colorful, bold, underline, italic or strikethrough.
  */
-const Text: FC<Props> = ({
+export default function Text({
 	color,
 	backgroundColor,
-	dimColor,
-	bold,
-	italic,
-	underline,
-	strikethrough,
-	inverse,
-	wrap,
+	dimColor = false,
+	bold = false,
+	italic = false,
+	underline = false,
+	strikethrough = false,
+	inverse = false,
+	wrap = 'wrap',
 	children
-}) => {
+}: Props) {
 	if (children === undefined || children === null) {
 		return null;
 	}
@@ -117,17 +118,4 @@ const Text: FC<Props> = ({
 			{children}
 		</ink-text>
 	);
-};
-
-Text.displayName = 'Text';
-
-Text.defaultProps = {
-	dimColor: false,
-	bold: false,
-	italic: false,
-	underline: false,
-	strikethrough: false,
-	wrap: 'wrap'
-};
-
-export default Text;
+}

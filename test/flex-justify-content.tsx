@@ -1,8 +1,8 @@
 import React from 'react';
 import test from 'ava';
 import chalk from 'chalk';
-import {renderToString} from './helpers/render-to-string';
-import {Box, Text} from '../src';
+import {Box, Text} from '../src/index.js';
+import {renderToString} from './helpers/render-to-string.js';
 
 test('row - align text to center', t => {
 	const output = renderToString(

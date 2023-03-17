@@ -1,8 +1,8 @@
 import {useEffect, useContext, useMemo} from 'react';
-import FocusContext from '../components/FocusContext';
-import useStdin from './use-stdin';
+import FocusContext from '../components/FocusContext.js';
+import useStdin from './use-stdin.js';
 
-interface Input {
+type Input = {
 	/**
 	 * Enable or disable this component's focus, while still maintaining its position in the list of focusable components.
 	 */
@@ -17,9 +17,9 @@ interface Input {
 	 * Assign an ID to this component, so it can be programmatically focused with `focus(id)`.
 	 */
 	id?: string;
-}
+};
 
-interface Output {
+type Output = {
 	/**
 	 * Determines whether this component is focused or not.
 	 */
@@ -29,7 +29,7 @@ interface Output {
 	 * Allows focusing a specific element with the provided `id`.
 	 */
 	focus: (id: string) => void;
-}
+};
 
 /**
  * Component that uses `useFocus` hook becomes "focusable" to Ink,

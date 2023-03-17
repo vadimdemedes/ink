@@ -1,7 +1,7 @@
-import React, {FC, useEffect} from 'react';
-import {render, useStdout, Text} from '../..';
+import React, {useEffect} from 'react';
+import {render, useStdout, Text} from '../../src/index.js';
 
-const WriteToStdout: FC = () => {
+function WriteToStdout() {
 	const {write} = useStdout();
 
 	useEffect(() => {
@@ -9,11 +9,9 @@ const WriteToStdout: FC = () => {
 	}, []);
 
 	return <Text>Hello World</Text>;
-};
+}
 
 const app = render(<WriteToStdout />);
 
-(async () => {
-	await app.waitUntilExit();
-	console.log('exited');
-})();
+await app.waitUntilExit();
+console.log('exited');

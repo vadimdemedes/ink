@@ -1,13 +1,10 @@
-'use strict';
-const React = require('react');
-const {default: PQueue} = require('p-queue');
-const delay = require('delay');
-const ms = require('ms');
-const importJsx = require('import-jsx');
-const {Static, Box, render} = require('../..');
-
-const Summary = importJsx('./summary');
-const Test = importJsx('./test');
+import React from 'react';
+import PQueue from 'p-queue';
+import delay from 'delay';
+import ms from 'ms';
+import {Static, Box, render} from '../../src/index.js';
+import Summary from './summary.jsx';
+import Test from './test.js';
 
 const paths = [
 	'tests/login.js',
@@ -22,9 +19,21 @@ const paths = [
 	'tests/comments.js'
 ];
 
-class Jest extends React.Component {
-	constructor() {
-		super();
+type State = {
+	startTime: number;
+	completedTests: Array<{
+		path: string;
+		status: string;
+	}>;
+	runningTests: Array<{
+		path: string;
+		status: string;
+	}>;
+};
+
+class Jest extends React.Component<Record<string, unknown>, State> {
+	constructor(props) {
+		super(props);
 
 		this.state = {
 			startTime: Date.now(),
@@ -65,12 +74,12 @@ class Jest extends React.Component {
 	componentDidMount() {
 		const queue = new PQueue({concurrency: 4});
 
-		paths.forEach(path => {
-			queue.add(this.runTest.bind(this, path));
-		});
+		for (const path of paths) {
+			void queue.add(this.runTest.bind(this, path));
+		}
 	}
 
-	async runTest(path) {
+	async runTest(path: string) {
 		this.setState(previousState => ({
 			runningTests: [
 				...previousState.runningTests,

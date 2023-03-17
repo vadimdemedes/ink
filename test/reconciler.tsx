@@ -1,11 +1,13 @@
 import React, {Suspense} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
-import {Box, Text, render} from '../src';
-import createStdout from './helpers/create-stdout';
+import {Box, Text, render} from '../src/index.js';
+import createStdout from './helpers/create-stdout.js';
 
 test('update child', t => {
-	const Test = ({update}) => <Text>{update ? 'B' : 'A'}</Text>;
+	function Test({update}: {update?: boolean}) {
+		return <Text>{update ? 'B' : 'A'}</Text>;
+	}
 
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
@@ -21,26 +23,28 @@ test('update child', t => {
 	});
 
 	t.is(
-		stdoutActual.write.lastCall.args[0],
-		stdoutExpected.write.lastCall.args[0]
+		(stdoutActual.write as any).lastCall.args[0],
+		(stdoutExpected.write as any).lastCall.args[0]
 	);
 
 	actual.rerender(<Test update />);
 	expected.rerender(<Text>B</Text>);
 
 	t.is(
-		stdoutActual.write.lastCall.args[0],
-		stdoutExpected.write.lastCall.args[0]
+		(stdoutActual.write as any).lastCall.args[0],
+		(stdoutExpected.write as any).lastCall.args[0]
 	);
 });
 
 test('update text node', t => {
-	const Test = ({update}) => (
-		<Box>
-			<Text>Hello </Text>
-			<Text>{update ? 'B' : 'A'}</Text>
-		</Box>
-	);
+	function Test({update}: {update?: boolean}) {
+		return (
+			<Box>
+				<Text>Hello </Text>
+				<Text>{update ? 'B' : 'A'}</Text>
+			</Box>
+		);
+	}
 
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
@@ -56,21 +60,21 @@ test('update text node', t => {
 	});
 
 	t.is(
-		stdoutActual.write.lastCall.args[0],
-		stdoutExpected.write.lastCall.args[0]
+		(stdoutActual.write as any).lastCall.args[0],
+		(stdoutExpected.write as any).lastCall.args[0]
 	);
 
 	actual.rerender(<Test update />);
 	expected.rerender(<Text>Hello B</Text>);
 
 	t.is(
-		stdoutActual.write.lastCall.args[0],
-		stdoutExpected.write.lastCall.args[0]
+		(stdoutActual.write as any).lastCall.args[0],
+		(stdoutExpected.write as any).lastCall.args[0]
 	);
 });
 
 test('append child', t => {
-	const Test = ({append}) => {
+	function Test({append}: {append?: boolean}) {
 		if (append) {
 			return (
 				<Box flexDirection="column">
@@ -85,7 +89,7 @@ test('append child', t => {
 				<Text>A</Text>
 			</Box>
 		);
-	};
+	}
 
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
@@ -106,8 +110,8 @@ test('append child', t => {
 	);
 
 	t.is(
-		stdoutActual.write.lastCall.args[0],
-		stdoutExpected.write.lastCall.args[0]
+		(stdoutActual.write as any).lastCall.args[0],
+		(stdoutExpected.write as any).lastCall.args[0]
 	);
 
 	actual.rerender(<Test append />);
@@ -120,13 +124,13 @@ test('append child', t => {
 	);
 
 	t.is(
-		stdoutActual.write.lastCall.args[0],
-		stdoutExpected.write.lastCall.args[0]
+		(stdoutActual.write as any).lastCall.args[0],
+		(stdoutExpected.write as any).lastCall.args[0]
 	);
 });
 
 test('insert child between other children', t => {
-	const Test = ({insert}) => {
+	function Test({insert}: {insert?: boolean}) {
 		if (insert) {
 			return (
 				<Box flexDirection="column">
@@ -143,7 +147,7 @@ test('insert child between other children', t => {
 				<Text key="c">C</Text>
 			</Box>
 		);
-	};
+	}
 
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
@@ -165,8 +169,8 @@ test('insert child between other children', t => {
 	);
 
 	t.is(
-		stdoutActual.write.lastCall.args[0],
-		stdoutExpected.write.lastCall.args[0]
+		(stdoutActual.write as any).lastCall.args[0],
+		(stdoutExpected.write as any).lastCall.args[0]
 	);
 
 	actual.rerender(<Test insert />);
@@ -180,13 +184,13 @@ test('insert child between other children', t => {
 	);
 
 	t.is(
-		stdoutActual.write.lastCall.args[0],
-		stdoutExpected.write.lastCall.args[0]
+		(stdoutActual.write as any).lastCall.args[0],
+		(stdoutExpected.write as any).lastCall.args[0]
 	);
 });
 
 test('remove child', t => {
-	const Test = ({remove}) => {
+	function Test({remove}: {remove?: boolean}) {
 		if (remove) {
 			return (
 				<Box flexDirection="column">
@@ -201,7 +205,7 @@ test('remove child', t => {
 				<Text>B</Text>
 			</Box>
 		);
-	};
+	}
 
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
@@ -223,8 +227,8 @@ test('remove child', t => {
 	);
 
 	t.is(
-		stdoutActual.write.lastCall.args[0],
-		stdoutExpected.write.lastCall.args[0]
+		(stdoutActual.write as any).lastCall.args[0],
+		(stdoutExpected.write as any).lastCall.args[0]
 	);
 
 	actual.rerender(<Test remove />);
@@ -236,13 +240,13 @@ test('remove child', t => {
 	);
 
 	t.is(
-		stdoutActual.write.lastCall.args[0],
-		stdoutExpected.write.lastCall.args[0]
+		(stdoutActual.write as any).lastCall.args[0],
+		(stdoutExpected.write as any).lastCall.args[0]
 	);
 });
 
 test('reorder children', t => {
-	const Test = ({reorder}) => {
+	function Test({reorder}: {reorder?: boolean}) {
 		if (reorder) {
 			return (
 				<Box flexDirection="column">
@@ -258,7 +262,7 @@ test('reorder children', t => {
 				<Text key="b">B</Text>
 			</Box>
 		);
-	};
+	}
 
 	const stdoutActual = createStdout();
 	const stdoutExpected = createStdout();
@@ -280,8 +284,8 @@ test('reorder children', t => {
 	);
 
 	t.is(
-		stdoutActual.write.lastCall.args[0],
-		stdoutExpected.write.lastCall.args[0]
+		(stdoutActual.write as any).lastCall.args[0],
+		(stdoutExpected.write as any).lastCall.args[0]
 	);
 
 	actual.rerender(<Test reorder />);
@@ -294,35 +298,35 @@ test('reorder children', t => {
 	);
 
 	t.is(
-		stdoutActual.write.lastCall.args[0],
-		stdoutExpected.write.lastCall.args[0]
+		(stdoutActual.write as any).lastCall.args[0],
+		(stdoutExpected.write as any).lastCall.args[0]
 	);
 });
 
 test('replace child node with text', t => {
 	const stdout = createStdout();
 
-	const Dynamic = ({replace}) => (
-		<Text>{replace ? 'x' : <Text color="green">test</Text>}</Text>
-	);
+	function Dynamic({replace}: {replace?: boolean}) {
+		return <Text>{replace ? 'x' : <Text color="green">test</Text>}</Text>;
+	}
 
 	const {rerender} = render(<Dynamic />, {
 		stdout,
 		debug: true
 	});
 
-	t.is(stdout.write.lastCall.args[0], chalk.green('test'));
+	t.is((stdout.write as any).lastCall.args[0], chalk.green('test'));
 
 	rerender(<Dynamic replace />);
-	t.is(stdout.write.lastCall.args[0], 'x');
+	t.is((stdout.write as any).lastCall.args[0], 'x');
 });
 
 test('support suspense', async t => {
 	const stdout = createStdout();
 
-	let promise;
-	let state;
-	let value;
+	let promise: Promise<void> | undefined;
+	let state: 'pending' | 'done' | undefined;
+	let value: string | undefined;
 
 	const read = () => {
 		if (!promise) {
@@ -332,40 +336,41 @@ test('support suspense', async t => {
 
 			state = 'pending';
 
-			// eslint-disable-next-line promise/prefer-await-to-then
-			promise.then(() => {
+			void promise.then(() => {
 				state = 'done';
 				value = 'Hello World';
 			});
 		}
 
-		if (state === 'pending') {
-			throw promise;
-		}
-
 		if (state === 'done') {
 			return value;
 		}
+
+		// eslint-disable-next-line @typescript-eslint/no-throw-literal
+		throw promise;
 	};
 
-	const Suspendable = () => <Text>{read()}</Text>;
+	function Suspendable() {
+		return <Text>{read()}</Text>;
+	}
 
-	const Test = () => (
-		<Suspense fallback={<Text>Loading</Text>}>
-			<Suspendable />
-		</Suspense>
-	);
+	function Test() {
+		return (
+			<Suspense fallback={<Text>Loading</Text>}>
+				<Suspendable />
+			</Suspense>
+		);
+	}
 
 	const out = render(<Test />, {
 		stdout,
 		debug: true
 	});
 
-	t.is(stdout.write.lastCall.args[0], 'Loading');
+	t.is((stdout.write as any).lastCall.args[0], 'Loading');
 
-	// eslint-disable-next-line @typescript-eslint/await-thenable
 	await promise;
 	out.rerender(<Test />);
 
-	t.is(stdout.write.lastCall.args[0], 'Hello World');
+	t.is((stdout.write as any).lastCall.args[0], 'Hello World');
 });

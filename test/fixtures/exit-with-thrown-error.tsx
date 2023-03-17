@@ -1,9 +1,14 @@
 import React from 'react';
-import {render} from '../..';
+import {render} from '../../src/index.js';
 
 const Test = () => {
 	throw new Error('errored');
 };
 
 const app = render(<Test />);
-app.waitUntilExit().catch(error => console.log(error.message));
+
+try {
+	await app.waitUntilExit();
+} catch (error: unknown) {
+	console.log((error as any).message);
+}

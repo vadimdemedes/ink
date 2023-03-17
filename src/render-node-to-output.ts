@@ -1,12 +1,13 @@
-import Yoga from 'yoga-layout-prebuilt';
 import widestLine from 'widest-line';
 import indentString from 'indent-string';
-import wrapText from './wrap-text';
-import getMaxWidth from './get-max-width';
-import squashTextNodes from './squash-text-nodes';
-import renderBorder from './render-border';
-import {DOMElement} from './dom';
-import Output from './output';
+// eslint-disable-next-line n/file-extension-in-import
+import Yoga from 'yoga-wasm-web/auto';
+import wrapText from './wrap-text.js';
+import getMaxWidth from './get-max-width.js';
+import squashTextNodes from './squash-text-nodes.js';
+import renderBorder from './render-border.js';
+import {type DOMElement} from './dom.js';
+import type Output from './output.js';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.
@@ -82,14 +83,45 @@ const renderNodeToOutput = (
 				}
 
 				text = applyPaddingToText(node, text);
+
 				output.write(x, y, text, {transformers: newTransformers});
 			}
 
 			return;
 		}
 
+		let clipped = false;
+
 		if (node.nodeName === 'ink-box') {
 			renderBorder(x, y, node, output);
+
+			const clipHorizontally = node.style.overflowX === 'hidden';
+			const clipVertically = node.style.overflowY === 'hidden';
+
+			if (clipHorizontally || clipVertically) {
+				const x1 = clipHorizontally
+					? x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT)
+					: undefined;
+
+				const x2 = clipHorizontally
+					? x +
+					  yogaNode.getComputedWidth() -
+					  yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
+					: undefined;
+
+				const y1 = clipVertically
+					? y + yogaNode.getComputedBorder(Yoga.EDGE_TOP)
+					: undefined;
+
+				const y2 = clipVertically
+					? y +
+					  yogaNode.getComputedHeight() -
+					  yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
+					: undefined;
+
+				output.clip({x1, x2, y1, y2});
+				clipped = true;
+			}
 		}
 
 		if (node.nodeName === 'ink-root' || node.nodeName === 'ink-box') {
@@ -100,6 +132,10 @@ const renderNodeToOutput = (
 					transformers: newTransformers,
 					skipStaticElements
 				});
+			}
+
+			if (clipped) {
+				output.unclip();
 			}
 		}
 	}

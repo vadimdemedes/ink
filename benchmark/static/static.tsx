@@ -1,10 +1,12 @@
-/* eslint-disable react/jsx-curly-brace-presence */
-'use strict';
-const React = require('react');
-const {render, Static, Box, Text} = require('../..');
+import React from 'react';
+import {render, Box, Text, Static} from '../../src/index.js';
 
-const App = () => {
-	const [items, setItems] = React.useState([]);
+function App() {
+	const [items, setItems] = React.useState<
+		Array<{
+			id: number;
+		}>
+	>([]);
 	const itemCountRef = React.useRef(0);
 
 	React.useEffect(() => {
@@ -45,6 +47,7 @@ const App = () => {
 
 			<Box flexDirection="column" padding={1}>
 				<Text underline bold color="red">
+					{/* eslint-disable-next-line react/jsx-curly-brace-presence */}
 					{'Hello'} {'World'}
 				</Text>
 
@@ -78,6 +81,6 @@ const App = () => {
 			</Box>
 		</Box>
 	);
-};
+}
 
 render(<App />);

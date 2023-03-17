@@ -1,15 +1,14 @@
-'use strict';
-const React = require('react');
-const {
+import React from 'react';
+import {
 	render,
 	Box,
 	Text,
 	useFocus,
 	useInput,
 	useFocusManager
-} = require('../..');
+} from '../../src/index.js';
 
-const Focus = () => {
+function Focus() {
 	const {focus} = useFocusManager();
 
 	useInput(input => {
@@ -39,9 +38,14 @@ const Focus = () => {
 			<Item id="3" label="Press 3 to focus" />
 		</Box>
 	);
+}
+
+type ItemProps = {
+	id: number;
+	label: string;
 };
 
-const Item = ({label, id}) => {
+function Item({label, id}: ItemProps) {
 	const {isFocused} = useFocus({id});
 
 	return (
@@ -49,6 +53,6 @@ const Item = ({label, id}) => {
 			{label} {isFocused && <Text color="green">(focused)</Text>}
 		</Text>
 	);
-};
+}
 
 render(<Focus />);

@@ -1,16 +1,20 @@
-'use strict';
-const childProcess = require('child_process');
-const React = require('react');
-const stripAnsi = require('strip-ansi');
-const {render, Text, Box} = require('../..');
+import childProcess from 'node:child_process';
+import type Buffer from 'node:buffer';
+import React from 'react';
+import stripAnsi from 'strip-ansi';
+import {render, Text, Box} from '../../src/index.js';
 
-const SubprocessOutput = () => {
+function SubprocessOutput() {
 	const [output, setOutput] = React.useState('');
 
 	React.useEffect(() => {
-		const subProcess = childProcess.spawn('node', ['examples/jest']);
+		const subProcess = childProcess.spawn('npm', [
+			'run',
+			'example',
+			'examples/jest'
+		]);
 
-		subProcess.stdout.on('data', newOutput => {
+		subProcess.stdout.on('data', (newOutput: Buffer) => {
 			const lines = stripAnsi(newOutput.toString('utf8')).split('\n');
 			setOutput(lines.slice(-5).join('\n'));
 		});
@@ -24,6 +28,6 @@ const SubprocessOutput = () => {
 			</Box>
 		</Box>
 	);
-};
+}
 
 render(<SubprocessOutput />);

@@ -1,9 +1,14 @@
 import cliBoxes from 'cli-boxes';
-import colorize from './colorize';
-import {DOMNode} from './dom';
-import Output from './output';
+import colorize from './colorize.js';
+import {type DOMNode} from './dom.js';
+import type Output from './output.js';
 
-export default (x: number, y: number, node: DOMNode, output: Output): void => {
+const renderBorder = (
+	x: number,
+	y: number,
+	node: DOMNode,
+	output: Output
+): void => {
 	if (typeof node.style.borderStyle === 'string') {
 		const width = node.yogaNode!.getComputedWidth();
 		const height = node.yogaNode!.getComputedHeight();
@@ -11,17 +16,17 @@ export default (x: number, y: number, node: DOMNode, output: Output): void => {
 		const box = cliBoxes[node.style.borderStyle];
 
 		const topBorder = colorize(
-			box.topLeft + box.horizontal.repeat(width - 2) + box.topRight,
+			box.topLeft + box.top.repeat(width - 2) + box.topRight,
 			color,
 			'foreground'
 		);
 
 		const verticalBorder = (
-			colorize(box.vertical, color, 'foreground') + '\n'
+			colorize(box.left, color, 'foreground') + '\n'
 		).repeat(height - 2);
 
 		const bottomBorder = colorize(
-			box.bottomLeft + box.horizontal.repeat(width - 2) + box.bottomRight,
+			box.bottomLeft + box.bottom.repeat(width - 2) + box.bottomRight,
 			color,
 			'foreground'
 		);
@@ -32,3 +37,5 @@ export default (x: number, y: number, node: DOMNode, output: Output): void => {
 		output.write(x, y + height - 1, bottomBorder, {transformers: []});
 	}
 };
+
+export default renderBorder;

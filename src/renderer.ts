@@ -1,20 +1,15 @@
-import Yoga from 'yoga-layout-prebuilt';
-import renderNodeToOutput from './render-node-to-output';
-import Output from './output';
-import {DOMElement} from './dom';
+import renderNodeToOutput from './render-node-to-output.js';
+import Output from './output.js';
+import {type DOMElement} from './dom.js';
 
-interface Result {
+type Result = {
 	output: string;
 	outputHeight: number;
 	staticOutput: string;
-}
+};
 
-export default (node: DOMElement, terminalWidth: number): Result => {
-	node.yogaNode!.setWidth(terminalWidth);
-
+const renderer = (node: DOMElement): Result => {
 	if (node.yogaNode) {
-		node.yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
-
 		const output = new Output({
 			width: node.yogaNode.getComputedWidth(),
 			height: node.yogaNode.getComputedHeight()
@@ -52,3 +47,5 @@ export default (node: DOMElement, terminalWidth: number): Result => {
 		staticOutput: ''
 	};
 };
+
+export default renderer;

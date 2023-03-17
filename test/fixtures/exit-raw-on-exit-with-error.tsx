@@ -1,26 +1,34 @@
 import React from 'react';
-import {render, Text, useApp, useStdin} from '../..';
+import {render, Text, useApp, useStdin} from '../../src/index.js';
 
 class Exit extends React.Component<{
 	onSetRawMode: (value: boolean) => void;
 	onExit: (error: Error) => void;
 }> {
-	render() {
+	override render() {
 		return <Text>Hello World</Text>;
 	}
 
-	componentDidMount() {
+	override componentDidMount() {
 		this.props.onSetRawMode(true);
-		setTimeout(() => this.props.onExit(new Error('errored')), 500);
+
+		setTimeout(() => {
+			this.props.onExit(new Error('errored'));
+		}, 500);
 	}
 }
 
-const Test = () => {
+function Test() {
 	const {exit} = useApp();
 	const {setRawMode} = useStdin();
 
 	return <Exit onExit={exit} onSetRawMode={setRawMode} />;
-};
+}
 
 const app = render(<Test />);
-app.waitUntilExit().catch(error => console.log(error.message));
+
+try {
+	await app.waitUntilExit();
+} catch (error: unknown) {
+	console.log((error as any).message);
+}

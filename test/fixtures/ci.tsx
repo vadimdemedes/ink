@@ -1,20 +1,20 @@
 import React from 'react';
-import {render, Static, Text} from '../..';
+import {render, Static, Text} from '../../src/index.js';
 
-interface TestState {
+type TestState = {
 	counter: number;
 	items: string[];
-}
+};
 
 class Test extends React.Component<Record<string, unknown>, TestState> {
 	timer?: NodeJS.Timeout;
 
-	state: TestState = {
+	override state: TestState = {
 		items: [],
 		counter: 0
 	};
 
-	render() {
+	override render() {
 		return (
 			<>
 				<Static items={this.state.items}>
@@ -26,7 +26,7 @@ class Test extends React.Component<Record<string, unknown>, TestState> {
 		);
 	}
 
-	componentDidMount() {
+	override componentDidMount() {
 		const onTimeout = () => {
 			if (this.state.counter > 4) {
 				return;
@@ -43,8 +43,8 @@ class Test extends React.Component<Record<string, unknown>, TestState> {
 		this.timer = setTimeout(onTimeout, 100);
 	}
 
-	componentWillUnmount() {
-		clearTimeout(this.timer!);
+	override componentWillUnmount() {
+		clearTimeout(this.timer);
 	}
 }
 
