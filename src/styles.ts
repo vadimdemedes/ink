@@ -82,6 +82,12 @@ export type Styles = {
 	readonly flexBasis?: number | string;
 
 	/**
+	 * It defines whether the flex items are forced in a single line or can be flowed into multiple lines. If set to multiple lines, it also defines the cross-axis which determines the direction new lines are stacked in.
+	 * See [flex-wrap](https://css-tricks.com/almanac/properties/f/flex-wrap/).
+	 */
+	readonly flexWrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
+
+	/**
 	 * The align-items property defines the default behavior for how items are laid out along the cross axis (perpendicular to the main axis).
 	 * See [align-items](https://css-tricks.com/almanac/properties/a/align-items/).
 	 */
@@ -209,6 +215,20 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 		node.setFlexShrink(
 			typeof style.flexShrink === 'number' ? style.flexShrink : 1
 		);
+	}
+
+	if ('flexWrap' in style) {
+		if (style.flexWrap === 'nowrap') {
+			node.setFlexWrap(Yoga.WRAP_NO_WRAP);
+		}
+
+		if (style.flexWrap === 'wrap') {
+			node.setFlexWrap(Yoga.WRAP_WRAP);
+		}
+
+		if (style.flexWrap === 'wrap-reverse') {
+			node.setFlexWrap(Yoga.WRAP_WRAP_REVERSE);
+		}
 	}
 
 	if ('flexDirection' in style) {

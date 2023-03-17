@@ -682,6 +682,32 @@ See [flex-direction](https://css-tricks.com/almanac/properties/f/flex-direction/
 // X
 ```
 
+##### flexWrap
+
+Type: `string`\
+Allowed values: `nowrap` `wrap` `wrap-reverse`
+
+See [flex-wrap](https://css-tricks.com/almanac/properties/f/flex-wrap/).
+
+```jsx
+<Box width={2} flexWrap="wrap">
+	<Text>A</Text>
+	<Text>BC</Text>
+</Box>
+// A
+// B C
+```
+
+```jsx
+<Box flexDirection="column" height={2} flexWrap="wrap">
+	<Text>A</Text>
+	<Text>B</Text>
+	<Text>C</Text>
+</Box>
+// A C
+// B
+```
+
 ##### alignItems
 
 Type: `string`\
