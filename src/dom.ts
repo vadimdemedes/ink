@@ -32,6 +32,7 @@ export type DOMElement = {
 	// Internal properties
 	isStaticDirty?: boolean;
 	staticNode?: DOMElement;
+	onComputeLayout?: () => void;
 	onRender?: () => void;
 	onImmediateRender?: () => void;
 } & InkNode;

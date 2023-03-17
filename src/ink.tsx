@@ -8,6 +8,8 @@ import autoBind from 'auto-bind';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
 import {type FiberRoot} from 'react-reconciler';
+// eslint-disable-next-line n/file-extension-in-import
+import Yoga from 'yoga-wasm-web/auto';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
@@ -49,6 +51,7 @@ export default class Ink {
 
 		this.options = options;
 		this.rootNode = dom.createNode('ink-root');
+		this.rootNode.onComputeLayout = this.calculateLayout;
 
 		this.rootNode.onRender = options.debug
 			? this.onRender
@@ -107,29 +110,43 @@ export default class Ink {
 		}
 
 		if (!isCi) {
-			options.stdout.on('resize', this.onRender);
+			options.stdout.on('resize', this.resized);
 
 			this.unsubscribeResize = () => {
-				options.stdout.off('resize', this.onRender);
+				options.stdout.off('resize', this.resized);
 			};
 		}
 	}
 
+	resized = () => {
+		this.calculateLayout();
+		this.onRender();
+	};
+
 	resolveExitPromise: () => void = () => {};
 	rejectExitPromise: (reason?: Error) => void = () => {};
 	unsubscribeExit: () => void = () => {};
+
+	calculateLayout = () => {
+		// The 'columns' property can be undefined or 0 when not using a TTY.
+		// In that case we fall back to 80.
+		const terminalWidth = this.options.stdout.columns || 80;
+
+		this.rootNode.yogaNode!.setWidth(terminalWidth);
+
+		this.rootNode.yogaNode!.calculateLayout(
+			undefined,
+			undefined,
+			Yoga.DIRECTION_LTR
+		);
+	};
 
 	onRender: () => void = () => {
 		if (this.isUnmounted) {
 			return;
 		}
 
-		const {output, outputHeight, staticOutput} = render(
-			this.rootNode,
-			// The 'columns' property can be undefined or 0 when not using a TTY.
-			// In that case we fall back to 80.
-			this.options.stdout.columns || 80
-		);
+		const {output, outputHeight, staticOutput} = render(this.rootNode);
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
@@ -243,6 +260,7 @@ export default class Ink {
 			return;
 		}
 
+		this.calculateLayout();
 		this.onRender();
 		this.unsubscribeExit();
 
