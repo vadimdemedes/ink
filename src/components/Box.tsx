@@ -6,6 +6,27 @@ import {type DOMElement} from '../dom.js';
 
 export type Props = Except<Styles, 'textWrap'> & {
 	/**
+	 * Size of the gap between an element's columns.
+	 *
+	 * @default 0
+	 */
+	readonly columnGap?: number;
+
+	/**
+	 * Size of the gap between element's rows.
+	 *
+	 * @default 0
+	 */
+	readonly rowGap?: number;
+
+	/**
+	 * Size of the gap between an element's columns and rows. Shorthand for `columnGap` and `rowGap`.
+	 *
+	 * @default 0
+	 */
+	readonly gap?: number;
+
+	/**
 	 * Margin on all sides. Equivalent to setting `marginTop`, `marginBottom`, `marginLeft` and `marginRight`.
 	 *
 	 * @default 0
@@ -76,6 +97,8 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 	({children, ...style}, ref) => {
 		const transformedStyle = {
 			...style,
+			columnGap: style.columnGap || style.gap || 0,
+			rowGap: style.rowGap || style.gap || 0,
 			marginLeft: style.marginLeft || style.marginX || style.margin || 0,
 			marginRight: style.marginRight || style.marginX || style.margin || 0,
 			marginTop: style.marginTop || style.marginY || style.margin || 0,
