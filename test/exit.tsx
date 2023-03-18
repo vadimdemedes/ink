@@ -54,7 +54,7 @@ test.serial('exit on unmount() with raw mode', async t => {
 
 test.serial('exit with thrown error', async t => {
 	const output = await run('exit-with-thrown-error');
-	t.true(output.includes('errored'));
+	t.true(output.includes('waitUntilExit catch: errored'));
 });
 
 test.serial('don’t exit while raw mode is active', async t => {

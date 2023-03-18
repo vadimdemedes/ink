@@ -10,5 +10,5 @@ const app = render(<Test />);
 try {
 	await app.waitUntilExit();
 } catch (error: unknown) {
-	console.log((error as any).message);
+	console.log(`waitUntilExit catch: ${(error as Error).message}`);
 }
