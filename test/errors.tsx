@@ -15,14 +15,14 @@ test.after(() => {
 	restore();
 });
 
-test('catch and display error', t => {
+test('catch and display error', async t => {
 	const stdout = createStdout();
 
 	const Test = () => {
 		throw new Error('Oh no');
 	};
 
-	render(<Test />, {stdout});
+	const {waitUntilExit} = render(<Test />, {stdout});
 
 	t.deepEqual(
 		stripAnsi((stdout.write as any).lastCall.args[0])
@@ -40,9 +40,11 @@ test('catch and display error', t => {
 			" 22:     throw new Error('Oh no');",
 			' 23:   };',
 			' 24:',
-			' 25:   render(<Test />, {stdout});',
+			' 25:   const {waitUntilExit} = render(<Test />, {stdout});',
 			'',
 			' - Test (test/errors.tsx:22:9)'
 		]
 	);
+
+	await t.throwsAsync(waitUntilExit, {message: 'Oh no'});
 });

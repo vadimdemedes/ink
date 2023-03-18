@@ -42,7 +42,7 @@ export default class Ink {
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	private fullStaticOutput: string;
-	private exitPromise?: Promise<void>;
+	private readonly exitPromise: Promise<void>;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
 
@@ -116,6 +116,11 @@ export default class Ink {
 				options.stdout.off('resize', this.resized);
 			};
 		}
+
+		this.exitPromise = new Promise((resolve, reject) => {
+			this.resolveExitPromise = resolve;
+			this.rejectExitPromise = reject;
+		});
 	}
 
 	resized = () => {
@@ -293,13 +298,6 @@ export default class Ink {
 	}
 
 	async waitUntilExit(): Promise<void> {
-		if (!this.exitPromise) {
-			this.exitPromise = new Promise((resolve, reject) => {
-				this.resolveExitPromise = resolve;
-				this.rejectExitPromise = reject;
-			});
-		}
-
 		return this.exitPromise;
 	}
 
