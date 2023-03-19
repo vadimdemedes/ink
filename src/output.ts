@@ -2,6 +2,12 @@ import sliceAnsi from 'slice-ansi';
 import stringWidth from 'string-width';
 import widestLine from 'widest-line';
 import {type OutputTransformer} from './render-node-to-output.js';
+import {
+	StyledChar,
+	styledCharsFromTokens,
+	styledCharsToString,
+	tokenize
+} from 'ansi-tokenize';
 
 /**
  * "Virtual" output class
@@ -92,10 +98,19 @@ export default class Output {
 
 	get(): {output: string; height: number} {
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
-		const output: string[] = [];
+		const output: StyledChar[][] = [];
 
 		for (let y = 0; y < this.height; y++) {
-			output.push(' '.repeat(this.width));
+			const row: StyledChar[] = [];
+			for (let x = 0; x < this.width; x++) {
+				row.push({
+					type: 'char',
+					value: ' ',
+					fullWidth: false,
+					styles: []
+				});
+			}
+			output.push(row);
 		}
 
 		const clips: Clip[] = [];
@@ -172,29 +187,24 @@ export default class Output {
 
 				for (let line of lines) {
 					const currentLine = output[y + offsetY];
-
 					// Line can be missing if `text` is taller than height of pre-initialized `this.output`
-					if (!currentLine) {
-						continue;
-					}
-
-					const width = stringWidth(line);
+					if (!currentLine) continue;
 
 					for (const transformer of transformers) {
 						line = transformer(line);
 					}
 
-					output[y + offsetY] =
-						sliceAnsi(currentLine, 0, x) +
-						line +
-						sliceAnsi(currentLine, x + width);
+					const chars = styledCharsFromTokens(tokenize(line));
+					currentLine.splice(x, chars.length, ...chars);
 
 					offsetY++;
 				}
 			}
 		}
 
-		const generatedOutput = output.map(line => line.trimEnd()).join('\n');
+		const generatedOutput = output
+			.map(line => styledCharsToString(line).trimEnd())
+			.join('\n');
 
 		return {
 			output: generatedOutput,
