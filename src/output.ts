@@ -1,13 +1,13 @@
 import sliceAnsi from 'slice-ansi';
 import stringWidth from 'string-width';
 import widestLine from 'widest-line';
-import {type OutputTransformer} from './render-node-to-output.js';
 import {
-	StyledChar,
+	type StyledChar,
 	styledCharsFromTokens,
 	styledCharsToString,
 	tokenize
 } from 'ansi-tokenize';
+import {type OutputTransformer} from './render-node-to-output.js';
 
 /**
  * "Virtual" output class
@@ -110,6 +110,7 @@ export default class Output {
 					styles: []
 				});
 			}
+
 			output.push(row);
 		}
 
