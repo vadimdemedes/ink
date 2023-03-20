@@ -43,8 +43,8 @@
 		"text"
 	],
 	"dependencies": {
+		"@alcalzone/ansi-tokenize": "^0.1.0",
 		"ansi-escapes": "^6.0.0",
-		"ansi-tokenize": "github:AlCalzone/ansi-tokenize",
 		"auto-bind": "^5.0.1",
 		"chalk": "^5.2.0",
 		"cli-boxes": "^3.0.0",

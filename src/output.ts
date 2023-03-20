@@ -6,7 +6,7 @@ import {
 	styledCharsFromTokens,
 	styledCharsToString,
 	tokenize
-} from 'ansi-tokenize';
+} from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
 
 /**
