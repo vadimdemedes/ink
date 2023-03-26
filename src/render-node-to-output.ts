@@ -95,8 +95,10 @@ const renderNodeToOutput = (
 		if (node.nodeName === 'ink-box') {
 			renderBorder(x, y, node, output);
 
-			const clipHorizontally = node.style.overflowX === 'hidden';
-			const clipVertically = node.style.overflowY === 'hidden';
+			const clipHorizontally =
+				node.style.overflowX === 'hidden' || node.style.overflow === 'hidden';
+			const clipVertically =
+				node.style.overflowY === 'hidden' || node.style.overflow === 'hidden';
 
 			if (clipHorizontally || clipVertically) {
 				const x1 = clipHorizontally
