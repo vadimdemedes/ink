@@ -218,9 +218,33 @@ export type Styles = {
 
 	/**
 	 * Change border color.
-	 * Accepts the same values as `color` in <Text> component.
+	 * Shorthand for setting `borderTopColor`, `borderRightColor`, `borderBottomColor` and `borderLeftColor`.
 	 */
 	readonly borderColor?: LiteralUnion<ForegroundColorName, string>;
+
+	/**
+	 * Change top border color.
+	 * Accepts the same values as `color` in `Text` component.
+	 */
+	readonly borderTopColor?: LiteralUnion<ForegroundColorName, string>;
+
+	/**
+	 * Change bottom border color.
+	 * Accepts the same values as `color` in `Text` component.
+	 */
+	readonly borderBottomColor?: LiteralUnion<ForegroundColorName, string>;
+
+	/**
+	 * Change left border color.
+	 * Accepts the same values as `color` in `Text` component.
+	 */
+	readonly borderLeftColor?: LiteralUnion<ForegroundColorName, string>;
+
+	/**
+	 * Change right border color.
+	 * Accepts the same values as `color` in `Text` component.
+	 */
+	readonly borderRightColor?: LiteralUnion<ForegroundColorName, string>;
 
 	/**
 	 * Behavior for an element's overflow in both directions.

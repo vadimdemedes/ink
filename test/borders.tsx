@@ -5,6 +5,7 @@ import indentString from 'indent-string';
 import delay from 'delay';
 import widestLine from 'widest-line';
 import cliBoxes from 'cli-boxes';
+import chalk from 'chalk';
 import {render, Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
@@ -610,4 +611,116 @@ test('hide all borders', t => {
 	);
 
 	t.is(output, ['Above', 'Content', 'Below'].join('\n'));
+});
+
+test('change color of top border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderTopColor="green">
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			chalk.green(
+				`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
+					cliBoxes.round.topRight
+				}`
+			),
+			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
+			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
+				cliBoxes.round.bottomRight
+			}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('change color of bottom border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderBottomColor="green">
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
+				cliBoxes.round.topRight
+			}`,
+			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
+			chalk.green(
+				`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
+					cliBoxes.round.bottomRight
+				}`
+			),
+			'Below'
+		].join('\n')
+	);
+});
+
+test('change color of left border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderLeftColor="green">
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
+				cliBoxes.round.topRight
+			}`,
+			`${chalk.green(cliBoxes.round.left)}Content${cliBoxes.round.right}`,
+			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
+				cliBoxes.round.bottomRight
+			}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('change color of right border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderRightColor="green">
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
+				cliBoxes.round.topRight
+			}`,
+			`${cliBoxes.round.left}Content${chalk.green(cliBoxes.round.right)}`,
+			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
+				cliBoxes.round.bottomRight
+			}`,
+			'Below'
+		].join('\n')
+	);
 });

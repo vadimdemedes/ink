@@ -12,8 +12,15 @@ const renderBorder = (
 	if (typeof node.style.borderStyle === 'string') {
 		const width = node.yogaNode!.getComputedWidth();
 		const height = node.yogaNode!.getComputedHeight();
-		const color = node.style.borderColor;
 		const box = cliBoxes[node.style.borderStyle];
+
+		const topBorderColor = node.style.borderTopColor ?? node.style.borderColor;
+		const bottomBorderColor =
+			node.style.borderBottomColor ?? node.style.borderColor;
+		const leftBorderColor =
+			node.style.borderLeftColor ?? node.style.borderColor;
+		const rightBorderColor =
+			node.style.borderRightColor ?? node.style.borderColor;
 
 		const showTopBorder = node.style.borderTop !== false;
 		const showBottomBorder = node.style.borderBottom !== false;
@@ -28,7 +35,7 @@ const renderBorder = (
 					(showLeftBorder ? box.topLeft : '') +
 						box.top.repeat(contentWidth) +
 						(showRightBorder ? box.topRight : ''),
-					color,
+					topBorderColor,
 					'foreground'
 			  )
 			: undefined;
@@ -43,8 +50,12 @@ const renderBorder = (
 			verticalBorderHeight -= 1;
 		}
 
-		const verticalBorder = (
-			colorize(box.left, color, 'foreground') + '\n'
+		const leftBorder = (
+			colorize(box.left, leftBorderColor, 'foreground') + '\n'
+		).repeat(verticalBorderHeight);
+
+		const rightBorder = (
+			colorize(box.left, rightBorderColor, 'foreground') + '\n'
 		).repeat(verticalBorderHeight);
 
 		const bottomBorder = showBottomBorder
@@ -52,7 +63,7 @@ const renderBorder = (
 					(showLeftBorder ? box.bottomLeft : '') +
 						box.bottom.repeat(contentWidth) +
 						(showRightBorder ? box.bottomRight : ''),
-					color,
+					bottomBorderColor,
 					'foreground'
 			  )
 			: undefined;
@@ -64,11 +75,11 @@ const renderBorder = (
 		}
 
 		if (showLeftBorder) {
-			output.write(x, y + offsetY, verticalBorder, {transformers: []});
+			output.write(x, y + offsetY, leftBorder, {transformers: []});
 		}
 
 		if (showRightBorder) {
-			output.write(x + width - 1, y + offsetY, verticalBorder, {
+			output.write(x + width - 1, y + offsetY, rightBorder, {
 				transformers: []
 			});
 		}
