@@ -990,28 +990,28 @@ Accepts the same values as [`color`](#color) in `<Text>` component.
 
 <img src="media/box-borderColor.jpg" width="228">
 
-#### borderTop
+##### borderTop
 
 Type: `boolean`\
 Default: `true`
 
 Determines whether top border is visible.
 
-#### borderRight
+##### borderRight
 
 Type: `boolean`\
 Default: `true`
 
 Determines whether right border is visible.
 
-#### borderBottom
+##### borderBottom
 
 Type: `boolean`\
 Default: `true`
 
 Determines whether bottom border is visible.
 
-#### borderLeft
+##### borderLeft
 
 Type: `boolean`\
 Default: `true`
