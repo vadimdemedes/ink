@@ -55,7 +55,7 @@ const renderBorder = (
 		).repeat(verticalBorderHeight);
 
 		const rightBorder = (
-			colorize(box.left, rightBorderColor, 'foreground') + '\n'
+			colorize(box.right, rightBorderColor, 'foreground') + '\n'
 		).repeat(verticalBorderHeight);
 
 		const bottomBorder = showBottomBorder
