@@ -17,7 +17,7 @@ import {
 	type ElementNames,
 	type DOMElement
 } from './dom.js';
-import {type Styles} from './styles.js';
+import applyStyles, {type Styles} from './styles.js';
 import {type OutputTransformer} from './render-node-to-output.js';
 
 // We need to conditionally perform devtools connection to avoid
@@ -43,6 +43,41 @@ $ npm install --save-dev react-devtools-core
 	}
 }
 
+type AnyObject = Record<string, unknown>;
+
+const diff = (before: AnyObject, after: AnyObject): AnyObject | undefined => {
+	if (before === after) {
+		return;
+	}
+
+	if (!before) {
+		return after;
+	}
+
+	const changed: AnyObject = {};
+	let isChanged = false;
+
+	for (const key of Object.keys(before)) {
+		const isDeleted = after ? !Object.hasOwnProperty.call(after, key) : true;
+
+		if (isDeleted) {
+			changed[key] = undefined;
+			isChanged = true;
+		}
+	}
+
+	if (after) {
+		for (const key of Object.keys(after)) {
+			if (after[key] !== before[key]) {
+				changed[key] = after[key];
+				isChanged = true;
+			}
+		}
+	}
+
+	return isChanged ? changed : undefined;
+};
+
 const cleanupYogaNode = (node?: YogaNode): void => {
 	node?.unsetMeasureFunc();
 	node?.freeRecursive();
@@ -52,6 +87,11 @@ type Props = Record<string, unknown>;
 
 type HostContext = {
 	isInsideText: boolean;
+};
+
+type UpdatePayload = {
+	props: Props | undefined;
+	style: Styles | undefined;
 };
 
 export default createReconciler<
@@ -64,7 +104,7 @@ export default createReconciler<
 	unknown,
 	unknown,
 	HostContext,
-	Props,
+	UpdatePayload,
 	unknown,
 	unknown,
 	unknown
@@ -126,6 +166,11 @@ export default createReconciler<
 
 			if (key === 'style') {
 				setStyle(node, value as Styles);
+
+				if (node.yogaNode) {
+					applyStyles(node.yogaNode, value as Styles);
+				}
+
 				continue;
 			}
 
@@ -206,83 +251,43 @@ export default createReconciler<
 			rootNode.isStaticDirty = true;
 		}
 
-		const updatePayload: Props = {};
-		const keys = Object.keys(newProps);
+		const props = diff(oldProps, newProps);
 
-		for (const key of keys) {
-			if (newProps[key] !== oldProps[key]) {
-				const isStyle =
-					key === 'style' &&
-					typeof newProps['style'] === 'object' &&
-					typeof oldProps['style'] === 'object';
+		const style = diff(
+			oldProps['style'] as Styles,
+			newProps['style'] as Styles
+		);
 
-				if (isStyle) {
-					const newStyle = newProps['style'] as Styles;
-					const oldStyle = oldProps['style'] as Styles;
-					const styleKeys = Object.keys(newStyle) as Array<keyof Styles>;
+		if (!props && !style) {
+			return null;
+		}
 
-					for (const styleKey of styleKeys) {
-						// Always include `borderColor` and `borderStyle` to ensure border is rendered,
-						// and `overflowX` and `overflowY` to ensure content is clipped,
-						// otherwise resulting `updatePayload` may not contain them
-						// if they weren't changed during this update
-						if (styleKey === 'borderStyle' || styleKey === 'borderColor') {
-							if (typeof updatePayload['style'] !== 'object') {
-								// Linter didn't like `= {} as Style`
-								const style: Styles = {};
-								updatePayload['style'] = style;
-							}
-
-							(updatePayload['style'] as any).borderStyle =
-								newStyle.borderStyle;
-							(updatePayload['style'] as any).borderColor =
-								newStyle.borderColor;
-							(updatePayload['style'] as any).overflowX = newStyle.overflowX;
-							(updatePayload['style'] as any).overflowY = newStyle.overflowY;
-						}
-
-						if (newStyle[styleKey] !== oldStyle[styleKey]) {
-							if (typeof updatePayload['style'] !== 'object') {
-								// Linter didn't like `= {} as Style`
-								const style: Styles = {};
-								updatePayload['style'] = style;
-							}
-
-							(updatePayload['style'] as any)[styleKey] = newStyle[styleKey];
-						}
-					}
-
+		return {props, style};
+	},
+	commitUpdate(node, {props, style}) {
+		if (props) {
+			for (const [key, value] of Object.entries(props)) {
+				if (key === 'style') {
+					setStyle(node, value as Styles);
 					continue;
 				}
 
-				(updatePayload as any)[key] = newProps[key];
+				if (key === 'internal_transform') {
+					node.internal_transform = value as OutputTransformer;
+					continue;
+				}
+
+				if (key === 'internal_static') {
+					node.internal_static = true;
+					continue;
+				}
+
+				setAttribute(node, key, value as DOMNodeAttribute);
 			}
 		}
 
-		return updatePayload;
-	},
-	commitUpdate(node, updatePayload) {
-		for (const [key, value] of Object.entries(updatePayload)) {
-			if (key === 'children') {
-				continue;
-			}
-
-			if (key === 'style') {
-				setStyle(node, value as Styles);
-				continue;
-			}
-
-			if (key === 'internal_transform') {
-				node.internal_transform = value as OutputTransformer;
-				continue;
-			}
-
-			if (key === 'internal_static') {
-				node.internal_static = true;
-				continue;
-			}
-
-			setAttribute(node, key, value as DOMNodeAttribute);
+		if (style && node.yogaNode) {
+			applyStyles(node.yogaNode, style);
 		}
 	},
 	commitTextUpdate(node, _oldText, newText) {
