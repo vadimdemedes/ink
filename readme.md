@@ -980,7 +980,7 @@ See example in [examples/borders](examples/borders/borders.tsx).
 Type: `string`
 
 Change border color.
-Accepts the same values as [`color`](#color) in `<Text>` component.
+Shorthand for setting `borderTopColor`, `borderRightColor`, `borderBottomColor` and `borderLeftColor`.
 
 ```jsx
 <Box borderStyle="round" borderColor="green">
@@ -989,6 +989,71 @@ Accepts the same values as [`color`](#color) in `<Text>` component.
 ```
 
 <img src="media/box-borderColor.jpg" width="228">
+
+##### borderTopColor
+
+Type: `string`
+
+Change top border color.
+Accepts the same values as [`color`](#color) in `<Text>` component.
+
+```jsx
+<Box borderStyle="round" borderTopColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderRightColor
+
+Type: `string`
+
+Change right border color.
+Accepts the same values as [`color`](#color) in `<Text>` component.
+
+```jsx
+<Box borderStyle="round" borderRightColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderRightColor
+
+Type: `string`
+
+Change right border color.
+Accepts the same values as [`color`](#color) in `<Text>` component.
+
+```jsx
+<Box borderStyle="round" borderRightColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderBottomColor
+
+Type: `string`
+
+Change bottom border color.
+Accepts the same values as [`color`](#color) in `<Text>` component.
+
+```jsx
+<Box borderStyle="round" borderBottomColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderLeftColor
+
+Type: `string`
+
+Change left border color.
+Accepts the same values as [`color`](#color) in `<Text>` component.
+
+```jsx
+<Box borderStyle="round" borderLeftColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
 
 ##### borderTop
 
