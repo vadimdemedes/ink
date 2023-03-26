@@ -973,7 +973,7 @@ Ink uses border styles from [`cli-boxes`](https://github.com/sindresorhus/cli-bo
 
 <img src="media/box-borderStyle.jpg" width="521">
 
-See example in [examples/borders](examples/borders/borders.js).
+See example in [examples/borders](examples/borders/borders.tsx).
 
 ##### borderColor
 
@@ -1133,7 +1133,7 @@ render(<Example />);
 that were previously rendered. This means that when you add new items to `items`
 array, changes you make to previous items will not trigger a rerender.
 
-See [examples/static](examples/static/static.js) for an example usage of `<Static>` component.
+See [examples/static](examples/static/static.tsx) for an example usage of `<Static>` component.
 
 #### items
 
@@ -1223,7 +1223,7 @@ This hook is used for handling user input.
 It's a more convenient alternative to using `useStdin` and listening to `data` events.
 The callback you pass to `useInput` is called for each character when user enters any input.
 However, if user pastes text and it's more than one character, the callback will be called only once and the whole string will be passed as `input`.
-You can find a full example of using `useInput` at [examples/use-input](examples/use-input/use-input.js).
+You can find a full example of using `useInput` at [examples/use-input](examples/use-input/use-input.tsx).
 
 ```jsx
 import {useInput} from 'ink';
@@ -1506,7 +1506,7 @@ const Example = () => {
 };
 ```
 
-See additional usage example in [examples/use-stdout](examples/use-stdout/use-stdout.js).
+See additional usage example in [examples/use-stdout](examples/use-stdout/use-stdout.tsx).
 
 ### useStderr()
 
@@ -1599,7 +1599,7 @@ const Example = () => {
 render(<Example />);
 ```
 
-See example in [examples/use-focus](examples/use-focus/use-focus.js) and [examples/use-focus-with-id](examples/use-focus-with-id/use-focus-with-id.js).
+See example in [examples/use-focus](examples/use-focus/use-focus.tsx) and [examples/use-focus-with-id](examples/use-focus-with-id/use-focus-with-id.tsx).
 
 ### useFocusManager()
 
