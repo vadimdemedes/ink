@@ -609,7 +609,7 @@ Default: `0`
 Size of the gap between an element's columns.
 
 ```jsx
-<Box gap={1}>
+<Box columnGap={1}>
 	<Text>A</Text>
 	<Text>B</Text>
 </Box>
@@ -624,7 +624,7 @@ Default: `0`
 Size of the gap between element's rows.
 
 ```jsx
-<Box flexDirection="column" gap={1}>
+<Box flexDirection="column" rowGap={1}>
 	<Text>A</Text>
 	<Text>B</Text>
 </Box>
