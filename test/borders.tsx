@@ -410,16 +410,10 @@ test('nested boxes - fit-content box with emojis on flex-direction column', t =>
 	t.is(output, expected);
 });
 
-test('render border after update', async t => {
+test('render border after update', t => {
 	const stdout = createStdout();
 
-	function Test() {
-		const [borderColor, setBorderColor] = useState<string | undefined>();
-
-		useEffect(() => {
-			setBorderColor('green');
-		}, []);
-
+	function Test({borderColor}: {borderColor?: string}) {
 		return (
 			<Box borderStyle="round" borderColor={borderColor}>
 				<Text>Hello World</Text>
@@ -427,7 +421,7 @@ test('render border after update', async t => {
 		);
 	}
 
-	render(<Test />, {
+	const {rerender} = render(<Test />, {
 		stdout,
 		debug: true
 	});
@@ -437,7 +431,7 @@ test('render border after update', async t => {
 		boxen('Hello World', {width: 100, borderStyle: 'round'})
 	);
 
-	await delay(100);
+	rerender(<Test borderColor="green" />);
 
 	t.is(
 		(stdout.write as any).lastCall.args[0],
@@ -445,6 +439,16 @@ test('render border after update', async t => {
 			width: 100,
 			borderStyle: 'round',
 			borderColor: 'green'
+		})
+	);
+
+	rerender(<Test />);
+
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		boxen('Hello World', {
+			width: 100,
+			borderStyle: 'round'
 		})
 	);
 });

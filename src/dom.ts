@@ -1,7 +1,7 @@
 // eslint-disable-next-line n/file-extension-in-import
 import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
 import measureText from './measure-text.js';
-import applyStyles, {type Styles} from './styles.js';
+import {type Styles} from './styles.js';
 import wrapText from './wrap-text.js';
 import squashTextNodes from './squash-text-nodes.js';
 import {type OutputTransformer} from './render-node-to-output.js';
@@ -159,10 +159,6 @@ export const setAttribute = (
 
 export const setStyle = (node: DOMNode, style: Styles): void => {
 	node.style = style;
-
-	if (node.yogaNode) {
-		applyStyles(node.yogaNode, style);
-	}
 };
 
 export const createTextNode = (text: string): TextNode => {
