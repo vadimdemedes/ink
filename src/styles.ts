@@ -189,6 +189,34 @@ export type Styles = {
 	readonly borderStyle?: keyof Boxes;
 
 	/**
+	 * Determines whether top border is visible.
+	 *
+	 * @default true
+	 */
+	readonly borderTop?: boolean;
+
+	/**
+	 * Determines whether bottom border is visible.
+	 *
+	 * @default true
+	 */
+	readonly borderBottom?: boolean;
+
+	/**
+	 * Determines whether left border is visible.
+	 *
+	 * @default true
+	 */
+	readonly borderLeft?: boolean;
+
+	/**
+	 * Determines whether right border is visible.
+	 *
+	 * @default true
+	 */
+	readonly borderRight?: boolean;
+
+	/**
 	 * Change border color.
 	 * Accepts the same values as `color` in <Text> component.
 	 */
@@ -449,10 +477,21 @@ const applyBorderStyles = (node: YogaNode, style: Styles): void => {
 	if ('borderStyle' in style) {
 		const borderWidth = typeof style.borderStyle === 'string' ? 1 : 0;
 
-		node.setBorder(Yoga.EDGE_TOP, borderWidth);
-		node.setBorder(Yoga.EDGE_BOTTOM, borderWidth);
-		node.setBorder(Yoga.EDGE_LEFT, borderWidth);
-		node.setBorder(Yoga.EDGE_RIGHT, borderWidth);
+		if (style.borderTop !== false) {
+			node.setBorder(Yoga.EDGE_TOP, borderWidth);
+		}
+
+		if (style.borderBottom !== false) {
+			node.setBorder(Yoga.EDGE_BOTTOM, borderWidth);
+		}
+
+		if (style.borderLeft !== false) {
+			node.setBorder(Yoga.EDGE_LEFT, borderWidth);
+		}
+
+		if (style.borderRight !== false) {
+			node.setBorder(Yoga.EDGE_RIGHT, borderWidth);
+		}
 	}
 };
 

@@ -15,26 +15,67 @@ const renderBorder = (
 		const color = node.style.borderColor;
 		const box = cliBoxes[node.style.borderStyle];
 
-		const topBorder = colorize(
-			box.topLeft + box.top.repeat(width - 2) + box.topRight,
-			color,
-			'foreground'
-		);
+		const showTopBorder = node.style.borderTop !== false;
+		const showBottomBorder = node.style.borderBottom !== false;
+		const showLeftBorder = node.style.borderLeft !== false;
+		const showRightBorder = node.style.borderRight !== false;
+
+		const contentWidth =
+			width - (showLeftBorder ? 1 : 0) - (showRightBorder ? 1 : 0);
+
+		const topBorder = showTopBorder
+			? colorize(
+					(showLeftBorder ? box.topLeft : '') +
+						box.top.repeat(contentWidth) +
+						(showRightBorder ? box.topRight : ''),
+					color,
+					'foreground'
+			  )
+			: undefined;
+
+		let verticalBorderHeight = height;
+
+		if (showTopBorder) {
+			verticalBorderHeight -= 1;
+		}
+
+		if (showBottomBorder) {
+			verticalBorderHeight -= 1;
+		}
 
 		const verticalBorder = (
 			colorize(box.left, color, 'foreground') + '\n'
-		).repeat(height - 2);
+		).repeat(verticalBorderHeight);
 
-		const bottomBorder = colorize(
-			box.bottomLeft + box.bottom.repeat(width - 2) + box.bottomRight,
-			color,
-			'foreground'
-		);
+		const bottomBorder = showBottomBorder
+			? colorize(
+					(showLeftBorder ? box.bottomLeft : '') +
+						box.bottom.repeat(contentWidth) +
+						(showRightBorder ? box.bottomRight : ''),
+					color,
+					'foreground'
+			  )
+			: undefined;
 
-		output.write(x, y, topBorder, {transformers: []});
-		output.write(x, y + 1, verticalBorder, {transformers: []});
-		output.write(x + width - 1, y + 1, verticalBorder, {transformers: []});
-		output.write(x, y + height - 1, bottomBorder, {transformers: []});
+		const offsetY = showTopBorder ? 1 : 0;
+
+		if (topBorder) {
+			output.write(x, y, topBorder, {transformers: []});
+		}
+
+		if (showLeftBorder) {
+			output.write(x, y + offsetY, verticalBorder, {transformers: []});
+		}
+
+		if (showRightBorder) {
+			output.write(x + width - 1, y + offsetY, verticalBorder, {
+				transformers: []
+			});
+		}
+
+		if (bottomBorder) {
+			output.write(x, y + height - 1, bottomBorder, {transformers: []});
+		}
 	}
 };
 
