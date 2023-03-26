@@ -9,10 +9,13 @@ const renderBorder = (
 	node: DOMNode,
 	output: Output
 ): void => {
-	if (typeof node.style.borderStyle === 'string') {
+	if (node.style.borderStyle) {
 		const width = node.yogaNode!.getComputedWidth();
 		const height = node.yogaNode!.getComputedHeight();
-		const box = cliBoxes[node.style.borderStyle];
+		const box =
+			typeof node.style.borderStyle === 'string'
+				? cliBoxes[node.style.borderStyle]
+				: node.style.borderStyle;
 
 		const topBorderColor = node.style.borderTopColor ?? node.style.borderColor;
 		const bottomBorderColor =

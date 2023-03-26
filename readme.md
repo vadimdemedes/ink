@@ -929,7 +929,7 @@ Shortcut for setting `overflowX` and `overflowY` at the same time.
 ##### borderStyle
 
 Type: `string`\
-Allowed values: `single` `double` `round` `bold` `singleDouble` `doubleSingle` `classic`
+Allowed values: `single` `double` `round` `bold` `singleDouble` `doubleSingle` `classic` | `BoxStyle`
 
 Add a border with a specified style.
 If `borderStyle` is `undefined` (which it is by default), no border will be added.
@@ -972,6 +972,25 @@ Ink uses border styles from [`cli-boxes`](https://github.com/sindresorhus/cli-bo
 ```
 
 <img src="media/box-borderStyle.jpg" width="521">
+
+Alternatively, pass a custom border style like so:
+
+```jsx
+<Box
+	borderStyle={{
+		topLeft: '↘',
+		top: '↓',
+		topRight: '↙',
+		left: '→',
+		bottomLeft: '↗',
+		bottom: '↑',
+		bottomRight: '↖',
+		right: '←'
+	}}
+>
+	<Text>Custom</Text>
+</Box>
+```
 
 See example in [examples/borders](examples/borders/borders.tsx).
 

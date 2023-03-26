@@ -724,3 +724,24 @@ test('change color of right border', t => {
 		].join('\n')
 	);
 });
+
+test('custom border style', t => {
+	const output = renderToString(
+		<Box
+			borderStyle={{
+				topLeft: '↘',
+				top: '↓',
+				topRight: '↙',
+				left: '→',
+				bottomLeft: '↗',
+				bottom: '↑',
+				bottomRight: '↖',
+				right: '←'
+			}}
+		>
+			<Text>Content</Text>
+		</Box>
+	);
+
+	t.is(output, boxen('Content', {width: 100, borderStyle: 'arrow'}));
+});

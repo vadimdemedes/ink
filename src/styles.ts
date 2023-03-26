@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import {type Boxes} from 'cli-boxes';
+import {type Boxes, type BoxStyle} from 'cli-boxes';
 import {type LiteralUnion} from 'type-fest';
 import {type ForegroundColorName} from 'chalk';
 // eslint-disable-next-line n/file-extension-in-import
@@ -186,7 +186,7 @@ export type Styles = {
 	 * Add a border with a specified style.
 	 * If `borderStyle` is `undefined` (which it is by default), no border will be added.
 	 */
-	readonly borderStyle?: keyof Boxes;
+	readonly borderStyle?: keyof Boxes | BoxStyle;
 
 	/**
 	 * Determines whether top border is visible.
@@ -499,7 +499,7 @@ const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
 
 const applyBorderStyles = (node: YogaNode, style: Styles): void => {
 	if ('borderStyle' in style) {
-		const borderWidth = typeof style.borderStyle === 'string' ? 1 : 0;
+		const borderWidth = style.borderStyle ? 1 : 0;
 
 		if (style.borderTop !== false) {
 			node.setBorder(Yoga.EDGE_TOP, borderWidth);
