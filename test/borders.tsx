@@ -4,6 +4,7 @@ import boxen, {type Options} from 'boxen';
 import indentString from 'indent-string';
 import delay from 'delay';
 import widestLine from 'widest-line';
+import cliBoxes from 'cli-boxes';
 import {render, Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
@@ -451,4 +452,162 @@ test('render border after update', t => {
 			borderStyle: 'round'
 		})
 	);
+});
+
+test('hide top border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderTop={false}>
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
+			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
+				cliBoxes.round.bottomRight
+			}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('hide bottom border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderBottom={false}>
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
+				cliBoxes.round.topRight
+			}`,
+			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('hide top and bottom borders', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderTop={false} borderBottom={false}>
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('hide left border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderLeft={false}>
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.top.repeat(7)}${cliBoxes.round.topRight}`,
+			`Content${cliBoxes.round.right}`,
+			`${cliBoxes.round.bottom.repeat(7)}${cliBoxes.round.bottomRight}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('hide right border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderRight={false}>
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}`,
+			`${cliBoxes.round.left}Content`,
+			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('hide left and right border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderLeft={false} borderRight={false}>
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			cliBoxes.round.top.repeat(7),
+			'Content',
+			cliBoxes.round.bottom.repeat(7),
+			'Below'
+		].join('\n')
+	);
+});
+
+test('hide all borders', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box
+				borderStyle="round"
+				borderTop={false}
+				borderBottom={false}
+				borderLeft={false}
+				borderRight={false}
+			>
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(output, ['Above', 'Content', 'Below'].join('\n'));
 });
