@@ -1,4 +1,3 @@
-import process from 'node:process';
 import createReconciler from 'react-reconciler';
 import {DefaultEventPriority} from 'react-reconciler/constants.js';
 // eslint-disable-next-line n/file-extension-in-import
@@ -23,6 +22,7 @@ import {type OutputTransformer} from './render-node-to-output.js';
 // We need to conditionally perform devtools connection to avoid
 // accidentally breaking other third-party code.
 // See https://github.com/vadimdemedes/ink/issues/384
+// eslint-disable-next-line n/prefer-global/process
 if (process.env['DEV'] === 'true') {
 	try {
 		await import('./devtools.js');
