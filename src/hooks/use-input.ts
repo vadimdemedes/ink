@@ -164,7 +164,15 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				key.ctrl = true;
 			}
 
-			if (input.startsWith('\u001B')) {
+			if (
+				input.startsWith('\u001B') &&
+				!key.upArrow &&
+				!key.downArrow &&
+				!key.leftArrow &&
+				!key.rightArrow &&
+				!key.pageUp &&
+				!key.pageDown
+			) {
 				input = input.slice(1);
 				key.meta = true;
 			}

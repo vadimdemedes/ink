@@ -31,32 +31,32 @@ function UserInput({test}: {test: string | undefined}) {
 			return;
 		}
 
-		if (test === 'upArrow' && key.upArrow) {
+		if (test === 'upArrow' && key.upArrow && !key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'downArrow' && key.downArrow) {
+		if (test === 'downArrow' && key.downArrow && !key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'leftArrow' && key.leftArrow) {
+		if (test === 'leftArrow' && key.leftArrow && !key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'rightArrow' && key.rightArrow) {
+		if (test === 'rightArrow' && key.rightArrow && !key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'pageDown' && key.pageDown) {
+		if (test === 'pageDown' && key.pageDown && !key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'pageUp' && key.pageUp) {
+		if (test === 'pageUp' && key.pageUp && !key.meta) {
 			exit();
 			return;
 		}
