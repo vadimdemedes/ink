@@ -18,6 +18,7 @@
 		"node": ">=14.16"
 	},
 	"scripts": {
+		"dev": "tsc --watch",
 		"build": "tsc",
 		"prepare": "npm run build",
 		"test": "tsc --noEmit && xo && FORCE_COLOR=true ava",
