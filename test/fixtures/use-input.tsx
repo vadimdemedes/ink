@@ -61,7 +61,7 @@ function UserInput({test}: {test: string | undefined}) {
 			return;
 		}
 
-		if (test === 'tab' && input === '' && key.tab) {
+		if (test === 'tab' && input === '' && key.tab && !key.ctrl) {
 			exit();
 			return;
 		}

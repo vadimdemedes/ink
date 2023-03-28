@@ -155,7 +155,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			};
 
 			// Copied from `keypress` module
-			if (input <= '\u001A' && !key.return) {
+			if (input <= '\u001A' && !key.return && !key.tab) {
 				// eslint-disable-next-line unicorn/prefer-code-point
 				input = String.fromCharCode(
 					// eslint-disable-next-line unicorn/prefer-code-point
