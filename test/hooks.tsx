@@ -135,6 +135,34 @@ test.serial('useInput - handle right arrow', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - handle meta + up arrow', async t => {
+	const ps = term('use-input', ['upArrowMeta']);
+	ps.write('\u001B\u001B[A');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle meta + down arrow', async t => {
+	const ps = term('use-input', ['downArrowMeta']);
+	ps.write('\u001B\u001B[B');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle meta + left arrow', async t => {
+	const ps = term('use-input', ['leftArrowMeta']);
+	ps.write('\u001B\u001B[D');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle meta + right arrow', async t => {
+	const ps = term('use-input', ['rightArrowMeta']);
+	ps.write('\u001B\u001B[C');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - handle page down', async t => {
 	const ps = term('use-input', ['pageDown']);
 	ps.write('\u001B[6~');

@@ -51,6 +51,26 @@ function UserInput({test}: {test: string | undefined}) {
 			return;
 		}
 
+		if (test === 'upArrowMeta' && key.upArrow && key.meta) {
+			exit();
+			return;
+		}
+
+		if (test === 'downArrowMeta' && key.downArrow && key.meta) {
+			exit();
+			return;
+		}
+
+		if (test === 'leftArrowMeta' && key.leftArrow && key.meta) {
+			exit();
+			return;
+		}
+
+		if (test === 'rightArrowMeta' && key.rightArrow && key.meta) {
+			exit();
+			return;
+		}
+
 		if (test === 'pageDown' && key.pageDown && !key.meta) {
 			exit();
 			return;

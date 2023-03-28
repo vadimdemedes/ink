@@ -137,6 +137,14 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 		const handleData = (data: Buffer) => {
 			let input = String(data);
 
+			const meta =
+				input.startsWith('\u001B\u001B') || // Meta + arrow keys
+				(input.startsWith('\u001B') && !input.startsWith('\u001B[')); // Meta + character
+
+			if (meta && input.length > 1) {
+				input = input.slice(1);
+			}
+
 			const key = {
 				upArrow: input === '\u001B[A',
 				downArrow: input === '\u001B[B',
@@ -147,11 +155,12 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				return: input === '\r',
 				escape: input === '\u001B',
 				ctrl: false,
-				shift: false,
+				// Shift + Tab
+				shift: input === '\u001B[Z',
 				tab: input === '\t' || input === '\u001B[Z',
 				backspace: input === '\u0008',
 				delete: input === '\u007F' || input === '\u001B[3~',
-				meta: false
+				meta
 			};
 
 			// Copied from `keypress` module
@@ -161,30 +170,14 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 					// eslint-disable-next-line unicorn/prefer-code-point
 					input.charCodeAt(0) + 'a'.charCodeAt(0) - 1
 				);
-				key.ctrl = true;
-			}
 
-			if (
-				input.startsWith('\u001B') &&
-				!key.upArrow &&
-				!key.downArrow &&
-				!key.leftArrow &&
-				!key.rightArrow &&
-				!key.pageUp &&
-				!key.pageDown
-			) {
-				input = input.slice(1);
-				key.meta = true;
+				key.ctrl = true;
 			}
 
 			const isLatinUppercase = input >= 'A' && input <= 'Z';
 			const isCyrillicUppercase = input >= 'А' && input <= 'Я';
-			if (input.length === 1 && (isLatinUppercase || isCyrillicUppercase)) {
-				key.shift = true;
-			}
 
-			// Shift+Tab
-			if (key.tab && input === '[Z') {
+			if (input.length === 1 && (isLatinUppercase || isCyrillicUppercase)) {
 				key.shift = true;
 			}
 
