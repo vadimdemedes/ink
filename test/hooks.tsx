@@ -163,6 +163,34 @@ test.serial('useInput - handle meta + right arrow', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - handle ctrl + up arrow', async t => {
+	const ps = term('use-input', ['upArrowCtrl']);
+	ps.write('\u001B[1;5A');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle ctrl + down arrow', async t => {
+	const ps = term('use-input', ['downArrowCtrl']);
+	ps.write('\u001B[1;5B');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle ctrl + left arrow', async t => {
+	const ps = term('use-input', ['leftArrowCtrl']);
+	ps.write('\u001B[1;5D');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle ctrl + right arrow', async t => {
+	const ps = term('use-input', ['rightArrowCtrl']);
+	ps.write('\u001B[1;5C');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - handle page down', async t => {
 	const ps = term('use-input', ['pageDown']);
 	ps.write('\u001B[6~');
