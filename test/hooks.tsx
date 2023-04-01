@@ -177,14 +177,14 @@ test.serial('useInput - handle page up', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle Tab', async t => {
+test.serial('useInput - handle tab', async t => {
 	const ps = term('use-input', ['tab']);
 	ps.write('\t');
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle Shift+Tab', async t => {
+test.serial('useInput - handle shift + tab', async t => {
 	const ps = term('use-input', ['shiftTab']);
 	ps.write('\u001B[Z');
 	await ps.waitForExit();

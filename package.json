@@ -52,6 +52,8 @@
 		"code-excerpt": "^4.0.0",
 		"indent-string": "^5.0.0",
 		"is-ci": "^3.0.1",
+		"is-lower-case": "^2.0.2",
+		"is-upper-case": "^2.0.2",
 		"lodash": "^4.17.21",
 		"patch-console": "^2.0.0",
 		"react-reconciler": "^0.29.0",
@@ -148,6 +150,9 @@
 			"react-hooks/exhaustive-deps": "off",
 			"complexity": "off"
 		},
+		"ignores": [
+			"src/parse-keypress.ts"
+		],
 		"overrides": [
 			{
 				"files": [
