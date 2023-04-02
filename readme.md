@@ -168,7 +168,7 @@ Alternatively, create a TypeScript project:
 npx create-ink-app --typescript my-ink-cli
 ```
 
-<details><summary>Manual setup</summary>
+<details><summary>Manual JavaScript setup</summary>
 <p>
 Ink requires the same Babel setup as you would do for regular React-based apps in the browser.
 
@@ -181,17 +181,7 @@ npm install --save-dev @babel/preset-react
 
 ```json
 {
-	"presets": [
-		"@babel/preset-react",
-		[
-			"@babel/preset-env",
-			{
-				"targets": {
-					"node": true
-				}
-			}
-		]
-	]
+	"presets": ["@babel/preset-react"]
 }
 ```
 
