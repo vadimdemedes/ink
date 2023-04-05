@@ -205,12 +205,13 @@ export default class Output {
 						const charWidth = char.fullWidth ? 2 : char.value.length;
 						for (let dx = 1; dx < charWidth; dx++) {
 							currentLine[offsetX + dx] = {
-								"type": "char",
-								"value": "",
-								"fullWidth": false,
-								"styles": char.styles
+								type: 'char',
+								value: '',
+								fullWidth: false,
+								styles: char.styles
 							};
 						}
+
 						offsetX += charWidth;
 					}
 
