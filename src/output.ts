@@ -196,7 +196,23 @@ export default class Output {
 					}
 
 					const chars = styledCharsFromTokens(tokenize(line));
-					currentLine.splice(x, chars.length, ...chars);
+					let offsetX = x;
+					for (const char of chars) {
+						currentLine[offsetX] = char;
+
+						// Some characters take up more than one column. In that case, the following
+						// pixels need to be cleared to avoid printing extra characters
+						const charWidth = char.fullWidth ? 2 : char.value.length;
+						for (let dx = 1; dx < charWidth; dx++) {
+							currentLine[offsetX + dx] = {
+								"type": "char",
+								"value": "",
+								"fullWidth": false,
+								"styles": char.styles
+							};
+						}
+						offsetX += charWidth;
+					}
 
 					offsetY++;
 				}
