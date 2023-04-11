@@ -202,9 +202,9 @@ export default class Output {
 
 						// Some characters take up more than one column. In that case, the following
 						// pixels need to be cleared to avoid printing extra characters
-						const charWidth = char.fullWidth ? 2 : char.value.length;
-						for (let dx = 1; dx < charWidth; dx++) {
-							currentLine[offsetX + dx] = {
+						const isWideChar = char.fullWidth || char.value.length > 1;
+						if (isWideChar) {
+							currentLine[offsetX + 1] = {
 								type: 'char',
 								value: '',
 								fullWidth: false,
@@ -212,7 +212,7 @@ export default class Output {
 							};
 						}
 
-						offsetX += charWidth;
+						offsetX += isWideChar ? 2 : 1;
 					}
 
 					offsetY++;
