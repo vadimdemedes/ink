@@ -198,12 +198,16 @@ export default class Output {
 					const chars = styledCharsFromTokens(tokenize(line));
 					let offsetX = x;
 					for (const char of chars) {
+						if (offsetX >= this.width) break;
+
 						currentLine[offsetX] = char;
 
 						// Some characters take up more than one column. In that case, the following
 						// pixels need to be cleared to avoid printing extra characters
 						const isWideChar = char.fullWidth || char.value.length > 1;
 						if (isWideChar) {
+							if (offsetX + 1 >= this.width) break;
+
 							currentLine[offsetX + 1] = {
 								type: 'char',
 								value: '',
