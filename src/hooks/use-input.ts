@@ -1,5 +1,7 @@
 import {type Buffer} from 'node:buffer';
 import {useEffect} from 'react';
+import {isUpperCase} from 'is-upper-case';
+import parseKeypress, {nonAlphanumericKeys} from '../parse-keypress.js';
 import useStdin from './use-stdin.js';
 
 /**
@@ -135,53 +137,47 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 		}
 
 		const handleData = (data: Buffer) => {
-			let input = String(data);
+			const keypress = parseKeypress(data);
 
 			const key = {
-				upArrow: input === '\u001B[A',
-				downArrow: input === '\u001B[B',
-				leftArrow: input === '\u001B[D',
-				rightArrow: input === '\u001B[C',
-				pageDown: input === '\u001B[6~',
-				pageUp: input === '\u001B[5~',
-				return: input === '\r',
-				escape: input === '\u001B',
-				ctrl: false,
-				shift: false,
-				tab: input === '\t' || input === '\u001B[Z',
-				backspace: input === '\u0008',
-				delete: input === '\u007F' || input === '\u001B[3~',
-				meta: false
+				upArrow: keypress.name === 'up',
+				downArrow: keypress.name === 'down',
+				leftArrow: keypress.name === 'left',
+				rightArrow: keypress.name === 'right',
+				pageDown: keypress.name === 'pagedown',
+				pageUp: keypress.name === 'pageup',
+				return: keypress.name === 'return',
+				escape: keypress.name === 'escape',
+				ctrl: keypress.ctrl,
+				shift: keypress.shift,
+				tab: keypress.name === 'tab',
+				backspace: keypress.name === 'backspace',
+				delete: keypress.name === 'delete',
+				// `parseKeypress` parses \u001B\u001B[A (meta + up arrow) as meta = false
+				// but with option = true, so we need to take this into account here
+				// to avoid breaking changes in Ink.
+				// TODO(vadimdemedes): consider removing this in the next major version.
+				meta: keypress.meta || keypress.name === 'escape' || keypress.option
 			};
 
-			// Copied from `keypress` module
-			if (input <= '\u001A' && !key.return) {
-				// eslint-disable-next-line unicorn/prefer-code-point
-				input = String.fromCharCode(
-					// eslint-disable-next-line unicorn/prefer-code-point
-					input.charCodeAt(0) + 'a'.charCodeAt(0) - 1
-				);
-				key.ctrl = true;
+			let input = keypress.ctrl ? keypress.name : keypress.sequence;
+
+			if (nonAlphanumericKeys.includes(keypress.name)) {
+				input = '';
 			}
 
+			// Strip meta if it's still remaining after `parseKeypress`
+			// TODO(vadimdemedes): remove this in the next major version.
 			if (input.startsWith('\u001B')) {
 				input = input.slice(1);
-				key.meta = true;
 			}
 
-			const isLatinUppercase = input >= 'A' && input <= 'Z';
-			const isCyrillicUppercase = input >= 'А' && input <= 'Я';
-			if (input.length === 1 && (isLatinUppercase || isCyrillicUppercase)) {
+			if (
+				input.length === 1 &&
+				typeof input[0] === 'string' &&
+				isUpperCase(input[0])
+			) {
 				key.shift = true;
-			}
-
-			// Shift+Tab
-			if (key.tab && input === '[Z') {
-				key.shift = true;
-			}
-
-			if (key.tab || key.backspace || key.delete) {
-				input = '';
 			}
 
 			// If app is not supposed to exit on Ctrl+C, then let input listener handle it

@@ -4,6 +4,8 @@ import boxen, {type Options} from 'boxen';
 import indentString from 'indent-string';
 import delay from 'delay';
 import widestLine from 'widest-line';
+import cliBoxes from 'cli-boxes';
+import chalk from 'chalk';
 import {render, Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
@@ -410,16 +412,10 @@ test('nested boxes - fit-content box with emojis on flex-direction column', t =>
 	t.is(output, expected);
 });
 
-test('render border after update', async t => {
+test('render border after update', t => {
 	const stdout = createStdout();
 
-	function Test() {
-		const [borderColor, setBorderColor] = useState<string | undefined>();
-
-		useEffect(() => {
-			setBorderColor('green');
-		}, []);
-
+	function Test({borderColor}: {borderColor?: string}) {
 		return (
 			<Box borderStyle="round" borderColor={borderColor}>
 				<Text>Hello World</Text>
@@ -427,7 +423,7 @@ test('render border after update', async t => {
 		);
 	}
 
-	render(<Test />, {
+	const {rerender} = render(<Test />, {
 		stdout,
 		debug: true
 	});
@@ -437,7 +433,7 @@ test('render border after update', async t => {
 		boxen('Hello World', {width: 100, borderStyle: 'round'})
 	);
 
-	await delay(100);
+	rerender(<Test borderColor="green" />);
 
 	t.is(
 		(stdout.write as any).lastCall.args[0],
@@ -447,4 +443,305 @@ test('render border after update', async t => {
 			borderColor: 'green'
 		})
 	);
+
+	rerender(<Test />);
+
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		boxen('Hello World', {
+			width: 100,
+			borderStyle: 'round'
+		})
+	);
+});
+
+test('hide top border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderTop={false}>
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
+			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
+				cliBoxes.round.bottomRight
+			}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('hide bottom border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderBottom={false}>
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
+				cliBoxes.round.topRight
+			}`,
+			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('hide top and bottom borders', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderTop={false} borderBottom={false}>
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('hide left border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderLeft={false}>
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.top.repeat(7)}${cliBoxes.round.topRight}`,
+			`Content${cliBoxes.round.right}`,
+			`${cliBoxes.round.bottom.repeat(7)}${cliBoxes.round.bottomRight}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('hide right border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderRight={false}>
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}`,
+			`${cliBoxes.round.left}Content`,
+			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('hide left and right border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderLeft={false} borderRight={false}>
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			cliBoxes.round.top.repeat(7),
+			'Content',
+			cliBoxes.round.bottom.repeat(7),
+			'Below'
+		].join('\n')
+	);
+});
+
+test('hide all borders', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box
+				borderStyle="round"
+				borderTop={false}
+				borderBottom={false}
+				borderLeft={false}
+				borderRight={false}
+			>
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(output, ['Above', 'Content', 'Below'].join('\n'));
+});
+
+test('change color of top border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderTopColor="green">
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			chalk.green(
+				`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
+					cliBoxes.round.topRight
+				}`
+			),
+			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
+			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
+				cliBoxes.round.bottomRight
+			}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('change color of bottom border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderBottomColor="green">
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
+				cliBoxes.round.topRight
+			}`,
+			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
+			chalk.green(
+				`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
+					cliBoxes.round.bottomRight
+				}`
+			),
+			'Below'
+		].join('\n')
+	);
+});
+
+test('change color of left border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderLeftColor="green">
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
+				cliBoxes.round.topRight
+			}`,
+			`${chalk.green(cliBoxes.round.left)}Content${cliBoxes.round.right}`,
+			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
+				cliBoxes.round.bottomRight
+			}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('change color of right border', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderStyle="round" borderRightColor="green">
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
+				cliBoxes.round.topRight
+			}`,
+			`${cliBoxes.round.left}Content${chalk.green(cliBoxes.round.right)}`,
+			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
+				cliBoxes.round.bottomRight
+			}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('custom border style', t => {
+	const output = renderToString(
+		<Box
+			borderStyle={{
+				topLeft: '↘',
+				top: '↓',
+				topRight: '↙',
+				left: '→',
+				bottomLeft: '↗',
+				bottom: '↑',
+				bottomRight: '↖',
+				right: '←'
+			}}
+		>
+			<Text>Content</Text>
+		</Box>
+	);
+
+	t.is(output, boxen('Content', {width: 100, borderStyle: 'arrow'}));
 });

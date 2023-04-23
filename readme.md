@@ -168,7 +168,7 @@ Alternatively, create a TypeScript project:
 npx create-ink-app --typescript my-ink-cli
 ```
 
-<details><summary>Manual setup</summary>
+<details><summary>Manual JavaScript setup</summary>
 <p>
 Ink requires the same Babel setup as you would do for regular React-based apps in the browser.
 
@@ -181,17 +181,7 @@ npm install --save-dev @babel/preset-react
 
 ```json
 {
-	"presets": [
-		"@babel/preset-react",
-		[
-			"@babel/preset-env",
-			{
-				"targets": {
-					"node": true
-				}
-			}
-		]
-	]
+	"presets": ["@babel/preset-react"]
 }
 ```
 
@@ -609,7 +599,7 @@ Default: `0`
 Size of the gap between an element's columns.
 
 ```jsx
-<Box gap={1}>
+<Box columnGap={1}>
 	<Text>A</Text>
 	<Text>B</Text>
 </Box>
@@ -624,7 +614,7 @@ Default: `0`
 Size of the gap between element's rows.
 
 ```jsx
-<Box flexDirection="column" gap={1}>
+<Box flexDirection="column" rowGap={1}>
 	<Text>A</Text>
 	<Text>B</Text>
 </Box>
@@ -929,7 +919,7 @@ Shortcut for setting `overflowX` and `overflowY` at the same time.
 ##### borderStyle
 
 Type: `string`\
-Allowed values: `single` `double` `round` `bold` `singleDouble` `doubleSingle` `classic`
+Allowed values: `single` `double` `round` `bold` `singleDouble` `doubleSingle` `classic` | `BoxStyle`
 
 Add a border with a specified style.
 If `borderStyle` is `undefined` (which it is by default), no border will be added.
@@ -973,14 +963,33 @@ Ink uses border styles from [`cli-boxes`](https://github.com/sindresorhus/cli-bo
 
 <img src="media/box-borderStyle.jpg" width="521">
 
-See example in [examples/borders](examples/borders/borders.js).
+Alternatively, pass a custom border style like so:
+
+```jsx
+<Box
+	borderStyle={{
+		topLeft: '↘',
+		top: '↓',
+		topRight: '↙',
+		left: '→',
+		bottomLeft: '↗',
+		bottom: '↑',
+		bottomRight: '↖',
+		right: '←'
+	}}
+>
+	<Text>Custom</Text>
+</Box>
+```
+
+See example in [examples/borders](examples/borders/borders.tsx).
 
 ##### borderColor
 
 Type: `string`
 
 Change border color.
-Accepts the same values as [`color`](#color) in `<Text>` component.
+Shorthand for setting `borderTopColor`, `borderRightColor`, `borderBottomColor` and `borderLeftColor`.
 
 ```jsx
 <Box borderStyle="round" borderColor="green">
@@ -989,6 +998,99 @@ Accepts the same values as [`color`](#color) in `<Text>` component.
 ```
 
 <img src="media/box-borderColor.jpg" width="228">
+
+##### borderTopColor
+
+Type: `string`
+
+Change top border color.
+Accepts the same values as [`color`](#color) in `<Text>` component.
+
+```jsx
+<Box borderStyle="round" borderTopColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderRightColor
+
+Type: `string`
+
+Change right border color.
+Accepts the same values as [`color`](#color) in `<Text>` component.
+
+```jsx
+<Box borderStyle="round" borderRightColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderRightColor
+
+Type: `string`
+
+Change right border color.
+Accepts the same values as [`color`](#color) in `<Text>` component.
+
+```jsx
+<Box borderStyle="round" borderRightColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderBottomColor
+
+Type: `string`
+
+Change bottom border color.
+Accepts the same values as [`color`](#color) in `<Text>` component.
+
+```jsx
+<Box borderStyle="round" borderBottomColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderLeftColor
+
+Type: `string`
+
+Change left border color.
+Accepts the same values as [`color`](#color) in `<Text>` component.
+
+```jsx
+<Box borderStyle="round" borderLeftColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderTop
+
+Type: `boolean`\
+Default: `true`
+
+Determines whether top border is visible.
+
+##### borderRight
+
+Type: `boolean`\
+Default: `true`
+
+Determines whether right border is visible.
+
+##### borderBottom
+
+Type: `boolean`\
+Default: `true`
+
+Determines whether bottom border is visible.
+
+##### borderLeft
+
+Type: `boolean`\
+Default: `true`
+
+Determines whether left border is visible.
 
 ### `<Newline>`
 
@@ -1133,7 +1235,7 @@ render(<Example />);
 that were previously rendered. This means that when you add new items to `items`
 array, changes you make to previous items will not trigger a rerender.
 
-See [examples/static](examples/static/static.js) for an example usage of `<Static>` component.
+See [examples/static](examples/static/static.tsx) for an example usage of `<Static>` component.
 
 #### items
 
@@ -1223,7 +1325,7 @@ This hook is used for handling user input.
 It's a more convenient alternative to using `useStdin` and listening to `data` events.
 The callback you pass to `useInput` is called for each character when user enters any input.
 However, if user pastes text and it's more than one character, the callback will be called only once and the whole string will be passed as `input`.
-You can find a full example of using `useInput` at [examples/use-input](examples/use-input/use-input.js).
+You can find a full example of using `useInput` at [examples/use-input](examples/use-input/use-input.tsx).
 
 ```jsx
 import {useInput} from 'ink';
@@ -1506,7 +1608,7 @@ const Example = () => {
 };
 ```
 
-See additional usage example in [examples/use-stdout](examples/use-stdout/use-stdout.js).
+See additional usage example in [examples/use-stdout](examples/use-stdout/use-stdout.tsx).
 
 ### useStderr()
 
@@ -1599,7 +1701,7 @@ const Example = () => {
 render(<Example />);
 ```
 
-See example in [examples/use-focus](examples/use-focus/use-focus.js) and [examples/use-focus-with-id](examples/use-focus-with-id/use-focus-with-id.js).
+See example in [examples/use-focus](examples/use-focus/use-focus.tsx) and [examples/use-focus-with-id](examples/use-focus-with-id/use-focus-with-id.tsx).
 
 ### useFocusManager()
 

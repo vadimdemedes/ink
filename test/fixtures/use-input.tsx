@@ -31,37 +31,77 @@ function UserInput({test}: {test: string | undefined}) {
 			return;
 		}
 
-		if (test === 'upArrow' && key.upArrow) {
+		if (test === 'upArrow' && key.upArrow && !key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'downArrow' && key.downArrow) {
+		if (test === 'downArrow' && key.downArrow && !key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'leftArrow' && key.leftArrow) {
+		if (test === 'leftArrow' && key.leftArrow && !key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'rightArrow' && key.rightArrow) {
+		if (test === 'rightArrow' && key.rightArrow && !key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'pageDown' && key.pageDown) {
+		if (test === 'upArrowMeta' && key.upArrow && key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'pageUp' && key.pageUp) {
+		if (test === 'downArrowMeta' && key.downArrow && key.meta) {
 			exit();
 			return;
 		}
 
-		if (test === 'tab' && input === '' && key.tab) {
+		if (test === 'leftArrowMeta' && key.leftArrow && key.meta) {
+			exit();
+			return;
+		}
+
+		if (test === 'rightArrowMeta' && key.rightArrow && key.meta) {
+			exit();
+			return;
+		}
+
+		if (test === 'upArrowCtrl' && key.upArrow && key.ctrl) {
+			exit();
+			return;
+		}
+
+		if (test === 'downArrowCtrl' && key.downArrow && key.ctrl) {
+			exit();
+			return;
+		}
+
+		if (test === 'leftArrowCtrl' && key.leftArrow && key.ctrl) {
+			exit();
+			return;
+		}
+
+		if (test === 'rightArrowCtrl' && key.rightArrow && key.ctrl) {
+			exit();
+			return;
+		}
+
+		if (test === 'pageDown' && key.pageDown && !key.meta) {
+			exit();
+			return;
+		}
+
+		if (test === 'pageUp' && key.pageUp && !key.meta) {
+			exit();
+			return;
+		}
+
+		if (test === 'tab' && input === '' && key.tab && !key.ctrl) {
 			exit();
 			return;
 		}
