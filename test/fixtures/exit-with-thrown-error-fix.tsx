@@ -5,10 +5,10 @@ const Test = () => {
 	throw new Error('errored');
 };
 
-const app = render(<Test />);
+const app = render(<Test />, {initWaitUntilExit: true});
 
 try {
 	await app.waitUntilExit();
 } catch (error: unknown) {
-	console.log((error as any).message);
+	console.log(`waitUntilExit catch: ${(error as Error).message}`);
 }

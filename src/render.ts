@@ -41,6 +41,13 @@ export type RenderOptions = {
 	 * @default true
 	 */
 	patchConsole?: boolean;
+
+	/**
+	 * Automatically initialize `waitUntilExit` method in order to catch synchronous errors.
+	 *
+	 * @default false
+	 */
+	initWaitUntilExit?: boolean;
 };
 
 export type Instance = {
@@ -80,6 +87,7 @@ const render: RenderFunction = (node, options): Instance => {
 		debug: false,
 		exitOnCtrlC: true,
 		patchConsole: true,
+		initWaitUntilExit: false,
 		...getOptions(options)
 	};
 
