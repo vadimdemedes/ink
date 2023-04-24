@@ -260,8 +260,8 @@ export default class Ink {
 			return;
 		}
 
-		this.calculateLayout();
-		this.onRender();
+		// this.calculateLayout();
+		// this.onRender();
 		this.unsubscribeExit();
 
 		if (typeof this.restoreConsole === 'function') {
