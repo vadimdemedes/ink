@@ -501,3 +501,21 @@ test('nested overflow', t => {
 
 	t.is(output, 'AA\nBB\nXXXX\nYYYY\n');
 });
+
+test('out of bounds writes are truncated and do not crash', t => {
+	// To trigger this reliably, render a box with a border that is at least 2 columns too wide for the terminal
+	const output = renderToString(
+		<Box width={12} height={10} borderStyle={'round'} flexDirection="row"></Box>,
+		{columns: 10}
+	);
+	const expected = boxen('', {
+		width: 11,
+		height: 10,
+		borderStyle: 'round'
+	})
+		.split('\n')
+		.map(line => line.slice(0, 10).trimEnd())
+		.join('\n');
+
+	t.is(output, expected);
+});
