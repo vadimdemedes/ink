@@ -13,10 +13,33 @@ test('margin', t => {
 	t.is(output, '\n\n  X\n\n');
 });
 
+test('margin shorthand', t => {
+	const output = renderToString(
+		<Box m={2}>
+			<Text>X</Text>
+		</Box>
+	);
+
+	t.is(output, '\n\n  X\n\n');
+});
+
 test('margin X', t => {
 	const output = renderToString(
 		<Box>
 			<Box marginX={2}>
+				<Text>X</Text>
+			</Box>
+			<Text>Y</Text>
+		</Box>
+	);
+
+	t.is(output, '  X  Y');
+});
+
+test('margin X shorthand', t => {
+	const output = renderToString(
+		<Box>
+			<Box mx={2}>
 				<Text>X</Text>
 			</Box>
 			<Text>Y</Text>
@@ -36,9 +59,29 @@ test('margin Y', t => {
 	t.is(output, '\n\nX\n\n');
 });
 
+test('margin Y shorthand', t => {
+	const output = renderToString(
+		<Box my={2}>
+			<Text>X</Text>
+		</Box>
+	);
+
+	t.is(output, '\n\nX\n\n');
+});
+
 test('margin top', t => {
 	const output = renderToString(
 		<Box marginTop={2}>
+			<Text>X</Text>
+		</Box>
+	);
+
+	t.is(output, '\n\nX');
+});
+
+test('margin top shorthand', t => {
+	const output = renderToString(
+		<Box mt={2}>
 			<Text>X</Text>
 		</Box>
 	);
@@ -56,9 +99,29 @@ test('margin bottom', t => {
 	t.is(output, 'X\n\n');
 });
 
+test('margin bottom shorthand', t => {
+	const output = renderToString(
+		<Box mb={2}>
+			<Text>X</Text>
+		</Box>
+	);
+
+	t.is(output, 'X\n\n');
+});
+
 test('margin left', t => {
 	const output = renderToString(
 		<Box marginLeft={2}>
+			<Text>X</Text>
+		</Box>
+	);
+
+	t.is(output, '  X');
+});
+
+test('margin left shorthand', t => {
+	const output = renderToString(
+		<Box ml={2}>
 			<Text>X</Text>
 		</Box>
 	);
@@ -70,6 +133,19 @@ test('margin right', t => {
 	const output = renderToString(
 		<Box>
 			<Box marginRight={2}>
+				<Text>X</Text>
+			</Box>
+			<Text>Y</Text>
+		</Box>
+	);
+
+	t.is(output, 'X  Y');
+});
+
+test('margin right shorthand', t => {
+	const output = renderToString(
+		<Box>
+			<Box mr={2}>
 				<Text>X</Text>
 			</Box>
 			<Text>Y</Text>

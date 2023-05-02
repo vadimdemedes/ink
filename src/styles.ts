@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import {type Boxes, type BoxStyle} from 'cli-boxes';
 import {type LiteralUnion} from 'type-fest';
 import {type ForegroundColorName} from 'chalk';
@@ -38,9 +37,21 @@ export type Styles = {
 	readonly margin?: number;
 
 	/**
+	 * Margin on all sides.
+	 * Shorthand for `margin`.
+	 */
+	readonly m?: number;
+
+	/**
 	 * Horizontal margin. Equivalent to setting `marginLeft` and `marginRight`.
 	 */
 	readonly marginX?: number;
+
+	/**
+	 * Horizontal margin.
+	 * Shorthand for `marginX`.
+	 */
+	readonly mx?: number;
 
 	/**
 	 * Vertical margin. Equivalent to setting `marginTop` and `marginBottom`.
@@ -48,9 +59,21 @@ export type Styles = {
 	readonly marginY?: number;
 
 	/**
+	 * Vertical margin.
+	 * Shorthand for `marginY`.
+	 */
+	readonly my?: number;
+
+	/**
 	 * Top margin.
 	 */
 	readonly marginTop?: number;
+
+	/**
+	 * Top margin.
+	 * Shorthand for `marginTop`.
+	 */
+	readonly mt?: number;
 
 	/**
 	 * Bottom margin.
@@ -58,9 +81,21 @@ export type Styles = {
 	readonly marginBottom?: number;
 
 	/**
+	 * Bottom margin.
+	 * Shorthand for `marginBottom`.
+	 */
+	readonly mb?: number;
+
+	/**
 	 * Left margin.
 	 */
 	readonly marginLeft?: number;
+
+	/**
+	 * Left margin.
+	 * Shorthand for `marginLeft`.
+	 */
+	readonly ml?: number;
 
 	/**
 	 * Right margin.
@@ -68,9 +103,21 @@ export type Styles = {
 	readonly marginRight?: number;
 
 	/**
+	 * Right margin.
+	 * Shorthand for `marginRight`.
+	 */
+	readonly mr?: number;
+
+	/**
 	 * Padding on all sides. Equivalent to setting `paddingTop`, `paddingBottom`, `paddingLeft` and `paddingRight`.
 	 */
 	readonly padding?: number;
+
+	/**
+	 * Padding on all sides.
+	 * Shorthand for `padding`.
+	 */
+	readonly p?: number;
 
 	/**
 	 * Horizontal padding. Equivalent to setting `paddingLeft` and `paddingRight`.
@@ -78,9 +125,21 @@ export type Styles = {
 	readonly paddingX?: number;
 
 	/**
+	 * Horizontal padding.
+	 * Shorthand for `paddingX`.
+	 */
+	readonly px?: number;
+
+	/**
 	 * Vertical padding. Equivalent to setting `paddingTop` and `paddingBottom`.
 	 */
 	readonly paddingY?: number;
+
+	/**
+	 * Vertical padding.
+	 * Shorthand for `paddingY`.
+	 */
+	readonly py?: number;
 
 	/**
 	 * Top padding.
@@ -88,9 +147,21 @@ export type Styles = {
 	readonly paddingTop?: number;
 
 	/**
+	 * Top padding.
+	 * Shorthand for `paddingTop`.
+	 */
+	readonly pt?: number;
+
+	/**
 	 * Bottom padding.
 	 */
 	readonly paddingBottom?: number;
+
+	/**
+	 * Bottom padding.
+	 * Shorthand for `paddingBottom`.
+	 */
+	readonly pb?: number;
 
 	/**
 	 * Left padding.
@@ -98,9 +169,21 @@ export type Styles = {
 	readonly paddingLeft?: number;
 
 	/**
+	 * Left padding.
+	 * Shorthand for `paddingLeft`.
+	 */
+	readonly pl?: number;
+
+	/**
 	 * Right padding.
 	 */
 	readonly paddingRight?: number;
+
+	/**
+	 * Right padding.
+	 * Shorthand for `paddingRight`.
+	 */
+	readonly pr?: number;
 
 	/**
 	 * This property defines the ability for a flex item to grow if necessary.
@@ -315,62 +398,62 @@ const applyPositionStyles = (node: YogaNode, style: Styles): void => {
 };
 
 const applyMarginStyles = (node: YogaNode, style: Styles): void => {
-	if ('margin' in style) {
-		node.setMargin(Yoga.EDGE_ALL, style.margin ?? 0);
+	if ('margin' in style || 'm' in style) {
+		node.setMargin(Yoga.EDGE_ALL, style.margin ?? style.m ?? 0);
 	}
 
-	if ('marginX' in style) {
-		node.setMargin(Yoga.EDGE_HORIZONTAL, style.marginX ?? 0);
+	if ('marginX' in style || 'mx' in style) {
+		node.setMargin(Yoga.EDGE_HORIZONTAL, style.marginX ?? style.mx ?? 0);
 	}
 
-	if ('marginY' in style) {
-		node.setMargin(Yoga.EDGE_VERTICAL, style.marginY ?? 0);
+	if ('marginY' in style || 'my' in style) {
+		node.setMargin(Yoga.EDGE_VERTICAL, style.marginY ?? style.my ?? 0);
 	}
 
-	if ('marginLeft' in style) {
-		node.setMargin(Yoga.EDGE_START, style.marginLeft || 0);
+	if ('marginLeft' in style || 'ml' in style) {
+		node.setMargin(Yoga.EDGE_START, style.marginLeft ?? style.ml ?? 0);
 	}
 
-	if ('marginRight' in style) {
-		node.setMargin(Yoga.EDGE_END, style.marginRight || 0);
+	if ('marginRight' in style || 'mr' in style) {
+		node.setMargin(Yoga.EDGE_END, style.marginRight ?? style.mr ?? 0);
 	}
 
-	if ('marginTop' in style) {
-		node.setMargin(Yoga.EDGE_TOP, style.marginTop || 0);
+	if ('marginTop' in style || 'mt' in style) {
+		node.setMargin(Yoga.EDGE_TOP, style.marginTop ?? style.mt ?? 0);
 	}
 
-	if ('marginBottom' in style) {
-		node.setMargin(Yoga.EDGE_BOTTOM, style.marginBottom || 0);
+	if ('marginBottom' in style || 'mb' in style) {
+		node.setMargin(Yoga.EDGE_BOTTOM, style.marginBottom ?? style.mb ?? 0);
 	}
 };
 
 const applyPaddingStyles = (node: YogaNode, style: Styles): void => {
-	if ('padding' in style) {
-		node.setPadding(Yoga.EDGE_ALL, style.padding ?? 0);
+	if ('padding' in style || 'p' in style) {
+		node.setPadding(Yoga.EDGE_ALL, style.padding ?? style.p ?? 0);
 	}
 
-	if ('paddingX' in style) {
-		node.setPadding(Yoga.EDGE_HORIZONTAL, style.paddingX ?? 0);
+	if ('paddingX' in style || 'px' in style) {
+		node.setPadding(Yoga.EDGE_HORIZONTAL, style.paddingX ?? style.px ?? 0);
 	}
 
-	if ('paddingY' in style) {
-		node.setPadding(Yoga.EDGE_VERTICAL, style.paddingY ?? 0);
+	if ('paddingY' in style || 'py' in style) {
+		node.setPadding(Yoga.EDGE_VERTICAL, style.paddingY ?? style.py ?? 0);
 	}
 
-	if ('paddingLeft' in style) {
-		node.setPadding(Yoga.EDGE_LEFT, style.paddingLeft || 0);
+	if ('paddingLeft' in style || 'pl' in style) {
+		node.setPadding(Yoga.EDGE_LEFT, style.paddingLeft ?? style.pl ?? 0);
 	}
 
-	if ('paddingRight' in style) {
-		node.setPadding(Yoga.EDGE_RIGHT, style.paddingRight || 0);
+	if ('paddingRight' in style || 'pr' in style) {
+		node.setPadding(Yoga.EDGE_RIGHT, style.paddingRight ?? style.pr ?? 0);
 	}
 
-	if ('paddingTop' in style) {
-		node.setPadding(Yoga.EDGE_TOP, style.paddingTop || 0);
+	if ('paddingTop' in style || 'pt' in style) {
+		node.setPadding(Yoga.EDGE_TOP, style.paddingTop ?? style.pt ?? 0);
 	}
 
-	if ('paddingBottom' in style) {
-		node.setPadding(Yoga.EDGE_BOTTOM, style.paddingBottom || 0);
+	if ('paddingBottom' in style || 'pb' in style) {
+		node.setPadding(Yoga.EDGE_BOTTOM, style.paddingBottom ?? style.pb ?? 0);
 	}
 };
 

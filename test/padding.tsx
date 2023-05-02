@@ -13,10 +13,33 @@ test('padding', t => {
 	t.is(output, '\n\n  X\n\n');
 });
 
+test('padding shorthand', t => {
+	const output = renderToString(
+		<Box p={2}>
+			<Text>X</Text>
+		</Box>
+	);
+
+	t.is(output, '\n\n  X\n\n');
+});
+
 test('padding X', t => {
 	const output = renderToString(
 		<Box>
 			<Box paddingX={2}>
+				<Text>X</Text>
+			</Box>
+			<Text>Y</Text>
+		</Box>
+	);
+
+	t.is(output, '  X  Y');
+});
+
+test('padding X shorthand', t => {
+	const output = renderToString(
+		<Box>
+			<Box px={2}>
 				<Text>X</Text>
 			</Box>
 			<Text>Y</Text>
@@ -36,9 +59,29 @@ test('padding Y', t => {
 	t.is(output, '\n\nX\n\n');
 });
 
+test('padding Y shorthand', t => {
+	const output = renderToString(
+		<Box py={2}>
+			<Text>X</Text>
+		</Box>
+	);
+
+	t.is(output, '\n\nX\n\n');
+});
+
 test('padding top', t => {
 	const output = renderToString(
 		<Box paddingTop={2}>
+			<Text>X</Text>
+		</Box>
+	);
+
+	t.is(output, '\n\nX');
+});
+
+test('padding top shorthand', t => {
+	const output = renderToString(
+		<Box pt={2}>
 			<Text>X</Text>
 		</Box>
 	);
@@ -56,9 +99,29 @@ test('padding bottom', t => {
 	t.is(output, 'X\n\n');
 });
 
+test('padding bottom shorthand', t => {
+	const output = renderToString(
+		<Box pb={2}>
+			<Text>X</Text>
+		</Box>
+	);
+
+	t.is(output, 'X\n\n');
+});
+
 test('padding left', t => {
 	const output = renderToString(
 		<Box paddingLeft={2}>
+			<Text>X</Text>
+		</Box>
+	);
+
+	t.is(output, '  X');
+});
+
+test('padding left shorthand', t => {
+	const output = renderToString(
+		<Box pl={2}>
 			<Text>X</Text>
 		</Box>
 	);
@@ -70,6 +133,19 @@ test('padding right', t => {
 	const output = renderToString(
 		<Box>
 			<Box paddingRight={2}>
+				<Text>X</Text>
+			</Box>
+			<Text>Y</Text>
+		</Box>
+	);
+
+	t.is(output, 'X  Y');
+});
+
+test('padding right shorthand', t => {
+	const output = renderToString(
+		<Box>
+			<Box pr={2}>
 				<Text>X</Text>
 			</Box>
 			<Text>Y</Text>

@@ -459,12 +459,20 @@ Default: `0`
 
 Top padding.
 
+##### pt
+
+Shorthand for `paddingTop`.
+
 ##### paddingBottom
 
 Type: `number`\
 Default: `0`
 
 Bottom padding.
+
+##### pb
+
+Shorthand for `paddingBottom`.
 
 ##### paddingLeft
 
@@ -473,12 +481,20 @@ Default: `0`
 
 Left padding.
 
+##### pl
+
+Shorthand for `paddingLeft`.
+
 ##### paddingRight
 
 Type: `number`\
 Default: `0`
 
 Right padding.
+
+##### pr
+
+Shorthand for `paddingRight`.
 
 ##### paddingX
 
@@ -487,12 +503,20 @@ Default: `0`
 
 Horizontal padding. Equivalent to setting `paddingLeft` and `paddingRight`.
 
+##### px
+
+Shorthand for `paddingX`.
+
 ##### paddingY
 
 Type: `number`\
 Default: `0`
 
 Vertical padding. Equivalent to setting `paddingTop` and `paddingBottom`.
+
+##### py
+
+Shorthand for `paddingY`.
 
 ##### padding
 
@@ -501,14 +525,31 @@ Default: `0`
 
 Padding on all sides. Equivalent to setting `paddingTop`, `paddingBottom`, `paddingLeft` and `paddingRight`.
 
+##### p
+
+Shorthand for `padding`.
+
 ```jsx
 <Box paddingTop={2}>Top</Box>
+<Box pt={2}>Top</Box>
+
 <Box paddingBottom={2}>Bottom</Box>
+<Box pb={2}>Bottom</Box>
+
 <Box paddingLeft={2}>Left</Box>
+<Box pl={2}>Left</Box>
+
 <Box paddingRight={2}>Right</Box>
+<Box pr={2}>Right</Box>
+
 <Box paddingX={2}>Left and right</Box>
+<Box px={2}>Left and right</Box>
+
 <Box paddingY={2}>Top and bottom</Box>
+<Box py={2}>Top and bottom</Box>
+
 <Box padding={2}>Top, bottom, left and right</Box>
+<Box p={2}>Top, bottom, left and right</Box>
 ```
 
 #### Margin
@@ -520,12 +561,20 @@ Default: `0`
 
 Top margin.
 
+##### mt
+
+Shorthand for `marginTop`.
+
 ##### marginBottom
 
 Type: `number`\
 Default: `0`
 
 Bottom margin.
+
+##### mb
+
+Shorthand for `marginBottom`.
 
 ##### marginLeft
 
@@ -534,12 +583,20 @@ Default: `0`
 
 Left margin.
 
+##### ml
+
+Shorthand for `marginLeft`.
+
 ##### marginRight
 
 Type: `number`\
 Default: `0`
 
 Right margin.
+
+##### mr
+
+Shorthand for `marginRight`.
 
 ##### marginX
 
@@ -548,12 +605,20 @@ Default: `0`
 
 Horizontal margin. Equivalent to setting `marginLeft` and `marginRight`.
 
+##### mx
+
+Shorthand for `marginX`.
+
 ##### marginY
 
 Type: `number`\
 Default: `0`
 
 Vertical margin. Equivalent to setting `marginTop` and `marginBottom`.
+
+##### my
+
+Shorthand for `marginY`.
 
 ##### margin
 
@@ -562,14 +627,31 @@ Default: `0`
 
 Margin on all sides. Equivalent to setting `marginTop`, `marginBottom`, `marginLeft` and `marginRight`.
 
+##### m
+
+Shorthand for `margin`.
+
 ```jsx
 <Box marginTop={2}>Top</Box>
+<Box mt={2}>Top</Box>
+
 <Box marginBottom={2}>Bottom</Box>
+<Box mb={2}>Bottom</Box>
+
 <Box marginLeft={2}>Left</Box>
+<Box ml={2}>Left</Box>
+
 <Box marginRight={2}>Right</Box>
+<Box mr={2}>Right</Box>
+
 <Box marginX={2}>Left and right</Box>
+<Box mx={2}>Left and right</Box>
+
 <Box marginY={2}>Top and bottom</Box>
+<Box my={2}>Top and bottom</Box>
+
 <Box margin={2}>Top, bottom, left and right</Box>
+<Box m={2}>Top, bottom, left and right</Box>
 ```
 
 #### Gap
