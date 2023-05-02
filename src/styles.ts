@@ -247,6 +247,42 @@ export type Styles = {
 	readonly borderRightColor?: LiteralUnion<ForegroundColorName, string>;
 
 	/**
+	 * Dim the border color.
+	 * Shorthand for setting `borderTopDimColor`, `borderBottomDimColor`, `borderLeftDimColor` and `borderRightDimColor`.
+	 *
+	 * @default false
+	 */
+	readonly borderDimColor?: boolean;
+
+	/**
+	 * Dim the top border color.
+	 *
+	 * @default false
+	 */
+	readonly borderTopDimColor?: boolean;
+
+	/**
+	 * Dim the bottom border color.
+	 *
+	 * @default false
+	 */
+	readonly borderBottomDimColor?: boolean;
+
+	/**
+	 * Dim the left border color.
+	 *
+	 * @default false
+	 */
+	readonly borderLeftDimColor?: boolean;
+
+	/**
+	 * Dim the right border color.
+	 *
+	 * @default false
+	 */
+	readonly borderRightDimColor?: boolean;
+
+	/**
 	 * Behavior for an element's overflow in both directions.
 	 *
 	 * @default 'visible'

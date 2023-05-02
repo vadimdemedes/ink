@@ -1,4 +1,5 @@
 import cliBoxes from 'cli-boxes';
+import chalk from 'chalk';
 import colorize from './colorize.js';
 import {type DOMNode} from './dom.js';
 import type Output from './output.js';
@@ -25,6 +26,18 @@ const renderBorder = (
 		const rightBorderColor =
 			node.style.borderRightColor ?? node.style.borderColor;
 
+		const dimTopBorderColor =
+			node.style.borderTopDimColor ?? node.style.borderDimColor;
+
+		const dimBottomBorderColor =
+			node.style.borderBottomDimColor ?? node.style.borderDimColor;
+
+		const dimLeftBorderColor =
+			node.style.borderLeftDimColor ?? node.style.borderDimColor;
+
+		const dimRightBorderColor =
+			node.style.borderRightDimColor ?? node.style.borderDimColor;
+
 		const showTopBorder = node.style.borderTop !== false;
 		const showBottomBorder = node.style.borderBottom !== false;
 		const showLeftBorder = node.style.borderLeft !== false;
@@ -33,7 +46,7 @@ const renderBorder = (
 		const contentWidth =
 			width - (showLeftBorder ? 1 : 0) - (showRightBorder ? 1 : 0);
 
-		const topBorder = showTopBorder
+		let topBorder = showTopBorder
 			? colorize(
 					(showLeftBorder ? box.topLeft : '') +
 						box.top.repeat(contentWidth) +
@@ -42,6 +55,10 @@ const renderBorder = (
 					'foreground'
 			  )
 			: undefined;
+
+		if (showTopBorder && dimTopBorderColor) {
+			topBorder = chalk.dim(topBorder);
+		}
 
 		let verticalBorderHeight = height;
 
@@ -53,15 +70,23 @@ const renderBorder = (
 			verticalBorderHeight -= 1;
 		}
 
-		const leftBorder = (
+		let leftBorder = (
 			colorize(box.left, leftBorderColor, 'foreground') + '\n'
 		).repeat(verticalBorderHeight);
 
-		const rightBorder = (
+		if (dimLeftBorderColor) {
+			leftBorder = chalk.dim(leftBorder);
+		}
+
+		let rightBorder = (
 			colorize(box.right, rightBorderColor, 'foreground') + '\n'
 		).repeat(verticalBorderHeight);
 
-		const bottomBorder = showBottomBorder
+		if (dimRightBorderColor) {
+			rightBorder = chalk.dim(rightBorder);
+		}
+
+		let bottomBorder = showBottomBorder
 			? colorize(
 					(showLeftBorder ? box.bottomLeft : '') +
 						box.bottom.repeat(contentWidth) +
@@ -70,6 +95,10 @@ const renderBorder = (
 					'foreground'
 			  )
 			: undefined;
+
+		if (showBottomBorder && dimBottomBorderColor) {
+			bottomBorder = chalk.dim(bottomBorder);
+		}
 
 		const offsetY = showTopBorder ? 1 : 0;
 
