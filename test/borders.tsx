@@ -745,3 +745,132 @@ test('custom border style', t => {
 
 	t.is(output, boxen('Content', {width: 100, borderStyle: 'arrow'}));
 });
+
+test('dim border color', t => {
+	const output = renderToString(
+		<Box borderDimColor borderStyle="round">
+			<Text>Content</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		boxen('Content', {
+			width: 100,
+			borderStyle: 'round',
+			dimBorder: true
+		})
+	);
+});
+
+test('dim top border color', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderTopDimColor borderStyle="round">
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			chalk.dim(
+				`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
+					cliBoxes.round.topRight
+				}`
+			),
+			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
+			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
+				cliBoxes.round.bottomRight
+			}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('dim bottom border color', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderBottomDimColor borderStyle="round">
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
+				cliBoxes.round.topRight
+			}`,
+			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
+			chalk.dim(
+				`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
+					cliBoxes.round.bottomRight
+				}`
+			),
+			'Below'
+		].join('\n')
+	);
+});
+
+test('dim left border color', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderLeftDimColor borderStyle="round">
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
+				cliBoxes.round.topRight
+			}`,
+			`${chalk.dim(cliBoxes.round.left)}Content${cliBoxes.round.right}`,
+			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
+				cliBoxes.round.bottomRight
+			}`,
+			'Below'
+		].join('\n')
+	);
+});
+
+test('dim right border color', t => {
+	const output = renderToString(
+		<Box flexDirection="column" alignItems="flex-start">
+			<Text>Above</Text>
+			<Box borderRightDimColor borderStyle="round">
+				<Text>Content</Text>
+			</Box>
+			<Text>Below</Text>
+		</Box>
+	);
+
+	t.is(
+		output,
+		[
+			'Above',
+			`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
+				cliBoxes.round.topRight
+			}`,
+			`${cliBoxes.round.left}Content${chalk.dim(cliBoxes.round.right)}`,
+			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
+				cliBoxes.round.bottomRight
+			}`,
+			'Below'
+		].join('\n')
+	);
+});

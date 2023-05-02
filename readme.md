@@ -1065,6 +1065,72 @@ Accepts the same values as [`color`](#color) in `<Text>` component.
 </Box>
 ```
 
+##### borderDimColor
+
+Type: `boolean`\
+Default: `false`
+
+Dim the border color.
+Shorthand for setting `borderTopDimColor`, `borderBottomDimColor`, `borderLeftDimColor` and `borderRightDimColor`.
+
+```jsx
+<Box borderStyle="round" borderDimColor>
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderTopDimColor
+
+Type: `boolean`\
+Default: `false`
+
+Dim the top border color.
+
+```jsx
+<Box borderStyle="round" borderTopDimColor>
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderBottomDimColor
+
+Type: `boolean`\
+Default: `false`
+
+Dim the bottom border color.
+
+```jsx
+<Box borderStyle="round" borderBottomDimColor>
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderLeftDimColor
+
+Type: `boolean`\
+Default: `false`
+
+Dim the left border color.
+
+```jsx
+<Box borderStyle="round" borderLeftDimColor>
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderRightDimColor
+
+Type: `boolean`\
+Default: `false`
+
+Dim the right border color.
+
+```jsx
+<Box borderStyle="round" borderRightDimColor>
+	<Text>Hello world</Text>
+</Box>
+```
+
 ##### borderTop
 
 Type: `boolean`\
