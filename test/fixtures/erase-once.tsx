@@ -1,4 +1,3 @@
-import process from 'node:process';
 import React, {useState} from 'react';
 import {Box, Text, render, useInput} from '../../src/index.js';
 
@@ -23,5 +22,4 @@ function Test() {
 	);
 }
 
-process.stdout.rows = Number(process.argv[2]);
 render(<Test />);
