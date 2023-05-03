@@ -5,7 +5,7 @@ import cliCursor from 'cli-cursor';
 export type LogUpdate = {
 	clear: () => void;
 	done: () => void;
-	(str: string): void;
+	(str: string, options?: {force?: boolean; erase?: boolean}): void;
 };
 
 const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
@@ -13,19 +13,25 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 	let previousOutput = '';
 	let hasHiddenCursor = false;
 
-	const render = (str: string) => {
+	const render = (
+		str: string,
+		{force = false, erase = true}: {force?: boolean; erase?: boolean} = {}
+	) => {
 		if (!showCursor && !hasHiddenCursor) {
 			cliCursor.hide();
 			hasHiddenCursor = true;
 		}
 
 		const output = str + '\n';
-		if (output === previousOutput) {
+		if (output === previousOutput && !force) {
 			return;
 		}
 
 		previousOutput = output;
-		stream.write(ansiEscapes.eraseLines(previousLineCount) + output);
+
+		const eraser = erase ? ansiEscapes.eraseLines(previousLineCount) : '';
+		stream.write(eraser + output);
+
 		previousLineCount = output.split('\n').length;
 	};
 

@@ -175,8 +175,10 @@ export default class Ink {
 
 		if (outputHeight >= this.options.stdout.rows) {
 			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput + output
+				ansiEscapes.clearTerminal + this.fullStaticOutput
 			);
+
+			this.log(output, {force: true, erase: false});
 			this.lastOutput = output;
 			return;
 		}
