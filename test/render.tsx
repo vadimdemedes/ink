@@ -106,6 +106,54 @@ test.serial('erase screen', async t => {
 	}
 });
 
+test.serial('erase screen once then continue rendering as usual', async t => {
+	const ps = term('erase-once', ['3']);
+	await delay(1000);
+
+	t.true(ps.output.includes(ansiEscapes.clearTerminal));
+	t.true(ps.output.includes('A'));
+	t.true(ps.output.includes('B'));
+	t.true(ps.output.includes('C'));
+
+	ps.output = '';
+	ps.write('x');
+
+	await ps.waitForExit();
+
+	t.false(ps.output.includes(ansiEscapes.clearTerminal));
+	t.true(ps.output.includes(ansiEscapes.eraseLines(3)));
+	t.true(ps.output.includes('A'));
+	t.true(ps.output.includes('B'));
+	t.false(ps.output.includes('C'));
+});
+
+test.serial(
+	'erase screen once then continue rendering as usual with <Static> present',
+	async t => {
+		const ps = term('erase-once-with-static', ['3']);
+		await delay(1000);
+
+		t.true(ps.output.includes(ansiEscapes.clearTerminal));
+		t.true(ps.output.includes('X'));
+		t.true(ps.output.includes('Y'));
+		t.true(ps.output.includes('Z'));
+		t.true(ps.output.includes('A'));
+		t.true(ps.output.includes('B'));
+		t.true(ps.output.includes('C'));
+
+		ps.output = '';
+		ps.write('x');
+
+		await ps.waitForExit();
+
+		t.false(ps.output.includes(ansiEscapes.clearTerminal));
+		t.true(ps.output.includes(ansiEscapes.eraseLines(2)));
+		t.true(ps.output.includes('A'));
+		t.true(ps.output.includes('B'));
+		t.false(ps.output.includes('C'));
+	}
+);
+
 test.serial(
 	'erase screen where <Static> exists but interactive part is taller than viewport',
 	async t => {
