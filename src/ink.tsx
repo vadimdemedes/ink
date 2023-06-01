@@ -95,7 +95,7 @@ export default class Ink {
 		// Unmount when process exits
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 
-		if (process.env['DEV'] === 'true') {
+		if (process.env['NODE_ENV'] === 'development') {
 			reconciler.injectIntoDevTools({
 				bundleType: 0,
 				// Reporting React DOM's version, not Ink's
