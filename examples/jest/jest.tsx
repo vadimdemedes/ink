@@ -32,7 +32,7 @@ type State = {
 };
 
 class Jest extends React.Component<Record<string, unknown>, State> {
-	constructor(props) {
+	constructor(props: any) {
 		super(props);
 
 		this.state = {
@@ -42,7 +42,7 @@ class Jest extends React.Component<Record<string, unknown>, State> {
 		};
 	}
 
-	render() {
+	override render() {
 		const {startTime, completedTests, runningTests} = this.state;
 
 		return (
@@ -71,7 +71,7 @@ class Jest extends React.Component<Record<string, unknown>, State> {
 		);
 	}
 
-	componentDidMount() {
+	override componentDidMount() {
 		const queue = new PQueue({concurrency: 4});
 
 		for (const path of paths) {

@@ -41,7 +41,7 @@ function Focus() {
 }
 
 type ItemProps = {
-	id: number;
+	id?: string;
 	label: string;
 };
 
