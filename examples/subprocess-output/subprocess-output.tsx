@@ -1,5 +1,5 @@
 import childProcess from 'node:child_process';
-import type Buffer from 'node:buffer';
+// import type Buffer from 'node:buffer';
 import React from 'react';
 import stripAnsi from 'strip-ansi';
 import {render, Text, Box} from '../../src/index.js';
@@ -22,7 +22,7 @@ function SubprocessOutput() {
 
 	return (
 		<Box flexDirection="column" padding={1}>
-			<Text>Сommand output:</Text>
+			<Text>Command output:</Text>
 			<Box marginTop={1}>
 				<Text>{output}</Text>
 			</Box>

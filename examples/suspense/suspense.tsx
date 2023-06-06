@@ -8,7 +8,7 @@ let value: string | undefined;
 const read = () => {
 	if (!promise) {
 		promise = new Promise(resolve => {
-			setTimeout(resolve, 500);
+			setTimeout(resolve, 2500);
 		});
 
 		state = 'pending';
@@ -27,6 +27,7 @@ const read = () => {
 	if (state === 'done') {
 		return value;
 	}
+	return undefined;
 };
 
 function Example() {
