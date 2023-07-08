@@ -146,6 +146,7 @@
 			"react/jsx-indent": "off",
 			"react/prop-types": "off",
 			"unicorn/import-index": "off",
+			"unicorn/expiring-todo-comments": "off",
 			"import/no-useless-path-segments": "off",
 			"react-hooks/exhaustive-deps": "off",
 			"complexity": "off"
