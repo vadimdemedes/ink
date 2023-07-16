@@ -211,10 +211,6 @@ export default class Output {
 							character.fullWidth || character.value.length > 1;
 
 						if (isWideCharacter) {
-							if (offsetX + 1 >= this.width) {
-								break;
-							}
-
 							currentLine[offsetX + 1] = {
 								type: 'char',
 								value: '',
