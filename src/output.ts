@@ -98,7 +98,7 @@ export default class Output {
 
 	get(): {output: string; height: number} {
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
-		const output: Array<StyledChar[]> = [];
+		const output: StyledChar[][] = [];
 
 		for (let y = 0; y < this.height; y++) {
 			const row: StyledChar[] = [];

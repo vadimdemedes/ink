@@ -516,7 +516,9 @@ test('out of bounds writes do not crash', t => {
 	})
 		.split('\n')
 		.map((line, index) => {
-			return index === 0 || index === 9 ? line : line.slice(0, 10) + line[11];
+			return index === 0 || index === 9
+				? line
+				: `${line.slice(0, 10)}${line[11] ?? ''}`;
 		})
 		.join('\n');
 
