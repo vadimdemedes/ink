@@ -98,10 +98,11 @@ export default class Output {
 
 	get(): {output: string; height: number} {
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
-		const output: StyledChar[][] = [];
+		const output: Array<StyledChar[]> = [];
 
 		for (let y = 0; y < this.height; y++) {
 			const row: StyledChar[] = [];
+
 			for (let x = 0; x < this.width; x++) {
 				row.push({
 					type: 'char',
@@ -188,33 +189,41 @@ export default class Output {
 
 				for (let line of lines) {
 					const currentLine = output[y + offsetY];
+
 					// Line can be missing if `text` is taller than height of pre-initialized `this.output`
-					if (!currentLine) continue;
+					if (!currentLine) {
+						continue;
+					}
 
 					for (const transformer of transformers) {
 						line = transformer(line);
 					}
 
-					const chars = styledCharsFromTokens(tokenize(line));
+					const characters = styledCharsFromTokens(tokenize(line));
 					let offsetX = x;
-					for (const char of chars) {
-						currentLine[offsetX] = char;
+
+					for (const character of characters) {
+						currentLine[offsetX] = character;
 
 						// Some characters take up more than one column. In that case, the following
 						// pixels need to be cleared to avoid printing extra characters
-						const isWideChar = char.fullWidth || char.value.length > 1;
-						if (isWideChar) {
-							if (offsetX + 1 >= this.width) break;
+						const isWideCharacter =
+							character.fullWidth || character.value.length > 1;
+
+						if (isWideCharacter) {
+							if (offsetX + 1 >= this.width) {
+								break;
+							}
 
 							currentLine[offsetX + 1] = {
 								type: 'char',
 								value: '',
 								fullWidth: false,
-								styles: char.styles
+								styles: character.styles
 							};
 						}
 
-						offsetX += isWideChar ? 2 : 1;
+						offsetX += isWideCharacter ? 2 : 1;
 					}
 
 					offsetY++;
