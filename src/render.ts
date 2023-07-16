@@ -1,6 +1,6 @@
 import {Stream} from 'node:stream';
 import process from 'node:process';
-import {type ReactElement} from 'react';
+import type {ReactNode} from 'react';
 import Ink, {type Options as InkOptions} from './ink.js';
 import instances from './instances.js';
 
@@ -64,15 +64,13 @@ export type Instance = {
 	clear: () => void;
 };
 
-type RenderFunction = <Props, K extends NodeJS.WriteStream | RenderOptions>(
-	tree: ReactElement<Props>,
-	options?: K
-) => Instance;
-
 /**
  * Mount a component and render the output.
  */
-const render: RenderFunction = (node, options): Instance => {
+const render = (
+	node: ReactNode,
+	options?: NodeJS.WriteStream | RenderOptions
+): Instance => {
 	const inkOptions: InkOptions = {
 		stdout: process.stdout,
 		stdin: process.stdin,

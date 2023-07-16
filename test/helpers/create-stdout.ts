@@ -7,7 +7,7 @@ type FakeStdout = {
 } & NodeJS.WriteStream;
 
 const createStdout = (columns?: number): FakeStdout => {
-	const stdout = new EventEmitter() as FakeStdout;
+	const stdout = new EventEmitter() as unknown as FakeStdout;
 	stdout.columns = columns ?? 100;
 
 	const write = spy();

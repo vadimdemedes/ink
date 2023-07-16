@@ -25,7 +25,7 @@ test('catch and display error', t => {
 	render(<Test />, {stdout});
 
 	t.deepEqual(
-		stripAnsi((stdout.write as any).lastCall.args[0])
+		stripAnsi((stdout.write as any).lastCall.args[0] as string)
 			.split('\n')
 			.slice(0, 14),
 		[

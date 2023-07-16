@@ -91,6 +91,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 
 ## Who's Using Ink?
 
+- [GitHub Copilot for CLI](https://githubnext.com/projects/copilot-cli) - Just say what you want the shell to do.
 - [Cloudflare's Wrangler](https://github.com/cloudflare/wrangler2) - The CLI for Cloudflare Workers.
 - [Gatsby](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing fast websites.
 - [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
@@ -1060,6 +1061,72 @@ Accepts the same values as [`color`](#color) in `<Text>` component.
 
 ```jsx
 <Box borderStyle="round" borderLeftColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderDimColor
+
+Type: `boolean`\
+Default: `false`
+
+Dim the border color.
+Shorthand for setting `borderTopDimColor`, `borderBottomDimColor`, `borderLeftDimColor` and `borderRightDimColor`.
+
+```jsx
+<Box borderStyle="round" borderDimColor>
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderTopDimColor
+
+Type: `boolean`\
+Default: `false`
+
+Dim the top border color.
+
+```jsx
+<Box borderStyle="round" borderTopDimColor>
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderBottomDimColor
+
+Type: `boolean`\
+Default: `false`
+
+Dim the bottom border color.
+
+```jsx
+<Box borderStyle="round" borderBottomDimColor>
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderLeftDimColor
+
+Type: `boolean`\
+Default: `false`
+
+Dim the left border color.
+
+```jsx
+<Box borderStyle="round" borderLeftDimColor>
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderRightDimColor
+
+Type: `boolean`\
+Default: `false`
+
+Dim the right border color.
+
+```jsx
+<Box borderStyle="round" borderRightDimColor>
 	<Text>Hello world</Text>
 </Box>
 ```

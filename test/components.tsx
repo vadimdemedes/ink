@@ -1,5 +1,5 @@
 import EventEmitter from 'node:events';
-import React, {useState, Component, FC} from 'react';
+import React, {useState, Component} from 'react';
 import chalk from 'chalk';
 import {spy} from 'sinon';
 import test from 'ava';
@@ -465,6 +465,7 @@ test('disable raw mode when all input components are unmounted', t => {
 
 	const {rerender} = render(
 		<Test renderFirstInput renderSecondInput />,
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 		options as any
 	);
 
@@ -596,6 +597,7 @@ test('render different component based on whether stdin is a TTY or not', t => {
 
 	const {rerender} = render(
 		<Test renderFirstInput renderSecondInput />,
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 		options as any
 	);
 

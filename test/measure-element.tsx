@@ -2,7 +2,13 @@ import React, {useState, useRef, useEffect} from 'react';
 import test from 'ava';
 import delay from 'delay';
 import stripAnsi from 'strip-ansi';
-import {Box, Text, render, measureElement} from '../src/index.js';
+import {
+	Box,
+	Text,
+	render,
+	measureElement,
+	type DOMElement
+} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
 test('measure element', async t => {
@@ -10,10 +16,14 @@ test('measure element', async t => {
 
 	function Test() {
 		const [width, setWidth] = useState(0);
-		const ref = useRef(null);
+		const ref = useRef<DOMElement>(null);
 
 		useEffect(() => {
-			setWidth(measureElement(ref.current as any).width);
+			if (!ref.current) {
+				return;
+			}
+
+			setWidth(measureElement(ref.current).width);
 		}, []);
 
 		return (
@@ -34,10 +44,14 @@ test.serial('calculate layout while rendering is throttled', async t => {
 
 	function Test() {
 		const [width, setWidth] = useState(0);
-		const ref = useRef(null);
+		const ref = useRef<DOMElement>(null);
 
 		useEffect(() => {
-			setWidth(measureElement(ref.current as any).width);
+			if (!ref.current) {
+				return;
+			}
+
+			setWidth(measureElement(ref.current).width);
 		}, []);
 
 		return (
@@ -51,5 +65,8 @@ test.serial('calculate layout while rendering is throttled', async t => {
 	rerender(<Test />);
 	await delay(50);
 
-	t.is(stripAnsi((stdout.write as any).lastCall.firstArg).trim(), 'Width: 100');
+	t.is(
+		stripAnsi((stdout.write as any).lastCall.firstArg as string).trim(),
+		'Width: 100'
+	);
 });

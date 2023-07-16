@@ -10,7 +10,7 @@ function App() {
 	const itemCountRef = React.useRef(0);
 
 	React.useEffect(() => {
-		let timer;
+		let timer: NodeJS.Timeout | undefined;
 
 		const run = () => {
 			if (itemCountRef.current++ > 1000) {
