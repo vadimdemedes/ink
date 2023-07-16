@@ -114,7 +114,7 @@ export default class Output {
 				let {x, y} = operation;
 				let lines = text.split('\n');
 
-				const clip = clips.at(-1);
+				const clip = clips[clips.length - 1];
 
 				if (clip) {
 					const clipHorizontally =
