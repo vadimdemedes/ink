@@ -1,6 +1,12 @@
 import sliceAnsi from 'slice-ansi';
 import stringWidth from 'string-width';
 import widestLine from 'widest-line';
+import {
+	type StyledChar,
+	styledCharsFromTokens,
+	styledCharsToString,
+	tokenize
+} from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
 
 /**
@@ -92,10 +98,21 @@ export default class Output {
 
 	get(): {output: string; height: number} {
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
-		const output: string[] = [];
+		const output: StyledChar[][] = [];
 
 		for (let y = 0; y < this.height; y++) {
-			output.push(' '.repeat(this.width));
+			const row: StyledChar[] = [];
+
+			for (let x = 0; x < this.width; x++) {
+				row.push({
+					type: 'char',
+					value: ' ',
+					fullWidth: false,
+					styles: []
+				});
+			}
+
+			output.push(row);
 		}
 
 		const clips: Clip[] = [];
@@ -178,23 +195,46 @@ export default class Output {
 						continue;
 					}
 
-					const width = stringWidth(line);
-
 					for (const transformer of transformers) {
 						line = transformer(line);
 					}
 
-					output[y + offsetY] =
-						sliceAnsi(currentLine, 0, x) +
-						line +
-						sliceAnsi(currentLine, x + width);
+					const characters = styledCharsFromTokens(tokenize(line));
+					let offsetX = x;
+
+					for (const character of characters) {
+						currentLine[offsetX] = character;
+
+						// Some characters take up more than one column. In that case, the following
+						// pixels need to be cleared to avoid printing extra characters
+						const isWideCharacter =
+							character.fullWidth || character.value.length > 1;
+
+						if (isWideCharacter) {
+							currentLine[offsetX + 1] = {
+								type: 'char',
+								value: '',
+								fullWidth: false,
+								styles: character.styles
+							};
+						}
+
+						offsetX += isWideCharacter ? 2 : 1;
+					}
 
 					offsetY++;
 				}
 			}
 		}
 
-		const generatedOutput = output.map(line => line.trimEnd()).join('\n');
+		const generatedOutput = output
+			.map(line => {
+				// See https://github.com/vadimdemedes/ink/pull/564#issuecomment-1637022742
+				const lineWithoutEmptyItems = line.filter(item => item !== undefined);
+
+				return styledCharsToString(lineWithoutEmptyItems).trimEnd();
+			})
+			.join('\n');
 
 		return {
 			output: generatedOutput,

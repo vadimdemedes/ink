@@ -43,6 +43,7 @@
 		"text"
 	],
 	"dependencies": {
+		"@alcalzone/ansi-tokenize": "^0.1.1",
 		"ansi-escapes": "^6.0.0",
 		"auto-bind": "^5.0.1",
 		"chalk": "^5.2.0",
