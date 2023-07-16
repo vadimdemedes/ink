@@ -198,8 +198,6 @@ export default class Output {
 					const chars = styledCharsFromTokens(tokenize(line));
 					let offsetX = x;
 					for (const char of chars) {
-						if (offsetX >= this.width) break;
-
 						currentLine[offsetX] = char;
 
 						// Some characters take up more than one column. In that case, the following
@@ -225,7 +223,12 @@ export default class Output {
 		}
 
 		const generatedOutput = output
-			.map(line => styledCharsToString(line).trimEnd())
+			.map(line => {
+				// See https://github.com/vadimdemedes/ink/pull/564#issuecomment-1637022742
+				const lineWithoutEmptyItems = line.filter(item => item !== undefined);
+
+				return styledCharsToString(lineWithoutEmptyItems).trimEnd();
+			})
 			.join('\n');
 
 		return {
