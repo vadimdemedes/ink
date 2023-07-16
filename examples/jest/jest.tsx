@@ -32,7 +32,7 @@ type State = {
 };
 
 class Jest extends React.Component<Record<string, unknown>, State> {
-	constructor(props) {
+	constructor(props: Record<string, unknown>) {
 		super(props);
 
 		this.state = {

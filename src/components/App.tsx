@@ -247,8 +247,7 @@ export default class App extends PureComponent<Props, State> {
 
 	focusPrevious = (): void => {
 		this.setState(previousState => {
-			const lastFocusableId =
-				previousState.focusables[previousState.focusables.length - 1]?.id;
+			const lastFocusableId = previousState.focusables.at(-1)?.id;
 			const previousFocusableId = this.findPreviousFocusable(previousState);
 
 			return {

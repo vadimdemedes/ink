@@ -26,7 +26,6 @@ import {type OutputTransformer} from './render-node-to-output.js';
 if (process.env['DEV'] === 'true') {
 	try {
 		await import('./devtools.js');
-		// eslint-disable-next-line @typescript-eslint/no-implicit-any-catch
 	} catch (error: any) {
 		if (error.code === 'MODULE_NOT_FOUND') {
 			console.warn(

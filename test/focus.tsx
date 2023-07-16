@@ -7,7 +7,7 @@ import {render, Box, Text, useFocus, useFocusManager} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
 const createStdin = () => {
-	const stdin = new EventEmitter() as NodeJS.WriteStream;
+	const stdin = new EventEmitter() as unknown as NodeJS.WriteStream;
 	stdin.isTTY = true;
 	stdin.setRawMode = spy();
 	stdin.setEncoding = () => {};

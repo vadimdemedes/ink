@@ -161,7 +161,7 @@ test.serial('rerender on resize', async t => {
 	const {unmount} = render(<Test />, {stdout});
 
 	t.is(
-		stripAnsi((stdout.write as any).firstCall.args[0]),
+		stripAnsi((stdout.write as any).firstCall.args[0] as string),
 		boxen('Test'.padEnd(8), {borderStyle: 'round'}) + '\n'
 	);
 
@@ -172,7 +172,7 @@ test.serial('rerender on resize', async t => {
 	await delay(100);
 
 	t.is(
-		stripAnsi((stdout.write as any).lastCall.args[0]),
+		stripAnsi((stdout.write as any).lastCall.args[0] as string),
 		boxen('Test'.padEnd(6), {borderStyle: 'round'}) + '\n'
 	);
 

@@ -11,7 +11,7 @@ function Example() {
 
 	React.useEffect(() => {
 		let completedTests = 0;
-		let timer;
+		let timer: NodeJS.Timeout | undefined;
 
 		const run = () => {
 			if (completedTests++ < 10) {

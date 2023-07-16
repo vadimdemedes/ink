@@ -26,6 +26,8 @@ declare namespace Ink {
 		children?: ReactNode;
 		key?: Key;
 		style?: Styles;
+
+		// eslint-disable-next-line @typescript-eslint/naming-convention
 		internal_transform?: (children: string) => string;
 	};
 }
