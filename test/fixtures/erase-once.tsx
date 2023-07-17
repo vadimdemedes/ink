@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {Box, Text, render, useInput} from '../../src/index.js';
 
-function Test() {
+function EraseOnce() {
 	const [fullHeight, setFullHeight] = useState(true);
 
 	useInput(
@@ -22,4 +22,4 @@ function Test() {
 	);
 }
 
-render(<Test />);
+render(<EraseOnce />);

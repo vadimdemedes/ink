@@ -1,4 +1,3 @@
-import process from 'node:process';
 import React from 'react';
 import {Static, Box, Text, render} from '../../src/index.js';
 
@@ -18,5 +17,4 @@ function EraseWithStatic() {
 	);
 }
 
-process.stdout.rows = Number(process.argv[3]);
 render(<EraseWithStatic />);
