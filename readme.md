@@ -93,6 +93,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 
 - [GitHub Copilot for CLI](https://githubnext.com/projects/copilot-cli) - Just say what you want the shell to do.
 - [Cloudflare's Wrangler](https://github.com/cloudflare/wrangler2) - The CLI for Cloudflare Workers.
+- [Linear](https://linear.app) - Linear built an internal CLI for managing deployments, configs and other housekeeping tasks.
 - [Gatsby](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing fast websites.
 - [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
 - [Terraform CDK](https://github.com/hashicorp/terraform-cdk) - CDK (Cloud Development Kit) for HashiCorp Terraform.
