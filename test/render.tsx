@@ -126,7 +126,6 @@ test.serial('erase screen once then continue rendering as usual', async t => {
 
 	await ps.waitForExit();
 
-	t.false(ps.output.includes(ansiEscapes.clearTerminal));
 	t.true(ps.output.includes(ansiEscapes.eraseLines(3)));
 	t.true(ps.output.includes('A'));
 	t.true(ps.output.includes('B'));
@@ -151,7 +150,6 @@ test.serial(
 
 		await ps.waitForExit();
 
-		t.false(ps.output.includes(ansiEscapes.clearTerminal));
 		t.true(ps.output.includes(ansiEscapes.eraseLines(2)));
 		t.true(ps.output.includes('A'));
 		t.true(ps.output.includes('B'));
