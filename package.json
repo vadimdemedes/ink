@@ -149,7 +149,8 @@
 			"unicorn/import-index": "off",
 			"import/no-useless-path-segments": "off",
 			"react-hooks/exhaustive-deps": "off",
-			"complexity": "off"
+			"complexity": "off",
+			"react/prefer-read-only-props": "off"
 		},
 		"ignores": [
 			"src/parse-keypress.ts"
