@@ -2,7 +2,7 @@ import EventEmitter from 'node:events';
 import React, {useEffect} from 'react';
 import delay from 'delay';
 import test from 'ava';
-import {spy} from 'sinon';
+import {spy, stub} from 'sinon';
 import {render, Box, Text, useFocus, useFocusManager} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
@@ -11,10 +11,18 @@ const createStdin = () => {
 	stdin.isTTY = true;
 	stdin.setRawMode = spy();
 	stdin.setEncoding = () => {};
-	stdin.resume = () => {};
-	stdin.pause = () => {};
+	stdin.read = stub();
+	stdin.unref = () => {};
 
 	return stdin;
+};
+
+const emitReadable = (stdin: NodeJS.WriteStream, chunk: string) => {
+	const read = stdin.read as ReturnType<typeof stub>;
+	read.onCall(0).returns(chunk);
+	read.onCall(1).returns(null);
+	stdin.emit('readable');
+	read.reset();
 };
 
 type TestProps = {
@@ -134,7 +142,7 @@ test('unfocus active component on Esc', async t => {
 	});
 
 	await delay(100);
-	stdin.emit('data', '\u001B');
+	emitReadable(stdin, '\u001B');
 	await delay(100);
 	t.is(
 		(stdout.write as any).lastCall.args[0],
@@ -152,7 +160,7 @@ test('switch focus to first component on Tab', async t => {
 	});
 
 	await delay(100);
-	stdin.emit('data', '\t');
+	emitReadable(stdin, '\t');
 	await delay(100);
 
 	t.is(
@@ -171,8 +179,8 @@ test('switch focus to the next component on Tab', async t => {
 	});
 
 	await delay(100);
-	stdin.emit('data', '\t');
-	stdin.emit('data', '\t');
+	emitReadable(stdin, '\t');
+	emitReadable(stdin, '\t');
 	await delay(100);
 
 	t.is(
@@ -191,8 +199,8 @@ test('switch focus to the first component if currently focused component is the 
 	});
 
 	await delay(100);
-	stdin.emit('data', '\t');
-	stdin.emit('data', '\t');
+	emitReadable(stdin, '\t');
+	emitReadable(stdin, '\t');
 	await delay(100);
 
 	t.is(
@@ -200,7 +208,7 @@ test('switch focus to the first component if currently focused component is the 
 		['First', 'Second', 'Third ✔'].join('\n')
 	);
 
-	stdin.emit('data', '\t');
+	emitReadable(stdin, '\t');
 	await delay(100);
 
 	t.is(
@@ -219,7 +227,7 @@ test('skip disabled component on Tab', async t => {
 	});
 
 	await delay(100);
-	stdin.emit('data', '\t');
+	emitReadable(stdin, '\t');
 	await delay(100);
 
 	t.is(
@@ -238,7 +246,7 @@ test('switch focus to the previous component on Shift+Tab', async t => {
 	});
 
 	await delay(100);
-	stdin.emit('data', '\t');
+	emitReadable(stdin, '\t');
 	await delay(100);
 
 	t.is(
@@ -246,7 +254,7 @@ test('switch focus to the previous component on Shift+Tab', async t => {
 		['First', 'Second ✔', 'Third'].join('\n')
 	);
 
-	stdin.emit('data', '\u001B[Z');
+	emitReadable(stdin, '\u001B[Z');
 	await delay(100);
 
 	t.is(
@@ -265,7 +273,7 @@ test('switch focus to the last component if currently focused component is the f
 	});
 
 	await delay(100);
-	stdin.emit('data', '\u001B[Z');
+	emitReadable(stdin, '\u001B[Z');
 
 	t.is(
 		(stdout.write as any).lastCall.args[0],
@@ -283,8 +291,8 @@ test('skip disabled component on Shift+Tab', async t => {
 	});
 
 	await delay(100);
-	stdin.emit('data', '\u001B[Z');
-	stdin.emit('data', '\u001B[Z');
+	emitReadable(stdin, '\u001B[Z');
+	emitReadable(stdin, '\u001B[Z');
 	await delay(100);
 
 	t.is(
@@ -324,7 +332,7 @@ test('focus first component after focused component unregisters', async t => {
 
 	t.is((stdout.write as any).lastCall.args[0], ['Second', 'Third'].join('\n'));
 
-	stdin.emit('data', '\t');
+	emitReadable(stdin, '\t');
 	await delay(100);
 
 	t.is(
@@ -345,7 +353,7 @@ test('toggle focus management', async t => {
 	await delay(100);
 	rerender(<Test autoFocus disabled />);
 	await delay(100);
-	stdin.emit('data', '\t');
+	emitReadable(stdin, '\t');
 	await delay(100);
 
 	t.is(
@@ -355,7 +363,7 @@ test('toggle focus management', async t => {
 
 	rerender(<Test autoFocus />);
 	await delay(100);
-	stdin.emit('data', '\t');
+	emitReadable(stdin, '\t');
 	await delay(100);
 
 	t.is(

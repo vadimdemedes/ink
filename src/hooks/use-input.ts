@@ -1,4 +1,3 @@
-import {type Buffer} from 'node:buffer';
 import {useEffect} from 'react';
 import {isUpperCase} from 'is-upper-case';
 import parseKeypress, {nonAlphanumericKeys} from '../parse-keypress.js';
@@ -137,7 +136,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			return;
 		}
 
-		const handleData = (data: Buffer) => {
+		const handleData = (data: string) => {
 			const keypress = parseKeypress(data);
 
 			const key = {
