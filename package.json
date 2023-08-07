@@ -90,9 +90,9 @@
 		"ava": "^5.1.1",
 		"boxen": "^7.0.1",
 		"delay": "^5.0.0",
-		"eslint-config-xo-react": "^0.27.0",
-		"eslint-plugin-react": "^7.32.2",
-		"eslint-plugin-react-hooks": "^4.6.0",
+		"eslint-config-xo-react": "0.27.0",
+		"eslint-plugin-react": "7.32.2",
+		"eslint-plugin-react-hooks": "4.6.0",
 		"ms": "^2.1.3",
 		"node-pty": "0.10.1",
 		"p-queue": "^7.3.4",
@@ -103,7 +103,7 @@
 		"strip-ansi": "^6.0.0",
 		"ts-node": "10.9.1",
 		"typescript": "^4.9.4",
-		"xo": "^0.54.2"
+		"xo": "0.54.2"
 	},
 	"peerDependencies": {
 		"@types/react": ">=18.0.0",
