@@ -117,7 +117,8 @@ type Options = {
  */
 const useInput = (inputHandler: Handler, options: Options = {}) => {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
-	const {stdin, setRawMode, internal_exitOnCtrlC} = useStdin();
+	const {stdin, setRawMode, internal_exitOnCtrlC, internal_eventEmitter} =
+		useStdin();
 
 	useEffect(() => {
 		if (options.isActive === false) {
@@ -189,10 +190,10 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			}
 		};
 
-		stdin?.on('data', handleData);
+		internal_eventEmitter?.on('input', handleData);
 
 		return () => {
-			stdin?.off('data', handleData);
+			internal_eventEmitter?.removeListener('input', handleData);
 		};
 	}, [options.isActive, stdin, internal_exitOnCtrlC, inputHandler]);
 };
