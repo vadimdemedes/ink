@@ -1380,7 +1380,7 @@ For example, to implement a hanging indent component, you can indent all the lin
 ```jsx
 import {render, Transform} from 'ink';
 
-const HangingIndent = ({ content, indent = 4, children, ...props }) => (
+const HangingIndent = ({content, indent = 4, children, ...props}) => (
 	<Transform transform={(line, index) =>
 		index === 0 ? line : (' '.repeat(indent) + line)} {...props}>
 	{children}
@@ -1393,10 +1393,10 @@ const text =
 	'house which I had built myself, on the shore of Walden Pond, ' +
 	'in Concord, Massachusetts, and earned my living by the labor ' +
 	'of my hands only. I lived there two years and two months. At ' +
-	'present I am a sojourner in civilized life again.'
+	'present I am a sojourner in civilized life again.';
 
-// Other text properties allowed as well
-render(<HangingIndent bold dimColor indent={4}>{text}</HangingIndent>)
+// Other text properties are allowed as well
+render(<HangingIndent bold dimColor indent={4}>{text}</HangingIndent>);
 ```
 
 #### transform(outputLine, index)
