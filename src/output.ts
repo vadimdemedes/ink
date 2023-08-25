@@ -187,9 +187,7 @@ export default class Output {
 
 				let offsetY = 0;
 
-				for (let index = 0; index < lines.length; index++) {
-					let line = lines[index];
-					if (line === undefined) continue;
+				for (let [index, line] of lines.entries()) {
 					const currentLine = output[y + offsetY];
 
 					// Line can be missing if `text` is taller than height of pre-initialized `this.output`
