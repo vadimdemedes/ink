@@ -253,23 +253,23 @@ test('fragment', t => {
 
 test('transform children', t => {
 	const output = renderToString(
-		<Transform transform={(string: string) => `[${string}]`}>
+		<Transform transform={(string: string, index: number) => `[${index}: ${string}]`}>
 			<Text>
-				<Transform transform={(string: string) => `{${string}}`}>
+				<Transform transform={(string: string, index: number) => `{${index}: ${string}}`}>
 					<Text>test</Text>
 				</Transform>
 			</Text>
 		</Transform>
 	);
 
-	t.is(output, '[{test}]');
+	t.is(output, '[0: {0: test}]');
 });
 
 test('squash multiple text nodes', t => {
 	const output = renderToString(
-		<Transform transform={(string: string) => `[${string}]`}>
+		<Transform transform={(string: string, index: number) => `[${index}: ${string}]`}>
 			<Text>
-				<Transform transform={(string: string) => `{${string}}`}>
+				<Transform transform={(string: string, index: number) => `{${index}: ${string}}`}>
 					{/* prettier-ignore */}
 					<Text>hello{' '}world</Text>
 				</Transform>
@@ -277,14 +277,26 @@ test('squash multiple text nodes', t => {
 		</Transform>
 	);
 
-	t.is(output, '[{hello world}]');
+	t.is(output, '[0: {0: hello world}]');
 });
+
+test('transform with multiple lines', t => {
+	const output = renderToString(
+		<Transform transform={(string: string, index: number) => `[${index}: ${string}]`}>
+			{/* prettier-ignore */}
+			<Text>hello{' '}world{'\n'}goodbye{' '}world</Text>
+		</Transform>
+	);
+
+	t.is(output, '[0: hello world]\n[1: goodbye world]');
+});
+
 
 test('squash multiple nested text nodes', t => {
 	const output = renderToString(
-		<Transform transform={(string: string) => `[${string}]`}>
+		<Transform transform={(string: string, index: number) => `[${index}: ${string}]`}>
 			<Text>
-				<Transform transform={(string: string) => `{${string}}`}>
+				<Transform transform={(string: string, index: number) => `{${index}: ${string}}`}>
 					hello
 					<Text> world</Text>
 				</Transform>
@@ -292,7 +304,7 @@ test('squash multiple nested text nodes', t => {
 		</Transform>
 	);
 
-	t.is(output, '[{hello world}]');
+	t.is(output, '[0: {0: hello world}]');
 });
 
 test('squash empty `<Text>` nodes', t => {
