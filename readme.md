@@ -1385,7 +1385,7 @@ const HangingIndent = ({content, indent = 4, children, ...props}) => (
 		index === 0 ? line : (' '.repeat(indent) + line)} {...props}>
 	{children}
 	</Transform>
-)
+);
 
 const text =
 	'WHEN I WROTE the following pages, or rather the bulk of them, ' +
