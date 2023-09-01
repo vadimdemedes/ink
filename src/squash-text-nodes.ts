@@ -11,7 +11,11 @@ const squashTextNodes = (node: DOMElement): string => {
 
 	for (let index = 0; index < node.childNodes.length; index++) {
 		const childNode = node.childNodes[index];
-		if (childNode === undefined) continue;
+
+		if (childNode === undefined) {
+			continue;
+		}
+
 		let nodeText = '';
 
 		if (childNode.nodeName === '#text') {

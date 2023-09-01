@@ -1381,9 +1381,13 @@ For example, to implement a hanging indent component, you can indent all the lin
 import {render, Transform} from 'ink';
 
 const HangingIndent = ({content, indent = 4, children, ...props}) => (
-	<Transform transform={(line, index) =>
-		index === 0 ? line : (' '.repeat(indent) + line)} {...props}>
-	{children}
+	<Transform
+		transform={(line, index) =>
+			index === 0 ? line : ' '.repeat(indent) + line
+		}
+		{...props}
+	>
+		{children}
 	</Transform>
 );
 
@@ -1396,7 +1400,11 @@ const text =
 	'present I am a sojourner in civilized life again.';
 
 // Other text properties are allowed as well
-render(<HangingIndent bold dimColor indent={4}>{text}</HangingIndent>);
+render(
+	<HangingIndent bold dimColor indent={4}>
+		{text}
+	</HangingIndent>
+);
 ```
 
 #### transform(outputLine, index)
