@@ -448,8 +448,6 @@ test('disable raw mode when all input components are unmounted', t => {
 	stdin.setEncoding = () => {};
 	stdin.setRawMode = spy();
 	stdin.isTTY = true; // Without this, setRawMode will throw
-	stdin.resume = spy();
-	stdin.pause = spy();
 
 	const options = {
 		stdout,
@@ -496,21 +494,15 @@ test('disable raw mode when all input components are unmounted', t => {
 
 	t.true(stdin.setRawMode.calledOnce);
 	t.deepEqual(stdin.setRawMode.firstCall.args, [true]);
-	t.true(stdin.resume.calledOnce);
-	t.false(stdin.pause.called);
 
 	rerender(<Test renderFirstInput />);
 
 	t.true(stdin.setRawMode.calledOnce);
-	t.true(stdin.resume.calledOnce);
-	t.false(stdin.pause.called);
 
 	rerender(<Test />);
 
 	t.true(stdin.setRawMode.calledTwice);
 	t.deepEqual(stdin.setRawMode.lastCall.args, [false]);
-	t.true(stdin.resume.calledOnce);
-	t.true(stdin.pause.calledOnce);
 });
 
 test('setRawMode() should throw if raw mode is not supported', t => {
@@ -520,8 +512,6 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 	stdin.setEncoding = () => {};
 	stdin.setRawMode = spy();
 	stdin.isTTY = false;
-	stdin.resume = spy();
-	stdin.pause = spy();
 
 	const didCatchInMount = spy();
 	const didCatchInUnmount = spy();
@@ -565,8 +555,6 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 	t.is(didCatchInMount.callCount, 1);
 	t.is(didCatchInUnmount.callCount, 1);
 	t.false(stdin.setRawMode.called);
-	t.false(stdin.resume.called);
-	t.false(stdin.pause.called);
 });
 
 test('render different component based on whether stdin is a TTY or not', t => {
@@ -576,8 +564,6 @@ test('render different component based on whether stdin is a TTY or not', t => {
 	stdin.setEncoding = () => {};
 	stdin.setRawMode = spy();
 	stdin.isTTY = false;
-	stdin.resume = spy();
-	stdin.pause = spy();
 
 	const options = {
 		stdout,
@@ -627,20 +613,14 @@ test('render different component based on whether stdin is a TTY or not', t => {
 	);
 
 	t.false(stdin.setRawMode.called);
-	t.false(stdin.resume.called);
-	t.false(stdin.pause.called);
 
 	rerender(<Test renderFirstInput />);
 
 	t.false(stdin.setRawMode.called);
-	t.false(stdin.resume.called);
-	t.false(stdin.pause.called);
 
 	rerender(<Test />);
 
 	t.false(stdin.setRawMode.called);
-	t.false(stdin.resume.called);
-	t.false(stdin.pause.called);
 });
 
 test('render only last frame when run in CI', async t => {

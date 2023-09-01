@@ -1,4 +1,3 @@
-import {type Buffer} from 'node:buffer';
 import {useEffect} from 'react';
 import {isUpperCase} from 'is-upper-case';
 import parseKeypress, {nonAlphanumericKeys} from '../parse-keypress.js';
@@ -118,7 +117,8 @@ type Options = {
  */
 const useInput = (inputHandler: Handler, options: Options = {}) => {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
-	const {stdin, setRawMode, internal_exitOnCtrlC} = useStdin();
+	const {stdin, setRawMode, internal_exitOnCtrlC, internal_eventEmitter} =
+		useStdin();
 
 	useEffect(() => {
 		if (options.isActive === false) {
@@ -137,7 +137,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			return;
 		}
 
-		const handleData = (data: Buffer) => {
+		const handleData = (data: string) => {
 			const keypress = parseKeypress(data);
 
 			const key = {
@@ -190,10 +190,10 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			}
 		};
 
-		stdin?.on('data', handleData);
+		internal_eventEmitter?.on('input', handleData);
 
 		return () => {
-			stdin?.off('data', handleData);
+			internal_eventEmitter?.removeListener('input', handleData);
 		};
 	}, [options.isActive, stdin, internal_exitOnCtrlC, inputHandler]);
 };

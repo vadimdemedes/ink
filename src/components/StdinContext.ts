@@ -1,3 +1,4 @@
+import {EventEmitter} from 'node:events';
 import process from 'node:process';
 import {createContext} from 'react';
 
@@ -19,6 +20,8 @@ export type Props = {
 	readonly isRawModeSupported: boolean;
 
 	readonly internal_exitOnCtrlC: boolean;
+
+	readonly internal_eventEmitter: EventEmitter;
 };
 
 /**
@@ -27,6 +30,8 @@ export type Props = {
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const StdinContext = createContext<Props>({
 	stdin: process.stdin,
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	internal_eventEmitter: new EventEmitter(),
 	setRawMode() {},
 	isRawModeSupported: false,
 	// eslint-disable-next-line @typescript-eslint/naming-convention
