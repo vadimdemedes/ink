@@ -1,21 +1,21 @@
 import EventEmitter from 'node:events';
-import React, {useState, Component} from 'react';
-import chalk from 'chalk';
-import {spy} from 'sinon';
 import test from 'ava';
+import chalk from 'chalk';
+import React, {Component, useState} from 'react';
+import {spy} from 'sinon';
 import {
 	Box,
-	Text,
-	Static,
-	Transform,
 	Newline,
+	render,
 	Spacer,
-	useStdin,
-	render
+	Static,
+	Text,
+	Transform,
+	useStdin
 } from '../src/index.js';
+import createStdout from './helpers/create-stdout.js';
 import {renderToString} from './helpers/render-to-string.js';
 import {run} from './helpers/run.js';
-import createStdout from './helpers/create-stdout.js';
 
 test('text', t => {
 	const output = renderToString(<Text>Hello World</Text>);
@@ -253,23 +253,31 @@ test('fragment', t => {
 
 test('transform children', t => {
 	const output = renderToString(
-		<Transform transform={(string: string) => `[${string}]`}>
+		<Transform
+			transform={(string: string, index: number) => `[${index}: ${string}]`}
+		>
 			<Text>
-				<Transform transform={(string: string) => `{${string}}`}>
+				<Transform
+					transform={(string: string, index: number) => `{${index}: ${string}}`}
+				>
 					<Text>test</Text>
 				</Transform>
 			</Text>
 		</Transform>
 	);
 
-	t.is(output, '[{test}]');
+	t.is(output, '[0: {0: test}]');
 });
 
 test('squash multiple text nodes', t => {
 	const output = renderToString(
-		<Transform transform={(string: string) => `[${string}]`}>
+		<Transform
+			transform={(string: string, index: number) => `[${index}: ${string}]`}
+		>
 			<Text>
-				<Transform transform={(string: string) => `{${string}}`}>
+				<Transform
+					transform={(string: string, index: number) => `{${index}: ${string}}`}
+				>
 					{/* prettier-ignore */}
 					<Text>hello{' '}world</Text>
 				</Transform>
@@ -277,14 +285,31 @@ test('squash multiple text nodes', t => {
 		</Transform>
 	);
 
-	t.is(output, '[{hello world}]');
+	t.is(output, '[0: {0: hello world}]');
+});
+
+test('transform with multiple lines', t => {
+	const output = renderToString(
+		<Transform
+			transform={(string: string, index: number) => `[${index}: ${string}]`}
+		>
+			{/* prettier-ignore */}
+			<Text>hello{' '}world{'\n'}goodbye{' '}world</Text>
+		</Transform>
+	);
+
+	t.is(output, '[0: hello world]\n[1: goodbye world]');
 });
 
 test('squash multiple nested text nodes', t => {
 	const output = renderToString(
-		<Transform transform={(string: string) => `[${string}]`}>
+		<Transform
+			transform={(string: string, index: number) => `[${index}: ${string}]`}
+		>
 			<Text>
-				<Transform transform={(string: string) => `{${string}}`}>
+				<Transform
+					transform={(string: string, index: number) => `{${index}: ${string}}`}
+				>
 					hello
 					<Text> world</Text>
 				</Transform>
@@ -292,7 +317,7 @@ test('squash multiple nested text nodes', t => {
 		</Transform>
 	);
 
-	t.is(output, '[{hello world}]');
+	t.is(output, '[0: {0: hello world}]');
 });
 
 test('squash empty `<Text>` nodes', t => {
