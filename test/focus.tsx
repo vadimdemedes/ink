@@ -13,6 +13,7 @@ const createStdin = () => {
 	stdin.setEncoding = () => {};
 	stdin.read = stub();
 	stdin.unref = () => {};
+	stdin.ref = () => {};
 
 	return stdin;
 };
