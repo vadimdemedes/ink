@@ -722,10 +722,10 @@ test('vertical spacer', t => {
 	t.is(output, 'Top\n\n\n\n\nBottom');
 });
 
-test('ansi escapes are closed properly', t => {
+test('link ansi escapes are closed properly', t => {
 	const output = renderToString(
 		<Text>{ansiEscapes.link('Example', 'https://example.com')}</Text>
 	);
 
-	t.is(output, '"]8;;https://example.comExample]8;;"');
+	t.is(output, ']8;;https://example.comExample]8;;');
 });
