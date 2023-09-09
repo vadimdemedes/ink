@@ -449,6 +449,8 @@ test('disable raw mode when all input components are unmounted', t => {
 	stdin.setEncoding = () => {};
 	stdin.setRawMode = spy();
 	stdin.isTTY = true; // Without this, setRawMode will throw
+	stdin.ref = spy();
+	stdin.unref = spy();
 
 	const options = {
 		stdout,
@@ -494,15 +496,20 @@ test('disable raw mode when all input components are unmounted', t => {
 	);
 
 	t.true(stdin.setRawMode.calledOnce);
+	t.true(stdin.ref.calledOnce);
 	t.deepEqual(stdin.setRawMode.firstCall.args, [true]);
 
 	rerender(<Test renderFirstInput />);
 
 	t.true(stdin.setRawMode.calledOnce);
+	t.true(stdin.ref.calledOnce);
+	t.true(stdin.unref.notCalled);
 
 	rerender(<Test />);
 
 	t.true(stdin.setRawMode.calledTwice);
+	t.true(stdin.ref.calledOnce);
+	t.true(stdin.unref.calledOnce);
 	t.deepEqual(stdin.setRawMode.lastCall.args, [false]);
 });
 
