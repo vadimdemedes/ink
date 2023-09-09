@@ -3,6 +3,7 @@ import test from 'ava';
 import chalk from 'chalk';
 import React, {Component, useState} from 'react';
 import {spy} from 'sinon';
+import ansiEscapes from 'ansi-escapes';
 import {
 	Box,
 	Newline,
@@ -719,4 +720,12 @@ test('vertical spacer', t => {
 	);
 
 	t.is(output, 'Top\n\n\n\n\nBottom');
+});
+
+test('link ansi escapes are closed properly', t => {
+	const output = renderToString(
+		<Text>{ansiEscapes.link('Example', 'https://example.com')}</Text>
+	);
+
+	t.is(output, ']8;;https://example.comExample]8;;');
 });
