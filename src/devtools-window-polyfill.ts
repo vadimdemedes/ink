@@ -13,6 +13,10 @@ if (!customGlobal.window) {
 	customGlobal.window = global;
 }
 
+if (!customGlobal.self) {
+	customGlobal.self = global;
+}
+
 // Filter out Ink's internal components from devtools for a cleaner view.
 // Also, ince `react-devtools-shared` package isn't published on npm, we can't
 // use its types, that's why there are hard-coded values in `type` fields below.
