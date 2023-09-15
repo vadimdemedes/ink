@@ -100,7 +100,6 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Twilio's SIGNAL](https://github.com/twilio-labs/plugin-signal2020) - CLI for Twilio's SIGNAL conference. [Blog post](https://www.twilio.com/blog/building-conference-cli-in-react).
 - [Typewriter](https://github.com/segmentio/typewriter) - Generates strongly-typed [Segment](https://segment.com) analytics clients from arbitrary JSON Schema.
 - [Prisma](https://www.prisma.io) - The unified data layer for modern applications.
-- [Wallace](https://www.projectwallace.com) - Pretty CSS analytics.
 - [Blitz](https://blitzjs.com) - The Fullstack React Framework.
 - [New York Times](https://github.com/nytimes/kyt) - NYT uses Ink `kyt` - a toolkit that encapsulates and manages the configuration for web apps.
 - [tink](https://github.com/npm/tink) - Next-generation runtime and package manager.
