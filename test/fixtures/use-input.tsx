@@ -2,7 +2,7 @@ import process from 'node:process';
 import React from 'react';
 import {render, useInput, useApp} from '../../src/index.js';
 
-function UserInput({test}: {test: string | undefined}) {
+function UserInput({test}: {readonly test: string | undefined}) {
 	const {exit} = useApp();
 
 	useInput((input, key) => {

@@ -1,5 +1,4 @@
 import {useEffect} from 'react';
-import {isUpperCase} from 'is-upper-case';
 import parseKeypress, {nonAlphanumericKeys} from '../parse-keypress.js';
 import reconciler from '../reconciler.js';
 import useStdin from './use-stdin.js';
@@ -176,7 +175,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			if (
 				input.length === 1 &&
 				typeof input[0] === 'string' &&
-				isUpperCase(input[0])
+				input[0].toUpperCase() === input[0]
 			) {
 				key.shift = true;
 			}

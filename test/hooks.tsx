@@ -1,14 +1,9 @@
 import process from 'node:process';
-import {createRequire} from 'node:module';
 import url from 'node:url';
-import * as path from 'node:path';
+import path from 'node:path';
 import test, {type ExecutionContext} from 'ava';
 import stripAnsi from 'strip-ansi';
-
-const require = createRequire(import.meta.url);
-
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports
-const {spawn} = require('node-pty') as typeof import('node-pty');
+import {spawn} from 'node-pty';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
@@ -56,17 +51,17 @@ const term = (fixture: string, args: string[] = []) => {
 		waitForExit: async () => exitPromise
 	};
 
-	ps.on('data', (data: string) => {
+	ps.onData(data => {
 		result.output += data;
 	});
 
-	ps.on('exit', (code: number) => {
-		if (code === 0) {
+	ps.onExit(({exitCode}) => {
+		if (exitCode === 0) {
 			resolve();
 			return;
 		}
 
-		reject(new Error(`Process exited with non-zero exit code: ${code}`));
+		reject(new Error(`Process exited with non-zero exit code: ${exitCode}`));
 	});
 
 	return result;

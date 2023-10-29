@@ -5,7 +5,7 @@ import {Box, Text, render} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
 test('update child', t => {
-	function Test({update}: {update?: boolean}) {
+	function Test({update}: {readonly update?: boolean}) {
 		return <Text>{update ? 'B' : 'A'}</Text>;
 	}
 
@@ -37,7 +37,7 @@ test('update child', t => {
 });
 
 test('update text node', t => {
-	function Test({update}: {update?: boolean}) {
+	function Test({update}: {readonly update?: boolean}) {
 		return (
 			<Box>
 				<Text>Hello </Text>
@@ -74,7 +74,7 @@ test('update text node', t => {
 });
 
 test('append child', t => {
-	function Test({append}: {append?: boolean}) {
+	function Test({append}: {readonly append?: boolean}) {
 		if (append) {
 			return (
 				<Box flexDirection="column">
@@ -130,7 +130,7 @@ test('append child', t => {
 });
 
 test('insert child between other children', t => {
-	function Test({insert}: {insert?: boolean}) {
+	function Test({insert}: {readonly insert?: boolean}) {
 		if (insert) {
 			return (
 				<Box flexDirection="column">
@@ -190,7 +190,7 @@ test('insert child between other children', t => {
 });
 
 test('remove child', t => {
-	function Test({remove}: {remove?: boolean}) {
+	function Test({remove}: {readonly remove?: boolean}) {
 		if (remove) {
 			return (
 				<Box flexDirection="column">
@@ -246,7 +246,7 @@ test('remove child', t => {
 });
 
 test('reorder children', t => {
-	function Test({reorder}: {reorder?: boolean}) {
+	function Test({reorder}: {readonly reorder?: boolean}) {
 		if (reorder) {
 			return (
 				<Box flexDirection="column">
@@ -306,7 +306,7 @@ test('reorder children', t => {
 test('replace child node with text', t => {
 	const stdout = createStdout();
 
-	function Dynamic({replace}: {replace?: boolean}) {
+	function Dynamic({replace}: {readonly replace?: boolean}) {
 		return <Text>{replace ? 'x' : <Text color="green">test</Text>}</Text>;
 	}
 

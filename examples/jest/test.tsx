@@ -22,8 +22,8 @@ const getBackgroundForStatus = (status: string): string | undefined => {
 };
 
 type Props = {
-	status: string;
-	path: string;
+	readonly status: string;
+	readonly path: string;
 };
 
 function Test({status, path}: Props) {

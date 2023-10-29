@@ -375,7 +375,7 @@ test('static output', t => {
 test('skip previous output when rendering new static output', t => {
 	const stdout = createStdout();
 
-	function Dynamic({items}: {items: string[]}) {
+	function Dynamic({items}: {readonly items: string[]}) {
 		return (
 			<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
 		);
@@ -395,7 +395,7 @@ test('skip previous output when rendering new static output', t => {
 test('render only new items in static output on final render', t => {
 	const stdout = createStdout();
 
-	function Dynamic({items}: {items: string[]}) {
+	function Dynamic({items}: {readonly items: string[]}) {
 		return (
 			<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
 		);
@@ -426,7 +426,7 @@ test('ensure wrap-ansi doesn’t trim leading whitespace', t => {
 test('replace child node with text', t => {
 	const stdout = createStdout();
 
-	function Dynamic({replace}: {replace?: boolean}) {
+	function Dynamic({replace}: {readonly replace?: boolean}) {
 		return <Text>{replace ? 'x' : <Text color="green">test</Text>}</Text>;
 	}
 
@@ -476,8 +476,8 @@ test('disable raw mode when all input components are unmounted', t => {
 		renderFirstInput,
 		renderSecondInput
 	}: {
-		renderFirstInput?: boolean;
-		renderSecondInput?: boolean;
+		readonly renderFirstInput?: boolean;
+		readonly renderSecondInput?: boolean;
 	}) {
 		const {setRawMode} = useStdin();
 
@@ -597,8 +597,8 @@ test('render different component based on whether stdin is a TTY or not', t => {
 		renderFirstInput,
 		renderSecondInput
 	}: {
-		renderFirstInput?: boolean;
-		renderSecondInput?: boolean;
+		readonly renderFirstInput?: boolean;
+		readonly renderSecondInput?: boolean;
 	}) {
 		const {isRawModeSupported, setRawMode} = useStdin();
 
@@ -660,7 +660,7 @@ test('render all frames if CI environment variable equals false', async t => {
 test('reset prop when it’s removed from the element', t => {
 	const stdout = createStdout();
 
-	function Dynamic({remove}: {remove?: boolean}) {
+	function Dynamic({remove}: {readonly remove?: boolean}) {
 		return (
 			<Box
 				flexDirection="column"

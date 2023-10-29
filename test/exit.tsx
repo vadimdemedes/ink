@@ -81,7 +81,7 @@ test.serial('don’t exit while raw mode is active', async t => {
 
 		let output = '';
 
-		term.on('data', (data: string) => {
+		term.onData(data => {
 			if (data === 's') {
 				setTimeout(() => {
 					t.false(isExited);
@@ -100,10 +100,10 @@ test.serial('don’t exit while raw mode is active', async t => {
 
 		let isExited = false;
 
-		term.on('exit', (code: any) => {
+		term.onExit(({exitCode}) => {
 			isExited = true;
 
-			if (code === 0) {
+			if (exitCode === 0) {
 				t.true(output.includes('exited'));
 				t.pass();
 				resolve();
