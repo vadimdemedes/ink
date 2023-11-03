@@ -2,10 +2,10 @@ import React from 'react';
 import {Box, Text} from '../../src/index.js';
 
 type Props = {
-	isFinished: boolean;
-	passed: number;
-	failed: number;
-	time: string;
+	readonly isFinished: boolean;
+	readonly passed: number;
+	readonly failed: number;
+	readonly time: string;
 };
 
 function Summary({isFinished, passed, failed, time}: Props) {

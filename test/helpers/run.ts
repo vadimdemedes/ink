@@ -42,17 +42,17 @@ export const run: Run = async (fixture, props) => {
 
 		let output = '';
 
-		term.on('data', (data: string) => {
+		term.onData(data => {
 			output += data;
 		});
 
-		term.on('exit', (code: number) => {
-			if (code === 0) {
+		term.onExit(({exitCode}) => {
+			if (exitCode === 0) {
 				resolve(output);
 				return;
 			}
 
-			reject(new Error(`Process exited with a non-zero code: ${output}`));
+			reject(new Error(`Process exited with a non-zero code: ${exitCode}`));
 		});
 	});
 };

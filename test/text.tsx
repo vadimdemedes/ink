@@ -77,7 +77,7 @@ test('text with inversion', t => {
 });
 
 test('remeasure text when text is changed', t => {
-	function Test({add}: {add?: boolean}) {
+	function Test({add}: {readonly add?: boolean}) {
 		return (
 			<Box>
 				<Text>{add ? 'abcx' : 'abc'}</Text>
@@ -94,7 +94,7 @@ test('remeasure text when text is changed', t => {
 });
 
 test('remeasure text when text nodes are changed', t => {
-	function Test({add}: {add?: boolean}) {
+	function Test({add}: {readonly add?: boolean}) {
 		return (
 			<Box>
 				<Text>
