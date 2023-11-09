@@ -3,7 +3,7 @@ import React, {type ReactNode} from 'react';
 import throttle from 'lodash/throttle.js';
 import {type DebouncedFunc} from 'lodash';
 import ansiEscapes from 'ansi-escapes';
-import originalIsCi from 'is-ci';
+import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
@@ -16,7 +16,6 @@ import logUpdate, {type LogUpdate} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
 
-const isCi = process.env['CI'] === 'false' ? false : originalIsCi;
 const noop = () => {};
 
 export type Options = {
@@ -108,7 +107,7 @@ export default class Ink {
 			this.patchConsole();
 		}
 
-		if (!isCi) {
+		if (!isInCi) {
 			options.stdout.on('resize', this.resized);
 
 			this.unsubscribeResize = () => {
@@ -159,7 +158,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isCi) {
+		if (isInCi) {
 			if (hasStaticOutput) {
 				this.options.stdout.write(staticOutput);
 			}
@@ -222,7 +221,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isCi) {
+		if (isInCi) {
 			this.options.stdout.write(data);
 			return;
 		}
@@ -243,7 +242,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isCi) {
+		if (isInCi) {
 			this.options.stderr.write(data);
 			return;
 		}
@@ -273,7 +272,7 @@ export default class Ink {
 
 		// CIs don't handle erasing ansi escapes well, so it's better to
 		// only render last frame of non-static output
-		if (isCi) {
+		if (isInCi) {
 			this.options.stdout.write(this.lastOutput + '\n');
 		} else if (!this.options.debug) {
 			this.log.done();
@@ -303,7 +302,7 @@ export default class Ink {
 	}
 
 	clear(): void {
-		if (!isCi && !this.options.debug) {
+		if (!isInCi && !this.options.debug) {
 			this.log.clear();
 		}
 	}
