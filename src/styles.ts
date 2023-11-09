@@ -2,7 +2,6 @@
 import {type Boxes, type BoxStyle} from 'cli-boxes';
 import {type LiteralUnion} from 'type-fest';
 import {type ForegroundColorName} from 'ansi-styles'; // Note: We import directly from `ansi-styles` to avoid a bug in TypeScript.
-// eslint-disable-next-line n/file-extension-in-import
 import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
 
 export type Styles = {

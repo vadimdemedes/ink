@@ -1,4 +1,3 @@
-// eslint-disable-next-line n/file-extension-in-import
 import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
 
 const getMaxWidth = (yogaNode: YogaNode) => {

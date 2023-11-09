@@ -8,7 +8,6 @@ import autoBind from 'auto-bind';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
 import {type FiberRoot} from 'react-reconciler';
-// eslint-disable-next-line n/file-extension-in-import
 import Yoga from 'yoga-wasm-web/auto';
 import reconciler from './reconciler.js';
 import render from './renderer.js';

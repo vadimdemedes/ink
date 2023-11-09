@@ -1,7 +1,6 @@
 import process from 'node:process';
 import createReconciler from 'react-reconciler';
 import {DefaultEventPriority} from 'react-reconciler/constants.js';
-// eslint-disable-next-line n/file-extension-in-import
 import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
 import {
 	createTextNode,
