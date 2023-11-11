@@ -90,13 +90,14 @@ You can also check it out live on [repl.it sandbox](https://ink-counter-demo.vad
 Feel free to play around with the code and fork this repl at [https://repl.it/@vadimdemedes/ink-counter-demo](https://repl.it/@vadimdemedes/ink-counter-demo).
 
 ## Who's Using Ink?
-- [Specify CLI](https://specifyapp.com) - Automate the distribution of your design tokens.
+
 - [GitHub Copilot for CLI](https://githubnext.com/projects/copilot-cli) - Just say what you want the shell to do.
 - [Cloudflare's Wrangler](https://github.com/cloudflare/wrangler2) - The CLI for Cloudflare Workers.
 - [Linear](https://linear.app) - Linear built an internal CLI for managing deployments, configs and other housekeeping tasks.
 - [Gatsby](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing fast websites.
 - [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
 - [Terraform CDK](https://github.com/hashicorp/terraform-cdk) - CDK (Cloud Development Kit) for HashiCorp Terraform.
+- [Specify CLI](https://specifyapp.com) - Automate the distribution of your design tokens.
 - [Twilio's SIGNAL](https://github.com/twilio-labs/plugin-signal2020) - CLI for Twilio's SIGNAL conference. [Blog post](https://www.twilio.com/blog/building-conference-cli-in-react).
 - [Typewriter](https://github.com/segmentio/typewriter) - Generates strongly-typed [Segment](https://segment.com) analytics clients from arbitrary JSON Schema.
 - [Prisma](https://www.prisma.io) - The unified data layer for modern applications.
