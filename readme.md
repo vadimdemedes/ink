@@ -90,7 +90,7 @@ You can also check it out live on [repl.it sandbox](https://ink-counter-demo.vad
 Feel free to play around with the code and fork this repl at [https://repl.it/@vadimdemedes/ink-counter-demo](https://repl.it/@vadimdemedes/ink-counter-demo).
 
 ## Who's Using Ink?
-- [Specify CLI](https://specifyapp.com) CLI for Specify to automate the distribution of your design tokens
+- [Specify CLI](https://specifyapp.com) - Automate the distribution of your design tokens.
 - [GitHub Copilot for CLI](https://githubnext.com/projects/copilot-cli) - Just say what you want the shell to do.
 - [Cloudflare's Wrangler](https://github.com/cloudflare/wrangler2) - The CLI for Cloudflare Workers.
 - [Linear](https://linear.app) - Linear built an internal CLI for managing deployments, configs and other housekeeping tasks.
