@@ -1,4 +1,3 @@
-import process from 'node:process';
 import React from 'react';
 import {Box, Text, render} from '../../src/index.js';
 
@@ -12,5 +11,4 @@ function Erase() {
 	);
 }
 
-process.stdout.rows = Number(process.argv[2]);
 render(<Erase />);
