@@ -138,7 +138,10 @@ type ParsedKey = {
 };
 
 const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
+
 	let parts;
+
+	let isWindows = process.platform === "win32";
 
 	if (Buffer.isBuffer(s)) {
 		if (s[0]! > 127 && s[1] === undefined) {
@@ -175,7 +178,7 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 	} else if (s === '\t') {
 		// tab
 		key.name = 'tab';
-	} else if (s === '\b' || s === '\x1b\b') {
+	} else if (!isWindows && s === '\x7f' || s === '\b' || s === '\x1b\b') {
 		// backspace or ctrl+h
 		key.name = 'backspace';
 		key.meta = s.charAt(0) === '\x1b';
