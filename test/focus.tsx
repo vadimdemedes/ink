@@ -28,7 +28,9 @@ const emitReadable = (stdin: NodeJS.WriteStream, chunk: string) => {
 
 type TestProps = {
 	readonly showFirst?: boolean;
+	readonly disableFirst?: boolean;
 	readonly disableSecond?: boolean;
+	readonly disableThird?: boolean;
 	readonly autoFocus?: boolean;
 	readonly disabled?: boolean;
 	readonly focusNext?: boolean;
@@ -38,7 +40,9 @@ type TestProps = {
 
 function Test({
 	showFirst = true,
+	disableFirst = false,
 	disableSecond = false,
+	disableThird = false,
 	autoFocus = false,
 	disabled = false,
 	focusNext = false,
@@ -73,9 +77,11 @@ function Test({
 
 	return (
 		<Box flexDirection="column">
-			{showFirst && <Item label="First" autoFocus={autoFocus} />}
+			{showFirst && (
+				<Item label="First" autoFocus={autoFocus} disabled={disableFirst} />
+			)}
 			<Item label="Second" autoFocus={autoFocus} disabled={disableSecond} />
-			<Item label="Third" autoFocus={autoFocus} />
+			<Item label="Third" autoFocus={autoFocus} disabled={disableThird} />
 		</Box>
 	);
 }
@@ -441,4 +447,61 @@ test('doesnt crash when focusing previous on unmounted children', async t => {
 	await delay(100);
 
 	t.is((stdout.write as any).lastCall.args[0], '');
+});
+
+test('focuses first non-disabled component', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	render(<Test autoFocus disableFirst disableSecond />, {
+		stdout,
+		stdin,
+		debug: true
+	});
+
+	await delay(100);
+
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		['First', 'Second', 'Third ✔'].join('\n')
+	);
+});
+
+test('skips disabled elements when wrapping around', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	render(<Test autoFocus disableFirst />, {
+		stdout,
+		stdin,
+		debug: true
+	});
+
+	await delay(100);
+	emitReadable(stdin, '\t');
+	await delay(100);
+	emitReadable(stdin, '\t');
+	await delay(100);
+
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		['First', 'Second ✔', 'Third'].join('\n')
+	);
+});
+
+test('skips disabled elements when wrapping around from the front', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	render(<Test autoFocus disableThird />, {
+		stdout,
+		stdin,
+		debug: true
+	});
+
+	await delay(100);
+	emitReadable(stdin, '\u001B[Z');
+	await delay(100);
+
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		['First', 'Second ✔', 'Third'].join('\n')
+	);
 });
