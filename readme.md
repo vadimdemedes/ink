@@ -1858,7 +1858,7 @@ const Example = () => {
 
 Switch focus to the next focusable component.
 If there's no active component right now, focus will be given to the first focusable component.
-If active component is the last in the list of focusable components, focus will be switched to the first component.
+If active component is the last in the list of focusable components, focus will be switched to the first focusable component.
 
 **Note:** Ink calls this method when user presses <kbd>Tab</kbd>.
 

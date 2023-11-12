@@ -4,7 +4,8 @@
 		"outDir": "build",
 		"sourceMap": true,
 		"jsx": "react",
-		"isolatedModules": true
+		"isolatedModules": true,
+		"lib": ["ES2023"]
 	},
 	"include": ["src"],
 	"ts-node": {
