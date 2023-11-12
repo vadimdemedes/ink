@@ -25,7 +25,7 @@ export type Options = {
 	debug: boolean;
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
-	waitUntilExit?: () => Promise<void>;
+	initWaitUntilExit: boolean;
 };
 
 export default class Ink {
@@ -113,6 +113,13 @@ export default class Ink {
 			this.unsubscribeResize = () => {
 				options.stdout.off('resize', this.resized);
 			};
+		}
+
+		if (options.initWaitUntilExit) {
+			this.exitPromise = new Promise((resolve, reject) => {
+				this.resolveExitPromise = resolve;
+				this.rejectExitPromise = reject;
+			});
 		}
 	}
 

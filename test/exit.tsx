@@ -57,6 +57,14 @@ test.serial('exit with thrown error', async t => {
 	t.true(output.includes('errored'));
 });
 
+test.serial(
+	'exit with thrown error when initWaitUntilExit is true',
+	async t => {
+		const output = await run('exit-with-thrown-error-fix');
+		t.true(output.includes('waitUntilExit catch: errored'));
+	}
+);
+
 test.serial('don’t exit while raw mode is active', async t => {
 	await new Promise<void>((resolve, _reject) => {
 		const env: Record<string, string> = {
