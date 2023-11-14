@@ -7,6 +7,8 @@ import {spawn} from 'node-pty';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
+const isWindows = process.platform === 'win32';
+
 const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: any) => void;
 	let reject: (error?: Error) => void;
@@ -216,14 +218,24 @@ test.serial('useInput - handle shift + tab', async t => {
 
 test.serial('useInput - handle backspace', async t => {
 	const ps = term('use-input', ['backspace']);
-	ps.write('\u0008');
+	if (isWindows) {
+		ps.write('\u0008');
+	} else {
+		ps.write('\u007F');
+	}
+
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
 
 test.serial('useInput - handle delete', async t => {
 	const ps = term('use-input', ['delete']);
-	ps.write('\u007F');
+	if (isWindows) {
+		ps.write('\u007F');
+	} else {
+		ps.write('\u001B[3~');
+	}
+
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });

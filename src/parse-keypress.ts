@@ -1,6 +1,8 @@
 // Copied from https://github.com/enquirer/enquirer/blob/36785f3399a41cd61e9d28d1eb9c2fcd73d69b4c/lib/keypress.js
 import {Buffer} from 'node:buffer';
 
+const isWindows = process.platform === "win32";
+
 const metaKeyCodeRe = /^(?:\x1b)([a-zA-Z0-9])$/;
 
 const fnKeyRe =
@@ -141,8 +143,6 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 
 	let parts;
 
-	let isWindows = process.platform === "win32";
-
 	if (Buffer.isBuffer(s)) {
 		if (s[0]! > 127 && s[1] === undefined) {
 			(s[0] as unknown as number) -= 128;
@@ -239,6 +239,7 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 		key.ctrl = isCtrlKey(code) || key.ctrl;
 	}
 
+	console.log(key)
 	return key;
 };
 
