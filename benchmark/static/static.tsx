@@ -20,8 +20,8 @@ function App() {
 			setItems(previousItems => [
 				...previousItems,
 				{
-					id: previousItems.length
-				}
+					id: previousItems.length,
+				},
 			]);
 
 			timer = setTimeout(run, 10);

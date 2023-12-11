@@ -37,13 +37,13 @@ const renderNodeToOutput = (
 		offsetY?: number;
 		transformers?: OutputTransformer[];
 		skipStaticElements: boolean;
-	}
+	},
 ) => {
 	const {
 		offsetX = 0,
 		offsetY = 0,
 		transformers = [],
-		skipStaticElements
+		skipStaticElements,
 	} = options;
 
 	if (skipStaticElements && node.internal_static) {
@@ -131,7 +131,7 @@ const renderNodeToOutput = (
 					offsetX: x,
 					offsetY: y,
 					transformers: newTransformers,
-					skipStaticElements
+					skipStaticElements,
 				});
 			}
 

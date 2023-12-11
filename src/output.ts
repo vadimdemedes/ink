@@ -5,7 +5,7 @@ import {
 	type StyledChar,
 	styledCharsFromTokens,
 	styledCharsToString,
-	tokenize
+	tokenize,
 } from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
 
@@ -66,7 +66,7 @@ export default class Output {
 		x: number,
 		y: number,
 		text: string,
-		options: {transformers: OutputTransformer[]}
+		options: {transformers: OutputTransformer[]},
 	): void {
 		const {transformers} = options;
 
@@ -79,20 +79,20 @@ export default class Output {
 			x,
 			y,
 			text,
-			transformers
+			transformers,
 		});
 	}
 
 	clip(clip: Clip) {
 		this.operations.push({
 			type: 'clip',
-			clip
+			clip,
 		});
 	}
 
 	unclip() {
 		this.operations.push({
-			type: 'unclip'
+			type: 'unclip',
 		});
 	}
 
@@ -108,7 +108,7 @@ export default class Output {
 					type: 'char',
 					value: ' ',
 					fullWidth: false,
-					styles: []
+					styles: [],
 				});
 			}
 
@@ -215,7 +215,7 @@ export default class Output {
 								type: 'char',
 								value: '',
 								fullWidth: false,
-								styles: character.styles
+								styles: character.styles,
 							};
 						}
 
@@ -238,7 +238,7 @@ export default class Output {
 
 		return {
 			output: generatedOutput,
-			height: output.length
+			height: output.length,
 		};
 	}
 }

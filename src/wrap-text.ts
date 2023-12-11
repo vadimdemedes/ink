@@ -7,7 +7,7 @@ const cache: Record<string, string> = {};
 const wrapText = (
 	text: string,
 	maxWidth: number,
-	wrapType: Styles['textWrap']
+	wrapType: Styles['textWrap'],
 ): string => {
 	const cacheKey = text + String(maxWidth) + String(wrapType);
 	const cachedText = cache[cacheKey];
@@ -21,7 +21,7 @@ const wrapText = (
 	if (wrapType === 'wrap') {
 		wrappedText = wrapAnsi(text, maxWidth, {
 			trim: false,
-			hard: true
+			hard: true,
 		});
 	}
 

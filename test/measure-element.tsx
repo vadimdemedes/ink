@@ -7,7 +7,7 @@ import {
 	Text,
 	render,
 	measureElement,
-	type DOMElement
+	type DOMElement,
 } from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
@@ -67,6 +67,6 @@ test.serial('calculate layout while rendering is throttled', async t => {
 
 	t.is(
 		stripAnsi((stdout.write as any).lastCall.firstArg as string).trim(),
-		'Width: 100'
+		'Width: 100',
 	);
 });

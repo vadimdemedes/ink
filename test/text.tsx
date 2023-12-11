@@ -24,7 +24,7 @@ test('text with dimmed color', t => {
 	const output = renderToString(
 		<Text dimColor color="green">
 			Test
-		</Text>
+		</Text>,
 	);
 
 	t.is(output, chalk.green.dim('Test'));
@@ -57,7 +57,7 @@ test('text with hex background color', t => {
 
 test('text with rgb background color', t => {
 	const output = renderToString(
-		<Text backgroundColor="rgb(255, 136, 0)">Test</Text>
+		<Text backgroundColor="rgb(255, 136, 0)">Test</Text>,
 	);
 
 	t.is(output, chalk.bgRgb(255, 136, 0)('Test'));
@@ -65,7 +65,7 @@ test('text with rgb background color', t => {
 
 test('text with ansi256 background color', t => {
 	const output = renderToString(
-		<Text backgroundColor="ansi256(194)">Test</Text>
+		<Text backgroundColor="ansi256(194)">Test</Text>,
 	);
 
 	t.is(output, chalk.bgAnsi256(194)('Test'));

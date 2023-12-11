@@ -8,7 +8,7 @@ test('direction row', t => {
 		<Box flexDirection="row">
 			<Text>A</Text>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'AB');
@@ -19,7 +19,7 @@ test('direction row reverse', t => {
 		<Box flexDirection="row-reverse" width={4}>
 			<Text>A</Text>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, '  BA');
@@ -30,7 +30,7 @@ test('direction column', t => {
 		<Box flexDirection="column">
 			<Text>A</Text>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A\nB');
@@ -41,7 +41,7 @@ test('direction column reverse', t => {
 		<Box flexDirection="column-reverse" height={4}>
 			<Text>A</Text>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, '\n\nB\nA');
@@ -52,7 +52,7 @@ test('don’t squash text nodes when column direction is applied', t => {
 		<Box flexDirection="column">
 			<Text>A</Text>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A\nB');

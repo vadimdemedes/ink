@@ -7,7 +7,7 @@ test('display flex', t => {
 	const output = renderToString(
 		<Box display="flex">
 			<Text>X</Text>
-		</Box>
+		</Box>,
 	);
 	t.is(output, 'X');
 });
@@ -19,7 +19,7 @@ test('display none', t => {
 				<Text>Kitty!</Text>
 			</Box>
 			<Text>Doggo</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'Doggo');

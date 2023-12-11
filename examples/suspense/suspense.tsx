@@ -41,5 +41,5 @@ function Fallback() {
 render(
 	<React.Suspense fallback={<Fallback />}>
 		<Example />
-	</React.Suspense>
+	</React.Suspense>,
 );

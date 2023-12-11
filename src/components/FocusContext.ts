@@ -24,7 +24,7 @@ const FocusContext = createContext<Props>({
 	disableFocus() {},
 	focusNext() {},
 	focusPrevious() {},
-	focus() {}
+	focus() {},
 });
 
 FocusContext.displayName = 'InternalFocusContext';

@@ -11,7 +11,7 @@ class Test extends React.Component<Record<string, unknown>, TestState> {
 
 	override state: TestState = {
 		items: [],
-		counter: 0
+		counter: 0,
 	};
 
 	override render() {
@@ -34,7 +34,7 @@ class Test extends React.Component<Record<string, unknown>, TestState> {
 
 			this.setState(prevState => ({
 				counter: prevState.counter + 1,
-				items: [...prevState.items, `#${prevState.counter + 1}`]
+				items: [...prevState.items, `#${prevState.counter + 1}`],
 			}));
 
 			this.timer = setTimeout(onTimeout, 100);

@@ -8,7 +8,7 @@ test('row - no wrap', t => {
 		<Box width={2}>
 			<Text>A</Text>
 			<Text>BC</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'BC\n');
@@ -20,7 +20,7 @@ test('column - no wrap', t => {
 			<Text>A</Text>
 			<Text>B</Text>
 			<Text>C</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'B\nC');
@@ -31,7 +31,7 @@ test('row - wrap content', t => {
 		<Box width={2} flexWrap="wrap">
 			<Text>A</Text>
 			<Text>BC</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A\nBC');
@@ -43,7 +43,7 @@ test('column - wrap content', t => {
 			<Text>A</Text>
 			<Text>B</Text>
 			<Text>C</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'AC\nB');
@@ -55,7 +55,7 @@ test('column - wrap content reverse', t => {
 			<Text>A</Text>
 			<Text>B</Text>
 			<Text>C</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, ' CA\n  B');
@@ -67,7 +67,7 @@ test('row - wrap content reverse', t => {
 			<Text>A</Text>
 			<Text>B</Text>
 			<Text>C</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, '\nC\nAB');
