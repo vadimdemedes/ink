@@ -11,7 +11,7 @@ function SubprocessOutput() {
 		const subProcess = childProcess.spawn('npm', [
 			'run',
 			'example',
-			'examples/jest'
+			'examples/jest',
 		]);
 
 		subProcess.stdout.on('data', (newOutput: Buffer) => {

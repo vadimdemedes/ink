@@ -308,7 +308,7 @@ const applyPositionStyles = (node: YogaNode, style: Styles): void => {
 		node.setPositionType(
 			style.position === 'absolute'
 				? Yoga.POSITION_TYPE_ABSOLUTE
-				: Yoga.POSITION_TYPE_RELATIVE
+				: Yoga.POSITION_TYPE_RELATIVE,
 		);
 	}
 };
@@ -380,7 +380,7 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 
 	if ('flexShrink' in style) {
 		node.setFlexShrink(
-			typeof style.flexShrink === 'number' ? style.flexShrink : 1
+			typeof style.flexShrink === 'number' ? style.flexShrink : 1,
 		);
 	}
 
@@ -527,7 +527,7 @@ const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
 const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
 	if ('display' in style) {
 		node.setDisplay(
-			style.display === 'flex' ? Yoga.DISPLAY_FLEX : Yoga.DISPLAY_NONE
+			style.display === 'flex' ? Yoga.DISPLAY_FLEX : Yoga.DISPLAY_NONE,
 		);
 	}
 };

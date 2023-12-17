@@ -5,7 +5,7 @@ class Test extends React.Component<Record<string, unknown>, {counter: number}> {
 	timer?: NodeJS.Timeout;
 
 	override state = {
-		counter: 0
+		counter: 0,
 	};
 
 	override render() {
@@ -15,7 +15,7 @@ class Test extends React.Component<Record<string, unknown>, {counter: number}> {
 	override componentDidMount() {
 		this.timer = setInterval(() => {
 			this.setState(prevState => ({
-				counter: prevState.counter + 1
+				counter: prevState.counter + 1,
 			}));
 		}, 100);
 	}

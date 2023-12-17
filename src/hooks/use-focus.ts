@@ -42,7 +42,7 @@ type Output = {
 const useFocus = ({
 	isActive = true,
 	autoFocus = false,
-	id: customId
+	id: customId,
 }: Input = {}): Output => {
 	const {isRawModeSupported, setRawMode} = useStdin();
 	const {activeId, add, remove, activate, deactivate, focus} =
@@ -82,7 +82,7 @@ const useFocus = ({
 
 	return {
 		isFocused: Boolean(id) && activeId === id,
-		focus
+		focus,
 	};
 };
 

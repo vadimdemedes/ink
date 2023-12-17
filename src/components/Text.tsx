@@ -68,7 +68,7 @@ export default function Text({
 	strikethrough = false,
 	inverse = false,
 	wrap = 'wrap',
-	children
+	children,
 }: Props) {
 	if (children === undefined || children === null) {
 		return null;

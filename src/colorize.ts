@@ -12,7 +12,7 @@ const isNamedColor = (color: string): color is ForegroundColorName => {
 const colorize = (
 	str: string,
 	color: string | undefined,
-	type: ColorType
+	type: ColorType,
 ): string => {
 	if (!color) {
 		return str;

@@ -30,7 +30,7 @@ const term = (fixture: string, args: string[] = []) => {
 	const env = {
 		...process.env,
 		// eslint-disable-next-line @typescript-eslint/naming-convention
-		NODE_NO_WARNINGS: '1'
+		NODE_NO_WARNINGS: '1',
 	};
 
 	const ps = spawn(
@@ -38,14 +38,14 @@ const term = (fixture: string, args: string[] = []) => {
 		[
 			'--loader=ts-node/esm',
 			path.join(__dirname, `./fixtures/${fixture}.tsx`),
-			...args
+			...args,
 		],
 		{
 			name: 'xterm-color',
 			cols: 100,
 			cwd: __dirname,
-			env
-		}
+			env,
+		},
 	);
 
 	const result = {
@@ -53,7 +53,7 @@ const term = (fixture: string, args: string[] = []) => {
 			ps.write(input);
 		},
 		output: '',
-		waitForExit: async () => exitPromise
+		waitForExit: async () => exitPromise,
 	};
 
 	ps.onData(data => {
@@ -93,7 +93,7 @@ test.serial(
 		for (const letter of ['A', 'B', 'C', 'D', 'E', 'F']) {
 			t.true(ps.output.includes(letter));
 		}
-	}
+	},
 );
 
 test.serial('erase screen', async t => {
@@ -116,7 +116,7 @@ test.serial(
 		for (const letter of ['A', 'B', 'C']) {
 			t.true(ps.output.includes(letter));
 		}
-	}
+	},
 );
 
 test.serial('clear output', async t => {
@@ -142,9 +142,9 @@ test.serial(
 
 		t.deepEqual(frames, [
 			'Hello World\r\n',
-			'First log\r\nHello World\r\nSecond log\r\n'
+			'First log\r\nHello World\r\nSecond log\r\n',
 		]);
-	}
+	},
 );
 
 test.serial('rerender on resize', async t => {
@@ -162,7 +162,7 @@ test.serial('rerender on resize', async t => {
 
 	t.is(
 		stripAnsi((stdout.write as any).firstCall.args[0] as string),
-		boxen('Test'.padEnd(8), {borderStyle: 'round'}) + '\n'
+		boxen('Test'.padEnd(8), {borderStyle: 'round'}) + '\n',
 	);
 
 	t.is(stdout.listeners('resize').length, 1);
@@ -173,7 +173,7 @@ test.serial('rerender on resize', async t => {
 
 	t.is(
 		stripAnsi((stdout.write as any).lastCall.args[0] as string),
-		boxen('Test'.padEnd(6), {borderStyle: 'round'}) + '\n'
+		boxen('Test'.padEnd(6), {borderStyle: 'round'}) + '\n',
 	);
 
 	unmount();

@@ -14,7 +14,7 @@ const cleanupPath = (path: string | undefined): string | undefined => {
 
 const stackUtils = new StackUtils({
 	cwd: cwd(),
-	internals: StackUtils.nodeInternals()
+	internals: StackUtils.nodeInternals(),
 });
 
 type Props = {

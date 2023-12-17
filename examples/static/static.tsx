@@ -19,8 +19,8 @@ function Example() {
 					...previousTests,
 					{
 						id: previousTests.length,
-						title: `Test #${previousTests.length + 1}`
-					}
+						title: `Test #${previousTests.length + 1}`,
+					},
 				]);
 
 				timer = setTimeout(run, 100);

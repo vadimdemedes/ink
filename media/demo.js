@@ -7,7 +7,7 @@ class Counter extends React.PureComponent {
 		super();
 
 		this.state = {
-			i: 0
+			i: 0,
 		};
 	}
 
@@ -18,20 +18,20 @@ class Counter extends React.PureComponent {
 			React.createElement(
 				Box,
 				{},
-				React.createElement(Text, {color: 'blue'}, '~/Projects/ink ')
+				React.createElement(Text, {color: 'blue'}, '~/Projects/ink '),
 			),
 			React.createElement(
 				Box,
 				{},
 				React.createElement(Text, {color: 'magenta'}, '❯ '),
 				React.createElement(Text, {color: 'green'}, 'node '),
-				React.createElement(Text, {}, 'media/example')
+				React.createElement(Text, {}, 'media/example'),
 			),
 			React.createElement(
 				Text,
 				{color: 'green'},
-				`${this.state.i} tests passed`
-			)
+				`${this.state.i} tests passed`,
+			),
 		);
 	}
 
@@ -42,7 +42,7 @@ class Counter extends React.PureComponent {
 			}
 
 			this.setState(previousState => ({
-				i: previousState.i + 1
+				i: previousState.i + 1,
 			}));
 		}, 100);
 	}

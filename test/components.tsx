@@ -12,7 +12,7 @@ import {
 	Static,
 	Text,
 	Transform,
-	useStdin
+	useStdin,
 } from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 import {renderToString} from './helpers/render-to-string.js';
@@ -35,7 +35,7 @@ test('multiple text nodes', t => {
 		<Text>
 			{'Hello'}
 			{' World'}
-		</Text>
+		</Text>,
 	);
 
 	t.is(output, 'Hello World');
@@ -49,7 +49,7 @@ test('text with component', t => {
 	const output = renderToString(
 		<Text>
 			Hello <World />
-		</Text>
+		</Text>,
 	);
 
 	t.is(output, 'Hello World');
@@ -59,7 +59,7 @@ test('text with fragment', t => {
 	const output = renderToString(
 		<Text>
 			Hello <>World</> {/* eslint-disable-line react/jsx-no-useless-fragment */}
-		</Text>
+		</Text>,
 	);
 
 	t.is(output, 'Hello World');
@@ -69,7 +69,7 @@ test('wrap text', t => {
 	const output = renderToString(
 		<Box width={7}>
 			<Text wrap="wrap">Hello World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'Hello\nWorld');
@@ -79,7 +79,7 @@ test('don’t wrap text if there is enough space', t => {
 	const output = renderToString(
 		<Box width={20}>
 			<Text wrap="wrap">Hello World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'Hello World');
@@ -89,7 +89,7 @@ test('truncate text in the end', t => {
 	const output = renderToString(
 		<Box width={7}>
 			<Text wrap="truncate">Hello World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'Hello …');
@@ -99,7 +99,7 @@ test('truncate text in the middle', t => {
 	const output = renderToString(
 		<Box width={7}>
 			<Text wrap="truncate-middle">Hello World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'Hel…rld');
@@ -109,7 +109,7 @@ test('truncate text in the beginning', t => {
 	const output = renderToString(
 		<Box width={7}>
 			<Text wrap="truncate-start">Hello World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, '… World');
@@ -122,7 +122,7 @@ test('ignore empty text node', t => {
 				<Text>Hello World</Text>
 			</Box>
 			<Text>{''}</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'Hello World');
@@ -158,13 +158,13 @@ test('fail when text nodes are not within <Text> component', t => {
 				Hello
 				<Text>World</Text>
 			</Box>
-		</ErrorBoundary>
+		</ErrorBoundary>,
 	);
 
 	t.truthy(error);
 	t.is(
 		error?.message,
-		'Text string "Hello" must be rendered inside <Text> component'
+		'Text string "Hello" must be rendered inside <Text> component',
 	);
 });
 
@@ -184,13 +184,13 @@ test('fail when text node is not within <Text> component', t => {
 	renderToString(
 		<ErrorBoundary>
 			<Box>Hello World</Box>
-		</ErrorBoundary>
+		</ErrorBoundary>,
 	);
 
 	t.truthy(error);
 	t.is(
 		error?.message,
-		'Text string "Hello World" must be rendered inside <Text> component'
+		'Text string "Hello World" must be rendered inside <Text> component',
 	);
 });
 
@@ -213,7 +213,7 @@ test('fail when <Box> is inside <Text> component', t => {
 				Hello World
 				<Box />
 			</Text>
-		</ErrorBoundary>
+		</ErrorBoundary>,
 	);
 
 	t.truthy(error);
@@ -227,7 +227,7 @@ test('remesure text dimensions on text change', t => {
 		<Box>
 			<Text>Hello</Text>
 		</Box>,
-		{stdout, debug: true}
+		{stdout, debug: true},
 	);
 
 	t.is((stdout.write as any).lastCall.args[0], 'Hello');
@@ -235,7 +235,7 @@ test('remesure text dimensions on text change', t => {
 	rerender(
 		<Box>
 			<Text>Hello World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is((stdout.write as any).lastCall.args[0], 'Hello World');
@@ -246,7 +246,7 @@ test('fragment', t => {
 		// eslint-disable-next-line react/jsx-no-useless-fragment
 		<>
 			<Text>Hello World</Text>
-		</>
+		</>,
 	);
 
 	t.is(output, 'Hello World');
@@ -264,7 +264,7 @@ test('transform children', t => {
 					<Text>test</Text>
 				</Transform>
 			</Text>
-		</Transform>
+		</Transform>,
 	);
 
 	t.is(output, '[0: {0: test}]');
@@ -283,7 +283,7 @@ test('squash multiple text nodes', t => {
 					<Text>hello{' '}world</Text>
 				</Transform>
 			</Text>
-		</Transform>
+		</Transform>,
 	);
 
 	t.is(output, '[0: {0: hello world}]');
@@ -296,7 +296,7 @@ test('transform with multiple lines', t => {
 		>
 			{/* prettier-ignore */}
 			<Text>hello{' '}world{'\n'}goodbye{' '}world</Text>
-		</Transform>
+		</Transform>,
 	);
 
 	t.is(output, '[0: hello world]\n[1: goodbye world]');
@@ -315,7 +315,7 @@ test('squash multiple nested text nodes', t => {
 					<Text> world</Text>
 				</Transform>
 			</Text>
-		</Transform>
+		</Transform>,
 	);
 
 	t.is(output, '[0: {0: hello world}]');
@@ -329,7 +329,7 @@ test('squash empty `<Text>` nodes', t => {
 					<Text>{[]}</Text>
 				</Transform>
 			</Text>
-		</Transform>
+		</Transform>,
 	);
 
 	t.is(output, '');
@@ -366,7 +366,7 @@ test('static output', t => {
 			<Box marginTop={1}>
 				<Text>X</Text>
 			</Box>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A\nB\nC\n\n\nX');
@@ -383,7 +383,7 @@ test('skip previous output when rendering new static output', t => {
 
 	const {rerender} = render(<Dynamic items={['A']} />, {
 		stdout,
-		debug: true
+		debug: true,
 	});
 
 	t.is((stdout.write as any).lastCall.args[0], 'A\n');
@@ -403,7 +403,7 @@ test('render only new items in static output on final render', t => {
 
 	const {rerender, unmount} = render(<Dynamic items={[]} />, {
 		stdout,
-		debug: true
+		debug: true,
 	});
 
 	t.is((stdout.write as any).lastCall.args[0], '');
@@ -432,7 +432,7 @@ test('replace child node with text', t => {
 
 	const {rerender} = render(<Dynamic />, {
 		stdout,
-		debug: true
+		debug: true,
 	});
 
 	t.is((stdout.write as any).lastCall.args[0], chalk.green('test'));
@@ -455,7 +455,7 @@ test('disable raw mode when all input components are unmounted', t => {
 	const options = {
 		stdout,
 		stdin,
-		debug: true
+		debug: true,
 	};
 
 	class Input extends React.Component<{setRawMode: (mode: boolean) => void}> {
@@ -474,7 +474,7 @@ test('disable raw mode when all input components are unmounted', t => {
 
 	function Test({
 		renderFirstInput,
-		renderSecondInput
+		renderSecondInput,
 	}: {
 		readonly renderFirstInput?: boolean;
 		readonly renderSecondInput?: boolean;
@@ -492,7 +492,7 @@ test('disable raw mode when all input components are unmounted', t => {
 	const {rerender} = render(
 		<Test renderFirstInput renderSecondInput />,
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-		options as any
+		options as any,
 	);
 
 	t.true(stdin.setRawMode.calledOnce);
@@ -527,7 +527,7 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 	const options = {
 		stdout,
 		stdin,
-		debug: true
+		debug: true,
 	};
 
 	class Input extends React.Component<{setRawMode: (mode: boolean) => void}> {
@@ -576,7 +576,7 @@ test('render different component based on whether stdin is a TTY or not', t => {
 	const options = {
 		stdout,
 		stdin,
-		debug: true
+		debug: true,
 	};
 
 	class Input extends React.Component<{setRawMode: (mode: boolean) => void}> {
@@ -595,7 +595,7 @@ test('render different component based on whether stdin is a TTY or not', t => {
 
 	function Test({
 		renderFirstInput,
-		renderSecondInput
+		renderSecondInput,
 	}: {
 		readonly renderFirstInput?: boolean;
 		readonly renderSecondInput?: boolean;
@@ -617,7 +617,7 @@ test('render different component based on whether stdin is a TTY or not', t => {
 	const {rerender} = render(
 		<Test renderFirstInput renderSecondInput />,
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-		options as any
+		options as any,
 	);
 
 	t.false(stdin.setRawMode.called);
@@ -635,7 +635,7 @@ test('render only last frame when run in CI', async t => {
 	const output = await run('ci', {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		env: {CI: 'true'},
-		columns: 0
+		columns: 0,
 	});
 
 	for (const num of [0, 1, 2, 3, 4]) {
@@ -649,7 +649,7 @@ test('render all frames if CI environment variable equals false', async t => {
 	const output = await run('ci', {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		env: {CI: 'false'},
-		columns: 0
+		columns: 0,
 	});
 
 	for (const num of [0, 1, 2, 3, 4, 5]) {
@@ -674,7 +674,7 @@ test('reset prop when it’s removed from the element', t => {
 
 	const {rerender} = render(<Dynamic />, {
 		stdout,
-		debug: true
+		debug: true,
 	});
 
 	t.is((stdout.write as any).lastCall.args[0], '\n\n\nx');
@@ -689,7 +689,7 @@ test('newline', t => {
 			Hello
 			<Newline />
 			World
-		</Text>
+		</Text>,
 	);
 	t.is(output, 'Hello\nWorld');
 });
@@ -700,7 +700,7 @@ test('multiple newlines', t => {
 			Hello
 			<Newline count={2} />
 			World
-		</Text>
+		</Text>,
 	);
 	t.is(output, 'Hello\n\nWorld');
 });
@@ -711,7 +711,7 @@ test('horizontal spacer', t => {
 			<Text>Left</Text>
 			<Spacer />
 			<Text>Right</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'Left           Right');
@@ -723,7 +723,7 @@ test('vertical spacer', t => {
 			<Text>Top</Text>
 			<Spacer />
 			<Text>Bottom</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'Top\n\n\n\n\nBottom');
@@ -731,7 +731,7 @@ test('vertical spacer', t => {
 
 test('link ansi escapes are closed properly', t => {
 	const output = renderToString(
-		<Text>{ansiEscapes.link('Example', 'https://example.com')}</Text>
+		<Text>{ansiEscapes.link('Example', 'https://example.com')}</Text>,
 	);
 
 	t.is(output, ']8;;https://example.comExample]8;;');

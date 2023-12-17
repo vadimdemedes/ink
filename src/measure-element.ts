@@ -17,7 +17,7 @@ type Output = {
  */
 const measureElement = (node: DOMElement): Output => ({
 	width: node.yogaNode?.getComputedWidth() ?? 0,
-	height: node.yogaNode?.getComputedHeight() ?? 0
+	height: node.yogaNode?.getComputedHeight() ?? 0,
 });
 
 export default measureElement;

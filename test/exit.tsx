@@ -62,21 +62,21 @@ test.serial('don’t exit while raw mode is active', async t => {
 		const env: Record<string, string> = {
 			...process.env,
 			// eslint-disable-next-line @typescript-eslint/naming-convention
-			NODE_NO_WARNINGS: '1'
+			NODE_NO_WARNINGS: '1',
 		};
 
 		const term = spawn(
 			'node',
 			[
 				'--loader=ts-node/esm',
-				path.join(__dirname, './fixtures/exit-double-raw-mode.tsx')
+				path.join(__dirname, './fixtures/exit-double-raw-mode.tsx'),
 			],
 			{
 				name: 'xterm-color',
 				cols: 100,
 				cwd: __dirname,
-				env
-			}
+				env,
+			},
 		);
 
 		let output = '';

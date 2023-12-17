@@ -9,7 +9,7 @@ test('gap', t => {
 			<Text>A</Text>
 			<Text>B</Text>
 			<Text>C</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A B\n\nC');
@@ -20,7 +20,7 @@ test('column gap', t => {
 		<Box gap={1}>
 			<Text>A</Text>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A B');
@@ -31,7 +31,7 @@ test('row gap', t => {
 		<Box flexDirection="column" gap={1}>
 			<Text>A</Text>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A\n\nB');

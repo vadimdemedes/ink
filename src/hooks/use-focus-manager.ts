@@ -45,7 +45,7 @@ const useFocusManager = (): Output => {
 		disableFocus: focusContext.disableFocus,
 		focusNext: focusContext.focusNext,
 		focusPrevious: focusContext.focusPrevious,
-		focus: focusContext.focus
+		focus: focusContext.focus,
 	};
 };
 

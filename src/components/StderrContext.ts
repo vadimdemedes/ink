@@ -21,7 +21,7 @@ export type Props = {
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const StderrContext = createContext<Props>({
 	stderr: process.stderr,
-	write() {}
+	write() {},
 });
 
 StderrContext.displayName = 'InternalStderrContext';

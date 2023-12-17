@@ -69,7 +69,7 @@ export type Instance = {
  */
 const render = (
 	node: ReactNode,
-	options?: NodeJS.WriteStream | RenderOptions
+	options?: NodeJS.WriteStream | RenderOptions,
 ): Instance => {
 	const inkOptions: InkOptions = {
 		stdout: process.stdout,
@@ -78,12 +78,12 @@ const render = (
 		debug: false,
 		exitOnCtrlC: true,
 		patchConsole: true,
-		...getOptions(options)
+		...getOptions(options),
 	};
 
 	const instance: Ink = getInstance(
 		inkOptions.stdout,
-		() => new Ink(inkOptions)
+		() => new Ink(inkOptions),
 	);
 
 	instance.render(node);
@@ -95,19 +95,19 @@ const render = (
 		},
 		waitUntilExit: instance.waitUntilExit,
 		cleanup: () => instances.delete(inkOptions.stdout),
-		clear: instance.clear
+		clear: instance.clear,
 	};
 };
 
 export default render;
 
 const getOptions = (
-	stdout: NodeJS.WriteStream | RenderOptions | undefined = {}
+	stdout: NodeJS.WriteStream | RenderOptions | undefined = {},
 ): RenderOptions => {
 	if (stdout instanceof Stream) {
 		return {
 			stdout,
-			stdin: process.stdin
+			stdin: process.stdin,
 		};
 	}
 
@@ -116,7 +116,7 @@ const getOptions = (
 
 const getInstance = (
 	stdout: NodeJS.WriteStream,
-	createInstance: () => Ink
+	createInstance: () => Ink,
 ): Ink => {
 	let instance = instances.get(stdout);
 

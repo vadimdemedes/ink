@@ -12,7 +12,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 type Run = (
 	fixture: string,
-	props?: {env?: Record<string, string>; columns?: number}
+	props?: {env?: Record<string, string>; columns?: number},
 ) => Promise<string>;
 
 export const run: Run = async (fixture, props) => {
@@ -22,7 +22,7 @@ export const run: Run = async (fixture, props) => {
 		CI: 'false',
 		...props?.env,
 		// eslint-disable-next-line @typescript-eslint/naming-convention
-		NODE_NO_WARNINGS: '1'
+		NODE_NO_WARNINGS: '1',
 	};
 
 	return new Promise<string>((resolve, reject) => {
@@ -30,14 +30,14 @@ export const run: Run = async (fixture, props) => {
 			'node',
 			[
 				'--loader=ts-node/esm',
-				path.join(__dirname, `/../fixtures/${fixture}.tsx`)
+				path.join(__dirname, `/../fixtures/${fixture}.tsx`),
 			],
 			{
 				name: 'xterm-color',
 				cols: typeof props?.columns === 'number' ? props.columns : 100,
 				cwd: __dirname,
-				env
-			}
+				env,
+			},
 		);
 
 		let output = '';

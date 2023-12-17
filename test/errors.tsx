@@ -42,7 +42,7 @@ test('catch and display error', t => {
 			' 24:',
 			' 25:   render(<Test />, {stdout});',
 			'',
-			' - Test (test/errors.tsx:22:9)'
-		]
+			' - Test (test/errors.tsx:22:9)',
+		],
 	);
 });

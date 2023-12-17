@@ -157,7 +157,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				// but with option = true, so we need to take this into account here
 				// to avoid breaking changes in Ink.
 				// TODO(vadimdemedes): consider removing this in the next major version.
-				meta: keypress.meta || keypress.name === 'escape' || keypress.option
+				meta: keypress.meta || keypress.name === 'escape' || keypress.option,
 			};
 
 			let input = keypress.ctrl ? keypress.name : keypress.sequence;

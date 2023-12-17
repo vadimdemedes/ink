@@ -16,13 +16,13 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 				style={{
 					...style,
 					overflowX: style.overflowX ?? style.overflow ?? 'visible',
-					overflowY: style.overflowY ?? style.overflow ?? 'visible'
+					overflowY: style.overflowY ?? style.overflow ?? 'visible',
 				}}
 			>
 				{children}
 			</ink-box>
 		);
-	}
+	},
 );
 
 Box.displayName = 'Box';
@@ -31,7 +31,7 @@ Box.defaultProps = {
 	flexWrap: 'nowrap',
 	flexDirection: 'row',
 	flexGrow: 0,
-	flexShrink: 1
+	flexShrink: 1,
 };
 
 export default Box;

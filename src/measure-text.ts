@@ -11,7 +11,7 @@ const measureText = (text: string): Output => {
 	if (text.length === 0) {
 		return {
 			width: 0,
-			height: 0
+			height: 0,
 		};
 	}
 
