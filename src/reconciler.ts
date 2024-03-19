@@ -26,10 +26,11 @@ if (process.env['DEV'] === 'true') {
 	try {
 		await import('./devtools.js');
 	} catch (error: any) {
-		if (error.code === 'MODULE_NOT_FOUND') {
+		if (error.code === 'ERR_MODULE_NOT_FOUND') {
 			console.warn(
 				`
-Debugging with React Devtools requires \`react-devtools-core\` dependency to be installed.
+The environment variable DEV = true so ink tried to import \`react-devtools-core\` but this 
+failed as it was not installed. Debugging with React Devtools requires it. To install use this command:
 
 $ npm install --save-dev react-devtools-core
 				`.trim() + '\n'
