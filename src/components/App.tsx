@@ -2,8 +2,6 @@ import {EventEmitter} from 'node:events';
 import process from 'node:process';
 import React, {
 	Component,
-	PureComponent,
-	useCallback,
 	useEffect,
 	useRef,
 	useState,
@@ -44,6 +42,35 @@ type Focusable = {
 	readonly isActive: boolean;
 };
 
+type ErrorState = {
+	error?: Error;
+};
+
+class InternalAppErrorBoundary extends Component<
+	{handleExit: (error: Error) => void; children: ReactNode},
+	ErrorState
+> {
+	static getDerivedStateFromError(error: Error) {
+		return {error};
+	}
+
+	override state = {
+		error: undefined
+	};
+
+	override componentDidCatch(error: Error) {
+		this.props.handleExit(error);
+	}
+
+	override render() {
+		return this.state.error ? (
+			<ErrorOverview error={this.state.error} />
+		) : (
+			this.props.children
+		);
+	}
+}
+
 // Root component for all Ink apps
 // It renders stdin and stdout contexts, so that children can access them if needed
 // It also handles Ctrl+C exiting and cursor visibility
@@ -77,14 +104,6 @@ export default function App({
 			}
 		};
 	}, [stdout, isRawModeSupported]);
-
-	function handleExit(error?: Error) {
-		if (isRawModeSupported) {
-			handleSetRawMode(false);
-		}
-
-		onExit(error);
-	}
 
 	function handleSetRawMode(isEnabled?: boolean) {
 		if (!isRawModeSupported) {
@@ -147,6 +166,22 @@ export default function App({
 			}
 			internal_eventEmitterRef.current.emit('input', chunk);
 		}
+	}
+
+	function handleExit(error?: Error) {
+		if (isRawModeSupported) {
+			handleSetRawMode(false);
+		}
+
+		onExit(error);
+	}
+
+	function enableFocus(): void {
+		setIsFocusEnabled(true);
+	}
+
+	function disableFocus(): void {
+		setIsFocusEnabled(false);
 	}
 
 	function focus(id: string): void {
@@ -227,14 +262,6 @@ export default function App({
 				};
 			})
 		);
-	}
-
-	function enableFocus(): void {
-		setIsFocusEnabled(true);
-	}
-
-	function disableFocus(): void {
-		setIsFocusEnabled(false);
 	}
 
 	return (
@@ -332,33 +359,4 @@ function findNextFocusable(
 	}
 
 	return undefined;
-}
-
-type ErrorState = {
-	error?: Error;
-};
-
-class InternalAppErrorBoundary extends Component<
-	{handleExit: (error: Error) => void; children: ReactNode},
-	ErrorState
-> {
-	state = {
-		error: undefined
-	};
-
-	static getDerivedStateFromError(error: Error) {
-		return {error};
-	}
-
-	override componentDidCatch(error: Error) {
-		this.props.handleExit(error);
-	}
-
-	override render() {
-		return this.state.error ? (
-			<ErrorOverview error={this.state.error} />
-		) : (
-			this.props.children
-		);
-	}
 }
