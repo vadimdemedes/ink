@@ -30,13 +30,6 @@ type Props = {
 	readonly onExit: (error?: Error) => void;
 };
 
-type State = {
-	readonly isFocusEnabled: boolean;
-	readonly activeFocusId?: string;
-	readonly focusables: Focusable[];
-	readonly error?: Error;
-};
-
 type Focusable = {
 	readonly id: string;
 	readonly isActive: boolean;
