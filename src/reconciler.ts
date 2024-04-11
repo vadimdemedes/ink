@@ -1,6 +1,9 @@
 import process from 'node:process';
 import createReconciler from 'react-reconciler';
-import {DefaultEventPriority} from 'react-reconciler/constants.js';
+import {
+	DefaultEventPriority,
+	NoEventPriority
+} from 'react-reconciler/constants.js';
 import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
 import {
 	createTextNode,
@@ -91,6 +94,8 @@ type UpdatePayload = {
 	props: Props | undefined;
 	style: Styles | undefined;
 };
+
+let currentUpdatePriority = NoEventPriority;
 
 export default createReconciler<
 	ElementNames,
@@ -231,7 +236,11 @@ export default createReconciler<
 	scheduleTimeout: setTimeout,
 	cancelTimeout: clearTimeout,
 	noTimeout: -1,
-	getCurrentEventPriority: () => DefaultEventPriority,
+	setCurrentUpdatePriority: newPriority => {
+		currentUpdatePriority = newPriority;
+	},
+	getCurrentUpdatePriority: () => currentUpdatePriority || DefaultEventPriority,
+	resolveUpdatePriority: () => DefaultEventPriority,
 	beforeActiveInstanceBlur() {},
 	afterActiveInstanceBlur() {},
 	detachDeletedInstance() {},
