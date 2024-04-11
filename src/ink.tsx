@@ -85,7 +85,7 @@ export default class Ink {
 		// TODO: Change error handling to noop. I've added this to more easily develop the reconciler
 		const onUncaughtError = console.error;
 		const onCaughtError = console.error;
-		const onRecoverableError = () => {};
+		const onRecoverableError = console.error;
 		const transitionCallbacks = null;
 
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
