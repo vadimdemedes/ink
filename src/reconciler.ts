@@ -239,8 +239,8 @@ export default createReconciler<
 	setCurrentUpdatePriority: newPriority => {
 		currentUpdatePriority = newPriority;
 	},
-	getCurrentUpdatePriority: () => currentUpdatePriority || DefaultEventPriority,
-	resolveUpdatePriority: () => DefaultEventPriority,
+	getCurrentUpdatePriority: () => currentUpdatePriority,
+	resolveUpdatePriority: () => currentUpdatePriority || DefaultEventPriority,
 	beforeActiveInstanceBlur() {},
 	afterActiveInstanceBlur() {},
 	detachDeletedInstance() {},
