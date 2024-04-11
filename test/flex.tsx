@@ -12,7 +12,7 @@ test('grow equally', t => {
 			<Box flexGrow={1}>
 				<Text>B</Text>
 			</Box>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A  B');
@@ -25,7 +25,7 @@ test('grow one element', t => {
 				<Text>A</Text>
 			</Box>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A    B');
@@ -43,7 +43,7 @@ test('dont shrink', t => {
 			<Box width={6}>
 				<Text>C</Text>
 			</Box>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A     B     C');
@@ -59,7 +59,7 @@ test('shrink equally', t => {
 				<Text>B</Text>
 			</Box>
 			<Text>C</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A    B   C');
@@ -72,7 +72,7 @@ test('set flex basis with flexDirection="row" container', t => {
 				<Text>A</Text>
 			</Box>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A  B');
@@ -85,7 +85,7 @@ test('set flex basis in percent with flexDirection="row" container', t => {
 				<Text>A</Text>
 			</Box>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A  B');
@@ -98,7 +98,7 @@ test('set flex basis with flexDirection="column" container', t => {
 				<Text>A</Text>
 			</Box>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A\n\n\nB\n\n');
@@ -111,7 +111,7 @@ test('set flex basis in percent with flexDirection="column" container', t => {
 				<Text>A</Text>
 			</Box>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A\n\n\nB\n\n');

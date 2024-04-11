@@ -21,7 +21,7 @@ export type Props = {
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const StdoutContext = createContext<Props>({
 	stdout: process.stdout,
-	write() {}
+	write() {},
 });
 
 StdoutContext.displayName = 'InternalStdoutContext';

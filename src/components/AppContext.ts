@@ -12,7 +12,7 @@ export type Props = {
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const AppContext = createContext<Props>({
-	exit() {}
+	exit() {},
 });
 
 AppContext.displayName = 'InternalAppContext';

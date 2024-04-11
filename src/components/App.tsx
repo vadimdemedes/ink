@@ -50,7 +50,7 @@ export default class App extends PureComponent<Props, State> {
 		isFocusEnabled: true,
 		activeFocusId: undefined,
 		focusables: [],
-		error: undefined
+		error: undefined,
 	};
 
 	// Count how many components enabled raw mode to avoid disabling
@@ -69,7 +69,7 @@ export default class App extends PureComponent<Props, State> {
 			<AppContext.Provider
 				// eslint-disable-next-line react/jsx-no-constructed-context-values
 				value={{
-					exit: this.handleExit
+					exit: this.handleExit,
 				}}
 			>
 				<StdinContext.Provider
@@ -81,21 +81,21 @@ export default class App extends PureComponent<Props, State> {
 						// eslint-disable-next-line @typescript-eslint/naming-convention
 						internal_exitOnCtrlC: this.props.exitOnCtrlC,
 						// eslint-disable-next-line @typescript-eslint/naming-convention
-						internal_eventEmitter: this.internal_eventEmitter
+						internal_eventEmitter: this.internal_eventEmitter,
 					}}
 				>
 					<StdoutContext.Provider
 						// eslint-disable-next-line react/jsx-no-constructed-context-values
 						value={{
 							stdout: this.props.stdout,
-							write: this.props.writeToStdout
+							write: this.props.writeToStdout,
 						}}
 					>
 						<StderrContext.Provider
 							// eslint-disable-next-line react/jsx-no-constructed-context-values
 							value={{
 								stderr: this.props.stderr,
-								write: this.props.writeToStderr
+								write: this.props.writeToStderr,
 							}}
 						>
 							<FocusContext.Provider
@@ -110,7 +110,7 @@ export default class App extends PureComponent<Props, State> {
 									disableFocus: this.disableFocus,
 									focusNext: this.focusNext,
 									focusPrevious: this.focusPrevious,
-									focus: this.focus
+									focus: this.focus,
 								}}
 							>
 								{this.state.error ? (
@@ -149,11 +149,11 @@ export default class App extends PureComponent<Props, State> {
 		if (!this.isRawModeSupported()) {
 			if (stdin === process.stdin) {
 				throw new Error(
-					'Raw mode is not supported on the current process.stdin, which Ink uses as input stream by default.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported'
+					'Raw mode is not supported on the current process.stdin, which Ink uses as input stream by default.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported',
 				);
 			} else {
 				throw new Error(
-					'Raw mode is not supported on the stdin provided to Ink.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported'
+					'Raw mode is not supported on the stdin provided to Ink.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported',
 				);
 			}
 		}
@@ -199,7 +199,7 @@ export default class App extends PureComponent<Props, State> {
 		// Reset focus when there's an active focused component on Esc
 		if (input === escape && this.state.activeFocusId) {
 			this.setState({
-				activeFocusId: undefined
+				activeFocusId: undefined,
 			});
 		}
 
@@ -224,20 +224,20 @@ export default class App extends PureComponent<Props, State> {
 
 	enableFocus = (): void => {
 		this.setState({
-			isFocusEnabled: true
+			isFocusEnabled: true,
 		});
 	};
 
 	disableFocus = (): void => {
 		this.setState({
-			isFocusEnabled: false
+			isFocusEnabled: false,
 		});
 	};
 
 	focus = (id: string): void => {
 		this.setState(previousState => {
 			const hasFocusableId = previousState.focusables.some(
-				focusable => focusable?.id === id
+				focusable => focusable?.id === id,
 			);
 
 			if (!hasFocusableId) {
@@ -254,7 +254,7 @@ export default class App extends PureComponent<Props, State> {
 			const nextFocusableId = this.findNextFocusable(previousState);
 
 			return {
-				activeFocusId: nextFocusableId ?? firstFocusableId
+				activeFocusId: nextFocusableId ?? firstFocusableId,
 			};
 		});
 	};
@@ -266,7 +266,7 @@ export default class App extends PureComponent<Props, State> {
 			const previousFocusableId = this.findPreviousFocusable(previousState);
 
 			return {
-				activeFocusId: previousFocusableId ?? lastFocusableId
+				activeFocusId: previousFocusableId ?? lastFocusableId,
 			};
 		});
 	};
@@ -285,9 +285,9 @@ export default class App extends PureComponent<Props, State> {
 					...previousState.focusables,
 					{
 						id,
-						isActive: true
-					}
-				]
+						isActive: true,
+					},
+				],
 			};
 		});
 	};
@@ -300,7 +300,7 @@ export default class App extends PureComponent<Props, State> {
 					: previousState.activeFocusId,
 			focusables: previousState.focusables.filter(focusable => {
 				return focusable.id !== id;
-			})
+			}),
 		}));
 	};
 
@@ -313,9 +313,9 @@ export default class App extends PureComponent<Props, State> {
 
 				return {
 					id,
-					isActive: true
+					isActive: true,
 				};
-			})
+			}),
 		}));
 	};
 
@@ -332,9 +332,9 @@ export default class App extends PureComponent<Props, State> {
 
 				return {
 					id,
-					isActive: false
+					isActive: false,
 				};
-			})
+			}),
 		}));
 	};
 

@@ -16,7 +16,7 @@ const paths = [
 	'tests/delete-profile.js',
 	'tests/posts.js',
 	'tests/post.js',
-	'tests/comments.js'
+	'tests/comments.js',
 ];
 
 type State = {
@@ -38,7 +38,7 @@ class Jest extends React.Component<Record<string, unknown>, State> {
 		this.state = {
 			startTime: Date.now(),
 			completedTests: [],
-			runningTests: []
+			runningTests: [],
 		};
 	}
 
@@ -85,24 +85,24 @@ class Jest extends React.Component<Record<string, unknown>, State> {
 				...previousState.runningTests,
 				{
 					status: 'runs',
-					path
-				}
-			]
+					path,
+				},
+			],
 		}));
 
 		await delay(1000 * Math.random());
 
 		this.setState(previousState => ({
 			runningTests: previousState.runningTests.filter(
-				test => test.path !== path
+				test => test.path !== path,
 			),
 			completedTests: [
 				...previousState.completedTests,
 				{
 					status: Math.random() < 0.5 ? 'pass' : 'fail',
-					path
-				}
-			]
+					path,
+				},
+			],
 		}));
 	}
 }

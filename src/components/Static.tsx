@@ -52,9 +52,9 @@ export default function Static<T>(props: Props<T>) {
 		() => ({
 			position: 'absolute',
 			flexDirection: 'column',
-			...customStyle
+			...customStyle,
 		}),
-		[customStyle]
+		[customStyle],
 	);
 
 	return (

@@ -21,7 +21,7 @@ const term = (fixture: string, args: string[] = []) => {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		NODE_NO_WARNINGS: '1',
 		// eslint-disable-next-line @typescript-eslint/naming-convention
-		CI: 'false'
+		CI: 'false',
 	};
 
 	const ps = spawn(
@@ -29,14 +29,14 @@ const term = (fixture: string, args: string[] = []) => {
 		[
 			'--loader=ts-node/esm',
 			path.join(__dirname, `./fixtures/${fixture}.tsx`),
-			...args
+			...args,
 		],
 		{
 			name: 'xterm-color',
 			cols: 100,
 			cwd: __dirname,
-			env
-		}
+			env,
+		},
 	);
 
 	const result = {
@@ -48,7 +48,7 @@ const term = (fixture: string, args: string[] = []) => {
 			}, 3000);
 		},
 		output: '',
-		waitForExit: async () => exitPromise
+		waitForExit: async () => exitPromise,
 	};
 
 	ps.onData(data => {
@@ -275,7 +275,7 @@ test.serial(
 
 		const thirdTry = await t.try(run);
 		thirdTry.commit();
-	}
+	},
 );
 
 test.serial('useStdout - write to stdout', async t => {
@@ -287,7 +287,7 @@ test.serial('useStdout - write to stdout', async t => {
 	t.deepEqual(lines.slice(1, -1), [
 		'Hello from Ink to stdout',
 		'Hello World',
-		'exited'
+		'exited',
 	]);
 });
 

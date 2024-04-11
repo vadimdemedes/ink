@@ -7,7 +7,7 @@ const users = Array.from({length: 10})
 	.map((_, index) => ({
 		id: index,
 		name: faker.internet.userName(),
-		email: faker.internet.email()
+		email: faker.internet.email(),
 	}));
 
 function Table() {

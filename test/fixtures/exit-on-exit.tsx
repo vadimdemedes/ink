@@ -8,7 +8,7 @@ class Exit extends React.Component<
 	timer?: NodeJS.Timeout;
 
 	override state = {
-		counter: 0
+		counter: 0,
 	};
 
 	override render() {
@@ -20,7 +20,7 @@ class Exit extends React.Component<
 
 		this.timer = setInterval(() => {
 			this.setState(prevState => ({
-				counter: prevState.counter + 1
+				counter: prevState.counter + 1,
 			}));
 		}, 100);
 	}

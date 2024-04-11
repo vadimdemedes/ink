@@ -35,7 +35,7 @@ const StdinContext = createContext<Props>({
 	setRawMode() {},
 	isRawModeSupported: false,
 	// eslint-disable-next-line @typescript-eslint/naming-convention
-	internal_exitOnCtrlC: true
+	internal_exitOnCtrlC: true,
 });
 
 StdinContext.displayName = 'InternalStdinContext';
