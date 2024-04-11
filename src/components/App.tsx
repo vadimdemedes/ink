@@ -5,7 +5,7 @@ import React, {
 	useEffect,
 	useRef,
 	useState,
-	type ReactNode
+	type ReactNode,
 } from 'react';
 import cliCursor from 'cli-cursor';
 import AppContext from './AppContext.js';
@@ -48,7 +48,7 @@ class InternalAppErrorBoundary extends Component<
 	}
 
 	override state = {
-		error: undefined
+		error: undefined,
 	};
 
 	override componentDidCatch(error: Error) {
@@ -75,10 +75,10 @@ export default function App({
 	stderr,
 	stdout,
 	writeToStderr,
-	writeToStdout
+	writeToStdout,
 }: Props) {
 	const rawModeEnabledCountRef = useRef(0);
-	const internal_eventEmitterRef = useRef(new EventEmitter());
+	const eventEmitterRef = useRef(new EventEmitter());
 	const [activeFocusId, setActiveFocusId] = useState<string | undefined>();
 	const [isFocusEnabled, setIsFocusEnabled] = useState(true);
 	const [focusables, setFocusables] = useState<Focusable[]>([]);
@@ -102,11 +102,11 @@ export default function App({
 		if (!isRawModeSupported) {
 			if (stdin === process.stdin) {
 				throw new Error(
-					'Raw mode is not supported on the current process.stdin, which Ink uses as input stream by default.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported'
+					'Raw mode is not supported on the current process.stdin, which Ink uses as input stream by default.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported',
 				);
 			} else {
 				throw new Error(
-					'Raw mode is not supported on the stdin provided to Ink.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported'
+					'Raw mode is not supported on the stdin provided to Ink.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported',
 				);
 			}
 		}
@@ -157,7 +157,8 @@ export default function App({
 					focusPrevious();
 				}
 			}
-			internal_eventEmitterRef.current.emit('input', chunk);
+
+			eventEmitterRef.current.emit('input', chunk);
 		}
 	}
 
@@ -197,7 +198,7 @@ export default function App({
 		const lastFocusableId = focusables.at(-1)?.id;
 		const previousFocusableId = findPreviousFocusable(
 			focusables,
-			activeFocusId
+			activeFocusId,
 		);
 		setActiveFocusId(previousFocusableId ?? lastFocusableId);
 	}
@@ -207,13 +208,14 @@ export default function App({
 		if (!nextFocusId && autoFocus) {
 			nextFocusId = id;
 		}
+
 		setActiveFocusId(nextFocusId);
 		setFocusables([
 			...focusables,
 			{
 				id,
-				isActive: true
-			}
+				isActive: true,
+			},
 		]);
 	}
 
@@ -222,7 +224,7 @@ export default function App({
 		setFocusables(
 			focusables.filter(focusable => {
 				return focusable.id !== id;
-			})
+			}),
 		);
 	}
 
@@ -235,9 +237,9 @@ export default function App({
 
 				return {
 					id,
-					isActive: true
+					isActive: true,
 				};
-			})
+			}),
 		);
 	}
 
@@ -251,42 +253,43 @@ export default function App({
 
 				return {
 					id,
-					isActive: false
+					isActive: false,
 				};
-			})
+			}),
 		);
 	}
 
 	return (
 		<AppContext.Provider
+			// eslint-disable-next-line react/jsx-no-constructed-context-values
 			value={{
-				exit: handleExit
+				exit: handleExit,
 			}}
 		>
 			<StdinContext.Provider
 				// eslint-disable-next-line react/jsx-no-constructed-context-values
 				value={{
-					stdin: stdin,
+					stdin,
 					setRawMode: handleSetRawMode,
-					isRawModeSupported: isRawModeSupported,
+					isRawModeSupported,
 					// eslint-disable-next-line @typescript-eslint/naming-convention
 					internal_exitOnCtrlC: exitOnCtrlC,
 					// eslint-disable-next-line @typescript-eslint/naming-convention
-					internal_eventEmitter: internal_eventEmitterRef.current
+					internal_eventEmitter: eventEmitterRef.current,
 				}}
 			>
 				<StdoutContext.Provider
 					// eslint-disable-next-line react/jsx-no-constructed-context-values
 					value={{
-						stdout: stdout,
-						write: writeToStdout
+						stdout,
+						write: writeToStdout,
 					}}
 				>
 					<StderrContext.Provider
 						// eslint-disable-next-line react/jsx-no-constructed-context-values
 						value={{
-							stderr: stderr,
-							write: writeToStderr
+							stderr,
+							write: writeToStderr,
 						}}
 					>
 						<FocusContext.Provider
@@ -297,13 +300,14 @@ export default function App({
 								remove: removeFocusable,
 								activate: activateFocusable,
 								deactivate: deactivateFocusable,
-								enableFocus: enableFocus,
-								disableFocus: disableFocus,
-								focusNext: focusNext,
-								focusPrevious: focusPrevious,
-								focus: focus
+								enableFocus,
+								disableFocus,
+								focusNext,
+								focusPrevious,
+								focus,
 							}}
 						>
+							{/* eslint-disable-next-line react/jsx-no-bind */}
 							<InternalAppErrorBoundary handleExit={handleExit}>
 								{children}
 							</InternalAppErrorBoundary>
@@ -314,11 +318,12 @@ export default function App({
 		</AppContext.Provider>
 	);
 }
+
 App.displayName = 'InternalApp';
 
 function findPreviousFocusable(
 	focusables: Focusable[],
-	activeFocusId: string | undefined
+	activeFocusId: string | undefined,
 ): string | undefined {
 	const activeIndex = focusables.findIndex(focusable => {
 		return focusable.id === activeFocusId;
@@ -337,7 +342,7 @@ function findPreviousFocusable(
 
 function findNextFocusable(
 	focusables: Focusable[],
-	activeFocusId: string | undefined
+	activeFocusId: string | undefined,
 ): string | undefined {
 	const activeIndex = focusables.findIndex(focusable => {
 		return focusable.id === activeFocusId;
