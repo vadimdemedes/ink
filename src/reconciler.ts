@@ -309,4 +309,13 @@ export default createReconciler<
 		// TODO: May return false here if we are confident that we don't need to suspend
 		return true;
 	},
+	startSuspendingCommit() {},
+	waitForCommitToBeReady() {
+		return null;
+	},
+	preloadInstance() {
+		// Return true to indicate it's already loaded
+		return true;
+	},
+	suspendInstance() {},
 });
