@@ -121,7 +121,6 @@ export default function App({
 		}
 	}
 
-	// TODO: Do the setStates in this function need to be wrapped in flushSync?
 	function handleReadable() {
 		let chunk;
 		// eslint-disable-next-line @typescript-eslint/ban-types
