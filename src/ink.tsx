@@ -77,17 +77,29 @@ export default class Ink {
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
 		this.fullStaticOutput = '';
 
+		const rootTag = 1;
+		const hydrationCallbacks = null;
+		const isStrictMode = false;
+		const concurrentUpdatesByDefaultOverride = false;
+		const identifierPrefix = 'id';
+		// TODO: Change error handling to noop. I've added this to more easily develop the reconciler
+		const onUncaughtError = console.error;
+		const onCaughtError = console.error;
+		const onRecoverableError = () => {};
+		const transitionCallbacks = null;
+
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		this.container = reconciler.createContainer(
 			this.rootNode,
-			// Legacy mode
-			0,
-			null,
-			false,
-			null,
-			'id',
-			() => {},
-			null,
+			rootTag,
+			hydrationCallbacks,
+			isStrictMode,
+			concurrentUpdatesByDefaultOverride,
+			identifierPrefix,
+			onUncaughtError,
+			onCaughtError,
+			onRecoverableError,
+			transitionCallbacks,
 		);
 
 		// Unmount when process exits

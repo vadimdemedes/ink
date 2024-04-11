@@ -2,7 +2,7 @@ import process from 'node:process';
 import createReconciler from 'react-reconciler';
 import {
 	DefaultEventPriority,
-	NoEventPriority
+	NoEventPriority,
 } from 'react-reconciler/constants.js';
 import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
 import {
@@ -271,7 +271,8 @@ export default createReconciler<
 
 		return {props, style};
 	},
-	commitUpdate(node, {props, style}) {
+	commitUpdate(node, payload, type, oldProps, newProps) {
+		const {props, style} = newProps;
 		if (props) {
 			for (const [key, value] of Object.entries(props)) {
 				if (key === 'style') {
@@ -303,5 +304,9 @@ export default createReconciler<
 	removeChild(node, removeNode) {
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
+	},
+	maySuspendCommit() {
+		// TODO: May return false here if we are confident that we don't need to suspend
+		return true;
 	},
 });
