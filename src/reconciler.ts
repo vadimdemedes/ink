@@ -318,4 +318,7 @@ export default createReconciler<
 		return true;
 	},
 	suspendInstance() {},
+	shouldAttemptEagerTransition() {
+		return false;
+	},
 });
