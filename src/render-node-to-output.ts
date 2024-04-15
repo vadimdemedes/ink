@@ -37,13 +37,13 @@ const renderNodeToOutput = (
 		offsetY?: number;
 		transformers?: OutputTransformer[];
 		skipStaticElements: boolean;
-	}
+	},
 ) => {
 	const {
 		offsetX = 0,
 		offsetY = 0,
 		transformers = [],
-		skipStaticElements
+		skipStaticElements,
 	} = options;
 
 	if (skipStaticElements && node.internal_static) {
@@ -106,8 +106,8 @@ const renderNodeToOutput = (
 
 				const x2 = clipHorizontally
 					? x +
-					yogaNode.getComputedWidth() -
-					yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
+						yogaNode.getComputedWidth() -
+						yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
 					: undefined;
 
 				const y1 = clipVertically
@@ -116,8 +116,8 @@ const renderNodeToOutput = (
 
 				const y2 = clipVertically
 					? y +
-					yogaNode.getComputedHeight() -
-					yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
+						yogaNode.getComputedHeight() -
+						yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
 					: undefined;
 
 				output.clip({ x1, x2, y1, y2 });
@@ -131,7 +131,7 @@ const renderNodeToOutput = (
 					offsetX: x,
 					offsetY: y,
 					transformers: newTransformers,
-					skipStaticElements
+					skipStaticElements,
 				});
 			}
 

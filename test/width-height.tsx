@@ -10,7 +10,7 @@ test('set width', t => {
 				<Text>A</Text>
 			</Box>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A    B');
@@ -23,7 +23,7 @@ test('set width in percent', t => {
 				<Text>A</Text>
 			</Box>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A    B');
@@ -36,7 +36,7 @@ test('set min width', t => {
 				<Text>A</Text>
 			</Box>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(smallerOutput, 'A    B');
@@ -47,7 +47,7 @@ test('set min width', t => {
 				<Text>AAAAA</Text>
 			</Box>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(largerOutput, 'AAAAAB');
@@ -60,7 +60,7 @@ test.failing('set min width in percent', t => {
 				<Text>A</Text>
 			</Box>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A    B');
@@ -71,7 +71,7 @@ test('set height', t => {
 		<Box height={4}>
 			<Text>A</Text>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'AB\n\n\n');
@@ -84,7 +84,7 @@ test('set height in percent', t => {
 				<Text>A</Text>
 			</Box>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, 'A\n\n\nB\n\n');
@@ -95,7 +95,7 @@ test('cut text over the set height', t => {
 		<Box height={2}>
 			<Text>AAAABBBBCCCC</Text>
 		</Box>,
-		{columns: 4}
+		{columns: 4},
 	);
 
 	t.is(output, 'AAAA\nBBBB');
@@ -105,7 +105,7 @@ test('set min height', t => {
 	const smallerOutput = renderToString(
 		<Box minHeight={4}>
 			<Text>A</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(smallerOutput, 'A\n\n\n');
@@ -115,7 +115,7 @@ test('set min height', t => {
 			<Box height={4}>
 				<Text>A</Text>
 			</Box>
-		</Box>
+		</Box>,
 	);
 
 	t.is(largerOutput, 'A\n\n\n');

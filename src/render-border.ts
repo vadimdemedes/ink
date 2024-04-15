@@ -8,7 +8,7 @@ const renderBorder = (
 	x: number,
 	y: number,
 	node: DOMNode,
-	output: Output
+	output: Output,
 ): void => {
 	if (node.style.borderStyle) {
 		const width = node.yogaNode!.getComputedWidth();
@@ -48,12 +48,12 @@ const renderBorder = (
 
 		let topBorder = showTopBorder
 			? colorize(
-				(showLeftBorder ? box.topLeft : '') +
-				box.top.repeat(contentWidth) +
-				(showRightBorder ? box.topRight : ''),
-				topBorderColor,
-				'foreground'
-			)
+					(showLeftBorder ? box.topLeft : '') +
+						box.top.repeat(contentWidth) +
+						(showRightBorder ? box.topRight : ''),
+					topBorderColor,
+					'foreground',
+				)
 			: undefined;
 
 		if (showTopBorder && dimTopBorderColor) {
@@ -88,12 +88,12 @@ const renderBorder = (
 
 		let bottomBorder = showBottomBorder
 			? colorize(
-				(showLeftBorder ? box.bottomLeft : '') +
-				box.bottom.repeat(contentWidth) +
-				(showRightBorder ? box.bottomRight : ''),
-				bottomBorderColor,
-				'foreground'
-			)
+					(showLeftBorder ? box.bottomLeft : '') +
+						box.bottom.repeat(contentWidth) +
+						(showRightBorder ? box.bottomRight : ''),
+					bottomBorderColor,
+					'foreground',
+				)
 			: undefined;
 
 		if (showBottomBorder && dimBottomBorderColor) {
@@ -112,7 +112,7 @@ const renderBorder = (
 
 		if (showRightBorder) {
 			output.write(x + width - 1, y + offsetY, rightBorder, {
-				transformers: []
+				transformers: [],
 			});
 		}
 

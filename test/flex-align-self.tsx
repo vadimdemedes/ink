@@ -9,7 +9,7 @@ test('row - align text to center', t => {
 			<Box alignSelf="center">
 				<Text>Test</Text>
 			</Box>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, '\nTest\n');
@@ -22,7 +22,7 @@ test('row - align multiple text nodes to center', t => {
 				<Text>A</Text>
 				<Text>B</Text>
 			</Box>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, '\nAB\n');
@@ -34,7 +34,7 @@ test('row - align text to bottom', t => {
 			<Box alignSelf="flex-end">
 				<Text>Test</Text>
 			</Box>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, '\n\nTest');
@@ -47,7 +47,7 @@ test('row - align multiple text nodes to bottom', t => {
 				<Text>A</Text>
 				<Text>B</Text>
 			</Box>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, '\n\nAB');
@@ -59,7 +59,7 @@ test('column - align text to center', t => {
 			<Box alignSelf="center">
 				<Text>Test</Text>
 			</Box>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, '   Test');
@@ -71,7 +71,7 @@ test('column - align text to right', t => {
 			<Box alignSelf="flex-end">
 				<Text>Test</Text>
 			</Box>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, '      Test');

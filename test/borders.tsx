@@ -14,7 +14,7 @@ test('single node - full width box', t => {
 	const output = renderToString(
 		<Box borderStyle="round">
 			<Text>Hello World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('Hello World', {width: 100, borderStyle: 'round'}));
@@ -24,7 +24,7 @@ test('single node - full width box with colorful border', t => {
 	const output = renderToString(
 		<Box borderStyle="round" borderColor="green">
 			<Text>Hello World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -32,8 +32,8 @@ test('single node - full width box with colorful border', t => {
 		boxen('Hello World', {
 			width: 100,
 			borderStyle: 'round',
-			borderColor: 'green'
-		})
+			borderColor: 'green',
+		}),
 	);
 });
 
@@ -41,7 +41,7 @@ test('single node - fit-content box', t => {
 	const output = renderToString(
 		<Box borderStyle="round" alignSelf="flex-start">
 			<Text>Hello World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('Hello World', {borderStyle: 'round'}));
@@ -51,7 +51,7 @@ test('single node - fit-content box with wide characters', t => {
 	const output = renderToString(
 		<Box borderStyle="round" alignSelf="flex-start">
 			<Text>こんにちは</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('こんにちは', {borderStyle: 'round'}));
@@ -61,7 +61,7 @@ test('single node - fit-content box with emojis', t => {
 	const output = renderToString(
 		<Box borderStyle="round" alignSelf="flex-start">
 			<Text>🌊🌊</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('🌊🌊', {borderStyle: 'round'}));
@@ -71,7 +71,7 @@ test('single node - fixed width box', t => {
 	const output = renderToString(
 		<Box borderStyle="round" width={20}>
 			<Text>Hello World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('Hello World'.padEnd(18, ' '), {borderStyle: 'round'}));
@@ -81,14 +81,14 @@ test('single node - fixed width and height box', t => {
 	const output = renderToString(
 		<Box borderStyle="round" width={20} height={20}>
 			<Text>Hello World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
 		output,
 		boxen('Hello World'.padEnd(18, ' ') + '\n'.repeat(17), {
-			borderStyle: 'round'
-		})
+			borderStyle: 'round',
+		}),
 	);
 });
 
@@ -96,7 +96,7 @@ test('single node - box with padding', t => {
 	const output = renderToString(
 		<Box borderStyle="round" padding={1} alignSelf="flex-start">
 			<Text>Hello World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('\n Hello World \n', {borderStyle: 'round'}));
@@ -106,7 +106,7 @@ test('single node - box with horizontal alignment', t => {
 	const output = renderToString(
 		<Box borderStyle="round" width={20} justifyContent="center">
 			<Text>Hello World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('   Hello World    ', {borderStyle: 'round'}));
@@ -121,14 +121,14 @@ test('single node - box with vertical alignment', t => {
 			alignSelf="flex-start"
 		>
 			<Text>Hello World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
 		output,
 		boxen('\n'.repeat(8) + 'Hello World' + '\n'.repeat(9), {
-			borderStyle: 'round'
-		})
+			borderStyle: 'round',
+		}),
 	);
 });
 
@@ -136,7 +136,7 @@ test('single node - box with wrapping', t => {
 	const output = renderToString(
 		<Box borderStyle="round" width={10}>
 			<Text>Hello World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('Hello   \nWorld', {borderStyle: 'round'}));
@@ -146,7 +146,7 @@ test('multiple nodes - full width box', t => {
 	const output = renderToString(
 		<Box borderStyle="round">
 			<Text>{'Hello '}World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('Hello World', {width: 100, borderStyle: 'round'}));
@@ -156,7 +156,7 @@ test('multiple nodes - full width box with colorful border', t => {
 	const output = renderToString(
 		<Box borderStyle="round" borderColor="green">
 			<Text>{'Hello '}World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -164,8 +164,8 @@ test('multiple nodes - full width box with colorful border', t => {
 		boxen('Hello World', {
 			width: 100,
 			borderStyle: 'round',
-			borderColor: 'green'
-		})
+			borderColor: 'green',
+		}),
 	);
 });
 
@@ -173,7 +173,7 @@ test('multiple nodes - fit-content box', t => {
 	const output = renderToString(
 		<Box borderStyle="round" alignSelf="flex-start">
 			<Text>{'Hello '}World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('Hello World', {borderStyle: 'round'}));
@@ -183,7 +183,7 @@ test('multiple nodes - fixed width box', t => {
 	const output = renderToString(
 		<Box borderStyle="round" width={20}>
 			<Text>{'Hello '}World</Text>
-		</Box>
+		</Box>,
 	);
 	t.is(output, boxen('Hello World'.padEnd(18, ' '), {borderStyle: 'round'}));
 });
@@ -192,13 +192,13 @@ test('multiple nodes - fixed width and height box', t => {
 	const output = renderToString(
 		<Box borderStyle="round" width={20} height={20}>
 			<Text>{'Hello '}World</Text>
-		</Box>
+		</Box>,
 	);
 	t.is(
 		output,
 		boxen('Hello World'.padEnd(18, ' ') + '\n'.repeat(17), {
-			borderStyle: 'round'
-		})
+			borderStyle: 'round',
+		}),
 	);
 });
 
@@ -206,7 +206,7 @@ test('multiple nodes - box with padding', t => {
 	const output = renderToString(
 		<Box borderStyle="round" padding={1} alignSelf="flex-start">
 			<Text>{'Hello '}World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('\n Hello World \n', {borderStyle: 'round'}));
@@ -216,7 +216,7 @@ test('multiple nodes - box with horizontal alignment', t => {
 	const output = renderToString(
 		<Box borderStyle="round" width={20} justifyContent="center">
 			<Text>{'Hello '}World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('   Hello World    ', {borderStyle: 'round'}));
@@ -231,14 +231,14 @@ test('multiple nodes - box with vertical alignment', t => {
 			alignSelf="flex-start"
 		>
 			<Text>{'Hello '}World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
 		output,
 		boxen('\n'.repeat(8) + 'Hello World' + '\n'.repeat(9), {
-			borderStyle: 'round'
-		})
+			borderStyle: 'round',
+		}),
 	);
 });
 
@@ -246,7 +246,7 @@ test('multiple nodes - box with wrapping', t => {
 	const output = renderToString(
 		<Box borderStyle="round" width={10}>
 			<Text>{'Hello '}World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('Hello   \nWorld', {borderStyle: 'round'}));
@@ -256,7 +256,7 @@ test('multiple nodes - box with wrapping and long first node', t => {
 	const output = renderToString(
 		<Box borderStyle="round" width={10}>
 			<Text>{'Helloooooo'} World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('Helloooo\noo World', {borderStyle: 'round'}));
@@ -266,7 +266,7 @@ test('multiple nodes - box with wrapping and very long first node', t => {
 	const output = renderToString(
 		<Box borderStyle="round" width={10}>
 			<Text>{'Hellooooooooooooo'} World</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('Helloooo\noooooooo\no World', {borderStyle: 'round'}));
@@ -278,17 +278,17 @@ test('nested boxes', t => {
 			<Box borderStyle="round" justifyContent="center" padding={1}>
 				<Text>Hello World</Text>
 			</Box>
-		</Box>
+		</Box>,
 	);
 
 	const nestedBox = indentString(
 		boxen('\n Hello World \n', {borderStyle: 'round'}),
-		1
+		1,
 	);
 
 	t.is(
 		output,
-		boxen(`${' '.repeat(38)}\n${nestedBox}\n`, {borderStyle: 'round'})
+		boxen(`${' '.repeat(38)}\n${nestedBox}\n`, {borderStyle: 'round'}),
 	);
 });
 
@@ -304,7 +304,7 @@ test('nested boxes - fit-content box with wide characters on flex-direction row'
 			<Box borderStyle="round">
 				<Text>カーク船長</Text>
 			</Box>
-		</Box>
+		</Box>,
 	);
 
 	const box1 = boxen('ミスター', {borderStyle: 'round'});
@@ -316,10 +316,10 @@ test('nested boxes - fit-content box with wide characters on flex-direction row'
 			.split('\n')
 			.map(
 				(line, index) =>
-					line + box2.split('\n')[index]! + box3.split('\n')[index]!
+					line + box2.split('\n')[index]! + box3.split('\n')[index]!,
 			)
 			.join('\n'),
-		{borderStyle: 'round'}
+		{borderStyle: 'round'},
 	);
 
 	t.is(output, expected);
@@ -337,7 +337,7 @@ test('nested boxes - fit-content box with emojis on flex-direction row', t => {
 			<Box borderStyle="round">
 				<Text>😋</Text>
 			</Box>
-		</Box>
+		</Box>,
 	);
 
 	const box1 = boxen('🦾', {borderStyle: 'round'});
@@ -349,10 +349,10 @@ test('nested boxes - fit-content box with emojis on flex-direction row', t => {
 			.split('\n')
 			.map(
 				(line, index) =>
-					line + box2.split('\n')[index]! + box3.split('\n')[index]!
+					line + box2.split('\n')[index]! + box3.split('\n')[index]!,
 			)
 			.join('\n'),
-		{borderStyle: 'round'}
+		{borderStyle: 'round'},
 	);
 
 	t.is(output, expected);
@@ -370,7 +370,7 @@ test('nested boxes - fit-content box with wide characters on flex-direction colu
 			<Box borderStyle="round">
 				<Text>カーク船長</Text>
 			</Box>
-		</Box>
+		</Box>,
 	);
 
 	const expected = boxen(
@@ -379,7 +379,7 @@ test('nested boxes - fit-content box with wide characters on flex-direction colu
 			boxen('スポック  ', {borderStyle: 'round'}) +
 			'\n' +
 			boxen('カーク船長', {borderStyle: 'round'}),
-		{borderStyle: 'round'}
+		{borderStyle: 'round'},
 	);
 
 	t.is(output, expected);
@@ -397,7 +397,7 @@ test('nested boxes - fit-content box with emojis on flex-direction column', t =>
 			<Box borderStyle="round">
 				<Text>😋</Text>
 			</Box>
-		</Box>
+		</Box>,
 	);
 
 	const expected = boxen(
@@ -406,7 +406,7 @@ test('nested boxes - fit-content box with emojis on flex-direction column', t =>
 			boxen('🌏', {borderStyle: 'round'}) +
 			'\n' +
 			boxen('😋', {borderStyle: 'round'}),
-		{borderStyle: 'round'}
+		{borderStyle: 'round'},
 	);
 
 	t.is(output, expected);
@@ -425,12 +425,12 @@ test('render border after update', t => {
 
 	const {rerender} = render(<Test />, {
 		stdout,
-		debug: true
+		debug: true,
 	});
 
 	t.is(
 		(stdout.write as any).lastCall.args[0],
-		boxen('Hello World', {width: 100, borderStyle: 'round'})
+		boxen('Hello World', {width: 100, borderStyle: 'round'}),
 	);
 
 	rerender(<Test borderColor="green" />);
@@ -440,8 +440,8 @@ test('render border after update', t => {
 		boxen('Hello World', {
 			width: 100,
 			borderStyle: 'round',
-			borderColor: 'green'
-		})
+			borderColor: 'green',
+		}),
 	);
 
 	rerender(<Test />);
@@ -450,8 +450,8 @@ test('render border after update', t => {
 		(stdout.write as any).lastCall.args[0],
 		boxen('Hello World', {
 			width: 100,
-			borderStyle: 'round'
-		})
+			borderStyle: 'round',
+		}),
 	);
 });
 
@@ -463,7 +463,7 @@ test('hide top border', t => {
 				<Text>Content</Text>
 			</Box>
 			<Text>Below</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -474,8 +474,8 @@ test('hide top border', t => {
 			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
 				cliBoxes.round.bottomRight
 			}`,
-			'Below'
-		].join('\n')
+			'Below',
+		].join('\n'),
 	);
 });
 
@@ -487,7 +487,7 @@ test('hide bottom border', t => {
 				<Text>Content</Text>
 			</Box>
 			<Text>Below</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -498,8 +498,8 @@ test('hide bottom border', t => {
 				cliBoxes.round.topRight
 			}`,
 			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
-			'Below'
-		].join('\n')
+			'Below',
+		].join('\n'),
 	);
 });
 
@@ -511,7 +511,7 @@ test('hide top and bottom borders', t => {
 				<Text>Content</Text>
 			</Box>
 			<Text>Below</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -519,8 +519,8 @@ test('hide top and bottom borders', t => {
 		[
 			'Above',
 			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
-			'Below'
-		].join('\n')
+			'Below',
+		].join('\n'),
 	);
 });
 
@@ -532,7 +532,7 @@ test('hide left border', t => {
 				<Text>Content</Text>
 			</Box>
 			<Text>Below</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -542,8 +542,8 @@ test('hide left border', t => {
 			`${cliBoxes.round.top.repeat(7)}${cliBoxes.round.topRight}`,
 			`Content${cliBoxes.round.right}`,
 			`${cliBoxes.round.bottom.repeat(7)}${cliBoxes.round.bottomRight}`,
-			'Below'
-		].join('\n')
+			'Below',
+		].join('\n'),
 	);
 });
 
@@ -555,7 +555,7 @@ test('hide right border', t => {
 				<Text>Content</Text>
 			</Box>
 			<Text>Below</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -565,8 +565,8 @@ test('hide right border', t => {
 			`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}`,
 			`${cliBoxes.round.left}Content`,
 			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}`,
-			'Below'
-		].join('\n')
+			'Below',
+		].join('\n'),
 	);
 });
 
@@ -578,7 +578,7 @@ test('hide left and right border', t => {
 				<Text>Content</Text>
 			</Box>
 			<Text>Below</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -588,8 +588,8 @@ test('hide left and right border', t => {
 			cliBoxes.round.top.repeat(7),
 			'Content',
 			cliBoxes.round.bottom.repeat(7),
-			'Below'
-		].join('\n')
+			'Below',
+		].join('\n'),
 	);
 });
 
@@ -607,7 +607,7 @@ test('hide all borders', t => {
 				<Text>Content</Text>
 			</Box>
 			<Text>Below</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, ['Above', 'Content', 'Below'].join('\n'));
@@ -621,7 +621,7 @@ test('change color of top border', t => {
 				<Text>Content</Text>
 			</Box>
 			<Text>Below</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -631,14 +631,14 @@ test('change color of top border', t => {
 			chalk.green(
 				`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
 					cliBoxes.round.topRight
-				}`
+				}`,
 			),
 			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
 			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
 				cliBoxes.round.bottomRight
 			}`,
-			'Below'
-		].join('\n')
+			'Below',
+		].join('\n'),
 	);
 });
 
@@ -650,7 +650,7 @@ test('change color of bottom border', t => {
 				<Text>Content</Text>
 			</Box>
 			<Text>Below</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -664,10 +664,10 @@ test('change color of bottom border', t => {
 			chalk.green(
 				`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
 					cliBoxes.round.bottomRight
-				}`
+				}`,
 			),
-			'Below'
-		].join('\n')
+			'Below',
+		].join('\n'),
 	);
 });
 
@@ -679,7 +679,7 @@ test('change color of left border', t => {
 				<Text>Content</Text>
 			</Box>
 			<Text>Below</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -693,8 +693,8 @@ test('change color of left border', t => {
 			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
 				cliBoxes.round.bottomRight
 			}`,
-			'Below'
-		].join('\n')
+			'Below',
+		].join('\n'),
 	);
 });
 
@@ -706,7 +706,7 @@ test('change color of right border', t => {
 				<Text>Content</Text>
 			</Box>
 			<Text>Below</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -720,8 +720,8 @@ test('change color of right border', t => {
 			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
 				cliBoxes.round.bottomRight
 			}`,
-			'Below'
-		].join('\n')
+			'Below',
+		].join('\n'),
 	);
 });
 
@@ -736,11 +736,11 @@ test('custom border style', t => {
 				bottomLeft: '↗',
 				bottom: '↑',
 				bottomRight: '↖',
-				right: '←'
+				right: '←',
 			}}
 		>
 			<Text>Content</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(output, boxen('Content', {width: 100, borderStyle: 'arrow'}));
@@ -750,7 +750,7 @@ test('dim border color', t => {
 	const output = renderToString(
 		<Box borderDimColor borderStyle="round">
 			<Text>Content</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -758,8 +758,8 @@ test('dim border color', t => {
 		boxen('Content', {
 			width: 100,
 			borderStyle: 'round',
-			dimBorder: true
-		})
+			dimBorder: true,
+		}),
 	);
 });
 
@@ -771,7 +771,7 @@ test('dim top border color', t => {
 				<Text>Content</Text>
 			</Box>
 			<Text>Below</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -781,14 +781,14 @@ test('dim top border color', t => {
 			chalk.dim(
 				`${cliBoxes.round.topLeft}${cliBoxes.round.top.repeat(7)}${
 					cliBoxes.round.topRight
-				}`
+				}`,
 			),
 			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
 			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
 				cliBoxes.round.bottomRight
 			}`,
-			'Below'
-		].join('\n')
+			'Below',
+		].join('\n'),
 	);
 });
 
@@ -800,7 +800,7 @@ test('dim bottom border color', t => {
 				<Text>Content</Text>
 			</Box>
 			<Text>Below</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -814,10 +814,10 @@ test('dim bottom border color', t => {
 			chalk.dim(
 				`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
 					cliBoxes.round.bottomRight
-				}`
+				}`,
 			),
-			'Below'
-		].join('\n')
+			'Below',
+		].join('\n'),
 	);
 });
 
@@ -829,7 +829,7 @@ test('dim left border color', t => {
 				<Text>Content</Text>
 			</Box>
 			<Text>Below</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -843,8 +843,8 @@ test('dim left border color', t => {
 			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
 				cliBoxes.round.bottomRight
 			}`,
-			'Below'
-		].join('\n')
+			'Below',
+		].join('\n'),
 	);
 });
 
@@ -856,7 +856,7 @@ test('dim right border color', t => {
 				<Text>Content</Text>
 			</Box>
 			<Text>Below</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
@@ -870,7 +870,7 @@ test('dim right border color', t => {
 			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
 				cliBoxes.round.bottomRight
 			}`,
-			'Below'
-		].join('\n')
+			'Below',
+		].join('\n'),
 	);
 });

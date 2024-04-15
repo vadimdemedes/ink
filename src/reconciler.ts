@@ -14,7 +14,7 @@ import {
 	type DOMNodeAttribute,
 	type TextNode,
 	type ElementNames,
-	type DOMElement
+	type DOMElement,
 } from './dom.js';
 import applyStyles, {type Styles} from './styles.js';
 import {type OutputTransformer} from './render-node-to-output.js';
@@ -35,7 +35,7 @@ but this failed as it was not installed. Debugging with React Devtools requires 
 To install use this command:
 
 $ npm install --save-dev react-devtools-core
-				`.trim() + '\n'
+				`.trim() + '\n',
 			);
 		} else {
 			// eslint-disable-next-line @typescript-eslint/no-throw-literal
@@ -111,7 +111,7 @@ export default createReconciler<
 	unknown
 >({
 	getRootHostContext: () => ({
-		isInsideText: false
+		isInsideText: false,
 	}),
 	prepareForCommit: () => null,
 	preparePortalMount: () => null,
@@ -193,7 +193,7 @@ export default createReconciler<
 	createTextInstance(text, _root, hostContext) {
 		if (!hostContext.isInsideText) {
 			throw new Error(
-				`Text string "${text}" must be rendered inside <Text> component`
+				`Text string "${text}" must be rendered inside <Text> component`,
 			);
 		}
 
@@ -256,7 +256,7 @@ export default createReconciler<
 
 		const style = diff(
 			oldProps['style'] as Styles,
-			newProps['style'] as Styles
+			newProps['style'] as Styles,
 		);
 
 		if (!props && !style) {
@@ -297,5 +297,5 @@ export default createReconciler<
 	removeChild(node, removeNode) {
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
-	}
+	},
 });

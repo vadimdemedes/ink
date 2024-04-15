@@ -54,18 +54,18 @@ export default class Ink {
 		this.rootNode.onRender = options.debug
 			? this.onRender
 			: throttle(this.onRender, 32, {
-				leading: true,
-				trailing: true
-			});
+					leading: true,
+					trailing: true,
+				});
 
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout);
 		this.throttledLog = options.debug
 			? this.log
 			: throttle(this.log, undefined, {
-				leading: true,
-				trailing: true
-			});
+					leading: true,
+					trailing: true,
+				});
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
@@ -86,8 +86,8 @@ export default class Ink {
 			false,
 			null,
 			'id',
-			() => { },
-			null
+			() => {},
+			null,
 		);
 
 		// Unmount when process exits
@@ -99,7 +99,7 @@ export default class Ink {
 				// Reporting React DOM's version, not Ink's
 				// See https://github.com/facebook/react/issues/16666#issuecomment-532639905
 				version: '16.13.1',
-				rendererPackageName: 'ink'
+				rendererPackageName: 'ink',
 			});
 		}
 
@@ -135,7 +135,7 @@ export default class Ink {
 		this.rootNode.yogaNode!.calculateLayout(
 			undefined,
 			undefined,
-			Yoga.DIRECTION_LTR
+			Yoga.DIRECTION_LTR,
 		);
 	};
 
@@ -173,7 +173,7 @@ export default class Ink {
 
 		if (outputHeight >= this.options.stdout.rows) {
 			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput + output
+				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
 			);
 			this.lastOutput = output;
 			return;

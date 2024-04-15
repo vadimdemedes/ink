@@ -5,7 +5,7 @@ import {
 	Text,
 	useFocus,
 	useInput,
-	useFocusManager
+	useFocusManager,
 } from '../../src/index.js';
 
 function Focus() {

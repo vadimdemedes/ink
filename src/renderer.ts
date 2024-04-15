@@ -12,7 +12,7 @@ const renderer = (node: DOMElement): Result => {
 	if (node.yogaNode) {
 		const output = new Output({
 			width: node.yogaNode.getComputedWidth(),
-			height: node.yogaNode.getComputedHeight()
+			height: node.yogaNode.getComputedHeight(),
 		});
 
 		renderNodeToOutput(node, output, {skipStaticElements: true});
@@ -22,11 +22,11 @@ const renderer = (node: DOMElement): Result => {
 		if (node.staticNode?.yogaNode) {
 			staticOutput = new Output({
 				width: node.staticNode.yogaNode.getComputedWidth(),
-				height: node.staticNode.yogaNode.getComputedHeight()
+				height: node.staticNode.yogaNode.getComputedHeight(),
 			});
 
 			renderNodeToOutput(node.staticNode, staticOutput, {
-				skipStaticElements: false
+				skipStaticElements: false,
 			});
 		}
 
@@ -37,14 +37,14 @@ const renderer = (node: DOMElement): Result => {
 			outputHeight,
 			// Newline at the end is needed, because static output doesn't have one, so
 			// interactive output will override last line of static output
-			staticOutput: staticOutput ? `${staticOutput.get().output}\n` : ''
+			staticOutput: staticOutput ? `${staticOutput.get().output}\n` : '',
 		};
 	}
 
 	return {
 		output: '',
 		outputHeight: 0,
-		staticOutput: ''
+		staticOutput: '',
 	};
 };
 

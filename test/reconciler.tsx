@@ -14,17 +14,17 @@ test('update child', t => {
 
 	const actual = render(<Test />, {
 		stdout: stdoutActual,
-		debug: true
+		debug: true,
 	});
 
 	const expected = render(<Text>A</Text>, {
 		stdout: stdoutExpected,
-		debug: true
+		debug: true,
 	});
 
 	t.is(
 		(stdoutActual.write as any).lastCall.args[0],
-		(stdoutExpected.write as any).lastCall.args[0]
+		(stdoutExpected.write as any).lastCall.args[0],
 	);
 
 	actual.rerender(<Test update />);
@@ -32,7 +32,7 @@ test('update child', t => {
 
 	t.is(
 		(stdoutActual.write as any).lastCall.args[0],
-		(stdoutExpected.write as any).lastCall.args[0]
+		(stdoutExpected.write as any).lastCall.args[0],
 	);
 });
 
@@ -51,17 +51,17 @@ test('update text node', t => {
 
 	const actual = render(<Test />, {
 		stdout: stdoutActual,
-		debug: true
+		debug: true,
 	});
 
 	const expected = render(<Text>Hello A</Text>, {
 		stdout: stdoutExpected,
-		debug: true
+		debug: true,
 	});
 
 	t.is(
 		(stdoutActual.write as any).lastCall.args[0],
-		(stdoutExpected.write as any).lastCall.args[0]
+		(stdoutExpected.write as any).lastCall.args[0],
 	);
 
 	actual.rerender(<Test update />);
@@ -69,7 +69,7 @@ test('update text node', t => {
 
 	t.is(
 		(stdoutActual.write as any).lastCall.args[0],
-		(stdoutExpected.write as any).lastCall.args[0]
+		(stdoutExpected.write as any).lastCall.args[0],
 	);
 });
 
@@ -96,7 +96,7 @@ test('append child', t => {
 
 	const actual = render(<Test />, {
 		stdout: stdoutActual,
-		debug: true
+		debug: true,
 	});
 
 	const expected = render(
@@ -105,13 +105,13 @@ test('append child', t => {
 		</Box>,
 		{
 			stdout: stdoutExpected,
-			debug: true
-		}
+			debug: true,
+		},
 	);
 
 	t.is(
 		(stdoutActual.write as any).lastCall.args[0],
-		(stdoutExpected.write as any).lastCall.args[0]
+		(stdoutExpected.write as any).lastCall.args[0],
 	);
 
 	actual.rerender(<Test append />);
@@ -120,12 +120,12 @@ test('append child', t => {
 		<Box flexDirection="column">
 			<Text>A</Text>
 			<Text>B</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
 		(stdoutActual.write as any).lastCall.args[0],
-		(stdoutExpected.write as any).lastCall.args[0]
+		(stdoutExpected.write as any).lastCall.args[0],
 	);
 });
 
@@ -154,7 +154,7 @@ test('insert child between other children', t => {
 
 	const actual = render(<Test />, {
 		stdout: stdoutActual,
-		debug: true
+		debug: true,
 	});
 
 	const expected = render(
@@ -164,13 +164,13 @@ test('insert child between other children', t => {
 		</Box>,
 		{
 			stdout: stdoutExpected,
-			debug: true
-		}
+			debug: true,
+		},
 	);
 
 	t.is(
 		(stdoutActual.write as any).lastCall.args[0],
-		(stdoutExpected.write as any).lastCall.args[0]
+		(stdoutExpected.write as any).lastCall.args[0],
 	);
 
 	actual.rerender(<Test insert />);
@@ -180,12 +180,12 @@ test('insert child between other children', t => {
 			<Text>A</Text>
 			<Text>B</Text>
 			<Text>C</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
 		(stdoutActual.write as any).lastCall.args[0],
-		(stdoutExpected.write as any).lastCall.args[0]
+		(stdoutExpected.write as any).lastCall.args[0],
 	);
 });
 
@@ -212,7 +212,7 @@ test('remove child', t => {
 
 	const actual = render(<Test />, {
 		stdout: stdoutActual,
-		debug: true
+		debug: true,
 	});
 
 	const expected = render(
@@ -222,13 +222,13 @@ test('remove child', t => {
 		</Box>,
 		{
 			stdout: stdoutExpected,
-			debug: true
-		}
+			debug: true,
+		},
 	);
 
 	t.is(
 		(stdoutActual.write as any).lastCall.args[0],
-		(stdoutExpected.write as any).lastCall.args[0]
+		(stdoutExpected.write as any).lastCall.args[0],
 	);
 
 	actual.rerender(<Test remove />);
@@ -236,12 +236,12 @@ test('remove child', t => {
 	expected.rerender(
 		<Box flexDirection="column">
 			<Text>A</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
 		(stdoutActual.write as any).lastCall.args[0],
-		(stdoutExpected.write as any).lastCall.args[0]
+		(stdoutExpected.write as any).lastCall.args[0],
 	);
 });
 
@@ -269,7 +269,7 @@ test('reorder children', t => {
 
 	const actual = render(<Test />, {
 		stdout: stdoutActual,
-		debug: true
+		debug: true,
 	});
 
 	const expected = render(
@@ -279,13 +279,13 @@ test('reorder children', t => {
 		</Box>,
 		{
 			stdout: stdoutExpected,
-			debug: true
-		}
+			debug: true,
+		},
 	);
 
 	t.is(
 		(stdoutActual.write as any).lastCall.args[0],
-		(stdoutExpected.write as any).lastCall.args[0]
+		(stdoutExpected.write as any).lastCall.args[0],
 	);
 
 	actual.rerender(<Test reorder />);
@@ -294,12 +294,12 @@ test('reorder children', t => {
 		<Box flexDirection="column">
 			<Text>B</Text>
 			<Text>A</Text>
-		</Box>
+		</Box>,
 	);
 
 	t.is(
 		(stdoutActual.write as any).lastCall.args[0],
-		(stdoutExpected.write as any).lastCall.args[0]
+		(stdoutExpected.write as any).lastCall.args[0],
 	);
 });
 
@@ -312,7 +312,7 @@ test('replace child node with text', t => {
 
 	const {rerender} = render(<Dynamic />, {
 		stdout,
-		debug: true
+		debug: true,
 	});
 
 	t.is((stdout.write as any).lastCall.args[0], chalk.green('test'));
@@ -364,7 +364,7 @@ test('support suspense', async t => {
 
 	const out = render(<Test />, {
 		stdout,
-		debug: true
+		debug: true,
 	});
 
 	t.is((stdout.write as any).lastCall.args[0], 'Loading');

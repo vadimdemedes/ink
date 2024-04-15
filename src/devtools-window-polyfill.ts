@@ -27,48 +27,48 @@ customGlobal.window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = [
 		type: 1,
 		// ElementTypeHostComponent
 		value: 7,
-		isEnabled: true
+		isEnabled: true,
 	},
 	{
 		// ComponentFilterDisplayName
 		type: 2,
 		value: 'InternalApp',
 		isEnabled: true,
-		isValid: true
+		isValid: true,
 	},
 	{
 		// ComponentFilterDisplayName
 		type: 2,
 		value: 'InternalAppContext',
 		isEnabled: true,
-		isValid: true
+		isValid: true,
 	},
 	{
 		// ComponentFilterDisplayName
 		type: 2,
 		value: 'InternalStdoutContext',
 		isEnabled: true,
-		isValid: true
+		isValid: true,
 	},
 	{
 		// ComponentFilterDisplayName
 		type: 2,
 		value: 'InternalStderrContext',
 		isEnabled: true,
-		isValid: true
+		isValid: true,
 	},
 	{
 		// ComponentFilterDisplayName
 		type: 2,
 		value: 'InternalStdinContext',
 		isEnabled: true,
-		isValid: true
+		isValid: true,
 	},
 	{
 		// ComponentFilterDisplayName
 		type: 2,
 		value: 'InternalFocusContext',
 		isEnabled: true,
-		isValid: true
-	}
+		isValid: true,
+	},
 ];
