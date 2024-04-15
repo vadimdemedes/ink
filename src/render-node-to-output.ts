@@ -5,7 +5,7 @@ import wrapText from './wrap-text.js';
 import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';
 import renderBorder from './render-border.js';
-import {type DOMElement} from './dom.js';
+import { type DOMElement } from './dom.js';
 import type Output from './output.js';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
@@ -50,7 +50,7 @@ const renderNodeToOutput = (
 		return;
 	}
 
-	const {yogaNode} = node;
+	const { yogaNode } = node;
 
 	if (yogaNode) {
 		if (yogaNode.getDisplay() === Yoga.DISPLAY_NONE) {
@@ -83,7 +83,7 @@ const renderNodeToOutput = (
 
 				text = applyPaddingToText(node, text);
 
-				output.write(x, y, text, {transformers: newTransformers});
+				output.write(x, y, text, { transformers: newTransformers });
 			}
 
 			return;
@@ -106,8 +106,8 @@ const renderNodeToOutput = (
 
 				const x2 = clipHorizontally
 					? x +
-					  yogaNode.getComputedWidth() -
-					  yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
+					yogaNode.getComputedWidth() -
+					yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
 					: undefined;
 
 				const y1 = clipVertically
@@ -116,11 +116,11 @@ const renderNodeToOutput = (
 
 				const y2 = clipVertically
 					? y +
-					  yogaNode.getComputedHeight() -
-					  yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
+					yogaNode.getComputedHeight() -
+					yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
 					: undefined;
 
-				output.clip({x1, x2, y1, y2});
+				output.clip({ x1, x2, y1, y2 });
 				clipped = true;
 			}
 		}
