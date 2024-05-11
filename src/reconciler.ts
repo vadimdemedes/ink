@@ -1,6 +1,9 @@
 import process from 'node:process';
 import createReconciler from 'react-reconciler';
-import {DefaultEventPriority} from 'react-reconciler/constants.js';
+import {
+	DefaultEventPriority,
+	NoEventPriority,
+} from 'react-reconciler/constants.js';
 import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
 import {
 	createTextNode,
@@ -94,6 +97,8 @@ type UpdatePayload = {
 	props: Props | undefined;
 	style: Styles | undefined;
 };
+
+let currentUpdatePriority = NoEventPriority;
 
 export default createReconciler<
 	ElementNames,
@@ -234,7 +239,11 @@ export default createReconciler<
 	scheduleTimeout: setTimeout,
 	cancelTimeout: clearTimeout,
 	noTimeout: -1,
-	getCurrentEventPriority: () => DefaultEventPriority,
+	setCurrentUpdatePriority: newPriority => {
+		currentUpdatePriority = newPriority;
+	},
+	getCurrentUpdatePriority: () => currentUpdatePriority,
+	resolveUpdatePriority: () => currentUpdatePriority || DefaultEventPriority,
 	beforeActiveInstanceBlur() {},
 	afterActiveInstanceBlur() {},
 	detachDeletedInstance() {},
@@ -265,7 +274,8 @@ export default createReconciler<
 
 		return {props, style};
 	},
-	commitUpdate(node, {props, style}) {
+	commitUpdate(node, payload, type, oldProps, newProps) {
+		const {props, style} = newProps;
 		if (props) {
 			for (const [key, value] of Object.entries(props)) {
 				if (key === 'style') {
@@ -297,5 +307,21 @@ export default createReconciler<
 	removeChild(node, removeNode) {
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
+	},
+	maySuspendCommit() {
+		// TODO: May return false here if we are confident that we don't need to suspend
+		return true;
+	},
+	startSuspendingCommit() {},
+	waitForCommitToBeReady() {
+		return null;
+	},
+	preloadInstance() {
+		// Return true to indicate it's already loaded
+		return true;
+	},
+	suspendInstance() {},
+	shouldAttemptEagerTransition() {
+		return false;
 	},
 });
