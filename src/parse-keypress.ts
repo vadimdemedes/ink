@@ -88,7 +88,7 @@ const keyName: Record<string, string> = {
 	'[7^': 'home',
 	'[8^': 'end',
 	/* misc. */
-	'[Z': 'tab'
+	'[Z': 'tab',
 };
 
 export const nonAlphanumericKeys = [...Object.values(keyName), 'backspace'];
@@ -106,7 +106,7 @@ const isShiftKey = (code: string) => {
 		'[6$',
 		'[7$',
 		'[8$',
-		'[Z'
+		'[Z',
 	].includes(code);
 };
 
@@ -122,7 +122,7 @@ const isCtrlKey = (code: string) => {
 		'[5^',
 		'[6^',
 		'[7^',
-		'[8^'
+		'[8^',
 	].includes(code);
 };
 
@@ -160,7 +160,7 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 		shift: false,
 		option: false,
 		sequence: s,
-		raw: s
+		raw: s,
 	};
 
 	key.sequence = key.sequence || s || key.name;
