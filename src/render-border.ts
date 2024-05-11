@@ -1,7 +1,7 @@
 import cliBoxes from 'cli-boxes';
 import chalk from 'chalk';
 import colorize from './colorize.js';
-import { type DOMNode } from './dom.js';
+import {type DOMNode} from './dom.js';
 import type Output from './output.js';
 
 const renderBorder = (
@@ -103,11 +103,11 @@ const renderBorder = (
 		const offsetY = showTopBorder ? 1 : 0;
 
 		if (topBorder) {
-			output.write(x, y, topBorder, { transformers: [] });
+			output.write(x, y, topBorder, {transformers: []});
 		}
 
 		if (showLeftBorder) {
-			output.write(x, y + offsetY, leftBorder, { transformers: [] });
+			output.write(x, y + offsetY, leftBorder, {transformers: []});
 		}
 
 		if (showRightBorder) {
@@ -117,7 +117,7 @@ const renderBorder = (
 		}
 
 		if (bottomBorder) {
-			output.write(x, y + height - 1, bottomBorder, { transformers: [] });
+			output.write(x, y + height - 1, bottomBorder, {transformers: []});
 		}
 	}
 };
