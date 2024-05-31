@@ -5,17 +5,11 @@ import ws from 'ws';
 const customGlobal = global as any;
 
 // These things must exist before importing `react-devtools-core`
-if (!customGlobal.WebSocket) {
-	customGlobal.WebSocket = ws;
-}
+customGlobal.WebSocket ||= ws;
 
-if (!customGlobal.window) {
-	customGlobal.window = global;
-}
+customGlobal.window ||= global;
 
-if (!customGlobal.self) {
-	customGlobal.self = global;
-}
+customGlobal.self ||= global;
 
 // Filter out Ink's internal components from devtools for a cleaner view.
 // Also, ince `react-devtools-shared` package isn't published on npm, we can't

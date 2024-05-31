@@ -7,13 +7,13 @@ function App() {
 			id: number;
 		}>
 	>([]);
-	const itemCountRef = React.useRef(0);
+	const itemCountReference = React.useRef(0);
 
 	React.useEffect(() => {
 		let timer: NodeJS.Timeout | undefined;
 
 		const run = () => {
-			if (itemCountRef.current++ > 1000) {
+			if (itemCountReference.current++ > 1000) {
 				return;
 			}
 

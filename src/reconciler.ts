@@ -59,7 +59,7 @@ const diff = (before: AnyObject, after: AnyObject): AnyObject | undefined => {
 	let isChanged = false;
 
 	for (const key of Object.keys(before)) {
-		const isDeleted = after ? !Object.hasOwnProperty.call(after, key) : true;
+		const isDeleted = after ? !Object.hasOwn(after, key) : true;
 
 		if (isDeleted) {
 			changed[key] = undefined;

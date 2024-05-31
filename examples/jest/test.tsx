@@ -21,12 +21,12 @@ const getBackgroundForStatus = (status: string): string | undefined => {
 	}
 };
 
-type Props = {
+type Properties = {
 	readonly status: string;
 	readonly path: string;
 };
 
-function Test({status, path}: Props) {
+function Test({status, path}: Properties) {
 	return (
 		<Box>
 			<Text color="black" backgroundColor={getBackgroundForStatus(status)}>

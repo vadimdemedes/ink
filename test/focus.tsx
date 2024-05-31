@@ -455,14 +455,14 @@ test('focuses first non-disabled component', async t => {
 	render(<Test autoFocus disableFirst disableSecond />, {
 		stdout,
 		stdin,
-		debug: true
+		debug: true,
 	});
 
 	await delay(100);
 
 	t.is(
 		(stdout.write as any).lastCall.args[0],
-		['First', 'Second', 'Third ✔'].join('\n')
+		['First', 'Second', 'Third ✔'].join('\n'),
 	);
 });
 
@@ -472,7 +472,7 @@ test('skips disabled elements when wrapping around', async t => {
 	render(<Test autoFocus disableFirst />, {
 		stdout,
 		stdin,
-		debug: true
+		debug: true,
 	});
 
 	await delay(100);
@@ -483,7 +483,7 @@ test('skips disabled elements when wrapping around', async t => {
 
 	t.is(
 		(stdout.write as any).lastCall.args[0],
-		['First', 'Second ✔', 'Third'].join('\n')
+		['First', 'Second ✔', 'Third'].join('\n'),
 	);
 });
 
@@ -493,7 +493,7 @@ test('skips disabled elements when wrapping around from the front', async t => {
 	render(<Test autoFocus disableThird />, {
 		stdout,
 		stdin,
-		debug: true
+		debug: true,
 	});
 
 	await delay(100);
@@ -502,6 +502,6 @@ test('skips disabled elements when wrapping around from the front', async t => {
 
 	t.is(
 		(stdout.write as any).lastCall.args[0],
-		['First', 'Second ✔', 'Third'].join('\n')
+		['First', 'Second ✔', 'Third'].join('\n'),
 	);
 });
