@@ -1,6 +1,8 @@
 // Copied from https://github.com/enquirer/enquirer/blob/36785f3399a41cd61e9d28d1eb9c2fcd73d69b4c/lib/keypress.js
 import {Buffer} from 'node:buffer';
 
+const isWindows = process.platform === "win32";
+
 const metaKeyCodeRe = /^(?:\x1b)([a-zA-Z0-9])$/;
 
 const fnKeyRe =
@@ -138,6 +140,7 @@ type ParsedKey = {
 };
 
 const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
+
 	let parts;
 
 	if (Buffer.isBuffer(s)) {
@@ -175,7 +178,7 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 	} else if (s === '\t') {
 		// tab
 		key.name = 'tab';
-	} else if (s === '\b' || s === '\x1b\b') {
+	} else if (!isWindows && s === '\x7f' || s === '\b' || s === '\x1b\b') {
 		// backspace or ctrl+h
 		key.name = 'backspace';
 		key.meta = s.charAt(0) === '\x1b';
@@ -236,6 +239,7 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 		key.ctrl = isCtrlKey(code) || key.ctrl;
 	}
 
+	console.log(key)
 	return key;
 };
 
