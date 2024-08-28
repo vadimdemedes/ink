@@ -25,6 +25,7 @@ export type Options = {
 	debug: boolean;
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
+	renderLastFrameOnly?: boolean;
 	waitUntilExit?: () => Promise<void>;
 };
 
@@ -67,6 +68,12 @@ export default class Ink {
 					trailing: true,
 				});
 
+		// CI environments and piped output don't handle erasing ansi escapes well,
+		// so it's better to only render last frame of non-static output
+		if (options.renderLastFrameOnly === undefined) {
+			options.renderLastFrameOnly = isInCi || !options.stdout.isTTY;
+		}
+
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
 
@@ -107,7 +114,7 @@ export default class Ink {
 			this.patchConsole();
 		}
 
-		if (!isInCi) {
+		if (!options.renderLastFrameOnly) {
 			options.stdout.on('resize', this.resized);
 
 			this.unsubscribeResize = () => {
@@ -158,7 +165,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isInCi) {
+		if (this.options.renderLastFrameOnly) {
 			if (hasStaticOutput) {
 				this.options.stdout.write(staticOutput);
 			}
@@ -221,7 +228,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isInCi) {
+		if (this.options.renderLastFrameOnly) {
 			this.options.stdout.write(data);
 			return;
 		}
@@ -242,7 +249,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isInCi) {
+		if (this.options.renderLastFrameOnly) {
 			this.options.stderr.write(data);
 			return;
 		}
@@ -270,9 +277,7 @@ export default class Ink {
 			this.unsubscribeResize();
 		}
 
-		// CIs don't handle erasing ansi escapes well, so it's better to
-		// only render last frame of non-static output
-		if (isInCi) {
+		if (this.options.renderLastFrameOnly) {
 			this.options.stdout.write(this.lastOutput + '\n');
 		} else if (!this.options.debug) {
 			this.log.done();
@@ -300,7 +305,7 @@ export default class Ink {
 	}
 
 	clear(): void {
-		if (!isInCi && !this.options.debug) {
+		if (!this.options.renderLastFrameOnly && !this.options.debug) {
 			this.log.clear();
 		}
 	}

@@ -41,6 +41,13 @@ export type RenderOptions = {
 	 * @default true
 	 */
 	patchConsole?: boolean;
+
+	/**
+	 * Configure whether Ink should only render the last frame of non-static output. Useful when ANSI erase codes are not supported.
+	 *
+	 * @default true if in CI or stdout is not a TTY
+	 */
+	renderLastFrameOnly?: boolean;
 };
 
 export type Instance = {
