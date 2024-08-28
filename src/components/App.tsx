@@ -22,6 +22,7 @@ type Props = {
 	readonly writeToStderr: (data: string) => void;
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (error?: Error) => void;
+	readonly debug: boolean;
 };
 
 type State = {
@@ -127,11 +128,15 @@ export default class App extends PureComponent<Props, State> {
 	}
 
 	override componentDidMount() {
-		cliCursor.hide(this.props.stdout);
+		if (!this.props.debug) {
+			cliCursor.hide(this.props.stdout);
+		}
 	}
 
 	override componentWillUnmount() {
-		cliCursor.show(this.props.stdout);
+		if (!this.props.debug) {
+			cliCursor.show(this.props.stdout);
+		}
 
 		// ignore calling setRawMode on an handle stdin it cannot be called
 		if (this.isRawModeSupported()) {

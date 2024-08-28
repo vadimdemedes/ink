@@ -209,6 +209,7 @@ export default class Ink {
 				writeToStdout={this.writeToStdout}
 				writeToStderr={this.writeToStderr}
 				exitOnCtrlC={this.options.exitOnCtrlC}
+				debug={this.options.debug}
 				onExit={this.unmount}
 			>
 				{node}

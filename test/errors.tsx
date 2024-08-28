@@ -22,7 +22,10 @@ test('catch and display error', t => {
 		throw new Error('Oh no');
 	};
 
-	render(<Test />, {stdout});
+	render(<Test />, {
+		stdout,
+		debug: true,
+	});
 
 	t.deepEqual(
 		stripAnsi((stdout.write as any).lastCall.args[0] as string)
@@ -40,7 +43,7 @@ test('catch and display error', t => {
 			" 22:     throw new Error('Oh no');",
 			' 23:   };',
 			' 24:',
-			' 25:   render(<Test />, {stdout});',
+			' 25:   render(<Test />, {',
 			'',
 			' - Test (test/errors.tsx:22:9)',
 		],
