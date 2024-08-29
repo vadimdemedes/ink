@@ -1,8 +1,8 @@
 import EventEmitter from 'node:events';
 import test from 'ava';
 import chalk from 'chalk';
-import React, {Component, useState} from 'react';
-import {spy} from 'sinon';
+import React, {Component, useEffect, useState} from 'react';
+import {spy, type SinonSpy} from 'sinon';
 import ansiEscapes from 'ansi-escapes';
 import {
 	Box,
@@ -645,7 +645,7 @@ test('render only last frame when run in CI', async t => {
 	t.true(output.includes('Counter: 5'));
 });
 
-test('render all frames if CI environment variable equals false', async t => {
+test('render all frames if CI environment variable equals false and there is an output TTY', async t => {
 	const output = await run('ci', {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		env: {CI: 'false'},
@@ -655,6 +655,111 @@ test('render all frames if CI environment variable equals false', async t => {
 	for (const num of [0, 1, 2, 3, 4, 5]) {
 		t.true(output.includes(`Counter: ${num}`));
 	}
+});
+
+function TestLastFrame(props: {
+	readonly continueTest: () => void;
+	readonly message1: string;
+	readonly message2: string;
+}) {
+	const [message, setMessage] = useState(props.message1);
+	useEffect(() => {
+		setTimeout(() => {
+			setMessage(props.message2);
+			props.continueTest();
+		}, 1);
+	}, [message]);
+	return <Text>{message}</Text>;
+}
+
+test('render only last frame when run without an output tty', async t => {
+	// Create without a TTY
+	const stdout = createStdout(undefined, false);
+	const message1 = 'Hello';
+	const message2 = 'World';
+
+	let continueTest = () => {};
+	const synchronizer = new Promise<void>((resolve, _reject) => {
+		continueTest = resolve;
+	});
+
+	const {unmount} = render(
+		<TestLastFrame
+			continueTest={continueTest}
+			message1={message1}
+			message2={message2}
+		/>,
+		{
+			stdout,
+		},
+	);
+	await synchronizer;
+	unmount();
+
+	const writeSpy = stdout.write as SinonSpy;
+	t.true(writeSpy.calledOnce);
+	t.true((writeSpy.firstCall.args[0] as string).includes(message2));
+});
+
+test('render only last frame when enabled in options', async t => {
+	const stdout = createStdout();
+	const message1 = 'Hello';
+	const message2 = 'World';
+
+	let continueTest = () => {};
+	const synchronizer = new Promise<void>((resolve, _reject) => {
+		continueTest = resolve;
+	});
+
+	const {unmount} = render(
+		<TestLastFrame
+			continueTest={continueTest}
+			message1={message1}
+			message2={message2}
+		/>,
+		{
+			stdout,
+			renderLastFrameOnly: true,
+		},
+	);
+	await synchronizer;
+	unmount();
+
+	const writeSpy = stdout.write as SinonSpy;
+	t.true(writeSpy.calledOnce);
+	t.true((writeSpy.firstCall.args[0] as string).includes(message2));
+});
+
+test('render all frames when enabled in options', async t => {
+	// Create without a TTY so last frame is the default
+	const stdout = createStdout(undefined, false);
+	const message1 = 'Hello';
+	const message2 = 'World';
+
+	let continueTest = () => {};
+	const synchronizer = new Promise<void>((resolve, _reject) => {
+		continueTest = resolve;
+	});
+
+	const {unmount} = render(
+		<TestLastFrame
+			continueTest={continueTest}
+			message1={message1}
+			message2={message2}
+		/>,
+		{
+			stdout,
+			// Override the default
+			renderLastFrameOnly: false,
+		},
+	);
+	await synchronizer;
+	unmount();
+
+	const writeSpy = stdout.write as SinonSpy;
+	t.true(writeSpy.calledTwice);
+	t.true((writeSpy.firstCall.args[0] as string).includes(message1));
+	t.true((writeSpy.secondCall.args[0] as string).includes(message2));
 });
 
 test('reset prop when it’s removed from the element', t => {

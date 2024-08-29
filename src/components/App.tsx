@@ -22,7 +22,7 @@ type Props = {
 	readonly writeToStderr: (data: string) => void;
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (error?: Error) => void;
-	readonly debug: boolean;
+	readonly hasCursor: boolean;
 };
 
 type State = {
@@ -128,13 +128,13 @@ export default class App extends PureComponent<Props, State> {
 	}
 
 	override componentDidMount() {
-		if (!this.props.debug) {
+		if (this.props.hasCursor) {
 			cliCursor.hide(this.props.stdout);
 		}
 	}
 
 	override componentWillUnmount() {
-		if (!this.props.debug) {
+		if (this.props.hasCursor) {
 			cliCursor.show(this.props.stdout);
 		}
 

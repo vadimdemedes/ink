@@ -41,6 +41,9 @@ export default class Ink {
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	private fullStaticOutput: string;
+	// CI environments and piped output don't handle erasing ansi escapes well,
+	// so it's better to only render last frame of non-static output
+	private readonly renderLastFrameOnly: boolean;
 	private exitPromise?: Promise<void>;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
@@ -67,12 +70,8 @@ export default class Ink {
 					leading: true,
 					trailing: true,
 				});
-
-		// CI environments and piped output don't handle erasing ansi escapes well,
-		// so it's better to only render last frame of non-static output
-		if (options.renderLastFrameOnly === undefined) {
-			options.renderLastFrameOnly = isInCi || !options.stdout.isTTY;
-		}
+		this.renderLastFrameOnly =
+			options.renderLastFrameOnly ?? (isInCi || !options.stdout.isTTY);
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
@@ -114,7 +113,7 @@ export default class Ink {
 			this.patchConsole();
 		}
 
-		if (!options.renderLastFrameOnly) {
+		if (!this.renderLastFrameOnly) {
 			options.stdout.on('resize', this.resized);
 
 			this.unsubscribeResize = () => {
@@ -165,7 +164,7 @@ export default class Ink {
 			return;
 		}
 
-		if (this.options.renderLastFrameOnly) {
+		if (this.renderLastFrameOnly) {
 			if (hasStaticOutput) {
 				this.options.stdout.write(staticOutput);
 			}
@@ -209,7 +208,7 @@ export default class Ink {
 				writeToStdout={this.writeToStdout}
 				writeToStderr={this.writeToStderr}
 				exitOnCtrlC={this.options.exitOnCtrlC}
-				debug={this.options.debug}
+				hasCursor={!this.options.debug && !this.renderLastFrameOnly}
 				onExit={this.unmount}
 			>
 				{node}
@@ -229,7 +228,7 @@ export default class Ink {
 			return;
 		}
 
-		if (this.options.renderLastFrameOnly) {
+		if (this.renderLastFrameOnly) {
 			this.options.stdout.write(data);
 			return;
 		}
@@ -250,7 +249,7 @@ export default class Ink {
 			return;
 		}
 
-		if (this.options.renderLastFrameOnly) {
+		if (this.renderLastFrameOnly) {
 			this.options.stderr.write(data);
 			return;
 		}
@@ -278,7 +277,7 @@ export default class Ink {
 			this.unsubscribeResize();
 		}
 
-		if (this.options.renderLastFrameOnly) {
+		if (this.renderLastFrameOnly) {
 			this.options.stdout.write(this.lastOutput + '\n');
 		} else if (!this.options.debug) {
 			this.log.done();
@@ -306,7 +305,7 @@ export default class Ink {
 	}
 
 	clear(): void {
-		if (!this.options.renderLastFrameOnly && !this.options.debug) {
+		if (!this.renderLastFrameOnly && !this.options.debug) {
 			this.log.clear();
 		}
 	}
