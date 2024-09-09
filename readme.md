@@ -2080,9 +2080,7 @@ Check out [ink-testing-library](https://github.com/vadimdemedes/ink-testing-libr
 
 ![](media/devtools.jpg)
 
-Ink supports [React Devtools](https://github.com/facebook/react/tree/master/packages/react-devtools) out-of-the-box.
-To enable integration with React Devtools in your Ink-based CLI, first ensure you have installed the optional
-`react-devtools-core` dependency, and then run your application with `DEV=true` environment variable:
+Ink supports [React Devtools](https://github.com/facebook/react/tree/master/packages/react-devtools) out-of-the-box. To enable integration with React Devtools in your Ink-based CLI, first ensure you have installed the optional `react-devtools-core` dependency, and then run your app with `DEV=true` environment variable:
 
 ```sh
 DEV=true my-cli
