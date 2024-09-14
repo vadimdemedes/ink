@@ -1,7 +1,6 @@
 import process from 'node:process';
 import React, {type ReactNode} from 'react';
-import throttle from 'lodash/throttle.js';
-import {type DebouncedFunc} from 'lodash';
+import {throttle} from 'es-toolkit/compat';
 import ansiEscapes from 'ansi-escapes';
 import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
@@ -28,10 +27,12 @@ export type Options = {
 	waitUntilExit?: () => Promise<void>;
 };
 
+type ThrottledFunc<T extends (...args: any[]) => void> = ReturnType<typeof throttle<T>>;
+
 export default class Ink {
 	private readonly options: Options;
 	private readonly log: LogUpdate;
-	private readonly throttledLog: LogUpdate | DebouncedFunc<LogUpdate>;
+	private readonly throttledLog: LogUpdate | ThrottledFunc<LogUpdate>;
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
 	private lastOutput: string;
@@ -53,19 +54,13 @@ export default class Ink {
 
 		this.rootNode.onRender = options.debug
 			? this.onRender
-			: throttle(this.onRender, 32, {
-					leading: true,
-					trailing: true,
-				});
+			: throttle(this.onRender, 32);
 
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout);
 		this.throttledLog = options.debug
 			? this.log
-			: throttle(this.log, undefined, {
-					leading: true,
-					trailing: true,
-				});
+			: throttle(this.log, undefined);
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
