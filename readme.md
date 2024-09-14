@@ -118,6 +118,8 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [ToDesktop CLI](https://www.todesktop.com/electron) - An all-in-one platform for building Electron apps.
 - [Walle](https://github.com/Pobepto/walle) - Full-featured crypto wallet for EVM networks.
 - [Sudoku](https://github.com/mrozio13pl/sudoku-in-terminal) - Sudoku game.
+- [DevITJobs.com](https://devitjobs.com) - Transparent tech job board with salary info.
+
 
 ## Contents
 
