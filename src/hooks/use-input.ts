@@ -178,6 +178,10 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				input = input.slice(1);
 			}
 
+			if (!key.name && input) {
+				key.name = input;
+			}
+
 			if (
 				input.length === 1 &&
 				typeof input[0] === 'string' &&
