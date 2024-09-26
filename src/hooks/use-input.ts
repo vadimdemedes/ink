@@ -140,6 +140,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			const keypress = parseKeypress(data);
 
 			const key = {
+				name: keypress.name,
 				upArrow: keypress.name === 'up',
 				downArrow: keypress.name === 'down',
 				leftArrow: keypress.name === 'left',
