@@ -8,6 +8,11 @@ import useStdin from './use-stdin.js';
  */
 export type Key = {
 	/**
+	 * The name of the key that was pressed.
+	 */
+	name: string;
+
+	/**
 	 * Up arrow key was pressed.
 	 */
 	upArrow: boolean;
