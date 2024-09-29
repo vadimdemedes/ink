@@ -27,12 +27,10 @@ export type Options = {
 	waitUntilExit?: () => Promise<void>;
 };
 
-type ThrottledFunc<T extends (...args: any[]) => void> = ReturnType<typeof throttle<T>>;
-
 export default class Ink {
 	private readonly options: Options;
 	private readonly log: LogUpdate;
-	private readonly throttledLog: LogUpdate | ThrottledFunc<LogUpdate>;
+	private readonly throttledLog: LogUpdate;
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
 	private lastOutput: string;
@@ -66,7 +64,7 @@ export default class Ink {
 			: throttle(this.log, undefined, {
 					leading: true,
 					trailing: true,
-				});
+				}) as unknown as LogUpdate;
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
