@@ -52,7 +52,7 @@
 		"cli-cursor": "^4.0.0",
 		"cli-truncate": "^4.0.0",
 		"code-excerpt": "^4.0.0",
-		"es-toolkit": "^1.19.0",
+		"es-toolkit": "^1.22.0",
 		"indent-string": "^5.0.0",
 		"is-in-ci": "^0.1.0",
 		"patch-console": "^2.0.0",

@@ -54,13 +54,19 @@ export default class Ink {
 
 		this.rootNode.onRender = options.debug
 			? this.onRender
-			: throttle(this.onRender, 32);
+			: throttle(this.onRender, 32, {
+					leading: true,
+					trailing: true,
+				});
 
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout);
 		this.throttledLog = options.debug
 			? this.log
-			: throttle(this.log, undefined);
+			: throttle(this.log, undefined, {
+					leading: true,
+					trailing: true,
+				});
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
