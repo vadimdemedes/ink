@@ -61,10 +61,10 @@ export default class Ink {
 		this.log = logUpdate.create(options.stdout);
 		this.throttledLog = options.debug
 			? this.log
-			: throttle(this.log, undefined, {
+			: (throttle(this.log, undefined, {
 					leading: true,
 					trailing: true,
-				}) as unknown as LogUpdate;
+				}) as unknown as LogUpdate);
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
