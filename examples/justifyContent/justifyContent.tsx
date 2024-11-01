@@ -10,7 +10,7 @@ function JustifyContent() {
 					<Text>X</Text>
 					<Text>Y</Text>
 				</Box>
-				<Text>]</Text>
+				<Text>] flex-start</Text>
 			</Box>
 			<Box>
 				<Text>[</Text>
@@ -18,7 +18,7 @@ function JustifyContent() {
 					<Text>X</Text>
 					<Text>Y</Text>
 				</Box>
-				<Text>]</Text>
+				<Text>] flex-end</Text>
 			</Box>
 			<Box>
 				<Text>[</Text>
@@ -26,7 +26,7 @@ function JustifyContent() {
 					<Text>X</Text>
 					<Text>Y</Text>
 				</Box>
-				<Text>]</Text>
+				<Text>] center</Text>
 			</Box>
 			<Box>
 				<Text>[</Text>
@@ -34,7 +34,7 @@ function JustifyContent() {
 					<Text>X</Text>
 					<Text>Y</Text>
 				</Box>
-				<Text>]</Text>
+				<Text>] space-around</Text>
 			</Box>
 			<Box>
 				<Text>[</Text>
@@ -42,7 +42,7 @@ function JustifyContent() {
 					<Text>X</Text>
 					<Text>Y</Text>
 				</Box>
-				<Text>]</Text>
+				<Text>] space-between</Text>
 			</Box>
 			<Box>
 				<Text>[</Text>
@@ -50,7 +50,7 @@ function JustifyContent() {
 					<Text>X</Text>
 					<Text>Y</Text>
 				</Box>
-				<Text>]</Text>
+				<Text>] space-evenly</Text>
 			</Box>
 		</Box>
 	);
