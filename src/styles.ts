@@ -152,6 +152,7 @@ export type Styles = {
 		| 'flex-end'
 		| 'space-between'
 		| 'space-around'
+		| 'space-evenly'
 		| 'center';
 
 	/**
@@ -482,6 +483,10 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 
 		if (style.justifyContent === 'space-around') {
 			node.setJustifyContent(Yoga.JUSTIFY_SPACE_AROUND);
+		}
+
+		if (style.justifyContent === 'space-evenly') {
+			node.setJustifyContent(Yoga.JUSTIFY_SPACE_EVENLY);
 		}
 	}
 };
