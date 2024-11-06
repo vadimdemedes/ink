@@ -1,1 +1,1 @@
-import './justify-content';
+import './justify-content.js';
