@@ -8,7 +8,31 @@ import useStdin from './use-stdin.js';
  */
 export type Key = {
 	/**
-	 * The name of the key that was pressed.
+   * The interpreted name of the key that was pressed. This is primarily useful
+   * for meta keys (e.g. Home, End, Insert).
+   *
+   * For example, if the user presses the Home key, `key.name` will be set to
+   * `home`.
+   *
+   * For non-meta keys, the `key.name` will be equivalent to the lower-cased
+   * version of `input`.
+   *
+   * Currently identified meta keys:
+   * - `f1` - `f12`
+   * - `escape`
+   * - `number` (for all number keys 0-9)
+   * - `return`
+   * - `up` (arrow keys)
+   * - `down` (arrow keys)
+   * - `left` (arrow keys)
+   * - `right` (arrow keys)
+   * - `insert`
+   * - `delete`
+   * - `home`
+   * - `end`
+   * - `pageup`
+   * - `pagedown`
+   * - `space`
 	 */
 	name: string;
 
