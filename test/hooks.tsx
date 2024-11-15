@@ -11,6 +11,7 @@ const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: any) => void;
 	let reject: (error?: Error) => void;
 
+	// eslint-disable-next-line promise/param-names
 	const exitPromise = new Promise((resolve2, reject2) => {
 		resolve = resolve2;
 		reject = reject2;

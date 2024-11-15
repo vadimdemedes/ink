@@ -13,14 +13,15 @@ const read = () => {
 
 		state = 'pending';
 
-		void promise.then(() => {
+		(async () => {
+			await promise;
 			state = 'done';
 			value = 'Hello World';
-		});
+		})();
 	}
 
 	if (state === 'pending') {
-		// eslint-disable-next-line @typescript-eslint/no-throw-literal
+		// eslint-disable-next-line @typescript-eslint/only-throw-error
 		throw promise;
 	}
 

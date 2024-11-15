@@ -38,7 +38,7 @@ $ npm install --save-dev react-devtools-core
 				`.trim() + '\n',
 			);
 		} else {
-			// eslint-disable-next-line @typescript-eslint/no-throw-literal
+			// eslint-disable-next-line @typescript-eslint/only-throw-error
 			throw error;
 		}
 	}
