@@ -57,6 +57,17 @@ test('row - align two text nodes on the edges', t => {
 	t.is(output, 'A  B');
 });
 
+test('row - space evenly two text nodes', t => {
+	const output = renderToString(
+		<Box justifyContent="space-evenly" width={10}>
+			<Text>A</Text>
+			<Text>B</Text>
+		</Box>,
+	);
+
+	t.is(output, '  A   B');
+});
+
 // Yoga has a bug, where first child in a container with space-around doesn't have
 // the correct X coordinate and measure function is used on that child node
 test.failing('row - align two text nodes with equal space around them', t => {

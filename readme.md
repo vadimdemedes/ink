@@ -837,7 +837,7 @@ See [align-self](https://css-tricks.com/almanac/properties/a/align-self/).
 ##### justifyContent
 
 Type: `string`\
-Allowed values: `flex-start` `center` `flex-end` `space-between` `space-around`
+Allowed values: `flex-start` `center` `flex-end` `space-between` `space-around` `space-evenly`
 
 See [justify-content](https://css-tricks.com/almanac/properties/j/justify-content/).
 
@@ -868,6 +868,12 @@ See [justify-content](https://css-tricks.com/almanac/properties/j/justify-conten
 	<Text>Y</Text>
 </Box>
 // [  X   Y  ]
+
+<Box justifyContent="space-evenly">
+	<Text>X</Text>
+	<Text>Y</Text>
+</Box>
+// [   X   Y   ]
 ```
 
 #### Visibility
