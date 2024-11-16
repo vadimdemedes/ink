@@ -55,6 +55,9 @@ export default class Output {
 
 	private readonly operations: Operation[] = [];
 
+	#charCache: {[line: string]: StyledChar[]} = {};
+	#styledCharsToStringCache: {[serializedStyledChars: string]: string} = {};
+
 	constructor(options: Options) {
 		const {width, height} = options;
 
@@ -199,7 +202,11 @@ export default class Output {
 						line = transformer(line, index);
 					}
 
-					const characters = styledCharsFromTokens(tokenize(line));
+					if (!this.#charCache.hasOwnProperty(line)) {
+						this.#charCache[line] = styledCharsFromTokens(tokenize(line));
+					}
+					const characters = this.#charCache[line]!;
+
 					let offsetX = x;
 
 					for (const character of characters) {
@@ -232,7 +239,12 @@ export default class Output {
 				// See https://github.com/vadimdemedes/ink/pull/564#issuecomment-1637022742
 				const lineWithoutEmptyItems = line.filter(item => item !== undefined);
 
-				return styledCharsToString(lineWithoutEmptyItems).trimEnd();
+				const key = JSON.stringify(lineWithoutEmptyItems);
+				if (!this.#styledCharsToStringCache.hasOwnProperty(key)) {
+					const result = styledCharsToString(lineWithoutEmptyItems).trimEnd();
+					this.#styledCharsToStringCache[key] = result;
+				}
+				return this.#styledCharsToStringCache[key];
 			})
 			.join('\n');
 
