@@ -236,6 +236,15 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 		key.ctrl = isCtrlKey(code) || key.ctrl;
 	}
 
+	// iTerm in natural text editing mode
+	if (key.raw === '\x1Bb') {
+		key.meta = true;
+		key.name = 'left';
+	} else if (key.raw === '\x1Bf') {
+		key.meta = true;
+		key.name = 'right';
+	}
+
 	return key;
 };
 
