@@ -2126,6 +2126,7 @@ You can even inspect and change the props of components, and see the results imm
 - [ink-syntax-highlight](https://github.com/vsashyn/ink-syntax-highlight) - Code syntax highlighting.
 - [ink-form](https://github.com/lukasbach/ink-form) - Form.
 - [ink-task-list](https://github.com/privatenumber/ink-task-list) - Task list.
+- [ink-spawn](https://github.com/kraenhansen/ink-spawn) - Spawn child processes.
 
 ## Useful Hooks
 
