@@ -94,7 +94,6 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Bit](https://github.com/teambit/bit) - Build, distribute and collaborate on components.
 - [Remirror](https://github.com/remirror/remirror) - Your friendly, world-class editor toolkit.
 - [Prime](https://github.com/birkir/prime) - Open source GraphQL CMS.
-- [Splash](https://github.com/Shopify/polaris-react/tree/master/scripts/splash) - Observe the splash zone of a change across the Shopify's [Polaris](https://polaris.shopify.com) component library.
 - [emoj](https://github.com/sindresorhus/emoj) - Find relevant emojis.
 - [emma](https://github.com/maticzav/emma-cli) - Find and install npm packages.
 - [npm-check-extras](https://github.com/akgondber/npm-check-extras) - Check for outdated and unused dependencies, and run update/delete action over selected ones.
