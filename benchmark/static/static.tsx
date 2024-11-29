@@ -48,7 +48,7 @@ function App() {
 			<Box flexDirection="column" padding={1}>
 				<Text underline bold color="red">
 					{/* eslint-disable-next-line react/jsx-curly-brace-presence */}
-					{'Hello'} {'World'}
+					{'Hello World'}
 				</Text>
 
 				<Text>Rendered: {items.length}</Text>
