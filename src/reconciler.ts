@@ -95,6 +95,30 @@ type UpdatePayload = {
 	style: Styles | undefined;
 };
 
+const finalizeChangedStyle = (
+	changedStyle: Styles | undefined,
+	currentStyle: Styles | undefined,
+): Styles | undefined => {
+	if (!changedStyle) {
+		return;
+	}
+
+	if (!currentStyle) {
+		return changedStyle;
+	}
+
+	const style = {...changedStyle};
+
+	if ('borderStyle' in style) {
+		style.borderTop = currentStyle.borderTop;
+		style.borderRight = currentStyle.borderRight;
+		style.borderBottom = currentStyle.borderBottom;
+		style.borderLeft = currentStyle.borderLeft;
+	}
+
+	return style;
+};
+
 export default createReconciler<
 	ElementNames,
 	Props,
@@ -254,14 +278,19 @@ export default createReconciler<
 
 		const props = diff(oldProps, newProps);
 
-		const style = diff(
+		const changedStyle = diff(
 			oldProps['style'] as Styles,
 			newProps['style'] as Styles,
 		);
 
-		if (!props && !style) {
+		if (!props && !changedStyle) {
 			return null;
 		}
+
+		const style = finalizeChangedStyle(
+			changedStyle as Styles,
+			newProps['style'] as Styles,
+		);
 
 		return {props, style};
 	},
