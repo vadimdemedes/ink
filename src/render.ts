@@ -41,6 +41,12 @@ export type RenderOptions = {
 	 * @default true
 	 */
 	patchConsole?: boolean;
+	/**
+	 * If true, render output will use all avaliable height (rows)
+	 *
+	 * @default undefined
+	 */
+	fullHeight?: boolean;
 };
 
 export type Instance = {
