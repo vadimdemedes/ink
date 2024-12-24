@@ -26,7 +26,7 @@ export default class Ink {
     rejectExitPromise: (reason?: Error) => void;
     unsubscribeExit: () => void;
     calculateLayout: () => void;
-    onRender: () => void;
+    onRender(didResize?: boolean): void;
     render(node: ReactNode): void;
     writeToStdout(data: string): void;
     writeToStderr(data: string): void;

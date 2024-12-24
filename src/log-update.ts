@@ -5,6 +5,7 @@ import cliCursor from 'cli-cursor';
 export type LogUpdate = {
 	clear: () => void;
 	done: () => void;
+	updateLineCount: (str: string) => void;
 	(str: string): void;
 };
 
@@ -33,6 +34,11 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 		stream.write(ansiEscapes.eraseLines(previousLineCount));
 		previousOutput = '';
 		previousLineCount = 0;
+	};
+
+	// Called when the terminal is resized
+	render.updateLineCount = (str: string) => {
+		previousLineCount = str.split('\n').length;
 	};
 
 	render.done = () => {

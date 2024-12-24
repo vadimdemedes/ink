@@ -117,7 +117,7 @@ export default class Ink {
 
 	resized = () => {
 		this.calculateLayout();
-		this.onRender();
+		this.onRender(true);
 	};
 
 	resolveExitPromise: () => void = () => {};
@@ -138,7 +138,7 @@ export default class Ink {
 		);
 	};
 
-	onRender: () => void = () => {
+	onRender(didResize = false) {
 		if (this.isUnmounted) {
 			return;
 		}
@@ -178,6 +178,15 @@ export default class Ink {
 			return;
 		}
 
+		if (didResize) {
+			this.options.stdout.write(
+				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
+			);
+			this.lastOutput = output;
+			this.log.updateLineCount(output);
+			return;
+		}
+
 		// To ensure static output is cleanly rendered before main output, clear main output first
 		if (hasStaticOutput) {
 			this.log.clear();
@@ -190,7 +199,7 @@ export default class Ink {
 		}
 
 		this.lastOutput = output;
-	};
+	}
 
 	render(node: ReactNode): void {
 		const tree = (

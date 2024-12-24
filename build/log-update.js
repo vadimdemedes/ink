@@ -22,6 +22,10 @@ const create = (stream, { showCursor = false } = {}) => {
         previousOutput = '';
         previousLineCount = 0;
     };
+    // Called when the terminal is resized
+    render.updateLineCount = (str) => {
+        previousLineCount = str.split('\n').length;
+    };
     render.done = () => {
         previousOutput = '';
         previousLineCount = 0;

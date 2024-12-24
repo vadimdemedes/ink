@@ -82,7 +82,7 @@ export default class Ink {
     }
     resized = () => {
         this.calculateLayout();
-        this.onRender();
+        this.onRender(true);
     };
     resolveExitPromise = () => { };
     rejectExitPromise = () => { };
@@ -94,7 +94,7 @@ export default class Ink {
         this.rootNode.yogaNode.setWidth(terminalWidth);
         this.rootNode.yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
     };
-    onRender = () => {
+    onRender(didResize = false) {
         if (this.isUnmounted) {
             return;
         }
@@ -123,6 +123,12 @@ export default class Ink {
             this.lastOutput = output;
             return;
         }
+        if (didResize) {
+            this.options.stdout.write(ansiEscapes.clearTerminal + this.fullStaticOutput + output);
+            this.lastOutput = output;
+            this.log.updateLineCount(output);
+            return;
+        }
         // To ensure static output is cleanly rendered before main output, clear main output first
         if (hasStaticOutput) {
             this.log.clear();
@@ -133,7 +139,7 @@ export default class Ink {
             this.throttledLog(output);
         }
         this.lastOutput = output;
-    };
+    }
     render(node) {
         const tree = (React.createElement(App, { stdin: this.options.stdin, stdout: this.options.stdout, stderr: this.options.stderr, writeToStdout: this.writeToStdout, writeToStderr: this.writeToStderr, exitOnCtrlC: this.options.exitOnCtrlC, onExit: this.unmount }, node));
         reconciler.updateContainer(tree, this.container, null, noop);
