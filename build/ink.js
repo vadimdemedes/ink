@@ -141,7 +141,7 @@ export default class Ink {
         if (hasStaticOutput) {
             this.log.clear();
             this.options.stdout.write(staticOutput);
-            this.log(output);
+            this.throttledLog(output);
         }
         if (!hasStaticOutput && output !== this.lastOutput) {
             this.throttledLog(output);
