@@ -21,6 +21,7 @@ export default class Ink {
     // Ignore last render after unmounting a tree to prevent empty output before exit
     isUnmounted;
     lastOutput;
+    lastOutputHeight;
     container;
     rootNode;
     // This variable is used only in debug mode to store full static output
@@ -52,6 +53,9 @@ export default class Ink {
         this.isUnmounted = false;
         // Store last output to only rerender when needed
         this.lastOutput = '';
+        // Store last output height so we know to clear the terminal when the previous output
+        // height is greater than the current terminal height
+        this.lastOutputHeight = 0;
         // This variable is used only in debug mode to store full static output
         // so that it's rerendered every time, not just new static parts, like in non-debug mode
         this.fullStaticOutput = '';
@@ -113,19 +117,23 @@ export default class Ink {
                 this.options.stdout.write(staticOutput);
             }
             this.lastOutput = output;
+            this.lastOutputHeight = outputHeight;
             return;
         }
         if (hasStaticOutput) {
             this.fullStaticOutput += staticOutput;
         }
-        if (outputHeight >= this.options.stdout.rows) {
+        if (outputHeight >= this.options.stdout.rows ||
+            this.lastOutputHeight >= this.options.stdout.rows) {
             this.options.stdout.write(ansiEscapes.clearTerminal + this.fullStaticOutput + output);
             this.lastOutput = output;
+            this.lastOutputHeight = outputHeight;
             return;
         }
         if (didResize) {
             this.options.stdout.write(ansiEscapes.clearTerminal + this.fullStaticOutput + output);
             this.lastOutput = output;
+            this.lastOutputHeight = outputHeight;
             this.log.updateLineCount(output);
             return;
         }
@@ -139,6 +147,7 @@ export default class Ink {
             this.throttledLog(output);
         }
         this.lastOutput = output;
+        this.lastOutputHeight = outputHeight;
     }
     render(node) {
         const tree = (React.createElement(App, { stdin: this.options.stdin, stdout: this.options.stdout, stderr: this.options.stderr, writeToStdout: this.writeToStdout, writeToStderr: this.writeToStderr, exitOnCtrlC: this.options.exitOnCtrlC, onExit: this.unmount }, node));

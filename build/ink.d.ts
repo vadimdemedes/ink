@@ -14,6 +14,7 @@ export default class Ink {
     private readonly throttledLog;
     private isUnmounted;
     private lastOutput;
+    private lastOutputHeight;
     private readonly container;
     private readonly rootNode;
     private fullStaticOutput;
