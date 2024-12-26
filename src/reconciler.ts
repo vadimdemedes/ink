@@ -25,7 +25,7 @@ import {type OutputTransformer} from './render-node-to-output.js';
 // See https://github.com/vadimdemedes/ink/issues/384
 if (process.env['DEV'] === 'true') {
 	try {
-		await import('./devtools.js');
+		import('./devtools.js');
 	} catch (error: any) {
 		if (error.code === 'ERR_MODULE_NOT_FOUND') {
 			console.warn(
