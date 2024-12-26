@@ -37,7 +37,7 @@ export default class Ink {
 	private lastOutput: string;
 	private lastOutputHeight: number;
 	private readonly container: FiberRoot;
-	private readonly rootNode: dom.DOMElement;
+	private rootNode: dom.DOMElement | null = null;
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	private fullStaticOutput: string;
@@ -47,19 +47,7 @@ export default class Ink {
 
 	constructor(options: Options) {
 		autoBind(this);
-
 		this.options = options;
-		this.rootNode = dom.createNode('ink-root');
-		this.rootNode.onComputeLayout = this.calculateLayout;
-
-		this.rootNode.onRender = options.debug
-			? this.onRender
-			: throttle(this.onRender, 32, {
-					leading: true,
-					trailing: true,
-				});
-
-		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout);
 		this.throttledLog = options.debug
 			? this.log
@@ -82,31 +70,8 @@ export default class Ink {
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
 		this.fullStaticOutput = '';
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-		this.container = reconciler.createContainer(
-			this.rootNode,
-			// Legacy mode
-			0,
-			null,
-			false,
-			null,
-			'id',
-			() => {},
-			null,
-		);
-
 		// Unmount when process exits
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
-
-		if (process.env['DEV'] === 'true') {
-			reconciler.injectIntoDevTools({
-				bundleType: 0,
-				// Reporting React DOM's version, not Ink's
-				// See https://github.com/facebook/react/issues/16666#issuecomment-532639905
-				version: '16.13.1',
-				rendererPackageName: 'ink',
-			});
-		}
 
 		if (options.patchConsole) {
 			this.patchConsole();
@@ -119,6 +84,42 @@ export default class Ink {
 				options.stdout.off('resize', this.resized);
 			};
 		}
+
+		initYoga().then(() => {
+			this.rootNode = dom.createNode('ink-root');
+			this.rootNode.onComputeLayout = this.calculateLayout;
+			this.rootNode.onRender = options.debug
+				? this.onRender
+				: throttle(this.onRender, 32, {
+						leading: true,
+						trailing: true,
+					});
+			this.rootNode.onImmediateRender = this.onRender;
+
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			// @ts-expect-error: TODO
+			this.container = reconciler.createContainer(
+				this.rootNode,
+				// Legacy mode
+				0,
+				null,
+				false,
+				null,
+				'id',
+				() => {},
+				null,
+			);
+
+			if (process.env['DEV'] === 'true') {
+				reconciler.injectIntoDevTools({
+					bundleType: 0,
+					// Reporting React DOM's version, not Ink's
+					// See https://github.com/facebook/react/issues/16666#issuecomment-532639905
+					version: '16.13.1',
+					rendererPackageName: 'ink',
+				});
+			}
+		});
 	}
 
 	resized = () => {
@@ -135,6 +136,11 @@ export default class Ink {
 		// In that case we fall back to 80.
 		const terminalWidth = this.options.stdout.columns || 80;
 
+		if (!this.rootNode) {
+			// Yoga is not initialized yet
+			return;
+		}
+
 		this.rootNode.yogaNode!.setWidth(terminalWidth);
 
 		this.rootNode.yogaNode!.calculateLayout(
@@ -146,6 +152,11 @@ export default class Ink {
 
 	onRender(didResize = false) {
 		if (this.isUnmounted) {
+			return;
+		}
+
+		if (!this.rootNode) {
+			// Yoga is not initialized yet
 			return;
 		}
 
