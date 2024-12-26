@@ -1,4 +1,4 @@
-import Yoga from 'yoga-wasm-web/auto';
+import { getYoga } from '@bcherny/yoga-wasm-web';
 import measureText from './measure-text.js';
 import wrapText from './wrap-text.js';
 import squashTextNodes from './squash-text-nodes.js';
@@ -9,7 +9,7 @@ export const createNode = (nodeName) => {
         attributes: {},
         childNodes: [],
         parentNode: undefined,
-        yogaNode: nodeName === 'ink-virtual-text' ? undefined : Yoga.Node.create(),
+        yogaNode: nodeName === 'ink-virtual-text' ? undefined : getYoga().Node.create(),
     };
     if (nodeName === 'ink-text') {
         node.yogaNode?.setMeasureFunc(measureTextNode.bind(null, node));

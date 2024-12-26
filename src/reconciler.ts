@@ -1,7 +1,8 @@
 import process from 'node:process';
 import createReconciler from 'react-reconciler';
 import {DefaultEventPriority} from 'react-reconciler/constants.js';
-import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
+import * as Yoga from '@bcherny/yoga-wasm-web';
+import {type Node as YogaNode} from '@bcherny/yoga-wasm-web';
 import {
 	createTextNode,
 	appendChildNode,

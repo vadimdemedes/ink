@@ -1,4 +1,4 @@
-import Yoga from 'yoga-wasm-web/auto';
+import * as Yoga from '@bcherny/yoga-wasm-web';
 const getMaxWidth = (yogaNode) => {
     return (yogaNode.getComputedWidth() -
         yogaNode.getComputedPadding(Yoga.EDGE_LEFT) -

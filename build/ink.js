@@ -6,13 +6,14 @@ import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
-import Yoga from 'yoga-wasm-web/auto';
+import * as Yoga from '@bcherny/yoga-wasm-web';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
 import logUpdate from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
+import { initYoga } from '@bcherny/yoga-wasm-web';
 const noop = () => { };
 export default class Ink {
     options;
@@ -150,8 +151,10 @@ export default class Ink {
         this.lastOutputHeight = outputHeight;
     }
     render(node) {
-        const tree = (React.createElement(App, { stdin: this.options.stdin, stdout: this.options.stdout, stderr: this.options.stderr, writeToStdout: this.writeToStdout, writeToStderr: this.writeToStderr, exitOnCtrlC: this.options.exitOnCtrlC, onExit: this.unmount }, node));
-        reconciler.updateContainer(tree, this.container, null, noop);
+        initYoga().then(() => {
+            const tree = (React.createElement(App, { stdin: this.options.stdin, stdout: this.options.stdout, stderr: this.options.stderr, writeToStdout: this.writeToStdout, writeToStderr: this.writeToStderr, exitOnCtrlC: this.options.exitOnCtrlC, onExit: this.unmount }, node));
+            reconciler.updateContainer(tree, this.container, null, noop);
+        });
     }
     writeToStdout(data) {
         if (this.isUnmounted) {

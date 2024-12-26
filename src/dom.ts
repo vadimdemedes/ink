@@ -1,4 +1,4 @@
-import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
+import {getYoga, type Node as YogaNode} from '@bcherny/yoga-wasm-web';
 import measureText from './measure-text.js';
 import {type Styles} from './styles.js';
 import wrapText from './wrap-text.js';
@@ -60,7 +60,8 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		attributes: {},
 		childNodes: [],
 		parentNode: undefined,
-		yogaNode: nodeName === 'ink-virtual-text' ? undefined : Yoga.Node.create(),
+		yogaNode:
+			nodeName === 'ink-virtual-text' ? undefined : getYoga().Node.create(),
 	};
 
 	if (nodeName === 'ink-text') {

@@ -65,7 +65,7 @@
 		"widest-line": "^5.0.0",
 		"wrap-ansi": "^9.0.0",
 		"ws": "^8.18.0",
-		"yoga-wasm-web": "~0.3.3"
+		"@bcherny/yoga-wasm-web": "^0.3.5"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "^9.2.0",
