@@ -1,6 +1,6 @@
 {
 	"name": "@bcherny/ink",
-	"version": "5.0.5",
+	"version": "5.0.6",
 	"description": "React for CLI (fork that you should not use probably)",
 	"license": "MIT",
 	"repository": "bcherny/ink",
