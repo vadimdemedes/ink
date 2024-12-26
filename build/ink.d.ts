@@ -16,7 +16,7 @@ export default class Ink {
     private lastOutput;
     private lastOutputHeight;
     private readonly container;
-    private readonly rootNode;
+    private rootNode;
     private fullStaticOutput;
     private exitPromise?;
     private restoreConsole?;
