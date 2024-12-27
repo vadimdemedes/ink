@@ -1,9 +1,7 @@
-import React, {useState, useEffect} from 'react';
+import React from 'react';
 import test from 'ava';
-import boxen, {type Options} from 'boxen';
+import boxen from 'boxen';
 import indentString from 'indent-string';
-import delay from 'delay';
-import widestLine from 'widest-line';
 import cliBoxes from 'cli-boxes';
 import chalk from 'chalk';
 import {render, Box, Text} from '../src/index.js';

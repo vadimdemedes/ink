@@ -1,5 +1,4 @@
 import sliceAnsi from 'slice-ansi';
-import stringWidth from 'string-width';
 import widestLine from 'widest-line';
 import {
 	type StyledChar,
@@ -164,7 +163,7 @@ export default class Output {
 					if (clipHorizontally) {
 						lines = lines.map(line => {
 							const from = x < clip.x1! ? clip.x1! - x : 0;
-							const width = stringWidth(line);
+							const width = Bun.stringWidth(line);
 							const to = x + width > clip.x2! ? clip.x2! - x : width;
 
 							return sliceAnsi(line, from, to);
