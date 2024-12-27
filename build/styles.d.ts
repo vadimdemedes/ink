@@ -1,7 +1,7 @@
 import { type Boxes, type BoxStyle } from 'cli-boxes';
 import { type LiteralUnion } from 'type-fest';
 import { type ForegroundColorName } from 'ansi-styles';
-import { type Node as YogaNode } from '@bcherny/yoga-wasm-web';
+import { type Node as YogaNode } from 'yoga-wasm-web';
 export type Styles = {
     readonly textWrap?: 'wrap' | 'end' | 'middle' | 'truncate-end' | 'truncate' | 'truncate-middle' | 'truncate-start';
     readonly position?: 'absolute' | 'relative';

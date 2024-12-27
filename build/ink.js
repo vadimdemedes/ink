@@ -6,14 +6,13 @@ import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
-import * as Yoga from '@bcherny/yoga-wasm-web';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
 import logUpdate from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
-import { initYoga } from '@bcherny/yoga-wasm-web';
+import Yoga from 'yoga-wasm-web/auto';
 const noop = () => { };
 export default class Ink {
     options;
@@ -62,31 +61,28 @@ export default class Ink {
                 options.stdout.off('resize', this.resized);
             };
         }
-        initYoga().then(() => {
-            this.rootNode = dom.createNode('ink-root');
-            this.rootNode.onComputeLayout = this.calculateLayout;
-            this.rootNode.onRender = options.debug
-                ? this.onRender
-                : throttle(this.onRender, 32, {
-                    leading: true,
-                    trailing: true,
-                });
-            this.rootNode.onImmediateRender = this.onRender;
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            // @ts-expect-error: TODO
-            this.container = reconciler.createContainer(this.rootNode, 
-            // Legacy mode
-            0, null, false, null, 'id', () => { }, null);
-            if (process.env['DEV'] === 'true') {
-                reconciler.injectIntoDevTools({
-                    bundleType: 0,
-                    // Reporting React DOM's version, not Ink's
-                    // See https://github.com/facebook/react/issues/16666#issuecomment-532639905
-                    version: '16.13.1',
-                    rendererPackageName: 'ink',
-                });
-            }
-        });
+        this.rootNode = dom.createNode('ink-root');
+        this.rootNode.onComputeLayout = this.calculateLayout;
+        this.rootNode.onRender = options.debug
+            ? this.onRender
+            : throttle(this.onRender, 32, {
+                leading: true,
+                trailing: true,
+            });
+        this.rootNode.onImmediateRender = this.onRender;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        this.container = reconciler.createContainer(this.rootNode, 
+        // Legacy mode
+        0, null, false, null, 'id', () => { }, null);
+        if (process.env['DEV'] === 'true') {
+            reconciler.injectIntoDevTools({
+                bundleType: 0,
+                // Reporting React DOM's version, not Ink's
+                // See https://github.com/facebook/react/issues/16666#issuecomment-532639905
+                version: '16.13.1',
+                rendererPackageName: 'ink',
+            });
+        }
     }
     resized = () => {
         this.calculateLayout();
@@ -162,10 +158,8 @@ export default class Ink {
         this.lastOutputHeight = outputHeight;
     }
     render(node) {
-        initYoga().then(() => {
-            const tree = (React.createElement(App, { stdin: this.options.stdin, stdout: this.options.stdout, stderr: this.options.stderr, writeToStdout: this.writeToStdout, writeToStderr: this.writeToStderr, exitOnCtrlC: this.options.exitOnCtrlC, onExit: this.unmount }, node));
-            reconciler.updateContainer(tree, this.container, null, noop);
-        });
+        const tree = (React.createElement(App, { stdin: this.options.stdin, stdout: this.options.stdout, stderr: this.options.stderr, writeToStdout: this.writeToStdout, writeToStderr: this.writeToStderr, exitOnCtrlC: this.options.exitOnCtrlC, onExit: this.unmount }, node));
+        reconciler.updateContainer(tree, this.container, null, noop);
     }
     writeToStdout(data) {
         if (this.isUnmounted) {

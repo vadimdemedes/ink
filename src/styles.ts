@@ -2,8 +2,8 @@
 import {type Boxes, type BoxStyle} from 'cli-boxes';
 import {type LiteralUnion} from 'type-fest';
 import {type ForegroundColorName} from 'ansi-styles'; // Note: We import directly from `ansi-styles` to avoid a bug in TypeScript.
-import * as Yoga from '@bcherny/yoga-wasm-web';
-import {type Node as YogaNode} from '@bcherny/yoga-wasm-web';
+import * as Yoga from 'yoga-wasm-web';
+import {type Node as YogaNode} from 'yoga-wasm-web';
 
 export type Styles = {
 	readonly textWrap?:

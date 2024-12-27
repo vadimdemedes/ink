@@ -1,4 +1,4 @@
-import * as Yoga from '@bcherny/yoga-wasm-web';
+import * as Yoga from 'yoga-wasm-web';
 const applyPositionStyles = (node, style) => {
     if ('position' in style) {
         node.setPositionType(style.position === 'absolute'

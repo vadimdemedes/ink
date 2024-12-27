@@ -7,6 +7,7 @@ import {
 	tokenize,
 } from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
+import stringWidth from 'string-width';
 
 /**
  * "Virtual" output class
@@ -163,7 +164,7 @@ export default class Output {
 					if (clipHorizontally) {
 						lines = lines.map(line => {
 							const from = x < clip.x1! ? clip.x1! - x : 0;
-							const width = Bun.stringWidth(line);
+							const width = stringWidth(line);
 							const to = x + width > clip.x2! ? clip.x2! - x : width;
 
 							return sliceAnsi(line, from, to);

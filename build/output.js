@@ -1,6 +1,7 @@
 import sliceAnsi from 'slice-ansi';
 import { widestLine } from './widest-line.js';
 import { styledCharsFromTokens, styledCharsToString, tokenize, } from '@alcalzone/ansi-tokenize';
+import stringWidth from 'string-width';
 export default class Output {
     width;
     height;
@@ -84,7 +85,7 @@ export default class Output {
                     if (clipHorizontally) {
                         lines = lines.map(line => {
                             const from = x < clip.x1 ? clip.x1 - x : 0;
-                            const width = Bun.stringWidth(line);
+                            const width = stringWidth(line);
                             const to = x + width > clip.x2 ? clip.x2 - x : width;
                             return sliceAnsi(line, from, to);
                         });

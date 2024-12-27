@@ -1,4 +1,4 @@
-import { type Node as YogaNode } from '@bcherny/yoga-wasm-web';
+import { type Node as YogaNode } from 'yoga-wasm-web';
 import { type Styles } from './styles.js';
 import { type OutputTransformer } from './render-node-to-output.js';
 type InkNode = {
