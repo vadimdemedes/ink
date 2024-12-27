@@ -27,6 +27,14 @@ export type Key = {
      */
     pageUp: boolean;
     /**
+     * Home key was pressed.
+     */
+    home: boolean;
+    /**
+     * End key was pressed.
+     */
+    end: boolean;
+    /**
      * Return (Enter) key was pressed.
      */
     return: boolean;
@@ -42,6 +50,10 @@ export type Key = {
      * Shift key was pressed.
      */
     shift: boolean;
+    /**
+     * Function (fn) key was pressed (Windows only).
+     */
+    fn: boolean;
     /**
      * Tab key was pressed.
      */
