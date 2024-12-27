@@ -134,6 +134,7 @@ const parseKeypress = (s = '') => {
     }
     const key = {
         name: '',
+        fn: false,
         ctrl: false,
         meta: false,
         shift: false,
@@ -236,6 +237,7 @@ const parseKeypress = (s = '') => {
                 meta: false,
                 shift: false,
                 option: false,
+                fn: false,
                 sequence: s,
                 raw: s,
             };
@@ -246,6 +248,7 @@ const parseKeypress = (s = '') => {
                 meta: false,
                 shift: false,
                 option: false,
+                fn: false,
                 sequence: s,
                 raw: s,
             };
@@ -256,6 +259,7 @@ const parseKeypress = (s = '') => {
                 meta: false,
                 shift: false,
                 option: false,
+                fn: false,
                 sequence: s,
                 raw: s,
             };
@@ -263,6 +267,51 @@ const parseKeypress = (s = '') => {
             return {
                 name: 'pagedown',
                 ctrl: false,
+                meta: false,
+                shift: false,
+                option: false,
+                fn: false,
+                sequence: s,
+                raw: s,
+            };
+        case '\u001b[1;5D':
+            return {
+                name: 'left',
+                ctrl: true,
+                meta: false,
+                shift: false,
+                option: false,
+                fn: false,
+                sequence: s,
+                raw: s,
+            };
+        case '\u001b[1;5C':
+            return {
+                name: 'right',
+                ctrl: true,
+                meta: false,
+                shift: false,
+                option: false,
+                fn: false,
+                sequence: s,
+                raw: s,
+            };
+        case '\u001b[1~':
+            return {
+                name: 'left',
+                ctrl: true,
+                fn: true,
+                meta: false,
+                shift: false,
+                option: false,
+                sequence: s,
+                raw: s,
+            };
+        case '\u001b[4~':
+            return {
+                name: 'right',
+                ctrl: true,
+                fn: true,
                 meta: false,
                 shift: false,
                 option: false,
@@ -277,6 +326,7 @@ const parseKeypress = (s = '') => {
             meta: false,
             shift: false,
             option: false,
+            fn: false,
             sequence: s,
             raw: s,
         };

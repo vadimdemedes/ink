@@ -127,6 +127,7 @@ const isCtrlKey = (code: string) => {
 };
 
 type ParsedKey = {
+	fn: boolean;
 	name: string;
 	ctrl: boolean;
 	meta: boolean;
@@ -155,6 +156,7 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 
 	const key: ParsedKey = {
 		name: '',
+		fn: false,
 		ctrl: false,
 		meta: false,
 		shift: false,
@@ -253,6 +255,7 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 				meta: false,
 				shift: false,
 				option: false,
+				fn: false,
 				sequence: s,
 				raw: s,
 			};
@@ -263,6 +266,7 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 				meta: false,
 				shift: false,
 				option: false,
+				fn: false,
 				sequence: s,
 				raw: s,
 			};
@@ -273,6 +277,7 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 				meta: false,
 				shift: false,
 				option: false,
+				fn: false,
 				sequence: s,
 				raw: s,
 			};
@@ -280,6 +285,51 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 			return {
 				name: 'pagedown',
 				ctrl: false,
+				meta: false,
+				shift: false,
+				option: false,
+				fn: false,
+				sequence: s,
+				raw: s,
+			};
+		case '\u001b[1;5D':
+			return {
+				name: 'left',
+				ctrl: true,
+				meta: false,
+				shift: false,
+				option: false,
+				fn: false,
+				sequence: s,
+				raw: s,
+			};
+		case '\u001b[1;5C':
+			return {
+				name: 'right',
+				ctrl: true,
+				meta: false,
+				shift: false,
+				option: false,
+				fn: false,
+				sequence: s,
+				raw: s,
+			};
+		case '\u001b[1~':
+			return {
+				name: 'left',
+				ctrl: true,
+				fn: true,
+				meta: false,
+				shift: false,
+				option: false,
+				sequence: s,
+				raw: s,
+			};
+		case '\u001b[4~':
+			return {
+				name: 'right',
+				ctrl: true,
+				fn: true,
 				meta: false,
 				shift: false,
 				option: false,
@@ -295,6 +345,7 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 			meta: false,
 			shift: false,
 			option: false,
+			fn: false,
 			sequence: s,
 			raw: s,
 		};

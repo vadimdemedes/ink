@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer';
 export declare const nonAlphanumericKeys: string[];
 type ParsedKey = {
+    fn: boolean;
     name: string;
     ctrl: boolean;
     meta: boolean;
