@@ -139,6 +139,8 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 		const handleData = (data: string) => {
 			const keypress = parseKeypress(data);
 
+			keypress.name;
+
 			const key = {
 				upArrow: keypress.name === 'up',
 				downArrow: keypress.name === 'down',
@@ -146,8 +148,11 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				rightArrow: keypress.name === 'right',
 				pageDown: keypress.name === 'pagedown',
 				pageUp: keypress.name === 'pageup',
+				home: keypress.name === 'home',
+				end: keypress.name === 'end',
 				return: keypress.name === 'return',
 				escape: keypress.name === 'escape',
+				fn: keypress.fn,
 				ctrl: keypress.ctrl,
 				shift: keypress.shift,
 				tab: keypress.name === 'tab',

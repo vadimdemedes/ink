@@ -321,7 +321,7 @@ const parseKeypress = (s = '') => {
     }
     if (process.platform === 'win32' && s === '\r') {
         return {
-            name: 'enter',
+            name: 'return',
             ctrl: true,
             meta: false,
             shift: false,

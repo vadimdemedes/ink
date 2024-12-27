@@ -340,7 +340,7 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 
 	if (process.platform === 'win32' && s === '\r') {
 		return {
-			name: 'enter',
+			name: 'return',
 			ctrl: true,
 			meta: false,
 			shift: false,
