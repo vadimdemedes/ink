@@ -245,6 +245,61 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 		key.name = 'right';
 	}
 
+	switch (s) {
+		case '\u001b[1~':
+			return {
+				name: 'home',
+				ctrl: false,
+				meta: false,
+				shift: false,
+				option: false,
+				sequence: s,
+				raw: s,
+			};
+		case '\u001b[4~':
+			return {
+				name: 'end',
+				ctrl: false,
+				meta: false,
+				shift: false,
+				option: false,
+				sequence: s,
+				raw: s,
+			};
+		case '\u001b[5~':
+			return {
+				name: 'pageup',
+				ctrl: false,
+				meta: false,
+				shift: false,
+				option: false,
+				sequence: s,
+				raw: s,
+			};
+		case '\u001b[6~':
+			return {
+				name: 'pagedown',
+				ctrl: false,
+				meta: false,
+				shift: false,
+				option: false,
+				sequence: s,
+				raw: s,
+			};
+	}
+
+	if (process.platform === 'win32' && s === '\r') {
+		return {
+			name: 'enter',
+			ctrl: true,
+			meta: false,
+			shift: false,
+			option: false,
+			sequence: s,
+			raw: s,
+		};
+	}
+
 	return key;
 };
 
