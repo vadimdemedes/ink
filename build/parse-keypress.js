@@ -319,18 +319,6 @@ const parseKeypress = (s = '') => {
                 raw: s,
             };
     }
-    if (process.platform === 'win32' && s === '\r') {
-        return {
-            name: 'return',
-            ctrl: true,
-            meta: false,
-            shift: false,
-            option: false,
-            fn: false,
-            sequence: s,
-            raw: s,
-        };
-    }
     return key;
 };
 export default parseKeypress;
