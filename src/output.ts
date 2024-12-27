@@ -1,5 +1,5 @@
 import sliceAnsi from 'slice-ansi';
-import widestLine from 'widest-line';
+import {widestLine} from './widest-line.js';
 import {
 	type StyledChar,
 	styledCharsFromTokens,
