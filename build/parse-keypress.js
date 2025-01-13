@@ -162,9 +162,8 @@ const parseKeypress = (s = '') => {
         key.meta = s.charAt(0) === '\x1b';
     }
     else if (s === '\x7f' || s === '\x1b\x7f') {
-        // TODO(vadimdemedes): `enquirer` detects delete key as backspace, but I had to split them up to avoid breaking changes in Ink. Merge them back together in the next major version.
-        // delete
-        key.name = 'delete';
+        // ink incorrectly sends "delete" here. we changed this in our fork
+        key.name = 'backspace';
         key.meta = s.charAt(0) === '\x1b';
     }
     else if (s === '\x1b' || s === '\x1b\x1b') {
