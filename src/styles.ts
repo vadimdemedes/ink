@@ -312,6 +312,18 @@ const applyPositionStyles = (node: YogaNode, style: Styles): void => {
 				: Yoga.POSITION_TYPE_RELATIVE,
 		);
 	}
+	if ('top' in style) {
+		node.setPosition(Yoga.EDGE_TOP, style.top ?? 0);
+	}
+	if ('left' in style) {
+		node.setPosition(Yoga.EDGE_LEFT, style.left ?? 0);
+	}
+	if ('bottom' in style) {
+		node.setPosition(Yoga.EDGE_BOTTOM, style.bottom ?? 0);
+	}
+	if ('right' in style) {
+		node.setPosition(Yoga.EDGE_RIGHT, style.right ?? 0);
+	}
 };
 
 const applyMarginStyles = (node: YogaNode, style: Styles): void => {
