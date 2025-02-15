@@ -55,8 +55,9 @@ export default class Output {
 
 	private readonly operations: Operation[] = [];
 
-	#charCache: {[line: string]: StyledChar[]} = {};
-	#styledCharsToStringCache: {[serializedStyledChars: string]: string} = {};
+	private charCache: {[line: string]: StyledChar[]} = {};
+	private styledCharsToStringCache: {[serializedStyledChars: string]: string} =
+		{};
 
 	constructor(options: Options) {
 		const {width, height} = options;
@@ -202,10 +203,10 @@ export default class Output {
 						line = transformer(line, index);
 					}
 
-					if (!this.#charCache.hasOwnProperty(line)) {
-						this.#charCache[line] = styledCharsFromTokens(tokenize(line));
+					if (!this.charCache.hasOwnProperty(line)) {
+						this.charCache[line] = styledCharsFromTokens(tokenize(line));
 					}
-					const characters = this.#charCache[line]!;
+					const characters = this.charCache[line]!;
 
 					let offsetX = x;
 
@@ -240,11 +241,11 @@ export default class Output {
 				const lineWithoutEmptyItems = line.filter(item => item !== undefined);
 
 				const key = JSON.stringify(lineWithoutEmptyItems);
-				if (!this.#styledCharsToStringCache.hasOwnProperty(key)) {
+				if (!this.styledCharsToStringCache.hasOwnProperty(key)) {
 					const result = styledCharsToString(lineWithoutEmptyItems).trimEnd();
-					this.#styledCharsToStringCache[key] = result;
+					this.styledCharsToStringCache[key] = result;
 				}
-				return this.#styledCharsToStringCache[key];
+				return this.styledCharsToStringCache[key];
 			})
 			.join('\n');
 

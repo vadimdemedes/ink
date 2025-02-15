@@ -6,8 +6,8 @@ export default class Output {
     width;
     height;
     operations = [];
-    #charCache = {};
-    #styledCharsToStringCache = {};
+    charCache = {};
+    styledCharsToStringCache = {};
     constructor(options) {
         const { width, height } = options;
         this.width = width;
@@ -113,10 +113,10 @@ export default class Output {
                     for (const transformer of transformers) {
                         line = transformer(line, index);
                     }
-                    if (!this.#charCache.hasOwnProperty(line)) {
-                        this.#charCache[line] = styledCharsFromTokens(tokenize(line));
+                    if (!this.charCache.hasOwnProperty(line)) {
+                        this.charCache[line] = styledCharsFromTokens(tokenize(line));
                     }
-                    const characters = this.#charCache[line];
+                    const characters = this.charCache[line];
                     let offsetX = x;
                     for (const character of characters) {
                         currentLine[offsetX] = character;
@@ -142,11 +142,11 @@ export default class Output {
             // See https://github.com/vadimdemedes/ink/pull/564#issuecomment-1637022742
             const lineWithoutEmptyItems = line.filter(item => item !== undefined);
             const key = JSON.stringify(lineWithoutEmptyItems);
-            if (!this.#styledCharsToStringCache.hasOwnProperty(key)) {
+            if (!this.styledCharsToStringCache.hasOwnProperty(key)) {
                 const result = styledCharsToString(lineWithoutEmptyItems).trimEnd();
-                this.#styledCharsToStringCache[key] = result;
+                this.styledCharsToStringCache[key] = result;
             }
-            return this.#styledCharsToStringCache[key];
+            return this.styledCharsToStringCache[key];
         })
             .join('\n');
         return {

@@ -18,10 +18,11 @@ type Clip = {
     y2: number | undefined;
 };
 export default class Output {
-    #private;
     width: number;
     height: number;
     private readonly operations;
+    private charCache;
+    private styledCharsToStringCache;
     constructor(options: Options);
     write(x: number, y: number, text: string, options: {
         transformers: OutputTransformer[];
