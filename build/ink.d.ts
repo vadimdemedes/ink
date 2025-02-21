@@ -7,6 +7,7 @@ export type Options = {
     exitOnCtrlC: boolean;
     patchConsole: boolean;
     waitUntilExit?: () => Promise<void>;
+    onFlicker?: () => unknown;
 };
 export default class Ink {
     private readonly options;

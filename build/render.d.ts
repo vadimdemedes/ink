@@ -36,6 +36,10 @@ export type RenderOptions = {
      * @default true
      */
     patchConsole?: boolean;
+    /**
+     * Callback for when Ink re-renders the scrollback.
+     */
+    onFlicker?: () => unknown;
 };
 export type Instance = {
     /**

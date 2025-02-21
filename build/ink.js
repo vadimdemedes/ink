@@ -133,6 +133,9 @@ export default class Ink {
         }
         if (outputHeight >= this.options.stdout.rows ||
             this.lastOutputHeight >= this.options.stdout.rows) {
+            if (this.options.onFlicker) {
+                this.options.onFlicker();
+            }
             this.options.stdout.write(ansiEscapes.clearTerminal + this.fullStaticOutput + output);
             this.lastOutput = output;
             this.lastOutputHeight = outputHeight;

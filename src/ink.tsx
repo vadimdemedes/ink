@@ -25,6 +25,7 @@ export type Options = {
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
 	waitUntilExit?: () => Promise<void>;
+	onFlicker?: () => unknown;
 };
 
 export default class Ink {
@@ -188,6 +189,9 @@ export default class Ink {
 			outputHeight >= this.options.stdout.rows ||
 			this.lastOutputHeight >= this.options.stdout.rows
 		) {
+			if (this.options.onFlicker) {
+				this.options.onFlicker();
+			}
 			this.options.stdout.write(
 				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
 			);
