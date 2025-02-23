@@ -136,16 +136,19 @@ export default class Ink {
             if (this.options.onFlicker) {
                 this.options.onFlicker();
             }
-            this.options.stdout.write(ansiEscapes.clearTerminal + this.fullStaticOutput + output);
+            // We add an extra newline to match what logOutput does
+            this.options.stdout.write(ansiEscapes.clearTerminal + this.fullStaticOutput + output + '\n');
             this.lastOutput = output;
             this.lastOutputHeight = outputHeight;
+            // Account for the extra newline
+            this.log.updateLineCount(output + '\n');
             return;
         }
         if (didResize) {
-            this.options.stdout.write(ansiEscapes.clearTerminal + this.fullStaticOutput + output);
+            this.options.stdout.write(ansiEscapes.clearTerminal + this.fullStaticOutput + output + '\n');
             this.lastOutput = output;
             this.lastOutputHeight = outputHeight;
-            this.log.updateLineCount(output);
+            this.log.updateLineCount(output + '\n');
             return;
         }
         // To ensure static output is cleanly rendered before main output, clear main output first
