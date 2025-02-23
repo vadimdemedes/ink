@@ -205,11 +205,11 @@ export default class Ink {
 
 		if (didResize) {
 			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
+				ansiEscapes.clearTerminal + this.fullStaticOutput + output + '\n',
 			);
 			this.lastOutput = output;
 			this.lastOutputHeight = outputHeight;
-			this.log.updateLineCount(output);
+			this.log.updateLineCount(output + '\n');
 			return;
 		}
 
