@@ -192,11 +192,14 @@ export default class Ink {
 			if (this.options.onFlicker) {
 				this.options.onFlicker();
 			}
+			// We add an extra newline to match what logOutput does
 			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
+				ansiEscapes.clearTerminal + this.fullStaticOutput + output + '\n',
 			);
 			this.lastOutput = output;
 			this.lastOutputHeight = outputHeight;
+			// Account for the extra newline
+			this.log.updateLineCount(output + '\n');
 			return;
 		}
 
