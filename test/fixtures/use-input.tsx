@@ -16,6 +16,16 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		if (test === 'pastedCarriageReturn' && input === '\rtest') {
+			exit();
+			return;
+		}
+
+		if (test === 'pastedTab' && input === '\ttest') {
+			exit();
+			return;
+		}
+
 		if (test === 'escape' && key.escape) {
 			exit();
 			return;
