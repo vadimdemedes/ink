@@ -191,7 +191,7 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 	} else if (s === ' ' || s === '\x1b ') {
 		key.name = 'space';
 		key.meta = s.length === 2;
-	} else if (s <= '\x1a') {
+	} else if (s.length === 1 && s <= '\x1a') {
 		// ctrl+letter
 		key.name = String.fromCharCode(s.charCodeAt(0) + 'a'.charCodeAt(0) - 1);
 		key.ctrl = true;
