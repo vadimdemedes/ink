@@ -19,11 +19,13 @@ const createStdin = () => {
 };
 
 const emitReadable = (stdin: NodeJS.WriteStream, chunk: string) => {
+	/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 	const read = stdin.read as ReturnType<typeof stub>;
 	read.onCall(0).returns(chunk);
 	read.onCall(1).returns(null);
 	stdin.emit('readable');
 	read.reset();
+	/* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 };
 
 type TestProps = {
