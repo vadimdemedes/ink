@@ -2,7 +2,6 @@ import process from 'node:process';
 import React, {type ReactNode} from 'react';
 import {throttle} from 'es-toolkit/compat';
 import ansiEscapes from 'ansi-escapes';
-import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
@@ -14,6 +13,8 @@ import logUpdate, {type LogUpdate} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import Yoga from 'yoga-wasm-web/auto';
+
+const isInCi = Boolean(process.env["CI"]);
 
 const noop = () => {};
 

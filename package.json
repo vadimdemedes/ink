@@ -54,7 +54,6 @@
 		"code-excerpt": "^4.0.0",
 		"es-toolkit": "^1.22.0",
 		"indent-string": "^5.0.0",
-		"is-in-ci": "^1.0.0",
 		"patch-console": "^2.0.0",
 		"react-reconciler": "^0.29.0",
 		"scheduler": "^0.23.0",
