@@ -1,4 +1,4 @@
-import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
+import Yoga, {type Node as YogaNode} from 'yoga-layout';
 
 const getMaxWidth = (yogaNode: YogaNode) => {
 	return (

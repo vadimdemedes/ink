@@ -1,4 +1,4 @@
-import Yoga, {type Node as YogaNode} from 'yoga-wasm-web/auto';
+import Yoga, {type Node as YogaNode} from 'yoga-layout';
 import measureText from './measure-text.js';
 import {type Styles} from './styles.js';
 import wrapText from './wrap-text.js';
