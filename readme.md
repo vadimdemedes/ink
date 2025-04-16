@@ -76,6 +76,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 
 ## Who's Using Ink?
 
+- [Codex](https://github.com/openai/codex) - An open-source coding agent that runs in the terminal, made by OpenAI.
 - [Claude Code](https://github.com/anthropics/claude-code) - An agentic coding tool made by Anthropic.
 - [GitHub Copilot for CLI](https://githubnext.com/projects/copilot-cli) - Just say what you want the shell to do.
 - [Cloudflare's Wrangler](https://github.com/cloudflare/wrangler2) - The CLI for Cloudflare Workers.
