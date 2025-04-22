@@ -16,6 +16,11 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		if (test === 'uppercase' && input === '\r' && !key.shift) {
+			exit();
+			return;
+		}
+
 		if (test === 'pastedCarriageReturn' && input === '\rtest') {
 			exit();
 			return;
