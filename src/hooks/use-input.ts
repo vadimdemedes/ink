@@ -175,7 +175,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			if (
 				input.length === 1 &&
 				typeof input[0] === 'string' &&
-				input[0].toUpperCase() === input[0]
+				/[A-Z]/.test(input[0])
 			) {
 				key.shift = true;
 			}
