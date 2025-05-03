@@ -4,7 +4,7 @@ import boxen, {type Options} from 'boxen';
 import indentString from 'indent-string';
 import delay from 'delay';
 import widestLine from 'widest-line';
-import cliBoxes from 'cli-boxes';
+import cliBoxes, {type Boxes} from 'cli-boxes';
 import chalk from 'chalk';
 import {render, Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
@@ -611,6 +611,35 @@ test('hide all borders', t => {
 	);
 
 	t.is(output, ['Above', 'Content', 'Below'].join('\n'));
+});
+
+test('keep borders hidden on `borderStyle` change', async t => {
+	const stdout = createStdout();
+
+	function Test() {
+		const [state, setState] = useState<keyof Boxes>('single');
+
+		useEffect(() => {
+			setState('double');
+		}, []);
+
+		return (
+			<Box
+				borderStyle={state}
+				borderTop={false}
+				borderBottom={false}
+				borderLeft={false}
+				borderRight={false}
+			>
+				<Text>Content</Text>
+			</Box>
+		);
+	}
+
+	render(<Test />, {stdout, debug: true});
+	t.is((stdout.write as any).firstCall.args[0], 'Content');
+	await delay(100);
+	t.is((stdout.write as any).lastCall.args[0], 'Content');
 });
 
 test('change color of top border', t => {
