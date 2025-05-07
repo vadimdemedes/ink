@@ -34,6 +34,7 @@ export default class Ink {
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
 	private lastOutput: string;
+	private lastOutputHeight: number;
 	private readonly container: FiberRoot;
 	private readonly rootNode: dom.DOMElement;
 	// This variable is used only in debug mode to store full static output
@@ -71,6 +72,7 @@ export default class Ink {
 
 		// Store last output to only rerender when needed
 		this.lastOutput = '';
+		this.lastOutputHeight = 0;
 
 		// This variable is used only in debug mode to store full static output
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
@@ -163,6 +165,7 @@ export default class Ink {
 			}
 
 			this.lastOutput = output;
+			this.lastOutputHeight = outputHeight;
 			return;
 		}
 
@@ -170,11 +173,13 @@ export default class Ink {
 			this.fullStaticOutput += staticOutput;
 		}
 
-		if (outputHeight >= this.options.stdout.rows) {
+		if (this.lastOutputHeight >= this.options.stdout.rows) {
 			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
+				ansiEscapes.clearTerminal + this.fullStaticOutput + output + "\n",
 			);
 			this.lastOutput = output;
+			this.lastOutputHeight = outputHeight;
+			this.log.sync(output);
 			return;
 		}
 
@@ -190,6 +195,7 @@ export default class Ink {
 		}
 
 		this.lastOutput = output;
+		this.lastOutputHeight = outputHeight;
 	};
 
 	render(node: ReactNode): void {

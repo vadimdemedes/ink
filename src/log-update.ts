@@ -5,6 +5,7 @@ import cliCursor from 'cli-cursor';
 export type LogUpdate = {
 	clear: () => void;
 	done: () => void;
+	sync: (str: string) => void;
 	(str: string): void;
 };
 
@@ -44,6 +45,12 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 			hasHiddenCursor = false;
 		}
 	};
+
+	render.sync = (str: string) => {
+		const output = str + '\n';
+        previousOutput = output;
+        previousLineCount = output.split('\n').length;
+	}
 
 	return render;
 };
