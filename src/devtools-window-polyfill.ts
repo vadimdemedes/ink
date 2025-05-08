@@ -5,6 +5,7 @@ import ws from 'ws';
 const customGlobal = global as any;
 
 // These things must exist before importing `react-devtools-core`
+// eslint-disable-next-line n/no-unsupported-features/node-builtins
 customGlobal.WebSocket ||= ws;
 
 customGlobal.window ||= global;

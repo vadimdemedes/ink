@@ -6,7 +6,9 @@ function Erase() {
 	const [show, setShow] = useState(true);
 
 	useEffect(() => {
-		const timer = setTimeout(() => setShow(false));
+		const timer = setTimeout(() => {
+			setShow(false);
+		});
 
 		return () => {
 			clearTimeout(timer);

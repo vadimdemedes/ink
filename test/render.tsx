@@ -136,7 +136,7 @@ test.serial('erase screen where state changes in small viewport', async t => {
 	await ps.waitForExit();
 
 	const frames = ps.output.split(ansiEscapes.clearTerminal);
-	const lastFrame = frames[frames.length - 1];
+	const lastFrame = frames.at(-1);
 
 	for (const letter of ['A', 'B', 'C']) {
 		t.false(lastFrame?.includes(letter));
