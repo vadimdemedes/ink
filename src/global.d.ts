@@ -3,7 +3,7 @@ import {type Except} from 'type-fest';
 import {type DOMElement} from './dom.js';
 import {type Styles} from './styles.js';
 
-declare global {
+declare module 'react' {
 	namespace JSX {
 		// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 		interface IntrinsicElements {
