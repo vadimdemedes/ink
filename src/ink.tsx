@@ -6,6 +6,7 @@ import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
+import {ConcurrentRoot} from 'react-reconciler/constants.js';
 import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import reconciler from './reconciler.js';
@@ -79,12 +80,16 @@ export default class Ink {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		this.container = reconciler.createContainer(
 			this.rootNode,
-			// Legacy mode
-			0,
+			ConcurrentRoot,
 			null,
 			false,
 			null,
 			'id',
+			() => {},
+			() => {},
+			// @ts-expect-error @types/react-reconciler are not up to date
+			// See https://github.com/facebook/react/blob/c0464aedb16b1c970d717651bba8d1c66c578729/packages/react-reconciler/src/ReactFiberReconciler.js#L236-L259
+			() => {},
 			() => {},
 			null,
 		);

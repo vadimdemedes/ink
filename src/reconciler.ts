@@ -1,7 +1,11 @@
 import process from 'node:process';
-import createReconciler from 'react-reconciler';
-import {DefaultEventPriority} from 'react-reconciler/constants.js';
+import createReconciler, {type ReactContext} from 'react-reconciler';
+import {
+	DefaultEventPriority,
+	NoEventPriority,
+} from 'react-reconciler/constants.js';
 import Yoga, {type Node as YogaNode} from 'yoga-layout';
+import {createContext} from 'react';
 import {
 	createTextNode,
 	appendChildNode,
@@ -44,41 +48,6 @@ $ npm install --save-dev react-devtools-core
 	}
 }
 
-type AnyObject = Record<string, unknown>;
-
-const diff = (before: AnyObject, after: AnyObject): AnyObject | undefined => {
-	if (before === after) {
-		return;
-	}
-
-	if (!before) {
-		return after;
-	}
-
-	const changed: AnyObject = {};
-	let isChanged = false;
-
-	for (const key of Object.keys(before)) {
-		const isDeleted = after ? !Object.hasOwn(after, key) : true;
-
-		if (isDeleted) {
-			changed[key] = undefined;
-			isChanged = true;
-		}
-	}
-
-	if (after) {
-		for (const key of Object.keys(after)) {
-			if (after[key] !== before[key]) {
-				changed[key] = after[key];
-				isChanged = true;
-			}
-		}
-	}
-
-	return isChanged ? changed : undefined;
-};
-
 const cleanupYogaNode = (node?: YogaNode): void => {
 	node?.unsetMeasureFunc();
 	node?.freeRecursive();
@@ -90,10 +59,7 @@ type HostContext = {
 	isInsideText: boolean;
 };
 
-type UpdatePayload = {
-	props: Props | undefined;
-	style: Styles | undefined;
-};
+let currentUpdatePriority = NoEventPriority;
 
 export default createReconciler<
 	ElementNames,
@@ -104,8 +70,9 @@ export default createReconciler<
 	DOMElement,
 	unknown,
 	unknown,
+	unknown,
 	HostContext,
-	UpdatePayload,
+	unknown,
 	unknown,
 	unknown,
 	unknown
@@ -234,7 +201,6 @@ export default createReconciler<
 	scheduleTimeout: setTimeout,
 	cancelTimeout: clearTimeout,
 	noTimeout: -1,
-	getCurrentEventPriority: () => DefaultEventPriority,
 	beforeActiveInstanceBlur() {},
 	afterActiveInstanceBlur() {},
 	detachDeletedInstance() {},
@@ -247,25 +213,9 @@ export default createReconciler<
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
 	},
-	prepareUpdate(node, _type, oldProps, newProps, rootNode) {
-		if (node.internal_static) {
-			rootNode.isStaticDirty = true;
-		}
+	commitUpdate(node, _type, _oldProps, newProps, _root) {
+		const {props, style} = newProps;
 
-		const props = diff(oldProps, newProps);
-
-		const style = diff(
-			oldProps['style'] as Styles,
-			newProps['style'] as Styles,
-		);
-
-		if (!props && !style) {
-			return null;
-		}
-
-		return {props, style};
-	},
-	commitUpdate(node, {props, style}) {
 		if (props) {
 			for (const [key, value] of Object.entries(props)) {
 				if (key === 'style') {
@@ -297,5 +247,45 @@ export default createReconciler<
 	removeChild(node, removeNode) {
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
+	},
+	setCurrentUpdatePriority(newPriority: number) {
+		currentUpdatePriority = newPriority;
+	},
+	getCurrentUpdatePriority: () => currentUpdatePriority,
+	resolveUpdatePriority() {
+		if (currentUpdatePriority !== NoEventPriority) {
+			return currentUpdatePriority;
+		}
+
+		return DefaultEventPriority;
+	},
+	maySuspendCommit() {
+		return false;
+	},
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	NotPendingTransition: undefined,
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	HostTransitionContext: createContext(
+		null,
+	) as unknown as ReactContext<unknown>,
+	resetFormInstance() {},
+	requestPostPaintCallback() {},
+	shouldAttemptEagerTransition() {
+		return false;
+	},
+	trackSchedulerEvent() {},
+	resolveEventType() {
+		return null;
+	},
+	resolveEventTimeStamp() {
+		return 0;
+	},
+	preloadInstance() {
+		return true;
+	},
+	startSuspendingCommit() {},
+	suspendInstance() {},
+	waitForCommitToBeReady() {
+		return null;
 	},
 });
