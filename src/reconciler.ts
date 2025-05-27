@@ -48,6 +48,41 @@ $ npm install --save-dev react-devtools-core
 	}
 }
 
+type AnyObject = Record<string, unknown>;
+
+const diff = (before: AnyObject, after: AnyObject): AnyObject | undefined => {
+	if (before === after) {
+		return;
+	}
+
+	if (!before) {
+		return after;
+	}
+
+	const changed: AnyObject = {};
+	let isChanged = false;
+
+	for (const key of Object.keys(before)) {
+		const isDeleted = after ? !Object.hasOwn(after, key) : true;
+
+		if (isDeleted) {
+			changed[key] = undefined;
+			isChanged = true;
+		}
+	}
+
+	if (after) {
+		for (const key of Object.keys(after)) {
+			if (after[key] !== before[key]) {
+				changed[key] = after[key];
+				isChanged = true;
+			}
+		}
+	}
+
+	return isChanged ? changed : undefined;
+};
+
 const cleanupYogaNode = (node?: YogaNode): void => {
 	node?.unsetMeasureFunc();
 	node?.freeRecursive();
@@ -210,8 +245,17 @@ export default createReconciler<
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
 	},
-	commitUpdate(node, _type, _oldProps, newProps, _root) {
-		const {props, style} = newProps;
+	commitUpdate(node, _type, oldProps, newProps, _root) {
+		const props = diff(oldProps, newProps);
+
+		const style = diff(
+			oldProps['style'] as Styles,
+			newProps['style'] as Styles,
+		);
+
+		if (!props && !style) {
+			return;
+		}
 
 		if (props) {
 			for (const [key, value] of Object.entries(props)) {
@@ -275,7 +319,7 @@ export default createReconciler<
 		return null;
 	},
 	resolveEventTimeStamp() {
-		return 0;
+		return -1.1;
 	},
 	preloadInstance() {
 		return true;
