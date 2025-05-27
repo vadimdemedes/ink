@@ -115,7 +115,7 @@ export default createReconciler<
 		return {isInsideText};
 	},
 	shouldSetTextContent: () => false,
-	createInstance(originalType, newProps, _root, hostContext) {
+	createInstance(originalType, newProps, rootNode, hostContext) {
 		if (hostContext.isInsideText && originalType === 'ink-box') {
 			throw new Error(`<Box> can’t be nested inside <Text> component`);
 		}
@@ -149,6 +149,11 @@ export default createReconciler<
 
 			if (key === 'internal_static') {
 				node.internal_static = true;
+				rootNode.isStaticDirty = true;
+
+				// Save reference to <Static> node to skip traversal of entire
+				// node tree to find it
+				rootNode.staticNode = node;
 				continue;
 			}
 
@@ -183,15 +188,7 @@ export default createReconciler<
 	appendInitialChild: appendChildNode,
 	appendChild: appendChildNode,
 	insertBefore: insertBeforeNode,
-	finalizeInitialChildren(node, _type, _props, rootNode) {
-		if (node.internal_static) {
-			rootNode.isStaticDirty = true;
-
-			// Save reference to <Static> node to skip traversal of entire
-			// node tree to find it
-			rootNode.staticNode = node;
-		}
-
+	finalizeInitialChildren() {
 		return false;
 	},
 	isPrimaryRenderer: true,
