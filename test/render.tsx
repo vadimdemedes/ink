@@ -120,6 +120,29 @@ test.serial(
 	},
 );
 
+test.serial('erase screen where state changes', async t => {
+	const ps = term('erase-with-state-change', ['4']);
+	await ps.waitForExit();
+
+	const secondFrame = ps.output.split(ansiEscapes.eraseLines(3))[1];
+
+	for (const letter of ['A', 'B', 'C']) {
+		t.false(secondFrame?.includes(letter));
+	}
+});
+
+test.serial('erase screen where state changes in small viewport', async t => {
+	const ps = term('erase-with-state-change', ['3']);
+	await ps.waitForExit();
+
+	const frames = ps.output.split(ansiEscapes.clearTerminal);
+	const lastFrame = frames.at(-1);
+
+	for (const letter of ['A', 'B', 'C']) {
+		t.false(lastFrame?.includes(letter));
+	}
+});
+
 test.serial('clear output', async t => {
 	const ps = term('clear');
 	await ps.waitForExit();
