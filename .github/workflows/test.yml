@@ -1,14 +1,13 @@
 name: test
 on: [push, pull_request]
-
 jobs:
   test:
     name: Node.js ${{ matrix.node_version }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node_version: [18, 20]
-
+        node_version:
+          - 20
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node_version }}

@@ -6,7 +6,7 @@ const users = Array.from({length: 10})
 	.fill(true)
 	.map((_, index) => ({
 		id: index,
-		name: faker.internet.userName(),
+		name: faker.internet.username(),
 		email: faker.internet.email(),
 	}));
 
