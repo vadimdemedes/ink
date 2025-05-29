@@ -9,8 +9,7 @@
 		],
 		"sourceMap": true,
 		"jsx": "react",
-		"isolatedModules": true,
-		"lib": ["ES2023"]
+		"isolatedModules": true
 	},
 	"include": ["src"],
 	"ts-node": {

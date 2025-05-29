@@ -283,6 +283,7 @@ test('switch focus to the last component if currently focused component is the f
 
 	await delay(100);
 	emitReadable(stdin, '\u001B[Z');
+	await delay(100);
 
 	t.is(
 		(stdout.write as any).lastCall.args[0],

@@ -6,6 +6,7 @@ import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
+import {LegacyRoot} from 'react-reconciler/constants.js';
 import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import reconciler from './reconciler.js';
@@ -79,12 +80,16 @@ export default class Ink {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		this.container = reconciler.createContainer(
 			this.rootNode,
-			// Legacy mode
-			0,
+			LegacyRoot,
 			null,
 			false,
 			null,
 			'id',
+			() => {},
+			() => {},
+			// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
+			// See https://github.com/facebook/react/blob/c0464aedb16b1c970d717651bba8d1c66c578729/packages/react-reconciler/src/ReactFiberReconciler.js#L236-L259
+			() => {},
 			() => {},
 			null,
 		);
@@ -207,7 +212,12 @@ export default class Ink {
 			</App>
 		);
 
-		reconciler.updateContainer(tree, this.container, null, noop);
+		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+		reconciler.updateContainerSync(tree, this.container, null, noop);
+		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+		reconciler.flushSyncWork();
 	}
 
 	writeToStdout(data: string): void {
@@ -279,7 +289,12 @@ export default class Ink {
 
 		this.isUnmounted = true;
 
-		reconciler.updateContainer(null, this.container, null, noop);
+		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+		reconciler.updateContainerSync(null, this.container, null, noop);
+		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+		reconciler.flushSyncWork();
 		instances.delete(this.options.stdout);
 
 		if (error instanceof Error) {

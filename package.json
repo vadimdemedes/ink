@@ -56,7 +56,7 @@
 		"indent-string": "^5.0.0",
 		"is-in-ci": "^1.0.0",
 		"patch-console": "^2.0.0",
-		"react-reconciler": "^0.29.0",
+		"react-reconciler": "^0.32.0",
 		"scheduler": "^0.23.0",
 		"signal-exit": "^3.0.7",
 		"slice-ansi": "^7.1.0",
@@ -74,8 +74,8 @@
 		"@types/benchmark": "^2.1.2",
 		"@types/ms": "^0.7.31",
 		"@types/node": "^22.9.0",
-		"@types/react": "^18.3.12",
-		"@types/react-reconciler": "^0.28.2",
+		"@types/react": "^19.1.5",
+		"@types/react-reconciler": "^0.32.0",
 		"@types/scheduler": "^0.23.0",
 		"@types/signal-exit": "^3.0.0",
 		"@types/sinon": "^17.0.3",
@@ -92,7 +92,7 @@
 		"node-pty": "^1.0.0",
 		"p-queue": "^8.0.0",
 		"prettier": "^3.3.3",
-		"react": "^18.0.0",
+		"react": "^19.1.0",
 		"react-devtools-core": "^5.0.0",
 		"sinon": "^19.0.2",
 		"strip-ansi": "^7.1.0",
@@ -101,8 +101,8 @@
 		"xo": "^0.59.3"
 	},
 	"peerDependencies": {
-		"@types/react": ">=18.0.0",
-		"react": ">=18.0.0",
+		"@types/react": ">=19.0.0",
+		"react": ">=19.0.0",
 		"react-devtools-core": "^4.19.1"
 	},
 	"peerDependenciesMeta": {

@@ -1,7 +1,11 @@
 import process from 'node:process';
-import createReconciler from 'react-reconciler';
-import {DefaultEventPriority} from 'react-reconciler/constants.js';
+import createReconciler, {type ReactContext} from 'react-reconciler';
+import {
+	DefaultEventPriority,
+	NoEventPriority,
+} from 'react-reconciler/constants.js';
 import Yoga, {type Node as YogaNode} from 'yoga-layout';
+import {createContext} from 'react';
 import {
 	createTextNode,
 	appendChildNode,
@@ -90,10 +94,7 @@ type HostContext = {
 	isInsideText: boolean;
 };
 
-type UpdatePayload = {
-	props: Props | undefined;
-	style: Styles | undefined;
-};
+let currentUpdatePriority = NoEventPriority;
 
 export default createReconciler<
 	ElementNames,
@@ -104,8 +105,9 @@ export default createReconciler<
 	DOMElement,
 	unknown,
 	unknown,
+	unknown,
 	HostContext,
-	UpdatePayload,
+	unknown,
 	unknown,
 	unknown,
 	unknown
@@ -148,7 +150,7 @@ export default createReconciler<
 		return {isInsideText};
 	},
 	shouldSetTextContent: () => false,
-	createInstance(originalType, newProps, _root, hostContext) {
+	createInstance(originalType, newProps, rootNode, hostContext) {
 		if (hostContext.isInsideText && originalType === 'ink-box') {
 			throw new Error(`<Box> can’t be nested inside <Text> component`);
 		}
@@ -182,6 +184,11 @@ export default createReconciler<
 
 			if (key === 'internal_static') {
 				node.internal_static = true;
+				rootNode.isStaticDirty = true;
+
+				// Save reference to <Static> node to skip traversal of entire
+				// node tree to find it
+				rootNode.staticNode = node;
 				continue;
 			}
 
@@ -216,15 +223,7 @@ export default createReconciler<
 	appendInitialChild: appendChildNode,
 	appendChild: appendChildNode,
 	insertBefore: insertBeforeNode,
-	finalizeInitialChildren(node, _type, _props, rootNode) {
-		if (node.internal_static) {
-			rootNode.isStaticDirty = true;
-
-			// Save reference to <Static> node to skip traversal of entire
-			// node tree to find it
-			rootNode.staticNode = node;
-		}
-
+	finalizeInitialChildren() {
 		return false;
 	},
 	isPrimaryRenderer: true,
@@ -234,7 +233,6 @@ export default createReconciler<
 	scheduleTimeout: setTimeout,
 	cancelTimeout: clearTimeout,
 	noTimeout: -1,
-	getCurrentEventPriority: () => DefaultEventPriority,
 	beforeActiveInstanceBlur() {},
 	afterActiveInstanceBlur() {},
 	detachDeletedInstance() {},
@@ -247,11 +245,7 @@ export default createReconciler<
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
 	},
-	prepareUpdate(node, _type, oldProps, newProps, rootNode) {
-		if (node.internal_static) {
-			rootNode.isStaticDirty = true;
-		}
-
+	commitUpdate(node, _type, oldProps, newProps, _root) {
 		const props = diff(oldProps, newProps);
 
 		const style = diff(
@@ -260,12 +254,9 @@ export default createReconciler<
 		);
 
 		if (!props && !style) {
-			return null;
+			return;
 		}
 
-		return {props, style};
-	},
-	commitUpdate(node, {props, style}) {
 		if (props) {
 			for (const [key, value] of Object.entries(props)) {
 				if (key === 'style') {
@@ -297,5 +288,45 @@ export default createReconciler<
 	removeChild(node, removeNode) {
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
+	},
+	setCurrentUpdatePriority(newPriority: number) {
+		currentUpdatePriority = newPriority;
+	},
+	getCurrentUpdatePriority: () => currentUpdatePriority,
+	resolveUpdatePriority() {
+		if (currentUpdatePriority !== NoEventPriority) {
+			return currentUpdatePriority;
+		}
+
+		return DefaultEventPriority;
+	},
+	maySuspendCommit() {
+		return false;
+	},
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	NotPendingTransition: undefined,
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	HostTransitionContext: createContext(
+		null,
+	) as unknown as ReactContext<unknown>,
+	resetFormInstance() {},
+	requestPostPaintCallback() {},
+	shouldAttemptEagerTransition() {
+		return false;
+	},
+	trackSchedulerEvent() {},
+	resolveEventType() {
+		return null;
+	},
+	resolveEventTimeStamp() {
+		return -1.1;
+	},
+	preloadInstance() {
+		return true;
+	},
+	startSuspendingCommit() {},
+	suspendInstance() {},
+	waitForCommitToBeReady() {
+		return null;
 	},
 });
