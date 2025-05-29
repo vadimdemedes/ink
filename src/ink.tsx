@@ -25,6 +25,7 @@ export type Options = {
 	debug: boolean;
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
+	fullHeight?: boolean;
 	waitUntilExit?: () => Promise<void>;
 };
 
@@ -137,6 +138,9 @@ export default class Ink {
 		const terminalWidth = this.options.stdout.columns || 80;
 
 		this.rootNode.yogaNode!.setWidth(terminalWidth);
+		if (this.options.fullHeight && this.options.stdout.rows) {
+			this.rootNode.yogaNode!.setHeight(this.options.stdout.rows);
+		}
 
 		this.rootNode.yogaNode!.calculateLayout(
 			undefined,
