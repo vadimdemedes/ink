@@ -319,7 +319,7 @@ test('static output', t => {
 test('skip previous output when rendering new static output', t => {
 	const stdout = createStdout();
 
-	const Dynamic: FC<{items: string[]}> = ({items}) => (
+	const Dynamic: FC<{readonly items: string[]}> = ({items}) => (
 		<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
 	);
 

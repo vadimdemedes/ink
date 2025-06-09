@@ -1,7 +1,7 @@
 import React, {FC} from 'react';
 import {render, useInput, useApp} from '../..';
 
-const UserInput: FC<{test: string}> = ({test}) => {
+const UserInput: FC<{readonly test: string}> = ({test}) => {
 	const {exit} = useApp();
 
 	useInput((input, key) => {

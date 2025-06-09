@@ -44,7 +44,7 @@ class Test extends React.Component<Record<string, unknown>, TestState> {
 	}
 
 	componentWillUnmount() {
-		clearTimeout(this.timer!);
+		clearTimeout(this.timer);
 	}
 }
 

@@ -60,7 +60,7 @@ export default class Ink {
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout);
 		this.throttledLog = options.debug
-			? this.log
+			? (this.log as any)
 			: throttle(this.log, undefined, {
 					leading: true,
 					trailing: true

@@ -3,7 +3,9 @@
 	"compilerOptions": {
 		"esModuleInterop": true,
 		"outDir": "build",
-		"sourceMap": true
+		"sourceMap": true,
+		"skipLibCheck": true
 	},
-	"include": ["src"]
+	"include": ["src"],
+	"exclude": ["node_modules"]
 }

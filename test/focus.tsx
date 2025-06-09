@@ -18,12 +18,12 @@ const createStdin = () => {
 };
 
 interface TestProps {
-	showFirst?: boolean;
-	disableSecond?: boolean;
-	autoFocus?: boolean;
-	disabled?: boolean;
-	focusNext?: boolean;
-	focusPrevious?: boolean;
+	readonly showFirst?: boolean;
+	readonly disableSecond?: boolean;
+	readonly autoFocus?: boolean;
+	readonly disabled?: boolean;
+	readonly focusNext?: boolean;
+	readonly focusPrevious?: boolean;
 }
 
 const Test: FC<TestProps> = ({
@@ -66,9 +66,9 @@ const Test: FC<TestProps> = ({
 };
 
 interface ItemProps {
-	label: string;
-	autoFocus: boolean;
-	disabled?: boolean;
+	readonly label: string;
+	readonly autoFocus: boolean;
+	readonly disabled?: boolean;
 }
 
 const Item: FC<ItemProps> = ({label, autoFocus, disabled = false}) => {

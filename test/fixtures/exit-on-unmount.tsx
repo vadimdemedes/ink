@@ -21,7 +21,7 @@ class Test extends React.Component<Record<string, unknown>, {counter: number}> {
 	}
 
 	componentWillUnmount() {
-		clearInterval(this.timer!);
+		clearInterval(this.timer);
 	}
 }
 
