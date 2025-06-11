@@ -95,7 +95,8 @@ type HostContext = {
 };
 
 let currentUpdatePriority = NoEventPriority;
-let currentRootNode : DOMElement | null = null;
+
+let currentRootNode: DOMElement | undefined;
 
 export default createReconciler<
 	ElementNames,
@@ -251,6 +252,7 @@ export default createReconciler<
 		if (currentRootNode && node.internal_static) {
 			currentRootNode.isStaticDirty = true;
 		}
+
 		const props = diff(oldProps, newProps);
 
 		const style = diff(
