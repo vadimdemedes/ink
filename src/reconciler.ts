@@ -95,6 +95,7 @@ type HostContext = {
 };
 
 let currentUpdatePriority = NoEventPriority;
+let currentRootNode : DOMElement | null = null;
 
 export default createReconciler<
 	ElementNames,
@@ -183,6 +184,7 @@ export default createReconciler<
 			}
 
 			if (key === 'internal_static') {
+				currentRootNode = rootNode;
 				node.internal_static = true;
 				rootNode.isStaticDirty = true;
 
@@ -245,7 +247,10 @@ export default createReconciler<
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
 	},
-	commitUpdate(node, _type, oldProps, newProps, _root) {
+	commitUpdate(node, _type, oldProps, newProps) {
+		if (currentRootNode && node.internal_static) {
+			currentRootNode.isStaticDirty = true;
+		}
 		const props = diff(oldProps, newProps);
 
 		const style = diff(
