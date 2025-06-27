@@ -131,6 +131,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
   - [`<Spacer>`](#spacer)
   - [`<Static>`](#static)
   - [`<Transform>`](#transform)
+  - [`<Cursor>`](#cursor)
 - [Hooks](#hooks)
   - [`useInput`](#useinputinputhandler-options)
   - [`useApp`](#useapp)
@@ -1420,6 +1421,30 @@ Output of child components.
 Type: `number`
 
 The zero-indexed line number of the line currently being transformed.
+
+### `<Cursor>`
+
+The `<Cursor>` component allows you to specify the cursor position in your terminal. It positions the terminal cursor at the exact location where the component is placed in your layout.
+
+```jsx
+import {render, Box, Text, Cursor} from 'ink';
+
+const Example = () => (
+	<Box>
+		<Text>Hello, </Text>
+		<Cursor />
+		<Text>World</Text>
+	</Box>
+);
+
+render(<Example />);
+```
+
+In this example, the cursor will be positioned between "Hello, " and "World", creating an interactive input-like appearance.
+
+**Note:** Only one `<Cursor>` component should be used per application. If you need to use multiple `<Cursor>` components, you should ensure that they are not rendered at the same time, for example by checking focus.
+
+The cursor is automatically shown when a `<Cursor>` component is present and hidden when it's not.
 
 ## Hooks
 

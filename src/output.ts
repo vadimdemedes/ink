@@ -23,7 +23,11 @@ type Options = {
 	height: number;
 };
 
-type Operation = WriteOperation | ClipOperation | UnclipOperation;
+type Operation =
+	| WriteOperation
+	| ClipOperation
+	| UnclipOperation
+	| CursorOperation;
 
 type WriteOperation = {
 	type: 'write';
@@ -47,6 +51,16 @@ type Clip = {
 
 type UnclipOperation = {
 	type: 'unclip';
+};
+
+type CursorOperation = {
+	type: 'cursor';
+	position: Position;
+};
+
+export type Position = {
+	x: number;
+	y: number;
 };
 
 export default class Output {
@@ -83,6 +97,13 @@ export default class Output {
 		});
 	}
 
+	setCursor(position: Position) {
+		this.operations.push({
+			type: 'cursor',
+			position,
+		});
+	}
+
 	clip(clip: Clip) {
 		this.operations.push({
 			type: 'clip',
@@ -96,9 +117,14 @@ export default class Output {
 		});
 	}
 
-	get(): {output: string; height: number} {
+	get(): {
+		output: string;
+		height: number;
+		cursorPosition: Position | undefined;
+	} {
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
 		const output: StyledChar[][] = [];
+		let cursorPosition: Position | undefined;
 
 		for (let y = 0; y < this.height; y++) {
 			const row: StyledChar[] = [];
@@ -225,6 +251,23 @@ export default class Output {
 					offsetY++;
 				}
 			}
+
+			if (operation.type === 'cursor') {
+				const clip = clips.at(-1);
+				if (
+					(clip?.x1 !== undefined && operation.position.x < clip.x1) ||
+					(clip?.x2 !== undefined && operation.position.x > clip.x2) ||
+					(clip?.y1 !== undefined && operation.position.y < clip.y1) ||
+					(clip?.y2 !== undefined && operation.position.y > clip.y2)
+				) {
+					continue;
+				}
+
+				cursorPosition = {
+					x: operation.position.x,
+					y: operation.position.y,
+				};
+			}
 		}
 
 		const generatedOutput = output
@@ -239,6 +282,7 @@ export default class Output {
 		return {
 			output: generatedOutput,
 			height: output.length,
+			cursorPosition,
 		};
 	}
 }

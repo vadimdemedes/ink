@@ -4,6 +4,7 @@ export type {Props as BoxProps} from './components/Box.js';
 export {default as Box} from './components/Box.js';
 export type {Props as TextProps} from './components/Text.js';
 export {default as Text} from './components/Text.js';
+export {default as Cursor} from './components/Cursor.js';
 export type {Props as AppProps} from './components/AppContext.js';
 export type {Props as StdinProps} from './components/StdinContext.js';
 export type {Props as StdoutProps} from './components/StdoutContext.js';

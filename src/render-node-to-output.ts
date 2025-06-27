@@ -89,6 +89,11 @@ const renderNodeToOutput = (
 			return;
 		}
 
+		if (node.nodeName === 'ink-cursor') {
+			output.setCursor({x, y});
+			return;
+		}
+
 		let clipped = false;
 
 		if (node.nodeName === 'ink-box') {

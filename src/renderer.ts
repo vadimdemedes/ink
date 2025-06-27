@@ -1,10 +1,11 @@
 import renderNodeToOutput from './render-node-to-output.js';
-import Output from './output.js';
+import Output, {type Position} from './output.js';
 import {type DOMElement} from './dom.js';
 
 type Result = {
 	output: string;
 	outputHeight: number;
+	outputCursorPosition: Position | undefined;
 	staticOutput: string;
 };
 
@@ -30,11 +31,16 @@ const renderer = (node: DOMElement): Result => {
 			});
 		}
 
-		const {output: generatedOutput, height: outputHeight} = output.get();
+		const {
+			output: generatedOutput,
+			height: outputHeight,
+			cursorPosition: outputCursorPosition,
+		} = output.get();
 
 		return {
 			output: generatedOutput,
 			outputHeight,
+			outputCursorPosition,
 			// Newline at the end is needed, because static output doesn't have one, so
 			// interactive output will override last line of static output
 			staticOutput: staticOutput ? `${staticOutput.get().output}\n` : '',
@@ -44,6 +50,7 @@ const renderer = (node: DOMElement): Result => {
 	return {
 		output: '',
 		outputHeight: 0,
+		outputCursorPosition: undefined,
 		staticOutput: '',
 	};
 };

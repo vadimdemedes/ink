@@ -1,7 +1,6 @@
 import {EventEmitter} from 'node:events';
 import process from 'node:process';
 import React, {PureComponent, type ReactNode} from 'react';
-import cliCursor from 'cli-cursor';
 import AppContext from './AppContext.js';
 import StdinContext from './StdinContext.js';
 import StdoutContext from './StdoutContext.js';
@@ -126,13 +125,7 @@ export default class App extends PureComponent<Props, State> {
 		);
 	}
 
-	override componentDidMount() {
-		cliCursor.hide(this.props.stdout);
-	}
-
 	override componentWillUnmount() {
-		cliCursor.show(this.props.stdout);
-
 		// ignore calling setRawMode on an handle stdin it cannot be called
 		if (this.isRawModeSupported()) {
 			this.handleSetRawMode(false);

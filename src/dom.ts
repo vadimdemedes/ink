@@ -17,7 +17,8 @@ export type ElementNames =
 	| 'ink-root'
 	| 'ink-box'
 	| 'ink-text'
-	| 'ink-virtual-text';
+	| 'ink-virtual-text'
+	| 'ink-cursor';
 
 export type NodeNames = ElementNames | TextName;
 

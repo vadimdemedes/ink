@@ -1,7 +1,6 @@
 import process from 'node:process';
 import React, {type ReactNode} from 'react';
 import {throttle} from 'es-toolkit/compat';
-import ansiEscapes from 'ansi-escapes';
 import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
 import signalExit from 'signal-exit';
@@ -11,6 +10,7 @@ import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
+import {type Position} from './output.js';
 import * as dom from './dom.js';
 import logUpdate, {type LogUpdate} from './log-update.js';
 import instances from './instances.js';
@@ -36,6 +36,7 @@ export default class Ink {
 	private isUnmounted: boolean;
 	private lastOutput: string;
 	private lastOutputHeight: number;
+	private lastCursorPosition: Position | undefined;
 	private readonly container: FiberRoot;
 	private readonly rootNode: dom.DOMElement;
 	// This variable is used only in debug mode to store full static output
@@ -74,6 +75,7 @@ export default class Ink {
 		// Store last output to only rerender when needed
 		this.lastOutput = '';
 		this.lastOutputHeight = 0;
+		this.lastCursorPosition = undefined;
 
 		// This variable is used only in debug mode to store full static output
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
@@ -150,7 +152,9 @@ export default class Ink {
 			return;
 		}
 
-		const {output, outputHeight, staticOutput} = render(this.rootNode);
+		const {output, outputHeight, outputCursorPosition, staticOutput} = render(
+			this.rootNode,
+		);
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
@@ -179,28 +183,25 @@ export default class Ink {
 		}
 
 		if (this.lastOutputHeight >= this.options.stdout.rows) {
-			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput + output + '\n',
-			);
-			this.lastOutput = output;
-			this.lastOutputHeight = outputHeight;
-			this.log.sync(output);
-			return;
-		}
-
-		// To ensure static output is cleanly rendered before main output, clear main output first
-		if (hasStaticOutput) {
+			this.log.clearTerminal();
+			this.options.stdout.write(this.fullStaticOutput);
+			this.log(output, outputCursorPosition);
+		} else if (hasStaticOutput) {
+			// To ensure static output is cleanly rendered before main output, clear main output first
 			this.log.clear();
 			this.options.stdout.write(staticOutput);
-			this.log(output);
-		}
-
-		if (!hasStaticOutput && output !== this.lastOutput) {
-			this.throttledLog(output);
+			this.log(output, outputCursorPosition);
+		} else if (
+			output !== this.lastOutput ||
+			this.lastCursorPosition?.x !== outputCursorPosition?.x ||
+			this.lastCursorPosition?.y !== outputCursorPosition?.y
+		) {
+			this.throttledLog(output, outputCursorPosition);
 		}
 
 		this.lastOutput = output;
 		this.lastOutputHeight = outputHeight;
+		this.lastCursorPosition = outputCursorPosition;
 	};
 
 	render(node: ReactNode): void {
@@ -243,7 +244,7 @@ export default class Ink {
 
 		this.log.clear();
 		this.options.stdout.write(data);
-		this.log(this.lastOutput);
+		this.log(this.lastOutput, this.lastCursorPosition);
 	}
 
 	writeToStderr(data: string): void {
@@ -264,7 +265,7 @@ export default class Ink {
 
 		this.log.clear();
 		this.options.stderr.write(data);
-		this.log(this.lastOutput);
+		this.log(this.lastOutput, this.lastCursorPosition);
 	}
 
 	// eslint-disable-next-line @typescript-eslint/ban-types
