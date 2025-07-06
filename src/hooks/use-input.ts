@@ -182,7 +182,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 
 			// If app is not supposed to exit on Ctrl+C, then let input listener handle it
 			if (!(input === 'c' && key.ctrl) || !internal_exitOnCtrlC) {
-				// @ts-expect-error TypeScript types for `batchedUpdates` require an argument, but React's codebase doesn't provide it and it works without it as exepected.
+				// @ts-expect-error TypeScript types for `batchedUpdates` require an argument, but React's codebase doesn't provide it and it works without it as expected.
 				reconciler.batchedUpdates(() => {
 					inputHandler(input, key);
 				});
