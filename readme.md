@@ -2101,7 +2101,7 @@ npx react-devtools
 ```
 
 After it starts up, you should see the component tree of your CLI.
-You can even inspect and change the props of components, and see the results immediatelly in the CLI, without restarting it.
+You can even inspect and change the props of components, and see the results immediately in the CLI, without restarting it.
 
 **Note**: You must manually quit your CLI via <kbd>Ctrl</kbd>+<kbd>C</kbd> after you're done testing.
 
