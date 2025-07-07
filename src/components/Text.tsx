@@ -1,8 +1,9 @@
-import React, {type ReactNode} from 'react';
+import React, {useContext, type ReactNode} from 'react';
 import chalk, {type ForegroundColorName} from 'chalk';
 import {type LiteralUnion} from 'type-fest';
 import colorize from '../colorize.js';
 import {type Styles} from '../styles.js';
+import {backgroundContext} from './BackgroundContext.js';
 
 export type Props = {
 	/**
@@ -70,6 +71,7 @@ export default function Text({
 	wrap = 'wrap',
 	children,
 }: Props) {
+	const inheritedBackgroundColor = useContext(backgroundContext);
 	if (children === undefined || children === null) {
 		return null;
 	}
@@ -83,8 +85,11 @@ export default function Text({
 			children = colorize(children, color, 'foreground');
 		}
 
-		if (backgroundColor) {
-			children = colorize(children, backgroundColor, 'background');
+		// Use explicit backgroundColor if provided, otherwise use inherited from parent Box
+		const effectiveBackgroundColor =
+			backgroundColor ?? inheritedBackgroundColor;
+		if (effectiveBackgroundColor) {
+			children = colorize(children, effectiveBackgroundColor, 'background');
 		}
 
 		if (bold) {
