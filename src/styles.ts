@@ -302,6 +302,12 @@ export type Styles = {
 	 * @default 'visible'
 	 */
 	readonly overflowY?: 'visible' | 'hidden';
+
+	/**
+	 * Background color for the element.
+	 * Accepts the same values as `backgroundColor` in `Text` component.
+	 */
+	readonly backgroundColor?: LiteralUnion<ForegroundColorName, string>;
 };
 
 const applyPositionStyles = (node: YogaNode, style: Styles): void => {
