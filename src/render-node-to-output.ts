@@ -97,13 +97,13 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 
 
 		// TODO(chrstn): not sure how we should handle.
-		const isColumn =
-			node.style.flexDirection === 'column' ||
-			node.style.flexDirection === 'column-reverse';
+		// const isColumn =
+		// 	node.style.flexDirection === 'column' ||
+		// 	node.style.flexDirection === 'column-reverse';
 		
-		const isRow =
-			node.style.flexDirection === 'row' ||
-			node.style.flexDirection === 'row-reverse';
+		// const isRow =
+		// 	node.style.flexDirection === 'row' ||
+		// 	node.style.flexDirection === 'row-reverse';
 
 
 		const separator = '\n';
