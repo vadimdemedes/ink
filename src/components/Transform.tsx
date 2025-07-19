@@ -2,6 +2,12 @@ import React, {type ReactNode} from 'react';
 
 export type Props = {
 	/**
+	 * Screen-reader-specific text to output.
+	 * If this is set, all children will be ignored.
+	 */
+	readonly accessibilityLabel?: string;
+
+	/**
 	 * Function which transforms children output. It accepts children and must return transformed children too.
 	 */
 	readonly transform: (children: string, index: number) => string;

@@ -15,6 +15,7 @@ import * as dom from './dom.js';
 import logUpdate, {type LogUpdate} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
+import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
 
 const noop = () => {};
 
@@ -32,6 +33,8 @@ export default class Ink {
 	private readonly options: Options;
 	private readonly log: LogUpdate;
 	private readonly throttledLog: LogUpdate;
+	private readonly isScreenReaderEnabled: boolean;
+
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
 	private lastOutput: string;
@@ -67,6 +70,9 @@ export default class Ink {
 					leading: true,
 					trailing: true,
 				}) as unknown as LogUpdate);
+
+		this.isScreenReaderEnabled =
+			!options.stdout.isTTY || process.env['INK_SCREEN_READER'] === 'true';
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
@@ -150,7 +156,10 @@ export default class Ink {
 			return;
 		}
 
-		const {output, outputHeight, staticOutput} = render(this.rootNode);
+		const {output, outputHeight, staticOutput} = render(
+			this.rootNode,
+			this.isScreenReaderEnabled,
+		);
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
@@ -205,17 +214,21 @@ export default class Ink {
 
 	render(node: ReactNode): void {
 		const tree = (
-			<App
-				stdin={this.options.stdin}
-				stdout={this.options.stdout}
-				stderr={this.options.stderr}
-				writeToStdout={this.writeToStdout}
-				writeToStderr={this.writeToStderr}
-				exitOnCtrlC={this.options.exitOnCtrlC}
-				onExit={this.unmount}
+			<AccessibilityContext.Provider
+				value={{isScreenReaderEnabled: this.isScreenReaderEnabled}}
 			>
-				{node}
-			</App>
+				<App
+					stdin={this.options.stdin}
+					stdout={this.options.stdout}
+					stderr={this.options.stderr}
+					writeToStdout={this.writeToStdout}
+					writeToStderr={this.writeToStderr}
+					exitOnCtrlC={this.options.exitOnCtrlC}
+					onExit={this.unmount}
+				>
+					{node}
+				</App>
+			</AccessibilityContext.Provider>
 		);
 
 		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.

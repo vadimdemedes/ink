@@ -1,5 +1,6 @@
 import {useEffect, useContext, useMemo} from 'react';
 import FocusContext from '../components/FocusContext.js';
+import {accessibilityContext} from '../components/AccessibilityContext.js';
 import useStdin from './use-stdin.js';
 
 type Input = {
@@ -44,6 +45,7 @@ const useFocus = ({
 	autoFocus = false,
 	id: customId,
 }: Input = {}): Output => {
+	const {isScreenReaderEnabled} = useContext(accessibilityContext);
 	const {isRawModeSupported, setRawMode} = useStdin();
 	const {activeId, add, remove, activate, deactivate, focus} =
 		useContext(FocusContext);
@@ -69,7 +71,7 @@ const useFocus = ({
 	}, [isActive, id]);
 
 	useEffect(() => {
-		if (!isRawModeSupported || !isActive) {
+		if (!isRawModeSupported || !isActive || isScreenReaderEnabled) {
 			return;
 		}
 
@@ -78,7 +80,7 @@ const useFocus = ({
 		return () => {
 			setRawMode(false);
 		};
-	}, [isActive]);
+	}, [isActive, isScreenReaderEnabled]);
 
 	return {
 		isFocused: Boolean(id) && activeId === id,

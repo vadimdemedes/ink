@@ -42,7 +42,7 @@ export default function ErrorOverview({error}: Props) {
 	return (
 		<Box flexDirection="column" padding={1}>
 			<Box>
-				<Text backgroundColor="red" color="white">
+				<Text backgroundColor="red" color="white" accessibilityLabel="Error">
 					{' '}
 					ERROR{' '}
 				</Text>
@@ -52,14 +52,21 @@ export default function ErrorOverview({error}: Props) {
 
 			{origin && filePath && (
 				<Box marginTop={1}>
-					<Text dimColor>
+					<Text
+						dimColor
+						accessibilityLabel={`Error occurred in file ${filePath} at line ${origin.line}, column ${origin.column}`}
+					>
 						{filePath}:{origin.line}:{origin.column}
 					</Text>
 				</Box>
 			)}
 
 			{origin && excerpt && (
-				<Box marginTop={1} flexDirection="column">
+				<Box
+					marginTop={1}
+					flexDirection="column"
+					accessibilityLabel="Code excerpt with error"
+				>
 					{excerpt.map(({line, value}) => (
 						<Box key={line}>
 							<Box width={lineWidth + 1}>
@@ -67,6 +74,9 @@ export default function ErrorOverview({error}: Props) {
 									dimColor={line !== origin.line}
 									backgroundColor={line === origin.line ? 'red' : undefined}
 									color={line === origin.line ? 'white' : undefined}
+									accessibilityLabel={`Line ${line}, ${
+										line === origin.line ? 'error' : ''
+									}`}
 								>
 									{String(line).padStart(lineWidth, ' ')}:
 								</Text>
@@ -85,7 +95,11 @@ export default function ErrorOverview({error}: Props) {
 			)}
 
 			{error.stack && (
-				<Box marginTop={1} flexDirection="column">
+				<Box
+					marginTop={1}
+					flexDirection="column"
+					accessibilityLabel="Stack trace"
+				>
 					{error.stack
 						.split('\n')
 						.slice(1)
@@ -99,6 +113,7 @@ export default function ErrorOverview({error}: Props) {
 										<Text dimColor>- </Text>
 										<Text dimColor bold>
 											{line}
+											\t{' '}
 										</Text>
 									</Box>
 								);
@@ -110,7 +125,13 @@ export default function ErrorOverview({error}: Props) {
 									<Text dimColor bold>
 										{parsedLine.function}
 									</Text>
-									<Text dimColor color="gray">
+									<Text
+										dimColor
+										color="gray"
+										accessibilityLabel={`at ${
+											cleanupPath(parsedLine.file) ?? ''
+										} line ${parsedLine.line} column ${parsedLine.column}`}
+									>
 										{' '}
 										({cleanupPath(parsedLine.file) ?? ''}:{parsedLine.line}:
 										{parsedLine.column})

@@ -3,7 +3,13 @@ import {type Except} from 'type-fest';
 import {type Styles} from '../styles.js';
 import {type DOMElement} from '../dom.js';
 
-export type Props = Except<Styles, 'textWrap'>;
+export type Props = Except<Styles, 'textWrap'> & {
+	/**
+	 * Screen-reader-specific text to output.
+	 * If this is set, all children will be ignored.
+	 */
+	readonly accessibilityLabel?: string;
+};
 
 /**
  * `<Box>` is an essential Ink component to build your layout. It's like `<div style="display: flex">` in the browser.

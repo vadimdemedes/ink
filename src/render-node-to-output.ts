@@ -28,6 +28,104 @@ const applyPaddingToText = (node: DOMElement, text: string): string => {
 
 export type OutputTransformer = (s: string, index: number) => string;
 
+const isTable = (node: DOMElement): boolean => {
+	if (
+		node.nodeName !== 'ink-box' ||
+		node.style.flexDirection !== 'column' ||
+		node.childNodes.length < 2
+	) {
+		return false;
+	}
+
+	const firstRow = node.childNodes[0] as DOMElement;
+	if (firstRow.nodeName !== 'ink-box') {
+		return false;
+	}
+
+	const columnCount = firstRow.childNodes.length;
+	if (columnCount === 0) {
+		return false;
+	}
+
+	for (const childNode of node.childNodes) {
+		const row = childNode as DOMElement;
+		if (row.nodeName !== 'ink-box' || row.childNodes.length !== columnCount) {
+			return false;
+		}
+
+		for (const cell of row.childNodes) {
+			if (cell.nodeName !== 'ink-box') {
+				return false;
+			}
+		}
+	}
+
+	return true;
+};
+
+export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
+	if (node.nodeName === 'ink-text') {
+		return squashTextNodes(node);
+	}
+
+	if (node.nodeName === 'ink-box' || node.nodeName === 'ink-root') {
+		if (isTable(node)) {
+			const headerRow = node.childNodes[0] as DOMElement;
+			const dataRows = node.childNodes.slice(1) as DOMElement[];
+
+			const headerCells = headerRow.childNodes as DOMElement[];
+			const headerTexts = headerCells.map(cell =>
+				renderNodeToScreenReaderOutput(cell),
+			);
+
+			const outputRows = dataRows.map((row, rowIndex) => {
+				const dataCells = row.childNodes as DOMElement[];
+				const dataTexts = dataCells.map(cell =>
+					renderNodeToScreenReaderOutput(cell),
+				);
+
+				const cellDescriptions = dataTexts.map((dataText, colIndex) => {
+					const headerText = headerTexts[colIndex];
+					return `${headerText}: ${dataText}`;
+				});
+
+				return `Record ${rowIndex + 1}\n${cellDescriptions.join('\n')}`;
+			});
+
+			return outputRows.join('\n---\n');
+		}
+
+
+		// TODO(chrstn): not sure how we should handle.
+		const isColumn =
+			node.style.flexDirection === 'column' ||
+			node.style.flexDirection === 'column-reverse';
+		
+		const isRow =
+			node.style.flexDirection === 'row' ||
+			node.style.flexDirection === 'row-reverse';
+
+
+		const separator = '\n';
+
+
+		const childNodes =
+			node.style.flexDirection === 'row-reverse' ||
+			node.style.flexDirection === 'column-reverse'
+				? [...node.childNodes].reverse()
+				: node.childNodes;
+
+		const output = childNodes
+			.map(childNode => renderNodeToScreenReaderOutput(childNode as DOMElement))
+			.filter(Boolean)
+			.join(separator);
+
+		return output;
+	}
+
+	return '';
+};
+
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
 const renderNodeToOutput = (
 	node: DOMElement,

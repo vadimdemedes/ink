@@ -6,6 +6,12 @@ import {type Styles} from '../styles.js';
 
 export type Props = {
 	/**
+	 * Screen-reader-specific text to output.
+	 * If this is set, all children will be ignored.
+	 */
+	readonly accessibilityLabel?: string;
+
+	/**
 	 * Change text color. Ink uses chalk under the hood, so all its functionality is supported.
 	 */
 	readonly color?: LiteralUnion<ForegroundColorName, string>;

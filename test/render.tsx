@@ -225,3 +225,30 @@ test.serial('render pager', t => {
 
 	unmount();
 });
+
+test.serial('enable screen reader mode', t => {
+	const stdout = createStdout();
+
+	function Test() {
+		return (
+			<Box borderStyle="round">
+				<Text>Test</Text>
+			</Box>
+		);
+	}
+
+	process.env['INK_SCREEN_READER'] = 'true';
+
+	const {unmount} = render(<Test />, {
+		stdout,
+	});
+
+	t.is(
+		stripAnsi((stdout.write as any).firstCall.args[0] as string).trim(),
+		'Test',
+	);
+
+	unmount();
+
+	delete process.env['INK_SCREEN_READER'];
+});
