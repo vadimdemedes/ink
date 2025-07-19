@@ -8,7 +8,7 @@ import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
-import {render, Box, Text} from '../src/index.js';
+import {render, Box, Text, Pager} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
 const require = createRequire(import.meta.url);
@@ -202,4 +202,26 @@ test.serial('rerender on resize', async t => {
 
 	unmount();
 	t.is(stdout.listeners('resize').length, 0);
+});
+
+test.serial('render pager', t => {
+	const stdout = createStdout();
+
+	const manyItems = Array.from({length: 10}, (_, i) => (
+		<Text key={i}>Item {i + 1}</Text>
+	));
+
+	const {unmount} = render(
+		<Box>
+			<Pager pageHeight={5}>{manyItems}</Pager>
+		</Box>,
+		{stdout},
+	);
+
+	t.is(
+		stripAnsi((stdout.write as any).lastCall.args[0] as string),
+		'Item 1\nItem 2\nItem 3\nItem 4\nItem 5\nPage 1 of 2 (Use  and  to navigate, ESC to exit)',
+	);
+
+	unmount();
 });

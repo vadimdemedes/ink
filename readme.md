@@ -131,6 +131,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
   - [`<Spacer>`](#spacer)
   - [`<Static>`](#static)
   - [`<Transform>`](#transform)
+  - [`<Pager>`](#pager)
 - [Hooks](#hooks)
   - [`useInput`](#useinputinputhandler-options)
   - [`useApp`](#useapp)
@@ -1420,6 +1421,36 @@ Output of child components.
 Type: `number`
 
 The zero-indexed line number of the line currently being transformed.
+
+### `<Pager>`
+
+Renders a paginated list of items. Only items that fit into the available height will be displayed.
+It will also display the current page and total number of pages.
+If `stdin` is in raw mode, it will listen for left and right arrow keys to switch between pages.
+
+```jsx
+import React from 'react';
+import {render, Box, Text, Pager} from 'ink';
+
+const manyItems = Array.from({length: 25}, (_, i) => (
+	<Text key={i}>Item {i + 1}</Text>
+));
+
+const PagerExample = () => (
+	<Box flexDirection="column">
+		<Text>A paginatable list of items:</Text>
+		<Pager height={10}>{manyItems}</Pager>
+	</Box>
+);
+
+render(<PagerExample />);
+```
+
+#### height
+
+Type: `number`
+
+Height of the pager.
 
 ## Hooks
 
