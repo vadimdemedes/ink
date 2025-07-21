@@ -1,1 +1,0 @@
-import './pager.js';
