@@ -2159,7 +2159,7 @@ You can use the `accessibilityLabel` prop on `<Box>`, `<Text>`, and `<Transform>
 
 Use the `accessibilityRole` prop on a `<Box>` to define its role, such as a button or checkbox. This helps screen reader users understand the element's function.
 
-Supported roles: `'button'`, `'checkbox'`, `'radio'`, `'radiogroup'`, `'list'`, `'listitem'`, `'menu'`, `'menuitem'`, `'progressbar'`, `'tab'`, `'tablist'`, `'timer'`, `'toolbar'`.
+Supported roles: `'button'`, `'checkbox'`, `'radio'`, `'radiogroup'`, `'list'`, `'listitem'`, `'menu'`, `'menuitem'`, `'progressbar'`, `'tab'`, `'tablist'`, `table`, `'timer'`, `'toolbar'`.
 
 ```jsx
 <Box accessibilityRole="button">

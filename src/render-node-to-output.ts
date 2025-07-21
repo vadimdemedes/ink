@@ -28,40 +28,7 @@ const applyPaddingToText = (node: DOMElement, text: string): string => {
 
 export type OutputTransformer = (s: string, index: number) => string;
 
-const isTable = (node: DOMElement): boolean => {
-	if (
-		node.nodeName !== 'ink-box' ||
-		node.style.flexDirection !== 'column' ||
-		node.childNodes.length < 2
-	) {
-		return false;
-	}
 
-	const firstRow = node.childNodes[0] as DOMElement;
-	if (firstRow.nodeName !== 'ink-box') {
-		return false;
-	}
-
-	const columnCount = firstRow.childNodes.length;
-	if (columnCount === 0) {
-		return false;
-	}
-
-	for (const childNode of node.childNodes) {
-		const row = childNode as DOMElement;
-		if (row.nodeName !== 'ink-box' || row.childNodes.length !== columnCount) {
-			return false;
-		}
-
-		for (const cell of row.childNodes) {
-			if (cell.nodeName !== 'ink-box') {
-				return false;
-			}
-		}
-	}
-
-	return true;
-};
 
 export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 	if (node.nodeName === 'ink-text') {
@@ -71,7 +38,7 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 	let output = '';
 
 	if (node.nodeName === 'ink-box' || node.nodeName === 'ink-root') {
-		if (isTable(node)) {
+		if (node.internal_accessibility?.role === 'table') {
 			const headerRow = node.childNodes[0] as DOMElement;
 			const dataRows = node.childNodes.slice(1) as DOMElement[];
 

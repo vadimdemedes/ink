@@ -27,7 +27,8 @@ export type Props = Except<Styles, 'textWrap'> & {
 		| 'tab'
 		| 'tablist'
 		| 'timer'
-		| 'toolbar';
+		| 'toolbar'
+		| 'table';
 
 	/**
 	 * State of the element.

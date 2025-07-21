@@ -41,7 +41,8 @@ export type DOMElement = {
 			| 'tab'
 			| 'tablist'
 			| 'timer'
-			| 'toolbar';
+			| 'toolbar'
+			| 'table';
 		state?: {
 			checked?: boolean;
 			disabled?: boolean;
