@@ -2116,7 +2116,7 @@ When screen reader support is enabled, Ink renders a text-based, screen-reader-f
 
 For example, this UI:
 
-```
+```jsx
 <Box borderStyle="single" flexDirection="column">
 	<Box>
 		<Text>Username</Text>
@@ -2149,7 +2149,7 @@ To create a more accessible UI, you can use the following props, which are only 
 
 You can use the `accessibilityLabel` prop on `<Box>`, `<Text>`, and `<Transform>` components to provide a custom, screen-reader-specific output. This label will replace the component's children in the screen reader output.
 
-```
+```jsx
 <Box accessibilityLabel="A box with a custom label for screen readers">
 	<Text>This text will be replaced by the label above.</Text>
 </Box>
@@ -2161,7 +2161,7 @@ Use the `accessibilityRole` prop on a `<Box>` to define its role, such as a butt
 
 Supported roles: `'button'`, `'checkbox'`, `'radio'`, `'radiogroup'`, `'list'`, `'listitem'`, `'menu'`, `'menuitem'`, `'progressbar'`, `'tab'`, `'tablist'`, `'timer'`, `'toolbar'`.
 
-```
+```jsx
 <Box accessibilityRole="button">
 	<Text>Save</Text>
 </Box>
@@ -2180,7 +2180,7 @@ Use the `accessibilityState` prop on a `<Box>` to describe its current state. Th
 
 Supported states: `checked`, `disabled`, `expanded`, `selected`.
 
-```
+```jsx
 <Box accessibilityRole="checkbox" accessibilityState={{checked: true}}>
 	<Text>Accept terms and conditions</Text>
 </Box>
