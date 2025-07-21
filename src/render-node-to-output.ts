@@ -68,6 +68,8 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 		return squashTextNodes(node);
 	}
 
+	let output = '';
+
 	if (node.nodeName === 'ink-box' || node.nodeName === 'ink-root') {
 		if (isTable(node)) {
 			const headerRow = node.childNodes[0] as DOMElement;
@@ -95,19 +97,7 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 			return outputRows.join('\n---\n');
 		}
 
-
-		// TODO(chrstn): not sure how we should handle.
-		// const isColumn =
-		// 	node.style.flexDirection === 'column' ||
-		// 	node.style.flexDirection === 'column-reverse';
-		
-		// const isRow =
-		// 	node.style.flexDirection === 'row' ||
-		// 	node.style.flexDirection === 'row-reverse';
-
-
 		const separator = '\n';
-
 
 		const childNodes =
 			node.style.flexDirection === 'row-reverse' ||
@@ -115,15 +105,30 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 				? [...node.childNodes].reverse()
 				: node.childNodes;
 
-		const output = childNodes
+		output = childNodes
 			.map(childNode => renderNodeToScreenReaderOutput(childNode as DOMElement))
 			.filter(Boolean)
 			.join(separator);
-
-		return output;
 	}
 
-	return '';
+	if (node.internal_accessibility) {
+		const {role, state} = node.internal_accessibility;
+
+		if (role) {
+			output = `${role}\n${output}`;
+		}
+
+		if (state) {
+			const stateKeys = Object.keys(state) as Array<keyof typeof state>;
+			const stateDescription = stateKeys.filter(key => state[key]).join(', ');
+
+			if (stateDescription) {
+				output = `${output} (${stateDescription})`;
+			}
+		}
+	}
+
+	return output;
 };
 
 // After nodes are laid out, render each to output object, which later gets rendered to terminal

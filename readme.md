@@ -142,6 +142,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [API](#api)
 - [Testing](#testing)
 - [Using React Devtools](#using-react-devtools)
+- [Screen Reader Support](#screen-reader-support)
 - [Useful Components](#useful-components)
 - [Useful Hooks](#useful-hooks)
 - [Examples](#examples)
@@ -2104,6 +2105,88 @@ After it starts up, you should see the component tree of your CLI.
 You can even inspect and change the props of components, and see the results immediately in the CLI, without restarting it.
 
 **Note**: You must manually quit your CLI via <kbd>Ctrl</kbd>+<kbd>C</kbd> after you're done testing.
+
+## Screen Reader Support
+
+To enable screen reader support, you can either pass the `isScreenReaderEnabled` option to the `render` function or set the `INK_SCREEN_READER` environment variable to `true`.
+
+`render(<MyApp />, {isScreenReaderEnabled: true});`
+
+When screen reader support is enabled, Ink renders a text-based, screen-reader-friendly version of the UI instead of the visual one.
+
+For example, this UI:
+
+```
+<Box borderStyle="single" flexDirection="column">
+	<Box>
+		<Text>Username</Text>
+		<Box flexGrow={1} />
+		<Text>guest</Text>
+	</Box>
+	<Box>
+		<Text>Password</Text>
+		<Box flexGrow={1} />
+		<Text>guestPassword</Text>
+	</Box>
+</Box>
+```
+ 
+For a screen reader, the output will be:
+
+```
+Username
+guest
+Password
+guestPassword
+```
+
+ 
+### Accessibility Props
+
+To create a more accessible UI, you can use the following props, which are only used when screen reader support is enabled.
+
+#### `accessibilityLabel`
+
+You can use the `accessibilityLabel` prop on `<Box>`, `<Text>`, and `<Transform>` components to provide a custom, screen-reader-specific output. This label will replace the component's children in the screen reader output.
+
+```
+<Box accessibilityLabel="A box with a custom label for screen readers">
+	<Text>This text will be replaced by the label above.</Text>
+</Box>
+```
+ 
+#### `accessibilityRole`
+
+Use the `accessibilityRole` prop on a `<Box>` to define its role, such as a button or checkbox. This helps screen reader users understand the element's function.
+
+Supported roles: `'button'`, `'checkbox'`, `'radio'`, `'radiogroup'`, `'list'`, `'listitem'`, `'menu'`, `'menuitem'`, `'progressbar'`, `'tab'`, `'tablist'`, `'timer'`, `'toolbar'`.
+
+```
+<Box accessibilityRole="button">
+	<Text>Save</Text>
+</Box>
+```
+ 
+This will be announced by a screen reader as:
+
+```
+button
+Save
+```
+
+#### `accessibilityState`
+
+Use the `accessibilityState` prop on a `<Box>` to describe its current state. This is useful for interactive components.
+
+Supported states: `checked`, `disabled`, `expanded`, `selected`.
+
+```
+<Box accessibilityRole="checkbox" accessibilityState={{checked: true}}>
+	<Text>Accept terms and conditions</Text>
+</Box>
+```
+ 
+This will be announced as `checkbox\nAccept terms and conditions (checked)` by a screen reader.
 
 ## Useful Components
 

@@ -1,7 +1,8 @@
-import React, {forwardRef, type PropsWithChildren} from 'react';
+import React, {forwardRef, useContext, type PropsWithChildren} from 'react';
 import {type Except} from 'type-fest';
 import {type Styles} from '../styles.js';
 import {type DOMElement} from '../dom.js';
+import {accessibilityContext} from './AccessibilityContext.js';
 
 export type Props = Except<Styles, 'textWrap'> & {
 	/**
@@ -9,13 +10,52 @@ export type Props = Except<Styles, 'textWrap'> & {
 	 * If this is set, all children will be ignored.
 	 */
 	readonly accessibilityLabel?: string;
+
+	/**
+	 * Role of the element.
+	 */
+	readonly accessibilityRole?:
+		| 'button'
+		| 'checkbox'
+		| 'radio'
+		| 'radiogroup'
+		| 'list'
+		| 'listitem'
+		| 'menu'
+		| 'menuitem'
+		| 'progressbar'
+		| 'tab'
+		| 'tablist'
+		| 'timer'
+		| 'toolbar';
+
+	/**
+	 * State of the element.
+	 */
+	readonly accessibilityState?: {
+		readonly checked?: boolean;
+		readonly disabled?: boolean;
+		readonly expanded?: boolean;
+		readonly selected?: boolean;
+	};
 };
 
 /**
  * `<Box>` is an essential Ink component to build your layout. It's like `<div style="display: flex">` in the browser.
  */
 const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
-	({children, ...style}, ref) => {
+	(
+		{
+			children,
+			accessibilityLabel,
+			accessibilityRole,
+			accessibilityState,
+			...style
+		},
+		ref,
+	) => {
+		const {isScreenReaderEnabled} = useContext(accessibilityContext);
+
 		return (
 			<ink-box
 				ref={ref}
@@ -28,8 +68,14 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 					overflowX: style.overflowX ?? style.overflow ?? 'visible',
 					overflowY: style.overflowY ?? style.overflow ?? 'visible',
 				}}
+				internal_accessibility={{
+					role: accessibilityRole,
+					state: accessibilityState,
+				}}
 			>
-				{children}
+				{isScreenReaderEnabled && accessibilityLabel
+					? accessibilityLabel
+					: children}
 			</ink-box>
 		);
 	},

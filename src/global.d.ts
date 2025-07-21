@@ -20,6 +20,7 @@ declare namespace Ink {
 		key?: Key;
 		ref?: LegacyRef<DOMElement>;
 		style?: Except<Styles, 'textWrap'>;
+		internal_accessibility?: DOMElement['internal_accessibility'];
 	};
 
 	type Text = {

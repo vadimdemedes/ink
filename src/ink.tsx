@@ -26,6 +26,7 @@ export type Options = {
 	debug: boolean;
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
+	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
 };
 
@@ -72,7 +73,8 @@ export default class Ink {
 				}) as unknown as LogUpdate);
 
 		this.isScreenReaderEnabled =
-			!options.stdout.isTTY || process.env['INK_SCREEN_READER'] === 'true';
+			options.isScreenReaderEnabled ??
+			process.env['INK_SCREEN_READER'] === 'true';
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;

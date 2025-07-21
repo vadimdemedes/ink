@@ -42,7 +42,7 @@ export default function ErrorOverview({error}: Props) {
 	return (
 		<Box flexDirection="column" padding={1}>
 			<Box>
-				<Text backgroundColor="red" color="white" accessibilityLabel="Error">
+				<Text backgroundColor="red" color="white">
 					{' '}
 					ERROR{' '}
 				</Text>
@@ -52,21 +52,14 @@ export default function ErrorOverview({error}: Props) {
 
 			{origin && filePath && (
 				<Box marginTop={1}>
-					<Text
-						dimColor
-						accessibilityLabel={`Error occurred in file ${filePath} at line ${origin.line}, column ${origin.column}`}
-					>
+					<Text dimColor>
 						{filePath}:{origin.line}:{origin.column}
 					</Text>
 				</Box>
 			)}
 
 			{origin && excerpt && (
-				<Box
-					marginTop={1}
-					flexDirection="column"
-					accessibilityLabel="Code excerpt with error"
-				>
+				<Box marginTop={1} flexDirection="column">
 					{excerpt.map(({line, value}) => (
 						<Box key={line}>
 							<Box width={lineWidth + 1}>
@@ -95,11 +88,7 @@ export default function ErrorOverview({error}: Props) {
 			)}
 
 			{error.stack && (
-				<Box
-					marginTop={1}
-					flexDirection="column"
-					accessibilityLabel="Stack trace"
-				>
+				<Box marginTop={1} flexDirection="column">
 					{error.stack
 						.split('\n')
 						.slice(1)

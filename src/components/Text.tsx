@@ -1,8 +1,9 @@
-import React, {type ReactNode} from 'react';
+import React, {useContext, type ReactNode} from 'react';
 import chalk, {type ForegroundColorName} from 'chalk';
 import {type LiteralUnion} from 'type-fest';
 import colorize from '../colorize.js';
 import {type Styles} from '../styles.js';
+import {accessibilityContext} from './AccessibilityContext.js';
 
 export type Props = {
 	/**
@@ -75,7 +76,10 @@ export default function Text({
 	inverse = false,
 	wrap = 'wrap',
 	children,
+	accessibilityLabel,
 }: Props) {
+	const {isScreenReaderEnabled} = useContext(accessibilityContext);
+
 	if (children === undefined || children === null) {
 		return null;
 	}
@@ -121,7 +125,9 @@ export default function Text({
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap}}
 			internal_transform={transform}
 		>
-			{children}
+			{isScreenReaderEnabled && accessibilityLabel
+				? accessibilityLabel
+				: children}
 		</ink-text>
 	);
 }

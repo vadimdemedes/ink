@@ -27,6 +27,28 @@ export type DOMElement = {
 	attributes: Record<string, DOMNodeAttribute>;
 	childNodes: DOMNode[];
 	internal_transform?: OutputTransformer;
+	internal_accessibility?: {
+		role?:
+			| 'button'
+			| 'checkbox'
+			| 'radio'
+			| 'radiogroup'
+			| 'list'
+			| 'listitem'
+			| 'menu'
+			| 'menuitem'
+			| 'progressbar'
+			| 'tab'
+			| 'tablist'
+			| 'timer'
+			| 'toolbar';
+		state?: {
+			checked?: boolean;
+			disabled?: boolean;
+			expanded?: boolean;
+			selected?: boolean;
+		};
+	};
 
 	// Internal properties
 	isStaticDirty?: boolean;

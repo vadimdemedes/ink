@@ -41,6 +41,14 @@ export type RenderOptions = {
 	 * @default true
 	 */
 	patchConsole?: boolean;
+
+	/**
+	 * Enable screen reader support.
+	 * See https://github.com/vadimdemedes/ink/blob/master/readme.md#screen-reader-support
+	 *
+	 * @default process.env['INK_SCREEN_READER'] === 'true'
+	 */
+	isScreenReaderEnabled?: boolean;
 };
 
 export type Instance = {
