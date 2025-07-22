@@ -84,6 +84,7 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		childNodes: [],
 		parentNode: undefined,
 		yogaNode: nodeName === 'ink-virtual-text' ? undefined : Yoga.Node.create(),
+		internal_accessibility: {},
 	};
 
 	if (nodeName === 'ink-text') {
@@ -176,6 +177,11 @@ export const setAttribute = (
 	key: string,
 	value: DOMNodeAttribute,
 ): void => {
+	if (key === 'internal_accessibility') {
+		node.internal_accessibility = value as DOMElement['internal_accessibility'];
+		return;
+	}
+
 	node.attributes[key] = value;
 };
 

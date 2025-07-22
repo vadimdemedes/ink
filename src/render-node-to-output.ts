@@ -82,7 +82,7 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 		const {role, state} = node.internal_accessibility;
 
 		if (role) {
-			output = `${role}\n${output}`;
+			output = `${role}: ${output}`;
 		}
 
 		if (state) {

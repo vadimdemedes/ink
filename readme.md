@@ -2167,11 +2167,10 @@ Supported roles: `'button'`, `'checkbox'`, `'radio'`, `'radiogroup'`, `'list'`, 
 </Box>
 ```
  
-This will be announced by a screen reader as:
+In screen reader mode will be:
 
 ```
-button
-Save
+button: Save
 ```
 
 #### `accessibilityState`
@@ -2186,7 +2185,7 @@ Supported states: `checked`, `disabled`, `expanded`, `selected`.
 </Box>
 ```
  
-This will be announced as `checkbox\nAccept terms and conditions (checked)` by a screen reader.
+This will output as `checkbox: Accept terms and conditions (checked)` in screen reader mode.
 
 ## Useful Components
 
