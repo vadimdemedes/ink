@@ -28,8 +28,6 @@ const applyPaddingToText = (node: DOMElement, text: string): string => {
 
 export type OutputTransformer = (s: string, index: number) => string;
 
-
-
 export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 	if (node.nodeName === 'ink-text') {
 		return squashTextNodes(node);
@@ -38,7 +36,7 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 	let output = '';
 
 	if (node.nodeName === 'ink-box' || node.nodeName === 'ink-root') {
-		if (node.internal_accessibility?.role === 'table') {
+		if (node.internalAccessiblity?.role === 'table') {
 			const headerRow = node.childNodes[0] as DOMElement;
 			const dataRows = node.childNodes.slice(1) as DOMElement[];
 
@@ -78,8 +76,8 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 			.join(separator);
 	}
 
-	if (node.internal_accessibility) {
-		const {role, state} = node.internal_accessibility;
+	if (node.internalAccessiblity) {
+		const {role, state} = node.internalAccessiblity;
 
 		if (role) {
 			output = `${role}: ${output}`;
