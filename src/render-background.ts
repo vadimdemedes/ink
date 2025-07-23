@@ -8,40 +8,44 @@ const renderBackground = (
 	node: DOMNode,
 	output: Output,
 ): void => {
-	if (node.style.backgroundColor) {
-		const width = node.yogaNode!.getComputedWidth();
-		const height = node.yogaNode!.getComputedHeight();
+	if (!node.style.backgroundColor) {
+		return;
+	}
 
-		// Calculate the actual content area considering borders
-		const leftBorderWidth =
-			node.style.borderStyle && node.style.borderLeft !== false ? 1 : 0;
-		const rightBorderWidth =
-			node.style.borderStyle && node.style.borderRight !== false ? 1 : 0;
-		const topBorderHeight =
-			node.style.borderStyle && node.style.borderTop !== false ? 1 : 0;
-		const bottomBorderHeight =
-			node.style.borderStyle && node.style.borderBottom !== false ? 1 : 0;
+	const width = node.yogaNode!.getComputedWidth();
+	const height = node.yogaNode!.getComputedHeight();
 
-		const contentWidth = width - leftBorderWidth - rightBorderWidth;
-		const contentHeight = height - topBorderHeight - bottomBorderHeight;
+	// Calculate the actual content area considering borders
+	const leftBorderWidth =
+		node.style.borderStyle && node.style.borderLeft !== false ? 1 : 0;
+	const rightBorderWidth =
+		node.style.borderStyle && node.style.borderRight !== false ? 1 : 0;
+	const topBorderHeight =
+		node.style.borderStyle && node.style.borderTop !== false ? 1 : 0;
+	const bottomBorderHeight =
+		node.style.borderStyle && node.style.borderBottom !== false ? 1 : 0;
 
-		if (contentWidth > 0 && contentHeight > 0) {
-			// Create background fill for each row
-			const backgroundLine = colorize(
-				' '.repeat(contentWidth),
-				node.style.backgroundColor,
-				'background',
-			);
+	const contentWidth = width - leftBorderWidth - rightBorderWidth;
+	const contentHeight = height - topBorderHeight - bottomBorderHeight;
 
-			for (let row = 0; row < contentHeight; row++) {
-				output.write(
-					x + leftBorderWidth,
-					y + topBorderHeight + row,
-					backgroundLine,
-					{transformers: []},
-				);
-			}
-		}
+	if (!(contentWidth > 0 && contentHeight > 0)) {
+		return;
+	}
+
+	// Create background fill for each row
+	const backgroundLine = colorize(
+		' '.repeat(contentWidth),
+		node.style.backgroundColor,
+		'background',
+	);
+
+	for (let row = 0; row < contentHeight; row++) {
+		output.write(
+			x + leftBorderWidth,
+			y + topBorderHeight + row,
+			backgroundLine,
+			{transformers: []},
+		);
 	}
 };
 
