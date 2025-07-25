@@ -41,6 +41,13 @@ export type RenderOptions = {
 	 * @default true
 	 */
 	patchConsole?: boolean;
+
+	/**
+	 * Force is-in-ci to behave one way or another
+	 *
+	 * @default undefined
+	 */
+	ci?: boolean;
 };
 
 export type Instance = {

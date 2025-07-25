@@ -115,3 +115,17 @@ test.serial('don’t exit while raw mode is active', async t => {
 		});
 	});
 });
+
+test.serial('ci override true', async t => {
+	const output = await run('ci-override');
+	// When ci: true, should behave as CI and only render last frame
+	t.false(output.includes('Hello'));
+	t.true(output.includes('World'));
+});
+
+test.serial('ci override false', async t => {
+	const output = await run('ci-override-false');
+	// When ci: false, should behave as NOT CI and render all frames
+	t.true(output.includes('Hello'));
+	t.true(output.includes('World'));
+});
