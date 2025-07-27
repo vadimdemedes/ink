@@ -305,7 +305,8 @@ export type Styles = {
 
 	/**
 	 * Background color for the element.
-	 * Accepts the same values as `backgroundColor` in `Text` component.
+	 * 
+	 * Accepts the same values as `color` in the `<Text>` component.
 	 */
 	readonly backgroundColor?: LiteralUnion<ForegroundColorName, string>;
 };
