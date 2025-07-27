@@ -1162,8 +1162,9 @@ Determines whether left border is visible.
 
 Type: `string`
 
-Add a background color to fill the entire content area of the Box.
-Accepts the same values as [`color`](#color) in `<Text>` component.
+Background color for the element.
+
+Accepts the same values as [`color`](#color) in the `<Text>` component.
 
 ```jsx
 <Box flexDirection="column">
@@ -1181,7 +1182,7 @@ Accepts the same values as [`color`](#color) in `<Text>` component.
 </Box>
 ```
 
-The background color fills the entire Box area and is inherited by child `<Text>` components unless they specify their own `backgroundColor`.
+The background color fills the entire `<Box>` area and is inherited by child `<Text>` components unless they specify their own `backgroundColor`.
 
 ```jsx
 <Box backgroundColor="blue" alignSelf="flex-start">
