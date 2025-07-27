@@ -1156,6 +1156,52 @@ Default: `true`
 
 Determines whether left border is visible.
 
+#### Background
+
+##### backgroundColor
+
+Type: `string`
+
+Background color for the element.
+
+Accepts the same values as [`color`](#color) in the `<Text>` component.
+
+```jsx
+<Box flexDirection="column">
+	<Box backgroundColor="red" width={20} height={5} alignSelf="flex-start">
+		<Text>Red background</Text>
+	</Box>
+
+	<Box backgroundColor="#FF8800" width={20} height={3} marginTop={1} alignSelf="flex-start">
+		<Text>Orange background</Text>
+	</Box>
+
+	<Box backgroundColor="rgb(0, 255, 0)" width={20} height={3} marginTop={1} alignSelf="flex-start">
+		<Text>Green background</Text>
+	</Box>
+</Box>
+```
+
+The background color fills the entire `<Box>` area and is inherited by child `<Text>` components unless they specify their own `backgroundColor`.
+
+```jsx
+<Box backgroundColor="blue" alignSelf="flex-start">
+	<Text>Blue inherited </Text>
+	<Text backgroundColor="yellow">Yellow override </Text>
+	<Text>Blue inherited again</Text>
+</Box>
+```
+
+Background colors work with borders and padding:
+
+```jsx
+<Box backgroundColor="cyan" borderStyle="round" padding={1} alignSelf="flex-start">
+	<Text>Background with border and padding</Text>
+</Box>
+```
+
+See example in [examples/box-backgrounds](examples/box-backgrounds/box-backgrounds.tsx).
+
 ### `<Newline>`
 
 Adds one or more newline (`\n`) characters.
