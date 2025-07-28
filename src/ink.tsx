@@ -26,6 +26,7 @@ export type Options = {
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
 	waitUntilExit?: () => Promise<void>;
+	ci?: boolean;
 };
 
 export default class Ink {
@@ -44,11 +45,13 @@ export default class Ink {
 	private exitPromise?: Promise<void>;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
+	private readonly isCi: boolean;
 
 	constructor(options: Options) {
 		autoBind(this);
 
 		this.options = options;
+		this.isCi = options.ci ?? isInCi;
 		this.rootNode = dom.createNode('ink-root');
 		this.rootNode.onComputeLayout = this.calculateLayout;
 
@@ -113,7 +116,7 @@ export default class Ink {
 			this.patchConsole();
 		}
 
-		if (!isInCi) {
+		if (!this.isCi) {
 			options.stdout.on('resize', this.resized);
 
 			this.unsubscribeResize = () => {
@@ -164,7 +167,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isInCi) {
+		if (this.isCi) {
 			if (hasStaticOutput) {
 				this.options.stdout.write(staticOutput);
 			}
@@ -236,7 +239,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isInCi) {
+		if (this.isCi) {
 			this.options.stdout.write(data);
 			return;
 		}
@@ -257,7 +260,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isInCi) {
+		if (this.isCi) {
 			this.options.stderr.write(data);
 			return;
 		}
@@ -287,7 +290,7 @@ export default class Ink {
 
 		// CIs don't handle erasing ansi escapes well, so it's better to
 		// only render last frame of non-static output
-		if (isInCi) {
+		if (this.isCi) {
 			this.options.stdout.write(this.lastOutput + '\n');
 		} else if (!this.options.debug) {
 			this.log.done();
@@ -320,7 +323,7 @@ export default class Ink {
 	}
 
 	clear(): void {
-		if (!isInCi && !this.options.debug) {
+		if (!this.isCi && !this.options.debug) {
 			this.log.clear();
 		}
 	}
