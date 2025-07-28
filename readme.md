@@ -120,7 +120,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Sudoku](https://github.com/mrozio13pl/sudoku-in-terminal) - Sudoku game.
 - [Sea Trader](https://github.com/zyishai/sea-trader) - Taipan! inspired trading simulator game.
 - [srtd](https://github.com/t1mmen/srtd) - Live-reloading SQL templates for Supabase projects.
-- [tweakcc](https://github.com/Piebald-AI/tweakcc) - Command-line tool to customize your Claude Code styling.
+- [tweakcc](https://github.com/Piebald-AI/tweakcc) - Customize your Claude Code styling.
 
 ## Contents
 
