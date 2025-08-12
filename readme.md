@@ -2175,7 +2175,7 @@ You can even inspect and change the props of components, and see the results imm
 - [ink-form](https://github.com/lukasbach/ink-form) - Form.
 - [ink-task-list](https://github.com/privatenumber/ink-task-list) - Task list.
 - [ink-spawn](https://github.com/kraenhansen/ink-spawn) - Spawn child processes.
-- [ink-titled-box](https://github.com/mishieck/ink-titled-box) - Titled borders.
+- [ink-titled-box](https://github.com/mishieck/ink-titled-box) - Box with title.
 
 ## Useful Hooks
 
