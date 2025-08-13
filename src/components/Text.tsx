@@ -4,6 +4,7 @@ import {type LiteralUnion} from 'type-fest';
 import colorize from '../colorize.js';
 import {type Styles} from '../styles.js';
 import {accessibilityContext} from './AccessibilityContext.js';
+import {backgroundContext} from './BackgroundContext.js';
 
 export type Props = {
 	/**
@@ -84,7 +85,7 @@ export default function Text({
 	'aria-hidden': ariaHidden = false,
 }: Props) {
 	const {isScreenReaderEnabled} = useContext(accessibilityContext);
-
+	const inheritedBackgroundColor = useContext(backgroundContext);
 	if (children === undefined || children === null) {
 		return null;
 	}
@@ -98,8 +99,11 @@ export default function Text({
 			children = colorize(children, color, 'foreground');
 		}
 
-		if (backgroundColor) {
-			children = colorize(children, backgroundColor, 'background');
+		// Use explicit backgroundColor if provided, otherwise use inherited from parent Box
+		const effectiveBackgroundColor =
+			backgroundColor ?? inheritedBackgroundColor;
+		if (effectiveBackgroundColor) {
+			children = colorize(children, effectiveBackgroundColor, 'background');
 		}
 
 		if (bold) {
