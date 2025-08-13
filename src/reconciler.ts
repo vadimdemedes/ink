@@ -255,38 +255,39 @@ export default createReconciler<
 
 		const props = diff(oldProps, newProps);
 
-		const style = diff(
-			oldProps['style'] as Styles,
-			newProps['style'] as Styles,
-		);
-
-		if (!props && !style) {
+		if (!props) {
 			return;
 		}
 
-		if (props) {
-			for (const [key, value] of Object.entries(props)) {
-				if (key === 'style') {
-					setStyle(node, value as Styles);
-					continue;
+		for (const [key, value] of Object.entries(props)) {
+			if (key === 'style') {
+				const styleDiff = diff(
+					oldProps['style'] as Styles,
+					newProps['style'] as Styles,
+				);
+
+				if (styleDiff) {
+					setStyle(node, styleDiff);
+
+					if (node.yogaNode) {
+						applyStyles(node.yogaNode, styleDiff);
+					}
 				}
 
-				if (key === 'internal_transform') {
-					node.internal_transform = value as OutputTransformer;
-					continue;
-				}
-
-				if (key === 'internal_static') {
-					node.internal_static = true;
-					continue;
-				}
-
-				setAttribute(node, key, value as DOMNodeAttribute);
+				continue;
 			}
-		}
 
-		if (style && node.yogaNode) {
-			applyStyles(node.yogaNode, style);
+			if (key === 'internal_transform') {
+				node.internal_transform = value as OutputTransformer;
+				continue;
+			}
+
+			if (key === 'internal_static') {
+				node.internal_static = true;
+				continue;
+			}
+
+			setAttribute(node, key, value as DOMNodeAttribute);
 		}
 	},
 	commitTextUpdate(node, _oldText, newText) {

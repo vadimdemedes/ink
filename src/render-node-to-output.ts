@@ -33,13 +33,11 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 		return '';
 	}
 
-	if (node.nodeName === 'ink-text') {
-		return squashTextNodes(node);
-	}
-
 	let output = '';
 
-	if (node.nodeName === 'ink-box' || node.nodeName === 'ink-root') {
+	if (node.nodeName === 'ink-text') {
+		output = squashTextNodes(node);
+	} else if (node.nodeName === 'ink-box' || node.nodeName === 'ink-root') {
 		if (node.internalAccessiblity?.role === 'table') {
 			const headerRow = node.childNodes[0] as DOMElement;
 			const dataRows = node.childNodes.slice(1) as DOMElement[];
@@ -72,7 +70,7 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 			node.style.flexDirection === 'row-reverse' ||
 			node.style.flexDirection === 'column-reverse'
 				? [...node.childNodes].reverse()
-				: node.childNodes;
+				: [...node.childNodes];
 
 		output = childNodes
 			.map(childNode => renderNodeToScreenReaderOutput(childNode as DOMElement))

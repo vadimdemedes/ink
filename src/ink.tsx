@@ -56,7 +56,13 @@ export default class Ink {
 		this.rootNode = dom.createNode('ink-root');
 		this.rootNode.onComputeLayout = this.calculateLayout;
 
-		this.rootNode.onRender = options.debug
+		this.isScreenReaderEnabled =
+			options.isScreenReaderEnabled ??
+			process.env['INK_SCREEN_READER'] === 'true';
+
+		const unthrottled = options.debug || this.isScreenReaderEnabled;
+
+		this.rootNode.onRender = unthrottled
 			? this.onRender
 			: throttle(this.onRender, 32, {
 					leading: true,
@@ -65,16 +71,12 @@ export default class Ink {
 
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout);
-		this.throttledLog = options.debug
+		this.throttledLog = unthrottled
 			? this.log
 			: (throttle(this.log, undefined, {
 					leading: true,
 					trailing: true,
 				}) as unknown as LogUpdate);
-
-		this.isScreenReaderEnabled =
-			options.isScreenReaderEnabled ??
-			process.env['INK_SCREEN_READER'] === 'true';
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;

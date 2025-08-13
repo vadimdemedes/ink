@@ -12,6 +12,11 @@ export type Props = {
 	readonly 'aria-label'?: string;
 
 	/**
+	 * Hide the element from screen readers.
+	 */
+	readonly 'aria-hidden'?: boolean;
+
+	/**
 	 * Change text color. Ink uses chalk under the hood, so all its functionality is supported.
 	 */
 	readonly color?: LiteralUnion<ForegroundColorName, string>;
@@ -76,6 +81,7 @@ export default function Text({
 	wrap = 'wrap',
 	children,
 	'aria-label': ariaLabel,
+	'aria-hidden': ariaHidden = false,
 }: Props) {
 	const {isScreenReaderEnabled} = useContext(accessibilityContext);
 
@@ -123,6 +129,9 @@ export default function Text({
 		<ink-text
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap}}
 			internal_transform={transform}
+			internalAccessiblity={{
+				hidden: ariaHidden,
+			}}
 		>
 			{isScreenReaderEnabled && ariaLabel ? ariaLabel : children}
 		</ink-text>
