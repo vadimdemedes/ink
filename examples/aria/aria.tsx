@@ -17,7 +17,7 @@ function AriaExample() {
 				with a screen reader.
 			</Text>
 			<Box marginTop={1}>
-				<Box role="checkbox" aria-state={{checked}} aria-label="A checkbox">
+				<Box aria-role="checkbox" aria-state={{checked}}>
 					<Text>{checked ? '[x]' : '[ ]'}</Text>
 				</Box>
 			</Box>

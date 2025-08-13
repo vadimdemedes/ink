@@ -2188,7 +2188,7 @@ When screen reader support is enabled, Ink will try its best to generate a scree
 For example, for this code:
 
 ```jsx
-<Box role="checkbox" aria-state={{checked: true}}>
+<Box aria-role="checkbox" aria-state={{checked: true}}>
 	Accept terms and conditions
 </Box>
 ```
@@ -2224,17 +2224,35 @@ Default: `false`
 
 Hide the element from screen readers.
 
-### `role`
+##### aria-role
 
 Type: `string`
 
-Role of the element. See [`<Box>`](#box) for a list of supported roles.
+Role of the element. Supported values are:
+- `button`
+- `checkbox`
+- `radio`
+- `radiogroup`
+- `list`
+- `listitem`
+- `menu`
+- `menuitem`
+- `progressbar`
+- `tab`
+- `tablist`
+- `timer`
+- `toolbar`
+- `table`
 
-### `aria-state`
+##### aria-state
 
 Type: `object`
 
-State of the element. See [`<Box>`](#box) for a list of supported states.
+State of the element. Supported values are:
+- `checked` (boolean)
+- `disabled` (boolean)
+- `expanded` (boolean)
+- `selected` (boolean)
 
 
 ## Useful Components

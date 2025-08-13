@@ -19,7 +19,7 @@ export type Props = Except<Styles, 'textWrap'> & {
 	/**
 	 * Role of the element.
 	 */
-	readonly role?:
+	readonly 'aria-role'?:
 		| 'button'
 		| 'checkbox'
 		| 'radio'
@@ -56,7 +56,7 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 			backgroundColor,
 			'aria-label': ariaLabel,
 			'aria-hidden': ariaHidden,
-			role,
+			'aria-role': role,
 			'aria-state': ariaState,
 			...style
 		},

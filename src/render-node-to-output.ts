@@ -39,32 +39,6 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 	if (node.nodeName === 'ink-text') {
 		output = squashTextNodes(node);
 	} else if (node.nodeName === 'ink-box' || node.nodeName === 'ink-root') {
-		if (node.internalAccessiblity?.role === 'table') {
-			const headerRow = node.childNodes[0] as DOMElement;
-			const dataRows = node.childNodes.slice(1) as DOMElement[];
-
-			const headerCells = headerRow.childNodes as DOMElement[];
-			const headerTexts = headerCells.map(cell =>
-				renderNodeToScreenReaderOutput(cell),
-			);
-
-			const outputRows = dataRows.map((row, rowIndex) => {
-				const dataCells = row.childNodes as DOMElement[];
-				const dataTexts = dataCells.map(cell =>
-					renderNodeToScreenReaderOutput(cell),
-				);
-
-				const cellDescriptions = dataTexts.map((dataText, colIndex) => {
-					const headerText = headerTexts[colIndex];
-					return `${headerText}: ${dataText}`;
-				});
-
-				return `Record ${rowIndex + 1}\n${cellDescriptions.join('\n')}`;
-			});
-
-			return outputRows.join('\n---\n');
-		}
-
 		const separator = '\n';
 
 		const childNodes =
