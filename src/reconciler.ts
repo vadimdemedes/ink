@@ -33,7 +33,7 @@ if (process.env['DEV'] === 'true') {
 		if (error.code === 'ERR_MODULE_NOT_FOUND') {
 			console.warn(
 				`
-The environment variable DEV is set to true, so Ink tried to import react-devtools-core,
+The environment variable DEV is set to true, so Ink tried to import \`react-devtools-core\`,
 but this failed as it was not installed. Debugging with React Devtools requires it.
 
 To install use this command:
@@ -255,39 +255,38 @@ export default createReconciler<
 
 		const props = diff(oldProps, newProps);
 
-		if (!props) {
+		const style = diff(
+			oldProps['style'] as Styles,
+			newProps['style'] as Styles,
+		);
+
+		if (!props && !style) {
 			return;
 		}
 
-		for (const [key, value] of Object.entries(props)) {
-			if (key === 'style') {
-				const styleDiff = diff(
-					oldProps['style'] as Styles,
-					newProps['style'] as Styles,
-				);
-
-				if (styleDiff) {
-					setStyle(node, styleDiff);
-
-					if (node.yogaNode) {
-						applyStyles(node.yogaNode, styleDiff);
-					}
+		if (props) {
+			for (const [key, value] of Object.entries(props)) {
+				if (key === 'style') {
+					setStyle(node, value as Styles);
+					continue;
 				}
 
-				continue;
-			}
+				if (key === 'internal_transform') {
+					node.internal_transform = value as OutputTransformer;
+					continue;
+				}
 
-			if (key === 'internal_transform') {
-				node.internal_transform = value as OutputTransformer;
-				continue;
-			}
+				if (key === 'internal_static') {
+					node.internal_static = true;
+					continue;
+				}
 
-			if (key === 'internal_static') {
-				node.internal_static = true;
-				continue;
+				setAttribute(node, key, value as DOMNodeAttribute);
 			}
+		}
 
-			setAttribute(node, key, value as DOMNodeAttribute);
+		if (style && node.yogaNode) {
+			applyStyles(node.yogaNode, style);
 		}
 	},
 	commitTextUpdate(node, _oldText, newText) {
