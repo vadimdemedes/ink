@@ -64,6 +64,9 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 	) => {
 		const {isScreenReaderEnabled} = useContext(accessibilityContext);
 		const label = ariaLabel ? <ink-text>{ariaLabel}</ink-text> : undefined;
+		if (isScreenReaderEnabled && ariaHidden) {
+			return null;
+		}
 
 		const boxElement = (
 			<ink-box
@@ -78,8 +81,7 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 					overflowX: style.overflowX ?? style.overflow ?? 'visible',
 					overflowY: style.overflowY ?? style.overflow ?? 'visible',
 				}}
-				internalAccessiblity={{
-					hidden: ariaHidden,
+				internal_accessibility={{
 					role,
 					state: ariaState,
 				}}

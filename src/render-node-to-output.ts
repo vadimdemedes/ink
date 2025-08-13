@@ -30,10 +30,6 @@ const applyPaddingToText = (node: DOMElement, text: string): string => {
 export type OutputTransformer = (s: string, index: number) => string;
 
 export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
-	if (node.internalAccessiblity?.hidden) {
-		return '';
-	}
-
 	let output = '';
 
 	if (node.nodeName === 'ink-text') {
@@ -53,8 +49,8 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 			.join(separator);
 	}
 
-	if (node.internalAccessiblity) {
-		const {role, state} = node.internalAccessiblity;
+	if (node.internal_accessibility) {
+		const {role, state} = node.internal_accessibility;
 
 		if (state) {
 			const stateKeys = Object.keys(state) as Array<keyof typeof state>;

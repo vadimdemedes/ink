@@ -27,8 +27,8 @@ export type DOMElement = {
 	attributes: Record<string, DOMNodeAttribute>;
 	childNodes: DOMNode[];
 	internal_transform?: OutputTransformer;
-	internalAccessiblity?: {
-		hidden?: boolean;
+
+	internal_accessibility?: {
 		role?:
 			| 'button'
 			| 'checkbox'
@@ -74,7 +74,6 @@ export type DOMNode<T = {nodeName: NodeNames}> = T extends {
 		: DOMElement
 	: never;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMNodeAttribute = boolean | string | number;
 
 export const createNode = (nodeName: ElementNames): DOMElement => {
@@ -85,7 +84,8 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		childNodes: [],
 		parentNode: undefined,
 		yogaNode: nodeName === 'ink-virtual-text' ? undefined : Yoga.Node.create(),
-		internalAccessiblity: {},
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		internal_accessibility: {},
 	};
 
 	if (nodeName === 'ink-text') {
@@ -178,8 +178,8 @@ export const setAttribute = (
 	key: string,
 	value: DOMNodeAttribute,
 ): void => {
-	if (key === 'internalAccessiblity') {
-		node.internalAccessiblity = value as DOMElement['internalAccessiblity'];
+	if (key === 'internal_accessibility') {
+		node.internal_accessibility = value as DOMElement['internal_accessibility'];
 		return;
 	}
 

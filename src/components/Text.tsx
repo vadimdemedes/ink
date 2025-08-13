@@ -129,13 +129,14 @@ export default function Text({
 		return children;
 	};
 
+	if (isScreenReaderEnabled && ariaHidden) {
+		return null;
+	}
+
 	return (
 		<ink-text
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap}}
 			internal_transform={transform}
-			internalAccessiblity={{
-				hidden: ariaHidden,
-			}}
 		>
 			{isScreenReaderEnabled && ariaLabel ? ariaLabel : children}
 		</ink-text>

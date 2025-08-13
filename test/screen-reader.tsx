@@ -71,6 +71,6 @@ test('render select input for screen readers', t => {
 
 	t.is(
 		output,
-		'list: Select a color:\nlistitem: 1. Red\nlistitem, selected: 2. Green\nlistitem: 3. Blue',
+		'list: Select a color:\nlistitem: 1. Red\nlistitem: (selected) 2. Green\nlistitem: 3. Blue',
 	);
 });
