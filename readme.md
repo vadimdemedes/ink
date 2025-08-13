@@ -121,6 +121,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Sea Trader](https://github.com/zyishai/sea-trader) - Taipan! inspired trading simulator game.
 - [srtd](https://github.com/t1mmen/srtd) - Live-reloading SQL templates for Supabase projects.
 - [tweakcc](https://github.com/Piebald-AI/tweakcc) - Customize your Claude Code styling.
+- [argonaut](https://github.com/darksworm/argonaut) - Manage Argo CD resources.
 
 ## Contents
 
