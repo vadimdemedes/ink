@@ -67,7 +67,7 @@ export default function ErrorOverview({error}: Props) {
 									dimColor={line !== origin.line}
 									backgroundColor={line === origin.line ? 'red' : undefined}
 									color={line === origin.line ? 'white' : undefined}
-									accessibilityLabel={`Line ${line}, ${
+									aria-label={`Line ${line}, ${
 										line === origin.line ? 'error' : ''
 									}`}
 								>
@@ -117,7 +117,7 @@ export default function ErrorOverview({error}: Props) {
 									<Text
 										dimColor
 										color="gray"
-										accessibilityLabel={`at ${
+										aria-label={`at ${
 											cleanupPath(parsedLine.file) ?? ''
 										} line ${parsedLine.line} column ${parsedLine.column}`}
 									>

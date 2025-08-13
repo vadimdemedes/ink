@@ -6,15 +6,19 @@ import {accessibilityContext} from './AccessibilityContext.js';
 
 export type Props = Except<Styles, 'textWrap'> & {
 	/**
-	 * Screen-reader-specific text to output.
-	 * If this is set, all children will be ignored.
+	 * Label for the element for screen readers.
 	 */
-	readonly accessibilityLabel?: string;
+	readonly 'aria-label'?: string;
+
+	/**
+	 * Hide the element from screen readers.
+	 */
+	readonly 'aria-hidden'?: boolean;
 
 	/**
 	 * Role of the element.
 	 */
-	readonly accessibilityRole?:
+	readonly role?:
 		| 'button'
 		| 'checkbox'
 		| 'radio'
@@ -33,7 +37,7 @@ export type Props = Except<Styles, 'textWrap'> & {
 	/**
 	 * State of the element.
 	 */
-	readonly accessibilityState?: {
+	readonly 'aria-state'?: {
 		readonly checked?: boolean;
 		readonly disabled?: boolean;
 		readonly expanded?: boolean;
@@ -48,17 +52,16 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 	(
 		{
 			children,
-			accessibilityLabel,
-			accessibilityRole,
-			accessibilityState,
+			'aria-label': ariaLabel,
+			'aria-hidden': ariaHidden,
+			role,
+			'aria-state': ariaState,
 			...style
 		},
 		ref,
 	) => {
 		const {isScreenReaderEnabled} = useContext(accessibilityContext);
-		const label = accessibilityLabel ? (
-			<ink-text>{accessibilityLabel}</ink-text>
-		) : undefined;
+		const label = ariaLabel ? <ink-text>{ariaLabel}</ink-text> : undefined;
 
 		return (
 			<ink-box
@@ -73,8 +76,9 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 					overflowY: style.overflowY ?? style.overflow ?? 'visible',
 				}}
 				internalAccessiblity={{
-					role: accessibilityRole,
-					state: accessibilityState,
+					hidden: ariaHidden,
+					role,
+					state: ariaState,
 				}}
 			>
 				{isScreenReaderEnabled && label ? label : children}

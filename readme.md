@@ -1921,6 +1921,27 @@ const Example = () => {
 };
 ```
 
+### useIsScreenReaderEnabled()
+
+Returns whether screen reader is enabled. This is useful when you want to
+render a different output for screen readers.
+
+```jsx
+import {useIsScreenReaderEnabled, Text} from 'ink';
+
+const Example = () => {
+	const isScreenReaderEnabled = useIsScreenReaderEnabled();
+
+	return (
+		<Text>
+			{isScreenReaderEnabled
+				? 'Screen reader is enabled'
+				: 'Screen reader is disabled'}
+		</Text>
+	);
+};
+```
+
 ## API
 
 #### render(tree, options?)
@@ -2108,84 +2129,65 @@ You can even inspect and change the props of components, and see the results imm
 
 ## Screen Reader Support
 
-To enable screen reader support, you can either pass the `isScreenReaderEnabled` option to the `render` function or set the `INK_SCREEN_READER` environment variable to `true`.
-
-`render(<MyApp />, {isScreenReaderEnabled: true});`
-
-When screen reader support is enabled, Ink renders a text-based, screen-reader-friendly version of the UI instead of the visual one.
-
-For example, this UI:
+Ink has a basic support for screen readers.
+To enable it, you can either pass `isScreenReaderEnabled` option to `render` function or set `INK_SCREEN_READER` environment variable to `true`.
 
 ```jsx
-<Box borderStyle="single" flexDirection="column">
-	<Box>
-		<Text>Username</Text>
-		<Box flexGrow={1} />
-		<Text>guest</Text>
-	</Box>
-	<Box>
-		<Text>Password</Text>
-		<Box flexGrow={1} />
-		<Text>guestPassword</Text>
-	</Box>
-</Box>
-```
- 
-For a screen reader, the output will be:
-
-```
-Username
-guest
-Password
-guestPassword
+render(<MyApp />, {isScreenReaderEnabled: true});
 ```
 
- 
-### Accessibility Props
-
-To create a more accessible UI, you can use the following props, which are only used when screen reader support is enabled.
-
-#### `accessibilityLabel`
-
-You can use the `accessibilityLabel` prop on `<Box>`, `<Text>`, and `<Transform>` components to provide a custom, screen-reader-specific output. This label will replace the component's children in the screen reader output.
+When screen reader support is enabled, Ink will try its best to generate a screen-reader-friendly output.
+For example, for this code:
 
 ```jsx
-<Box accessibilityLabel="A box with a custom label for screen readers">
-	<Text>This text will be replaced by the label above.</Text>
+<Box role="checkbox" aria-state={{checked: true}}>
+	Accept terms and conditions
 </Box>
 ```
- 
-#### `accessibilityRole`
 
-Use the `accessibilityRole` prop on a `<Box>` to define its role, such as a button or checkbox. This helps screen reader users understand the element's function.
+Ink will generate the following output for screen readers:
 
-Supported roles: `'button'`, `'checkbox'`, `'radio'`, `'radiogroup'`, `'list'`, `'listitem'`, `'menu'`, `'menuitem'`, `'progressbar'`, `'tab'`, `'tablist'`, `table`, `'timer'`, `'toolbar'`.
+```
+(checked) checkbox: Accept terms and conditions
+```
+
+You can also provide a custom label for screen readers, if you want to render something different for them.
+For example, if you are building a progress bar, you can use `aria-label` to provide a more descriptive label for screen readers.
 
 ```jsx
-<Box accessibilityRole="button">
-	<Text>Save</Text>
+<Box>
+	<Box width="50%" height={1} backgroundColor="green" />
+	<Text aria-label="Progress: 50%">50%</Text>
 </Box>
 ```
- 
-In screen reader mode will be:
 
-```
-button: Save
-```
+In the example above, screen reader will read "Progress: 50%", instead of "50%".
 
-#### `accessibilityState`
+### `aria-label`
 
-Use the `accessibilityState` prop on a `<Box>` to describe its current state. This is useful for interactive components.
+Type: `string`
 
-Supported states: `checked`, `disabled`, `expanded`, `selected`.
+Label for the element for screen readers.
 
-```jsx
-<Box accessibilityRole="checkbox" accessibilityState={{checked: true}}>
-	<Text>Accept terms and conditions</Text>
-</Box>
-```
- 
-This will output as `checkbox: Accept terms and conditions (checked)` in screen reader mode.
+### `aria-hidden`
+
+Type: `boolean`
+Default: `false`
+
+Hide the element from screen readers.
+
+### `role`
+
+Type: `string`
+
+Role of the element. See [`<Box>`](#box) for a list of supported roles.
+
+### `aria-state`
+
+Type: `object`
+
+State of the element. See [`<Box>`](#box) for a list of supported states.
+
 
 ## Useful Components
 

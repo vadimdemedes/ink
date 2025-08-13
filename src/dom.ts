@@ -28,6 +28,7 @@ export type DOMElement = {
 	childNodes: DOMNode[];
 	internal_transform?: OutputTransformer;
 	internalAccessiblity?: {
+		hidden?: boolean;
 		role?:
 			| 'button'
 			| 'checkbox'

@@ -29,6 +29,10 @@ const applyPaddingToText = (node: DOMElement, text: string): string => {
 export type OutputTransformer = (s: string, index: number) => string;
 
 export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
+	if (node.internalAccessiblity?.hidden) {
+		return '';
+	}
+
 	if (node.nodeName === 'ink-text') {
 		return squashTextNodes(node);
 	}
@@ -79,17 +83,17 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 	if (node.internalAccessiblity) {
 		const {role, state} = node.internalAccessiblity;
 
-		if (role) {
-			output = `${role}: ${output}`;
-		}
-
 		if (state) {
 			const stateKeys = Object.keys(state) as Array<keyof typeof state>;
 			const stateDescription = stateKeys.filter(key => state[key]).join(', ');
 
 			if (stateDescription) {
-				output = `${output} (${stateDescription})`;
+				output = `(${stateDescription}) ${output}`;
 			}
+		}
+
+		if (role) {
+			output = `${role}: ${output}`;
 		}
 	}
 

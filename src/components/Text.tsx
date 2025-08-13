@@ -7,10 +7,9 @@ import {accessibilityContext} from './AccessibilityContext.js';
 
 export type Props = {
 	/**
-	 * Screen-reader-specific text to output.
-	 * If this is set, all children will be ignored.
+	 * Label for the element for screen readers.
 	 */
-	readonly accessibilityLabel?: string;
+	readonly 'aria-label'?: string;
 
 	/**
 	 * Change text color. Ink uses chalk under the hood, so all its functionality is supported.
@@ -76,7 +75,7 @@ export default function Text({
 	inverse = false,
 	wrap = 'wrap',
 	children,
-	accessibilityLabel,
+	'aria-label': ariaLabel,
 }: Props) {
 	const {isScreenReaderEnabled} = useContext(accessibilityContext);
 
@@ -125,9 +124,7 @@ export default function Text({
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap}}
 			internal_transform={transform}
 		>
-			{isScreenReaderEnabled && accessibilityLabel
-				? accessibilityLabel
-				: children}
+			{isScreenReaderEnabled && ariaLabel ? ariaLabel : children}
 		</ink-text>
 	);
 }
