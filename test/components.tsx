@@ -143,7 +143,7 @@ test('fail when text nodes are not within <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		override render() {
+		override async render() {
 			return this.props.children;
 		}
 
@@ -172,7 +172,7 @@ test('fail when text node is not within <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		override render() {
+		override async render() {
 			return this.props.children;
 		}
 
@@ -198,7 +198,7 @@ test('fail when <Box> is inside <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		override render() {
+		override async render() {
 			return this.props.children;
 		}
 

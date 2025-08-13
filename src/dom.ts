@@ -74,6 +74,7 @@ export type DOMNode<T = {nodeName: NodeNames}> = T extends {
 		: DOMElement
 	: never;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMNodeAttribute = boolean | string | number;
 
 export const createNode = (nodeName: ElementNames): DOMElement => {
