@@ -101,7 +101,6 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command line tools for time-saving web developers.
 - [share](https://github.com/marionebl/share-cli) - Quickly share files.
 - [Kubelive](https://github.com/ameerthehacker/kubelive) - CLI for Kubernetes to provide live data about the cluster and its resources.
-- [argonaut](https://github.com/darksworm/argonaut) - k9s-like TUI app for managing Argo CD resources.
 - [changelog-view](https://github.com/jdeniau/changelog-view) - View changelogs.
 - [cfpush](https://github.com/mamachanko/cfpush) - An interactive Cloud Foundry tutorial.
 - [startd](https://github.com/mgrip/startd) - Turn your React component into a web app.
@@ -122,6 +121,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Sea Trader](https://github.com/zyishai/sea-trader) - Taipan! inspired trading simulator game.
 - [srtd](https://github.com/t1mmen/srtd) - Live-reloading SQL templates for Supabase projects.
 - [tweakcc](https://github.com/Piebald-AI/tweakcc) - Customize your Claude Code styling.
+- [argonaut](https://github.com/darksworm/argonaut) - Manage Argo CD resources.
 
 ## Contents
 
