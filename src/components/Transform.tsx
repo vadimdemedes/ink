@@ -1,6 +1,13 @@
-import React, {type ReactNode} from 'react';
+import React, {useContext, type ReactNode} from 'react';
+import {accessibilityContext} from './AccessibilityContext.js';
 
 export type Props = {
+	/**
+	 * Screen-reader-specific text to output.
+	 * If this is set, all children will be ignored.
+	 */
+	readonly accessibilityLabel?: string;
+
 	/**
 	 * Function which transforms children output. It accepts children and must return transformed children too.
 	 */
@@ -15,7 +22,13 @@ export type Props = {
  * These use cases can't accept React nodes as input, they are expecting a string.
  * That's what <Transform> component does, it gives you an output string of its child components and lets you transform it in any way.
  */
-export default function Transform({children, transform}: Props) {
+export default function Transform({
+	children,
+	transform,
+	accessibilityLabel,
+}: Props) {
+	const {isScreenReaderEnabled} = useContext(accessibilityContext);
+
 	if (children === undefined || children === null) {
 		return null;
 	}
@@ -25,7 +38,9 @@ export default function Transform({children, transform}: Props) {
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row'}}
 			internal_transform={transform}
 		>
-			{children}
+			{isScreenReaderEnabled && accessibilityLabel
+				? accessibilityLabel
+				: children}
 		</ink-text>
 	);
 }

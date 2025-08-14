@@ -3,9 +3,20 @@ import chalk, {type ForegroundColorName} from 'chalk';
 import {type LiteralUnion} from 'type-fest';
 import colorize from '../colorize.js';
 import {type Styles} from '../styles.js';
+import {accessibilityContext} from './AccessibilityContext.js';
 import {backgroundContext} from './BackgroundContext.js';
 
 export type Props = {
+	/**
+	 * Label for the element for screen readers.
+	 */
+	readonly 'aria-label'?: string;
+
+	/**
+	 * Hide the element from screen readers.
+	 */
+	readonly 'aria-hidden'?: boolean;
+
 	/**
 	 * Change text color. Ink uses chalk under the hood, so all its functionality is supported.
 	 */
@@ -70,9 +81,15 @@ export default function Text({
 	inverse = false,
 	wrap = 'wrap',
 	children,
+	'aria-label': ariaLabel,
+	'aria-hidden': ariaHidden = false,
 }: Props) {
+	const {isScreenReaderEnabled} = useContext(accessibilityContext);
 	const inheritedBackgroundColor = useContext(backgroundContext);
-	if (children === undefined || children === null) {
+	const childrenOrAriaLabel =
+		isScreenReaderEnabled && ariaLabel ? ariaLabel : children;
+
+	if (childrenOrAriaLabel === undefined || childrenOrAriaLabel === null) {
 		return null;
 	}
 
@@ -115,12 +132,16 @@ export default function Text({
 		return children;
 	};
 
+	if (isScreenReaderEnabled && ariaHidden) {
+		return null;
+	}
+
 	return (
 		<ink-text
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap}}
 			internal_transform={transform}
 		>
-			{children}
+			{isScreenReaderEnabled && ariaLabel ? ariaLabel : children}
 		</ink-text>
 	);
 }

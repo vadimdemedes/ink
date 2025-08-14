@@ -144,6 +144,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [API](#api)
 - [Testing](#testing)
 - [Using React Devtools](#using-react-devtools)
+- [Screen Reader Support](#screen-reader-support)
 - [Useful Components](#useful-components)
 - [Useful Hooks](#useful-hooks)
 - [Examples](#examples)
@@ -1968,6 +1969,26 @@ const Example = () => {
 };
 ```
 
+### useIsScreenReaderEnabled()
+
+Returns whether screen reader is enabled. This is useful when you want to render a different output for screen readers.
+
+```jsx
+import {useIsScreenReaderEnabled, Text} from 'ink';
+
+const Example = () => {
+	const isScreenReaderEnabled = useIsScreenReaderEnabled();
+
+	return (
+		<Text>
+			{isScreenReaderEnabled
+				? 'Screen reader is enabled'
+				: 'Screen reader is disabled'}
+		</Text>
+	);
+};
+```
+
 ## API
 
 #### render(tree, options?)
@@ -2152,6 +2173,105 @@ After it starts up, you should see the component tree of your CLI.
 You can even inspect and change the props of components, and see the results immediately in the CLI, without restarting it.
 
 **Note**: You must manually quit your CLI via <kbd>Ctrl</kbd>+<kbd>C</kbd> after you're done testing.
+
+## Screen Reader Support
+
+Ink has a basic support for screen readers.
+
+To enable it, you can either pass the `isScreenReaderEnabled` option to the `render` function or set the `INK_SCREEN_READER` environment variable to `true`.
+
+Ink implements a small subset of functionality from the [ARIA specification](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA).
+
+```jsx
+render(<MyApp />, {isScreenReaderEnabled: true});
+```
+
+When screen reader support is enabled, Ink will try its best to generate a screen-reader-friendly output.
+
+For example, for this code:
+
+```jsx
+<Box aria-role="checkbox" aria-state={{checked: true}}>
+	Accept terms and conditions
+</Box>
+```
+
+Ink will generate the following output for screen readers:
+
+```
+(checked) checkbox: Accept terms and conditions
+```
+
+You can also provide a custom label for screen readers, if you want to render something different for them.
+
+For example, if you are building a progress bar, you can use `aria-label` to provide a more descriptive label for screen readers.
+
+```jsx
+<Box>
+	<Box width="50%" height={1} backgroundColor="green" />
+	<Text aria-label="Progress: 50%">50%</Text>
+</Box>
+```
+
+In the example above, screen reader will read "Progress: 50%", instead of "50%".
+
+### `aria-label`
+
+Type: `string`
+
+Label for the element for screen readers.
+
+### `aria-hidden`
+
+Type: `boolean`\
+Default: `false`
+
+Hide the element from screen readers.
+
+##### aria-role
+
+Type: `string`
+
+Role of the element.
+
+Supported values:
+- `button`
+- `checkbox`
+- `radio`
+- `radiogroup`
+- `list`
+- `listitem`
+- `menu`
+- `menuitem`
+- `progressbar`
+- `tab`
+- `tablist`
+- `timer`
+- `toolbar`
+- `table`
+
+##### aria-state
+
+Type: `object`
+
+State of the element.
+
+Supported values:
+- `checked` (boolean)
+- `disabled` (boolean)
+- `expanded` (boolean)
+- `selected` (boolean)
+
+## Creating Components
+
+When building custom components, it's important to keep accessibility in mind. While Ink provides the building blocks, ensuring your components are accessible will make your CLIs usable by a wider audience.
+
+### General Principles
+
+- **Provide screen reader-friendly output:** Use the `useIsScreenReaderEnabled` hook to detect if a screen reader is active. You can then render a more descriptive output for screen reader users.
+- **Leverage ARIA props:** For components that have a specific role (e.g., a checkbox or a button), use the `aria-role`, `aria-state`, and `aria-label` props on `<Box>` and `<Text>` to provide semantic meaning to screen readers.
+
+For a practical example of building an accessible component, see the [ARIA example](/examples/aria/aria.tsx).
 
 ## Useful Components
 
