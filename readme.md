@@ -1971,8 +1971,7 @@ const Example = () => {
 
 ### useIsScreenReaderEnabled()
 
-Returns whether screen reader is enabled. This is useful when you want to
-render a different output for screen readers.
+Returns whether screen reader is enabled. This is useful when you want to render a different output for screen readers.
 
 ```jsx
 import {useIsScreenReaderEnabled, Text} from 'ink';
