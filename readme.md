@@ -2177,13 +2177,15 @@ You can even inspect and change the props of components, and see the results imm
 ## Screen Reader Support
 
 Ink has a basic support for screen readers.
-To enable it, you can either pass `isScreenReaderEnabled` option to `render` function or set `INK_SCREEN_READER` environment variable to `true`.
+
+To enable it, you can either pass the `isScreenReaderEnabled` option to the `render` function or set the `INK_SCREEN_READER` environment variable to `true`.
 
 ```jsx
 render(<MyApp />, {isScreenReaderEnabled: true});
 ```
 
 When screen reader support is enabled, Ink will try its best to generate a screen-reader-friendly output.
+
 For example, for this code:
 
 ```jsx
@@ -2199,6 +2201,7 @@ Ink will generate the following output for screen readers:
 ```
 
 You can also provide a custom label for screen readers, if you want to render something different for them.
+
 For example, if you are building a progress bar, you can use `aria-label` to provide a more descriptive label for screen readers.
 
 ```jsx
@@ -2218,7 +2221,7 @@ Label for the element for screen readers.
 
 ### `aria-hidden`
 
-Type: `boolean`
+Type: `boolean`\
 Default: `false`
 
 Hide the element from screen readers.
@@ -2227,7 +2230,9 @@ Hide the element from screen readers.
 
 Type: `string`
 
-Role of the element. Supported values are:
+Role of the element.
+
+Supported values:
 - `button`
 - `checkbox`
 - `radio`
@@ -2247,12 +2252,13 @@ Role of the element. Supported values are:
 
 Type: `object`
 
-State of the element. Supported values are:
+State of the element.
+
+Supported values:
 - `checked` (boolean)
 - `disabled` (boolean)
 - `expanded` (boolean)
 - `selected` (boolean)
-
 
 ## Useful Components
 
