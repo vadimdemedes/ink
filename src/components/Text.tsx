@@ -86,7 +86,10 @@ export default function Text({
 }: Props) {
 	const {isScreenReaderEnabled} = useContext(accessibilityContext);
 	const inheritedBackgroundColor = useContext(backgroundContext);
-	if (children === undefined || children === null) {
+	const childrenOrAriaLabel =
+		isScreenReaderEnabled && ariaLabel ? ariaLabel : children;
+
+	if (childrenOrAriaLabel === undefined || childrenOrAriaLabel === null) {
 		return null;
 	}
 

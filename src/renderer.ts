@@ -14,7 +14,7 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 	if (node.yogaNode) {
 		if (isScreenReaderEnabled) {
 			const output = renderNodeToScreenReaderOutput(node);
-			const outputHeight = output.split('\n').length;
+			const outputHeight = output === '' ? 0 : output.split('\n').length;
 
 			return {
 				output,

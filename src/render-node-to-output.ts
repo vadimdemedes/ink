@@ -30,6 +30,10 @@ const applyPaddingToText = (node: DOMElement, text: string): string => {
 export type OutputTransformer = (s: string, index: number) => string;
 
 export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
+	if (node.yogaNode?.getDisplay() === Yoga.DISPLAY_NONE) {
+		return '';
+	}
+
 	let output = '';
 
 	if (node.nodeName === 'ink-text') {

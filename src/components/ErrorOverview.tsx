@@ -67,9 +67,11 @@ export default function ErrorOverview({error}: Props) {
 									dimColor={line !== origin.line}
 									backgroundColor={line === origin.line ? 'red' : undefined}
 									color={line === origin.line ? 'white' : undefined}
-									aria-label={`Line ${line}, ${
-										line === origin.line ? 'error' : ''
-									}`}
+									aria-label={
+										line === origin.line
+											? `Line ${line}, error`
+											: `Line ${line}`
+									}
 								>
 									{String(line).padStart(lineWidth, ' ')}:
 								</Text>
