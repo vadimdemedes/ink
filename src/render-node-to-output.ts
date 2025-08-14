@@ -29,7 +29,12 @@ const applyPaddingToText = (node: DOMElement, text: string): string => {
 
 export type OutputTransformer = (s: string, index: number) => string;
 
-export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
+export const renderNodeToScreenReaderOutput = (
+	node: DOMElement,
+	options: {
+		parentRole?: string;
+	} = {},
+): string => {
 	if (node.yogaNode?.getDisplay() === Yoga.DISPLAY_NONE) {
 		return '';
 	}
@@ -39,7 +44,11 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 	if (node.nodeName === 'ink-text') {
 		output = squashTextNodes(node);
 	} else if (node.nodeName === 'ink-box' || node.nodeName === 'ink-root') {
-		const separator = '\n';
+		const separator =
+			node.style.flexDirection === 'row' ||
+			node.style.flexDirection === 'row-reverse'
+				? ' '
+				: '\n';
 
 		const childNodes =
 			node.style.flexDirection === 'row-reverse' ||
@@ -48,7 +57,11 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 				: [...node.childNodes];
 
 		output = childNodes
-			.map(childNode => renderNodeToScreenReaderOutput(childNode as DOMElement))
+			.map(childNode =>
+				renderNodeToScreenReaderOutput(childNode as DOMElement, {
+					parentRole: node.internal_accessibility?.role,
+				}),
+			)
 			.filter(Boolean)
 			.join(separator);
 	}
@@ -65,7 +78,7 @@ export const renderNodeToScreenReaderOutput = (node: DOMElement): string => {
 			}
 		}
 
-		if (role) {
+		if (role && role !== options.parentRole) {
 			output = `${role}: ${output}`;
 		}
 	}

@@ -22,26 +22,35 @@ export type Props = Except<Styles, 'textWrap'> & {
 	readonly 'aria-role'?:
 		| 'button'
 		| 'checkbox'
-		| 'radio'
-		| 'radiogroup'
+		| 'combobox'
 		| 'list'
+		| 'listbox'
 		| 'listitem'
 		| 'menu'
 		| 'menuitem'
+		| 'option'
 		| 'progressbar'
+		| 'radio'
+		| 'radiogroup'
 		| 'tab'
 		| 'tablist'
+		| 'table'
+		| 'textbox'
 		| 'timer'
-		| 'toolbar'
-		| 'table';
+		| 'toolbar';
 
 	/**
 	 * State of the element.
 	 */
 	readonly 'aria-state'?: {
+		readonly busy?: boolean;
 		readonly checked?: boolean;
 		readonly disabled?: boolean;
 		readonly expanded?: boolean;
+		readonly multiline?: boolean;
+		readonly multiselectable?: boolean;
+		readonly readonly?: boolean;
+		readonly required?: boolean;
 		readonly selected?: boolean;
 	};
 };

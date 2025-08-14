@@ -318,3 +318,31 @@ test('render multi-line text with roles', t => {
 
 	t.is(output, 'list: listitem: Item 1\nlistitem: Item 2');
 });
+
+test('render listbox with multiselectable options', t => {
+	const output = renderToString(
+		<Box
+			flexDirection="column"
+			aria-role="listbox"
+			aria-state={{multiselectable: true}}
+		>
+			<Box aria-role="option" aria-state={{selected: true}}>
+				<Text>Option 1</Text>
+			</Box>
+			<Box aria-role="option" aria-state={{selected: false}}>
+				<Text>Option 2</Text>
+			</Box>
+			<Box aria-role="option" aria-state={{selected: true}}>
+				<Text>Option 3</Text>
+			</Box>
+		</Box>,
+		{
+			isScreenReaderEnabled: true,
+		},
+	);
+
+	t.is(
+		output,
+		'listbox: (multiselectable) option: (selected) Option 1\noption: Option 2\noption: (selected) Option 3',
+	);
+});

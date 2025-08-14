@@ -32,22 +32,31 @@ export type DOMElement = {
 		role?:
 			| 'button'
 			| 'checkbox'
-			| 'radio'
-			| 'radiogroup'
+			| 'combobox'
 			| 'list'
+			| 'listbox'
 			| 'listitem'
 			| 'menu'
 			| 'menuitem'
+			| 'option'
 			| 'progressbar'
+			| 'radio'
+			| 'radiogroup'
 			| 'tab'
 			| 'tablist'
+			| 'table'
+			| 'textbox'
 			| 'timer'
-			| 'toolbar'
-			| 'table';
+			| 'toolbar';
 		state?: {
+			busy?: boolean;
 			checked?: boolean;
 			disabled?: boolean;
 			expanded?: boolean;
+			multiline?: boolean;
+			multiselectable?: boolean;
+			readonly?: boolean;
+			required?: boolean;
 			selected?: boolean;
 		};
 	};

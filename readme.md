@@ -2180,6 +2180,8 @@ You can even inspect and change the props of components, and see the results imm
 Ink has a basic support for screen readers.
 To enable it, you can either pass `isScreenReaderEnabled` option to `render` function or set `INK_SCREEN_READER` environment variable to `true`.
 
+Ink implements a small subset of functionality from the [ARIA specification](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA).
+
 ```jsx
 render(<MyApp />, {isScreenReaderEnabled: true});
 ```
@@ -2254,6 +2256,16 @@ State of the element. Supported values are:
 - `expanded` (boolean)
 - `selected` (boolean)
 
+## Creating Components
+
+When building custom components, it's important to keep accessibility in mind. While Ink provides the building blocks, ensuring your components are accessible will make your CLIs usable by a wider audience.
+
+### General Principles
+
+- **Provide screen reader-friendly output:** Use the `useIsScreenReaderEnabled` hook to detect if a screen reader is active. You can then render a more descriptive output for screen reader users.
+- **Leverage ARIA props:** For components that have a specific role (e.g., a checkbox or a button), use the `aria-role`, `aria-state`, and `aria-label` props on `<Box>` and `<Text>` to provide semantic meaning to screen readers.
+
+For a practical example of building an accessible component, see the [ARIA example](/examples/aria/aria.tsx).
 
 ## Useful Components
 
