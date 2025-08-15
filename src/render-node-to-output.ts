@@ -57,11 +57,18 @@ export const renderNodeToScreenReaderOutput = (
 				: [...node.childNodes];
 
 		output = childNodes
-			.map(childNode =>
-				renderNodeToScreenReaderOutput(childNode as DOMElement, {
-					parentRole: node.internal_accessibility?.role,
-				}),
-			)
+			.map(childNode => {
+				const screenReaderOutput = renderNodeToScreenReaderOutput(
+					childNode as DOMElement,
+					{
+						parentRole: node.internal_accessibility?.role,
+					},
+				);
+
+				// When a text node contains multiple lines, it's still a single text node.
+				// We need to split it into lines and then join them with the separator.
+				return screenReaderOutput.split('\n').join(separator);
+			})
 			.filter(Boolean)
 			.join(separator);
 	}
