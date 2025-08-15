@@ -1,50 +1,31 @@
 import React, {useState} from 'react';
 import {render, Text, Box, useInput} from 'ink';
 
-let messageId = 0;
+function AriaExample() {
+	const [checked, setChecked] = useState(false);
 
-function ChatApp() {
-	const [input, setInput] = useState('');
-
-	const [messages, setMessages] = useState<
-		Array<{
-			id: number;
-			text: string;
-		}>
-	>([]);
-
-	useInput((character, key) => {
-		if (key.return) {
-			if (input) {
-				setMessages(previousMessages => [
-					...previousMessages,
-					{
-						id: messageId++,
-						text: `User: ${input}`,
-					},
-				]);
-				setInput('');
-			}
-		} else if (key.backspace || key.delete) {
-			setInput(currentInput => currentInput.slice(0, -1));
-		} else {
-			setInput(currentInput => currentInput + character);
+	useInput(key => {
+		if (key === ' ') {
+			setChecked(!checked);
 		}
 	});
 
 	return (
-		<Box flexDirection="column" padding={1}>
-			<Box flexDirection="column">
-				{messages.map(message => (
-					<Text key={message.id}>{message.text}</Text>
-				))}
-			</Box>
-
+		<Box flexDirection="column">
+			<Text>
+				Press spacebar to toggle the checkbox. This example is best experienced
+				with a screen reader.
+			</Text>
 			<Box marginTop={1}>
-				<Text>Enter your message: {input}</Text>
+				<Box aria-role="checkbox" aria-state={{checked}}>
+					<Text>{checked ? '[x]' : '[ ]'}</Text>
+				</Box>
+			</Box>
+			<Box marginTop={1}>
+				<Text aria-hidden="true">This text is hidden from screen readers.</Text>
 			</Box>
 		</Box>
 	);
 }
 
-render(<ChatApp />);
+render(<AriaExample />);
