@@ -24,5 +24,12 @@ export {default as useStderr} from './hooks/use-stderr.js';
 export {default as useFocus} from './hooks/use-focus.js';
 export {default as useFocusManager} from './hooks/use-focus-manager.js';
 export {default as useIsScreenReaderEnabled} from './hooks/use-is-screen-reader-enabled.js';
-export {default as measureElement} from './measure-element.js';
+export {
+	default as measureElement,
+	getBoundingBox,
+	getInnerWidth,
+	getInnerHeight,
+	getScrollHeight,
+	getScrollWidth,
+} from './measure-element.js';
 export type {DOMElement} from './dom.js';
