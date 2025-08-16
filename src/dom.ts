@@ -67,6 +67,12 @@ export type DOMElement = {
 	onComputeLayout?: () => void;
 	onRender?: () => void;
 	onImmediateRender?: () => void;
+	internal_scrollTop?: number;
+	internal_scrollHeight?: number;
+	internal_clientHeight?: number;
+	internal_scrollLeft?: number;
+	internal_scrollWidth?: number;
+	internal_clientWidth?: number;
 } & InkNode;
 
 export type TextNode = {
