@@ -67,6 +67,9 @@ export type DOMElement = {
 	onComputeLayout?: () => void;
 	onRender?: () => void;
 	onImmediateRender?: () => void;
+	internal_scrollTop?: number;
+	internal_scrollHeight?: number;
+	internal_clientHeight?: number;
 } & InkNode;
 
 export type TextNode = {
@@ -262,3 +265,42 @@ export const setTextNodeValue = (node: TextNode, text: string): void => {
 	node.nodeValue = text;
 	markNodeAsDirty(node);
 };
+
+export function getScrollHeight(yogaNode: YogaNode | undefined): number {
+	if (!yogaNode) {
+		return 0;
+	}
+
+	let scrollHeight = 0;
+	for (let i = 0; i < yogaNode.getChildCount(); i++) {
+		const child = yogaNode.getChild(i);
+		scrollHeight += child.getComputedMargin(Yoga.EDGE_TOP);
+		scrollHeight += child.getComputedHeight();
+		scrollHeight += child.getComputedMargin(Yoga.EDGE_BOTTOM);
+	}
+
+	scrollHeight +=
+		yogaNode.getComputedPadding(Yoga.EDGE_TOP) +
+		yogaNode.getComputedPadding(Yoga.EDGE_BOTTOM);
+
+	return scrollHeight;
+}
+
+export function getScrollWidth(yogaNode: YogaNode | undefined): number {
+	if (!yogaNode) {
+		return 0;
+	}
+
+	let scrollWidth = 0;
+	for (let i = 0; i < yogaNode.getChildCount(); i++) {
+		const child = yogaNode.getChild(i);
+		scrollWidth += child.getComputedMargin(Yoga.EDGE_LEFT);
+		scrollWidth += child.getComputedWidth();
+		scrollWidth += child.getComputedMargin(Yoga.EDGE_RIGHT);
+	}
+
+	scrollWidth +=
+		yogaNode.getComputedPadding(Yoga.EDGE_LEFT) +
+		yogaNode.getComputedPadding(Yoga.EDGE_RIGHT);
+	return scrollWidth;
+}
