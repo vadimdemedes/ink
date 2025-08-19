@@ -208,7 +208,8 @@ export default class Ink {
 			this.options.stdout.write(erase + wrappedOutput);
 
 			this.lastOutput = output;
-			this.lastOutputHeight = wrappedOutput.split('\n').length;
+			this.lastOutputHeight = wrappedOutput === '' ? 0 : wrappedOutput.split('\n').
+length;
 			return;
 		}
 
