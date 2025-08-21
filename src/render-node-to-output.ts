@@ -33,8 +33,13 @@ export const renderNodeToScreenReaderOutput = (
 	node: DOMElement,
 	options: {
 		parentRole?: string;
+		skipStaticElements?: boolean;
 	} = {},
 ): string => {
+	if (options.skipStaticElements && node.internal_static) {
+		return '';
+	}
+
 	if (node.yogaNode?.getDisplay() === Yoga.DISPLAY_NONE) {
 		return '';
 	}
@@ -62,6 +67,7 @@ export const renderNodeToScreenReaderOutput = (
 					childNode as DOMElement,
 					{
 						parentRole: node.internal_accessibility?.role,
+						skipStaticElements: options.skipStaticElements,
 					},
 				);
 

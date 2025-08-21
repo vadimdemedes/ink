@@ -13,13 +13,24 @@ type Result = {
 const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 	if (node.yogaNode) {
 		if (isScreenReaderEnabled) {
-			const output = renderNodeToScreenReaderOutput(node);
+			const output = renderNodeToScreenReaderOutput(node, {
+				skipStaticElements: true,
+			});
+
 			const outputHeight = output === '' ? 0 : output.split('\n').length;
+
+			let staticOutput = '';
+
+			if (node.staticNode) {
+				staticOutput = renderNodeToScreenReaderOutput(node.staticNode, {
+					skipStaticElements: false,
+				});
+			}
 
 			return {
 				output,
 				outputHeight,
-				staticOutput: '',
+				staticOutput: staticOutput ? `${staticOutput}\n` : '',
 			};
 		}
 

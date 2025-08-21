@@ -189,7 +189,18 @@ export default class Ink {
 		}
 
 		if (this.isScreenReaderEnabled) {
-			if (output === this.lastOutput) {
+			if (hasStaticOutput) {
+				// We need to erase the main output before writing new static output
+				const erase =
+					this.lastOutputHeight > 0
+						? ansiEscapes.eraseLines(this.lastOutputHeight)
+						: '';
+				this.options.stdout.write(erase + staticOutput);
+				// After erasing, the last output is gone, so we should reset its height
+				this.lastOutputHeight = 0;
+			}
+
+			if (output === this.lastOutput && !hasStaticOutput) {
 				return;
 			}
 
@@ -200,12 +211,16 @@ export default class Ink {
 				hard: true,
 			});
 
-			const erase =
-				this.lastOutputHeight > 0
-					? ansiEscapes.eraseLines(this.lastOutputHeight)
-					: '';
-
-			this.options.stdout.write(erase + wrappedOutput);
+			// If we haven't erased yet, do it now.
+			if (hasStaticOutput) {
+				this.options.stdout.write(wrappedOutput);
+			} else {
+				const erase =
+					this.lastOutputHeight > 0
+						? ansiEscapes.eraseLines(this.lastOutputHeight)
+						: '';
+				this.options.stdout.write(erase + wrappedOutput);
+			}
 
 			this.lastOutput = output;
 			this.lastOutputHeight =
