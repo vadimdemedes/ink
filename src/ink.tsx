@@ -9,12 +9,14 @@ import patchConsole from 'patch-console';
 import {LegacyRoot} from 'react-reconciler/constants.js';
 import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
+import wrapAnsi from 'wrap-ansi';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
 import logUpdate, {type LogUpdate} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
+import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
 
 const noop = () => {};
 
@@ -25,6 +27,7 @@ export type Options = {
 	debug: boolean;
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
+	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
 };
 
@@ -32,6 +35,8 @@ export default class Ink {
 	private readonly options: Options;
 	private readonly log: LogUpdate;
 	private readonly throttledLog: LogUpdate;
+	private readonly isScreenReaderEnabled: boolean;
+
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
 	private lastOutput: string;
@@ -52,7 +57,13 @@ export default class Ink {
 		this.rootNode = dom.createNode('ink-root');
 		this.rootNode.onComputeLayout = this.calculateLayout;
 
-		this.rootNode.onRender = options.debug
+		this.isScreenReaderEnabled =
+			options.isScreenReaderEnabled ??
+			process.env['INK_SCREEN_READER'] === 'true';
+
+		const unthrottled = options.debug || this.isScreenReaderEnabled;
+
+		this.rootNode.onRender = unthrottled
 			? this.onRender
 			: throttle(this.onRender, 32, {
 					leading: true,
@@ -61,7 +72,7 @@ export default class Ink {
 
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout);
-		this.throttledLog = options.debug
+		this.throttledLog = unthrottled
 			? this.log
 			: (throttle(this.log, undefined, {
 					leading: true,
@@ -150,7 +161,10 @@ export default class Ink {
 			return;
 		}
 
-		const {output, outputHeight, staticOutput} = render(this.rootNode);
+		const {output, outputHeight, staticOutput} = render(
+			this.rootNode,
+			this.isScreenReaderEnabled,
+		);
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
@@ -171,6 +185,46 @@ export default class Ink {
 
 			this.lastOutput = output;
 			this.lastOutputHeight = outputHeight;
+			return;
+		}
+
+		if (this.isScreenReaderEnabled) {
+			if (hasStaticOutput) {
+				// We need to erase the main output before writing new static output
+				const erase =
+					this.lastOutputHeight > 0
+						? ansiEscapes.eraseLines(this.lastOutputHeight)
+						: '';
+				this.options.stdout.write(erase + staticOutput);
+				// After erasing, the last output is gone, so we should reset its height
+				this.lastOutputHeight = 0;
+			}
+
+			if (output === this.lastOutput && !hasStaticOutput) {
+				return;
+			}
+
+			const terminalWidth = this.options.stdout.columns || 80;
+
+			const wrappedOutput = wrapAnsi(output, terminalWidth, {
+				trim: false,
+				hard: true,
+			});
+
+			// If we haven't erased yet, do it now.
+			if (hasStaticOutput) {
+				this.options.stdout.write(wrappedOutput);
+			} else {
+				const erase =
+					this.lastOutputHeight > 0
+						? ansiEscapes.eraseLines(this.lastOutputHeight)
+						: '';
+				this.options.stdout.write(erase + wrappedOutput);
+			}
+
+			this.lastOutput = output;
+			this.lastOutputHeight =
+				wrappedOutput === '' ? 0 : wrappedOutput.split('\n').length;
 			return;
 		}
 
@@ -205,17 +259,21 @@ export default class Ink {
 
 	render(node: ReactNode): void {
 		const tree = (
-			<App
-				stdin={this.options.stdin}
-				stdout={this.options.stdout}
-				stderr={this.options.stderr}
-				writeToStdout={this.writeToStdout}
-				writeToStderr={this.writeToStderr}
-				exitOnCtrlC={this.options.exitOnCtrlC}
-				onExit={this.unmount}
+			<AccessibilityContext.Provider
+				value={{isScreenReaderEnabled: this.isScreenReaderEnabled}}
 			>
-				{node}
-			</App>
+				<App
+					stdin={this.options.stdin}
+					stdout={this.options.stdout}
+					stderr={this.options.stderr}
+					writeToStdout={this.writeToStdout}
+					writeToStderr={this.writeToStderr}
+					exitOnCtrlC={this.options.exitOnCtrlC}
+					onExit={this.unmount}
+				>
+					{node}
+				</App>
+			</AccessibilityContext.Provider>
 		);
 
 		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.

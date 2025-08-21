@@ -113,3 +113,10 @@ test('remeasure text when text nodes are changed', t => {
 	rerender(<Test add />);
 	t.is((stdout.write as any).lastCall.args[0], 'abcx');
 });
+
+// See https://github.com/vadimdemedes/ink/issues/743
+// Without the fix, the output was ''.
+test('text with content "constructor" wraps correctly', t => {
+	const output = renderToString(<Text>constructor</Text>);
+	t.is(output, 'constructor');
+});

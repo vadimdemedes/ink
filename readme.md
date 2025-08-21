@@ -121,6 +121,8 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [Sudoku](https://github.com/mrozio13pl/sudoku-in-terminal) - Sudoku game.
 - [Sea Trader](https://github.com/zyishai/sea-trader) - Taipan! inspired trading simulator game.
 - [srtd](https://github.com/t1mmen/srtd) - Live-reloading SQL templates for Supabase projects.
+- [tweakcc](https://github.com/Piebald-AI/tweakcc) - Customize your Claude Code styling.
+- [argonaut](https://github.com/darksworm/argonaut) - Manage Argo CD resources.
 
 ## Contents
 
@@ -143,6 +145,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [API](#api)
 - [Testing](#testing)
 - [Using React Devtools](#using-react-devtools)
+- [Screen Reader Support](#screen-reader-support)
 - [Useful Components](#useful-components)
 - [Useful Hooks](#useful-hooks)
 - [Examples](#examples)
@@ -1157,6 +1160,52 @@ Default: `true`
 
 Determines whether left border is visible.
 
+#### Background
+
+##### backgroundColor
+
+Type: `string`
+
+Background color for the element.
+
+Accepts the same values as [`color`](#color) in the `<Text>` component.
+
+```jsx
+<Box flexDirection="column">
+	<Box backgroundColor="red" width={20} height={5} alignSelf="flex-start">
+		<Text>Red background</Text>
+	</Box>
+
+	<Box backgroundColor="#FF8800" width={20} height={3} marginTop={1} alignSelf="flex-start">
+		<Text>Orange background</Text>
+	</Box>
+
+	<Box backgroundColor="rgb(0, 255, 0)" width={20} height={3} marginTop={1} alignSelf="flex-start">
+		<Text>Green background</Text>
+	</Box>
+</Box>
+```
+
+The background color fills the entire `<Box>` area and is inherited by child `<Text>` components unless they specify their own `backgroundColor`.
+
+```jsx
+<Box backgroundColor="blue" alignSelf="flex-start">
+	<Text>Blue inherited </Text>
+	<Text backgroundColor="yellow">Yellow override </Text>
+	<Text>Blue inherited again</Text>
+</Box>
+```
+
+Background colors work with borders and padding:
+
+```jsx
+<Box backgroundColor="cyan" borderStyle="round" padding={1} alignSelf="flex-start">
+	<Text>Background with border and padding</Text>
+</Box>
+```
+
+See example in [examples/box-backgrounds](examples/box-backgrounds/box-backgrounds.tsx).
+
 ### `<Newline>`
 
 Adds one or more newline (`\n`) characters.
@@ -1921,6 +1970,26 @@ const Example = () => {
 };
 ```
 
+### useIsScreenReaderEnabled()
+
+Returns whether screen reader is enabled. This is useful when you want to render a different output for screen readers.
+
+```jsx
+import {useIsScreenReaderEnabled, Text} from 'ink';
+
+const Example = () => {
+	const isScreenReaderEnabled = useIsScreenReaderEnabled();
+
+	return (
+		<Text>
+			{isScreenReaderEnabled
+				? 'Screen reader is enabled'
+				: 'Screen reader is disabled'}
+		</Text>
+	);
+};
+```
+
 ## API
 
 #### render(tree, options?)
@@ -2106,6 +2175,105 @@ You can even inspect and change the props of components, and see the results imm
 
 **Note**: You must manually quit your CLI via <kbd>Ctrl</kbd>+<kbd>C</kbd> after you're done testing.
 
+## Screen Reader Support
+
+Ink has a basic support for screen readers.
+
+To enable it, you can either pass the `isScreenReaderEnabled` option to the `render` function or set the `INK_SCREEN_READER` environment variable to `true`.
+
+Ink implements a small subset of functionality from the [ARIA specification](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA).
+
+```jsx
+render(<MyApp />, {isScreenReaderEnabled: true});
+```
+
+When screen reader support is enabled, Ink will try its best to generate a screen-reader-friendly output.
+
+For example, for this code:
+
+```jsx
+<Box aria-role="checkbox" aria-state={{checked: true}}>
+	Accept terms and conditions
+</Box>
+```
+
+Ink will generate the following output for screen readers:
+
+```
+(checked) checkbox: Accept terms and conditions
+```
+
+You can also provide a custom label for screen readers, if you want to render something different for them.
+
+For example, if you are building a progress bar, you can use `aria-label` to provide a more descriptive label for screen readers.
+
+```jsx
+<Box>
+	<Box width="50%" height={1} backgroundColor="green" />
+	<Text aria-label="Progress: 50%">50%</Text>
+</Box>
+```
+
+In the example above, screen reader will read "Progress: 50%", instead of "50%".
+
+### `aria-label`
+
+Type: `string`
+
+Label for the element for screen readers.
+
+### `aria-hidden`
+
+Type: `boolean`\
+Default: `false`
+
+Hide the element from screen readers.
+
+##### aria-role
+
+Type: `string`
+
+Role of the element.
+
+Supported values:
+- `button`
+- `checkbox`
+- `radio`
+- `radiogroup`
+- `list`
+- `listitem`
+- `menu`
+- `menuitem`
+- `progressbar`
+- `tab`
+- `tablist`
+- `timer`
+- `toolbar`
+- `table`
+
+##### aria-state
+
+Type: `object`
+
+State of the element.
+
+Supported values:
+- `checked` (boolean)
+- `disabled` (boolean)
+- `expanded` (boolean)
+- `selected` (boolean)
+
+## Creating Components
+
+When building custom components, it's important to keep accessibility in mind. While Ink provides the building blocks, ensuring your components are accessible will make your CLIs usable by a wider audience.
+
+### General Principles
+
+- **Provide screen reader-friendly output:** Use the `useIsScreenReaderEnabled` hook to detect if a screen reader is active. You can then render a more descriptive output for screen reader users.
+- **Leverage ARIA props:** For components that have a specific role (e.g., a checkbox or a button), use the `aria-role`, `aria-state`, and `aria-label` props on `<Box>` and `<Text>` to provide semantic meaning to screen readers.
+
+For a practical example of building an accessible component, see the [ARIA example](/examples/aria/aria.tsx).
+
 ## Useful Components
 
 - [ink-text-input](https://github.com/vadimdemedes/ink-text-input) - Text input.
@@ -2129,6 +2297,7 @@ You can even inspect and change the props of components, and see the results imm
 - [ink-form](https://github.com/lukasbach/ink-form) - Form.
 - [ink-task-list](https://github.com/privatenumber/ink-task-list) - Task list.
 - [ink-spawn](https://github.com/kraenhansen/ink-spawn) - Spawn child processes.
+- [ink-titled-box](https://github.com/mishieck/ink-titled-box) - Box with title.
 
 ## Useful Hooks
 

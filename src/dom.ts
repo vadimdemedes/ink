@@ -28,6 +28,39 @@ export type DOMElement = {
 	childNodes: DOMNode[];
 	internal_transform?: OutputTransformer;
 
+	internal_accessibility?: {
+		role?:
+			| 'button'
+			| 'checkbox'
+			| 'combobox'
+			| 'list'
+			| 'listbox'
+			| 'listitem'
+			| 'menu'
+			| 'menuitem'
+			| 'option'
+			| 'progressbar'
+			| 'radio'
+			| 'radiogroup'
+			| 'tab'
+			| 'tablist'
+			| 'table'
+			| 'textbox'
+			| 'timer'
+			| 'toolbar';
+		state?: {
+			busy?: boolean;
+			checked?: boolean;
+			disabled?: boolean;
+			expanded?: boolean;
+			multiline?: boolean;
+			multiselectable?: boolean;
+			readonly?: boolean;
+			required?: boolean;
+			selected?: boolean;
+		};
+	};
+
 	// Internal properties
 	isStaticDirty?: boolean;
 	staticNode?: DOMElement;
@@ -61,6 +94,8 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		childNodes: [],
 		parentNode: undefined,
 		yogaNode: nodeName === 'ink-virtual-text' ? undefined : Yoga.Node.create(),
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		internal_accessibility: {},
 	};
 
 	if (nodeName === 'ink-text') {
@@ -153,6 +188,11 @@ export const setAttribute = (
 	key: string,
 	value: DOMNodeAttribute,
 ): void => {
+	if (key === 'internal_accessibility') {
+		node.internal_accessibility = value as DOMElement['internal_accessibility'];
+		return;
+	}
+
 	node.attributes[key] = value;
 };
 

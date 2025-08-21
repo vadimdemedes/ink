@@ -20,6 +20,7 @@ declare namespace Ink {
 		key?: Key;
 		ref?: LegacyRef<DOMElement>;
 		style?: Except<Styles, 'textWrap'>;
+		internal_accessibility?: DOMElement['internal_accessibility'];
 	};
 
 	type Text = {
@@ -29,5 +30,6 @@ declare namespace Ink {
 
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		internal_transform?: (children: string, index: number) => string;
+		internal_accessibility?: DOMElement['internal_accessibility'];
 	};
 }
