@@ -124,7 +124,6 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [argonaut](https://github.com/darksworm/argonaut) - Manage Argo CD resources.
 - [Qodo Command](https://github.com/qodo-ai/command) - A powerful CLI for building, running, and managing AI agents.
 
-
 ## Contents
 
 - [Getting Started](#getting-started)
