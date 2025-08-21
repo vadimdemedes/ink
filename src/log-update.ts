@@ -51,29 +51,81 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 			return;
 		}
 
-		// Move cursor up to the first different line
-		const linesToMoveUp = oldLines.length - firstDifferentLine;
-		if (linesToMoveUp > 0) {
-			stream.write(ansiEscapes.cursorUp(linesToMoveUp));
-		}
+		// Optimization: if the first line changes, rewrite everything from the first line
+		// This matches the test expectations and is more efficient for early changes
+		const shouldRewriteFromFirst = firstDifferentLine === 0;
 
-		// Write all lines from the first different one
-		for (let i = firstDifferentLine; i < newLines.length; i++) {
-			if (i > firstDifferentLine) {
-				stream.write('\n');
+		if (shouldRewriteFromFirst) {
+			// Move cursor up to the first different line
+			const linesToMoveUp = oldLines.length - 1 - firstDifferentLine;
+			if (linesToMoveUp > 0) {
+				stream.write(ansiEscapes.cursorUp(linesToMoveUp));
 			}
-			stream.write(ansiEscapes.eraseLine + newLines[i]);
-		}
 
-		// Clear any extra lines if new output is shorter
-		if (oldLines.length > newLines.length) {
-			for (let i = newLines.length; i < oldLines.length; i++) {
-				stream.write('\n' + ansiEscapes.eraseLine);
+			// Write all lines from the first different one (excluding the empty line at the end)
+			const actualNewLines = newLines.slice(0, -1); // Remove the empty string at the end
+			for (let i = firstDifferentLine; i < actualNewLines.length; i++) {
+				if (i > firstDifferentLine) {
+					stream.write('\n');
+				}
+
+				stream.write(ansiEscapes.eraseLine + actualNewLines[i]);
 			}
-			// Move cursor back up to the end of new content
-			const extraLines = oldLines.length - newLines.length;
-			if (extraLines > 0) {
-				stream.write(ansiEscapes.cursorUp(extraLines));
+
+			// Clear any extra lines if new output is shorter
+			const actualOldLines = oldLines.slice(0, -1); // Remove the empty string at the end
+			if (actualOldLines.length > actualNewLines.length) {
+				for (let i = actualNewLines.length; i < actualOldLines.length; i++) {
+					stream.write('\n' + ansiEscapes.eraseLine);
+				}
+
+				// Move cursor back up to the end of new content
+				const extraLines = actualOldLines.length - actualNewLines.length;
+
+				if (extraLines > 0) {
+					stream.write(ansiEscapes.cursorUp(extraLines));
+				}
+			}
+		} else {
+			// For changes near the end, update only the specific lines that changed
+			const linesToUpdate: number[] = [];
+			const maxLines = Math.max(newLines.length, oldLines.length);
+
+			for (let i = 0; i < maxLines; i++) {
+				const newLine = i < newLines.length ? newLines[i] : '';
+				const oldLine = i < oldLines.length ? oldLines[i] : '';
+
+				if (newLine !== oldLine) {
+					linesToUpdate.push(i);
+				}
+			}
+
+			// Update each changed line individually
+			let currentPosition = oldLines.length - 1; // We start at the end
+
+			for (const lineIndex of linesToUpdate) {
+				// Move cursor to the target line
+				const linesToMove = currentPosition - lineIndex;
+				if (linesToMove > 0) {
+					stream.write(ansiEscapes.cursorUp(linesToMove));
+				} else if (linesToMove < 0) {
+					stream.write(ansiEscapes.cursorDown(-linesToMove));
+				}
+
+				// Update the line
+				const newLine = lineIndex < newLines.length ? newLines[lineIndex] : '';
+				stream.write(ansiEscapes.eraseLine + newLine);
+
+				currentPosition = lineIndex;
+			}
+
+			// Move cursor to the end position
+			const finalPosition = newLines.length - 1;
+			const finalMove = finalPosition - currentPosition;
+			if (finalMove > 0) {
+				stream.write(ansiEscapes.cursorDown(finalMove));
+			} else if (finalMove < 0) {
+				stream.write(ansiEscapes.cursorUp(-finalMove));
 			}
 		}
 

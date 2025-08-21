@@ -5,8 +5,9 @@ import logUpdate from '../src/log-update.js';
 class MockStream {
 	public output: string[] = [];
 
-	write(data: string) {
+	write(data: string): boolean {
 		this.output.push(data);
+		return true;
 	}
 
 	getOutput() {
@@ -24,7 +25,7 @@ class MockStream {
 
 test('incremental rendering - updates only changed lines', t => {
 	const stream = new MockStream();
-	const log = logUpdate.create(stream as any, {showCursor: true});
+	const log = logUpdate.create(stream as never, {showCursor: true});
 
 	// First render
 	log('Line 1\nLine 2\nLine 3');
@@ -50,7 +51,7 @@ test('incremental rendering - updates only changed lines', t => {
 
 test('incremental rendering - appends new lines', t => {
 	const stream = new MockStream();
-	const log = logUpdate.create(stream as any, {showCursor: true});
+	const log = logUpdate.create(stream as never, {showCursor: true});
 
 	// First render
 	log('Line 1\nLine 2');
@@ -71,7 +72,7 @@ test('incremental rendering - appends new lines', t => {
 
 test('incremental rendering - removes extra lines', t => {
 	const stream = new MockStream();
-	const log = logUpdate.create(stream as any, {showCursor: true});
+	const log = logUpdate.create(stream as never, {showCursor: true});
 
 	// First render with 3 lines
 	log('Line 1\nLine 2\nLine 3');
@@ -89,14 +90,19 @@ test('incremental rendering - removes extra lines', t => {
 	t.true(output.includes('Line B'));
 	// Should clear the third line
 	const eraseCount = (
-		output.match(new RegExp(ansiEscapes.eraseLine, 'g')) || []
+		output.match(
+			new RegExp(
+				ansiEscapes.eraseLine.replaceAll(/[[\]{}()*+?.\\^$|]/g, '\\$&'),
+				'g',
+			),
+		) ?? []
 	).length;
 	t.is(eraseCount, 3); // All 3 lines get erased before being written
 });
 
 test('incremental rendering - handles identical content', t => {
 	const stream = new MockStream();
-	const log = logUpdate.create(stream as any, {showCursor: true});
+	const log = logUpdate.create(stream as never, {showCursor: true});
 
 	// First render
 	log('Line 1\nLine 2');
@@ -113,7 +119,7 @@ test('incremental rendering - handles identical content', t => {
 
 test('incremental rendering - updates first line only', t => {
 	const stream = new MockStream();
-	const log = logUpdate.create(stream as any, {showCursor: true});
+	const log = logUpdate.create(stream as never, {showCursor: true});
 
 	// First render
 	log('Line 1\nLine 2\nLine 3');
@@ -134,7 +140,7 @@ test('incremental rendering - updates first line only', t => {
 
 test('incremental rendering - updates last line only', t => {
 	const stream = new MockStream();
-	const log = logUpdate.create(stream as any, {showCursor: true});
+	const log = logUpdate.create(stream as never, {showCursor: true});
 
 	// First render
 	log('Line 1\nLine 2\nLine 3');
@@ -155,7 +161,7 @@ test('incremental rendering - updates last line only', t => {
 
 test('clear() method works correctly', t => {
 	const stream = new MockStream();
-	const log = logUpdate.create(stream as any, {showCursor: true});
+	const log = logUpdate.create(stream as never, {showCursor: true});
 
 	log('Line 1\nLine 2\nLine 3');
 	stream.clear();
@@ -169,7 +175,7 @@ test('clear() method works correctly', t => {
 
 test('sync() method updates internal state without rendering', t => {
 	const stream = new MockStream();
-	const log = logUpdate.create(stream as any, {showCursor: true});
+	const log = logUpdate.create(stream as never, {showCursor: true});
 
 	// Sync without rendering
 	log.sync('Line 1\nLine 2');
@@ -187,7 +193,7 @@ test('sync() method updates internal state without rendering', t => {
 
 test('done() method resets state', t => {
 	const stream = new MockStream();
-	const log = logUpdate.create(stream as any, {showCursor: false});
+	const log = logUpdate.create(stream as never, {showCursor: false});
 
 	log('Line 1\nLine 2');
 	stream.clear();
