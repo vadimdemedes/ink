@@ -301,6 +301,38 @@ test('render multi-line text', t => {
 	t.is(output, 'Line 1\nLine 2');
 });
 
+test('render nested multi-line text', t => {
+	const output = renderToString(
+		<Box flexDirection="row">
+			<Box flexDirection="column">
+				<Text>Line 1</Text>
+				<Text>Line 2</Text>
+			</Box>
+		</Box>,
+		{
+			isScreenReaderEnabled: true,
+		},
+	);
+
+	t.is(output, 'Line 1\nLine 2');
+});
+
+test('render nested row', t => {
+	const output = renderToString(
+		<Box flexDirection="column">
+			<Box flexDirection="row">
+				<Text>Line 1</Text>
+				<Text>Line 2</Text>
+			</Box>
+		</Box>,
+		{
+			isScreenReaderEnabled: true,
+		},
+	);
+
+	t.is(output, 'Line 1 Line 2');
+});
+
 test('render multi-line text with roles', t => {
 	const output = renderToString(
 		<Box flexDirection="column" aria-role="list">

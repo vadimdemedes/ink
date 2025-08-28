@@ -70,10 +70,7 @@ export const renderNodeToScreenReaderOutput = (
 						skipStaticElements: options.skipStaticElements,
 					},
 				);
-
-				// When a text node contains multiple lines, it's still a single text node.
-				// We need to split it into lines and then join them with the separator.
-				return screenReaderOutput.split('\n').join(separator);
+				return screenReaderOutput;
 			})
 			.filter(Boolean)
 			.join(separator);
