@@ -49,6 +49,14 @@ export type RenderOptions = {
 	 * @default process.env['INK_SCREEN_READER'] === 'true'
 	 */
 	isScreenReaderEnabled?: boolean;
+
+	/**
+	 * Throttle delay in milliseconds for render updates.
+	 * This controls how frequently the UI can update to prevent excessive re-rendering.
+	 *
+	 * @default 32
+	 */
+	renderThrottleMs?: number;
 };
 
 export type Instance = {
@@ -86,6 +94,7 @@ const render = (
 		debug: false,
 		exitOnCtrlC: true,
 		patchConsole: true,
+		renderThrottleMs: 32,
 		...getOptions(options),
 	};
 

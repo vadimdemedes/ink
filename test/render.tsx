@@ -1,20 +1,20 @@
 import process from 'node:process';
 import url from 'node:url';
 import * as path from 'node:path';
-import {createRequire} from 'node:module';
+import { createRequire } from 'node:module';
 import test from 'ava';
 import React from 'react';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
-import {render, Box, Text} from '../src/index.js';
+import { render, Box, Text } from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
 const require = createRequire(import.meta.url);
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-const {spawn} = require('node-pty') as typeof import('node-pty');
+const { spawn } = require('node-pty') as typeof import('node-pty');
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
@@ -61,7 +61,7 @@ const term = (fixture: string, args: string[] = []) => {
 		result.output += data;
 	});
 
-	ps.onExit(({exitCode}) => {
+	ps.onExit(({ exitCode }) => {
 		if (exitCode === 0) {
 			resolve();
 			return;
@@ -182,11 +182,11 @@ test.serial('rerender on resize', async t => {
 		);
 	}
 
-	const {unmount} = render(<Test />, {stdout});
+	const { unmount } = render(<Test />, { stdout });
 
 	t.is(
 		stripAnsi((stdout.write as any).firstCall.args[0] as string),
-		boxen('Test'.padEnd(8), {borderStyle: 'round'}) + '\n',
+		boxen('Test'.padEnd(8), { borderStyle: 'round' }) + '\n',
 	);
 
 	t.is(stdout.listeners('resize').length, 1);
@@ -197,9 +197,39 @@ test.serial('rerender on resize', async t => {
 
 	t.is(
 		stripAnsi((stdout.write as any).lastCall.args[0] as string),
-		boxen('Test'.padEnd(6), {borderStyle: 'round'}) + '\n',
+		boxen('Test'.padEnd(6), { borderStyle: 'round' }) + '\n',
 	);
 
 	unmount();
 	t.is(stdout.listeners('resize').length, 0);
+});
+
+test.serial('uses default renderThrottleMs when not specified', t => {
+	const stdout = createStdout(10);
+
+	function Test() {
+		return <Text>Test</Text>;
+	}
+
+	const { unmount } = render(<Test />, { stdout });
+
+	// Should render immediately
+	t.is(stripAnsi((stdout.write as any).firstCall.args[0] as string), 'Test\n');
+
+	unmount();
+});
+
+test.serial('uses custom renderThrottleMs when specified', t => {
+	const stdout = createStdout(10);
+
+	function Test() {
+		return <Text>Text</Text>;
+	}
+
+	const { unmount } = render(<Test />, { stdout, renderThrottleMs: 100 });
+
+	// Should render immediately
+	t.is(stripAnsi((stdout.write as any).firstCall.args[0] as string), 'Text\n');
+
+	unmount();
 });

@@ -1,24 +1,24 @@
 import process from 'node:process';
-import React, {type ReactNode} from 'react';
-import {throttle} from 'es-toolkit/compat';
+import React, { type ReactNode } from 'react';
+import { throttle } from 'es-toolkit/compat';
 import ansiEscapes from 'ansi-escapes';
 import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
-import {LegacyRoot} from 'react-reconciler/constants.js';
-import {type FiberRoot} from 'react-reconciler';
+import { LegacyRoot } from 'react-reconciler/constants.js';
+import { type FiberRoot } from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import wrapAnsi from 'wrap-ansi';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
-import logUpdate, {type LogUpdate} from './log-update.js';
+import logUpdate, { type LogUpdate } from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
-import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
+import { accessibilityContext as AccessibilityContext } from './components/AccessibilityContext.js';
 
-const noop = () => {};
+const noop = () => { };
 
 export type Options = {
 	stdout: NodeJS.WriteStream;
@@ -29,6 +29,13 @@ export type Options = {
 	patchConsole: boolean;
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
+	/**
+	 * Throttle delay in milliseconds for render updates.
+	 * This controls how frequently the UI can update to prevent excessive re-rendering.
+	 *
+	 * @default 32
+	 */
+	renderThrottleMs?: number;
 };
 
 export default class Ink {
@@ -62,22 +69,23 @@ export default class Ink {
 			process.env['INK_SCREEN_READER'] === 'true';
 
 		const unthrottled = options.debug || this.isScreenReaderEnabled;
+		const renderThrottleMs = options.renderThrottleMs ?? 32;
 
 		this.rootNode.onRender = unthrottled
 			? this.onRender
-			: throttle(this.onRender, 32, {
-					leading: true,
-					trailing: true,
-				});
+			: throttle(this.onRender, renderThrottleMs, {
+				leading: true,
+				trailing: true,
+			});
 
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout);
 		this.throttledLog = unthrottled
 			? this.log
 			: (throttle(this.log, undefined, {
-					leading: true,
-					trailing: true,
-				}) as unknown as LogUpdate);
+				leading: true,
+				trailing: true,
+			}) as unknown as LogUpdate);
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
@@ -98,17 +106,17 @@ export default class Ink {
 			false,
 			null,
 			'id',
-			() => {},
-			() => {},
+			() => { },
+			() => { },
 			// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
 			// See https://github.com/facebook/react/blob/c0464aedb16b1c970d717651bba8d1c66c578729/packages/react-reconciler/src/ReactFiberReconciler.js#L236-L259
-			() => {},
-			() => {},
+			() => { },
+			() => { },
 			null,
 		);
 
 		// Unmount when process exits
-		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
+		this.unsubscribeExit = signalExit(this.unmount, { alwaysLast: false });
 
 		if (process.env['DEV'] === 'true') {
 			reconciler.injectIntoDevTools({
@@ -138,9 +146,9 @@ export default class Ink {
 		this.onRender();
 	};
 
-	resolveExitPromise: () => void = () => {};
-	rejectExitPromise: (reason?: Error) => void = () => {};
-	unsubscribeExit: () => void = () => {};
+	resolveExitPromise: () => void = () => { };
+	rejectExitPromise: (reason?: Error) => void = () => { };
+	unsubscribeExit: () => void = () => { };
 
 	calculateLayout = () => {
 		// The 'columns' property can be undefined or 0 when not using a TTY.
@@ -161,7 +169,7 @@ export default class Ink {
 			return;
 		}
 
-		const {output, outputHeight, staticOutput} = render(
+		const { output, outputHeight, staticOutput } = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
 		);
@@ -260,7 +268,7 @@ export default class Ink {
 	render(node: ReactNode): void {
 		const tree = (
 			<AccessibilityContext.Provider
-				value={{isScreenReaderEnabled: this.isScreenReaderEnabled}}
+				value={{ isScreenReaderEnabled: this.isScreenReaderEnabled }}
 			>
 				<App
 					stdin={this.options.stdin}
