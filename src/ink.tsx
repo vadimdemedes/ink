@@ -1,22 +1,22 @@
 import process from 'node:process';
-import React, { type ReactNode } from 'react';
-import { throttle } from 'es-toolkit/compat';
+import React, {type ReactNode} from 'react';
+import {throttle} from 'es-toolkit/compat';
 import ansiEscapes from 'ansi-escapes';
 import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
-import { LegacyRoot } from 'react-reconciler/constants.js';
-import { type FiberRoot } from 'react-reconciler';
+import {LegacyRoot} from 'react-reconciler/constants.js';
+import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import wrapAnsi from 'wrap-ansi';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
-import logUpdate, { type LogUpdate } from './log-update.js';
+import logUpdate, {type LogUpdate} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
-import { accessibilityContext as AccessibilityContext } from './components/AccessibilityContext.js';
+import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
 
 const noop = () => {};
 
