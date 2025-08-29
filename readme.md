@@ -2046,21 +2046,6 @@ Default: `false`
 
 If `true`, each update will be rendered as a separate output, without replacing the previous one.
 
-###### renderThrottleMs
-
-Type: `number`\
-Default: `32`
-
-Throttle delay in milliseconds for render updates. This controls how frequently the UI can update to prevent excessive re-rendering. The default value of 32ms provides approximately 30 FPS, which is smooth for most terminal applications.
-
-```jsx
-// Use a higher throttle for smoother animations
-render(<MyApp />, {renderThrottleMs: 16}); // ~60 FPS
-
-// Use a lower throttle to reduce CPU usage
-render(<MyApp />, {renderThrottleMs: 100}); // ~10 FPS
-```
-
 #### Instance
 
 This is the object that `render()` returns.
