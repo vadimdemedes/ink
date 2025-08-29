@@ -18,7 +18,7 @@ import instances from './instances.js';
 import App from './components/App.js';
 import { accessibilityContext as AccessibilityContext } from './components/AccessibilityContext.js';
 
-const noop = () => { };
+const noop = () => {};
 
 export type Options = {
 	stdout: NodeJS.WriteStream;
@@ -106,12 +106,12 @@ export default class Ink {
 			false,
 			null,
 			'id',
-			() => { },
-			() => { },
+			() => {},
+			() => {},
 			// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
 			// See https://github.com/facebook/react/blob/c0464aedb16b1c970d717651bba8d1c66c578729/packages/react-reconciler/src/ReactFiberReconciler.js#L236-L259
-			() => { },
-			() => { },
+			() => {},
+			() => {},
 			null,
 		);
 
@@ -146,9 +146,9 @@ export default class Ink {
 		this.onRender();
 	};
 
-	resolveExitPromise: () => void = () => { };
-	rejectExitPromise: (reason?: Error) => void = () => { };
-	unsubscribeExit: () => void = () => { };
+	resolveExitPromise: () => void = () => {};
+	rejectExitPromise: (reason?: Error) => void = () => {};
+	unsubscribeExit: () => void = () => {};
 
 	calculateLayout = () => {
 		// The 'columns' property can be undefined or 0 when not using a TTY.
@@ -169,7 +169,7 @@ export default class Ink {
 			return;
 		}
 
-		const { output, outputHeight, staticOutput } = render(
+		const {output, outputHeight, staticOutput} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
 		);
@@ -268,7 +268,7 @@ export default class Ink {
 	render(node: ReactNode): void {
 		const tree = (
 			<AccessibilityContext.Provider
-				value={{ isScreenReaderEnabled: this.isScreenReaderEnabled }}
+				value={{isScreenReaderEnabled: this.isScreenReaderEnabled}}
 			>
 				<App
 					stdin={this.options.stdin}
