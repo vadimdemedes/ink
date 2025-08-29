@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { render, Box, Text } from '../../src/index.js';
+import React, {useState, useEffect} from 'react';
+import {render, Box, Text} from '../../src/index.js';
 
 function App() {
 	const [count, setCount] = useState(0);
@@ -23,7 +23,7 @@ function App() {
 	);
 }
 
-// Example with custom renderThrottleMs
+// Example with custom maxFps
 render(<App />, {
-	renderThrottleMs: 100, // Only render every 100ms instead of default 32ms
+	maxFps: 10, // Only render at 10fps (every ~100ms) instead of default 30fps
 });

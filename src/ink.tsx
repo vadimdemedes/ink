@@ -30,12 +30,13 @@ export type Options = {
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
 	/**
-	 * Throttle delay in milliseconds for render updates.
+	 * Maximum frames per second for render updates.
 	 * This controls how frequently the UI can update to prevent excessive re-rendering.
+	 * Higher values allow more frequent updates but may impact performance.
 	 *
-	 * @default 32
+	 * @default 30
 	 */
-	renderThrottleMs?: number;
+	maxFps?: number;
 };
 
 export default class Ink {
@@ -69,23 +70,25 @@ export default class Ink {
 			process.env['INK_SCREEN_READER'] === 'true';
 
 		const unthrottled = options.debug || this.isScreenReaderEnabled;
-		const renderThrottleMs = options.renderThrottleMs ?? 32;
+		const maxFps = options.maxFps ?? 30;
+		const renderThrottleMs =
+			maxFps > 0 ? Math.max(1, Math.round(1000 / maxFps)) : 0;
 
 		this.rootNode.onRender = unthrottled
 			? this.onRender
 			: throttle(this.onRender, renderThrottleMs, {
-				leading: true,
-				trailing: true,
-			});
+					leading: true,
+					trailing: true,
+				});
 
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout);
 		this.throttledLog = unthrottled
 			? this.log
 			: (throttle(this.log, undefined, {
-				leading: true,
-				trailing: true,
-			}) as unknown as LogUpdate);
+					leading: true,
+					trailing: true,
+				}) as unknown as LogUpdate);
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;

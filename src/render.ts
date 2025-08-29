@@ -51,12 +51,13 @@ export type RenderOptions = {
 	isScreenReaderEnabled?: boolean;
 
 	/**
-	 * Throttle delay in milliseconds for render updates.
+	 * Maximum frames per second for render updates.
 	 * This controls how frequently the UI can update to prevent excessive re-rendering.
+	 * Higher values allow more frequent updates but may impact performance.
 	 *
-	 * @default 32
+	 * @default 30
 	 */
-	renderThrottleMs?: number;
+	maxFps?: number;
 };
 
 export type Instance = {
@@ -94,7 +95,7 @@ const render = (
 		debug: false,
 		exitOnCtrlC: true,
 		patchConsole: true,
-		renderThrottleMs: 32,
+		maxFps: 30,
 		...getOptions(options),
 	};
 
