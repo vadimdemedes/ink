@@ -116,7 +116,7 @@ export default class Ink {
 		);
 
 		// Unmount when process exits
-		this.unsubscribeExit = signalExit(this.unmount, { alwaysLast: false });
+		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 
 		if (process.env['DEV'] === 'true') {
 			reconciler.injectIntoDevTools({
