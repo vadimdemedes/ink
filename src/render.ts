@@ -49,6 +49,15 @@ export type RenderOptions = {
 	 * @default process.env['INK_SCREEN_READER'] === 'true'
 	 */
 	isScreenReaderEnabled?: boolean;
+
+	/**
+	 * Maximum frames per second for render updates.
+	 * This controls how frequently the UI can update to prevent excessive re-rendering.
+	 * Higher values allow more frequent updates but may impact performance.
+	 *
+	 * @default 30
+	 */
+	maxFps?: number;
 };
 
 export type Instance = {
@@ -86,6 +95,7 @@ const render = (
 		debug: false,
 		exitOnCtrlC: true,
 		patchConsole: true,
+		maxFps: 30,
 		...getOptions(options),
 	};
 

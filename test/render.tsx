@@ -203,3 +203,33 @@ test.serial('rerender on resize', async t => {
 	unmount();
 	t.is(stdout.listeners('resize').length, 0);
 });
+
+test.serial('uses default maxFps when not specified', t => {
+	const stdout = createStdout(10);
+
+	function Test() {
+		return <Text>Test</Text>;
+	}
+
+	const {unmount} = render(<Test />, {stdout});
+
+	// Should render immediately
+	t.is(stripAnsi((stdout.write as any).firstCall.args[0] as string), 'Test\n');
+
+	unmount();
+});
+
+test.serial('uses custom maxFps when specified', t => {
+	const stdout = createStdout(10);
+
+	function Test() {
+		return <Text>Text</Text>;
+	}
+
+	const {unmount} = render(<Test />, {stdout, maxFps: 10});
+
+	// Should render immediately
+	t.is(stripAnsi((stdout.write as any).firstCall.args[0] as string), 'Text\n');
+
+	unmount();
+});
