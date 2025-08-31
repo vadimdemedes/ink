@@ -204,32 +204,34 @@ test.serial('rerender on resize', async t => {
 	t.is(stdout.listeners('resize').length, 0);
 });
 
-test.serial('uses default maxFps when not specified', t => {
-	const stdout = createStdout(10);
+test.serial('throttle renders to maxFps', async t => {
+	const stdout = createStdout();
 
-	function Test() {
-		return <Text>Test</Text>;
+	function Component({text}: {text: string}) {
+		return <Text>{text}</Text>;
 	}
 
-	const {unmount} = render(<Test />, {stdout});
+	const {unmount, rerender} = render(<Component text="Hello" />, {
+		stdout,
+		maxFps: 1,
+	});
 
-	// Should render immediately
-	t.is(stripAnsi((stdout.write as any).firstCall.args[0] as string), 'Test\n');
+	// Initial render
+	t.is((stdout.write as any).callCount, 1);
+	t.is(stripAnsi((stdout.write as any).lastCall.args[0] as string), 'Hello\n');
 
-	unmount();
-});
+	rerender(<Component text="World" />);
+	// Should not render immediately, because of throttling
+	t.is((stdout.write as any).callCount, 1);
 
-test.serial('uses custom maxFps when specified', t => {
-	const stdout = createStdout(10);
+	await delay(500);
+	// Still shouldn't have rendered
+	t.is((stdout.write as any).callCount, 1);
 
-	function Test() {
-		return <Text>Text</Text>;
-	}
-
-	const {unmount} = render(<Test />, {stdout, maxFps: 10});
-
-	// Should render immediately
-	t.is(stripAnsi((stdout.write as any).firstCall.args[0] as string), 'Text\n');
+	// After 1000ms, second render should happen
+	await delay(600); // Total > 1000ms
+	t.is((stdout.write as any).callCount, 2);
+	t.is(stripAnsi((stdout.write as any).lastCall.args[0] as string), 'World\n');
 
 	unmount();
 });
