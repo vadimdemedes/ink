@@ -7,18 +7,18 @@ import {backgroundContext} from './BackgroundContext.js';
 
 export type Props = Except<Styles, 'textWrap'> & {
 	/**
-	 * Label for the element for screen readers.
-	 */
+	A label for the element for screen readers.
+	*/
 	readonly 'aria-label'?: string;
 
 	/**
-	 * Hide the element from screen readers.
-	 */
+	Hide the element from screen readers.
+	*/
 	readonly 'aria-hidden'?: boolean;
 
 	/**
-	 * Role of the element.
-	 */
+	The role of the element.
+	*/
 	readonly 'aria-role'?:
 		| 'button'
 		| 'checkbox'
@@ -40,8 +40,8 @@ export type Props = Except<Styles, 'textWrap'> & {
 		| 'toolbar';
 
 	/**
-	 * State of the element.
-	 */
+	The state of the element.
+	*/
 	readonly 'aria-state'?: {
 		readonly busy?: boolean;
 		readonly checked?: boolean;
@@ -56,8 +56,8 @@ export type Props = Except<Styles, 'textWrap'> & {
 };
 
 /**
- * `<Box>` is an essential Ink component to build your layout. It's like `<div style="display: flex">` in the browser.
- */
+`<Box>` is an essential Ink component to build your layout. It's like `<div style="display: flex">` in the browser.
+*/
 const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 	(
 		{

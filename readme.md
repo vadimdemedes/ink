@@ -17,12 +17,12 @@
 [![npm](https://img.shields.io/npm/dm/ink?logo=npm)](https://npmjs.com/package/ink)
 
 Ink provides the same component-based UI building experience that React offers in the browser, but for command-line apps.
-It uses [Yoga](https://github.com/facebook/yoga) to build Flexbox layouts in the terminal, so most CSS-like props are available in Ink as well.
+It uses [Yoga](https://github.com/facebook/yoga) to build Flexbox layouts in the terminal, so most CSS-like properties are available in Ink as well.
 If you are already familiar with React, you already know Ink.
 
-Since Ink is a React renderer, it means that all features of React are supported.
-Head over to [React](https://reactjs.org) website for documentation on how to use it.
-Only Ink's methods will be documented in this readme.
+Since Ink is a React renderer, all features of React are supported.
+Head over to the [React](https://reactjs.org) website for documentation on how to use it.
+Only Ink's methods are documented in this readme.
 
 ---
 
@@ -69,60 +69,62 @@ render(<Counter />);
 
 <img src="media/demo.svg" width="600">
 
-Feel free to play around with the code and fork this repl at [https://repl.it/@vadimdemedes/ink-counter-demo](https://repl.it/@vadimdemedes/ink-counter-demo).
+Feel free to play around with the code and fork this Repl at [https://repl.it/@vadimdemedes/ink-counter-demo](https://repl.it/@vadimdemedes/ink-counter-demo).
 
 ## Who's Using Ink?
 
-- [Codex](https://github.com/openai/codex) - An agentic coding tool, made by OpenAI.
-- [Claude Code](https://github.com/anthropics/claude-code) - An agentic coding tool, made by Anthropic.
-- [Gemini CLI](https://github.com/google-gemini/gemini-cli) - An agentic coding tool, made by Google.
+- [Codex](https://github.com/openai/codex) - An agentic coding tool made by OpenAI.
+- [Claude Code](https://github.com/anthropics/claude-code) - An agentic coding tool made by Anthropic.
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli) - An agentic coding tool made by Google.
 - [GitHub Copilot for CLI](https://githubnext.com/projects/copilot-cli) - Just say what you want the shell to do.
 - [Canva CLI](https://www.canva.dev/docs/apps/canva-cli/) - CLI for creating and managing Canva Apps.
 - [Cloudflare's Wrangler](https://github.com/cloudflare/wrangler2) - The CLI for Cloudflare Workers.
-- [Linear](https://linear.app) - Linear built an internal CLI for managing deployments, configs and other housekeeping tasks.
-- [Gatsby](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing fast websites.
+- [Linear](https://linear.app) - Linear built an internal CLI for managing deployments, configs, and other housekeeping tasks.
+- [Gatsby](https://www.gatsbyjs.org) - Gatsby is a modern web framework for blazing-fast websites.
 - [tap](https://node-tap.org) - A Test-Anything-Protocol library for JavaScript.
-- [Terraform CDK](https://github.com/hashicorp/terraform-cdk) - CDK (Cloud Development Kit) for HashiCorp Terraform.
+- [Terraform CDK](https://github.com/hashicorp/terraform-cdk) - Cloud Development Kit (CDK) for HashiCorp Terraform.
 - [Specify CLI](https://specifyapp.com) - Automate the distribution of your design tokens.
 - [Twilio's SIGNAL](https://github.com/twilio-labs/plugin-signal2020) - CLI for Twilio's SIGNAL conference. [Blog post](https://www.twilio.com/blog/building-conference-cli-in-react).
 - [Typewriter](https://github.com/segmentio/typewriter) - Generates strongly-typed [Segment](https://segment.com) analytics clients from arbitrary JSON Schema.
 - [Prisma](https://www.prisma.io) - The unified data layer for modern applications.
 - [Blitz](https://blitzjs.com) - The Fullstack React Framework.
-- [New York Times](https://github.com/nytimes/kyt) - NYT uses Ink `kyt` - a toolkit that encapsulates and manages the configuration for web apps.
-- [tink](https://github.com/npm/tink) - Next-generation runtime and package manager.
-- [Inkle](https://github.com/jrr/inkle) - Wordle game.
-- [loki](https://github.com/oblador/loki) - Visual regression testing for Storybook.
-- [Bit](https://github.com/teambit/bit) - Build, distribute and collaborate on components.
+- [New York Times](https://github.com/nytimes/kyt) - NYT uses Ink's `kyt` - a toolkit that encapsulates and manages the configuration for web apps.
+- [tink](https://github.com/npm/tink) - A next-generation runtime and package manager.
+- [Inkle](https://github.com/jrr/inkle) - A Wordle game.
+- [loki](https://github.com/oblador/loki) - Visual regression testing tool for Storybook.
+- [Bit](https://github.com/teambit/bit) - Build, distribute, and collaborate on components.
 - [Remirror](https://github.com/remirror/remirror) - Your friendly, world-class editor toolkit.
-- [Prime](https://github.com/birkir/prime) - Open source GraphQL CMS.
+- [Prime](https://github.com/birkir/prime) - Open-source GraphQL CMS.
 - [emoj](https://github.com/sindresorhus/emoj) - Find relevant emojis.
-- [emma](https://github.com/maticzav/emma-cli) - Find and install npm packages.
-- [npm-check-extras](https://github.com/akgondber/npm-check-extras) - Check for outdated and unused dependencies, and run update/delete action over selected ones.
-- [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command line tools for time-saving web developers.
-- [share](https://github.com/marionebl/share-cli) - Quickly share files.
-- [Kubelive](https://github.com/ameerthehacker/kubelive) - CLI for Kubernetes to provide live data about the cluster and its resources.
+- [emma](https://github.com/maticzav/emma-cli) - Find and install npm packages easily.
+- [npm-check-extras](https://github.com/akgondber/npm-check-extras) - Check for outdated and unused dependencies, and run update/delete actions on selected ones.
+- [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command-line tools for time-saving web developers.
+- [share](https://github.com/marionebl/share-cli) - Share files quickly.
+- [Kubelive](https://github.com/ameerthehacker/kubelive) - A CLI for Kubernetes that provides live data about the cluster and its resources.
 - [changelog-view](https://github.com/jdeniau/changelog-view) - View changelogs.
-- [cfpush](https://github.com/mamachanko/cfpush) - An interactive Cloud Foundry tutorial.
+- [cfpush](https://github.com/mamachanko/cfpush) - Interactive Cloud Foundry tutorial.
 - [startd](https://github.com/mgrip/startd) - Turn your React component into a web app.
-- [wiki-cli](https://github.com/hexrcs/wiki-cli) - Search Wikipedia and read summaries.
-- [garson](https://github.com/goliney/garson) - Build interactive config-based command-line interfaces.
-- [git-contrib-calendar](https://github.com/giannisp/git-contrib-calendar) - Display a contributions calendar for any git repository.
-- [gitgud](https://github.com/GitGud-org/GitGud) - An interactive command-line GUI for Git.
-- [Autarky](https://github.com/pranshuchittora/autarky) - Find and delete old `node_modules` directories in order to free up disk space.
-- [fast-cli](https://github.com/sindresorhus/fast-cli) - Test your download and upload speed.
+- [wiki-cli](https://github.com/hexrcs/wiki-cli) - Search Wikipedia and read article summaries.
+- [garson](https://github.com/goliney/garson) - Build interactive, config-based command-line interfaces.
+- [git-contrib-calendar](https://github.com/giannisp/git-contrib-calendar) - Display a contributions calendar for any Git repository.
+- [gitgud](https://github.com/GitGud-org/GitGud) - Interactive command-line GUI for Git.
+- [Autarky](https://github.com/pranshuchittora/autarky) - Find and delete old `node_modules` directories to free up disk space.
+- [fast-cli](https://github.com/sindresorhus/fast-cli) - Test your download and upload speeds.
 - [tasuku](https://github.com/privatenumber/tasuku) - Minimal task runner.
-- [mnswpr](https://github.com/mordv/mnswpr) - Minesweeper game.
+- [mnswpr](https://github.com/mordv/mnswpr) - A Minesweeper game.
 - [lrn](https://github.com/krychu/lrn) - Learning by repetition.
-- [turdle](https://github.com/mynameisankit/turdle) - Wordle game.
-- [Shopify CLI](https://github.com/Shopify/cli) - Build apps, themes, and storefronts for Shopify.
-- [ToDesktop CLI](https://www.todesktop.com/electron) - An all-in-one platform for building Electron apps.
-- [Walle](https://github.com/Pobepto/walle) - Full-featured crypto wallet for EVM networks.
-- [Sudoku](https://github.com/mrozio13pl/sudoku-in-terminal) - Sudoku game.
-- [Sea Trader](https://github.com/zyishai/sea-trader) - Taipan! inspired trading simulator game.
+- [turdle](https://github.com/mynameisankit/turdle) - A Wordle game.
+- [Shopify CLI](https://github.com/Shopify/cli) - Build apps, themes, and storefronts for the Shopify platform.
+- [ToDesktop CLI](https://www.todesktop.com/electron) - All-in-one platform for building Electron apps.
+- [Walle](https://github.com/Pobepto/walle) - A full-featured crypto wallet for EVM networks.
+- [Sudoku](https://github.com/mrozio13pl/sudoku-in-terminal) - A Sudoku game.
+- [Sea Trader](https://github.com/zyishai/sea-trader) - A Taipan!-inspired trading simulator game.
 - [srtd](https://github.com/t1mmen/srtd) - Live-reloading SQL templates for Supabase projects.
 - [tweakcc](https://github.com/Piebald-AI/tweakcc) - Customize your Claude Code styling.
 - [argonaut](https://github.com/darksworm/argonaut) - Manage Argo CD resources.
 - [Qodo Command](https://github.com/qodo-ai/command) - Build, run, and manage AI agents.
+
+*(PRs welcome. Append new entries at the end. Repos must have 100+ stars and showcase Ink beyond a basic list picker.)*
 
 ## Contents
 
@@ -209,9 +211,9 @@ If you don't like transpiling files during development, you can use [import-jsx]
 </p>
 </details>
 
-Ink uses [Yoga](https://github.com/facebook/yoga) - a Flexbox layout engine to build great user interfaces for your CLIs using familiar CSS-like props you've used when building apps for the browser.
+Ink uses [Yoga](https://github.com/facebook/yoga), a Flexbox layout engine, to build great user interfaces for your CLIs using familiar CSS-like properties you've used when building apps for the browser.
 It's important to remember that each element is a Flexbox container.
-Think of it as if each `<div>` in the browser had `display: flex`.
+Think of it as if every `<div>` in the browser had `display: flex`.
 See [`<Box>`](#box) built-in component below for documentation on how to use Flexbox layouts in Ink.
 Note that all text must be wrapped in a [`<Text>`](#text) component.
 
@@ -219,7 +221,7 @@ Note that all text must be wrapped in a [`<Text>`](#text) component.
 
 ### `<Text>`
 
-This component can display text, and change its style to make it bold, underline, italic or strikethrough.
+This component can display text and change its style to make it bold, underlined, italic, or strikethrough.
 
 ```jsx
 import {render, Text} from 'ink';
@@ -278,7 +280,7 @@ Same as `color` above, but for background.
 Type: `boolean`\
 Default: `false`
 
-Dim the color (emit a small amount of light).
+Dim the color (make it less bright).
 
 ```jsx
 <Text color="red" dimColor>
@@ -321,7 +323,7 @@ Make the text crossed with a line.
 Type: `boolean`\
 Default: `false`
 
-Inverse background and foreground colors.
+Invert background and foreground colors.
 
 ```jsx
 <Text inverse color="yellow">
@@ -337,9 +339,9 @@ Type: `string`\
 Allowed values: `wrap` `truncate` `truncate-start` `truncate-middle` `truncate-end`\
 Default: `wrap`
 
-This property tells Ink to wrap or truncate text if its width is larger than container.
-If `wrap` is passed (by default), Ink will wrap text and split it into multiple lines.
-If `truncate-*` is passed, Ink will truncate text instead, which will result in one line of text with the rest cut off.
+This property tells Ink to wrap or truncate text if its width is larger than the container.
+If `wrap` is passed (the default), Ink will wrap text and split it into multiple lines.
+If `truncate-*` is passed, Ink will truncate text instead, resulting in one line of text with the rest cut off.
 
 ```jsx
 <Box width={7}>
@@ -388,7 +390,7 @@ render(<Example />);
 Type: `number` `string`
 
 Width of the element in spaces.
-You can also set it in percent, which will calculate the width based on the width of parent element.
+You can also set it as a percentage, which will calculate the width based on the width of the parent element.
 
 ```jsx
 <Box width={4}>
@@ -412,7 +414,7 @@ You can also set it in percent, which will calculate the width based on the widt
 Type: `number` `string`
 
 Height of the element in lines (rows).
-You can also set it in percent, which will calculate the height based on the height of parent element.
+You can also set it as a percentage, which will calculate the height based on the height of the parent element.
 
 ```jsx
 <Box height={4}>
@@ -436,14 +438,14 @@ You can also set it in percent, which will calculate the height based on the hei
 Type: `number`
 
 Sets a minimum width of the element.
-Percentages aren't supported yet, see https://github.com/facebook/yoga/issues/872.
+Percentages aren't supported yet; see https://github.com/facebook/yoga/issues/872.
 
 ##### minHeight
 
 Type: `number`
 
 Sets a minimum height of the element.
-Percentages aren't supported yet, see https://github.com/facebook/yoga/issues/872.
+Percentages aren't supported yet; see https://github.com/facebook/yoga/issues/872.
 
 #### Padding
 
@@ -574,7 +576,7 @@ Margin on all sides. Equivalent to setting `marginTop`, `marginBottom`, `marginL
 Type: `number`\
 Default: `0`
 
-Size of the gap between an element's columns and rows. Shorthand for `columnGap` and `rowGap`.
+Size of the gap between an element's columns and rows. A shorthand for `columnGap` and `rowGap`.
 
 ```jsx
 <Box gap={1} width={3} flexWrap="wrap">
@@ -607,7 +609,7 @@ Size of the gap between an element's columns.
 Type: `number`\
 Default: `0`
 
-Size of the gap between element's rows.
+Size of the gap between an element's rows.
 
 ```jsx
 <Box flexDirection="column" rowGap={1}>
@@ -898,7 +900,7 @@ Type: `string`\
 Allowed values: `visible` `hidden`\
 Default: `visible`
 
-Behavior for an element's overflow in horizontal direction.
+Behavior for an element's overflow in the horizontal direction.
 
 ##### overflowY
 
@@ -906,7 +908,7 @@ Type: `string`\
 Allowed values: `visible` `hidden`\
 Default: `visible`
 
-Behavior for an element's overflow in vertical direction.
+Behavior for an element's overflow in the vertical direction.
 
 ##### overflow
 
@@ -914,7 +916,7 @@ Type: `string`\
 Allowed values: `visible` `hidden`\
 Default: `visible`
 
-Shortcut for setting `overflowX` and `overflowY` at the same time.
+A shortcut for setting `overflowX` and `overflowY` at the same time.
 
 #### Borders
 
@@ -924,8 +926,8 @@ Type: `string`\
 Allowed values: `single` `double` `round` `bold` `singleDouble` `doubleSingle` `classic` | `BoxStyle`
 
 Add a border with a specified style.
-If `borderStyle` is `undefined` (which it is by default), no border will be added.
-Ink uses border styles from [`cli-boxes`](https://github.com/sindresorhus/cli-boxes) module.
+If `borderStyle` is `undefined` (the default), no border will be added.
+Ink uses border styles from the [`cli-boxes`](https://github.com/sindresorhus/cli-boxes) module.
 
 ```jsx
 <Box flexDirection="column">
@@ -991,7 +993,7 @@ See example in [examples/borders](examples/borders/borders.tsx).
 Type: `string`
 
 Change border color.
-Shorthand for setting `borderTopColor`, `borderRightColor`, `borderBottomColor` and `borderLeftColor`.
+A shorthand for setting `borderTopColor`, `borderRightColor`, `borderBottomColor`, and `borderLeftColor`.
 
 ```jsx
 <Box borderStyle="round" borderColor="green">
@@ -1010,19 +1012,6 @@ Accepts the same values as [`color`](#color) in `<Text>` component.
 
 ```jsx
 <Box borderStyle="round" borderTopColor="green">
-	<Text>Hello world</Text>
-</Box>
-```
-
-##### borderRightColor
-
-Type: `string`
-
-Change right border color.
-Accepts the same values as [`color`](#color) in `<Text>` component.
-
-```jsx
-<Box borderStyle="round" borderRightColor="green">
 	<Text>Hello world</Text>
 </Box>
 ```
@@ -1072,7 +1061,7 @@ Type: `boolean`\
 Default: `false`
 
 Dim the border color.
-Shorthand for setting `borderTopDimColor`, `borderBottomDimColor`, `borderLeftDimColor` and `borderRightDimColor`.
+A shorthand for setting `borderTopDimColor`, `borderBottomDimColor`, `borderLeftDimColor`, and `borderRightDimColor`.
 
 ```jsx
 <Box borderStyle="round" borderDimColor>
@@ -1242,7 +1231,7 @@ World
 ### `<Spacer>`
 
 A flexible space that expands along the major axis of its containing layout.
-It's useful as a shortcut for filling all the available spaces between elements.
+It's useful as a shortcut for filling all the available space between elements.
 
 For example, using `<Spacer>` in a `<Box>` with default flex direction (`row`) will position "Left" on the left side and will push "Right" to the right side.
 
@@ -1260,8 +1249,8 @@ const Example = () => (
 render(<Example />);
 ```
 
-In a vertical flex direction (`column`), it will position "Top" to the top of the container and push "Bottom" to the bottom of it.
-Note, that container needs to be tall to enough to see this in effect.
+In a vertical flex direction (`column`), it will position "Top" at the top of the container and push "Bottom" to the bottom.
+Note that the container needs to be tall enough to see this in effect.
 
 ```jsx
 import {render, Box, Text, Spacer} from 'ink';
@@ -1281,14 +1270,14 @@ render(<Example />);
 
 `<Static>` component permanently renders its output above everything else.
 It's useful for displaying activity like completed tasks or logs - things that
-are not changing after they're rendered (hence the name "Static").
+don't change after they're rendered (hence the name "Static").
 
-It's preferred to use `<Static>` for use cases like these, when you can't know
-or control the amount of items that need to be rendered.
+It's preferred to use `<Static>` for use cases like these when you can't know
+or control the number of items that need to be rendered.
 
 For example, [Tap](https://github.com/tapjs/node-tap) uses `<Static>` to display
 a list of completed tests. [Gatsby](https://github.com/gatsbyjs/gatsby) uses it
-to display a list of generated pages, while still displaying a live progress bar.
+to display a list of generated pages while still displaying a live progress bar.
 
 ```jsx
 import React, {useState, useEffect} from 'react';
@@ -1345,8 +1334,8 @@ const Example = () => {
 render(<Example />);
 ```
 
-**Note:** `<Static>` only renders new items in `items` prop and ignores items
-that were previously rendered. This means that when you add new items to `items`
+**Note:** `<Static>` only renders new items in the `items` prop and ignores items
+that were previously rendered. This means that when you add new items to the `items`
 array, changes you make to previous items will not trigger a rerender.
 
 See [examples/static](examples/static/static.tsx) for an example usage of `<Static>` component.
@@ -1355,7 +1344,7 @@ See [examples/static](examples/static/static.tsx) for an example usage of `<Stat
 
 Type: `Array`
 
-Array of items of any type to render using a function you pass as a component child.
+Array of items of any type to render using the function you pass as a component child.
 
 #### style
 
@@ -1374,11 +1363,11 @@ See [`<Box>`](#box) for supported properties.
 
 Type: `Function`
 
-Function that is called to render every item in `items` array.
-First argument is an item itself and second argument is index of that item in
+Function that is called to render every item in the `items` array.
+The first argument is the item itself, and the second argument is the index of that item in the
 `items` array.
 
-Note that `key` must be assigned to the root component.
+Note that a `key` must be assigned to the root component.
 
 ```jsx
 <Static items={['a', 'b', 'c']}>
@@ -1397,12 +1386,12 @@ Note that `key` must be assigned to the root component.
 
 ### `<Transform>`
 
-Transform a string representation of React components before they are written to output.
-For example, you might want to apply a [gradient to text](https://github.com/sindresorhus/ink-gradient), [add a clickable link](https://github.com/sindresorhus/ink-link) or [create some text effects](https://github.com/sindresorhus/ink-big-text).
-These use cases can't accept React nodes as input, they are expecting a string.
-That's what `<Transform>` component does, it gives you an output string of its child components and lets you transform it in any way.
+Transform a string representation of React components before they're written to output.
+For example, you might want to apply a [gradient to text](https://github.com/sindresorhus/ink-gradient), [add a clickable link](https://github.com/sindresorhus/ink-link), or [create some text effects](https://github.com/sindresorhus/ink-big-text).
+These use cases can't accept React nodes as input; they expect a string.
+That's what the `<Transform>` component does: it gives you an output string of its child components and lets you transform it in any way.
 
-**Note:** `<Transform>` must be applied only to `<Text>` children components and shouldn't change the dimensions of the output, otherwise layout will be incorrect.
+**Note:** `<Transform>` must be applied only to `<Text>` children components and shouldn't change the dimensions of the output; otherwise, the layout will be incorrect.
 
 ```jsx
 import {render, Transform} from 'ink';
@@ -1416,7 +1405,7 @@ const Example = () => (
 render(<Example />);
 ```
 
-Since `transform` function converts all characters to upper case, final output that's rendered to the terminal will be "HELLO WORLD", not "Hello World".
+Since the `transform` function converts all characters to uppercase, the final output rendered to the terminal will be "HELLO WORLD", not "Hello World".
 
 When the output wraps to multiple lines, it can be helpful to know which line is being processed.
 
@@ -1456,8 +1445,8 @@ render(
 
 Type: `Function`
 
-Function which transforms children output.
-It accepts children and must return transformed children too.
+Function that transforms children output.
+It accepts children and must return transformed children as well.
 
 ##### children
 
@@ -1469,16 +1458,16 @@ Output of child components.
 
 Type: `number`
 
-The zero-indexed line number of the line currently being transformed.
+The zero-indexed line number of the line that's currently being transformed.
 
 ## Hooks
 
 ### useInput(inputHandler, options?)
 
 This hook is used for handling user input.
-It's a more convenient alternative to using `useStdin` and listening to `data` events.
-The callback you pass to `useInput` is called for each character when user enters any input.
-However, if user pastes text and it's more than one character, the callback will be called only once and the whole string will be passed as `input`.
+It's a more convenient alternative to using `useStdin` and listening for `data` events.
+The callback you pass to `useInput` is called for each character when the user enters any input.
+However, if the user pastes text and it's more than one character, the callback will be called only once, and the whole string will be passed as `input`.
 You can find a full example of using `useInput` at [examples/use-input](examples/use-input/use-input.tsx).
 
 ```jsx
@@ -1529,7 +1518,7 @@ Type: `boolean`\
 Default: `false`
 
 If an arrow key was pressed, the corresponding property will be `true`.
-For example, if user presses left arrow key, `key.leftArrow` equals `true`.
+For example, if the user presses the left arrow key, `key.leftArrow` equals `true`.
 
 ###### key.return
 
@@ -1587,8 +1576,8 @@ Delete key was pressed.
 Type: `boolean`\
 Default: `false`
 
-If Page Up or Page Down key was pressed, the corresponding property will be `true`.
-For example, if user presses Page Down, `key.pageDown` equals `true`.
+If the Page Up or Page Down key was pressed, the corresponding property will be `true`.
+For example, if the user presses Page Down, `key.pageDown` equals `true`.
 
 ###### key.meta
 
@@ -1611,7 +1600,7 @@ Useful when there are multiple `useInput` hooks used at once to avoid handling t
 
 ### useApp()
 
-`useApp` is a React hook, which exposes a method to manually exit the app (unmount).
+`useApp` is a React hook that exposes a method to manually exit the app (unmount).
 
 #### exit(error?)
 
@@ -1644,14 +1633,14 @@ const Example = () => {
 
 ### useStdin()
 
-`useStdin` is a React hook, which exposes stdin stream.
+`useStdin` is a React hook that exposes the stdin stream.
 
 #### stdin
 
 Type: `stream.Readable`\
 Default: `process.stdin`
 
-Stdin stream passed to `render()` in `options.stdin` or `process.stdin` by default.
+The stdin stream passed to `render()` in `options.stdin`, or `process.stdin` by default.
 Useful if your app needs to handle user input.
 
 ```js
@@ -1718,7 +1707,7 @@ const Example = () => {
 
 ### useStdout()
 
-`useStdout` is a React hook, which exposes stdout stream, where Ink renders your app.
+`useStdout` is a React hook that exposes the stdout stream where Ink renders your app.
 
 #### stdout
 
@@ -1737,9 +1726,9 @@ const Example = () => {
 
 #### write(data)
 
-Write any string to stdout, while preserving Ink's output.
-It's useful when you want to display some external information outside of Ink's rendering and ensure there's no conflict between the two.
-It's similar to `<Static>`, except it can't accept components, it only works with strings.
+Write any string to stdout while preserving Ink's output.
+It's useful when you want to display external information outside of Ink's rendering and ensure there's no conflict between the two.
+It's similar to `<Static>`, except it can't accept components; it only works with strings.
 
 ##### data
 
@@ -1766,7 +1755,7 @@ See additional usage example in [examples/use-stdout](examples/use-stdout/use-st
 
 ### useStderr()
 
-`useStderr` is a React hook, which exposes stderr stream.
+`useStderr` is a React hook that exposes the stderr stream.
 
 #### stderr
 
@@ -1787,10 +1776,10 @@ const Example = () => {
 
 #### write(data)
 
-Write any string to stderr, while preserving Ink's output.
+Write any string to stderr while preserving Ink's output.
 
-It's useful when you want to display some external information outside of Ink's rendering and ensure there's no conflict between the two.
-It's similar to `<Static>`, except it can't accept components, it only works with strings.
+It's useful when you want to display external information outside of Ink's rendering and ensure there's no conflict between the two.
+It's similar to `<Static>`, except it can't accept components; it only works with strings.
 
 ##### data
 
@@ -1815,9 +1804,9 @@ const Example = () => {
 
 ### useFocus(options?)
 
-Component that uses `useFocus` hook becomes "focusable" to Ink, so when user presses <kbd>Tab</kbd>, Ink will switch focus to this component.
-If there are multiple components that execute `useFocus` hook, focus will be given to them in the order that these components are rendered in.
-This hook returns an object with `isFocused` boolean property, which determines if this component is focused or not.
+A component that uses the `useFocus` hook becomes "focusable" to Ink, so when the user presses <kbd>Tab</kbd>, Ink will switch focus to this component.
+If there are multiple components that execute the `useFocus` hook, focus will be given to them in the order in which these components are rendered.
+This hook returns an object with an `isFocused` boolean property, which determines whether this component is focused.
 
 #### options
 
@@ -1826,7 +1815,7 @@ This hook returns an object with `isFocused` boolean property, which determines 
 Type: `boolean`\
 Default: `false`
 
-Auto focus this component, if there's no active (focused) component right now.
+Auto-focus this component if there's no active (focused) component right now.
 
 ##### isActive
 
@@ -1841,7 +1830,7 @@ This is useful for inputs that are temporarily disabled.
 Type: `string`\
 Required: `false`
 
-Set a component's focus ID, which can be used to programmatically focus the component. This is useful for large interfaces with many focusable elements, to avoid having to cycle through all of them.
+Set a component's focus ID, which can be used to programmatically focus the component. This is useful for large interfaces with many focusable elements to avoid having to cycle through all of them.
 
 ```jsx
 import {render, useFocus, Text} from 'ink';
@@ -1865,7 +1854,7 @@ This hook exposes methods to enable or disable focus management for all componen
 
 Enable focus management for all components.
 
-**Note:** You don't need to call this method manually, unless you've disabled focus management. Focus management is enabled by default.
+**Note:** You don't need to call this method manually unless you've disabled focus management. Focus management is enabled by default.
 
 ```js
 import {useFocusManager} from 'ink';
@@ -1884,7 +1873,7 @@ const Example = () => {
 #### disableFocus()
 
 Disable focus management for all components.
-Currently active component (if there's one) will lose its focus.
+The currently active component (if there's one) will lose its focus.
 
 ```js
 import {useFocusManager} from 'ink';
@@ -1904,7 +1893,7 @@ const Example = () => {
 
 Switch focus to the next focusable component.
 If there's no active component right now, focus will be given to the first focusable component.
-If active component is the last in the list of focusable components, focus will be switched to the first active component.
+If the active component is the last in the list of focusable components, focus will be switched to the first focusable component.
 
 **Note:** Ink calls this method when user presses <kbd>Tab</kbd>.
 
@@ -1926,7 +1915,7 @@ const Example = () => {
 
 Switch focus to the previous focusable component.
 If there's no active component right now, focus will be given to the first focusable component.
-If active component is the first in the list of focusable components, focus will be switched to the last component.
+If the active component is the first in the list of focusable components, focus will be switched to the last focusable component.
 
 **Note:** Ink calls this method when user presses <kbd>Shift</kbd>+<kbd>Tab</kbd>.
 
@@ -1972,7 +1961,7 @@ const Example = () => {
 
 ### useIsScreenReaderEnabled()
 
-Returns whether screen reader is enabled. This is useful when you want to render a different output for screen readers.
+Returns whether a screen reader is enabled. This is useful when you want to render different output for screen readers.
 
 ```jsx
 import {useIsScreenReaderEnabled, Text} from 'ink';
@@ -2025,26 +2014,26 @@ Input stream where app will listen for input.
 Type: `boolean`\
 Default: `true`
 
-Configure whether Ink should listen to Ctrl+C keyboard input and exit the app.
-This is needed in case `process.stdin` is in [raw mode](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode), because then Ctrl+C is ignored by default and process is expected to handle it manually.
+Configure whether Ink should listen for Ctrl+C keyboard input and exit the app.
+This is needed in case `process.stdin` is in [raw mode](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode), because then Ctrl+C is ignored by default and the process is expected to handle it manually.
 
 ###### patchConsole
 
 Type: `boolean`\
 Default: `true`
 
-Patch console methods to ensure console output doesn't mix with Ink output.
-When any of `console.*` methods are called (like `console.log()`), Ink intercepts their output, clears main output, renders output from the console method and then rerenders main output again.
-That way both are visible and are not overlapping each other.
+Patch console methods to ensure console output doesn't mix with Ink's output.
+When any of the `console.*` methods are called (like `console.log()`), Ink intercepts their output, clears the main output, renders output from the console method, and then rerenders the main output again.
+That way, both are visible and don't overlap each other.
 
-This functionality is powered by [patch-console](https://github.com/vadimdemedes/patch-console), so if you need to disable Ink's interception of output but want to build something custom, you can use it.
+This functionality is powered by [patch-console](https://github.com/vadimdemedes/patch-console), so if you need to disable Ink's interception of output but want to build something custom, you can use that.
 
 ###### debug
 
 Type: `boolean`\
 Default: `false`
 
-If `true`, each update will be rendered as a separate output, without replacing the previous one.
+If `true`, each update will be rendered as separate output, without replacing the previous one.
 
 #### Instance
 
@@ -2052,7 +2041,7 @@ This is the object that `render()` returns.
 
 ##### rerender(tree)
 
-Replace previous root node with a new one or update props of the current root node.
+Replace the previous root node with a new one or update props of the current root node.
 
 ###### tree
 
@@ -2079,7 +2068,7 @@ unmount();
 
 ##### waitUntilExit()
 
-Returns a promise, which resolves when app is unmounted.
+Returns a promise that resolves when the app is unmounted.
 
 ```jsx
 const {unmount, waitUntilExit} = render(<MyApp />);
@@ -2101,16 +2090,16 @@ clear();
 #### measureElement(ref)
 
 Measure the dimensions of a particular `<Box>` element.
-It returns an object with `width` and `height` properties.
-This function is useful when your component needs to know the amount of available space it has. You could use it when you need to change the layout based on the length of its content.
+Returns an object with `width` and `height` properties.
+This function is useful when your component needs to know the amount of available space it has. You can use it when you need to change the layout based on the length of its content.
 
-**Note:** `measureElement()` returns correct results only after the initial render, when layout has been calculated. Until then, `width` and `height` equal to zero. It's recommended to call `measureElement()` in a `useEffect` hook, which fires after the component has rendered.
+**Note:** `measureElement()` returns correct results only after the initial render, when the layout has been calculated. Until then, `width` and `height` equal zero. It's recommended to call `measureElement()` in a `useEffect` hook, which fires after the component has rendered.
 
 ##### ref
 
 Type: `MutableRef`
 
-A reference to a `<Box>` element captured with a `ref` property.
+A reference to a `<Box>` element captured with the `ref` property.
 See [Refs](https://reactjs.org/docs/refs-and-the-dom.html) for more information on how to capture references.
 
 ```jsx
@@ -2158,7 +2147,7 @@ Check out [ink-testing-library](https://github.com/vadimdemedes/ink-testing-libr
 
 ![](media/devtools.jpg)
 
-Ink supports [React Devtools](https://github.com/facebook/react/tree/master/packages/react-devtools) out-of-the-box. To enable integration with React Devtools in your Ink-based CLI, first ensure you have installed the optional `react-devtools-core` dependency, and then run your app with `DEV=true` environment variable:
+Ink supports [React Devtools](https://github.com/facebook/react/tree/master/packages/react-devtools) out of the box. To enable integration with React Devtools in your Ink-based CLI, first ensure you have installed the optional `react-devtools-core` dependency, and then run your app with the `DEV=true` environment variable:
 
 ```sh
 DEV=true my-cli
@@ -2170,14 +2159,14 @@ Then, start React Devtools itself:
 npx react-devtools
 ```
 
-After it starts up, you should see the component tree of your CLI.
+After it starts, you should see the component tree of your CLI.
 You can even inspect and change the props of components, and see the results immediately in the CLI, without restarting it.
 
 **Note**: You must manually quit your CLI via <kbd>Ctrl</kbd>+<kbd>C</kbd> after you're done testing.
 
 ## Screen Reader Support
 
-Ink has a basic support for screen readers.
+Ink has basic support for screen readers.
 
 To enable it, you can either pass the `isScreenReaderEnabled` option to the `render` function or set the `INK_SCREEN_READER` environment variable to `true`.
 
@@ -2203,7 +2192,7 @@ Ink will generate the following output for screen readers:
 (checked) checkbox: Accept terms and conditions
 ```
 
-You can also provide a custom label for screen readers, if you want to render something different for them.
+You can also provide a custom label for screen readers if you want to render something different for them.
 
 For example, if you are building a progress bar, you can use `aria-label` to provide a more descriptive label for screen readers.
 
@@ -2214,13 +2203,13 @@ For example, if you are building a progress bar, you can use `aria-label` to pro
 </Box>
 ```
 
-In the example above, screen reader will read "Progress: 50%", instead of "50%".
+In the example above, the screen reader will read "Progress: 50%" instead of "50%".
 
 ### `aria-label`
 
 Type: `string`
 
-Label for the element for screen readers.
+A label for the element for screen readers.
 
 ### `aria-hidden`
 
@@ -2233,7 +2222,7 @@ Hide the element from screen readers.
 
 Type: `string`
 
-Role of the element.
+The role of the element.
 
 Supported values:
 - `button`
@@ -2255,7 +2244,7 @@ Supported values:
 
 Type: `object`
 
-State of the element.
+The state of the element.
 
 Supported values:
 - `checked` (boolean)
@@ -2269,8 +2258,8 @@ When building custom components, it's important to keep accessibility in mind. W
 
 ### General Principles
 
-- **Provide screen reader-friendly output:** Use the `useIsScreenReaderEnabled` hook to detect if a screen reader is active. You can then render a more descriptive output for screen reader users.
-- **Leverage ARIA props:** For components that have a specific role (e.g., a checkbox or a button), use the `aria-role`, `aria-state`, and `aria-label` props on `<Box>` and `<Text>` to provide semantic meaning to screen readers.
+- **Provide screen reader-friendly output:** Use the `useIsScreenReaderEnabled` hook to detect if a screen reader is active. You can then render more descriptive output for screen reader users.
+- **Leverage ARIA props:** For components that have a specific role (e.g., a checkbox or button), use the `aria-role`, `aria-state`, and `aria-label` props on `<Box>` and `<Text>` to provide semantic meaning to screen readers.
 
 For a practical example of building an accessible component, see the [ARIA example](/examples/aria/aria.tsx).
 
@@ -2291,13 +2280,13 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-table](https://github.com/maticzav/ink-table) - Table.
 - [ink-ascii](https://github.com/hexrcs/ink-ascii) - Awesome text component with more font choices, based on Figlet.
 - [ink-markdown](https://github.com/cameronhunter/ink-markdown) - Render syntax highlighted Markdown.
-- [ink-quicksearch-input](https://github.com/Eximchain/ink-quicksearch-input) - Select component with fast quicksearch-like navigation.
+- [ink-quicksearch-input](https://github.com/Eximchain/ink-quicksearch-input) - Select component with fast, quicksearch-like navigation.
 - [ink-confirm-input](https://github.com/kevva/ink-confirm-input) - Yes/No confirmation input.
 - [ink-syntax-highlight](https://github.com/vsashyn/ink-syntax-highlight) - Code syntax highlighting.
 - [ink-form](https://github.com/lukasbach/ink-form) - Form.
 - [ink-task-list](https://github.com/privatenumber/ink-task-list) - Task list.
 - [ink-spawn](https://github.com/kraenhansen/ink-spawn) - Spawn child processes.
-- [ink-titled-box](https://github.com/mishieck/ink-titled-box) - Box with title.
+- [ink-titled-box](https://github.com/mishieck/ink-titled-box) - Box with a title.
 - [ink-chart](https://github.com/pppp606/ink-chart) - Sparkline and bar chart.
 
 ## Useful Hooks
@@ -2314,17 +2303,17 @@ npm run example examples/[example name]
 ```
 
 - [Jest](examples/jest/jest.tsx) - Implementation of basic Jest UI.
-- [Counter](examples/counter/counter.tsx) - Simple counter that increments every 100ms.
+- [Counter](examples/counter/counter.tsx) - A simple counter that increments every 100ms.
 - [Form with validation](https://github.com/final-form/rff-cli-example) - Manage form state using [Final Form](https://github.com/final-form/final-form#-final-form).
-- [Borders](examples/borders/borders.tsx) - Add borders to `<Box>` component.
+- [Borders](examples/borders/borders.tsx) - Add borders to the `<Box>` component.
 - [Suspense](examples/suspense/suspense.tsx) - Use React Suspense.
-- [Table](examples/table/table.tsx) - Render a table with multiple columns and rows.
-- [Focus management](examples/use-focus/use-focus.tsx) - Use `useFocus` hook to manage focus between components.
-- [User input](examples/use-input/use-input.tsx) - Listen to user input.
-- [Write to stdout](examples/use-stdout/use-stdout.tsx) - Write to stdout bypassing main Ink output.
-- [Write to stderr](examples/use-stderr/use-stderr.tsx) - Write to stderr bypassing main Ink output.
-- [Static](examples/static/static.tsx) - Use `<Static>` to render permanent output.
-- [Child process](examples/subprocess-output) - Render output from a child process.
+- [Table](examples/table/table.tsx) - Renders a table with multiple columns and rows.
+- [Focus management](examples/use-focus/use-focus.tsx) - Use the `useFocus` hook to manage focus between components.
+- [User input](examples/use-input/use-input.tsx) - Listen for user input.
+- [Write to stdout](examples/use-stdout/use-stdout.tsx) - Write to stdout, bypassing main Ink output.
+- [Write to stderr](examples/use-stderr/use-stderr.tsx) - Write to stderr, bypassing main Ink output.
+- [Static](examples/static/static.tsx) - Use the `<Static>` component to render permanent output.
+- [Child process](examples/subprocess-output) - Renders output from a child process.
 
 ## Maintainers
 

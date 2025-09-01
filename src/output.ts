@@ -10,13 +10,12 @@ import {
 import {type OutputTransformer} from './render-node-to-output.js';
 
 /**
- * "Virtual" output class
- *
- * Handles the positioning and saving of the output of each node in the tree.
- * Also responsible for applying transformations to each character of the output.
- *
- * Used to generate the final output of all nodes before writing it to actual output stream (e.g. stdout)
- */
+"Virtual" output class
+
+Handles the positioning and saving of the output of each node in the tree. Also responsible for applying transformations to each character of the output.
+
+Used to generate the final output of all nodes before writing it to actual output stream (e.g. stdout)
+*/
 
 type Options = {
 	width: number;

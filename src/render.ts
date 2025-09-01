@@ -6,75 +6,74 @@ import instances from './instances.js';
 
 export type RenderOptions = {
 	/**
-	 * Output stream where app will be rendered.
-	 *
-	 * @default process.stdout
-	 */
+	Output stream where app will be rendered.
+
+	@default process.stdout
+	*/
 	stdout?: NodeJS.WriteStream;
 	/**
-	 * Input stream where app will listen for input.
-	 *
-	 * @default process.stdin
-	 */
+	Input stream where app will listen for input.
+
+	@default process.stdin
+	*/
 	stdin?: NodeJS.ReadStream;
 	/**
-	 * Error stream.
-	 * @default process.stderr
-	 */
+	Error stream.
+	@default process.stderr
+	*/
 	stderr?: NodeJS.WriteStream;
 	/**
-	 * If true, each update will be rendered as a separate output, without replacing the previous one.
-	 *
-	 * @default false
-	 */
+	If true, each update will be rendered as separate output, without replacing the previous one.
+
+	@default false
+	*/
 	debug?: boolean;
 	/**
-	 * Configure whether Ink should listen to Ctrl+C keyboard input and exit the app. This is needed in case `process.stdin` is in raw mode, because then Ctrl+C is ignored by default and process is expected to handle it manually.
-	 *
-	 * @default true
-	 */
+	Configure whether Ink should listen for Ctrl+C keyboard input and exit the app. This is needed in case `process.stdin` is in raw mode, because then Ctrl+C is ignored by default and the process is expected to handle it manually.
+
+	@default true
+	*/
 	exitOnCtrlC?: boolean;
 
 	/**
-	 * Patch console methods to ensure console output doesn't mix with Ink output.
-	 *
-	 * @default true
-	 */
+	Patch console methods to ensure console output doesn't mix with Ink's output.
+
+	@default true
+	*/
 	patchConsole?: boolean;
 
 	/**
-	 * Enable screen reader support.
-	 * See https://github.com/vadimdemedes/ink/blob/master/readme.md#screen-reader-support
-	 *
-	 * @default process.env['INK_SCREEN_READER'] === 'true'
-	 */
+	Enable screen reader support. See https://github.com/vadimdemedes/ink/blob/master/readme.md#screen-reader-support
+
+	@default process.env['INK_SCREEN_READER'] === 'true'
+	*/
 	isScreenReaderEnabled?: boolean;
 };
 
 export type Instance = {
 	/**
-	 * Replace previous root node with a new one or update props of the current root node.
-	 */
+	Replace the previous root node with a new one or update props of the current root node.
+	*/
 	rerender: Ink['render'];
 	/**
-	 * Manually unmount the whole Ink app.
-	 */
+	Manually unmount the whole Ink app.
+	*/
 	unmount: Ink['unmount'];
 	/**
-	 * Returns a promise, which resolves when app is unmounted.
-	 */
+	Returns a promise that resolves when the app is unmounted.
+	*/
 	waitUntilExit: Ink['waitUntilExit'];
 	cleanup: () => void;
 
 	/**
-	 * Clear output.
-	 */
+	Clear output.
+	*/
 	clear: () => void;
 };
 
 /**
- * Mount a component and render the output.
- */
+Mount a component and render the output.
+*/
 const render = (
 	node: ReactNode,
 	options?: NodeJS.WriteStream | RenderOptions,
