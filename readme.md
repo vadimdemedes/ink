@@ -100,6 +100,7 @@ Feel free to play around with the code and fork this repl at [https://repl.it/@v
 - [npm-check-extras](https://github.com/akgondber/npm-check-extras) - Check for outdated and unused dependencies, and run update/delete action over selected ones.
 - [swiff](https://github.com/simple-integrated-marketing/swiff) - Multi-environment command line tools for time-saving web developers.
 - [share](https://github.com/marionebl/share-cli) - Quickly share files.
+- [shush](https://github.com/CoryMConway/shush) - Shell, Python, and JS script manager that dyanmically builds an interactice cli off of directory structure
 - [Kubelive](https://github.com/ameerthehacker/kubelive) - CLI for Kubernetes to provide live data about the cluster and its resources.
 - [changelog-view](https://github.com/jdeniau/changelog-view) - View changelogs.
 - [cfpush](https://github.com/mamachanko/cfpush) - An interactive Cloud Foundry tutorial.
