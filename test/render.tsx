@@ -2,6 +2,7 @@ import process from 'node:process';
 import url from 'node:url';
 import * as path from 'node:path';
 import {createRequire} from 'node:module';
+import FakeTimers from '@sinonjs/fake-timers';
 import test from 'ava';
 import React from 'react';
 import ansiEscapes from 'ansi-escapes';
@@ -204,34 +205,45 @@ test.serial('rerender on resize', async t => {
 	t.is(stdout.listeners('resize').length, 0);
 });
 
-test.serial('throttle renders to maxFps', async t => {
-	const stdout = createStdout();
+function ThrottleTestComponent({text}: {readonly text: string}) {
+	return <Text>{text}</Text>;
+}
 
-	function Component({text}: {text: string}) {
-		return <Text>{text}</Text>;
+test.serial('throttle renders to maxFps', t => {
+	const clock = FakeTimers.install(); // Controls timers + Date.now()
+	try {
+		const stdout = createStdout();
+
+		const {unmount, rerender} = render(<ThrottleTestComponent text="Hello" />, {
+			stdout,
+			maxFps: 1, // 1 Hz => ~1000 ms window
+		});
+
+		// Initial render (leading call)
+		t.is((stdout.write as any).callCount, 1);
+		t.is(
+			stripAnsi((stdout.write as any).lastCall.args[0] as string),
+			'Hello\n',
+		);
+
+		// Trigger another render inside the throttle window
+		rerender(<ThrottleTestComponent text="World" />);
+		t.is((stdout.write as any).callCount, 1);
+
+		// Advance 999 ms: still within window, no trailing call yet
+		clock.tick(999);
+		t.is((stdout.write as any).callCount, 1);
+
+		// Cross the boundary: trailing render fires once
+		clock.tick(1);
+		t.is((stdout.write as any).callCount, 2);
+		t.is(
+			stripAnsi((stdout.write as any).lastCall.args[0] as string),
+			'World\n',
+		);
+
+		unmount();
+	} finally {
+		clock.uninstall();
 	}
-
-	const {unmount, rerender} = render(<Component text="Hello" />, {
-		stdout,
-		maxFps: 1,
-	});
-
-	// Initial render
-	t.is((stdout.write as any).callCount, 1);
-	t.is(stripAnsi((stdout.write as any).lastCall.args[0] as string), 'Hello\n');
-
-	rerender(<Component text="World" />);
-	// Should not render immediately, because of throttling
-	t.is((stdout.write as any).callCount, 1);
-
-	await delay(500);
-	// Still shouldn't have rendered
-	t.is((stdout.write as any).callCount, 1);
-
-	// After 1000ms, second render should happen
-	await delay(600); // Total > 1000ms
-	t.is((stdout.write as any).callCount, 2);
-	t.is(stripAnsi((stdout.write as any).lastCall.args[0] as string), 'World\n');
-
-	unmount();
 });
