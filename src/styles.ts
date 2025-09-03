@@ -7,6 +7,7 @@ import Yoga, {type Node as YogaNode} from 'yoga-layout';
 export type Styles = {
 	readonly textWrap?:
 		| 'wrap'
+		| 'wrap-break-word'
 		| 'end'
 		| 'middle'
 		| 'truncate-end'
