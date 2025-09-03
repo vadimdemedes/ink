@@ -25,6 +25,14 @@ const wrapText = (
 		});
 	}
 
+	if (wrapType === 'wrap-break-word') {
+		wrappedText = wrapAnsi(text, maxWidth, {
+			trim: false,
+			hard: true,
+			wordWrap: false,
+		});
+	}
+
 	if (wrapType!.startsWith('truncate')) {
 		let position: 'end' | 'middle' | 'start' = 'end';
 

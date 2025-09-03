@@ -120,3 +120,21 @@ test('text with content "constructor" wraps correctly', t => {
 	const output = renderToString(<Text>constructor</Text>);
 	t.is(output, 'constructor');
 });
+
+test('text with "wrap" wraps correctly', t => {
+	const output = renderToString(
+		<Box width={7}>
+			<Text wrap="wrap">hello word!</Text>
+		</Box>,
+	);
+	t.is(output, 'hello\nword!');
+});
+
+test('text with "wrap-break-word" wraps correctly', t => {
+	const output = renderToString(
+		<Box width={7}>
+			<Text wrap="wrap-break-word">hello word!</Text>
+		</Box>,
+	);
+	t.is(output, 'hello w\nord!');
+});

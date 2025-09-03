@@ -334,11 +334,12 @@ Inverse background and foreground colors.
 #### wrap
 
 Type: `string`\
-Allowed values: `wrap` `truncate` `truncate-start` `truncate-middle` `truncate-end`\
+Allowed values: `wrap` `wrap-break-word` `truncate` `truncate-start` `truncate-middle` `truncate-end`\
 Default: `wrap`
 
 This property tells Ink to wrap or truncate text if its width is larger than container.
 If `wrap` is passed (by default), Ink will wrap text and split it into multiple lines.
+If `wrap-break-word` is passed, Ink will wrap text and split it into multiple lines, breaking words if necessary.
 If `truncate-*` is passed, Ink will truncate text instead, which will result in one line of text with the rest cut off.
 
 ```jsx
