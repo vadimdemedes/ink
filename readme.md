@@ -2308,6 +2308,7 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-task-list](https://github.com/privatenumber/ink-task-list) - Task list.
 - [ink-spawn](https://github.com/kraenhansen/ink-spawn) - Spawn child processes.
 - [ink-titled-box](https://github.com/mishieck/ink-titled-box) - Box with title.
+- [ink-chart](https://github.com/pppp606/ink-chart) - Sparkline and bar chart.
 
 ## Useful Hooks
 
