@@ -70,6 +70,7 @@
 	"devDependencies": {
 		"@faker-js/faker": "^9.8.0",
 		"@sindresorhus/tsconfig": "^7.0.0",
+		"@sinonjs/fake-timers": "^14.0.0",
 		"@types/ms": "^2.1.0",
 		"@types/node": "^22.15.24",
 		"@types/react": "^19.1.5",

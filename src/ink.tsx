@@ -29,6 +29,7 @@ export type Options = {
 	patchConsole: boolean;
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
+	maxFps?: number;
 };
 
 export default class Ink {
@@ -62,10 +63,13 @@ export default class Ink {
 			process.env['INK_SCREEN_READER'] === 'true';
 
 		const unthrottled = options.debug || this.isScreenReaderEnabled;
+		const maxFps = options.maxFps ?? 30;
+		const renderThrottleMs =
+			maxFps > 0 ? Math.max(1, Math.ceil(1000 / maxFps)) : 0;
 
 		this.rootNode.onRender = unthrottled
 			? this.onRender
-			: throttle(this.onRender, 32, {
+			: throttle(this.onRender, renderThrottleMs, {
 					leading: true,
 					trailing: true,
 				});
