@@ -2048,7 +2048,7 @@ If `true`, each update will be rendered as a separate output, without replacing 
 
 ###### maxFps
 
-Type: `number`
+Type: `number`\
 Default: `30`
 
 Maximum frames per second for render updates.
