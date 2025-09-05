@@ -51,12 +51,12 @@ export type RenderOptions = {
 	isScreenReaderEnabled?: boolean;
 
 	/**
-	 Maximum frames per second for render updates.
-	 This controls how frequently the UI can update to prevent excessive re-rendering.
-	 Higher values allow more frequent updates but may impact performance.
+	Maximum frames per second for render updates.
+	This controls how frequently the UI can update to prevent excessive re-rendering.
+	Higher values allow more frequent updates but may impact performance.
 
-	 @default 30
-	 */
+	@default 30
+	*/
 	maxFps?: number;
 };
 
