@@ -2035,6 +2035,16 @@ Default: `false`
 
 If `true`, each update will be rendered as separate output, without replacing the previous one.
 
+###### maxFps
+
+Type: `number`\
+Default: `30`
+
+Maximum frames per second for render updates.
+This controls how frequently the UI can update to prevent excessive re-rendering.
+Higher values allow more frequent updates but may impact performance.
+Setting it to a lower value may be useful for components that update very frequently, to reduce CPU usage.
+
 #### Instance
 
 This is the object that `render()` returns.
