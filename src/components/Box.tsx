@@ -1,5 +1,6 @@
 import React, {forwardRef, useContext, type PropsWithChildren} from 'react';
-import {type Except} from 'type-fest';
+import {type Except, type LiteralUnion} from 'type-fest';
+import {type ForegroundColorName} from 'ansi-styles';
 import {type Styles} from '../styles.js';
 import {type DOMElement} from '../dom.js';
 import {accessibilityContext} from './AccessibilityContext.js';
@@ -53,6 +54,46 @@ export type Props = Except<Styles, 'textWrap'> & {
 		readonly required?: boolean;
 		readonly selected?: boolean;
 	};
+
+	/**
+	 * Set the vertical scroll position.
+	 */
+	readonly scrollTop?: number;
+
+	/**
+	 * Set the horizontal scroll position.
+	 */
+	readonly scrollLeft?: number;
+
+	/**
+	 * Set the initial vertical scroll position.
+	 * @default 'top'
+	 */
+	readonly initialScrollPosition?: 'top' | 'bottom';
+
+	/**
+	 * Character to render for the scrollbar thumb.
+	 * @default '█'
+	 */
+	readonly scrollbarThumbCharacter?: string;
+
+	/**
+	 * Character to render for the scrollbar track.
+	 * @default '│'
+	 */
+	readonly scrollbarTrackCharacter?: string;
+
+	/**
+	 * Color of the scrollbar thumb.
+	 * @default 'white'
+	 */
+	readonly scrollbarThumbColor?: LiteralUnion<ForegroundColorName, string>;
+
+	/**
+	 * Color of the scrollbar track.
+	 * @default 'gray'
+	 */
+	readonly scrollbarTrackColor?: LiteralUnion<ForegroundColorName, string>;
 };
 
 /**
@@ -67,6 +108,7 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 			'aria-hidden': ariaHidden,
 			'aria-role': role,
 			'aria-state': ariaState,
+			initialScrollPosition = 'top',
 			...style
 		},
 		ref,
@@ -86,6 +128,7 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 					flexGrow: 0,
 					flexShrink: 1,
 					...style,
+					initialScrollPosition,
 					backgroundColor,
 					overflowX: style.overflowX ?? style.overflow ?? 'visible',
 					overflowY: style.overflowY ?? style.overflow ?? 'visible',

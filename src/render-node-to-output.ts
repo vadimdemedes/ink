@@ -6,8 +6,9 @@ import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';
 import renderBorder from './render-border.js';
 import renderBackground from './render-background.js';
-import {type DOMElement} from './dom.js';
+import {type DOMElement, getScrollHeight, getScrollWidth} from './dom.js';
 import type Output from './output.js';
+import colorize from './colorize.js';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.
@@ -132,7 +133,6 @@ const renderNodeToOutput = (
 		// Transformers are functions that transform final text output of each component
 		// See Output class for logic that applies transformers
 		let newTransformers = transformers;
-
 		if (typeof node.internal_transform === 'function') {
 			newTransformers = [node.internal_transform, ...transformers];
 		}
@@ -158,25 +158,46 @@ const renderNodeToOutput = (
 		}
 
 		let clipped = false;
+		let childrenOffsetY = y;
+		let childrenOffsetX = x;
 
 		if (node.nodeName === 'ink-box') {
 			renderBackground(x, y, node, output);
 			renderBorder(x, y, node, output);
 
-			const clipHorizontally =
-				node.style.overflowX === 'hidden' || node.style.overflow === 'hidden';
-			const clipVertically =
-				node.style.overflowY === 'hidden' || node.style.overflow === 'hidden';
+			const overflow = node.style.overflow ?? 'visible';
+			const overflowX = node.style.overflowX ?? overflow;
+			const overflowY = node.style.overflowY ?? overflow;
+
+			const verticallyScrollable = overflowY === 'scroll';
+			const horizontallyScrollable = overflowX === 'scroll';
+
+			if (verticallyScrollable) {
+				renderVerticalScrollbar(node, x, y, output);
+				childrenOffsetY -= node.internal_scrollTop ?? 0;
+			}
+
+			if (horizontallyScrollable) {
+				renderHorizontalScrollbar(node, x, y, output);
+				childrenOffsetX -= node.style.scrollLeft ?? 0;
+			}
+
+			const clipHorizontally = overflowX === 'hidden' || overflowX === 'scroll';
+			const clipVertically = overflowY === 'hidden' || overflowY === 'scroll';
 
 			if (clipHorizontally || clipVertically) {
 				const x1 = clipHorizontally
-					? x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT)
+					? x +
+						yogaNode.getComputedBorder(Yoga.EDGE_LEFT) +
+						yogaNode.getComputedPadding(Yoga.EDGE_LEFT)
 					: undefined;
 
 				const x2 = clipHorizontally
 					? x +
 						yogaNode.getComputedWidth() -
-						yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
+						yogaNode.getComputedBorder(Yoga.EDGE_RIGHT) -
+						yogaNode.getComputedPadding(Yoga.EDGE_RIGHT) -
+						(verticallyScrollable ? 1 : 0)
 					: undefined;
 
 				const y1 = clipVertically
@@ -186,7 +207,8 @@ const renderNodeToOutput = (
 				const y2 = clipVertically
 					? y +
 						yogaNode.getComputedHeight() -
-						yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
+						yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM) -
+						(horizontallyScrollable ? 1 : 0)
 					: undefined;
 
 				output.clip({x1, x2, y1, y2});
@@ -197,8 +219,8 @@ const renderNodeToOutput = (
 		if (node.nodeName === 'ink-root' || node.nodeName === 'ink-box') {
 			for (const childNode of node.childNodes) {
 				renderNodeToOutput(childNode as DOMElement, output, {
-					offsetX: x,
-					offsetY: y,
+					offsetX: childrenOffsetX,
+					offsetY: childrenOffsetY,
 					transformers: newTransformers,
 					skipStaticElements,
 				});
@@ -210,5 +232,172 @@ const renderNodeToOutput = (
 		}
 	}
 };
+
+function renderVerticalScrollbar(
+	node: DOMElement,
+	x: number,
+	y: number,
+	output: Output,
+) {
+	const {yogaNode} = node;
+	if (!yogaNode) {
+		return;
+	}
+
+	const clientHeight =
+		yogaNode.getComputedHeight() -
+		yogaNode.getComputedBorder(Yoga.EDGE_TOP) -
+		yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
+
+	const borderTop = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
+	const borderBottom = yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
+	const scrollHeight = getScrollHeight(yogaNode);
+
+	let {scrollTop} = node.style;
+	if (typeof scrollTop !== 'number') {
+		scrollTop =
+			node.style.initialScrollPosition === 'bottom'
+				? Math.max(0, scrollHeight - clientHeight)
+				: 0;
+	}
+
+	scrollTop = Math.max(0, Math.min(scrollTop, scrollHeight - clientHeight));
+
+	node.internal_scrollTop = scrollTop;
+	node.internal_scrollHeight = scrollHeight;
+	node.internal_clientHeight = clientHeight;
+
+	if (scrollHeight <= clientHeight) {
+		return;
+	}
+
+	const scrollbarX =
+		x +
+		yogaNode.getComputedWidth() -
+		1 -
+		yogaNode.getComputedBorder(Yoga.EDGE_RIGHT);
+
+	// Scrollbar track is rendered from border to border.
+	const scrollbarY = y + yogaNode.getComputedBorder(Yoga.EDGE_TOP);
+	const scrollbarHeight =
+		yogaNode.getComputedHeight() - borderTop - borderBottom;
+
+	// Thumb height is proportional to the visible content area.
+	const thumbHeight = Math.max(
+		1,
+		Math.ceil((clientHeight / scrollHeight) * scrollbarHeight),
+	);
+
+	// Thumb moves within the scrollbar track.
+	const thumbY =
+		scrollbarHeight > thumbHeight
+			? Math.floor(
+					(scrollTop / (scrollHeight - clientHeight)) *
+						(scrollbarHeight - thumbHeight),
+				)
+			: 0;
+
+	const thumbCharacter = node.style.scrollbarThumbCharacter ?? '█';
+	const trackCharacter = node.style.scrollbarTrackCharacter ?? '│';
+	const thumbColor = node.style.scrollbarThumbColor ?? 'white';
+	const trackColor = node.style.scrollbarTrackColor ?? 'gray';
+
+	// Render track
+	for (let index = 0; index < scrollbarHeight; index++) {
+		output.write(
+			scrollbarX,
+			scrollbarY + index,
+			colorize(trackCharacter, trackColor, 'foreground'),
+			{transformers: []},
+		);
+	}
+
+	// Render thumb
+	for (let index = 0; index < thumbHeight; index++) {
+		output.write(
+			scrollbarX,
+			scrollbarY + thumbY + index,
+			colorize(thumbCharacter, thumbColor, 'foreground'),
+			{transformers: []},
+		);
+	}
+}
+
+function renderHorizontalScrollbar(
+	node: DOMElement,
+	x: number,
+	y: number,
+	output: Output,
+	{verticallyScrollable}: {verticallyScrollable: boolean},
+) {
+	const {yogaNode} = node;
+	if (!yogaNode) {
+		return;
+	}
+
+	const clientWidth =
+		yogaNode.getComputedWidth() -
+		yogaNode.getComputedBorder(Yoga.EDGE_LEFT) -
+		yogaNode.getComputedBorder(Yoga.EDGE_RIGHT);
+
+	const scrollWidth = getScrollWidth(yogaNode);
+	let scrollLeft = node.style.scrollLeft ?? 0;
+	scrollLeft = Math.max(0, Math.min(scrollLeft, scrollWidth - clientWidth));
+
+	if (scrollWidth <= clientWidth) {
+		return;
+	}
+
+	const scrollbarY =
+		y +
+		yogaNode.getComputedHeight() -
+		1 -
+		yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
+
+	const scrollbarX = x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
+	const scrollbarWidth =
+		yogaNode.getComputedWidth() -
+		yogaNode.getComputedBorder(Yoga.EDGE_LEFT) -
+		yogaNode.getComputedBorder(Yoga.EDGE_RIGHT) -
+		(verticallyScrollable ? 1 : 0);
+
+	const thumbWidth = Math.max(
+		1,
+		Math.ceil((clientWidth / scrollWidth) * scrollbarWidth),
+	);
+
+	const thumbX =
+		scrollbarWidth > thumbWidth
+			? Math.floor(
+					(scrollLeft / (scrollWidth - clientWidth)) *
+						(scrollbarWidth - thumbWidth),
+				)
+			: 0;
+
+	const thumbCharacter = node.style.scrollbarThumbCharacter ?? '█';
+	const trackCharacter = node.style.scrollbarTrackCharacter ?? '─';
+	const thumbColor = node.style.scrollbarThumbColor ?? 'white';
+	const trackColor = node.style.scrollbarTrackColor ?? 'gray';
+
+	// Render track
+	for (let index = 0; index < scrollbarWidth; index++) {
+		output.write(
+			scrollbarX + index,
+			scrollbarY,
+			colorize(trackCharacter, trackColor, 'foreground'),
+			{transformers: []},
+		);
+	}
+
+	// Render thumb
+	for (let index = 0; index < thumbWidth; index++) {
+		output.write(
+			scrollbarX + thumbX + index,
+			scrollbarY,
+			colorize(thumbCharacter, thumbColor, 'foreground'),
+			{transformers: []},
+		);
+	}
+}
 
 export default renderNodeToOutput;
