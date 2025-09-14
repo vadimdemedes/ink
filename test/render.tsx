@@ -144,6 +144,36 @@ test.serial('erase screen where state changes in small viewport', async t => {
 	}
 });
 
+test.serial(
+	'full-screen mode should not add extra newline at the bottom',
+	async t => {
+		const ps = term('fullscreen-no-extra-newline', ['5']);
+		await ps.waitForExit();
+
+		// Get the final output
+		const output = ps.output;
+
+		// The output should end with the bottom line text, not an extra newline
+		t.true(output.includes('Bottom line'));
+
+		// Check that there's no trailing newline after the bottom line
+		// The output should not end with multiple newlines
+		const lines = output.split('\n');
+		const lastLine = lines[lines.length - 1];
+
+		// The last line should contain the bottom text or be part of ANSI escape codes
+		// but should not be an empty line caused by an extra newline
+		if (lastLine === '') {
+			// If the last line is empty, check if the second-to-last has the bottom text
+			const secondToLast = lines[lines.length - 2];
+			t.false(
+				secondToLast?.includes('Bottom line'),
+				'Bottom line should be on the last line, not have a blank line after it',
+			);
+		}
+	},
+);
+
 test.serial('clear output', async t => {
 	const ps = term('clear');
 	await ps.waitForExit();
