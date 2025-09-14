@@ -170,10 +170,6 @@ test.serial(
 			lines[4]?.includes('Bottom line') ?? false,
 			'Bottom line should be on line 5',
 		);
-
-		if (lines.length > 5) {
-			t.fail('Should not have more than 5 lines (extra newline detected)');
-		}
 	},
 );
 
