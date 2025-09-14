@@ -150,26 +150,29 @@ test.serial(
 		const ps = term('fullscreen-no-extra-newline', ['5']);
 		await ps.waitForExit();
 
-		// Get the final output
-		const output = ps.output;
+		t.true(ps.output.includes('Bottom line'));
 
-		// The output should end with the bottom line text, not an extra newline
-		t.true(output.includes('Bottom line'));
+		const lastFrame = ps.output.split(ansiEscapes.clearTerminal).at(-1) || '';
 
-		// Check that there's no trailing newline after the bottom line
-		// The output should not end with multiple newlines
-		const lines = output.split('\n');
-		const lastLine = lines[lines.length - 1];
+		// Remove cursor control sequences that node-pty might add
+		const cleanFrame = lastFrame.replace(/\x1b\[\?25[hl]/g, '');
 
-		// The last line should contain the bottom text or be part of ANSI escape codes
-		// but should not be an empty line caused by an extra newline
-		if (lastLine === '') {
-			// If the last line is empty, check if the second-to-last has the bottom text
-			const secondToLast = lines[lines.length - 2];
-			t.false(
-				secondToLast?.includes('Bottom line'),
-				'Bottom line should be on the last line, not have a blank line after it',
-			);
+		// Check that the bottom line is at the end without extra newlines
+		// In a 5-line terminal:
+		// Line 1: Full-screen: top
+		// Lines 2-4: empty (from flexGrow)
+		// Line 5: Bottom line (should be usable)
+		const lines = cleanFrame.split('\n');
+
+		t.is(lines.length, 5, 'Should have exactly 5 lines for 5-row terminal');
+
+		t.true(
+			lines[4]?.includes('Bottom line') ?? false,
+			'Bottom line should be on line 5',
+		);
+
+		if (lines.length > 5) {
+			t.fail('Should not have more than 5 lines (extra newline detected)');
 		}
 	},
 );
