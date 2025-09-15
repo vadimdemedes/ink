@@ -152,17 +152,14 @@ test.serial(
 
 		t.true(ps.output.includes('Bottom line'));
 
-		const lastFrame = ps.output.split(ansiEscapes.clearTerminal).at(-1) || '';
-
-		// Remove cursor control sequences that node-pty might add
-		const cleanFrame = lastFrame.replace(/\x1b\[\?25[hl]/g, '');
+		const lastFrame = ps.output.split(ansiEscapes.clearTerminal).at(-1) ?? '';
 
 		// Check that the bottom line is at the end without extra newlines
 		// In a 5-line terminal:
 		// Line 1: Full-screen: top
 		// Lines 2-4: empty (from flexGrow)
 		// Line 5: Bottom line (should be usable)
-		const lines = cleanFrame.split('\n');
+		const lines = lastFrame.split('\n');
 
 		t.is(lines.length, 5, 'Should have exactly 5 lines for 5-row terminal');
 

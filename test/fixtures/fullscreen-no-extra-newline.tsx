@@ -11,7 +11,9 @@ function FullScreen() {
 			exit();
 		}, 100);
 
-		return () => clearTimeout(timer);
+		return () => {
+			clearTimeout(timer);
+		};
 	}, [exit]);
 
 	// Force the root to occupy exactly terminal rows
