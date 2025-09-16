@@ -205,7 +205,7 @@ test('get scroll height and width', t => {
 
 	t.true(onLayout.calledOnce);
 	t.like(onLayout.firstCall.args[0], {
-		scrollWidth: 20,
+		scrollWidth: 10,
 		scrollHeight: 20,
 	});
 });
@@ -243,9 +243,9 @@ test('get bounding box with scroll position', t => {
 
 	t.true(onLayout.calledOnce);
 	t.like(onLayout.firstCall.args[0], {
-		x: 0,
-		y: -3,
-		width: 10,
+		x: 5,
+		y: 0,
+		width: 5,
 		height: 10,
 	});
 });

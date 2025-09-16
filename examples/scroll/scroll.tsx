@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import process from 'node:process';
 import React, {useState, useRef, useEffect, useLayoutEffect} from 'react';
 import {
@@ -8,6 +14,7 @@ import {
 	getInnerWidth,
 	getScrollHeight,
 	getScrollWidth,
+	type DOMElement,
 } from '../../src/index.js';
 
 type ScrollMode = 'vertical' | 'horizontal' | 'both' | 'hidden';
@@ -47,7 +54,7 @@ function ScrollableContent() {
 	const [scrollMode, setScrollMode] = useState<ScrollMode>('vertical');
 	const [scrollTop, setScrollTop] = useState(0);
 	const [scrollLeft, setScrollLeft] = useState(0);
-	const reference = useRef<any>(null);
+	const reference = useRef<DOMElement>(null);
 	const {columns, rows} = useTerminalSize();
 	const [size, setSize] = useState({
 		innerHeight: 0,
@@ -151,7 +158,8 @@ function ScrollableContent() {
 					s + 1,
 					Math.max(
 						0,
-						sizeReference.current.scrollWidth - sizeReference.current.innerWidth,
+						sizeReference.current.scrollWidth -
+							sizeReference.current.innerWidth,
 					),
 				),
 			);

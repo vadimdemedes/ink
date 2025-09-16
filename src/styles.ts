@@ -176,6 +176,16 @@ export type Styles = {
 	readonly minHeight?: number | string;
 
 	/**
+	Maximum width of the element.
+	*/
+	readonly maxWidth?: number | string;
+
+	/**
+	Maximum height of the element.
+	*/
+	readonly maxHeight?: number | string;
+
+	/**
 	Set this property to `none` to hide the element.
 	*/
 	readonly display?: 'flex' | 'none';
@@ -538,6 +548,22 @@ const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
 			node.setMinHeightPercent(Number.parseInt(style.minHeight, 10));
 		} else {
 			node.setMinHeight(style.minHeight ?? 0);
+		}
+	}
+
+	if ('maxWidth' in style) {
+		if (typeof style.maxWidth === 'string') {
+			node.setMaxWidthPercent(Number.parseInt(style.maxWidth, 10));
+		} else {
+			node.setMaxWidth(style.maxWidth);
+		}
+	}
+
+	if ('maxHeight' in style) {
+		if (typeof style.maxHeight === 'string') {
+			node.setMaxHeightPercent(Number.parseInt(style.maxHeight, 10));
+		} else {
+			node.setMaxHeight(style.maxHeight);
 		}
 	}
 };

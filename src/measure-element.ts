@@ -108,8 +108,7 @@ export const getScrollHeight = (node: DOMElement): number => {
 		return 0;
 	}
 
-	const top =
-		yogaNode.getComputedBorder(Yoga.EDGE_TOP);
+	const top = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
 	let maxBottom = top;
 	for (let i = 0; i < yogaNode.getChildCount(); i++) {
 		const child = yogaNode.getChild(i);
@@ -123,7 +122,11 @@ export const getScrollHeight = (node: DOMElement): number => {
 		}
 	}
 
-	return maxBottom - top  + yogaNode.getComputedPadding(Yoga.EDGE_BOTTOM);
+	// We add bottom padding to the scroll height because we act as if the
+	// bottom padding is part of the scrollable child content so that you
+	// can scroll all the way to the bottom and see the full bottom padding
+	// amount of padding after the rendered content.
+	return maxBottom - top + yogaNode.getComputedPadding(Yoga.EDGE_BOTTOM);
 };
 
 /**
@@ -135,8 +138,7 @@ export const getScrollWidth = (node: DOMElement): number => {
 		return 0;
 	}
 
-	const left =
-		yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
+	const left = yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
 
 	let maxRight = yogaNode.getComputedPadding(Yoga.EDGE_LEFT);
 	for (let i = 0; i < yogaNode.getChildCount(); i++) {
@@ -151,6 +153,10 @@ export const getScrollWidth = (node: DOMElement): number => {
 		}
 	}
 
+	// We add right padding to the scroll height because we act as if the
+	// right padding is part of the scrollable child content so that you
+	// can scroll all the way to the right and see the full right padding
+	// amount of padding after the rendered content.
 	return maxRight - left + yogaNode.getComputedPadding(Yoga.EDGE_RIGHT);
 };
 

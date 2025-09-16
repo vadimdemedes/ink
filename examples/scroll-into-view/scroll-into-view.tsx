@@ -1,9 +1,15 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import React, {
 	useState,
 	useLayoutEffect,
 	useCallback,
 	useEffect,
-	useRef
+	useRef,
 } from 'react';
 import {
 	Box,
@@ -12,13 +18,13 @@ import {
 	getBoundingBox,
 	getInnerHeight,
 	type DOMElement,
-	Static
+	Static,
 } from '../../src/index.js';
 
 const items = Array.from({length: 100}).map((_, i) => ({
 	id: String(i + 1),
 	header: `Item ${i}`,
-	content: ' - Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+	content: ' - Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
 }));
 
 type Rect = {
@@ -33,11 +39,10 @@ function ScrollIntoView() {
 	const [log, setLog] = useState<Array<{id: string; text: string}>>([]);
 	const [scrollTop, setScrollTop] = useState(10);
 	const [container, setContainer] = useState<DOMElement | undefined>(null);
-	const [
-		selectedItemNode,
-		setSelectedItemNode
-	] = useState<DOMElement | undefined>(null);
-	const innerRef = useRef<DOMElement>(null);
+	const [selectedItemNode, setSelectedItemNode] = useState<
+		DOMElement | undefined
+	>(null);
+	const innerReference = useRef<DOMElement>(null);
 
 	const selectedItemCallbackReference = useCallback(
 		(node: DOMElement | undefined) => {
@@ -45,7 +50,7 @@ function ScrollIntoView() {
 				setSelectedItemNode(node);
 			}
 		},
-		[]
+		[],
 	);
 
 	useInput((_, key) => {
@@ -63,24 +68,23 @@ function ScrollIntoView() {
 			...previousLog,
 			{
 				id: String(previousLog.length + 1),
-				text: `Selected item is ${selected}`
-			}
+				text: `Selected item is ${selected}`,
+			},
 		]);
 	}, [selected]);
 
 	useLayoutEffect(() => {
-		if (!container || !selectedItemNode || !innerRef.current) {
+		if (!container || !selectedItemNode || !innerReference.current) {
 			return;
 		}
 
 		const newContainerRect = getBoundingBox(container);
-		const innerRect = getBoundingBox(innerRef.current);
+		const innerRect = getBoundingBox(innerReference.current);
 		const borderTop = innerRect.y - newContainerRect.y;
 		const innerHeight = getInnerHeight(container);
 		const newItemRect = getBoundingBox(selectedItemNode);
 
-		const unscrolledItemY =
-			newItemRect.y - (newContainerRect.y + borderTop);
+		const unscrolledItemY = newItemRect.y - (newContainerRect.y + borderTop);
 
 		const visibleHeight = innerHeight;
 
@@ -118,7 +122,7 @@ function ScrollIntoView() {
 					scrollTop={scrollTop}
 				>
 					<Box
-						ref={innerRef}
+						ref={innerReference}
 						flexDirection="column"
 						flexShrink={0}
 						padding={1}

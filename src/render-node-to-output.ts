@@ -392,15 +392,15 @@ function renderScrollbar(
 					? fill === 2
 						? '█'
 						: // Fill === 1
-						start % 2 === 0
-						? '▀' // Top half of the cell is filled
-						: '▄' // Bottom half of the cell is filled
+							start % 2 === 0
+							? '▀' // Top half of the cell is filled
+							: '▄' // Bottom half of the cell is filled
 					: fill === 2
-					? '█'
-					: // Fill === 1
-					start % 2 === 0
-					? '▌' // Left half of the cell is filled
-					: '▐'; // Right half of the cell is filled
+						? '█'
+						: // Fill === 1
+							start % 2 === 0
+							? '▌' // Left half of the cell is filled
+							: '▐'; // Right half of the cell is filled
 
 			const outputX = axis === 'vertical' ? scrollbarX : scrollbarX + index;
 			const outputY = axis === 'vertical' ? scrollbarY + index : scrollbarY;
