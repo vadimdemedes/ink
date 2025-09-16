@@ -529,3 +529,62 @@ test('interactive scroll', async t => {
 	const afterScrollRight = (stdout.write as any).lastCall.args[0] as string;
 	t.snapshot(afterScrollRight, 'after scrolling right');
 });
+
+const maxDimensionsScrollTests = [
+	{
+		name: 'max-width',
+		props: {
+			maxWidth: 10
+		}
+	},
+	{
+		name: 'max-height',
+		props: {
+			maxHeight: 5
+		}
+	},
+	{
+		name: 'max-width-percent',
+		props: {
+			maxWidth: '50%'
+		}
+	},
+	{
+		name: 'max-height-percent',
+		props: {
+			maxHeight: '50%'
+		}
+	},
+	{
+		name: 'max-width-and-max-height',
+		props: {
+			maxWidth: 10,
+			maxHeight: 5
+		}
+	},
+	{
+		name: 'max-width-and-max-height-percents',
+		props: {
+			maxWidth: '20%',
+			maxHeight: '20%'
+		}
+	}
+];
+
+for (const {name, props} of maxDimensionsScrollTests) {
+	test(name, t => {
+		const output = renderToString(
+			<Box
+				overflow="scroll"
+				borderStyle="round"
+				{...props}
+			>
+				<Box width={100} height={100} flexShrink={0}>
+					<Text>Scroll me</Text>
+				</Box>
+			</Box>
+		);
+
+		t.snapshot(output);
+	});
+}
