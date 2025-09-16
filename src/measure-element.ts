@@ -108,8 +108,7 @@ export const getScrollHeight = (node: DOMElement): number => {
 		return 0;
 	}
 
-	const top =
-		yogaNode.getComputedBorder(Yoga.EDGE_TOP);
+	const top = yogaNode.getComputedBorder(Yoga.EDGE_TOP);
 	let maxBottom = top;
 	for (let i = 0; i < yogaNode.getChildCount(); i++) {
 		const child = yogaNode.getChild(i);
@@ -123,7 +122,7 @@ export const getScrollHeight = (node: DOMElement): number => {
 		}
 	}
 
-	return maxBottom - top  + yogaNode.getComputedPadding(Yoga.EDGE_BOTTOM);
+	return maxBottom - top + yogaNode.getComputedPadding(Yoga.EDGE_BOTTOM);
 };
 
 /**
@@ -135,8 +134,7 @@ export const getScrollWidth = (node: DOMElement): number => {
 		return 0;
 	}
 
-	const left =
-		yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
+	const left = yogaNode.getComputedBorder(Yoga.EDGE_LEFT);
 
 	let maxRight = yogaNode.getComputedPadding(Yoga.EDGE_LEFT);
 	for (let i = 0; i < yogaNode.getChildCount(); i++) {

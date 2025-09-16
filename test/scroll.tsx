@@ -75,7 +75,7 @@ for (const {name, props} of verticalScrollTests) {
 			<Box
 				height={5}
 				overflowY="scroll"
-				overflowX='hidden'
+				overflowX="hidden"
 				borderStyle="round"
 				flexDirection="column"
 				{...props}
@@ -371,12 +371,7 @@ test('scrollbar thumb color', t => {
 
 test('overflow hidden', t => {
 	const output = renderToString(
-		<Box
-			width={15}
-			height={5}
-			overflow="hidden"
-			borderStyle="round"
-		>
+		<Box width={15} height={5} overflow="hidden" borderStyle="round">
 			<Box width={100} height={100} flexShrink={0}>
 				<Text>{tallText}</Text>
 			</Box>
@@ -388,12 +383,7 @@ test('overflow hidden', t => {
 
 test('overflow visible', t => {
 	const output = renderToString(
-		<Box
-			width={15}
-			height={5}
-			overflow="visible"
-			borderStyle="round"
-		>
+		<Box width={15} height={5} overflow="visible" borderStyle="round">
 			<Box width={100} height={100} flexShrink={0}>
 				<Text>{tallText}</Text>
 			</Box>
@@ -430,12 +420,7 @@ test('dynamic content size causing scrollbars to appear and disappear', t => {
 
 	function DynamicContent({large}: {readonly large: boolean}) {
 		return (
-			<Box
-				width={15}
-				height={5}
-				overflow="scroll"
-				borderStyle="round"
-			>
+			<Box width={15} height={5} overflow="scroll" borderStyle="round">
 				<Box width={large ? 100 : 10} height={large ? 100 : 2} flexShrink={0}>
 					<Text>Content</Text>
 				</Box>
@@ -451,7 +436,7 @@ test('dynamic content size causing scrollbars to appear and disappear', t => {
 	const initialRender = (stdout.write as any).lastCall.args[0] as string;
 	t.snapshot(initialRender, 'initial render - no scrollbars');
 
-	rerender(<DynamicContent large={true} />);
+	rerender(<DynamicContent large />);
 	const withScrollbars = (stdout.write as any).lastCall.args[0] as string;
 	t.snapshot(withScrollbars, 'after content grows - with scrollbars');
 
@@ -461,7 +446,6 @@ test('dynamic content size causing scrollbars to appear and disappear', t => {
 });
 
 function InteractiveScrollableContent() {
-
 	const [scrollTop, setScrollTop] = useState(0);
 	const [scrollLeft, setScrollLeft] = useState(0);
 
@@ -529,3 +513,58 @@ test('interactive scroll', async t => {
 	const afterScrollRight = (stdout.write as any).lastCall.args[0] as string;
 	t.snapshot(afterScrollRight, 'after scrolling right');
 });
+
+const maxDimensionsScrollTests = [
+	{
+		name: 'max-width',
+		props: {
+			maxWidth: 10,
+		},
+	},
+	{
+		name: 'max-height',
+		props: {
+			maxHeight: 5,
+		},
+	},
+	{
+		name: 'max-width-percent',
+		props: {
+			maxWidth: '50%',
+		},
+	},
+	{
+		name: 'max-height-percent',
+		props: {
+			maxHeight: '50%',
+		},
+	},
+	{
+		name: 'max-width-and-max-height',
+		props: {
+			maxWidth: 10,
+			maxHeight: 5,
+		},
+	},
+	{
+		name: 'max-width-and-max-height-percents',
+		props: {
+			maxWidth: '20%',
+			maxHeight: '20%',
+		},
+	},
+];
+
+for (const {name, props} of maxDimensionsScrollTests) {
+	test(name, t => {
+		const output = renderToString(
+			<Box overflow="scroll" borderStyle="round" {...props}>
+				<Box width={100} height={100} flexShrink={0}>
+					<Text>Scroll me</Text>
+				</Box>
+			</Box>,
+		);
+
+		t.snapshot(output);
+	});
+}

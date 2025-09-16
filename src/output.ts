@@ -126,29 +126,29 @@ export default class Output {
 						previousClip.x1 === undefined
 							? nextClip.x1
 							: nextClip.x1 === undefined
-							? previousClip.x1
-							: Math.max(previousClip.x1, nextClip.x1);
+								? previousClip.x1
+								: Math.max(previousClip.x1, nextClip.x1);
 
 					nextClip.x2 =
 						previousClip.x2 === undefined
 							? nextClip.x2
 							: nextClip.x2 === undefined
-							? previousClip.x2
-							: Math.min(previousClip.x2, nextClip.x2);
+								? previousClip.x2
+								: Math.min(previousClip.x2, nextClip.x2);
 
 					nextClip.y1 =
 						previousClip.y1 === undefined
 							? nextClip.y1
 							: nextClip.y1 === undefined
-							? previousClip.y1
-							: Math.max(previousClip.y1, nextClip.y1);
+								? previousClip.y1
+								: Math.max(previousClip.y1, nextClip.y1);
 
 					nextClip.y2 =
 						previousClip.y2 === undefined
 							? nextClip.y2
 							: nextClip.y2 === undefined
-							? previousClip.y2
-							: Math.min(previousClip.y2, nextClip.y2);
+								? previousClip.y2
+								: Math.min(previousClip.y2, nextClip.y2);
 				}
 
 				clips.push(nextClip);
