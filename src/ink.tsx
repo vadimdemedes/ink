@@ -28,6 +28,7 @@ export type Options = {
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
 	isScreenReaderEnabled?: boolean;
+	alternateBuffer?: boolean;
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
 };
@@ -37,6 +38,7 @@ export default class Ink {
 	private readonly log: LogUpdate;
 	private readonly throttledLog: LogUpdate;
 	private readonly isScreenReaderEnabled: boolean;
+	private readonly alternateBuffer: boolean;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
@@ -61,6 +63,12 @@ export default class Ink {
 		this.isScreenReaderEnabled =
 			options.isScreenReaderEnabled ??
 			process.env['INK_SCREEN_READER'] === 'true';
+
+		this.alternateBuffer = options.alternateBuffer ?? false;
+
+		if (this.alternateBuffer && !isInCi) {
+			this.options.stdout.write(ansiEscapes.enterAlternativeScreen);
+		}
 
 		const unthrottled = options.debug || this.isScreenReaderEnabled;
 		const maxFps = options.maxFps ?? 30;
@@ -232,6 +240,20 @@ export default class Ink {
 			return;
 		}
 
+		if (this.alternateBuffer) {
+			if (hasStaticOutput) {
+				this.fullStaticOutput += staticOutput;
+			}
+
+			this.options.stdout.write(
+				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
+			);
+
+			this.lastOutput = output;
+			this.lastOutputHeight = outputHeight;
+			return;
+		}
+
 		if (hasStaticOutput) {
 			this.fullStaticOutput += staticOutput;
 		}
@@ -353,6 +375,10 @@ export default class Ink {
 			this.options.stdout.write(this.lastOutput + '\n');
 		} else if (!this.options.debug) {
 			this.log.done();
+		}
+
+		if (this.alternateBuffer && !isInCi) {
+			this.options.stdout.write(ansiEscapes.exitAlternativeScreen);
 		}
 
 		this.isUnmounted = true;

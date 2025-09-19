@@ -50,6 +50,14 @@ export type RenderOptions = {
 	isScreenReaderEnabled?: boolean;
 
 	/**
+	Enable alternate screen buffer.
+	This will cause Ink to render to a new screen buffer, and restore the old one on exit.
+
+	@default false
+	*/
+	alternateBuffer?: boolean;
+
+	/**
 	Maximum frames per second for render updates.
 	This controls how frequently the UI can update to prevent excessive re-rendering.
 	Higher values allow more frequent updates but may impact performance.
