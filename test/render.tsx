@@ -145,7 +145,7 @@ test.serial('erase screen where state changes in small viewport', async t => {
 });
 
 test.serial(
-	'full-screen mode should not add extra newline at the bottom',
+	'fullscreen mode should not add extra newline at the bottom',
 	async t => {
 		const ps = term('fullscreen-no-extra-newline', ['5']);
 		await ps.waitForExit();
@@ -156,7 +156,7 @@ test.serial(
 
 		// Check that the bottom line is at the end without extra newlines
 		// In a 5-line terminal:
-		// Line 1: Full-screen: top
+		// Line 1: Fullscreen: top
 		// Lines 2-4: empty (from flexGrow)
 		// Line 5: Bottom line (should be usable)
 		const lines = lastFrame.split('\n');
