@@ -2,7 +2,7 @@ import process from 'node:process';
 import React, {useEffect} from 'react';
 import {Box, Text, render, useApp} from '../../src/index.js';
 
-function FullScreen() {
+function Fullscreen() {
 	const {exit} = useApp();
 
 	useEffect(() => {
@@ -32,4 +32,4 @@ function FullScreen() {
 // Set terminal size from argument
 process.stdout.rows = Number(process.argv[2]) || 5;
 
-render(<FullScreen />);
+render(<Fullscreen />);
