@@ -144,6 +144,32 @@ test.serial('erase screen where state changes in small viewport', async t => {
 	}
 });
 
+test.serial(
+	'fullscreen mode should not add extra newline at the bottom',
+	async t => {
+		const ps = term('fullscreen-no-extra-newline', ['5']);
+		await ps.waitForExit();
+
+		t.true(ps.output.includes('Bottom line'));
+
+		const lastFrame = ps.output.split(ansiEscapes.clearTerminal).at(-1) ?? '';
+
+		// Check that the bottom line is at the end without extra newlines
+		// In a 5-line terminal:
+		// Line 1: Fullscreen: top
+		// Lines 2-4: empty (from flexGrow)
+		// Line 5: Bottom line (should be usable)
+		const lines = lastFrame.split('\n');
+
+		t.is(lines.length, 5, 'Should have exactly 5 lines for 5-row terminal');
+
+		t.true(
+			lines[4]?.includes('Bottom line') ?? false,
+			'Bottom line should be on line 5',
+		);
+	},
+);
+
 test.serial('clear output', async t => {
 	const ps = term('clear');
 	await ps.waitForExit();
