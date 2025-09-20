@@ -1139,7 +1139,8 @@ A shorthand for setting `borderTopBackgroundColor`, `borderRightBackgroundColor`
 Type: `string`
 
 Change top border background color.
-Accepts the same values as [`backgroundColor`](#backgroundColor) in `<Text>` component.
+Accepts the same values as [`backgroundColor`](#backgroundcolor) in `<Text>` component.
+Falls back to `borderBackgroundColor` if not specified.
 
 ```jsx
 <Box borderStyle="round" borderColor="white" borderTopBackgroundColor="green">
@@ -1152,7 +1153,8 @@ Accepts the same values as [`backgroundColor`](#backgroundColor) in `<Text>` com
 Type: `string`
 
 Change bottom border background color.
-Accepts the same values as [`backgroundColor`](#backgroundColor) in `<Text>` component.
+Accepts the same values as [`backgroundColor`](#backgroundcolor) in `<Text>` component.
+Falls back to `borderBackgroundColor` if not specified.
 
 ```jsx
 <Box borderStyle="round" borderColor="white" borderBottomBackgroundColor="green">
@@ -1165,7 +1167,8 @@ Accepts the same values as [`backgroundColor`](#backgroundColor) in `<Text>` com
 Type: `string`
 
 Change right border background color.
-Accepts the same values as [`backgroundColor`](#backgroundColor) in `<Text>` component.
+Accepts the same values as [`backgroundColor`](#backgroundcolor) in `<Text>` component.
+Falls back to `borderBackgroundColor` if not specified.
 ```jsx
 <Box borderStyle="round" borderColor="white" borderRightBackgroundColor="green">
 	<Text>Hello world</Text>
@@ -1177,7 +1180,8 @@ Accepts the same values as [`backgroundColor`](#backgroundColor) in `<Text>` com
 Type: `string`
 
 Change left border background color.
-Accepts the same values as [`backgroundColor`](#backgroundColor) in `<Text>` component.
+Accepts the same values as [`backgroundColor`](#backgroundcolor) in `<Text>` component.
+Falls back to `borderBackgroundColor` if not specified.
 ```jsx
 <Box borderStyle="round" borderColor="white" borderLeftBackgroundColor="green">
 	<Text>Hello world</Text>

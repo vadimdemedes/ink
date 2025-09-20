@@ -308,41 +308,6 @@ export type Styles = {
 	>;
 
 	/**
-	Dim the border background color. A shorthand for setting `borderTopBackgroundDimColor`, `borderBottomBackgroundDimColor`, `borderLeftBackgroundDimColor`, and `borderRightBackgroundDimColor`.
-
-	@default false
-	*/
-	readonly borderBackgroundDimColor?: boolean;
-
-	/**
-	Dim the top border background color.
-
-	@default false
-	*/
-	readonly borderTopBackgroundDimColor?: boolean;
-
-	/**
-	Dim the bottom border background color.
-
-	@default false
-	*/
-	readonly borderBottomBackgroundDimColor?: boolean;
-
-	/**
-	Dim the left border background color.
-
-	@default false
-	*/
-	readonly borderLeftBackgroundDimColor?: boolean;
-
-	/**
-	Dim the right border background color.
-
-	@default false
-	*/
-	readonly borderRightBackgroundDimColor?: boolean;
-
-	/**
 	Behavior for an element's overflow in both directions.
 	
 	@default 'visible'

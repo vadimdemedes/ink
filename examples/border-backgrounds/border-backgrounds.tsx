@@ -38,13 +38,13 @@ function BorderBackgrounds() {
 			</Box>
 
 			<Box
-				borderBackgroundDimColor
+				borderDimColor
 				borderBackgroundColor="rgb(128, 0, 128)"
 				borderStyle="classic"
 				borderColor="white"
 				padding={1}
 			>
-				<Text>Box with RGB purple dimmed background on border</Text>
+				<Text>Box with dimmed RGB purple background on border</Text>
 			</Box>
 
 			<Box

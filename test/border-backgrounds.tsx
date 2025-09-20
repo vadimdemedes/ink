@@ -1,6 +1,6 @@
 import React from 'react';
 import test from 'ava';
-import {Box} from '../src/index.js';
+import {Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 import {enableTestColors, disableTestColors} from './helpers/force-colors.js';
 
@@ -83,18 +83,41 @@ test('border background color fallback to general borderBackgroundColor', t => {
 	t.true(output.includes('\u001B[45m'));
 });
 
-test('border dimmed background via shorthand and per-side', t => {
+test('vertical border background does not bleed into content lines', t => {
 	const output = renderToString(
 		<Box
-			borderBackgroundDimColor
-			borderBackgroundColor="rgb(128, 0, 128)"
 			borderStyle="single"
+			borderLeftBackgroundColor="cyan"
+			alignSelf="flex-start"
 		>
-			<Box width={4}>Test</Box>
+			<Text>Line 1</Text>
+			<Text>Line 2</Text>
 		</Box>,
 	);
 
-	// Dim uses SGR 2 wrapped around colored content; presence of '\u001B[2m'
-	// indicates dim was applied on the border string
+	// Ensure content lines are not entirely wrapped in background codes
+	const cyanBg = '\u001B[46m';
+	const bgReset = '\u001B[49m';
+	// There should be a reset between left border and text on both lines
+	t.true(output.includes(`${cyanBg}│${bgReset}Line 1`));
+	t.true(output.includes(`${cyanBg}│${bgReset}Line 2`));
+});
+
+test('foreground, background and dim combine correctly', t => {
+	const output = renderToString(
+		<Box
+			borderTopDimColor
+			borderStyle="single"
+			borderTopColor="red"
+			borderTopBackgroundColor="cyan"
+			alignSelf="flex-start"
+		>
+			<Text>Hi</Text>
+		</Box>,
+	);
+
+	// Expect red FG (31), cyan BG (46) and dim (2) to appear
+	t.true(output.includes('\u001B[31m'));
+	t.true(output.includes('\u001B[46m'));
 	t.true(output.includes('\u001B[2m'));
 });
