@@ -26,6 +26,16 @@ const renderBorder = (
 		const rightBorderColor =
 			node.style.borderRightColor ?? node.style.borderColor;
 
+		const topBorderBackgroundColor =
+			node.style.borderTopBackgroundColor ?? node.style.borderBackgroundColor;
+		const bottomBorderBackgroundColor =
+			node.style.borderBottomBackgroundColor ??
+			node.style.borderBackgroundColor;
+		const leftBorderBackgroundColor =
+			node.style.borderLeftBackgroundColor ?? node.style.borderBackgroundColor;
+		const rightBorderBackgroundColor =
+			node.style.borderRightBackgroundColor ?? node.style.borderBackgroundColor;
+
 		const dimTopBorderColor =
 			node.style.borderTopDimColor ?? node.style.borderDimColor;
 
@@ -38,6 +48,19 @@ const renderBorder = (
 		const dimRightBorderColor =
 			node.style.borderRightDimColor ?? node.style.borderDimColor;
 
+		const dimTopBackground =
+			node.style.borderTopBackgroundDimColor ??
+			node.style.borderBackgroundDimColor;
+		const dimBottomBackground =
+			node.style.borderBottomBackgroundDimColor ??
+			node.style.borderBackgroundDimColor;
+		const dimLeftBackground =
+			node.style.borderLeftBackgroundDimColor ??
+			node.style.borderBackgroundDimColor;
+		const dimRightBackground =
+			node.style.borderRightBackgroundDimColor ??
+			node.style.borderBackgroundDimColor;
+
 		const showTopBorder = node.style.borderTop !== false;
 		const showBottomBorder = node.style.borderBottom !== false;
 		const showLeftBorder = node.style.borderLeft !== false;
@@ -47,17 +70,21 @@ const renderBorder = (
 			width - (showLeftBorder ? 1 : 0) - (showRightBorder ? 1 : 0);
 
 		let topBorder = showTopBorder
-			? colorize(
-					(showLeftBorder ? box.topLeft : '') +
-						box.top.repeat(contentWidth) +
-						(showRightBorder ? box.topRight : ''),
-					topBorderColor,
-					'foreground',
-				)
+			? (showLeftBorder ? box.topLeft : '') +
+				box.top.repeat(contentWidth) +
+				(showRightBorder ? box.topRight : '')
 			: undefined;
 
-		if (showTopBorder && dimTopBorderColor) {
-			topBorder = chalk.dim(topBorder);
+		if (showTopBorder && topBorder) {
+			// Apply foreground color
+			topBorder = colorize(topBorder, topBorderColor, 'foreground');
+			// Apply background color
+			topBorder = colorize(topBorder, topBorderBackgroundColor, 'background');
+			// Apply dim if needed
+			const shouldDimTop = [dimTopBorderColor, dimTopBackground].some(Boolean);
+			if (shouldDimTop) {
+				topBorder = chalk.dim(topBorder);
+			}
 		}
 
 		let verticalBorderHeight = height;
@@ -70,34 +97,72 @@ const renderBorder = (
 			verticalBorderHeight -= 1;
 		}
 
-		let leftBorder = (
-			colorize(box.left, leftBorderColor, 'foreground') + '\n'
-		).repeat(verticalBorderHeight);
+		let leftBorder = showLeftBorder
+			? (box.left + '\n').repeat(verticalBorderHeight)
+			: '';
 
-		if (dimLeftBorderColor) {
-			leftBorder = chalk.dim(leftBorder);
+		if (showLeftBorder && leftBorder) {
+			// Apply foreground color
+			leftBorder = colorize(leftBorder, leftBorderColor, 'foreground');
+			// Apply background color
+			leftBorder = colorize(
+				leftBorder,
+				leftBorderBackgroundColor,
+				'background',
+			);
+			// Apply dim if needed
+			const shouldDimLeft = [dimLeftBorderColor, dimLeftBackground].some(
+				Boolean,
+			);
+			if (shouldDimLeft) {
+				leftBorder = chalk.dim(leftBorder);
+			}
 		}
 
-		let rightBorder = (
-			colorize(box.right, rightBorderColor, 'foreground') + '\n'
-		).repeat(verticalBorderHeight);
+		let rightBorder = showRightBorder
+			? (box.right + '\n').repeat(verticalBorderHeight)
+			: '';
 
-		if (dimRightBorderColor) {
-			rightBorder = chalk.dim(rightBorder);
+		if (showRightBorder && rightBorder) {
+			// Apply foreground color
+			rightBorder = colorize(rightBorder, rightBorderColor, 'foreground');
+			// Apply background color
+			rightBorder = colorize(
+				rightBorder,
+				rightBorderBackgroundColor,
+				'background',
+			);
+			// Apply dim if needed
+			const shouldDimRight = [dimRightBorderColor, dimRightBackground].some(
+				Boolean,
+			);
+			if (shouldDimRight) {
+				rightBorder = chalk.dim(rightBorder);
+			}
 		}
 
 		let bottomBorder = showBottomBorder
-			? colorize(
-					(showLeftBorder ? box.bottomLeft : '') +
-						box.bottom.repeat(contentWidth) +
-						(showRightBorder ? box.bottomRight : ''),
-					bottomBorderColor,
-					'foreground',
-				)
+			? (showLeftBorder ? box.bottomLeft : '') +
+				box.bottom.repeat(contentWidth) +
+				(showRightBorder ? box.bottomRight : '')
 			: undefined;
 
-		if (showBottomBorder && dimBottomBorderColor) {
-			bottomBorder = chalk.dim(bottomBorder);
+		if (showBottomBorder && bottomBorder) {
+			// Apply foreground color
+			bottomBorder = colorize(bottomBorder, bottomBorderColor, 'foreground');
+			// Apply background color
+			bottomBorder = colorize(
+				bottomBorder,
+				bottomBorderBackgroundColor,
+				'background',
+			);
+			// Apply dim if needed
+			const shouldDimBottom = [dimBottomBorderColor, dimBottomBackground].some(
+				Boolean,
+			);
+			if (shouldDimBottom) {
+				bottomBorder = chalk.dim(bottomBorder);
+			}
 		}
 
 		const offsetY = showTopBorder ? 1 : 0;

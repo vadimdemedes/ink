@@ -274,6 +274,75 @@ export type Styles = {
 	readonly borderRightDimColor?: boolean;
 
 	/**
+	Change border background color. A shorthand for setting `borderTopBackgroundColor`, `borderRightBackgroundColor`, `borderBottomBackgroundColor`, and `borderLeftBackgroundColor`.
+	*/
+	readonly borderBackgroundColor?: LiteralUnion<ForegroundColorName, string>;
+
+	/**
+	Change top border background color. Accepts the same values as `backgroundColor` in `Text` component.
+	*/
+	readonly borderTopBackgroundColor?: LiteralUnion<ForegroundColorName, string>;
+
+	/**
+	Change bottom border background color. Accepts the same values as `backgroundColor` in `Text` component.
+	*/
+	readonly borderBottomBackgroundColor?: LiteralUnion<
+		ForegroundColorName,
+		string
+	>;
+
+	/**
+	Change left border background color. Accepts the same values as `backgroundColor` in `Text` component.
+	*/
+	readonly borderLeftBackgroundColor?: LiteralUnion<
+		ForegroundColorName,
+		string
+	>;
+
+	/**
+	Change right border background color. Accepts the same values as `backgroundColor` in `Text` component.
+	*/
+	readonly borderRightBackgroundColor?: LiteralUnion<
+		ForegroundColorName,
+		string
+	>;
+
+	/**
+	Dim the border background color. A shorthand for setting `borderTopBackgroundDimColor`, `borderBottomBackgroundDimColor`, `borderLeftBackgroundDimColor`, and `borderRightBackgroundDimColor`.
+
+	@default false
+	*/
+	readonly borderBackgroundDimColor?: boolean;
+
+	/**
+	Dim the top border background color.
+
+	@default false
+	*/
+	readonly borderTopBackgroundDimColor?: boolean;
+
+	/**
+	Dim the bottom border background color.
+
+	@default false
+	*/
+	readonly borderBottomBackgroundDimColor?: boolean;
+
+	/**
+	Dim the left border background color.
+
+	@default false
+	*/
+	readonly borderLeftBackgroundDimColor?: boolean;
+
+	/**
+	Dim the right border background color.
+
+	@default false
+	*/
+	readonly borderRightBackgroundDimColor?: boolean;
+
+	/**
 	Behavior for an element's overflow in both directions.
 	
 	@default 'visible'
