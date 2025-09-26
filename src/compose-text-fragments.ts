@@ -1,9 +1,7 @@
-import chalk from 'chalk';
-import colorize from './colorize.js';
-import {type Props as TextProps} from './components/Text.js';
+import {applyTextStyles, type TextStyleOptions} from './text-styles.js';
 
 export type InlineTextStyle = Pick<
-	TextProps,
+	TextStyleOptions,
 	| 'color'
 	| 'backgroundColor'
 	| 'bold'
@@ -56,37 +54,9 @@ export function composeTextFragments(fragments: TextFragment[]): string {
 				text = transform(text, index);
 			}
 
-			// Apply styles in the same order as the Text component
-			// Each style object is applied in sequence to match Text component behavior
+			// Apply styles using the same logic as Text component
 			for (const style of styles) {
-				// Apply in the same order as Text component transform function
-				if (style.color) {
-					text = colorize(text, style.color, 'foreground');
-				}
-
-				if (style.backgroundColor) {
-					text = colorize(text, style.backgroundColor, 'background');
-				}
-
-				if (style.bold) {
-					text = chalk.bold(text);
-				}
-
-				if (style.italic) {
-					text = chalk.italic(text);
-				}
-
-				if (style.underline) {
-					text = chalk.underline(text);
-				}
-
-				if (style.strikethrough) {
-					text = chalk.strikethrough(text);
-				}
-
-				if (style.inverse) {
-					text = chalk.inverse(text);
-				}
+				text = applyTextStyles(text, style);
 			}
 
 			return text;

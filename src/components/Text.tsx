@@ -1,7 +1,7 @@
 import React, {useContext, type ReactNode} from 'react';
-import chalk, {type ForegroundColorName} from 'chalk';
+import {type ForegroundColorName} from 'chalk';
 import {type LiteralUnion} from 'type-fest';
-import colorize from '../colorize.js';
+import {applyTextStyles} from '../text-styles.js';
 import {type Styles} from '../styles.js';
 import {accessibilityContext} from './AccessibilityContext.js';
 import {backgroundContext} from './BackgroundContext.js';
@@ -92,42 +92,20 @@ export default function Text({
 	}
 
 	const transform = (children: string): string => {
-		if (dimColor) {
-			children = chalk.dim(children);
-		}
-
-		if (color) {
-			children = colorize(children, color, 'foreground');
-		}
-
-		// Use explicit backgroundColor if provided, otherwise use inherited from parent Box
-		const effectiveBackgroundColor =
-			backgroundColor ?? inheritedBackgroundColor;
-		if (effectiveBackgroundColor) {
-			children = colorize(children, effectiveBackgroundColor, 'background');
-		}
-
-		if (bold) {
-			children = chalk.bold(children);
-		}
-
-		if (italic) {
-			children = chalk.italic(children);
-		}
-
-		if (underline) {
-			children = chalk.underline(children);
-		}
-
-		if (strikethrough) {
-			children = chalk.strikethrough(children);
-		}
-
-		if (inverse) {
-			children = chalk.inverse(children);
-		}
-
-		return children;
+		return applyTextStyles(
+			children,
+			{
+				color,
+				backgroundColor,
+				dimColor,
+				bold,
+				italic,
+				underline,
+				strikethrough,
+				inverse,
+			},
+			inheritedBackgroundColor,
+		);
 	};
 
 	if (isScreenReaderEnabled && ariaHidden) {
