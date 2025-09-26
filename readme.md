@@ -136,6 +136,7 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
   - [`<Spacer>`](#spacer)
   - [`<Static>`](#static)
   - [`<Transform>`](#transform)
+- [Text Fragment Composition API](#text-fragment-composition-api)
 - [Hooks](#hooks)
   - [`useInput`](#useinputinputhandler-options)
   - [`useApp`](#useapp)
@@ -1459,6 +1460,161 @@ Output of child components.
 Type: `number`
 
 The zero-indexed line number of the line that's currently being transformed.
+
+## Text Fragment Composition API
+
+The Text Fragment Composition API enables i18n packages and complex text formatting to work seamlessly with Ink's reconciler system. This API solves the fundamental problem of component nesting limitations in Ink.
+
+### Problem Solved
+
+Ink's reconciler cannot handle nested Text components, which makes it impossible for i18n libraries to provide rich, styled translations. This API provides a single-output solution that maintains Ink compatibility while enabling complex text styling.
+
+#### Before (Doesn't work in Ink)
+```tsx
+// This breaks Ink's reconciler
+<Text>
+  Welcome <Text color="green" bold>{user}</Text>! 
+  You have <Text color="yellow">{count}</Text> messages.
+</Text>
+```
+
+#### After (Works perfectly)
+```tsx
+// Single Text component with rich styling
+const fragments = [
+  'Welcome ',
+  { text: user, styles: [{ color: 'green', bold: true }] },
+  '! You have ',
+  { text: count.toString(), styles: [{ color: 'yellow' }] },
+  ' messages.'
+];
+
+<Text>{composeTextFragments(fragments)}</Text>
+```
+
+### Types
+
+#### `InlineTextStyle`
+```tsx
+type InlineTextStyle = {
+  color?: string;
+  backgroundColor?: string;  
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  strikethrough?: boolean;
+  inverse?: boolean;
+};
+```
+
+#### `TextFragment`
+```tsx
+type TextFragment = 
+  | string
+  | {
+      readonly text: string;
+      readonly styles?: readonly InlineTextStyle[];
+      readonly transform?: (text: string, index: number) => string;
+    };
+```
+
+### composeTextFragments(fragments)
+
+Composes an array of text fragments into a single styled string with ANSI escape codes.
+
+#### fragments
+
+Type: `TextFragment[]`
+
+Array of text fragments (strings or styled objects).
+
+```tsx
+import {composeTextFragments} from 'ink';
+
+const result = composeTextFragments([
+  'Hello ',
+  { 
+    text: 'World', 
+    styles: [{ color: 'green', bold: true }],
+    transform: (text) => text.toUpperCase()
+  },
+  '!'
+]);
+
+console.log(result);
+// Result: "Hello WORLD!" (with green bold styling on "WORLD")
+```
+
+### Basic Usage
+
+```tsx
+import {composeTextFragments} from 'ink';
+
+// Simple text composition
+const fragments = [
+  'Status: ',
+  { text: 'Online', styles: [{ color: 'green', bold: true }] }
+];
+
+const MyComponent = () => (
+  <Text>{composeTextFragments(fragments)}</Text>
+);
+```
+
+### Multiple Styles
+
+```tsx
+const fragments = [
+  { 
+    text: 'Important',
+    styles: [
+      { color: 'red' },
+      { bold: true },
+      { underline: true }
+    ]
+  }
+];
+```
+
+### Text Transformations
+
+```tsx
+const fragments = [
+  'User: ',
+  { 
+    text: 'john_doe',
+    styles: [{ color: 'cyan' }],
+    transform: (text) => `@${text.toUpperCase()}`
+  }
+];
+// Result: "User: @JOHN_DOE" (styled)
+```
+
+### I18n Integration
+
+```tsx
+// Example i18n component using composeTextFragments
+const I18nText = ({ i18nKey, variables = {} }) => {
+  const template = t(i18nKey); // Get translation
+  const fragments = parseTemplate(template, variables);
+  return <Text>{composeTextFragments(fragments)}</Text>;
+};
+
+// Usage
+<I18nText
+  i18nKey="welcome.message" // "Welcome {{name}}! You have {{count}} messages."
+  variables={{
+    name: {
+      value: 'Alice',
+      styles: [{ color: 'green', bold: true }]
+    },
+    count: {
+      value: 5,
+      styles: [{ color: 'yellow', bold: true }]
+    }
+  }}
+/>
+```
 
 ## Hooks
 

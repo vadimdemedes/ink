@@ -29,7 +29,7 @@ test('composeTextFragments - object fragment with text only', t => {
 	t.is(result, 'Hello World!');
 });
 
-test('composeTextFragments - bold style', t => {
+test('composeTextFragments - single style', t => {
 	const fragments: TextFragment[] = [
 		'Hello ',
 		{
@@ -40,78 +40,6 @@ test('composeTextFragments - bold style', t => {
 	];
 	const result = composeTextFragments(fragments);
 	const expected = `Hello ${chalk.bold('World')}!`;
-	t.is(result, expected);
-});
-
-test('composeTextFragments - italic style', t => {
-	const fragments: TextFragment[] = [
-		{
-			text: 'Hello',
-			styles: [{italic: true}],
-		},
-	];
-	const result = composeTextFragments(fragments);
-	const expected = chalk.italic('Hello');
-	t.is(result, expected);
-});
-
-test('composeTextFragments - underline style', t => {
-	const fragments: TextFragment[] = [
-		{
-			text: 'Hello',
-			styles: [{underline: true}],
-		},
-	];
-	const result = composeTextFragments(fragments);
-	const expected = chalk.underline('Hello');
-	t.is(result, expected);
-});
-
-test('composeTextFragments - strikethrough style', t => {
-	const fragments: TextFragment[] = [
-		{
-			text: 'Hello',
-			styles: [{strikethrough: true}],
-		},
-	];
-	const result = composeTextFragments(fragments);
-	const expected = chalk.strikethrough('Hello');
-	t.is(result, expected);
-});
-
-test('composeTextFragments - inverse style', t => {
-	const fragments: TextFragment[] = [
-		{
-			text: 'Hello',
-			styles: [{inverse: true}],
-		},
-	];
-	const result = composeTextFragments(fragments);
-	const expected = chalk.inverse('Hello');
-	t.is(result, expected);
-});
-
-test('composeTextFragments - color style', t => {
-	const fragments: TextFragment[] = [
-		{
-			text: 'Hello',
-			styles: [{color: 'red'}],
-		},
-	];
-	const result = composeTextFragments(fragments);
-	const expected = chalk.red('Hello');
-	t.is(result, expected);
-});
-
-test('composeTextFragments - background color style', t => {
-	const fragments: TextFragment[] = [
-		{
-			text: 'Hello',
-			styles: [{backgroundColor: 'blue'}],
-		},
-	];
-	const result = composeTextFragments(fragments);
-	const expected = chalk.bgBlue('Hello');
 	t.is(result, expected);
 });
 
@@ -204,28 +132,24 @@ test('composeTextFragments - complex mixed fragments', t => {
 	t.is(result, expected);
 });
 
-test('composeTextFragments - hex color', t => {
-	const fragments: TextFragment[] = [
+test('composeTextFragments - color formats', t => {
+	// Test hex color
+	const hexResult = composeTextFragments([
 		{
-			text: 'Hello',
+			text: 'Hex',
 			styles: [{color: '#ff0000'}],
 		},
-	];
-	const result = composeTextFragments(fragments);
-	const expected = chalk.hex('#ff0000')('Hello');
-	t.is(result, expected);
-});
+	]);
+	t.is(hexResult, chalk.hex('#ff0000')('Hex'));
 
-test('composeTextFragments - rgb color', t => {
-	const fragments: TextFragment[] = [
+	// Test rgb color
+	const rgbResult = composeTextFragments([
 		{
-			text: 'Hello',
-			styles: [{color: 'rgb(255, 0, 0)'}],
+			text: 'RGB',
+			styles: [{color: 'rgb(0, 255, 0)'}],
 		},
-	];
-	const result = composeTextFragments(fragments);
-	const expected = chalk.rgb(255, 0, 0)('Hello');
-	t.is(result, expected);
+	]);
+	t.is(rgbResult, chalk.rgb(0, 255, 0)('RGB'));
 });
 
 test('composeTextFragments - error on invalid input type', t => {

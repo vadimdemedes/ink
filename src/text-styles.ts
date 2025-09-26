@@ -2,9 +2,9 @@ import chalk from 'chalk';
 import colorize from './colorize.js';
 
 /**
- * Type for text styling options that can be applied to strings.
- * This is a subset of TextProps focused only on visual styling.
- */
+Type for text styling options that can be applied to strings.
+This is a subset of TextProps focused only on visual styling.
+*/
 export type TextStyleOptions = {
 	readonly color?: string;
 	readonly backgroundColor?: string;
@@ -17,15 +17,15 @@ export type TextStyleOptions = {
 };
 
 /**
- * Apply text styles to a string using the same logic as the Text component.
- * This function centralizes the text styling logic to ensure consistency
- * between the Text component and the composeTextFragments function.
- *
- * @param text - The text to style
- * @param options - The styling options to apply
- * @param inheritedBackgroundColor - Background color inherited from parent (for Text component compatibility)
- * @returns The styled text with ANSI escape codes
- */
+Apply text styles to a string using the same logic as the Text component.
+This function centralizes the text styling logic to ensure consistency
+between the Text component and the composeTextFragments function.
+
+@param text - The text to style
+@param options - The styling options to apply
+@param inheritedBackgroundColor - Background color inherited from parent (for Text component compatibility)
+@returns The styled text with ANSI escape codes
+*/
 export function applyTextStyles(
 	text: string,
 	options: TextStyleOptions,
