@@ -26,3 +26,5 @@ export {default as useFocusManager} from './hooks/use-focus-manager.js';
 export {default as useIsScreenReaderEnabled} from './hooks/use-is-screen-reader-enabled.js';
 export {default as measureElement} from './measure-element.js';
 export type {DOMElement} from './dom.js';
+export type {InlineTextStyle, TextFragment} from './compose-text-fragments.js';
+export {composeTextFragments} from './compose-text-fragments.js';
