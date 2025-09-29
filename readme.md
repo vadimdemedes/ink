@@ -1498,7 +1498,8 @@ const fragments = [
 ```tsx
 type InlineTextStyle = {
   color?: string;
-  backgroundColor?: string;  
+  backgroundColor?: string;
+  dimColor?: boolean;
   bold?: boolean;
   italic?: boolean;
   underline?: boolean;
