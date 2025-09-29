@@ -28,5 +28,3 @@ export {default as measureElement} from './measure-element.js';
 export type {DOMElement} from './dom.js';
 export type {InlineTextStyle, TextFragment} from './compose-text-fragments.js';
 export {composeTextFragments} from './compose-text-fragments.js';
-export type {TextStyleOptions} from './text-styles.js';
-export {applyTextStyles} from './text-styles.js';

@@ -4,7 +4,6 @@ import chalk from 'chalk';
 import {
 	composeTextFragments,
 	type TextFragment,
-	type InlineTextStyle,
 } from '../src/index.js';
 
 test('composeTextFragments - basic string composition', t => {
@@ -253,4 +252,72 @@ test('composeTextFragments - text content is preserved', t => {
 	const result = composeTextFragments(fragments);
 	const textContent = stripAnsi(result);
 	t.is(textContent, 'Hello World!');
+});
+
+// Tests for Text component parity as requested by sindresorhus
+test('composeTextFragments - parent background only', t => {
+	const fragments: TextFragment[] = [
+		{text: 'Hello', styles: [{}]}, // No explicit background
+	];
+	const parentBackground = 'blue';
+	const result = composeTextFragments(fragments, parentBackground);
+	const expected = chalk.bgBlue('Hello');
+	t.is(result, expected);
+});
+
+test('composeTextFragments - fragment inverse only', t => {
+	const fragments: TextFragment[] = [
+		{text: 'Hello', styles: [{inverse: true}]},
+	];
+	const result = composeTextFragments(fragments);
+	const expected = chalk.inverse('Hello');
+	t.is(result, expected);
+});
+
+test('composeTextFragments - parent background and fragment inverse combined', t => {
+	const fragments: TextFragment[] = [
+		{text: 'Hello', styles: [{inverse: true}]},
+	];
+	const parentBackground = 'blue';
+	const result = composeTextFragments(fragments, parentBackground);
+	const expected = chalk.inverse(chalk.bgBlue('Hello'));
+	t.is(result, expected);
+});
+
+test('composeTextFragments - dimColor support', t => {
+	const fragments: TextFragment[] = [
+		{text: 'Hello', styles: [{dimColor: true}]},
+	];
+	const result = composeTextFragments(fragments);
+	const expected = chalk.dim('Hello');
+	t.is(result, expected);
+});
+
+test('composeTextFragments - dimColor with color and background', t => {
+	const fragments: TextFragment[] = [
+		{
+			text: 'Hello',
+			styles: [{dimColor: true, color: 'red', backgroundColor: 'yellow'}],
+		},
+	];
+	const result = composeTextFragments(fragments);
+	const expected = chalk.bgYellow(chalk.red(chalk.dim('Hello')));
+	t.is(result, expected);
+});
+
+test('composeTextFragments - complex background inheritance with multiple fragments', t => {
+	const fragments: TextFragment[] = [
+		{text: 'Hello ', styles: [{color: 'green'}]},
+		{text: 'World', styles: [{inverse: true}]},
+		{text: '!', styles: [{backgroundColor: 'red'}]},
+	];
+	const parentBackground = 'blue';
+	const result = composeTextFragments(fragments, parentBackground);
+
+	const expected =
+		chalk.bgBlue(chalk.green('Hello ')) +
+		chalk.inverse(chalk.bgBlue('World')) +
+		chalk.bgRed('!');
+
+	t.is(result, expected);
 });
