@@ -1,36 +1,12 @@
 {
   "header": {
-    "title": "文本片段组合 API - 样式展示"
-  },
-  "sections": {
-    "english": "英文 - 所有 InlineTextStyle 属性:",
-    "chinese": "中文 - 所有 InlineTextStyle 属性:"
-  },
-  "styles": {
-    "colors": {
-      "red": "{{text:红色|color:red}}",
-      "green": "{{text:绿色|color:green}}",
-      "blue": "{{text:蓝色|color:blue}}"
-    },
-    "backgrounds": {
-      "red": "{{text:红色背景|backgroundColor:red}}",
-      "green": "{{text:绿色背景|backgroundColor:green}}",
-      "blue": "{{text:蓝色背景|backgroundColor:blue}}"
-    },
-    "decorations": {
-      "bold": "{{text:粗体|bold:true}}",
-      "italic": "{{text:斜体|italic:true}}",
-      "underline": "{{text:下划线|underline:true}}",
-      "strikethrough": "{{text:删除线|strikethrough:true}}",
-      "dim": "{{text:暗淡|dimColor:true}}",
-      "inverse": "{{text:反色|inverse:true}}"
-    },
-    "combinations": {
-      "boldRed": "{{text:粗体+红色|bold:true,color:red}}",
-      "allStyles": "{{text:所有样式|bold:true,italic:true,underline:true,color:magenta,backgroundColor:white}}"
+    "title": {
+      "prefix": "文本片段组合 ",
+      "api": "API",
+      "suffix": " - 样式展示"
     }
   },
-  "footer": {
-    "message": "使用 composeTextFragments() 生成 - 完美支持国际化！"
+  "controls": {
+    "message": "按 [L] 切换语言 | [Ctrl+C] 退出"
   }
 }

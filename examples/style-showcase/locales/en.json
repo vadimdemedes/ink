@@ -1,36 +1,12 @@
 {
   "header": {
-    "title": "Text Fragment Composition API - Style Showcase"
-  },
-  "sections": {
-    "english": "English - All InlineTextStyle Properties:",
-    "chinese": "中文 - 所有 InlineTextStyle 属性:"
-  },
-  "styles": {
-    "colors": {
-      "red": "{{text:Red|color:red}}",
-      "green": "{{text:Green|color:green}}",
-      "blue": "{{text:Blue|color:blue}}"
-    },
-    "backgrounds": {
-      "red": "{{text:BgRed|backgroundColor:red}}",
-      "green": "{{text:BgGreen|backgroundColor:green}}",
-      "blue": "{{text:BgBlue|backgroundColor:blue}}"
-    },
-    "decorations": {
-      "bold": "{{text:Bold|bold:true}}",
-      "italic": "{{text:Italic|italic:true}}",
-      "underline": "{{text:Underline|underline:true}}",
-      "strikethrough": "{{text:Strike|strikethrough:true}}",
-      "dim": "{{text:Dim|dimColor:true}}",
-      "inverse": "{{text:Inverse|inverse:true}}"
-    },
-    "combinations": {
-      "boldRed": "{{text:Bold+Red|bold:true,color:red}}",
-      "allStyles": "{{text:All Styles|bold:true,italic:true,underline:true,color:magenta,backgroundColor:white}}"
+    "title": {
+      "prefix": "Text Fragment Composition ",
+      "api": "API",
+      "suffix": " - Style Showcase"
     }
   },
-  "footer": {
-    "message": "Generated using composeTextFragments() - Perfect for i18n!"
+  "controls": {
+    "message": "Press [L] to switch language | [Ctrl+C] to exit"
   }
 }
