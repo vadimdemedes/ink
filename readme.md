@@ -1557,10 +1557,10 @@ console.log(result);
 **IMPORTANT**: Use `composeTextFragments` output with unstyled Text wrapper only.
 
 ```tsx
-// ✅ Correct - unstyled Text wrapper
+// Correct - unstyled Text wrapper
 <Text>{composeTextFragments(fragments)}</Text>
 
-// ❌ Avoid - additional styles will stack on every fragment
+// Avoid - additional styles will stack on every fragment
 <Text color="red">{composeTextFragments(fragments)}</Text>
 ```
 
