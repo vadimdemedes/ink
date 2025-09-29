@@ -1519,7 +1519,7 @@ type TextFragment =
     };
 ```
 
-### composeTextFragments(fragments)
+### composeTextFragments(fragments, inheritedBackgroundColor?)
 
 Composes an array of text fragments into a single styled string with ANSI escape codes.
 
@@ -1528,6 +1528,12 @@ Composes an array of text fragments into a single styled string with ANSI escape
 Type: `TextFragment[]`
 
 Array of text fragments (strings or styled objects).
+
+#### inheritedBackgroundColor
+
+Type: `string` (optional)
+
+Background color inherited from parent context. Used for proper background and inverse styling behavior.
 
 ```tsx
 import {composeTextFragments} from 'ink';
@@ -1544,6 +1550,18 @@ const result = composeTextFragments([
 
 console.log(result);
 // Result: "Hello WORLD!" (with green bold styling on "WORLD")
+```
+
+### Usage Guidelines
+
+**IMPORTANT**: Use `composeTextFragments` output with unstyled Text wrapper only.
+
+```tsx
+// ✅ Correct - unstyled Text wrapper
+<Text>{composeTextFragments(fragments)}</Text>
+
+// ❌ Avoid - additional styles will stack on every fragment
+<Text color="red">{composeTextFragments(fragments)}</Text>
 ```
 
 ### Basic Usage
@@ -1573,6 +1591,11 @@ const fragments = [
       { bold: true },
       { underline: true }
     ]
+  },
+  ' ',
+  {
+    text: 'Note',
+    styles: [{ dimColor: true, italic: true }]
   }
 ];
 ```
