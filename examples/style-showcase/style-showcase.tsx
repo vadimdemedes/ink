@@ -1,6 +1,5 @@
 import React from 'react';
-import {render, Text, Box} from '../../src/index.js';
-import {composeTextFragments} from '../../src/index.js';
+import {render, Text, Box, composeTextFragments} from '../../src/index.js';
 
 function StyleShowcase() {
 	// English version
@@ -31,13 +30,18 @@ function StyleShowcase() {
 		'\n',
 		{text: 'Bold+Red', styles: [{bold: true, color: 'red'}]},
 		' | ',
-		{text: 'All Styles', styles: [{
-			bold: true,
-			italic: true,
-			underline: true,
-			color: 'magenta',
-			backgroundColor: 'white'
-		}]},
+		{
+			text: 'All Styles',
+			styles: [
+				{
+					bold: true,
+					italic: true,
+					underline: true,
+					color: 'magenta',
+					backgroundColor: 'white',
+				},
+			],
+		},
 	];
 
 	// Chinese version
@@ -68,13 +72,18 @@ function StyleShowcase() {
 		'\n',
 		{text: '粗体+红色', styles: [{bold: true, color: 'red'}]},
 		' | ',
-		{text: '所有样式', styles: [{
-			bold: true,
-			italic: true,
-			underline: true,
-			color: 'magenta',
-			backgroundColor: 'white'
-		}]},
+		{
+			text: '所有样式',
+			styles: [
+				{
+					bold: true,
+					italic: true,
+					underline: true,
+					color: 'magenta',
+					backgroundColor: 'white',
+				},
+			],
+		},
 	];
 
 	const englishText = composeTextFragments(englishFragments);

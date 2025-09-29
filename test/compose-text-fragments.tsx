@@ -1,10 +1,7 @@
 import test from 'ava';
 import stripAnsi from 'strip-ansi';
 import chalk from 'chalk';
-import {
-	composeTextFragments,
-	type TextFragment,
-} from '../src/index.js';
+import {composeTextFragments, type TextFragment} from '../src/index.js';
 
 test('composeTextFragments - basic string composition', t => {
 	const fragments: TextFragment[] = ['Hello ', 'World', '!'];
