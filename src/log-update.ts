@@ -10,7 +10,7 @@ export type LogUpdate = {
 };
 
 const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
-	let previousLineCount = 0;
+	let previousLines: string[] = [];
 	let previousOutput = '';
 	let hasHiddenCursor = false;
 
@@ -25,20 +25,63 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 			return;
 		}
 
+		const previousLineCount = previousLines.length;
+		const lines = output.split('\n');
+		const lineCount = lines.length;
+
+		if (lineCount === 0 || previousLineCount === 0) {
+			stream.write(ansiEscapes.eraseLines(previousLineCount) + output);
+			previousOutput = output;
+			previousLines = lines;
+			return;
+		}
+
+		// We aggregate all chunks for incremental rendering into a buffer, and then write them to stdout at the end.
+		const buffer: string[] = [];
+		const commitBuffer = () => {
+			stream.write(buffer.join(''));
+		};
+
+		// Clear extra lines if the current content's line count is lower than the previous.
+		if (lineCount < previousLineCount) {
+			buffer.push(
+				ansiEscapes.eraseLines(previousLineCount - lineCount + 1),
+				ansiEscapes.cursorUp(lineCount),
+			);
+		} else {
+			buffer.push(ansiEscapes.cursorUp(previousLineCount));
+		}
+
+		for (let i = 0; i < lineCount; i++) {
+			// We do not write lines if the contents are the same. This prevents flickering during renders.
+			if (lines[i] === previousLines[i]) {
+				buffer.push(ansiEscapes.cursorNextLine);
+				continue;
+			}
+
+			if (i === lineCount - 1) {
+				buffer.push(ansiEscapes.eraseLine);
+				break;
+			}
+
+			buffer.push(ansiEscapes.eraseLine + (lines[i] ?? '') + '\n');
+		}
+
+		commitBuffer();
+
 		previousOutput = output;
-		stream.write(ansiEscapes.eraseLines(previousLineCount) + output);
-		previousLineCount = output.split('\n').length;
+		previousLines = lines;
 	};
 
 	render.clear = () => {
-		stream.write(ansiEscapes.eraseLines(previousLineCount));
+		stream.write(ansiEscapes.eraseLines(previousLines.length));
 		previousOutput = '';
-		previousLineCount = 0;
+		previousLines = [];
 	};
 
 	render.done = () => {
 		previousOutput = '';
-		previousLineCount = 0;
+		previousLines = [];
 
 		if (!showCursor) {
 			cliCursor.show();
@@ -49,7 +92,7 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 	render.sync = (str: string) => {
 		const output = str + '\n';
 		previousOutput = output;
-		previousLineCount = output.split('\n').length;
+		previousLines = output.split('\n');
 	};
 
 	return render;
