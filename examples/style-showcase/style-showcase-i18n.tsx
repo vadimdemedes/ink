@@ -1,5 +1,12 @@
 import React, {useState, useEffect} from 'react';
-import {render, Text, Box, useInput, composeTextFragments} from '../../src/index.js';
+import {
+	render,
+	Text,
+	Box,
+	useInput,
+	composeTextFragments,
+} from '../../src/index.js';
+import {renderStyledText} from './renderStyledText.js';
 
 type TranslationData = {
 	header: {
@@ -8,6 +15,12 @@ type TranslationData = {
 			api: string;
 			suffix: string;
 		};
+	};
+	description: {
+		message: string;
+	};
+	terms: {
+		fragmentedSentence: string;
 	};
 	controls: {
 		message: string;
@@ -26,13 +39,15 @@ async function loadTranslations(locale: string): Promise<TranslationData> {
 
 function StyleShowcaseI18n() {
 	const [locale, setLocale] = useState<'en' | 'zh'>('en');
-	const [translations, setTranslations] = useState<TranslationData | null>(null);
+	const [translations, setTranslations] = useState<TranslationData | null>(
+		null,
+	);
 
 	useEffect(() => {
 		loadTranslations(locale).then(setTranslations);
 	}, [locale]);
 
-	useInput((input) => {
+	useInput(input => {
 		if (input === 'l' || input === 'L') {
 			setLocale(prev => (prev === 'en' ? 'zh' : 'en'));
 		}
@@ -45,23 +60,39 @@ function StyleShowcaseI18n() {
 	return (
 		<Box flexDirection="column" padding={1}>
 			<Box borderStyle="round" borderColor="cyan" padding={1}>
-				<Text bold>
-					{composeTextFragments([
-						{text: translations.header.title.prefix, styles: [{color: 'red'}]},
-						{text: translations.header.title.api, styles: [{color: 'yellow'}, {underline: true}]},
-						{text: translations.header.title.suffix, styles: [{color: 'red'}]}
-					])}
-				</Text>
+				<Box flexDirection="column" alignItems="center">
+					<Text bold>
+						{composeTextFragments([
+							{
+								text: translations.header.title.prefix,
+								styles: [{color: 'red'}],
+							},
+							{
+								text: translations.header.title.api,
+								styles: [{color: 'yellow'}, {underline: true}],
+							},
+							{
+								text: translations.header.title.suffix,
+								styles: [{color: 'red'}],
+							},
+						])}
+					</Text>
+					{renderStyledText(translations.description.message, {
+						fragmentedSentence: (
+							<Text color="yellow" underline>
+								{translations.terms.fragmentedSentence}
+							</Text>
+						),
+					})}
+				</Box>
 			</Box>
 
 			<Box height={1} />
-			
-			<Box justifyContent="center">
-				<Text dimColor>
-					{translations.controls.message}
-				</Text>
-			</Box>
 
+			{/* Controls */}
+			<Box justifyContent="center">
+				<Text dimColor>{translations.controls.message}</Text>
+			</Box>
 		</Box>
 	);
 }

@@ -1,12 +1,18 @@
 {
-  "header": {
-    "title": {
-      "prefix": "Text Fragment Composition ",
-      "api": "API",
-      "suffix": " - Style Showcase"
-    }
-  },
-  "controls": {
-    "message": "Press [L] to switch language | [Ctrl+C] to exit"
-  }
+	"header": {
+		"title": {
+			"prefix": "Text Fragment Composition ",
+			"api": "API",
+			"suffix": " - Style Showcase"
+		}
+	},
+	"description": {
+		"message": "Demonstrates {fragmentedSentence} translation."
+	},
+	"terms": {
+		"fragmentedSentence": "fragmented sentence"
+	},
+	"controls": {
+		"message": "Press [L] to switch language | [Ctrl+C] to exit"
+	}
 }

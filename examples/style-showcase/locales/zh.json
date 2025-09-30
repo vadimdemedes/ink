@@ -1,12 +1,18 @@
 {
-  "header": {
-    "title": {
-      "prefix": "文本片段组合 ",
-      "api": "API",
-      "suffix": " - 样式展示"
-    }
-  },
-  "controls": {
-    "message": "按 [L] 切换语言 | [Ctrl+C] 退出"
-  }
+	"header": {
+		"title": {
+			"prefix": "文本片段组合 ",
+			"api": "API",
+			"suffix": " - 样式展示"
+		}
+	},
+	"description": {
+		"message": "演示{fragmentedSentence}翻译。"
+	},
+	"terms": {
+		"fragmentedSentence": "碎片化语句"
+	},
+	"controls": {
+		"message": "按 [L] 切换语言 | [Ctrl+C] 退出"
+	}
 }
