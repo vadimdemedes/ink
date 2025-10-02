@@ -254,7 +254,7 @@ test('composeTextFragments - text content is preserved', t => {
 // Tests for Text component parity as requested by sindresorhus
 test('composeTextFragments - parent background only', t => {
 	const fragments: TextFragment[] = [
-		{text: 'Hello', styles: [{}]}, // No explicit background
+		{text: 'Hello'}, // No explicit styles needed
 	];
 	const parentBackground = 'blue';
 	const result = composeTextFragments(fragments, parentBackground);

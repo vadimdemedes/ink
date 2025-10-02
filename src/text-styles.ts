@@ -1,4 +1,5 @@
-import chalk from 'chalk';
+import chalk, {type ForegroundColorName} from 'chalk';
+import {type LiteralUnion} from 'type-fest';
 import colorize from './colorize.js';
 
 /**
@@ -6,8 +7,8 @@ Type for text styling options that can be applied to strings.
 This is a subset of TextProps focused only on visual styling.
 */
 export type TextStyleOptions = {
-	readonly color?: string;
-	readonly backgroundColor?: string;
+	readonly color?: LiteralUnion<ForegroundColorName, string>;
+	readonly backgroundColor?: LiteralUnion<ForegroundColorName, string>;
 	readonly dimColor?: boolean;
 	readonly bold?: boolean;
 	readonly italic?: boolean;

@@ -84,8 +84,14 @@ export function composeTextFragments(
 			}
 
 			// Apply styles using the same logic as Text component
-			for (const style of styles) {
-				text = applyTextStyles(text, style, inheritedBackgroundColor);
+			// If there are styles, apply them
+			if (styles.length > 0) {
+				for (const style of styles) {
+					text = applyTextStyles(text, style, inheritedBackgroundColor);
+				}
+			} else if (inheritedBackgroundColor) {
+				// If no styles but inherited background exists, apply it
+				text = applyTextStyles(text, {}, inheritedBackgroundColor);
 			}
 
 			return text;
