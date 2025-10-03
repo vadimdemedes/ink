@@ -1,34 +1,24 @@
-/**
- * @license
- * Copyright 2025 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React from 'react';
 import {Text} from '../../src/index.js';
 
-/**
- * Renders text with styled interpolations for i18n.
- *
- * This implements the "Semantic Interpolation Pattern" for React Ink environments:
- * - Provides complete semantic context for translators
- * - Avoids fragmented translation keys
- * - Supports complex styling in terminal environments
- * - Compatible with React Ink's Text component limitations
- *
- * @param text - The translated text with {key} placeholders
- * @param styleMap - Map of keys to their styled React components
- * @param defaultColor - Default text color for the container
- * @returns Styled text component or throws error on mismatch
- * @throws Error when placeholders and styleMap don't match
- *
- * @example
- * // Translation: "Shell mode: Execute commands via {symbol} (e.g., {example})"
- * renderStyledText(t('shellMode'), {
- *   symbol: <Text bold color="purple">!</Text>,
- *   example: <Text bold color="purple">!npm start</Text>
- * }, 'white')
- */
+// Render styled interpolations for i18n strings.
+//
+// Semantic Interpolation Pattern for Ink:
+// - Gives translators full context
+// - Avoids fragmented keys
+// - Keeps complex terminal styling working
+// - Respects the <Text> nesting limits
+//
+// `text` includes `{key}` placeholders.
+// `styleMap` maps those keys to styled React nodes.
+// `defaultColor` sets the wrapper's default color.
+// Throws if placeholders and styleMap entries don't align.
+//
+// Example:
+// renderStyledText(t('shellMode'), {
+//   symbol: <Text bold color="purple">!</Text>,
+//   example: <Text bold color="purple">!npm start</Text>
+// }, 'white');
 export function renderStyledText(
 	text: string,
 	styleMap: Record<string, React.ReactNode>,
