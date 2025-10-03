@@ -20,31 +20,18 @@ export type TextFragment =
 			readonly transform?: (text: string, index: number) => string;
 	  };
 
-/**
- * Compose text fragments into a single styled string for use with Ink's Text component.
- *
- * This function enables i18n packages to generate pre-styled text that works with
- * Ink's reconciler constraints.
- *
- * @param fragments - Array of text fragments (strings or styled objects)
- * @param inheritedBackgroundColor - Background color inherited from parent context
- * @returns Composed string with ANSI escape codes for styling
- *
- * @example
- * ```tsx
- * // Basic usage
- * const result = composeTextFragments([
- *   "Hello ",
- *   { text: "world", styles: [{ bold: true, color: 'green' }] }
- * ]);
- *
- * // IMPORTANT: Use with unstyled Text wrapper only
- * return <Text>{result}</Text>; // Correct
- *
- * // AVOID: Don't apply additional styles to the wrapper
- * return <Text color="red">{result}</Text>; // Will stack styles on fragments
- * ```
- */
+// Compose text fragments into a single styled string for Ink's <Text> component.
+// Keeps i18n helpers compatible with the reconciler's nested <Text> constraint.
+//
+// fragments: strings or fragment objects to compose.
+// inheritedBackgroundColor: optional parent background to honor inverse/background styles.
+//
+// Example:
+// const output = composeTextFragments([
+//   'Hello ',
+//   {text: 'world', styles: [{bold: true, color: 'green'}]},
+// ]);
+// <Text>{output}</Text>; // wrapper should stay unstyled to avoid stacking.
 export function composeTextFragments(
 	fragments: TextFragment[],
 	inheritedBackgroundColor?: string,
