@@ -1,1 +1,1 @@
-import './style-showcase.js';
+import './style-showcase-i18n.js';

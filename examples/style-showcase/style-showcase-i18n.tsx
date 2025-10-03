@@ -3,7 +3,7 @@ import {
 	render,
 	Text,
 	Box,
-	useInput,
+	useApp,
 	composeTextFragments,
 } from '../../src/index.js';
 import {renderStyledText} from './render-styled-text.js';
@@ -22,19 +22,18 @@ type TranslationData = {
 	terms: {
 		fragmentedSentence: string;
 	};
-	controls: {
-		message: string;
-	};
 };
 
 async function loadTranslations(locale: string): Promise<TranslationData> {
 	try {
-		const {default: translations} = (await import(
-			`./locales/${locale}.json`
-		)) as {default: TranslationData};
+		const {default: translations} = (await import(`./locales/${locale}.json`, {
+			with: {type: 'json'},
+		})) as {default: TranslationData};
 		return translations;
 	} catch {
-		const {default: translations} = (await import('./locales/en.json')) as {
+		const {default: translations} = (await import('./locales/en.json', {
+			with: {type: 'json'},
+		})) as {
 			default: TranslationData;
 		};
 		return translations;
@@ -46,6 +45,7 @@ function StyleShowcaseI18n() {
 	const [translations, setTranslations] = useState<TranslationData | undefined>(
 		undefined,
 	);
+	const {exit} = useApp();
 
 	useEffect(() => {
 		const loadData = async () => {
@@ -56,11 +56,27 @@ function StyleShowcaseI18n() {
 		void loadData();
 	}, [locale]);
 
-	useInput(input => {
-		if (input === 'l' || input === 'L') {
+	// Auto-switch language every 1.5 seconds
+	useEffect(() => {
+		const interval = setInterval(() => {
 			setLocale(previous => (previous === 'en' ? 'zh' : 'en'));
-		}
-	});
+		}, 1500);
+
+		return () => {
+			clearInterval(interval);
+		};
+	}, []);
+
+	// Auto-exit after 4 seconds
+	useEffect(() => {
+		const timeout = setTimeout(() => {
+			exit();
+		}, 4000);
+
+		return () => {
+			clearTimeout(timeout);
+		};
+	}, [exit]);
 
 	if (!translations) {
 		return <Text>Loading translations...</Text>;
@@ -69,7 +85,8 @@ function StyleShowcaseI18n() {
 	return (
 		<Box flexDirection="column" padding={1}>
 			<Box borderStyle="round" borderColor="cyan" padding={1}>
-				<Box flexDirection="column" alignItems="center">
+				<Box flexDirection="column" alignItems="center" gap={1}>
+					{/* Example 1: composeTextFragments for i18n */}
 					<Text bold>
 						{composeTextFragments([
 							{
@@ -86,6 +103,8 @@ function StyleShowcaseI18n() {
 							},
 						])}
 					</Text>
+
+					{/* Example 2: renderStyledText for i18n */}
 					{renderStyledText(translations.description.message, {
 						fragmentedSentence: (
 							<Text underline color="yellow">
@@ -93,14 +112,10 @@ function StyleShowcaseI18n() {
 							</Text>
 						),
 					})}
+
+					{/* Language indicator */}
+					<Text dimColor>Language: {locale === 'en' ? 'English' : '中文'}</Text>
 				</Box>
-			</Box>
-
-			<Box height={1} />
-
-			{/* Controls */}
-			<Box justifyContent="center">
-				<Text dimColor>{translations.controls.message}</Text>
 			</Box>
 		</Box>
 	);
