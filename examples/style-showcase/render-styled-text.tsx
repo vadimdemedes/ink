@@ -72,17 +72,20 @@ export function renderStyledText(
 	return (
 		<Text color={defaultColor}>
 			{parts
+				// eslint-disable-next-line @typescript-eslint/promise-function-async
 				.map((part, _index) => {
 					const match = /^{([^}]+)}$/.exec(part);
 					if (match) {
 						const key = match[1];
-						return styleMap[key]; // Now guaranteed to exist due to validation above
+						return styleMap[key] as React.ReactNode; // Now guaranteed to exist due to validation above
 					}
 
 					return part;
 				})
 				.map((element, index) => (
-					<React.Fragment key={`fragment-${index}`}>{element}</React.Fragment>
+					<React.Fragment key={`fragment-${String(index)}`}>
+						{element}
+					</React.Fragment>
 				))}
 		</Text>
 	);

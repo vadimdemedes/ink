@@ -6,7 +6,7 @@ import {
 	useInput,
 	composeTextFragments,
 } from '../../src/index.js';
-import {renderStyledText} from './renderStyledText.js';
+import {renderStyledText} from './render-styled-text.js';
 
 type TranslationData = {
 	header: {
@@ -29,27 +29,36 @@ type TranslationData = {
 
 async function loadTranslations(locale: string): Promise<TranslationData> {
 	try {
-		const {default: translations} = await import(`./locales/${locale}.json`);
+		const {default: translations} = (await import(
+			`./locales/${locale}.json`
+		)) as {default: TranslationData};
 		return translations;
 	} catch {
-		const {default: translations} = await import('./locales/en.json');
+		const {default: translations} = (await import('./locales/en.json')) as {
+			default: TranslationData;
+		};
 		return translations;
 	}
 }
 
 function StyleShowcaseI18n() {
 	const [locale, setLocale] = useState<'en' | 'zh'>('en');
-	const [translations, setTranslations] = useState<TranslationData | null>(
-		null,
+	const [translations, setTranslations] = useState<TranslationData | undefined>(
+		undefined,
 	);
 
 	useEffect(() => {
-		loadTranslations(locale).then(setTranslations);
+		const loadData = async () => {
+			const result = await loadTranslations(locale);
+			setTranslations(result);
+		};
+
+		void loadData();
 	}, [locale]);
 
 	useInput(input => {
 		if (input === 'l' || input === 'L') {
-			setLocale(prev => (prev === 'en' ? 'zh' : 'en'));
+			setLocale(previous => (previous === 'en' ? 'zh' : 'en'));
 		}
 	});
 
@@ -79,7 +88,7 @@ function StyleShowcaseI18n() {
 					</Text>
 					{renderStyledText(translations.description.message, {
 						fragmentedSentence: (
-							<Text color="yellow" underline>
+							<Text underline color="yellow">
 								{translations.terms.fragmentedSentence}
 							</Text>
 						),
