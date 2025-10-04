@@ -2045,6 +2045,28 @@ This controls how frequently the UI can update to prevent excessive re-rendering
 Higher values allow more frequent updates but may impact performance.
 Setting it to a lower value may be useful for components that update very frequently, to reduce CPU usage.
 
+###### splitRapidInput
+
+Type: `boolean`\
+Default: `false`
+
+When enabled, Ink will parse stdin input chunks into individual keypresses and process each separately.
+This is useful for automation and testing scenarios where multiple keypresses may arrive in the same event loop tick.
+
+By default, when multiple keypresses arrive rapidly (e.g., from automated testing tools or LLM-controlled interfaces), Ink processes the entire chunk as a single input event, which can cause subsequent keypresses to be ignored.
+Setting `splitRapidInput: true` ensures each keypress is processed individually.
+
+**Note:** This option correctly handles ANSI escape sequences (arrow keys, function keys, etc.) as atomic units.
+
+```jsx
+import {render} from 'ink';
+
+// Enable per-keypress processing for automation/testing
+render(<App />, {
+	splitRapidInput: true
+});
+```
+
 #### Instance
 
 This is the object that `render()` returns.

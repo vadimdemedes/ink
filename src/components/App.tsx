@@ -13,6 +13,64 @@ const tab = '\t';
 const shiftTab = '\u001B[Z';
 const escape = '\u001B';
 
+/**
+ * Parse a chunk of input into individual keypresses.
+ * Handles ANSI escape sequences (arrow keys, function keys, etc.) as single units.
+ *
+ * @param chunk - The input chunk to parse
+ * @returns Array of individual keypresses
+ */
+const parseKeypresses = (chunk: string): string[] => {
+	const keypresses: string[] = [];
+	let i = 0;
+
+	while (i < chunk.length) {
+		if (chunk[i] === '\x1b') {
+			// Escape sequence
+			if (i + 1 < chunk.length && chunk[i + 1] === '[') {
+				// CSI (Control Sequence Introducer) sequence
+				// Format: ESC [ <parameters> <final byte>
+				// Read until we find a letter (a-z, A-Z) or ~
+				let j = i + 2;
+				while (j < chunk.length && !/[a-zA-Z~]/.test(chunk[j]!)) {
+					j++;
+				}
+
+				if (j < chunk.length) {
+					// Found complete sequence
+					keypresses.push(chunk.substring(i, j + 1));
+					i = j + 1;
+				} else {
+					// Incomplete sequence - shouldn't happen but handle gracefully
+					keypresses.push(chunk.substring(i));
+					i = chunk.length;
+				}
+			} else if (i + 1 < chunk.length && chunk[i + 1] === 'O') {
+				// SS3 (Single Shift 3) sequence - typically function keys
+				// Format: ESC O <character>
+				if (i + 2 < chunk.length) {
+					keypresses.push(chunk.substring(i, i + 3));
+					i = i + 3;
+				} else {
+					// Incomplete sequence
+					keypresses.push(chunk.substring(i));
+					i = chunk.length;
+				}
+			} else {
+				// Just ESC by itself
+				keypresses.push('\x1b');
+				i++;
+			}
+		} else {
+			// Regular character
+			keypresses.push(chunk[i]!);
+			i++;
+		}
+	}
+
+	return keypresses;
+};
+
 type Props = {
 	readonly children: ReactNode;
 	readonly stdin: NodeJS.ReadStream;
@@ -21,6 +79,7 @@ type Props = {
 	readonly writeToStdout: (data: string) => void;
 	readonly writeToStderr: (data: string) => void;
 	readonly exitOnCtrlC: boolean;
+	readonly splitRapidInput?: boolean;
 	readonly onExit: (error?: Error) => void;
 };
 
@@ -184,8 +243,21 @@ export default class App extends PureComponent<Props, State> {
 		let chunk;
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		while ((chunk = this.props.stdin.read() as string | null) !== null) {
-			this.handleInput(chunk);
-			this.internal_eventEmitter.emit('input', chunk);
+			if (this.props.splitRapidInput) {
+				// Split chunk into individual keypresses and emit each separately
+				// This is useful for automation/testing where multiple keys arrive
+				// in the same event loop tick
+				const keypresses = parseKeypresses(chunk);
+				for (const keypress of keypresses) {
+					this.handleInput(keypress);
+					this.internal_eventEmitter.emit('input', keypress);
+				}
+			} else {
+				// Default behavior - process entire chunk as single input
+				// This preserves existing behavior for backward compatibility
+				this.handleInput(chunk);
+				this.internal_eventEmitter.emit('input', chunk);
+			}
 		}
 	};
 

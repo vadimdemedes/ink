@@ -30,6 +30,17 @@ export type Options = {
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
+	/**
+	 * When enabled, Ink will parse stdin input chunks into individual keypresses
+	 * and process each separately. This is useful for automation and testing scenarios
+	 * where multiple keypresses may arrive in the same event loop tick.
+	 *
+	 * By default, when multiple keypresses arrive rapidly, Ink processes the entire
+	 * chunk as a single input event, which can cause subsequent keypresses to be ignored.
+	 *
+	 * @default false
+	 */
+	splitRapidInput?: boolean;
 };
 
 export default class Ink {
@@ -273,6 +284,7 @@ export default class Ink {
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
+					splitRapidInput={this.options.splitRapidInput}
 					onExit={this.unmount}
 				>
 					{node}
