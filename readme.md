@@ -2298,6 +2298,7 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-spawn](https://github.com/kraenhansen/ink-spawn) - Spawn child processes.
 - [ink-titled-box](https://github.com/mishieck/ink-titled-box) - Box with a title.
 - [ink-chart](https://github.com/pppp606/ink-chart) - Sparkline and bar chart.
+- [ink-picture](https://github.com/endernoke/ink-picture) - More advanced and modern image component with Ink 6 support.
 
 ## Useful Hooks
 
