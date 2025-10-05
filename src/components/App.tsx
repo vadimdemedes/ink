@@ -25,7 +25,7 @@ const parseKeypresses = (chunk: string): string[] => {
 	let i = 0;
 
 	while (i < chunk.length) {
-		if (chunk[i] === '\x1b') {
+		if (chunk[i] === '\u001B') {
 			// Escape sequence
 			if (i + 1 < chunk.length && chunk[i + 1] === '[') {
 				// CSI (Control Sequence Introducer) sequence
@@ -38,27 +38,27 @@ const parseKeypresses = (chunk: string): string[] => {
 
 				if (j < chunk.length) {
 					// Found complete sequence
-					keypresses.push(chunk.substring(i, j + 1));
+					keypresses.push(chunk.slice(i, j + 1));
 					i = j + 1;
 				} else {
 					// Incomplete sequence - shouldn't happen but handle gracefully
-					keypresses.push(chunk.substring(i));
+					keypresses.push(chunk.slice(i));
 					i = chunk.length;
 				}
 			} else if (i + 1 < chunk.length && chunk[i + 1] === 'O') {
 				// SS3 (Single Shift 3) sequence - typically function keys
 				// Format: ESC O <character>
 				if (i + 2 < chunk.length) {
-					keypresses.push(chunk.substring(i, i + 3));
-					i = i + 3;
+					keypresses.push(chunk.slice(i, i + 3));
+					i += 3;
 				} else {
 					// Incomplete sequence
-					keypresses.push(chunk.substring(i));
+					keypresses.push(chunk.slice(i));
 					i = chunk.length;
 				}
 			} else {
 				// Just ESC by itself
-				keypresses.push('\x1b');
+				keypresses.push('\u001B');
 				i++;
 			}
 		} else {
