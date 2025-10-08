@@ -21,54 +21,63 @@ const escape = '\u001B';
  * @returns Array of individual keypresses
  */
 const parseKeypresses = (chunk: string): string[] => {
-	const keypresses: string[] = [];
+	const parts: string[] = [];
 	let i = 0;
+	let text = '';
+	const csiFinalByte = /[\u0040-\u007E]/;
+
+	const readEscapeSequence = (start: number): number => {
+		if (start + 1 >= chunk.length) {
+			return start + 1;
+		}
+
+		const next = chunk[start + 1]!;
+
+		if (next === '[') {
+			let j = start + 2;
+			while (j < chunk.length && !csiFinalByte.test(chunk[j]!)) {
+				j++;
+			}
+
+			return j < chunk.length ? j + 1 : chunk.length;
+		}
+
+		if (next === 'O') {
+			return start + 2 < chunk.length ? start + 3 : chunk.length;
+		}
+
+		if (next === escape) {
+			return readEscapeSequence(start + 1);
+		}
+
+		const codePoint = chunk.codePointAt(start + 1)!;
+		const length = codePoint > 65_535 ? 2 : 1;
+		return start + 1 + length;
+	};
+
+	const flush = () => {
+		if (text) {
+			parts.push(text);
+			text = '';
+		}
+	};
 
 	while (i < chunk.length) {
-		if (chunk[i] === '\u001B') {
-			// Escape sequence
-			if (i + 1 < chunk.length && chunk[i + 1] === '[') {
-				// CSI (Control Sequence Introducer) sequence
-				// Format: ESC [ <parameters> <final byte>
-				// Read until we find a letter (a-z, A-Z) or ~
-				let j = i + 2;
-				while (j < chunk.length && !/[a-zA-Z~]/.test(chunk[j]!)) {
-					j++;
-				}
+		if (chunk[i] === escape) {
+			flush();
 
-				if (j < chunk.length) {
-					// Found complete sequence
-					keypresses.push(chunk.slice(i, j + 1));
-					i = j + 1;
-				} else {
-					// Incomplete sequence - shouldn't happen but handle gracefully
-					keypresses.push(chunk.slice(i));
-					i = chunk.length;
-				}
-			} else if (i + 1 < chunk.length && chunk[i + 1] === 'O') {
-				// SS3 (Single Shift 3) sequence - typically function keys
-				// Format: ESC O <character>
-				if (i + 2 < chunk.length) {
-					keypresses.push(chunk.slice(i, i + 3));
-					i += 3;
-				} else {
-					// Incomplete sequence
-					keypresses.push(chunk.slice(i));
-					i = chunk.length;
-				}
-			} else {
-				// Just ESC by itself
-				keypresses.push('\u001B');
-				i++;
-			}
-		} else {
-			// Regular character
-			keypresses.push(chunk[i]!);
-			i++;
+			const sequenceEnd = readEscapeSequence(i);
+			parts.push(chunk.slice(i, sequenceEnd));
+			i = sequenceEnd;
+			continue;
 		}
+
+		text += chunk[i]!;
+		i++;
 	}
 
-	return keypresses;
+	flush();
+	return parts;
 };
 
 type Props = {
