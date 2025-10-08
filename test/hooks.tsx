@@ -155,6 +155,47 @@ test.serial('useInput - handle right arrow', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial(
+	'useInput - handles sequential CSI down arrows individually',
+	async t => {
+		const ps = term('use-input', ['rapidArrows']);
+		ps.write('\u001B[B\u001B[B\u001B[B');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial('useInput - coalesces plain text paste into one event', async t => {
+	const ps = term('use-input', ['coalescedText']);
+	ps.write('hello world');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handles mixed CSI and text input', async t => {
+	const ps = term('use-input', ['mixedSequence']);
+	ps.write('\u001B[Bhello\u001B[B');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial(
+	'useInput - supports CSI sequences with non-letter finals',
+	async t => {
+		const ps = term('use-input', ['csiFinals']);
+		ps.write('\u001B[@\u001B[200~');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial('useInput - preserves high-unicode paste integrity', async t => {
+	const ps = term('use-input', ['emojiPaste']);
+	ps.write('👋🌍');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - handle meta + up arrow', async t => {
 	const ps = term('use-input', ['upArrowMeta']);
 	ps.write('\u001B\u001B[A');
