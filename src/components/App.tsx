@@ -79,7 +79,6 @@ type Props = {
 	readonly writeToStdout: (data: string) => void;
 	readonly writeToStderr: (data: string) => void;
 	readonly exitOnCtrlC: boolean;
-	readonly splitRapidInput?: boolean;
 	readonly onExit: (error?: Error) => void;
 };
 
@@ -243,20 +242,10 @@ export default class App extends PureComponent<Props, State> {
 		let chunk;
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		while ((chunk = this.props.stdin.read() as string | null) !== null) {
-			if (this.props.splitRapidInput) {
-				// Split chunk into individual keypresses and emit each separately
-				// This is useful for automation/testing where multiple keys arrive
-				// in the same event loop tick
-				const keypresses = parseKeypresses(chunk);
-				for (const keypress of keypresses) {
-					this.handleInput(keypress);
-					this.internal_eventEmitter.emit('input', keypress);
-				}
-			} else {
-				// Default behavior - process entire chunk as single input
-				// This preserves existing behavior for backward compatibility
-				this.handleInput(chunk);
-				this.internal_eventEmitter.emit('input', chunk);
+			const keypresses = parseKeypresses(chunk);
+			for (const keypress of keypresses) {
+				this.handleInput(keypress);
+				this.internal_eventEmitter.emit('input', keypress);
 			}
 		}
 	};
