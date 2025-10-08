@@ -14,12 +14,13 @@ const shiftTab = '\u001B[Z';
 const escape = '\u001B';
 
 /**
- * Parse a chunk of input into individual keypresses.
- * Handles ANSI escape sequences (arrow keys, function keys, etc.) as single units.
- *
- * @param chunk - The input chunk to parse
- * @returns Array of individual keypresses
- */
+Parse a chunk of input into individual keypresses.
+
+Handles ANSI escape sequences (arrow keys, function keys, etc.) as single units.
+
+@param chunk - The input chunk to parse.
+@returns Array of individual keypresses.
+*/
 const parseKeypresses = (chunk: string): string[] => {
 	const parts: string[] = [];
 	let i = 0;
