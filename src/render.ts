@@ -57,7 +57,6 @@ export type RenderOptions = {
 	@default 30
 	*/
 	maxFps?: number;
-
 };
 
 export type Instance = {
