@@ -9,6 +9,12 @@ function UserInput({test}: {readonly test: string | undefined}) {
 	const mixedStageRef = React.useRef(0);
 	const csiStageRef = React.useRef(0);
 	const emojiCountRef = React.useRef(0);
+	const chunkedCsiCountRef = React.useRef(0);
+	const chunkedMetaCountRef = React.useRef(0);
+	const bracketedStageRef = React.useRef(0);
+	const bracketedContent = 'hello \u001B[Bworld';
+	const chunkedMetaDelayedStageRef = React.useRef(0);
+	const partialEscapeHandledRef = React.useRef(false);
 
 	useInput((input, key) => {
 		if (test === 'rapidArrows') {
@@ -102,6 +108,21 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		if (test === 'chunkedCsi') {
+			chunkedCsiCountRef.current++;
+
+			if (chunkedCsiCountRef.current > 1) {
+				throw new Error('Expected a single CSI event when split across chunks');
+			}
+
+			if (input !== '[200~') {
+				throw new Error(`Unexpected CSI input: ${JSON.stringify(input)}`);
+			}
+
+			exit();
+			return;
+		}
+
 		if (test === 'emojiPaste') {
 			emojiCountRef.current++;
 
@@ -155,6 +176,79 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		if (test === 'meta' && input === 'm' && key.meta) {
 			exit();
 			return;
+		}
+
+		if (test === 'chunkedMetaLetter') {
+			chunkedMetaCountRef.current++;
+
+			if (chunkedMetaCountRef.current > 1) {
+				throw new Error(
+					'Expected a single meta letter event when split across chunks',
+				);
+			}
+
+			if (input === 'b' && key.meta) {
+				exit();
+				return;
+			}
+
+			throw new Error(`Unexpected meta input: ${JSON.stringify(input)}`);
+		}
+
+		if (test === 'chunkedMetaLetterDelayed') {
+			const stage = chunkedMetaDelayedStageRef.current;
+
+			if (stage === 0) {
+				if (!key.escape || input !== '') {
+					throw new Error('Expected an escape key event first');
+				}
+
+				chunkedMetaDelayedStageRef.current = 1;
+				return;
+			}
+
+			if (stage === 1) {
+				if (input !== 'b' || key.meta || key.escape) {
+					throw new Error(
+						`Expected plain letter after delayed meta sequence, got ${JSON.stringify({input, key})}`,
+					);
+				}
+
+				exit();
+				return;
+			}
+
+			throw new Error(
+				'All events must resolve before the delayed meta sequence completes',
+			);
+		}
+
+		if (test === 'bracketedPaste') {
+			const expected = ['[200~', bracketedContent, '[201~'];
+			const index = bracketedStageRef.current;
+
+			if (index >= expected.length) {
+				throw new Error('Received more bracketed paste events than expected');
+			}
+
+			if (input !== expected[index]) {
+				throw new Error(
+					`Unexpected bracketed paste input: ${JSON.stringify(input)}`,
+				);
+			}
+
+			bracketedStageRef.current++;
+
+			if (bracketedStageRef.current === expected.length) {
+				exit();
+			}
+
+			return;
+		}
+
+		if (test === 'partialEscapeDrop') {
+			partialEscapeHandledRef.current = true;
+			throw new Error('Partial escape should be dropped before emitting input');
 		}
 
 		if (test === 'upArrow' && key.upArrow && !key.meta) {
@@ -254,6 +348,14 @@ function UserInput({test}: {readonly test: string | undefined}) {
 
 		throw new Error('Crash');
 	});
+
+	if (test === 'partialEscapeDrop') {
+		setTimeout(() => {
+			if (!partialEscapeHandledRef.current) {
+				exit();
+			}
+		}, 50);
+	}
 
 	return null;
 }

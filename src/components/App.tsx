@@ -14,71 +14,203 @@ const shiftTab = '\u001B[Z';
 const escape = '\u001B';
 
 /**
-Parse a chunk of input into individual keypresses.
+Stateful parser that turns input chunks into individual keypresses.
 
-Handles ANSI escape sequences (arrow keys, function keys, etc.) as single units.
-
-@param chunk - The input chunk to parse.
-@returns Array of individual keypresses.
+It keeps enough context to join split escape sequences, including bracketed
+paste markers and the single-ESC ambiguity.
 */
-const parseKeypresses = (chunk: string): string[] => {
-	const parts: string[] = [];
-	let i = 0;
-	let text = '';
+type KeypressParser = {
+	push: (chunk: string) => void;
+	reset: () => void;
+};
+
+const bracketedPasteStart = '\u001B[200~';
+const bracketedPasteEnd = '\u001B[201~';
+const maxCarrySize = 4 * 1024;
+
+const createKeypressParser = (
+	emit: (output: string) => void,
+): KeypressParser => {
 	const csiFinalByte = /[\u0040-\u007E]/;
+	let carry = '';
+	let escapeImmediate: NodeJS.Immediate | undefined;
+	let pendingText = '';
+	let inBracketedPaste = false;
+	let bracketedBuffer = '';
 
-	const readEscapeSequence = (start: number): number => {
-		if (start + 1 >= chunk.length) {
-			return start + 1;
+	const flushPendingText = () => {
+		if (pendingText) {
+			emit(pendingText);
+			pendingText = '';
 		}
+	};
 
-		const next = chunk[start + 1]!;
+	const emitSequence = (sequence: string) => {
+		flushPendingText();
+		emit(sequence);
+	};
 
-		if (next === '[') {
-			let j = start + 2;
-			while (j < chunk.length && !csiFinalByte.test(chunk[j]!)) {
-				j++;
+	const cancelPendingEscape = () => {
+		if (escapeImmediate) {
+			clearImmediate(escapeImmediate);
+			escapeImmediate = undefined;
+		}
+	};
+
+	const scheduleSingleEscapeDecision = () => {
+		cancelPendingEscape();
+		escapeImmediate = setImmediate(() => {
+			if (carry === escape) {
+				carry = '';
+				emitSequence(escape);
 			}
 
-			return j < chunk.length ? j + 1 : chunk.length;
+			escapeImmediate = undefined;
+		});
+	};
+
+	const readEscapeSequence = (
+		input: string,
+		start: number,
+	): {complete: boolean; length: number} => {
+		if (start + 1 >= input.length) {
+			return {complete: false, length: input.length - start};
+		}
+
+		const next = input[start + 1]!;
+
+		if (next === '[') {
+			let index = start + 2;
+
+			while (index < input.length && !csiFinalByte.test(input[index]!)) {
+				index++;
+			}
+
+			if (index >= input.length) {
+				return {complete: false, length: input.length - start};
+			}
+
+			return {complete: true, length: index - start + 1};
 		}
 
 		if (next === 'O') {
-			return start + 2 < chunk.length ? start + 3 : chunk.length;
+			if (start + 2 >= input.length) {
+				return {complete: false, length: input.length - start};
+			}
+
+			return {complete: true, length: 3};
 		}
 
 		if (next === escape) {
-			return readEscapeSequence(start + 1);
+			const nested = readEscapeSequence(input, start + 1);
+
+			if (!nested.complete) {
+				return {complete: false, length: input.length - start};
+			}
+
+			return {complete: true, length: 1 + nested.length};
 		}
 
-		const codePoint = chunk.codePointAt(start + 1)!;
-		const length = codePoint > 65_535 ? 2 : 1;
-		return start + 1 + length;
+		const codePoint = input.codePointAt(start + 1)!;
+		const charLength = codePoint > 65_535 ? 2 : 1;
+
+		if (start + 1 + charLength > input.length) {
+			return {complete: false, length: input.length - start};
+		}
+
+		return {complete: true, length: 1 + charLength};
 	};
 
-	const flush = () => {
-		if (text) {
-			parts.push(text);
-			text = '';
+	const push = (chunk: string): void => {
+		if (!chunk) {
+			return;
+		}
+
+		cancelPendingEscape();
+		const input = carry + chunk;
+		carry = '';
+
+		let index = 0;
+
+		while (index < input.length) {
+			if (inBracketedPaste) {
+				const endIndex = input.indexOf(bracketedPasteEnd, index);
+
+				if (endIndex === -1) {
+					bracketedBuffer += input.slice(index);
+					index = input.length;
+					break;
+				}
+
+				bracketedBuffer += input.slice(index, endIndex);
+
+				if (bracketedBuffer) {
+					emit(bracketedBuffer);
+					bracketedBuffer = '';
+				}
+
+				emitSequence(bracketedPasteEnd);
+				inBracketedPaste = false;
+				index = endIndex + bracketedPasteEnd.length;
+				continue;
+			}
+
+			const character = input[index]!;
+
+			if (character !== escape) {
+				pendingText += character;
+				index++;
+				continue;
+			}
+
+			if (input.startsWith(bracketedPasteStart, index)) {
+				emitSequence(bracketedPasteStart);
+				inBracketedPaste = true;
+				bracketedBuffer = '';
+				index += bracketedPasteStart.length;
+				continue;
+			}
+
+			const remaining = input.length - index;
+
+			if (remaining === 1) {
+				carry = escape;
+				scheduleSingleEscapeDecision();
+				index = input.length;
+				break;
+			}
+
+			const sequence = readEscapeSequence(input, index);
+
+			if (!sequence.complete) {
+				carry = input.slice(index);
+
+				if (carry.length > maxCarrySize) {
+					carry = '';
+				}
+
+				break;
+			}
+
+			const value = input.slice(index, index + sequence.length);
+			emitSequence(value);
+			index += sequence.length;
+		}
+
+		if (!inBracketedPaste && index >= input.length) {
+			flushPendingText();
 		}
 	};
 
-	while (i < chunk.length) {
-		if (chunk[i] === escape) {
-			flush();
+	const reset = (): void => {
+		cancelPendingEscape();
+		carry = '';
+		pendingText = '';
+		inBracketedPaste = false;
+		bracketedBuffer = '';
+	};
 
-			const sequenceEnd = readEscapeSequence(i);
-			parts.push(chunk.slice(i, sequenceEnd));
-			i = sequenceEnd;
-			continue;
-		}
-
-		text += chunk[i]!;
-		i++;
-	}
-
-	flush();
-	return parts;
+	return {push, reset};
 };
 
 type Props = {
@@ -126,6 +258,10 @@ export default class App extends PureComponent<Props, State> {
 	rawModeEnabledCount = 0;
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	internal_eventEmitter = new EventEmitter();
+	private readonly keypressParser = createKeypressParser(sequence => {
+		this.handleInput(sequence);
+		this.internal_eventEmitter.emit('input', sequence);
+	});
 
 	// Determines if TTY is supported on the provided stdin
 	isRawModeSupported(): boolean {
@@ -200,6 +336,7 @@ export default class App extends PureComponent<Props, State> {
 
 	override componentWillUnmount() {
 		cliCursor.show(this.props.stdout);
+		this.keypressParser.reset();
 
 		// ignore calling setRawMode on an handle stdin it cannot be called
 		if (this.isRawModeSupported()) {
@@ -245,6 +382,7 @@ export default class App extends PureComponent<Props, State> {
 			stdin.setRawMode(false);
 			stdin.removeListener('readable', this.handleReadable);
 			stdin.unref();
+			this.keypressParser.reset();
 		}
 	};
 
@@ -252,11 +390,7 @@ export default class App extends PureComponent<Props, State> {
 		let chunk;
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		while ((chunk = this.props.stdin.read() as string | null) !== null) {
-			const keypresses = parseKeypresses(chunk);
-			for (const keypress of keypresses) {
-				this.handleInput(keypress);
-				this.internal_eventEmitter.emit('input', keypress);
-			}
+			this.keypressParser.push(chunk);
 		}
 	};
 

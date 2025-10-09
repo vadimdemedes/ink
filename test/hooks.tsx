@@ -127,6 +127,46 @@ test.serial('useInput - handle meta', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - handles meta letter split across chunks', async t => {
+	const ps = term('use-input', ['chunkedMetaLetter']);
+	ps.write('\u001B');
+	process.nextTick(() => {
+		ps.write('b');
+	});
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial(
+	'useInput - emits escape when delayed meta letter arrives late',
+	async t => {
+		const ps = term('use-input', ['chunkedMetaLetterDelayed']);
+		ps.write('\u001B');
+		setTimeout(() => {
+			ps.write('b');
+		}, 10);
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial('useInput - handles bracketed paste as text', async t => {
+	const ps = term('use-input', ['bracketedPaste']);
+	ps.write('\u001B[200~');
+	ps.write('hello ');
+	ps.write('\u001B[Bworld');
+	ps.write('\u001B[201~');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - drops partial escape at stream end', async t => {
+	const ps = term('use-input', ['partialEscapeDrop']);
+	ps.write('\u001B[');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - handle up arrow', async t => {
 	const ps = term('use-input', ['upArrow']);
 	ps.write('\u001B[A');
@@ -188,6 +228,14 @@ test.serial(
 		t.true(ps.output.includes('exited'));
 	},
 );
+
+test.serial('useInput - handles CSI split across chunks', async t => {
+	const ps = term('use-input', ['chunkedCsi']);
+	ps.write('\u001B[');
+	ps.write('200~');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
 
 test.serial('useInput - preserves high-unicode paste integrity', async t => {
 	const ps = term('use-input', ['emojiPaste']);
