@@ -18,8 +18,243 @@ function UserInput({test}: {readonly test: string | undefined}) {
 	const chunkedMetaDelayedStageRef = React.useRef(0);
 	const partialEscapeHandledRef = React.useRef(false);
 	const invalidCsiStageRef = React.useRef(0);
+	const oscTitleStageRef = React.useRef(0);
+	const oscHyperlinkStageRef = React.useRef(0);
+	const dcsStageRef = React.useRef(0);
+	const escapeDepthStageRef = React.useRef(0);
+	const escapeDepthExceededStageRef = React.useRef(0);
+	const surrogateSeenRef = React.useRef(false);
+	const surrogateTailSeenRef = React.useRef(false);
 
 	useInput((input, key) => {
+		if (test === 'oscTitle') {
+			const expectedPayload = '0;Ink Title\u0007';
+			const stage = oscTitleStageRef.current;
+
+			if (stage === 0) {
+				if (input !== ']' || key.escape || key.meta) {
+					throw new Error(
+						`Expected OSC introducer without modifiers, got ${JSON.stringify({input, key})}`,
+					);
+				}
+
+				oscTitleStageRef.current = 1;
+				return;
+			}
+
+			if (stage === 1) {
+				if (input !== expectedPayload) {
+					throw new Error(
+						`Expected OSC payload ${JSON.stringify(expectedPayload)}, got ${JSON.stringify(input)}`,
+					);
+				}
+
+				exit();
+				return;
+			}
+
+			throw new Error('Received more OSC title events than expected');
+		}
+
+		if (test === 'oscHyperlink') {
+			const expected = [
+				']',
+				'8;;https://example.com\u0007Ink Hyperlink',
+				']',
+				'8;;\u0007',
+			];
+			const stage = oscHyperlinkStageRef.current;
+			const expectedValue = expected[stage];
+
+			if (!expectedValue) {
+				throw new Error('Received more OSC hyperlink events than expected');
+			}
+
+			if (input !== expectedValue) {
+				throw new Error(
+					`Unexpected OSC hyperlink segment: ${JSON.stringify({
+						stage,
+						input,
+					})}`,
+				);
+			}
+
+			oscHyperlinkStageRef.current++;
+
+			if (oscHyperlinkStageRef.current === expected.length) {
+				exit();
+			}
+
+			return;
+		}
+
+		if (test === 'dcsSequence') {
+			const stage = dcsStageRef.current;
+
+			if (stage === 0) {
+				if (input !== 'P' || !key.meta || !key.shift) {
+					throw new Error(
+						`Expected DCS introducer with meta+shift, got ${JSON.stringify({
+							input,
+							key,
+						})}`,
+					);
+				}
+
+				dcsStageRef.current = 1;
+				return;
+			}
+
+			if (stage === 1) {
+				if (input !== '1;2|payload' || key.meta || key.escape) {
+					throw new Error(
+						`Expected DCS payload, got ${JSON.stringify({input, key})}`,
+					);
+				}
+
+				dcsStageRef.current = 2;
+				return;
+			}
+
+			if (stage === 2) {
+				if (input !== '\\' || key.meta || key.escape) {
+					throw new Error(
+						`Expected DCS string terminator, got ${JSON.stringify({
+							input,
+							key,
+						})}`,
+					);
+				}
+
+				exit();
+				return;
+			}
+
+			throw new Error('Received more DCS events than expected');
+		}
+
+		if (test === 'escapeDepthBoundary') {
+			const expected = '\u001B'.repeat(31) + 'A';
+
+			if (escapeDepthStageRef.current !== 0) {
+				throw new Error(
+					'Received more events than expected for depth boundary',
+				);
+			}
+
+			if (input !== expected || key.escape || key.meta) {
+				throw new Error(
+					`Expected nested escape payload ${JSON.stringify(expected)}, got ${JSON.stringify(
+						{
+							input,
+							key,
+						},
+					)}`,
+				);
+			}
+
+			escapeDepthStageRef.current = 1;
+			exit();
+			return;
+		}
+
+		if (test === 'escapeDepthExceeded') {
+			const stage = escapeDepthExceededStageRef.current;
+			const expected = '\u001B'.repeat(31) + 'A';
+
+			if (stage === 0) {
+				if (!key.escape || input !== '') {
+					throw new Error(
+						`Expected standalone escape key before overflow payload, got ${JSON.stringify(
+							{
+								input,
+								key,
+							},
+						)}`,
+					);
+				}
+
+				escapeDepthExceededStageRef.current = 1;
+				return;
+			}
+
+			if (stage === 1) {
+				if (input !== expected || key.escape || key.meta) {
+					throw new Error(
+						`Expected overflow payload ${JSON.stringify(expected)}, got ${JSON.stringify(
+							{
+								input,
+								key,
+							},
+						)}`,
+					);
+				}
+
+				exit();
+				return;
+			}
+
+			throw new Error(
+				'Received more events than expected when escape depth exceeded',
+			);
+		}
+
+		if (test === 'flagEmoji') {
+			if (input === '🇺🇳') {
+				exit();
+				return;
+			}
+
+			throw new Error(`Unexpected flag emoji input: ${JSON.stringify(input)}`);
+		}
+
+		if (test === 'variationSelectorEmoji') {
+			if (input === '✂️') {
+				exit();
+				return;
+			}
+
+			throw new Error(
+				`Unexpected variation selector input: ${JSON.stringify(input)}`,
+			);
+		}
+
+		if (test === 'keycapEmoji') {
+			if (input === '1️⃣') {
+				exit();
+				return;
+			}
+
+			throw new Error(`Unexpected keycap input: ${JSON.stringify(input)}`);
+		}
+
+		if (test === 'isolatedSurrogate') {
+			for (const char of input) {
+				if (char === 'X') {
+					if (surrogateTailSeenRef.current) {
+						throw new Error(
+							'Received duplicate trailing character for surrogate sequence',
+						);
+					}
+
+					surrogateTailSeenRef.current = true;
+					continue;
+				}
+
+				if (surrogateSeenRef.current) {
+					throw new Error('Received duplicate surrogate placeholder');
+				}
+
+				surrogateSeenRef.current = true;
+			}
+
+			if (surrogateSeenRef.current && surrogateTailSeenRef.current) {
+				exit();
+			}
+
+			return;
+		}
+
 		if (test === 'rapidArrows') {
 			if (!key.downArrow || input !== '') {
 				throw new Error('Expected down arrow event');

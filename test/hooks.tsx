@@ -252,6 +252,44 @@ test.serial('useInput - rejects invalid CSI parameter bytes', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - handles OSC title sequence', async t => {
+	const ps = term('use-input', ['oscTitle']);
+	ps.write('\u001B]0;Ink Title\u0007');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handles OSC hyperlink sequence', async t => {
+	const ps = term('use-input', ['oscHyperlink']);
+	ps.write('\u001B]8;;https://example.com\u0007Ink Hyperlink\u001B]8;;\u0007');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handles DCS sequence', async t => {
+	const ps = term('use-input', ['dcsSequence']);
+	ps.write('\u001BP1;2|payload\u001B\\');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handles escape depth boundary case', async t => {
+	const ps = term('use-input', ['escapeDepthBoundary']);
+	ps.write('\u001B'.repeat(32) + 'A');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial(
+	'useInput - splits escape depth overflow into separate events',
+	async t => {
+		const ps = term('use-input', ['escapeDepthExceeded']);
+		ps.write('\u001B'.repeat(33) + 'A');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
 test.serial('useInput - preserves high-unicode paste integrity', async t => {
 	const ps = term('use-input', ['emojiPaste']);
 	ps.write('👋🌍');
@@ -375,6 +413,37 @@ test.serial('useInput - handle delete', async t => {
 test.serial('useInput - handle remove (delete)', async t => {
 	const ps = term('use-input', ['remove']);
 	ps.write('\u001B[3~');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - preserves flag emoji grapheme', async t => {
+	const ps = term('use-input', ['flagEmoji']);
+	ps.write('🇺🇳');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - preserves variation selector emoji', async t => {
+	const ps = term('use-input', ['variationSelectorEmoji']);
+	ps.write('✂️');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - preserves emoji keycap sequence', async t => {
+	const ps = term('use-input', ['keycapEmoji']);
+	ps.write('1️⃣');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - forwards isolated surrogate code units', async t => {
+	const ps = term('use-input', ['isolatedSurrogate']);
+	ps.write('\uD83D');
+	process.nextTick(() => {
+		ps.write('X');
+	});
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
