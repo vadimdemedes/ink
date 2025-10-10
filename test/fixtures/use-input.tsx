@@ -9,12 +9,15 @@ function UserInput({test}: {readonly test: string | undefined}) {
 	const mixedStageRef = React.useRef(0);
 	const csiStageRef = React.useRef(0);
 	const emojiCountRef = React.useRef(0);
+	const emojiFamilyCountRef = React.useRef(0);
 	const chunkedCsiCountRef = React.useRef(0);
 	const chunkedMetaCountRef = React.useRef(0);
 	const bracketedStageRef = React.useRef(0);
+	const emptyBracketedStageRef = React.useRef(0);
 	const bracketedContent = 'hello \u001B[Bworld';
 	const chunkedMetaDelayedStageRef = React.useRef(0);
 	const partialEscapeHandledRef = React.useRef(false);
+	const invalidCsiStageRef = React.useRef(0);
 
 	useInput((input, key) => {
 		if (test === 'rapidArrows') {
@@ -123,6 +126,34 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		if (test === 'invalidCsiParams') {
+			const stage = invalidCsiStageRef.current;
+
+			if (stage === 0) {
+				if (!key.escape || input !== '') {
+					throw new Error(
+						'Expected escape key as the first event for invalid CSI',
+					);
+				}
+
+				invalidCsiStageRef.current = 1;
+				return;
+			}
+
+			if (stage === 1) {
+				if (input !== '[12\u0000\u0001@') {
+					throw new Error(
+						`Expected invalid CSI payload as plain text, got ${JSON.stringify(input)}`,
+					);
+				}
+
+				exit();
+				return;
+			}
+
+			throw new Error('Received more events than expected for invalid CSI');
+		}
+
 		if (test === 'emojiPaste') {
 			emojiCountRef.current++;
 
@@ -136,6 +167,23 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			}
 
 			throw new Error(`Unexpected emoji input: ${JSON.stringify(input)}`);
+		}
+
+		if (test === 'emojiFamilySingle' || test === 'emojiFamilyChunked') {
+			emojiFamilyCountRef.current++;
+
+			if (emojiFamilyCountRef.current > 1) {
+				throw new Error('Expected emoji family to arrive as a single event');
+			}
+
+			if (input === '👨‍👩‍👧‍👦') {
+				exit();
+				return;
+			}
+
+			throw new Error(
+				`Unexpected emoji family input: ${JSON.stringify(input)}`,
+			);
 		}
 
 		if (test === 'lowercase' && input === 'q') {
@@ -240,6 +288,31 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			bracketedStageRef.current++;
 
 			if (bracketedStageRef.current === expected.length) {
+				exit();
+			}
+
+			return;
+		}
+
+		if (test === 'emptyBracketedPaste') {
+			const expected = ['[200~', '', '[201~'];
+			const index = emptyBracketedStageRef.current;
+
+			if (index >= expected.length) {
+				throw new Error(
+					'Received more empty bracketed paste events than expected',
+				);
+			}
+
+			if (input !== expected[index]) {
+				throw new Error(
+					`Unexpected empty bracketed paste input: ${JSON.stringify(input)}`,
+				);
+			}
+
+			emptyBracketedStageRef.current++;
+
+			if (emptyBracketedStageRef.current === expected.length) {
 				exit();
 			}
 

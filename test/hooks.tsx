@@ -160,6 +160,14 @@ test.serial('useInput - handles bracketed paste as text', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - emits empty bracketed paste content', async t => {
+	const ps = term('use-input', ['emptyBracketedPaste']);
+	ps.write('\u001B[200~');
+	ps.write('\u001B[201~');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - drops partial escape at stream end', async t => {
 	const ps = term('use-input', ['partialEscapeDrop']);
 	ps.write('\u001B[');
@@ -237,9 +245,31 @@ test.serial('useInput - handles CSI split across chunks', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - rejects invalid CSI parameter bytes', async t => {
+	const ps = term('use-input', ['invalidCsiParams']);
+	ps.write('\u001B[12\u0000\u0001@');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - preserves high-unicode paste integrity', async t => {
 	const ps = term('use-input', ['emojiPaste']);
 	ps.write('👋🌍');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - preserves emoji family grapheme', async t => {
+	const ps = term('use-input', ['emojiFamilySingle']);
+	ps.write('👨‍👩‍👧‍👦');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - preserves chunked emoji family grapheme', async t => {
+	const ps = term('use-input', ['emojiFamilyChunked']);
+	ps.write('👨');
+	ps.write('‍👩‍👧‍👦');
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });

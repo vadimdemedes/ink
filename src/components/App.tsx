@@ -12,6 +12,11 @@ import ErrorOverview from './ErrorOverview.js';
 const tab = '\t';
 const shiftTab = '\u001B[Z';
 const escape = '\u001B';
+const zeroWidthJoiner = '\u200D';
+const extendedPictographic = /\p{Extended_Pictographic}/u;
+const combiningMark = /\p{Mark}/u;
+const skinToneModifierStart = 127_995;
+const skinToneModifierEnd = 127_999;
 
 /**
 Stateful parser that turns input chunks into individual keypresses.
@@ -27,26 +32,137 @@ type KeypressParser = {
 const bracketedPasteStart = '\u001B[200~';
 const bracketedPasteEnd = '\u001B[201~';
 const maxCarrySize = 4 * 1024;
+const csiParamByte = /^[\u0020-\u003F]$/;
+const maxEscapeDepth = 32;
+const graphemeSegmenter =
+	typeof Intl.Segmenter === 'function'
+		? new Intl.Segmenter(undefined, {granularity: 'grapheme'})
+		: undefined;
+
+type GraphemeInfo = {
+	readonly segment: string;
+	readonly length: number;
+};
+
+const codePointLength = (codePoint: number): number =>
+	codePoint > 65_535 ? 2 : 1;
+
+const zeroWidthJoinerCodePoint = zeroWidthJoiner.codePointAt(0)!;
+
+const getNextGrapheme = (
+	text: string,
+	start: number,
+): GraphemeInfo | undefined => {
+	if (start >= text.length) {
+		return undefined;
+	}
+
+	if (graphemeSegmenter) {
+		const segments = graphemeSegmenter.segment(text.slice(start));
+		const iteratorResult = segments[Symbol.iterator]().next();
+
+		if (iteratorResult.done) {
+			return undefined;
+		}
+
+		const {segment} = iteratorResult.value;
+		return {segment, length: segment.length};
+	}
+
+	const codePoint = text.codePointAt(start);
+
+	if (codePoint === undefined) {
+		return undefined;
+	}
+
+	let length = codePointLength(codePoint);
+
+	while (start + length < text.length) {
+		const nextCodePoint = text.codePointAt(start + length);
+
+		if (nextCodePoint === undefined) {
+			break;
+		}
+
+		if (nextCodePoint === zeroWidthJoinerCodePoint) {
+			const afterJoiner = text.codePointAt(
+				start + length + codePointLength(nextCodePoint),
+			);
+
+			if (afterJoiner === undefined) {
+				break;
+			}
+
+			length += codePointLength(nextCodePoint);
+			length += codePointLength(afterJoiner);
+			continue;
+		}
+
+		const nextChar = String.fromCodePoint(nextCodePoint);
+
+		if (
+			combiningMark.test(nextChar) ||
+			(nextCodePoint >= skinToneModifierStart &&
+				nextCodePoint <= skinToneModifierEnd)
+		) {
+			length += codePointLength(nextCodePoint);
+			continue;
+		}
+
+		break;
+	}
+
+	return {segment: text.slice(start, start + length), length};
+};
+
+const startsWithJoiner = (value: string): boolean =>
+	value.codePointAt(0) === zeroWidthJoinerCodePoint;
+
+const shouldHoldGraphemeForContinuation = (value: string): boolean => {
+	if (!value) {
+		return false;
+	}
+
+	if (value.endsWith(zeroWidthJoiner)) {
+		return true;
+	}
+
+	return extendedPictographic.test(value);
+};
+
+type EscapeParseResult =
+	| {readonly kind: 'complete'; readonly length: number}
+	| {readonly kind: 'incomplete'; readonly length: number}
+	| {readonly kind: 'invalid'; readonly length: number};
 
 const createKeypressParser = (
 	emit: (output: string) => void,
 ): KeypressParser => {
 	const csiFinalByte = /[\u0040-\u007E]/;
 	let carry = '';
+	let carryMode: 'none' | 'escape' | 'grapheme' = 'none';
 	let escapeImmediate: NodeJS.Immediate | undefined;
+	let graphemeImmediate: NodeJS.Immediate | undefined;
 	let pendingText = '';
 	let inBracketedPaste = false;
 	let bracketedBuffer = '';
+	const escapeCodePoint = escape.codePointAt(0)!;
 
-	const flushPendingText = () => {
-		if (pendingText) {
-			emit(pendingText);
-			pendingText = '';
+	const flushPendingText = (force = false) => {
+		if (!pendingText) {
+			return;
 		}
+
+		if (!force && pendingText.endsWith(zeroWidthJoiner)) {
+			return;
+		}
+
+		emit(pendingText);
+		pendingText = '';
 	};
 
 	const emitSequence = (sequence: string) => {
-		flushPendingText();
+		flushPendingText(true);
 		emit(sequence);
 	};
 
@@ -57,24 +173,61 @@ const createKeypressParser = (
 		}
 	};
 
+	const cancelPendingGrapheme = () => {
+		if (graphemeImmediate) {
+			clearImmediate(graphemeImmediate);
+			graphemeImmediate = undefined;
+		}
+	};
+
 	const scheduleSingleEscapeDecision = () => {
 		cancelPendingEscape();
+
+		// Wait for two turns of the event loop: the first lets pending chunks append,
+		// the second runs after same-tick data handlers so we don't beat fresh input.
 		escapeImmediate = setImmediate(() => {
-			if (carry === escape) {
+			escapeImmediate = setImmediate(() => {
+				if (carry === escape) {
+					carry = '';
+					carryMode = 'none';
+					emitSequence(escape);
+				}
+
+				escapeImmediate = undefined;
+			});
+		});
+	};
+
+	const schedulePendingGraphemeDecision = () => {
+		cancelPendingGrapheme();
+
+		if (carryMode !== 'grapheme' || !carry) {
+			return;
+		}
+
+		graphemeImmediate = setImmediate(() => {
+			if (carryMode === 'grapheme' && carry) {
+				pendingText += carry;
 				carry = '';
-				emitSequence(escape);
+				carryMode = 'none';
+				flushPendingText(true);
 			}
 
-			escapeImmediate = undefined;
+			graphemeImmediate = undefined;
 		});
 	};
 
 	const readEscapeSequence = (
 		input: string,
 		start: number,
-	): {complete: boolean; length: number} => {
+		depth = 0,
+	): EscapeParseResult => {
+		if (depth >= maxEscapeDepth) {
+			return {kind: 'invalid', length: 1};
+		}
+
 		if (start + 1 >= input.length) {
-			return {complete: false, length: input.length - start};
+			return {kind: 'incomplete', length: input.length - start};
 		}
 
 		const next = input[start + 1]!;
@@ -82,43 +235,75 @@ const createKeypressParser = (
 		if (next === '[') {
 			let index = start + 2;
 
-			while (index < input.length && !csiFinalByte.test(input[index]!)) {
+			while (index < input.length) {
+				const character = input[index]!;
+
+				if (csiFinalByte.test(character)) {
+					return {kind: 'complete', length: index - start + 1};
+				}
+
+				if (!csiParamByte.test(character)) {
+					return {kind: 'invalid', length: 1};
+				}
+
 				index++;
 			}
 
-			if (index >= input.length) {
-				return {complete: false, length: input.length - start};
-			}
-
-			return {complete: true, length: index - start + 1};
+			return {kind: 'incomplete', length: input.length - start};
 		}
 
 		if (next === 'O') {
-			if (start + 2 >= input.length) {
-				return {complete: false, length: input.length - start};
+			let index = start + 2;
+
+			while (index < input.length) {
+				const character = input[index]!;
+
+				if (csiFinalByte.test(character)) {
+					return {kind: 'complete', length: index - start + 1};
+				}
+
+				if (!csiParamByte.test(character)) {
+					return {kind: 'invalid', length: 1};
+				}
+
+				index++;
 			}
 
-			return {complete: true, length: 3};
+			return {kind: 'incomplete', length: input.length - start};
 		}
 
 		if (next === escape) {
-			const nested = readEscapeSequence(input, start + 1);
+			const nested = readEscapeSequence(input, start + 1, depth + 1);
 
-			if (!nested.complete) {
-				return {complete: false, length: input.length - start};
+			if (nested.kind === 'invalid') {
+				return nested;
 			}
 
-			return {complete: true, length: 1 + nested.length};
+			if (nested.kind === 'incomplete') {
+				return {kind: 'incomplete', length: input.length - start};
+			}
+
+			return {kind: 'complete', length: 1 + nested.length};
 		}
 
-		const codePoint = input.codePointAt(start + 1)!;
-		const charLength = codePoint > 65_535 ? 2 : 1;
+		const grapheme = getNextGrapheme(input, start + 1);
 
-		if (start + 1 + charLength > input.length) {
-			return {complete: false, length: input.length - start};
+		if (!grapheme) {
+			return {kind: 'incomplete', length: input.length - start};
 		}
 
-		return {complete: true, length: 1 + charLength};
+		if (start + 1 + grapheme.length > input.length) {
+			return {kind: 'incomplete', length: input.length - start};
+		}
+
+		if (
+			grapheme.segment.endsWith(zeroWidthJoiner) &&
+			start + 1 + grapheme.length >= input.length
+		) {
+			return {kind: 'incomplete', length: input.length - start};
+		}
+
+		return {kind: 'complete', length: 1 + grapheme.length};
 	};
 
 	const push = (chunk: string): void => {
@@ -127,8 +312,30 @@ const createKeypressParser = (
 		}
 
 		cancelPendingEscape();
-		const input = carry + chunk;
-		carry = '';
+		cancelPendingGrapheme();
+
+		let nextChunk = chunk;
+
+		if (carryMode === 'grapheme') {
+			if (startsWithJoiner(nextChunk)) {
+				nextChunk = carry + nextChunk;
+				carry = '';
+				carryMode = 'none';
+			} else {
+				pendingText += carry;
+				carry = '';
+				carryMode = 'none';
+				flushPendingText(true);
+			}
+		}
+
+		if (carryMode === 'escape') {
+			nextChunk = carry + nextChunk;
+			carry = '';
+			carryMode = 'none';
+		}
+
+		const input = nextChunk;
 
 		let index = 0;
 
@@ -143,11 +350,8 @@ const createKeypressParser = (
 				}
 
 				bracketedBuffer += input.slice(index, endIndex);
-
-				if (bracketedBuffer) {
-					emit(bracketedBuffer);
-					bracketedBuffer = '';
-				}
+				emit(bracketedBuffer);
+				bracketedBuffer = '';
 
 				emitSequence(bracketedPasteEnd);
 				inBracketedPaste = false;
@@ -155,11 +359,33 @@ const createKeypressParser = (
 				continue;
 			}
 
-			const character = input[index]!;
+			const codePoint = input.codePointAt(index);
 
-			if (character !== escape) {
-				pendingText += character;
-				index++;
+			if (codePoint === undefined) {
+				break;
+			}
+
+			if (codePoint !== escapeCodePoint) {
+				const grapheme = getNextGrapheme(input, index);
+
+				if (!grapheme) {
+					pendingText += input.slice(index);
+					index = input.length;
+					break;
+				}
+
+				const {segment, length} = grapheme;
+				const atEnd = index + length >= input.length;
+
+				if (atEnd && shouldHoldGraphemeForContinuation(segment)) {
+					carry = input.slice(index);
+					carryMode = 'grapheme';
+					schedulePendingGraphemeDecision();
+					break;
+				}
+
+				pendingText += segment;
+				index += length;
 				continue;
 			}
 
@@ -175,6 +401,7 @@ const createKeypressParser = (
 
 			if (remaining === 1) {
 				carry = escape;
+				carryMode = 'escape';
 				scheduleSingleEscapeDecision();
 				index = input.length;
 				break;
@@ -182,14 +409,24 @@ const createKeypressParser = (
 
 			const sequence = readEscapeSequence(input, index);
 
-			if (!sequence.complete) {
+			if (sequence.kind === 'incomplete') {
 				carry = input.slice(index);
+				carryMode = 'escape';
 
 				if (carry.length > maxCarrySize) {
+					flushPendingText(true);
+					emit(carry);
 					carry = '';
+					carryMode = 'none';
 				}
 
 				break;
+			}
+
+			if (sequence.kind === 'invalid') {
+				emitSequence(escape);
+				index += 1;
+				continue;
 			}
 
 			const value = input.slice(index, index + sequence.length);
@@ -197,14 +434,16 @@ const createKeypressParser = (
 			index += sequence.length;
 		}
 
-		if (!inBracketedPaste && index >= input.length) {
+		if (!inBracketedPaste && carryMode === 'none' && index >= input.length) {
 			flushPendingText();
 		}
 	};
 
 	const reset = (): void => {
 		cancelPendingEscape();
+		cancelPendingGrapheme();
 		carry = '';
+		carryMode = 'none';
 		pendingText = '';
 		inBracketedPaste = false;
 		bracketedBuffer = '';
@@ -262,6 +501,10 @@ export default class App extends PureComponent<Props, State> {
 		this.handleInput(sequence);
 		this.internal_eventEmitter.emit('input', sequence);
 	});
+
+	handleStdinError = (): void => {
+		this.keypressParser.reset();
+	};
 
 	// Determines if TTY is supported on the provided stdin
 	isRawModeSupported(): boolean {
@@ -332,6 +575,7 @@ export default class App extends PureComponent<Props, State> {
 
 	override componentDidMount() {
 		cliCursor.hide(this.props.stdout);
+		this.props.stdin.on('error', this.handleStdinError);
 	}
 
 	override componentWillUnmount() {
@@ -342,6 +586,8 @@ export default class App extends PureComponent<Props, State> {
 		if (this.isRawModeSupported()) {
 			this.handleSetRawMode(false);
 		}
+
+		this.props.stdin.off('error', this.handleStdinError);
 	}
 
 	override componentDidCatch(error: Error) {
