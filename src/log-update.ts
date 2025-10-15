@@ -49,10 +49,10 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 				ansiEscapes.cursorUp(lineCount),
 			);
 		} else {
-			buffer.push(ansiEscapes.cursorUp(previousLineCount));
+			buffer.push(ansiEscapes.cursorUp(previousLineCount - 1));
 		}
 
-		for (let i = 0; i < lineCount; i++) {
+		for (let i = 0; i < lineCount - 1; i++) {
 			// We do not write lines if the contents are the same. This prevents flickering during renders.
 			if (lines[i] === previousLines[i]) {
 				buffer.push(ansiEscapes.cursorNextLine);
