@@ -80,3 +80,47 @@ test('single write call with multiple surgical updates', t => {
 
 	t.is((stdout.write as any).callCount, 2); // Only 2 writes total (initial + update)
 });
+
+test('shrinking output keeps screen tight', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render('Line 1\nLine 2\nLine 3');
+	render('Line 1\nLine 2');
+	render('Line 1');
+
+	const thirdCall = stdout.get();
+
+	t.is(
+		thirdCall,
+		ansiEscapes.eraseLines(2) + // Erase Line 2 and ending cursorNextLine
+			ansiEscapes.cursorUp(1) + // Move to beginning of Line 1
+			ansiEscapes.cursorNextLine, // Move to next line after Line 1
+	);
+});
+
+test('clear() fully resets incremental state', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render('Line 1\nLine 2\nLine 3');
+	render.clear();
+	render('Line 1');
+
+	const afterClear = stdout.get();
+
+	t.is(afterClear, ansiEscapes.eraseLines(0) + 'Line 1\n'); // Should do a fresh write
+});
+
+test('done() resets before next render', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render('Line 1\nLine 2\nLine 3');
+	render.done();
+	render('Line 1');
+
+	const afterDone = stdout.get();
+
+	t.is(afterDone, ansiEscapes.eraseLines(0) + 'Line 1\n'); // Should do a fresh write
+});
