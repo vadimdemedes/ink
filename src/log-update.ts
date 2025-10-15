@@ -46,7 +46,7 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 		if (lineCount < previousLineCount) {
 			buffer.push(
 				ansiEscapes.eraseLines(previousLineCount - lineCount + 1),
-				ansiEscapes.cursorUp(lineCount),
+				ansiEscapes.cursorUp(lineCount - 1),
 			);
 		} else {
 			buffer.push(ansiEscapes.cursorUp(previousLineCount - 1));
