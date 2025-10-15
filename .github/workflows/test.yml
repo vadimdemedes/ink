@@ -2,10 +2,10 @@ name: test
 on:
   push:
     branches:
-      - ‘master’
+      - master
   pull_request:
     branches:
-      - ‘master’
+      - master
 jobs:
   test:
     name: Node.js ${{ matrix.node_version }}
