@@ -176,6 +176,16 @@ export type Styles = {
 	readonly minHeight?: number | string;
 
 	/**
+	Maximum width of the element.
+	*/
+	readonly maxWidth?: number | string;
+
+	/**
+	Maximum height of the element.
+	*/
+	readonly maxHeight?: number | string;
+
+	/**
 	Set this property to `none` to hide the element.
 	*/
 	readonly display?: 'flex' | 'none';
@@ -278,21 +288,21 @@ export type Styles = {
 	
 	@default 'visible'
 	*/
-	readonly overflow?: 'visible' | 'hidden';
+	readonly overflow?: 'visible' | 'hidden' | 'scroll';
 
 	/**
 	Behavior for an element's overflow in the horizontal direction.
 
 	@default 'visible'
 	*/
-	readonly overflowX?: 'visible' | 'hidden';
+	readonly overflowX?: 'visible' | 'hidden' | 'scroll';
 
 	/**
 	Behavior for an element's overflow in the vertical direction.
 
 	@default 'visible'
 	*/
-	readonly overflowY?: 'visible' | 'hidden';
+	readonly overflowY?: 'visible' | 'hidden' | 'scroll';
 
 	/**
 	Background color for the element.
@@ -300,6 +310,21 @@ export type Styles = {
 	Accepts the same values as `color` in the `<Text>` component.
 	*/
 	readonly backgroundColor?: LiteralUnion<ForegroundColorName, string>;
+
+	/**
+	Vertical scroll position.
+	 */
+	readonly scrollTop?: number;
+
+	/**
+	 Horizontal scroll position.
+	 */
+	readonly scrollLeft?: number;
+
+	/**
+	 Color of the scrollbar thumb.
+	 */
+	readonly scrollbarThumbColor?: LiteralUnion<ForegroundColorName, string>;
 };
 
 const applyPositionStyles = (node: YogaNode, style: Styles): void => {
@@ -525,6 +550,22 @@ const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
 			node.setMinHeight(style.minHeight ?? 0);
 		}
 	}
+
+	if ('maxWidth' in style) {
+		if (typeof style.maxWidth === 'string') {
+			node.setMaxWidthPercent(Number.parseInt(style.maxWidth, 10));
+		} else {
+			node.setMaxWidth(style.maxWidth);
+		}
+	}
+
+	if ('maxHeight' in style) {
+		if (typeof style.maxHeight === 'string') {
+			node.setMaxHeightPercent(Number.parseInt(style.maxHeight, 10));
+		} else {
+			node.setMaxHeight(style.maxHeight);
+		}
+	}
 };
 
 const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
@@ -571,6 +612,16 @@ const applyGapStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
+const applyOverflowStyles = (node: YogaNode, style: Styles): void => {
+	const overflow = style.overflow ?? 'visible';
+	const overflowX = style.overflowX ?? overflow;
+	const overflowY = style.overflowY ?? overflow;
+
+	if (overflowX === 'scroll' || overflowY === 'scroll') {
+		node.setOverflow(Yoga.OVERFLOW_SCROLL);
+	}
+};
+
 const styles = (node: YogaNode, style: Styles = {}): void => {
 	applyPositionStyles(node, style);
 	applyMarginStyles(node, style);
@@ -580,6 +631,7 @@ const styles = (node: YogaNode, style: Styles = {}): void => {
 	applyDisplayStyles(node, style);
 	applyBorderStyles(node, style);
 	applyGapStyles(node, style);
+	applyOverflowStyles(node, style);
 };
 
 export default styles;
