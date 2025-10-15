@@ -104,7 +104,9 @@ export default class Ink {
 			'id',
 			() => {},
 			() => {},
-			// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
+			// TODO(jacobr): change this back to ts-expect-error if we can
+			// figure out how to align the Gemini CLI version with the Ink ones.
+			// @ts-ignore the types for `react-reconciler` are not up to date with the library.
 			// See https://github.com/facebook/react/blob/c0464aedb16b1c970d717651bba8d1c66c578729/packages/react-reconciler/src/ReactFiberReconciler.js#L236-L259
 			() => {},
 			() => {},
