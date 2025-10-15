@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import Yoga from 'yoga-layout';
 import {type DOMElement} from './dom.js';
 import {getScrollHeight, getScrollWidth} from './measure-element.js';

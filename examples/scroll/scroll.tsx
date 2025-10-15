@@ -1,3 +1,9 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import process from 'node:process';
 import React, {useState, useRef, useEffect, useLayoutEffect} from 'react';
 import {
