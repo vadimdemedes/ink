@@ -27,6 +27,7 @@ export type Options = {
 	debug: boolean;
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
+	onRender?: (renderTime: number) => void;
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
@@ -280,12 +281,17 @@ export default class Ink {
 			</AccessibilityContext.Provider>
 		);
 
+		const start = Date.now();
 		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		reconciler.updateContainerSync(tree, this.container, null, noop);
 		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		reconciler.flushSyncWork();
+		if (this.options.onRender) {
+			const end = Date.now();
+			this.options.onRender(end - start);
+		}
 	}
 
 	writeToStdout(data: string): void {
