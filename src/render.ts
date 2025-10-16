@@ -43,6 +43,11 @@ export type RenderOptions = {
 	patchConsole?: boolean;
 
 	/**
+	Function to call after each render.
+	*/
+	onRender?: (renderTime: number) => void;
+
+	/**
 	Enable screen reader support. See https://github.com/vadimdemedes/ink/blob/master/readme.md#screen-reader-support
 
 	@default process.env['INK_SCREEN_READER'] === 'true'
