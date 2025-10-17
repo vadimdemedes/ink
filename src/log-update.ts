@@ -43,7 +43,9 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 		// Clear extra lines if the current content's line count is lower than the previous.
 		if (nextCount < prevCount) {
 			buffer.push(
+				// Erases the trailing lines and the final newline slot.
 				ansiEscapes.eraseLines(prevCount - nextCount + 1),
+				// Positions cursor to the top of the rendered output.
 				ansiEscapes.cursorUp(visibleCount),
 			);
 		} else {
