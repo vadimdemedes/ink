@@ -2033,7 +2033,7 @@ This functionality is powered by [patch-console](https://github.com/vadimdemedes
 Type: `(renderTime: number) => void`\
 Default: `undefined`
 
-Runs the given callback after each render and re-render with the time taken for the rendering.
+Runs the given callback after each render and re-render with a renderResult object.
 
 ###### debug
 

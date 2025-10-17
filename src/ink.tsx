@@ -20,6 +20,10 @@ import {accessibilityContext as AccessibilityContext} from './components/Accessi
 
 const noop = () => {};
 
+export type RenderResult = {
+	renderTime: number;
+};
+
 export type Options = {
 	stdout: NodeJS.WriteStream;
 	stdin: NodeJS.ReadStream;
@@ -27,7 +31,7 @@ export type Options = {
 	debug: boolean;
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
-	onRender?: (renderTime: number) => void;
+	onRender?: (renderTime: RenderResult) => void;
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
@@ -281,7 +285,7 @@ export default class Ink {
 			</AccessibilityContext.Provider>
 		);
 
-		const start = Date.now();
+		const start = performance.now();
 		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		reconciler.updateContainerSync(tree, this.container, null, noop);
@@ -289,8 +293,8 @@ export default class Ink {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		reconciler.flushSyncWork();
 		if (this.options.onRender) {
-			const end = Date.now();
-			this.options.onRender(end - start);
+			const end = performance.now();
+			this.options.onRender({renderTime: end - start});
 		}
 	}
 

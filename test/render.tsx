@@ -10,6 +10,7 @@ import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
 import {render, Box, Text} from '../src/index.js';
+import {type RenderResult} from '../src/ink.js';
 import createStdout from './helpers/create-stdout.js';
 
 const require = createRequire(import.meta.url);
@@ -279,7 +280,8 @@ test.serial('outputs renderTime when onRender is passed', t => {
 	let lastRenderTime = -1;
 	let tickTime = 100;
 
-	const onRender = (renderTime: number) => {
+	const onRender = (renderResult: RenderResult) => {
+		const {renderTime} = renderResult;
 		lastRenderTime = renderTime;
 	};
 
