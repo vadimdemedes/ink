@@ -3,6 +3,7 @@ import url from 'node:url';
 import * as path from 'node:path';
 import {createRequire} from 'node:module';
 import FakeTimers from '@sinonjs/fake-timers';
+import {stub} from 'sinon';
 import test from 'ava';
 import React, {useEffect} from 'react';
 import ansiEscapes from 'ansi-escapes';
@@ -279,11 +280,14 @@ test.serial('outputs renderTime when onRender is passed', t => {
 	const clock = FakeTimers.install(); // Controls timers + Date.now()
 	let lastRenderTime = -1;
 	let tickTime = 100;
-
-	const onRender = (renderResult: RenderResult) => {
-		const {renderTime} = renderResult;
-		lastRenderTime = renderTime;
+	const funcObj = {
+		onRender(renderResult: RenderResult) {
+			const {renderTime} = renderResult;
+			lastRenderTime = renderTime;
+		},
 	};
+
+	const onRenderStub = stub(funcObj, 'onRender').callThrough();
 
 	function Nested() {
 		clock.tick(tickTime);
@@ -293,7 +297,7 @@ test.serial('outputs renderTime when onRender is passed', t => {
 	function Test() {
 		useEffect(() => {
 			clock.tick(tickTime);
-		}, []);
+		});
 
 		return (
 			<Box borderStyle="round">
@@ -305,17 +309,17 @@ test.serial('outputs renderTime when onRender is passed', t => {
 
 	const {unmount, rerender} = render(<Test />, {
 		debug: true,
-		onRender,
+		onRender: onRenderStub,
 	});
 
 	t.is(lastRenderTime, 200);
+	t.is(onRenderStub.callCount, 2);
 
 	tickTime = 200;
 	rerender(<Test />);
 
-	// Component props haven't changed for Nested so it doesn't trigger tick
-	t.is(lastRenderTime, 200);
-
+	t.is(lastRenderTime, 400);
+	t.is(onRenderStub.callCount, 4);
 	unmount();
 
 	clock.uninstall();
