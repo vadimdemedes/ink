@@ -31,6 +31,7 @@ export type Options = {
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
+	alternateBuffer?: boolean;
 };
 
 export default class Ink {
@@ -56,6 +57,7 @@ export default class Ink {
 		autoBind(this);
 
 		this.options = options;
+
 		this.rootNode = dom.createNode('ink-root');
 		this.rootNode.onComputeLayout = this.calculateLayout;
 
@@ -76,7 +78,10 @@ export default class Ink {
 				});
 
 		this.rootNode.onImmediateRender = this.onRender;
-		this.log = logUpdate.create(options.stdout);
+		this.log = logUpdate.create(options.stdout, {
+			alternateBuffer: options.alternateBuffer,
+			getRows: () => options.stdout.rows,
+		});
 		this.throttledLog = unthrottled
 			? this.log
 			: (throttle(this.log, undefined, {
@@ -193,6 +198,16 @@ export default class Ink {
 
 			this.lastOutput = output;
 			this.lastOutputHeight = outputHeight;
+			return;
+		}
+
+		if (this.options.alternateBuffer) {
+			if (hasStaticOutput) {
+				this.fullStaticOutput += staticOutput;
+			}
+
+			this.log(this.fullStaticOutput + output);
+			this.lastOutput = output;
 			return;
 		}
 

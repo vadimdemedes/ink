@@ -12,7 +12,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 type Run = (
 	fixture: string,
-	props?: {env?: Record<string, string>; columns?: number},
+	props?: {env?: Record<string, string>; columns?: number; rows?: number},
 ) => Promise<string>;
 
 export const run: Run = async (fixture, props) => {
@@ -35,6 +35,7 @@ export const run: Run = async (fixture, props) => {
 			{
 				name: 'xterm-color',
 				cols: typeof props?.columns === 'number' ? props.columns : 100,
+				rows: typeof props?.rows === 'number' ? props.rows : 30,
 				cwd: __dirname,
 				env,
 			},
