@@ -56,11 +56,6 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 				continue;
 			}
 
-			if (i === lineCount - 1) {
-				buffer.push(ansiEscapes.eraseLine);
-				break;
-			}
-
 			buffer.push(ansiEscapes.eraseLine + (lines[i] ?? '') + '\n');
 		}
 
