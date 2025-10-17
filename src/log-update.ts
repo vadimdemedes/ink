@@ -26,13 +26,14 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 		}
 
 		const previousLineCount = previousLines.length;
-		const lines = output.split('\n');
-		const lineCount = lines.length;
+		const nextLines = output.split('\n');
+		const nextLineCount = nextLines.length;
+		const visibleCount = nextLineCount - 1
 
-		if (lineCount === 0 || previousLineCount === 0) {
+		if (nextLineCount === 0 || previousLineCount === 0) {
 			stream.write(ansiEscapes.eraseLines(previousLineCount) + output);
 			previousOutput = output;
-			previousLines = lines;
+			previousLines = nextLines;
 			return;
 		}
 
@@ -40,29 +41,29 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 		const buffer: string[] = [];
 
 		// Clear extra lines if the current content's line count is lower than the previous.
-		if (lineCount < previousLineCount) {
+		if (nextLineCount < previousLineCount) {
 			buffer.push(
-				ansiEscapes.eraseLines(previousLineCount - lineCount + 1),
-				ansiEscapes.cursorUp(lineCount - 1),
+				ansiEscapes.eraseLines(previousLineCount - nextLineCount + 1),
+				ansiEscapes.cursorUp(visibleCount),
 			);
 		} else {
 			buffer.push(ansiEscapes.cursorUp(previousLineCount - 1));
 		}
 
-		for (let i = 0; i < lineCount - 1; i++) {
+		for (let i = 0; i < visibleCount; i++) {
 			// We do not write lines if the contents are the same. This prevents flickering during renders.
-			if (lines[i] === previousLines[i]) {
+			if (nextLines[i] === previousLines[i]) {
 				buffer.push(ansiEscapes.cursorNextLine);
 				continue;
 			}
 
-			buffer.push(ansiEscapes.eraseLine + (lines[i] ?? '') + '\n');
+			buffer.push(ansiEscapes.eraseLine + (nextLines[i] ?? '') + '\n');
 		}
 
 		stream.write(buffer.join(''));
 
 		previousOutput = output;
-		previousLines = lines;
+		previousLines = nextLines;
 	};
 
 	render.clear = () => {
