@@ -2281,7 +2281,7 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-link](https://github.com/sindresorhus/ink-link) - Link.
 - [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color.
 - [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text.
-- [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
+- [ink-picture](https://github.com/endernoke/ink-picture) - Display images.
 - [ink-tab](https://github.com/jdeniau/ink-tab) - Tab.
 - [ink-color-pipe](https://github.com/LitoMore/ink-color-pipe) - Create color text with simpler style strings.
 - [ink-multi-select](https://github.com/karaggeorge/ink-multi-select) - Select one or more values from a list
