@@ -141,3 +141,20 @@ test('multiple consecutive clear() calls (should be harmless no-ops)', t => {
 	const afterClears = stdout.get();
 	t.is(afterClears, ansiEscapes.eraseLines(0) + 'New content\n'); // Should do a fresh write
 });
+
+test('sync() followed by update (assert incremental path is used)', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render.sync('Line 1\nLine 2\nLine 3');
+	t.is((stdout.write as any).callCount, 0); // The sync() call shouldn't write to stdout
+
+	render('Line 1\nUpdated\nLine 3');
+	t.is((stdout.write as any).callCount, 1);
+
+	const firstCall = (stdout.write as any).firstCall.args[0] as string;
+	t.true(firstCall.includes(ansiEscapes.cursorNextLine)); // Skips unchanged lines
+	t.true(firstCall.includes('Updated')); // Only updates changed line
+	t.false(firstCall.includes('Line 1')); // Doesn't rewrite unchanged
+	t.false(firstCall.includes('Line 3')); // Doesn't rewrite unchanged
+});
