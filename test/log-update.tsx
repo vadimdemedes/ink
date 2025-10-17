@@ -124,3 +124,20 @@ test('done() resets before next render', t => {
 
 	t.is(afterDone, ansiEscapes.eraseLines(0) + 'Line 1\n'); // Should do a fresh write
 });
+
+test('multiple consecutive clear() calls (should be harmless no-ops)', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render('Line 1\nLine 2\nLine 3');
+	render.clear();
+	render.clear();
+	render.clear();
+
+	t.is((stdout.write as any).callCount, 4); // Initial render + 3 clears (each writes eraseLines)
+
+	// Verify state is properly reset after multiple clears
+	render('New content');
+	const afterClears = stdout.get();
+	t.is(afterClears, ansiEscapes.eraseLines(0) + 'New content\n'); // Should do a fresh write
+});
