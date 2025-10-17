@@ -28,7 +28,7 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 		const prevCount = previousLines.length;
 		const nextLines = output.split('\n');
 		const nextCount = nextLines.length;
-		const visibleCount = nextCount - 1
+		const visibleCount = nextCount - 1;
 
 		if (nextCount === 0 || prevCount === 0) {
 			stream.write(ansiEscapes.eraseLines(prevCount) + output);
@@ -57,7 +57,7 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 				continue;
 			}
 
-			buffer.push(ansiEscapes.eraseLine + (nextLines[i] ?? '') + '\n');
+			buffer.push(ansiEscapes.eraseLine + nextLines[i] + '\n');
 		}
 
 		stream.write(buffer.join(''));
