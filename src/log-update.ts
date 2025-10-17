@@ -38,9 +38,6 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 
 		// We aggregate all chunks for incremental rendering into a buffer, and then write them to stdout at the end.
 		const buffer: string[] = [];
-		const commitBuffer = () => {
-			stream.write(buffer.join(''));
-		};
 
 		// Clear extra lines if the current content's line count is lower than the previous.
 		if (lineCount < previousLineCount) {
@@ -67,7 +64,7 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 			buffer.push(ansiEscapes.eraseLine + (lines[i] ?? '') + '\n');
 		}
 
-		commitBuffer();
+		stream.write(buffer.join(''));
 
 		previousOutput = output;
 		previousLines = lines;
