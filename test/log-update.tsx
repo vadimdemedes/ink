@@ -158,3 +158,19 @@ test('sync() followed by update (assert incremental path is used)', t => {
 	t.false(firstCall.includes('Line 1')); // Doesn't rewrite unchanged
 	t.false(firstCall.includes('Line 3')); // Doesn't rewrite unchanged
 });
+
+test('render to empty string (full clear vs early exit)', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render('Line 1\nLine 2\nLine 3');
+	render('');
+
+	t.is((stdout.write as any).callCount, 2);
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	t.is(secondCall, ansiEscapes.eraseLines(4) + '\n'); // Erases all 4 lines + writes single newline
+
+	// Rendering empty string again should be skipped (identical output)
+	render('');
+	t.is((stdout.write as any).callCount, 2); // No additional write
+});

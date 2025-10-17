@@ -30,7 +30,7 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 		const nextCount = nextLines.length;
 		const visibleCount = nextCount - 1;
 
-		if (nextCount === 0 || prevCount === 0) {
+		if (output === '\n' || previousOutput.length === 0) {
 			stream.write(ansiEscapes.eraseLines(prevCount) + output);
 			previousOutput = output;
 			previousLines = nextLines;
