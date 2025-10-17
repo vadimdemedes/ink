@@ -168,10 +168,14 @@ export default class Ink {
 			return;
 		}
 
+		const startTime = performance.now();
 		const {output, outputHeight, staticOutput} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
 		);
+		if (this.options.onRender) {
+			this.options.onRender({renderTime: performance.now() - startTime});
+		}
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
