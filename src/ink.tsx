@@ -20,6 +20,10 @@ import {accessibilityContext as AccessibilityContext} from './components/Accessi
 
 const noop = () => {};
 
+export type RenderResult = {
+	renderTime: number;
+};
+
 export type Options = {
 	stdout: NodeJS.WriteStream;
 	stdin: NodeJS.ReadStream;
@@ -27,6 +31,7 @@ export type Options = {
 	debug: boolean;
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
+	onRender?: (renderTime: RenderResult) => void;
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
@@ -163,10 +168,14 @@ export default class Ink {
 			return;
 		}
 
+		const startTime = performance.now();
 		const {output, outputHeight, staticOutput} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
 		);
+		if (this.options.onRender) {
+			this.options.onRender({renderTime: performance.now() - startTime});
+		}
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
@@ -278,12 +287,17 @@ export default class Ink {
 			</AccessibilityContext.Provider>
 		);
 
+		const start = performance.now();
 		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		reconciler.updateContainerSync(tree, this.container, null, noop);
 		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		reconciler.flushSyncWork();
+		if (this.options.onRender) {
+			const end = performance.now();
+			this.options.onRender({renderTime: end - start});
+		}
 	}
 
 	writeToStdout(data: string): void {
