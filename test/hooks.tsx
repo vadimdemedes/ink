@@ -127,6 +127,54 @@ test.serial('useInput - handle meta', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - handles meta letter split across chunks', async t => {
+	const ps = term('use-input', ['chunkedMetaLetter']);
+	ps.write('\u001B');
+	process.nextTick(() => {
+		ps.write('b');
+	});
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial(
+	'useInput - emits escape when delayed meta letter arrives late',
+	async t => {
+		const ps = term('use-input', ['chunkedMetaLetterDelayed']);
+		ps.write('\u001B');
+		setTimeout(() => {
+			ps.write('b');
+		}, 10);
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial('useInput - handles bracketed paste as text', async t => {
+	const ps = term('use-input', ['bracketedPaste']);
+	ps.write('\u001B[200~');
+	ps.write('hello ');
+	ps.write('\u001B[Bworld');
+	ps.write('\u001B[201~');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - emits empty bracketed paste content', async t => {
+	const ps = term('use-input', ['emptyBracketedPaste']);
+	ps.write('\u001B[200~');
+	ps.write('\u001B[201~');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - drops partial escape at stream end', async t => {
+	const ps = term('use-input', ['partialEscapeDrop']);
+	ps.write('\u001B[');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - handle up arrow', async t => {
 	const ps = term('use-input', ['upArrow']);
 	ps.write('\u001B[A');
@@ -151,6 +199,115 @@ test.serial('useInput - handle left arrow', async t => {
 test.serial('useInput - handle right arrow', async t => {
 	const ps = term('use-input', ['rightArrow']);
 	ps.write('\u001B[C');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial(
+	'useInput - handles sequential CSI down arrows individually',
+	async t => {
+		const ps = term('use-input', ['rapidArrows']);
+		ps.write('\u001B[B\u001B[B\u001B[B');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial('useInput - coalesces plain text paste into one event', async t => {
+	const ps = term('use-input', ['coalescedText']);
+	ps.write('hello world');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handles mixed CSI and text input', async t => {
+	const ps = term('use-input', ['mixedSequence']);
+	ps.write('\u001B[Bhello\u001B[B');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial(
+	'useInput - supports CSI sequences with non-letter finals',
+	async t => {
+		const ps = term('use-input', ['csiFinals']);
+		ps.write('\u001B[@\u001B[200~');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial('useInput - handles CSI split across chunks', async t => {
+	const ps = term('use-input', ['chunkedCsi']);
+	ps.write('\u001B[');
+	ps.write('200~');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - rejects invalid CSI parameter bytes', async t => {
+	const ps = term('use-input', ['invalidCsiParams']);
+	ps.write('\u001B[12\u0000\u0001@');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handles OSC title sequence', async t => {
+	const ps = term('use-input', ['oscTitle']);
+	ps.write('\u001B]0;Ink Title\u0007');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handles OSC hyperlink sequence', async t => {
+	const ps = term('use-input', ['oscHyperlink']);
+	ps.write('\u001B]8;;https://example.com\u0007Ink Hyperlink\u001B]8;;\u0007');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handles DCS sequence', async t => {
+	const ps = term('use-input', ['dcsSequence']);
+	ps.write('\u001BP1;2|payload\u001B\\');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handles escape depth boundary case', async t => {
+	const ps = term('use-input', ['escapeDepthBoundary']);
+	ps.write('\u001B'.repeat(32) + 'A');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial(
+	'useInput - splits escape depth overflow into separate events',
+	async t => {
+		const ps = term('use-input', ['escapeDepthExceeded']);
+		ps.write('\u001B'.repeat(33) + 'A');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial('useInput - preserves high-unicode paste integrity', async t => {
+	const ps = term('use-input', ['emojiPaste']);
+	ps.write('👋🌍');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - preserves emoji family grapheme', async t => {
+	const ps = term('use-input', ['emojiFamilySingle']);
+	ps.write('👨‍👩‍👧‍👦');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - preserves chunked emoji family grapheme', async t => {
+	const ps = term('use-input', ['emojiFamilyChunked']);
+	ps.write('👨');
+	ps.write('‍👩‍👧‍👦');
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
@@ -256,6 +413,37 @@ test.serial('useInput - handle delete', async t => {
 test.serial('useInput - handle remove (delete)', async t => {
 	const ps = term('use-input', ['remove']);
 	ps.write('\u001B[3~');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - preserves flag emoji grapheme', async t => {
+	const ps = term('use-input', ['flagEmoji']);
+	ps.write('🇺🇳');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - preserves variation selector emoji', async t => {
+	const ps = term('use-input', ['variationSelectorEmoji']);
+	ps.write('✂️');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - preserves emoji keycap sequence', async t => {
+	const ps = term('use-input', ['keycapEmoji']);
+	ps.write('1️⃣');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - forwards isolated surrogate code units', async t => {
+	const ps = term('use-input', ['isolatedSurrogate']);
+	ps.write('\uD83D');
+	process.nextTick(() => {
+		ps.write('X');
+	});
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
