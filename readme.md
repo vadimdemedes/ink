@@ -2009,6 +2009,13 @@ Default: `process.stdin`
 
 Input stream where app will listen for input.
 
+###### stderr
+
+Type: `stream.Writable`\
+Default: `process.stderr`
+
+Error stream.
+
 ###### exitOnCtrlC
 
 Type: `boolean`\
