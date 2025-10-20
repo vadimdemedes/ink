@@ -5,6 +5,7 @@ import path from 'node:path';
 import test, {type ExecutionContext} from 'ava';
 import stripAnsi from 'strip-ansi';
 import {spawn} from 'node-pty';
+import {ReadySignalFilter} from './helpers/ready-signal-filter.js';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
@@ -20,6 +21,7 @@ const term = (fixture: string, args: string[] = []) => {
 
 	// Generate unique ready token for this test
 	const readyToken = crypto.randomUUID();
+	const readyFilter = new ReadySignalFilter(readyToken);
 
 	const env: Record<string, string> = {
 		...process.env,
@@ -52,17 +54,15 @@ const term = (fixture: string, args: string[] = []) => {
 
 	// Attach onData handler immediately after spawn to catch early data
 	ps.onData(data => {
+		const filteredData = readyFilter.process(data);
+
 		// Check for ready signal
-		if (!isReady && data.includes(readyToken)) {
+		if (!isReady && readyFilter.hasSeenSignal()) {
 			isReady = true;
 			readyResolve?.();
-			// Remove the ready marker from output (handles both \n and \r\n line endings)
-			data = data
-				.replace(`${readyToken}\r\n`, '')
-				.replace(`${readyToken}\n`, '');
 		}
 
-		output += data;
+		output += filteredData;
 	});
 
 	const readyPromise = new Promise<void>(resolve => {

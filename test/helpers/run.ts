@@ -2,6 +2,8 @@ import process from 'node:process';
 import {createRequire} from 'node:module';
 import path from 'node:path';
 import url from 'node:url';
+import crypto from 'node:crypto';
+import {ReadySignalFilter} from './ready-signal-filter.js';
 
 const require = createRequire(import.meta.url);
 
@@ -16,6 +18,10 @@ type Run = (
 ) => Promise<string>;
 
 export const run: Run = async (fixture, props) => {
+	// Generate unique ready token for this test
+	const readyToken = crypto.randomUUID();
+	const readyFilter = new ReadySignalFilter(readyToken);
+
 	const env: Record<string, string> = {
 		...(process.env as Record<string, string>),
 		// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -23,6 +29,8 @@ export const run: Run = async (fixture, props) => {
 		...props?.env,
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		NODE_NO_WARNINGS: '1',
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		INK_READY_TOKEN: readyToken,
 	};
 
 	return new Promise<string>((resolve, reject) => {
@@ -43,7 +51,7 @@ export const run: Run = async (fixture, props) => {
 		let output = '';
 
 		term.onData(data => {
-			output += data;
+			output += readyFilter.process(data);
 		});
 
 		term.onExit(({exitCode}) => {
