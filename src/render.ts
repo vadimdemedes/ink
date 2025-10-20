@@ -11,23 +11,27 @@ export type RenderOptions = {
 	@default process.stdout
 	*/
 	stdout?: NodeJS.WriteStream;
+
 	/**
 	Input stream where app will listen for input.
 
 	@default process.stdin
 	*/
 	stdin?: NodeJS.ReadStream;
+
 	/**
 	Error stream.
 	@default process.stderr
 	*/
 	stderr?: NodeJS.WriteStream;
+
 	/**
 	If true, each update will be rendered as separate output, without replacing the previous one.
 
 	@default false
 	*/
 	debug?: boolean;
+
 	/**
 	Configure whether Ink should listen for Ctrl+C keyboard input and exit the app. This is needed in case `process.stdin` is in raw mode, because then Ctrl+C is ignored by default and the process is expected to handle it manually.
 
@@ -69,14 +73,17 @@ export type Instance = {
 	Replace the previous root node with a new one or update props of the current root node.
 	*/
 	rerender: Ink['render'];
+
 	/**
 	Manually unmount the whole Ink app.
 	*/
 	unmount: Ink['unmount'];
+
 	/**
 	Returns a promise that resolves when the app is unmounted.
 	*/
 	waitUntilExit: Ink['waitUntilExit'];
+
 	cleanup: () => void;
 
 	/**
