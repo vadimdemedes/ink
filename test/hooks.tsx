@@ -231,7 +231,7 @@ test.serial(
 	'useInput - supports CSI sequences with non-letter finals',
 	async t => {
 		const ps = term('use-input', ['csiFinals']);
-		ps.write('\u001B[@\u001B[200~');
+		ps.write('\u001B[@\u001B[100~');
 		await ps.waitForExit();
 		t.true(ps.output.includes('exited'));
 	},
@@ -240,7 +240,7 @@ test.serial(
 test.serial('useInput - handles CSI split across chunks', async t => {
 	const ps = term('use-input', ['chunkedCsi']);
 	ps.write('\u001B[');
-	ps.write('200~');
+	ps.write('100~');
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
@@ -437,6 +437,32 @@ test.serial('useInput - preserves emoji keycap sequence', async t => {
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
+
+test.serial(
+	'useInput - preserves chunked airplane emoji with variation selector',
+	async t => {
+		const ps = term('use-input', ['airplaneEmojiChunked']);
+		ps.write('✈');
+		process.nextTick(() => {
+			ps.write('\uFE0F'); // VS16
+		});
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial(
+	'useInput - preserves chunked heart emoji with variation selector',
+	async t => {
+		const ps = term('use-input', ['heartEmojiChunked']);
+		ps.write('♥');
+		process.nextTick(() => {
+			ps.write('\uFE0F'); // VS16
+		});
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
 
 test.serial('useInput - forwards isolated surrogate code units', async t => {
 	const ps = term('use-input', ['isolatedSurrogate']);

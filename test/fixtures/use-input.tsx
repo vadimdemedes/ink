@@ -340,6 +340,44 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			throw new Error(`Unexpected keycap input: ${JSON.stringify(input)}`);
 		}
 
+		if (test === 'airplaneEmojiChunked') {
+			probe.inc('emojiCount');
+
+			if (probe.counters.emojiCount > 1) {
+				throw new Error(
+					'Airplane emoji with VS16 should arrive as single event when chunked',
+				);
+			}
+
+			if (input !== '✈️') {
+				throw new Error(
+					`Expected airplane emoji "✈️", got ${JSON.stringify(input)}`,
+				);
+			}
+
+			exit();
+			return;
+		}
+
+		if (test === 'heartEmojiChunked') {
+			probe.inc('emojiCount');
+
+			if (probe.counters.emojiCount > 1) {
+				throw new Error(
+					'Heart emoji with VS16 should arrive as single event when chunked',
+				);
+			}
+
+			if (input !== '♥️') {
+				throw new Error(
+					`Expected heart emoji "♥️", got ${JSON.stringify(input)}`,
+				);
+			}
+
+			exit();
+			return;
+		}
+
 		if (test === 'isolatedSurrogate') {
 			for (const char of input) {
 				if (char === 'X') {
@@ -438,7 +476,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		if (test === 'csiFinals') {
-			const expected = ['[@', '[200~'];
+			const expected = ['[@', '[100~'];
 			const index = probe.stages.csiStage;
 
 			if (index >= expected.length) {
@@ -465,7 +503,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 				throw new Error('Expected a single CSI event when split across chunks');
 			}
 
-			if (input !== '[200~') {
+			if (input !== '[100~') {
 				throw new Error(`Unexpected CSI input: ${JSON.stringify(input)}`);
 			}
 
@@ -619,50 +657,42 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		if (test === 'bracketedPaste') {
-			const expected = ['[200~', bracketedContent, '[201~'];
-			const index = probe.stages.bracketedStage;
-
-			if (index >= expected.length) {
-				throw new Error('Received more bracketed paste events than expected');
+			// Should receive pasted content with isPaste flag, NOT the markers
+			if (input === '[200~' || input === '[201~') {
+				throw new Error('Bracketed paste markers should not reach userland');
 			}
 
-			if (input !== expected[index]) {
+			if (!key.isPaste) {
+				throw new Error('Expected isPaste flag to be true for pasted content');
+			}
+
+			if (input !== bracketedContent) {
 				throw new Error(
-					`Unexpected bracketed paste input: ${JSON.stringify(input)}`,
+					`Expected pasted content "${bracketedContent}", got ${JSON.stringify(input)}`,
 				);
 			}
 
-			probe.nextStage('bracketedStage');
-
-			if (probe.stages.bracketedStage === expected.length) {
-				exit();
-			}
-
+			exit();
 			return;
 		}
 
 		if (test === 'emptyBracketedPaste') {
-			const expected = ['[200~', '', '[201~'];
-			const index = probe.stages.emptyBracketedStage;
+			// Should receive empty content with isPaste flag, NOT the markers
+			if (input === '[200~' || input === '[201~') {
+				throw new Error('Bracketed paste markers should not reach userland');
+			}
 
-			if (index >= expected.length) {
+			if (!key.isPaste) {
+				throw new Error('Expected isPaste flag to be true for empty paste');
+			}
+
+			if (input !== '') {
 				throw new Error(
-					'Received more empty bracketed paste events than expected',
+					`Expected empty pasted content, got ${JSON.stringify(input)}`,
 				);
 			}
 
-			if (input !== expected[index]) {
-				throw new Error(
-					`Unexpected empty bracketed paste input: ${JSON.stringify(input)}`,
-				);
-			}
-
-			probe.nextStage('emptyBracketedStage');
-
-			if (probe.stages.emptyBracketedStage === expected.length) {
-				exit();
-			}
-
+			exit();
 			return;
 		}
 
