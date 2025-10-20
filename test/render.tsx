@@ -273,3 +273,29 @@ test.serial('throttle renders to maxFps', t => {
 		clock.uninstall();
 	}
 });
+
+test.serial('no throttled renders after unmount', t => {
+	const clock = FakeTimers.install();
+	try {
+		const stdout = createStdout();
+
+		const {unmount, rerender} = render(<ThrottleTestComponent text="Foo" />, {
+			stdout,
+		});
+
+		t.is((stdout.write as any).callCount, 1);
+
+		rerender(<ThrottleTestComponent text="Bar" />);
+		rerender(<ThrottleTestComponent text="Baz" />);
+		unmount();
+
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		const callCountAfterUnmount = (stdout.write as any).callCount;
+
+		// Regression test for https://github.com/vadimdemedes/ink/issues/692
+		clock.tick(1000);
+		t.is((stdout.write as any).callCount, callCountAfterUnmount);
+	} finally {
+		clock.uninstall();
+	}
+});

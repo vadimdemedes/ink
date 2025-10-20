@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {render, Text, Box, useInput} from 'ink';
+import {render, Text, Box, useInput} from '../../src/index.js';
 
 let messageId = 0;
 

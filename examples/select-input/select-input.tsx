@@ -1,5 +1,11 @@
 import React, {useState} from 'react';
-import {render, Text, Box, useInput, useIsScreenReaderEnabled} from 'ink';
+import {
+	render,
+	Text,
+	Box,
+	useInput,
+	useIsScreenReaderEnabled,
+} from '../../src/index.js';
 
 const items = ['Red', 'Green', 'Blue', 'Yellow', 'Magenta', 'Cyan'];
 

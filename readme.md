@@ -123,6 +123,7 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
 - [tweakcc](https://github.com/Piebald-AI/tweakcc) - Customize your Claude Code styling.
 - [argonaut](https://github.com/darksworm/argonaut) - Manage Argo CD resources.
 - [Qodo Command](https://github.com/qodo-ai/command) - Build, run, and manage AI agents.
+- [Nanocoder](https://github.com/nano-collective/nanocoder) - A community-built, local-first AI coding agent with multi-provider support.
 
 *(PRs welcome. Append new entries at the end. Repos must have 100+ stars and showcase Ink beyond a basic list picker.)*
 
@@ -2009,6 +2010,13 @@ Default: `process.stdin`
 
 Input stream where app will listen for input.
 
+###### stderr
+
+Type: `stream.Writable`\
+Default: `process.stderr`
+
+Error stream.
+
 ###### exitOnCtrlC
 
 Type: `boolean`\
@@ -2281,7 +2289,7 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-link](https://github.com/sindresorhus/ink-link) - Link.
 - [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color.
 - [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text.
-- [ink-image](https://github.com/kevva/ink-image) - Display images inside the terminal.
+- [ink-picture](https://github.com/endernoke/ink-picture) - Display images.
 - [ink-tab](https://github.com/jdeniau/ink-tab) - Tab.
 - [ink-color-pipe](https://github.com/LitoMore/ink-color-pipe) - Create color text with simpler style strings.
 - [ink-multi-select](https://github.com/karaggeorge/ink-multi-select) - Select one or more values from a list
