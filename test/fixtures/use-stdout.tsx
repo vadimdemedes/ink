@@ -1,5 +1,6 @@
 import React, {useEffect} from 'react';
 import {render, useStdout, Text} from '../../src/index.js';
+import {writeReadySignal} from '../helpers/ready.js';
 
 function WriteToStdout() {
 	const {write} = useStdout();
@@ -12,6 +13,9 @@ function WriteToStdout() {
 }
 
 const app = render(<WriteToStdout />);
+
+// Signal to test harness that Ink is ready to accept input
+writeReadySignal();
 
 await app.waitUntilExit();
 console.log('exited');

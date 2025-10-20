@@ -1,6 +1,7 @@
 import process from 'node:process';
 import React from 'react';
 import {Static, Box, Text, render} from '../../src/index.js';
+import {writeReadySignal} from '../helpers/ready.js';
 
 function EraseWithStatic() {
 	return (
@@ -20,3 +21,6 @@ function EraseWithStatic() {
 
 process.stdout.rows = Number(process.argv[3]);
 render(<EraseWithStatic />);
+
+// Signal to test harness that Ink is ready to accept input
+writeReadySignal();

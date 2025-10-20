@@ -1,5 +1,6 @@
 import React, {useEffect} from 'react';
 import {Text, render} from '../../src/index.js';
+import {writeReadySignal} from '../helpers/ready.js';
 
 function App() {
 	useEffect(() => {
@@ -14,6 +15,10 @@ function App() {
 }
 
 const {unmount} = render(<App />);
+
+// Signal to test harness that Ink is ready to accept input
+writeReadySignal();
+
 console.log('First log');
 unmount();
 console.log('Second log');

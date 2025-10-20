@@ -1,6 +1,7 @@
 import process from 'node:process';
 import React from 'react';
 import {Text, render, useStdin} from '../../src/index.js';
+import {writeReadySignal} from '../helpers/ready.js';
 
 class ExitDoubleRawMode extends React.Component<{
 	setRawMode: (value: boolean) => void;
@@ -31,6 +32,9 @@ function Test() {
 }
 
 const {unmount, waitUntilExit} = render(<Test />);
+
+// Signal to test harness that Ink is ready to accept input
+writeReadySignal();
 
 process.stdin.on('data', data => {
 	if (String(data) === 'q') {

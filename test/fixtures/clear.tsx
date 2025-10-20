@@ -1,5 +1,6 @@
 import React from 'react';
 import {Box, Text, render} from '../../src/index.js';
+import {writeReadySignal} from '../helpers/ready.js';
 
 function Clear() {
 	return (
@@ -12,4 +13,8 @@ function Clear() {
 }
 
 const {clear} = render(<Clear />);
+
+// Signal to test harness that Ink is ready to accept input
+writeReadySignal();
+
 clear();

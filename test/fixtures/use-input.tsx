@@ -1,6 +1,7 @@
 import process from 'node:process';
 import React from 'react';
 import {render, useInput, useApp} from '../../src/index.js';
+import {writeReadySignal} from '../helpers/ready.js';
 
 type CounterKey =
 	| 'arrowCount'
@@ -811,6 +812,9 @@ function UserInput({test}: {readonly test: string | undefined}) {
 }
 
 const app = render(<UserInput test={process.argv[2]} />);
+
+// Signal to test harness that Ink is ready to accept input
+writeReadySignal();
 
 await app.waitUntilExit();
 console.log('exited');
