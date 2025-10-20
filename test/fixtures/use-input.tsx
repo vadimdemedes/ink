@@ -2,34 +2,146 @@ import process from 'node:process';
 import React from 'react';
 import {render, useInput, useApp} from '../../src/index.js';
 
+type CounterKey =
+	| 'arrowCount'
+	| 'textEventCount'
+	| 'emojiCount'
+	| 'emojiFamilyCount'
+	| 'chunkedCsiCount'
+	| 'chunkedMetaCount';
+
+type StageKey =
+	| 'mixedStage'
+	| 'csiStage'
+	| 'chunkedMetaDelayedStage'
+	| 'bracketedStage'
+	| 'emptyBracketedStage'
+	| 'invalidCsiStage'
+	| 'oscTitleStage'
+	| 'oscHyperlinkStage'
+	| 'dcsStage'
+	| 'escapeDepthStage'
+	| 'escapeDepthExceededStage';
+
+type FlagKey = 'partialEscapeHandled' | 'surrogateSeen' | 'surrogateTailSeen';
+
+type Counters = Record<CounterKey, number>;
+type Stages = Record<StageKey, number>;
+type Flags = Record<FlagKey, boolean>;
+
+function makeZeroed<T extends string>(keys: readonly T[]): Record<T, number> {
+	const out = Object.create(null) as Record<T, number>;
+	for (const key of keys) {
+		out[key] = 0;
+	}
+
+	return out;
+}
+
+function makeFalsey<T extends string>(keys: readonly T[]): Record<T, boolean> {
+	const out = Object.create(null) as Record<T, boolean>;
+	for (const key of keys) {
+		out[key] = false;
+	}
+
+	return out;
+}
+
+const counterKeys = [
+	'arrowCount',
+	'textEventCount',
+	'emojiCount',
+	'emojiFamilyCount',
+	'chunkedCsiCount',
+	'chunkedMetaCount',
+] as const;
+
+const stageKeys = [
+	'mixedStage',
+	'csiStage',
+	'chunkedMetaDelayedStage',
+	'bracketedStage',
+	'emptyBracketedStage',
+	'invalidCsiStage',
+	'oscTitleStage',
+	'oscHyperlinkStage',
+	'dcsStage',
+	'escapeDepthStage',
+	'escapeDepthExceededStage',
+] as const;
+
+const flagKeys = [
+	'partialEscapeHandled',
+	'surrogateSeen',
+	'surrogateTailSeen',
+] as const;
+
+export type Probe = {
+	readonly counters: Counters;
+	readonly stages: Stages;
+	readonly flags: Flags;
+	inc: (key: CounterKey, by?: number) => void;
+	nextStage: (key: StageKey) => void;
+	setStage: (key: StageKey, value: number) => void;
+	setFlag: (key: FlagKey, value?: boolean) => void;
+	reset: () => void;
+	snapshot: () => {counters: Counters; stages: Stages; flags: Flags};
+};
+
+export function createProbe(): Probe {
+	const counters = makeZeroed(counterKeys);
+	const stages = makeZeroed(stageKeys);
+	const flags = makeFalsey(flagKeys);
+
+	const api: Probe = {
+		counters,
+		stages,
+		flags,
+		inc(key, by = 1) {
+			counters[key] += by;
+		},
+		nextStage(key) {
+			stages[key] += 1;
+		},
+		setStage(key, value) {
+			stages[key] = value;
+		},
+		setFlag(key, value = true) {
+			flags[key] = value;
+		},
+		reset() {
+			for (const k of counterKeys) counters[k] = 0;
+			for (const k of stageKeys) stages[k] = 0;
+			for (const k of flagKeys) flags[k] = false;
+		},
+		snapshot() {
+			return {
+				counters: {...counters},
+				stages: {...stages},
+				flags: {...flags},
+			};
+		},
+	};
+
+	return api;
+}
+
+export function useProbe(): Probe {
+	const ref = React.useRef<Probe>();
+	ref.current ||= createProbe();
+
+	return ref.current;
+}
+
 function UserInput({test}: {readonly test: string | undefined}) {
 	const {exit} = useApp();
-	const arrowCountRef = React.useRef(0);
-	const textEventCountRef = React.useRef(0);
-	const mixedStageRef = React.useRef(0);
-	const csiStageRef = React.useRef(0);
-	const emojiCountRef = React.useRef(0);
-	const emojiFamilyCountRef = React.useRef(0);
-	const chunkedCsiCountRef = React.useRef(0);
-	const chunkedMetaCountRef = React.useRef(0);
-	const bracketedStageRef = React.useRef(0);
-	const emptyBracketedStageRef = React.useRef(0);
+	const probe = useProbe();
 	const bracketedContent = 'hello \u001B[Bworld';
-	const chunkedMetaDelayedStageRef = React.useRef(0);
-	const partialEscapeHandledRef = React.useRef(false);
-	const invalidCsiStageRef = React.useRef(0);
-	const oscTitleStageRef = React.useRef(0);
-	const oscHyperlinkStageRef = React.useRef(0);
-	const dcsStageRef = React.useRef(0);
-	const escapeDepthStageRef = React.useRef(0);
-	const escapeDepthExceededStageRef = React.useRef(0);
-	const surrogateSeenRef = React.useRef(false);
-	const surrogateTailSeenRef = React.useRef(false);
 
 	useInput((input, key) => {
 		if (test === 'oscTitle') {
 			const expectedPayload = '0;Ink Title\u0007';
-			const stage = oscTitleStageRef.current;
+			const stage = probe.stages.oscTitleStage;
 
 			if (stage === 0) {
 				if (input !== ']' || key.escape || key.meta) {
@@ -38,7 +150,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 					);
 				}
 
-				oscTitleStageRef.current = 1;
+				probe.setStage('oscTitleStage', 1);
 				return;
 			}
 
@@ -63,7 +175,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 				']',
 				'8;;\u0007',
 			];
-			const stage = oscHyperlinkStageRef.current;
+			const stage = probe.stages.oscHyperlinkStage;
 			const expectedValue = expected[stage];
 
 			if (!expectedValue) {
@@ -79,9 +191,9 @@ function UserInput({test}: {readonly test: string | undefined}) {
 				);
 			}
 
-			oscHyperlinkStageRef.current++;
+			probe.nextStage('oscHyperlinkStage');
 
-			if (oscHyperlinkStageRef.current === expected.length) {
+			if (probe.stages.oscHyperlinkStage === expected.length) {
 				exit();
 			}
 
@@ -89,7 +201,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		if (test === 'dcsSequence') {
-			const stage = dcsStageRef.current;
+			const stage = probe.stages.dcsStage;
 
 			if (stage === 0) {
 				if (input !== 'P' || !key.meta || !key.shift) {
@@ -101,7 +213,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 					);
 				}
 
-				dcsStageRef.current = 1;
+				probe.setStage('dcsStage', 1);
 				return;
 			}
 
@@ -112,7 +224,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 					);
 				}
 
-				dcsStageRef.current = 2;
+				probe.setStage('dcsStage', 2);
 				return;
 			}
 
@@ -136,7 +248,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		if (test === 'escapeDepthBoundary') {
 			const expected = '\u001B'.repeat(31) + 'A';
 
-			if (escapeDepthStageRef.current !== 0) {
+			if (probe.stages.escapeDepthStage !== 0) {
 				throw new Error(
 					'Received more events than expected for depth boundary',
 				);
@@ -153,13 +265,13 @@ function UserInput({test}: {readonly test: string | undefined}) {
 				);
 			}
 
-			escapeDepthStageRef.current = 1;
+			probe.setStage('escapeDepthStage', 1);
 			exit();
 			return;
 		}
 
 		if (test === 'escapeDepthExceeded') {
-			const stage = escapeDepthExceededStageRef.current;
+			const stage = probe.stages.escapeDepthExceededStage;
 			const expected = '\u001B'.repeat(31) + 'A';
 
 			if (stage === 0) {
@@ -174,7 +286,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 					);
 				}
 
-				escapeDepthExceededStageRef.current = 1;
+				probe.setStage('escapeDepthExceededStage', 1);
 				return;
 			}
 
@@ -231,24 +343,24 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		if (test === 'isolatedSurrogate') {
 			for (const char of input) {
 				if (char === 'X') {
-					if (surrogateTailSeenRef.current) {
+					if (probe.flags.surrogateTailSeen) {
 						throw new Error(
 							'Received duplicate trailing character for surrogate sequence',
 						);
 					}
 
-					surrogateTailSeenRef.current = true;
+					probe.setFlag('surrogateTailSeen');
 					continue;
 				}
 
-				if (surrogateSeenRef.current) {
+				if (probe.flags.surrogateSeen) {
 					throw new Error('Received duplicate surrogate placeholder');
 				}
 
-				surrogateSeenRef.current = true;
+				probe.setFlag('surrogateSeen');
 			}
 
-			if (surrogateSeenRef.current && surrogateTailSeenRef.current) {
+			if (probe.flags.surrogateSeen && probe.flags.surrogateTailSeen) {
 				exit();
 			}
 
@@ -260,14 +372,14 @@ function UserInput({test}: {readonly test: string | undefined}) {
 				throw new Error('Expected down arrow event');
 			}
 
-			arrowCountRef.current++;
+			probe.inc('arrowCount');
 
-			if (arrowCountRef.current === 3) {
+			if (probe.counters.arrowCount === 3) {
 				exit();
 				return;
 			}
 
-			if (arrowCountRef.current > 3) {
+			if (probe.counters.arrowCount > 3) {
 				throw new Error('Received extra down arrow events');
 			}
 
@@ -275,9 +387,9 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		if (test === 'coalescedText') {
-			textEventCountRef.current++;
+			probe.inc('textEventCount');
 
-			if (textEventCountRef.current > 1) {
+			if (probe.counters.textEventCount > 1) {
 				throw new Error('Expected a single text event');
 			}
 
@@ -308,7 +420,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 				},
 			];
 
-			const validator = validators[mixedStageRef.current];
+			const validator = validators[probe.stages.mixedStage];
 
 			if (!validator) {
 				throw new Error('Received more events than expected');
@@ -316,9 +428,9 @@ function UserInput({test}: {readonly test: string | undefined}) {
 
 			validator();
 
-			mixedStageRef.current++;
+			probe.nextStage('mixedStage');
 
-			if (mixedStageRef.current === 3) {
+			if (probe.stages.mixedStage === 3) {
 				exit();
 			}
 
@@ -327,7 +439,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 
 		if (test === 'csiFinals') {
 			const expected = ['[@', '[200~'];
-			const index = csiStageRef.current;
+			const index = probe.stages.csiStage;
 
 			if (index >= expected.length) {
 				throw new Error('Received more CSI sequences than expected');
@@ -337,9 +449,9 @@ function UserInput({test}: {readonly test: string | undefined}) {
 				throw new Error(`Unexpected CSI sequence: ${JSON.stringify(input)}`);
 			}
 
-			csiStageRef.current++;
+			probe.nextStage('csiStage');
 
-			if (csiStageRef.current === expected.length) {
+			if (probe.stages.csiStage === expected.length) {
 				exit();
 			}
 
@@ -347,9 +459,9 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		if (test === 'chunkedCsi') {
-			chunkedCsiCountRef.current++;
+			probe.inc('chunkedCsiCount');
 
-			if (chunkedCsiCountRef.current > 1) {
+			if (probe.counters.chunkedCsiCount > 1) {
 				throw new Error('Expected a single CSI event when split across chunks');
 			}
 
@@ -362,7 +474,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		if (test === 'invalidCsiParams') {
-			const stage = invalidCsiStageRef.current;
+			const stage = probe.stages.invalidCsiStage;
 
 			if (stage === 0) {
 				if (!key.escape || input !== '') {
@@ -371,7 +483,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 					);
 				}
 
-				invalidCsiStageRef.current = 1;
+				probe.setStage('invalidCsiStage', 1);
 				return;
 			}
 
@@ -390,9 +502,9 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		if (test === 'emojiPaste') {
-			emojiCountRef.current++;
+			probe.inc('emojiCount');
 
-			if (emojiCountRef.current > 1) {
+			if (probe.counters.emojiCount > 1) {
 				throw new Error('Expected emoji paste to arrive as a single event');
 			}
 
@@ -405,9 +517,9 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		if (test === 'emojiFamilySingle' || test === 'emojiFamilyChunked') {
-			emojiFamilyCountRef.current++;
+			probe.inc('emojiFamilyCount');
 
-			if (emojiFamilyCountRef.current > 1) {
+			if (probe.counters.emojiFamilyCount > 1) {
 				throw new Error('Expected emoji family to arrive as a single event');
 			}
 
@@ -462,9 +574,9 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		if (test === 'chunkedMetaLetter') {
-			chunkedMetaCountRef.current++;
+			probe.inc('chunkedMetaCount');
 
-			if (chunkedMetaCountRef.current > 1) {
+			if (probe.counters.chunkedMetaCount > 1) {
 				throw new Error(
 					'Expected a single meta letter event when split across chunks',
 				);
@@ -479,14 +591,14 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		if (test === 'chunkedMetaLetterDelayed') {
-			const stage = chunkedMetaDelayedStageRef.current;
+			const stage = probe.stages.chunkedMetaDelayedStage;
 
 			if (stage === 0) {
 				if (!key.escape || input !== '') {
 					throw new Error('Expected an escape key event first');
 				}
 
-				chunkedMetaDelayedStageRef.current = 1;
+				probe.setStage('chunkedMetaDelayedStage', 1);
 				return;
 			}
 
@@ -508,7 +620,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 
 		if (test === 'bracketedPaste') {
 			const expected = ['[200~', bracketedContent, '[201~'];
-			const index = bracketedStageRef.current;
+			const index = probe.stages.bracketedStage;
 
 			if (index >= expected.length) {
 				throw new Error('Received more bracketed paste events than expected');
@@ -520,9 +632,9 @@ function UserInput({test}: {readonly test: string | undefined}) {
 				);
 			}
 
-			bracketedStageRef.current++;
+			probe.nextStage('bracketedStage');
 
-			if (bracketedStageRef.current === expected.length) {
+			if (probe.stages.bracketedStage === expected.length) {
 				exit();
 			}
 
@@ -531,7 +643,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 
 		if (test === 'emptyBracketedPaste') {
 			const expected = ['[200~', '', '[201~'];
-			const index = emptyBracketedStageRef.current;
+			const index = probe.stages.emptyBracketedStage;
 
 			if (index >= expected.length) {
 				throw new Error(
@@ -545,9 +657,9 @@ function UserInput({test}: {readonly test: string | undefined}) {
 				);
 			}
 
-			emptyBracketedStageRef.current++;
+			probe.nextStage('emptyBracketedStage');
 
-			if (emptyBracketedStageRef.current === expected.length) {
+			if (probe.stages.emptyBracketedStage === expected.length) {
 				exit();
 			}
 
@@ -555,7 +667,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		if (test === 'partialEscapeDrop') {
-			partialEscapeHandledRef.current = true;
+			probe.setFlag('partialEscapeHandled');
 			throw new Error('Partial escape should be dropped before emitting input');
 		}
 
@@ -659,7 +771,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 
 	if (test === 'partialEscapeDrop') {
 		setTimeout(() => {
-			if (!partialEscapeHandledRef.current) {
+			if (!probe.flags.partialEscapeHandled) {
 				exit();
 			}
 		}, 50);
