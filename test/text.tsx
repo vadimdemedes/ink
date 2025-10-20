@@ -26,7 +26,7 @@ test('text with dim+bold', t => {
 			Test
 		</Text>,
 	);
-	t.is(output, chalk.dim.bold('Test'));
+	t.is(output, chalk.bold.dim('Test'));
 });
 
 test('text with dimmed color', t => {
