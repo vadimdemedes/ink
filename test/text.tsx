@@ -20,13 +20,13 @@ test('text with standard color', t => {
 	t.is(output, chalk.green('Test'));
 });
 
-test.failing('text with dim+bold', t => {
+test('text with dim+bold', t => {
 	const output = renderToString(
 		<Text dimColor bold>
 			Test
 		</Text>,
 	);
-	t.is(output, chalk.dim.bold('Test'));
+	t.is(output, chalk.bold.dim('Test'));
 });
 
 test('text with dimmed color', t => {
