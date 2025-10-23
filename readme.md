@@ -73,7 +73,6 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
 
 ## Who's Using Ink?
 
-- [Codex](https://github.com/openai/codex) - An agentic coding tool made by OpenAI.
 - [Claude Code](https://github.com/anthropics/claude-code) - An agentic coding tool made by Anthropic.
 - [Gemini CLI](https://github.com/google-gemini/gemini-cli) - An agentic coding tool made by Google.
 - [GitHub Copilot for CLI](https://githubnext.com/projects/copilot-cli) - Just say what you want the shell to do.
