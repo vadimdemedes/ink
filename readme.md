@@ -2035,6 +2035,13 @@ That way, both are visible and don't overlap each other.
 
 This functionality is powered by [patch-console](https://github.com/vadimdemedes/patch-console), so if you need to disable Ink's interception of output but want to build something custom, you can use that.
 
+###### onRender
+
+Type: `(renderTime: number) => void`\
+Default: `undefined`
+
+Runs the given callback after each render and re-render with a renderResult object.
+
 ###### debug
 
 Type: `boolean`\
