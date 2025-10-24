@@ -97,6 +97,11 @@ export type Instance = {
 	Clear output.
 	*/
 	clear: () => void;
+
+	/**
+	 * Manually recalculate layout.
+	 */
+	recalculateLayout: Ink['recalculateLayout'];
 };
 
 /**
@@ -133,6 +138,7 @@ const render = (
 		waitUntilExit: instance.waitUntilExit,
 		cleanup: () => instances.delete(inkOptions.stdout),
 		clear: instance.clear,
+		recalculateLayout: instance.recalculateLayout,
 	};
 };
 

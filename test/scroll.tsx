@@ -13,7 +13,6 @@ import {Box, Text, render, useInput} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
 
-const longText = 'line '.repeat(20).trim();
 const tallText = Array.from({length: 20})
 	.map((_, i) => `line ${i}`)
 	.join('\n');
@@ -207,26 +206,43 @@ test('dynamic scroll update', t => {
 	t.snapshot(secondRender, 'after scroll');
 });
 
-test('scroll with flexGrow', t => {
-	const output = renderToString(
-		<Box width={20} height={5}>
-			<Box
-				flexGrow={1}
-				overflowY="scroll"
-				borderStyle="round"
-				flexDirection="column"
-				scrollTop={10}
-			>
-				<Box flexDirection="column" flexShrink={0}>
-					<Text>{tallText}</Text>
-				</Box>
-			</Box>
-			<Text>Text on Side</Text>
-		</Box>,
-	);
+const flexGrowScrollTests = [
+	{
+		name: 'scroll with flexGrow at top',
+		scrollTop: 0,
+	},
+	{
+		name: 'scroll with flexGrow at middle',
+		scrollTop: 10,
+	},
+	{
+		name: 'scroll with flexGrow at bottom',
+		scrollTop: 17,
+	},
+];
 
-	t.snapshot(output);
-});
+for (const {name, scrollTop} of flexGrowScrollTests) {
+	test(name, t => {
+		const output = renderToString(
+			<Box width={20} height={5}>
+				<Box
+					flexGrow={1}
+					overflowY="scroll"
+					borderStyle="round"
+					flexDirection="column"
+					scrollTop={scrollTop}
+				>
+					<Box flexDirection="column" flexShrink={0}>
+						<Text>{tallText}</Text>
+					</Box>
+				</Box>
+				<Text>Text on Side</Text>
+			</Box>,
+		);
+
+		t.snapshot(output);
+	});
+}
 
 const scrollWithPaddingTests = [
 	{
