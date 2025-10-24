@@ -515,11 +515,7 @@ test('out of bounds writes do not crash', t => {
 		borderStyle: 'round',
 	})
 		.split('\n')
-		.map((line, index) => {
-			return index === 0 || index === 9
-				? line
-				: `${line.slice(0, 10)}${line[11] ?? ''}`;
-		})
+		.map(line => line.slice(0, 10).trimEnd())
 		.join('\n');
 
 	t.is(output, expected);

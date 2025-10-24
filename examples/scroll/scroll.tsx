@@ -19,7 +19,7 @@ import {
 
 type ScrollMode = 'vertical' | 'horizontal' | 'both' | 'hidden';
 
-const items = Array.from({length: 100}).map((_, i) => ({
+const items = Array.from({length: 1000}).map((_, i) => ({
 	id: i,
 	text: `Line ${i} ${'-'.repeat(i)}`,
 }));
@@ -119,7 +119,7 @@ function ScrollableContent() {
 			getNewValue: (current: number) => number,
 		) => {
 			let frame = 0;
-			const frames = 10;
+			const frames = 1000;
 			scrollIntervalReference.current = setInterval(() => {
 				if (frame < frames) {
 					setter(s => getNewValue(s));
@@ -128,7 +128,7 @@ function ScrollableContent() {
 					clearInterval(scrollIntervalReference.current);
 					scrollIntervalReference.current = null;
 				}
-			}, 16);
+			}, 1);
 		};
 
 		if (key.upArrow) {

@@ -44,6 +44,7 @@
 	],
 	"dependencies": {
 		"@alcalzone/ansi-tokenize": "^0.2.0",
+		"@xterm/headless": "5.5.0",
 		"ansi-escapes": "^7.0.0",
 		"ansi-styles": "^6.2.1",
 		"auto-bind": "^5.0.1",
@@ -62,7 +63,6 @@
 		"stack-utils": "^2.0.6",
 		"string-width": "^8.1.0",
 		"type-fest": "^4.27.0",
-		"widest-line": "^5.0.0",
 		"wrap-ansi": "^9.0.0",
 		"ws": "^8.18.0",
 		"yoga-layout": "~3.2.1"

@@ -1,7 +1,6 @@
-import widestLine from 'widest-line';
-import indentString from 'indent-string';
 import Yoga from 'yoga-layout';
-import wrapText from './wrap-text.js';
+import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {truncateStyledChars, wrapStyledChars} from './wrap-text.js';
 import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';
 import renderBorder from './render-border.js';
@@ -10,6 +9,11 @@ import {type DOMElement} from './dom.js';
 import {getScrollHeight, getScrollWidth} from './measure-element.js';
 import type Output from './output.js';
 import colorize from './colorize.js';
+import {
+	measureStyledChars,
+	splitStyledCharsByNewline,
+	toStyledCharacters,
+} from './measure-text.js';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.
@@ -17,16 +21,34 @@ import colorize from './colorize.js';
 // and use it as offset for the rest of the nodes
 // Only first node is taken into account, because other text nodes can't have margin or padding,
 // so their coordinates will be relative to the first node anyway
-const applyPaddingToText = (node: DOMElement, text: string): string => {
+const applyPaddingToStyledChars = (
+	node: DOMElement,
+	lines: StyledChar[][],
+): StyledChar[][] => {
 	const yogaNode = node.childNodes[0]?.yogaNode;
 
 	if (yogaNode) {
 		const offsetX = yogaNode.getComputedLeft();
 		const offsetY = yogaNode.getComputedTop();
-		text = '\n'.repeat(offsetY) + indentString(text, offsetX);
+
+		const space: StyledChar = {
+			type: 'char',
+			value: ' ',
+			fullWidth: false,
+			styles: [],
+		};
+
+		const paddingLeft = Array.from({length: offsetX}).map(() => space);
+
+		lines = lines.map(line => [...paddingLeft, ...line]);
+
+		const paddingTop: StyledChar[][] = Array.from({length: offsetY}).map(
+			() => [],
+		);
+		lines.unshift(...paddingTop);
 	}
 
-	return text;
+	return lines;
 };
 
 export type OutputTransformer = (s: string, index: number) => string;
@@ -131,6 +153,32 @@ const renderNodeToOutput = (
 		const x = offsetX + yogaNode.getComputedLeft();
 		const y = offsetY + yogaNode.getComputedTop();
 
+		const width = yogaNode.getComputedWidth();
+		const height = yogaNode.getComputedHeight();
+		const clip = output.getCurrentClip();
+
+		if (clip) {
+			const nodeLeft = x;
+			const nodeRight = x + width;
+			const nodeTop = y;
+			const nodeBottom = y + height;
+
+			const clipLeft = clip.x1 ?? -Infinity;
+			const clipRight = clip.x2 ?? Infinity;
+			const clipTop = clip.y1 ?? -Infinity;
+			const clipBottom = clip.y2 ?? Infinity;
+
+			const isVisible =
+				nodeRight > clipLeft &&
+				nodeLeft < clipRight &&
+				nodeBottom > clipTop &&
+				nodeTop < clipBottom;
+
+			if (!isVisible) {
+				return;
+			}
+		}
+
 		// Transformers are functions that transform final text output of each component
 		// See Output class for logic that applies transformers
 		let newTransformers = transformers;
@@ -139,20 +187,39 @@ const renderNodeToOutput = (
 		}
 
 		if (node.nodeName === 'ink-text') {
-			let text = squashTextNodes(node);
+			const styledChars = toStyledCharacters(squashTextNodes(node));
 
-			if (text.length > 0) {
-				const currentWidth = widestLine(text);
+			if (styledChars.length > 0) {
+				let lines: StyledChar[][] = [];
+				const {width: currentWidth} = measureStyledChars(styledChars);
 				const maxWidth = getMaxWidth(yogaNode);
 
 				if (currentWidth > maxWidth) {
 					const textWrap = node.style.textWrap ?? 'wrap';
-					text = wrapText(text, maxWidth, textWrap);
+					if (textWrap.startsWith('truncate')) {
+						let position: 'start' | 'middle' | 'end' = 'end';
+						if (textWrap === 'truncate-middle') {
+							position = 'middle';
+						} else if (textWrap === 'truncate-start') {
+							position = 'start';
+						}
+
+						lines = [truncateStyledChars(styledChars, maxWidth, {position})];
+					} else {
+						lines = wrapStyledChars(styledChars, maxWidth);
+					}
+				} else {
+					lines = splitStyledCharsByNewline(styledChars);
 				}
 
-				text = applyPaddingToText(node, text);
+				lines = applyPaddingToStyledChars(node, lines);
 
-				output.write(x, y, text, {transformers: newTransformers});
+				for (const [index, line] of lines.entries()) {
+					output.write(x, y + index, line, {
+						transformers: newTransformers,
+						lineIndex: index,
+					});
+				}
 			}
 
 			return;
@@ -292,14 +359,15 @@ function calculateHorizontalScroll(node: DOMElement) {
 
 function renderScrollbar(
 	node: DOMElement,
-	x: number,
-	y: number,
 	output: Output,
-	axis: 'vertical' | 'horizontal',
 	options: {
+		x: number;
+		y: number;
+		axis: 'vertical' | 'horizontal';
 		verticallyScrollable?: boolean;
-	} = {},
+	},
 ) {
+	const {x, y, axis} = options;
 	const {yogaNode} = node;
 	if (!yogaNode) {
 		return;
@@ -425,7 +493,7 @@ function renderVerticalScrollbar(
 	y: number,
 	output: Output,
 ) {
-	renderScrollbar(node, x, y, output, 'vertical');
+	renderScrollbar(node, output, {x, y, axis: 'vertical'});
 }
 
 // eslint-disable-next-line max-params
@@ -436,7 +504,10 @@ function renderHorizontalScrollbar(
 	output: Output,
 	{verticallyScrollable}: {verticallyScrollable: boolean},
 ) {
-	renderScrollbar(node, x, y, output, 'horizontal', {
+	renderScrollbar(node, output, {
+		x,
+		y,
+		axis: 'horizontal',
 		verticallyScrollable,
 	});
 }

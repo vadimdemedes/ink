@@ -107,17 +107,25 @@ const renderBorder = (
 		}
 
 		if (showLeftBorder) {
-			output.write(x, y + offsetY, leftBorder, {transformers: []});
+			for (const [index, line] of leftBorder.split('\n').entries()) {
+				output.write(x, y + offsetY + index, line, {
+					transformers: [],
+				});
+			}
 		}
 
 		if (showRightBorder) {
-			output.write(x + width - 1, y + offsetY, rightBorder, {
-				transformers: [],
-			});
+			for (const [index, line] of rightBorder.split('\n').entries()) {
+				output.write(x + width - 1, y + offsetY + index, line, {
+					transformers: [],
+				});
+			}
 		}
 
 		if (bottomBorder) {
-			output.write(x, y + height - 1, bottomBorder, {transformers: []});
+			output.write(x, y + height - 1, bottomBorder, {
+				transformers: [],
+			});
 		}
 	}
 };

@@ -1,47 +1,173 @@
-import wrapAnsi from 'wrap-ansi';
-import cliTruncate from 'cli-truncate';
-import {type Styles} from './styles.js';
+import {type StyledChar} from '@alcalzone/ansi-tokenize';
+import {inkCharacterWidth, styledCharsWidth} from './measure-text.js';
 
-const cache: Record<string, string> = {};
+export const sliceStyledChars = (
+	styledChars: StyledChar[],
+	begin: number,
+	end?: number,
+): StyledChar[] => {
+	let width = 0;
+	const result: StyledChar[] = [];
 
-const wrapText = (
-	text: string,
-	maxWidth: number,
-	wrapType: Styles['textWrap'],
-): string => {
-	const cacheKey = text + String(maxWidth) + String(wrapType);
-	const cachedText = cache[cacheKey];
+	for (const char of styledChars) {
+		const charWidth = inkCharacterWidth(char.value);
+		const charStart = width;
+		const charEnd = width + charWidth;
 
-	if (cachedText) {
-		return cachedText;
-	}
-
-	let wrappedText = text;
-
-	if (wrapType === 'wrap') {
-		wrappedText = wrapAnsi(text, maxWidth, {
-			trim: false,
-			hard: true,
-		});
-	}
-
-	if (wrapType!.startsWith('truncate')) {
-		let position: 'end' | 'middle' | 'start' = 'end';
-
-		if (wrapType === 'truncate-middle') {
-			position = 'middle';
+		if (end !== undefined && charEnd > end) {
+			break;
 		}
 
-		if (wrapType === 'truncate-start') {
-			position = 'start';
+		if (charStart >= begin) {
+			result.push(char);
 		}
 
-		wrappedText = cliTruncate(text, maxWidth, {position});
+		width += charWidth;
 	}
 
-	cache[cacheKey] = wrappedText;
-
-	return wrappedText;
+	return result;
 };
 
-export default wrapText;
+export const truncateStyledChars = (
+	styledChars: StyledChar[],
+	columns: number,
+	options: {position?: 'start' | 'middle' | 'end'} = {},
+): StyledChar[] => {
+	const {position = 'end'} = options;
+	const truncationCharacter = '…';
+	const truncationStyledChar: StyledChar = {
+		type: 'char',
+		value: truncationCharacter,
+		fullWidth: false,
+		styles: [],
+	};
+
+	if (columns < 1) {
+		return [];
+	}
+
+	if (columns === 1) {
+		return [truncationStyledChar];
+	}
+
+	const textWidth = styledCharsWidth(styledChars);
+
+	if (textWidth <= columns) {
+		return styledChars;
+	}
+
+	const truncationWidth = inkCharacterWidth(truncationCharacter);
+
+	if (position === 'start') {
+		const right = sliceStyledChars(
+			styledChars,
+			textWidth - columns + truncationWidth,
+			textWidth,
+		);
+		return [truncationStyledChar, ...right];
+	}
+
+	if (position === 'middle') {
+		const leftWidth = Math.ceil(columns / 2);
+		const rightWidth = columns - leftWidth;
+		const left = sliceStyledChars(styledChars, 0, leftWidth - truncationWidth);
+		const right = sliceStyledChars(
+			styledChars,
+			textWidth - rightWidth,
+			textWidth,
+		);
+		return [...left, truncationStyledChar, ...right];
+	}
+
+	const left = sliceStyledChars(styledChars, 0, columns - truncationWidth);
+	return [...left, truncationStyledChar];
+};
+
+const wrapWord = (
+	rows: StyledChar[][],
+	word: StyledChar[],
+	columns: number,
+) => {
+	let currentLine = rows.at(-1)!;
+	let visible = styledCharsWidth(currentLine);
+
+	for (const character of word) {
+		const characterLength = inkCharacterWidth(character.value);
+
+		if (visible + characterLength > columns && visible > 0) {
+			rows.push([]);
+			currentLine = rows.at(-1)!;
+			visible = 0;
+		}
+
+		currentLine.push(character);
+		visible += characterLength;
+	}
+};
+
+export const wrapStyledChars = (
+	styledChars: StyledChar[],
+	columns: number,
+): StyledChar[][] => {
+	const rows: StyledChar[][] = [[]];
+	const words: StyledChar[][] = [];
+	let currentWord: StyledChar[] = [];
+
+	for (const char of styledChars) {
+		if (char.value === ' ') {
+			if (currentWord.length > 0) {
+				words.push(currentWord);
+			}
+
+			currentWord = [];
+		} else {
+			currentWord.push(char);
+		}
+	}
+
+	if (currentWord.length > 0) {
+		words.push(currentWord);
+	}
+
+	const space: StyledChar = {
+		type: 'char',
+		value: ' ',
+		fullWidth: false,
+		styles: [],
+	};
+
+	for (const [index, word] of words.entries()) {
+		const wordWidth = styledCharsWidth(word);
+		let rowWidth = styledCharsWidth(rows.at(-1)!);
+
+		if (index > 0) {
+			rows.at(-1)!.push(space);
+			rowWidth++;
+		}
+
+		if (wordWidth > columns) {
+			if (index > 0) {
+				rows[rows.length - 1] = rows.at(-1)!.slice(0, -1);
+
+				if (rows.at(-1)!.length > 0) {
+					rows.push([]);
+				}
+			}
+
+			wrapWord(rows, word, columns);
+			continue;
+		}
+
+		if (rowWidth + wordWidth > columns && rowWidth > 0) {
+			if (index > 0) {
+				rows[rows.length - 1] = rows.at(-1)!.slice(0, -1);
+			}
+
+			rows.push(word);
+		} else {
+			rows.at(-1)!.push(...word);
+		}
+	}
+
+	return rows;
+};

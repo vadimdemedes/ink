@@ -280,6 +280,12 @@ export default class Ink {
 		this.lastOutputHeight = outputHeight;
 	};
 
+	recalculateLayout(): void {
+		this.markAllTextNodesDirty(this.rootNode);
+		this.calculateLayout();
+		this.onRender();
+	}
+
 	render(node: ReactNode): void {
 		const tree = (
 			<AccessibilityContext.Provider
@@ -429,5 +435,17 @@ export default class Ink {
 				}
 			}
 		});
+	}
+
+	private markAllTextNodesDirty(node: dom.DOMElement) {
+		if (node.nodeName === 'ink-text' && node.yogaNode) {
+			node.yogaNode.markDirty();
+		}
+
+		for (const child of node.childNodes) {
+			if (child.nodeName !== '#text') {
+				this.markAllTextNodesDirty(child);
+			}
+		}
 	}
 }

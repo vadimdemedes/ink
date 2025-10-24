@@ -1,5 +1,6 @@
 export type {RenderOptions, Instance} from './render.js';
 export {default as render} from './render.js';
+
 export type {Props as BoxProps} from './components/Box.js';
 export {default as Box} from './components/Box.js';
 export type {Props as TextProps} from './components/Text.js';
@@ -32,4 +33,5 @@ export {
 	getScrollHeight,
 	getScrollWidth,
 } from './measure-element.js';
+export {clearStringWidthCache, setStringWidthFunction} from './measure-text.js';
 export type {DOMElement} from './dom.js';
