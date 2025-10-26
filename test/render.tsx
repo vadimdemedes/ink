@@ -1,15 +1,18 @@
+import EventEmitter from 'node:events';
 import process from 'node:process';
 import url from 'node:url';
 import * as path from 'node:path';
 import {createRequire} from 'node:module';
 import FakeTimers from '@sinonjs/fake-timers';
+import {stub} from 'sinon';
 import test from 'ava';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
-import {render, Box, Text} from '../src/index.js';
+import {render, Box, Text, useInput} from '../src/index.js';
+import {type RenderResult} from '../src/ink.js';
 import createStdout from './helpers/create-stdout.js';
 
 const require = createRequire(import.meta.url);
@@ -18,6 +21,28 @@ const require = createRequire(import.meta.url);
 const {spawn} = require('node-pty') as typeof import('node-pty');
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+
+const createStdin = () => {
+	const stdin = new EventEmitter() as unknown as NodeJS.WriteStream;
+	stdin.isTTY = true;
+	stdin.setRawMode = stub();
+	stdin.setEncoding = () => {};
+	stdin.read = stub();
+	stdin.unref = () => {};
+	stdin.ref = () => {};
+
+	return stdin;
+};
+
+const emitReadable = (stdin: NodeJS.WriteStream, chunk: string) => {
+	/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
+	const read = stdin.read as ReturnType<typeof stub>;
+	read.onCall(0).returns(chunk);
+	read.onCall(1).returns(null);
+	stdin.emit('readable');
+	read.reset();
+	/* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
+};
 
 const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: unknown) => void;
@@ -272,6 +297,68 @@ test.serial('throttle renders to maxFps', t => {
 	} finally {
 		clock.uninstall();
 	}
+});
+
+test.serial('outputs renderTime when onRender is passed', async t => {
+	const clock = FakeTimers.install(); // Controls timers + Date.now()
+	let lastRenderTime = -1;
+	let tickTime = 100;
+	const funcObj = {
+		onRender(renderResult: RenderResult) {
+			const {renderTime} = renderResult;
+			lastRenderTime = renderTime;
+		},
+	};
+
+	const onRenderStub = stub(funcObj, 'onRender').callThrough();
+
+	function Nested({text}) {
+		clock.tick(tickTime);
+		return <Text>{text}</Text>;
+	}
+
+	function Test() {
+		const [text, setText] = useState('Test');
+		useEffect(() => {
+			clock.tick(tickTime);
+		});
+
+		useInput(input => {
+			setText(input);
+		});
+
+		return (
+			<Box borderStyle="round">
+				<Text>{text}</Text>
+				<Nested text={text} />
+			</Box>
+		);
+	}
+
+	const stdin = createStdin();
+	const {unmount, rerender} = render(<Test />, {
+		onRender: onRenderStub,
+		stdin,
+	});
+
+	t.is(onRenderStub.callCount, 2);
+
+	onRenderStub.resetHistory();
+	tickTime = 200;
+	rerender(<Test />);
+
+	t.is(onRenderStub.callCount, 2);
+
+	onRenderStub.resetHistory();
+	emitReadable(stdin, 'a');
+	await delay(100);
+
+	t.is(lastRenderTime, 0);
+	t.is(onRenderStub.callCount, 1);
+
+	unmount();
+
+	clock.uninstall();
 });
 
 test.serial('no throttled renders after unmount', t => {
