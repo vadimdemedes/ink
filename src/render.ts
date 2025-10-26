@@ -1,7 +1,7 @@
 import {Stream} from 'node:stream';
 import process from 'node:process';
 import type {ReactNode} from 'react';
-import Ink, {type Options as InkOptions, type RenderResult} from './ink.js';
+import Ink, {type Options as InkOptions, type RenderMetrics} from './ink.js';
 import instances from './instances.js';
 
 export type RenderOptions = {
@@ -47,9 +47,9 @@ export type RenderOptions = {
 	patchConsole?: boolean;
 
 	/**
-	Runs the given callback after each render and re-render with a RenderResult object.
+	Runs the given callback after each render and re-render.
 	*/
-	onRender?: (renderTime: RenderResult) => void;
+	onRender?: (metrics: RenderMetrics) => void;
 
 	/**
 	Enable screen reader support. See https://github.com/vadimdemedes/ink/blob/master/readme.md#screen-reader-support

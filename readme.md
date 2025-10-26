@@ -2037,10 +2037,10 @@ This functionality is powered by [patch-console](https://github.com/vadimdemedes
 
 ###### onRender
 
-Type: `(renderTime: number) => void`\
+Type: `({renderTime: number}) => void`\
 Default: `undefined`
 
-Runs the given callback after each render and re-render with a renderResult object.
+Runs the given callback after each render and re-render with a metrics object.
 
 ###### debug
 

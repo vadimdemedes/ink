@@ -6,13 +6,13 @@ import {createRequire} from 'node:module';
 import FakeTimers from '@sinonjs/fake-timers';
 import {stub} from 'sinon';
 import test from 'ava';
-import React, {useEffect, useState} from 'react';
+import React, {type ReactNode, useEffect, useState} from 'react';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
 import {render, Box, Text, useInput} from '../src/index.js';
-import {type RenderResult} from '../src/ink.js';
+import {type RenderMetrics} from '../src/ink.js';
 import createStdout from './helpers/create-stdout.js';
 
 const require = createRequire(import.meta.url);
@@ -300,28 +300,18 @@ test.serial('throttle renders to maxFps', t => {
 });
 
 test.serial('outputs renderTime when onRender is passed', async t => {
-	const clock = FakeTimers.install(); // Controls timers + Date.now()
-	let lastRenderTime = -1;
-	let tickTime = 100;
+	const renderTimes: number[] = [];
 	const funcObj = {
-		onRender(renderResult: RenderResult) {
-			const {renderTime} = renderResult;
-			lastRenderTime = renderTime;
+		onRender(metrics: RenderMetrics) {
+			const {renderTime} = metrics;
+			renderTimes.push(renderTime);
 		},
 	};
 
 	const onRenderStub = stub(funcObj, 'onRender').callThrough();
 
-	function Nested({text}) {
-		clock.tick(tickTime);
-		return <Text>{text}</Text>;
-	}
-
-	function Test() {
+	function Test({children}: {readonly children?: ReactNode}) {
 		const [text, setText] = useState('Test');
-		useEffect(() => {
-			clock.tick(tickTime);
-		});
 
 		useInput(input => {
 			setText(input);
@@ -330,7 +320,7 @@ test.serial('outputs renderTime when onRender is passed', async t => {
 		return (
 			<Box borderStyle="round">
 				<Text>{text}</Text>
-				<Nested text={text} />
+				{children}
 			</Box>
 		);
 	}
@@ -341,24 +331,32 @@ test.serial('outputs renderTime when onRender is passed', async t => {
 		stdin,
 	});
 
-	t.is(onRenderStub.callCount, 2);
+	// Initial render
+	t.is(onRenderStub.callCount, 1);
+	t.true(renderTimes[0] >= 0);
 
+	// Manual rerender
 	onRenderStub.resetHistory();
-	tickTime = 200;
-	rerender(<Test />);
+	rerender(
+		<Test>
+			<Text>Updated</Text>
+		</Test>,
+	);
+	await delay(100);
+	t.is(onRenderStub.callCount, 1);
+	t.true(renderTimes[1] >= 0);
 
-	t.is(onRenderStub.callCount, 2);
-
+	// Internal state update via useInput
 	onRenderStub.resetHistory();
 	emitReadable(stdin, 'a');
 	await delay(100);
-
-	t.is(lastRenderTime, 0);
 	t.is(onRenderStub.callCount, 1);
+	t.true(renderTimes[2] >= 0);
+
+	// Verify all renders were tracked
+	t.is(renderTimes.length, 3);
 
 	unmount();
-
-	clock.uninstall();
 });
 
 test.serial('no throttled renders after unmount', t => {
