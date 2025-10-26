@@ -1,5 +1,6 @@
 import React from 'react';
 import {render, Text} from '../../src/index.js';
+import {writeReadySignal} from '../helpers/ready.js';
 
 class Test extends React.Component<Record<string, unknown>, {counter: number}> {
 	timer?: NodeJS.Timeout;
@@ -34,3 +35,6 @@ class Test extends React.Component<Record<string, unknown>, {counter: number}> {
 }
 
 render(<Test />);
+
+// Signal to test harness that Ink is ready to accept input
+writeReadySignal();

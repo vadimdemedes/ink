@@ -1,6 +1,7 @@
 import process from 'node:process';
 import React, {useEffect} from 'react';
 import {Box, Text, render, useApp} from '../../src/index.js';
+import {writeReadySignal} from '../helpers/ready.js';
 
 function Fullscreen() {
 	const {exit} = useApp();
@@ -33,3 +34,6 @@ function Fullscreen() {
 process.stdout.rows = Number(process.argv[2]) || 5;
 
 render(<Fullscreen />);
+
+// Signal to test harness that Ink is ready to accept input
+writeReadySignal();

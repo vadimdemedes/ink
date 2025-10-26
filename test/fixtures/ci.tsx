@@ -1,5 +1,6 @@
 import React from 'react';
 import {render, Static, Text} from '../../src/index.js';
+import {writeReadySignal} from '../helpers/ready.js';
 
 type TestState = {
 	counter: number;
@@ -49,3 +50,6 @@ class Test extends React.Component<Record<string, unknown>, TestState> {
 }
 
 render(<Test />);
+
+// Signal to test harness that Ink is ready to accept input
+writeReadySignal();
