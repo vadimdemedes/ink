@@ -66,6 +66,15 @@ export type RenderOptions = {
 	@default 30
 	*/
 	maxFps?: number;
+
+	/**
+	Enable IME (Input Method Editor) cursor positioning support.
+	When enabled, the terminal cursor will be positioned at the actual input location
+	for proper IME candidate window placement (useful for CJK input).
+
+	@default false
+	*/
+	enableImeCursor?: boolean;
 };
 
 export type Instance = {
