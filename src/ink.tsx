@@ -70,7 +70,6 @@ export default class Ink {
 	private exitPromise?: Promise<void>;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
-	private appInstance: App | undefined = undefined;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -293,11 +292,6 @@ export default class Ink {
 				value={{isScreenReaderEnabled: this.isScreenReaderEnabled}}
 			>
 				<App
-					ref={instance => {
-						if (instance && instance !== this.appInstance) {
-							this.appInstance = instance;
-						}
-					}}
 					enableImeCursor={this.enableImeCursor}
 					exitOnCtrlC={this.options.exitOnCtrlC}
 					stderr={this.options.stderr}
