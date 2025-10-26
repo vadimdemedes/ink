@@ -22,6 +22,7 @@ type Props = {
 	readonly writeToStderr: (data: string) => void;
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (error?: Error) => void;
+	readonly enableImeCursor: boolean;
 };
 
 type State = {
@@ -127,11 +128,19 @@ export default class App extends PureComponent<Props, State> {
 	}
 
 	override componentDidMount() {
-		cliCursor.hide(this.props.stdout);
+		// When IME cursor is enabled, log-update controls cursor visibility
+		// Otherwise, hide cursor globally for the app
+		if (!this.props.enableImeCursor) {
+			cliCursor.hide(this.props.stdout);
+		}
 	}
 
 	override componentWillUnmount() {
-		cliCursor.show(this.props.stdout);
+		// When IME cursor is enabled, log-update handles cursor restoration
+		// Otherwise, show cursor on unmount
+		if (!this.props.enableImeCursor) {
+			cliCursor.show(this.props.stdout);
+		}
 
 		// ignore calling setRawMode on an handle stdin it cannot be called
 		if (this.isRawModeSupported()) {

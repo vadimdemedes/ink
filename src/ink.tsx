@@ -41,6 +41,14 @@ export type Options = {
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
+	/**
+	 * Enable IME (Input Method Editor) cursor positioning support.
+	 * When enabled, the terminal cursor will be positioned at the actual input location
+	 * for proper IME candidate window placement (useful for CJK input).
+	 *
+	 * @default false
+	 */
+	enableImeCursor?: boolean;
 };
 
 export default class Ink {
@@ -48,6 +56,7 @@ export default class Ink {
 	private readonly log: LogUpdate;
 	private readonly throttledLog: LogUpdate;
 	private readonly isScreenReaderEnabled: boolean;
+	private readonly enableImeCursor: boolean;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
@@ -61,6 +70,7 @@ export default class Ink {
 	private exitPromise?: Promise<void>;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
+	private appInstance: App | undefined = undefined;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -86,7 +96,11 @@ export default class Ink {
 				});
 
 		this.rootNode.onImmediateRender = this.onRender;
-		this.log = logUpdate.create(options.stdout);
+		// IME cursor control is disabled by default, must be explicitly enabled
+		this.enableImeCursor = options.enableImeCursor ?? false;
+		this.log = logUpdate.create(options.stdout, {
+			showCursor: this.enableImeCursor,
+		});
 		this.throttledLog = unthrottled
 			? this.log
 			: (throttle(this.log, undefined, {
@@ -249,13 +263,13 @@ export default class Ink {
 		}
 
 		if (this.lastOutputHeight >= this.options.stdout.rows) {
+			// Clear terminal and reset, then use normal log path for cursor support
 			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
+				ansiEscapes.clearTerminal + this.fullStaticOutput,
 			);
-			this.lastOutput = output;
-			this.lastOutputHeight = outputHeight;
-			this.log.sync(output);
-			return;
+			this.lastOutput = '';
+			this.lastOutputHeight = 0;
+			// Fall through to normal log path
 		}
 
 		// To ensure static output is cleanly rendered before main output, clear main output first
@@ -279,12 +293,18 @@ export default class Ink {
 				value={{isScreenReaderEnabled: this.isScreenReaderEnabled}}
 			>
 				<App
+					ref={instance => {
+						if (instance && instance !== this.appInstance) {
+							this.appInstance = instance;
+						}
+					}}
+					enableImeCursor={this.enableImeCursor}
+					exitOnCtrlC={this.options.exitOnCtrlC}
+					stderr={this.options.stderr}
 					stdin={this.options.stdin}
 					stdout={this.options.stdout}
-					stderr={this.options.stderr}
-					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
-					exitOnCtrlC={this.options.exitOnCtrlC}
+					writeToStdout={this.writeToStdout}
 					onExit={this.unmount}
 				>
 					{node}
