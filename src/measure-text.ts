@@ -1,5 +1,4 @@
 import widestLine from 'widest-line';
-import {CURSOR_MARKER} from './cursor-marker.js';
 
 const cache = new Map<string, Output>();
 
@@ -9,28 +8,23 @@ type Output = {
 };
 
 const measureText = (text: string): Output => {
-	// Remove cursor marker before measuring to get accurate width
-	// Only one marker should exist, so replace() is sufficient
-	const textWithoutMarker = text.replace(CURSOR_MARKER, '');
-
-	if (textWithoutMarker.length === 0) {
+	if (text.length === 0) {
 		return {
 			width: 0,
 			height: 0,
 		};
 	}
 
-	// Use textWithoutMarker as cache key to avoid marker affecting cache
-	const cachedDimensions = cache.get(textWithoutMarker);
+	const cachedDimensions = cache.get(text);
 
 	if (cachedDimensions) {
 		return cachedDimensions;
 	}
 
-	const width = widestLine(textWithoutMarker);
-	const height = textWithoutMarker.split('\n').length;
+	const width = widestLine(text);
+	const height = text.split('\n').length;
 	const dimensions = {width, height};
-	cache.set(textWithoutMarker, dimensions);
+	cache.set(text, dimensions);
 
 	return dimensions;
 };

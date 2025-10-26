@@ -11,14 +11,15 @@ import stripAnsi from 'strip-ansi';
 import stringWidth from 'string-width';
 
 /**
- * Cursor position marker character (Private Use Area)
+ * Cursor position marker (ANSI escape sequence)
  *
- * This invisible character (U+E000) is used to mark where the terminal cursor
+ * This invisible ANSI escape sequence is used to mark where the terminal cursor
  * should be positioned in the rendered output. It's essential for IME (Input Method Editor)
  * support, as the IME candidate window needs to appear at the correct cursor position.
  *
- * Using U+E000 from Private Use Area which has no standard definition.
- * This is more reliable than zero-width characters which some terminals render with width 1.
+ * Using SGR 999 (undefined parameter) which is recognized by ansi-tokenize but has no visual effect.
+ * This sequence does not interfere with existing text styles (color, bold, etc.) and is automatically
+ * excluded from width calculations and removed during tokenization, ensuring accurate layout.
  *
  * @example
  * ```tsx
@@ -29,7 +30,7 @@ import stringWidth from 'string-width';
  * ```
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export const CURSOR_MARKER = '\uE000';
+export const CURSOR_MARKER = '\u001B[999m';
 
 /**
  * Cursor position in the output

@@ -262,13 +262,13 @@ export default class Ink {
 		}
 
 		if (this.lastOutputHeight >= this.options.stdout.rows) {
-			// Clear terminal and reset, then use normal log path for cursor support
 			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput,
+				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
 			);
-			this.lastOutput = '';
-			this.lastOutputHeight = 0;
-			// Fall through to normal log path
+			this.lastOutput = output;
+			this.lastOutputHeight = outputHeight;
+			this.log.sync(output);
+			return;
 		}
 
 		// To ensure static output is cleanly rendered before main output, clear main output first
@@ -292,14 +292,14 @@ export default class Ink {
 				value={{isScreenReaderEnabled: this.isScreenReaderEnabled}}
 			>
 				<App
-					enableImeCursor={this.enableImeCursor}
-					exitOnCtrlC={this.options.exitOnCtrlC}
-					stderr={this.options.stderr}
 					stdin={this.options.stdin}
 					stdout={this.options.stdout}
-					writeToStderr={this.writeToStderr}
+					stderr={this.options.stderr}
 					writeToStdout={this.writeToStdout}
+					writeToStderr={this.writeToStderr}
+					exitOnCtrlC={this.options.exitOnCtrlC}
 					onExit={this.unmount}
+					enableImeCursor={this.enableImeCursor}
 				>
 					{node}
 				</App>

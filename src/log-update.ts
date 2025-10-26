@@ -41,52 +41,15 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 		// Detect and remove cursor marker
 		const {cleaned, position} = findAndRemoveMarker(str);
 
-		/**
-		 * Border alignment fix for marker removal
-		 *
-		 * Problem: When we remove the marker character (U+E000), some terminals
-		 * still reserve 1 cell of width for it, causing the right border │ to
-		 * shift left by 1 character on the cursor line only.
-		 *
-		 * Solution: Insert a compensating space before the right border to push
-		 * it back to the correct column, maintaining visual alignment across all lines.
-		 *
-		 * This is a workaround for terminal rendering inconsistencies where the
-		 * marker character is not truly zero-width.
-		 */
-		let fixedCleaned = cleaned;
-		if (position) {
-			const lines = cleaned.split('\n');
-			const cursorLine = lines[position.row];
-			if (cursorLine) {
-				// Find the last occurrence of │ (right border) and insert space before it
-				const lastBorderIndex = cursorLine.lastIndexOf('│');
-				let paddedLine: string;
-				if (lastBorderIndex >= 0) {
-					// Insert space before the right border
-					paddedLine =
-						cursorLine.slice(0, lastBorderIndex) +
-						' ' +
-						cursorLine.slice(lastBorderIndex);
-				} else {
-					// No border found, add space at the end
-					paddedLine = cursorLine + ' ';
-				}
-
-				lines[position.row] = paddedLine;
-				fixedCleaned = lines.join('\n');
-			}
-		}
-
 		// When cursor is visible, remove any trailing newlines to keep cursor on input line
 		// When cursor is hidden, ensure there's a trailing newline
 		let output: string;
 		if (showCursor) {
 			// Remove trailing newlines when cursor is visible
-			output = fixedCleaned.replace(/\n+$/, '');
+			output = cleaned.replace(/\n+$/, '');
 		} else {
 			// Ensure trailing newline when cursor is hidden
-			output = fixedCleaned.endsWith('\n') ? fixedCleaned : fixedCleaned + '\n';
+			output = cleaned.endsWith('\n') ? cleaned : cleaned + '\n';
 		}
 
 		// Check if both output AND cursor position are unchanged
