@@ -25,7 +25,7 @@ const create = (stream: Writable, {showCursor = false} = {}): LogUpdate => {
 			return;
 		}
 
-		const prevCount = previousLines.length;
+		const previousCount = previousLines.length;
 		const nextLines = output.split('\n');
 		const nextCount = nextLines.length;
 		const visibleCount = nextCount - 1;
