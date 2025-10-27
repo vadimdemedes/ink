@@ -36,7 +36,14 @@ const rows = [
 
 const generateLogLine = (index: number, value: number) => {
 	const timestamp = new Date().toLocaleTimeString();
-	const actions = ['PROCESSING', 'COMPLETED', 'UPDATING', 'SYNCING', 'VALIDATING', 'EXECUTING'];
+	const actions = [
+		'PROCESSING',
+		'COMPLETED',
+		'UPDATING',
+		'SYNCING',
+		'VALIDATING',
+		'EXECUTING',
+	];
 	const action = actions[Math.floor(Math.random() * actions.length)];
 	return `[${timestamp}] Worker-${index} ${action}: Batch=${value} Throughput=${(Math.random() * 1000).toFixed(0)}req/s Memory=${(Math.random() * 512).toFixed(1)}MB CPU=${(Math.random() * 100).toFixed(1)}%`;
 };
@@ -50,7 +57,9 @@ function IncrementalRendering() {
 	const [progress2, setProgress2] = useState(0);
 	const [progress3, setProgress3] = useState(0);
 	const [randomValue, setRandomValue] = useState(0);
-	const [logLines, setLogLines] = useState(Array.from({length: 5}, (_, i) => generateLogLine(i, 0)));
+	const [logLines, setLogLines] = useState(
+		Array.from({length: 5}, (_, i) => generateLogLine(i, 0)),
+	);
 
 	// Update timestamp and counter every second to show live updates
 	useEffect(() => {
@@ -79,7 +88,10 @@ function IncrementalRendering() {
 			setLogLines(prev => {
 				const newLines = [...prev];
 				const updateIndex = Math.floor(Math.random() * newLines.length);
-				newLines[updateIndex] = generateLogLine(updateIndex, Math.floor(Math.random() * 1000));
+				newLines[updateIndex] = generateLogLine(
+					updateIndex,
+					Math.floor(Math.random() * 1000),
+				);
 				return newLines;
 			});
 
@@ -133,30 +145,53 @@ function IncrementalRendering() {
 						Use ↑/↓ arrows to navigate • Press q to quit • FPS: {fps}
 					</Text>
 					<Text>
-						Time: <Text color="green">{timestamp}</Text> • Updates: <Text color="yellow">{counter}</Text> • Random: <Text color="cyan">{randomValue}</Text>
+						Time: <Text color="green">{timestamp}</Text> • Updates:{' '}
+						<Text color="yellow">{counter}</Text> • Random:{' '}
+						<Text color="cyan">{randomValue}</Text>
 					</Text>
 					<Text>
-						Progress 1: <Text color="green">{progressBar(progress1)}</Text> {progress1}%
+						Progress 1: <Text color="green">{progressBar(progress1)}</Text>{' '}
+						{progress1}%
 					</Text>
 					<Text>
-						Progress 2: <Text color="yellow">{progressBar(progress2)}</Text> {progress2}%
+						Progress 2: <Text color="yellow">{progressBar(progress2)}</Text>{' '}
+						{progress2}%
 					</Text>
 					<Text>
-						Progress 3: <Text color="red">{progressBar(progress3)}</Text> {progress3}%
+						Progress 3: <Text color="red">{progressBar(progress3)}</Text>{' '}
+						{progress3}%
 					</Text>
 				</Box>
 			</Box>
 
-			<Box borderStyle="single" borderColor="yellow" paddingX={2} paddingY={1} marginTop={1}>
+			<Box
+				borderStyle="single"
+				borderColor="yellow"
+				paddingX={2}
+				paddingY={1}
+				marginTop={1}
+			>
 				<Box flexDirection="column">
-					<Text bold color="yellow">Live Logs (only 1-2 lines update per frame):</Text>
+					<Text bold color="yellow">
+						Live Logs (only 1-2 lines update per frame):
+					</Text>
 					{logLines.map((line, index) => (
-						<Text key={index} color="green">{line}</Text>
+						<Text key={index} color="green">
+							{line}
+						</Text>
 					))}
 				</Box>
 			</Box>
 
-			<Box borderStyle="single" borderColor="gray" paddingX={2} paddingY={1} marginTop={1} flexGrow={1} flexDirection="column">
+			<Box
+				borderStyle="single"
+				borderColor="gray"
+				paddingX={2}
+				paddingY={1}
+				marginTop={1}
+				flexGrow={1}
+				flexDirection="column"
+			>
 				<Text bold color="magenta">
 					System Services Monitor (30 services with long descriptions):
 				</Text>
@@ -173,7 +208,10 @@ function IncrementalRendering() {
 
 			<Box borderStyle="round" borderColor="magenta" paddingX={2} marginTop={1}>
 				<Text>
-					Selected: <Text color="magenta" bold>{rows[selectedIndex]}</Text>
+					Selected:{' '}
+					<Text color="magenta" bold>
+						{rows[selectedIndex]}
+					</Text>
 				</Text>
 			</Box>
 		</Box>
