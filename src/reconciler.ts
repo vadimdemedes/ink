@@ -184,6 +184,16 @@ export default createReconciler<
 				continue;
 			}
 
+			if (key === 'sticky') {
+				node.internalSticky = value as boolean;
+				continue;
+			}
+
+			if (key === 'internalStickyAlternate') {
+				node.internalStickyAlternate = value as boolean;
+				continue;
+			}
+
 			if (key === 'internal_static') {
 				currentRootNode = rootNode;
 				node.internal_static = true;
@@ -192,6 +202,11 @@ export default createReconciler<
 				// Save reference to <Static> node to skip traversal of entire
 				// node tree to find it
 				rootNode.staticNode = node;
+				continue;
+			}
+
+			if (key === 'opaque') {
+				node.internal_opaque = value as boolean;
 				continue;
 			}
 
@@ -276,8 +291,23 @@ export default createReconciler<
 					continue;
 				}
 
+				if (key === 'sticky') {
+					node.internalSticky = Boolean(value);
+					continue;
+				}
+
+				if (key === 'internalStickyAlternate') {
+					node.internalStickyAlternate = Boolean(value);
+					continue;
+				}
+
 				if (key === 'internal_static') {
 					node.internal_static = true;
+					continue;
+				}
+
+				if (key === 'opaque') {
+					node.internal_opaque = Boolean(value);
 					continue;
 				}
 

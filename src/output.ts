@@ -28,6 +28,7 @@ type WriteOperation = {
 	items: string | StyledChar[];
 	transformers: OutputTransformer[];
 	lineIndex?: number;
+	preserveBackgroundColor?: boolean;
 };
 
 type ClipOperation = {
@@ -69,9 +70,13 @@ export default class Output {
 		x: number,
 		y: number,
 		items: string | StyledChar[],
-		options: {transformers: OutputTransformer[]; lineIndex?: number},
+		options: {
+			transformers: OutputTransformer[];
+			lineIndex?: number;
+			preserveBackgroundColor?: boolean;
+		},
 	): void {
-		const {transformers, lineIndex} = options;
+		const {transformers, lineIndex, preserveBackgroundColor} = options;
 
 		if (items.length === 0) {
 			return;
@@ -84,6 +89,7 @@ export default class Output {
 			items,
 			transformers,
 			lineIndex,
+			preserveBackgroundColor,
 		});
 	}
 

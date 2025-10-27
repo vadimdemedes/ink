@@ -71,13 +71,20 @@ export type DOMElement = {
 	onComputeLayout?: () => void;
 	onRender?: () => void;
 	onImmediateRender?: () => void;
-	internal_scrollTop?: number;
-	internal_scrollHeight?: number;
-	internal_clientHeight?: number;
-	internal_scrollLeft?: number;
-	internal_scrollWidth?: number;
-	internal_clientWidth?: number;
+	internal_scrollState?: ScrollState;
+	internalSticky?: boolean;
+	internalStickyAlternate?: boolean;
+	internal_opaque?: boolean;
 } & InkNode;
+
+export type ScrollState = {
+	scrollTop: number;
+	scrollLeft: number;
+	scrollHeight: number;
+	scrollWidth: number;
+	clientHeight: number;
+	clientWidth: number;
+};
 
 export type TextNode = {
 	nodeName: TextName;
@@ -106,6 +113,8 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		yogaNode: nodeName === 'ink-virtual-text' ? undefined : Yoga.Node.create(),
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		internal_accessibility: {},
+		internalSticky: false,
+		internalStickyAlternate: false,
 	};
 
 	if (nodeName === 'ink-text') {
