@@ -28,9 +28,9 @@ test('skips identical output', t => {
 	t.is((stdout.write as any).callCount, 1);
 });
 
-test('incremental render (surgical updates)', t => {
+test('incremental rendering - surgical updates', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {incremental: true});
 
 	render('Line 1\nLine 2\nLine 3');
 	render('Line 1\nUpdated\nLine 3');
@@ -42,9 +42,9 @@ test('incremental render (surgical updates)', t => {
 	t.false(secondCall.includes('Line 3')); // Doesn't rewrite unchanged
 });
 
-test('clears extra lines when output shrinks', t => {
+test('incremental rendering - clears extra lines when output shrinks', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {incremental: true});
 
 	render('Line 1\nLine 2\nLine 3');
 	render('Line 1');
@@ -53,9 +53,9 @@ test('clears extra lines when output shrinks', t => {
 	t.true(secondCall.includes(ansiEscapes.eraseLines(2))); // Erases 2 extra lines
 });
 
-test('incremental render when output grows', t => {
+test('incremental rendering - when output grows', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {incremental: true});
 
 	render('Line 1');
 	render('Line 1\nLine 2\nLine 3');
@@ -67,9 +67,9 @@ test('incremental render when output grows', t => {
 	t.false(secondCall.includes('Line 1')); // Doesn't rewrite unchanged
 });
 
-test('single write call with multiple surgical updates', t => {
+test('incremental rendering - single write call with multiple surgical updates', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {incremental: true});
 
 	render(
 		'Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8\nLine 9\nLine 10',
@@ -81,9 +81,9 @@ test('single write call with multiple surgical updates', t => {
 	t.is((stdout.write as any).callCount, 2); // Only 2 writes total (initial + update)
 });
 
-test('shrinking output keeps screen tight', t => {
+test('incremental rendering - shrinking output keeps screen tight', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {incremental: true});
 
 	render('Line 1\nLine 2\nLine 3');
 	render('Line 1\nLine 2');
@@ -99,9 +99,9 @@ test('shrinking output keeps screen tight', t => {
 	);
 });
 
-test('clear() fully resets incremental state', t => {
+test('incremental rendering - clear() fully resets incremental state', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {incremental: true});
 
 	render('Line 1\nLine 2\nLine 3');
 	render.clear();
@@ -112,9 +112,9 @@ test('clear() fully resets incremental state', t => {
 	t.is(afterClear, ansiEscapes.eraseLines(0) + 'Line 1\n'); // Should do a fresh write
 });
 
-test('done() resets before next render', t => {
+test('incremental rendering - done() resets before next render', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {incremental: true});
 
 	render('Line 1\nLine 2\nLine 3');
 	render.done();
@@ -125,9 +125,9 @@ test('done() resets before next render', t => {
 	t.is(afterDone, ansiEscapes.eraseLines(0) + 'Line 1\n'); // Should do a fresh write
 });
 
-test('multiple consecutive clear() calls (should be harmless no-ops)', t => {
+test('incremental rendering - multiple consecutive clear() calls (should be harmless no-ops)', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {incremental: true});
 
 	render('Line 1\nLine 2\nLine 3');
 	render.clear();
@@ -142,9 +142,9 @@ test('multiple consecutive clear() calls (should be harmless no-ops)', t => {
 	t.is(afterClears, ansiEscapes.eraseLines(0) + 'New content\n'); // Should do a fresh write
 });
 
-test('sync() followed by update (assert incremental path is used)', t => {
+test('incremental rendering - sync() followed by update (assert incremental path is used)', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {incremental: true});
 
 	render.sync('Line 1\nLine 2\nLine 3');
 	t.is((stdout.write as any).callCount, 0); // The sync() call shouldn't write to stdout
@@ -159,9 +159,9 @@ test('sync() followed by update (assert incremental path is used)', t => {
 	t.false(firstCall.includes('Line 3')); // Doesn't rewrite unchanged
 });
 
-test('render to empty string (full clear vs early exit)', t => {
+test('incremental rendering - render to empty string (full clear vs early exit)', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {incremental: true});
 
 	render('Line 1\nLine 2\nLine 3');
 	render('');
