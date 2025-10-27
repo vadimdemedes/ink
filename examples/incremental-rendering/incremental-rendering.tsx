@@ -158,7 +158,7 @@ function IncrementalRendering() {
 
 			<Box borderStyle="single" borderColor="gray" paddingX={2} paddingY={1} marginTop={1} flexGrow={1} flexDirection="column">
 				<Text bold color="magenta">
-					Static Content List (30 rows, only selection changes):
+					System Services Monitor (30 services with long descriptions):
 				</Text>
 				{rows.map((row, index) => {
 					const isSelected = index === selectedIndex;
