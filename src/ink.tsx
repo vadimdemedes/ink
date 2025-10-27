@@ -77,7 +77,7 @@ export default class Ink {
 
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout, {
-			incremental: options.incrementalRendering ?? false,
+			incremental: options.incrementalRendering,
 		});
 		this.throttledLog = unthrottled
 			? this.log
