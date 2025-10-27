@@ -2059,6 +2059,14 @@ This controls how frequently the UI can update to prevent excessive re-rendering
 Higher values allow more frequent updates but may impact performance.
 Setting it to a lower value may be useful for components that update very frequently, to reduce CPU usage.
 
+###### incrementalRendering
+
+Type: `boolean`\
+Default: `false`
+
+Enable incremental rendering mode which only updates changed lines instead of redrawing the entire output.
+This can reduce flickering and improve performance for frequently updating UIs.
+
 #### Instance
 
 This is the object that `render()` returns.
