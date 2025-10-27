@@ -30,6 +30,7 @@ export type Options = {
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
+	incrementalRendering?: boolean;
 };
 
 export default class Ink {
@@ -75,7 +76,9 @@ export default class Ink {
 				});
 
 		this.rootNode.onImmediateRender = this.onRender;
-		this.log = logUpdate.create(options.stdout);
+		this.log = logUpdate.create(options.stdout, {
+			incremental: options.incrementalRendering ?? false,
+		});
 		this.throttledLog = unthrottled
 			? this.log
 			: (throttle(this.log, undefined, {
