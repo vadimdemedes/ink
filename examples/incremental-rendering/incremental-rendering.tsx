@@ -171,8 +171,8 @@ function IncrementalRendering() {
 					<Text bold color="yellow">
 						Live Logs (only 1-2 lines update per frame):
 					</Text>
-					{logLines.map((line, index) => (
-						<Text key={`log-${index}-${line}`} color="green">
+					{logLines.map(line => (
+						<Text key={line} color="green">
 							{line}
 						</Text>
 					))}
