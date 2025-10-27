@@ -3,7 +3,7 @@ import ansiEscapes from 'ansi-escapes';
 import logUpdate from '../src/log-update.js';
 import createStdout from './helpers/create-stdout.js';
 
-test('renders and updates output', t => {
+test('standard rendering - renders and updates output', t => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout);
 
@@ -18,7 +18,7 @@ test('renders and updates output', t => {
 	);
 });
 
-test('skips identical output', t => {
+test('standard rendering - skips identical output', t => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout);
 
