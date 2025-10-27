@@ -28,6 +28,31 @@ test('skips identical output', t => {
 	t.is((stdout.write as any).callCount, 1);
 });
 
+test('incremental rendering - renders and updates output', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render('Hello');
+	t.is((stdout.write as any).callCount, 1);
+	t.is((stdout.write as any).firstCall.args[0], 'Hello\n');
+
+	render('World');
+	t.is((stdout.write as any).callCount, 2);
+	t.true(
+		((stdout.write as any).secondCall.args[0] as string).includes('World'),
+	);
+});
+
+test('incremental rendering - skips identical output', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render('Hello');
+	render('Hello');
+
+	t.is((stdout.write as any).callCount, 1);
+});
+
 test('incremental rendering - surgical updates', t => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout, {incremental: true});
