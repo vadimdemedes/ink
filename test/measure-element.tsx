@@ -192,7 +192,7 @@ test('get scroll height and width', t => {
 		});
 
 		return (
-			<Box ref={ref} width={10} height={10}>
+			<Box ref={ref} width={10} height={10} overflow="scroll">
 				<Box width={20} height={20} />
 			</Box>
 		);

@@ -17,6 +17,7 @@ import logUpdate, {type LogUpdate} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
+import {calculateScroll} from './scroll.js';
 
 const noop = () => {};
 
@@ -167,7 +168,30 @@ export default class Ink {
 			undefined,
 			Yoga.DIRECTION_LTR,
 		);
+
+		this.recalculateScroll(this.rootNode);
 	};
+
+	recalculateScroll(node: dom.DOMElement) {
+		if (node.nodeName === 'ink-box') {
+			const {style} = node;
+			const overflow = style.overflow ?? 'visible';
+			const overflowX = style.overflowX ?? overflow;
+			const overflowY = style.overflowY ?? overflow;
+
+			if (overflowX === 'scroll' || overflowY === 'scroll') {
+				calculateScroll(node);
+			} else if (node.internal_scrollState) {
+				delete node.internal_scrollState;
+			}
+		}
+
+		for (const child of node.childNodes) {
+			if (child.nodeName !== '#text') {
+				this.recalculateScroll(child);
+			}
+		}
+	}
 
 	onRender: () => void = () => {
 		if (this.isUnmounted) {

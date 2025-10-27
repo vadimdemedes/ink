@@ -467,10 +467,60 @@ test('dynamic content size causing scrollbars to appear and disappear', t => {
 	t.snapshot(withoutScrollbars, 'after content shrinks - no scrollbars');
 });
 
+test('cached scroll values are updated with dynamic content', t => {
+	const outputA = renderToString(
+		<Box
+			width={15}
+			height={5}
+			overflow="scroll"
+			borderStyle="round"
+			flexDirection="column"
+		>
+			<Box flexShrink={0}>
+				<Text>Short</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.snapshot(outputA, 'initial render');
+
+	const outputB = renderToString(
+		<Box
+			width={15}
+			height={5}
+			overflow="scroll"
+			borderStyle="round"
+			flexDirection="column"
+			scrollTop={1000}
+		>
+			<Box flexShrink={0}>
+				<Text>{tallText}</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.snapshot(outputB, 'after content grows and scrolled');
+
+	const outputC = renderToString(
+		<Box
+			width={15}
+			height={5}
+			overflow="scroll"
+			borderStyle="round"
+			flexDirection="column"
+		>
+			<Box flexShrink={0}>
+				<Text>Short</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.snapshot(outputC, 'after content shrinks');
+});
+
 function InteractiveScrollableContent() {
 	const [scrollTop, setScrollTop] = useState(0);
 	const [scrollLeft, setScrollLeft] = useState(0);
-
 	useInput((_, key) => {
 		if (key.upArrow) {
 			setScrollTop(s => s - 1);

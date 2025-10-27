@@ -1,4 +1,9 @@
-import React, {forwardRef, useContext, type PropsWithChildren} from 'react';
+import React, {
+	forwardRef,
+	useContext,
+	type PropsWithChildren,
+	type ReactNode,
+} from 'react';
 import {type Except} from 'type-fest';
 import {type Styles} from '../styles.js';
 import {type DOMElement} from '../dom.js';
@@ -53,6 +58,21 @@ export type Props = Except<Styles, 'textWrap'> & {
 		readonly required?: boolean;
 		readonly selected?: boolean;
 	};
+
+	/**
+	 * Make the element opaque even if no background color is specified.
+	 */
+	readonly opaque?: boolean;
+
+	/**
+	 * Make the element sticky.
+	 */
+	readonly sticky?: boolean;
+
+	/**
+	 * Content to render when the element is sticky.
+	 */
+	readonly stickyChildren?: ReactNode;
 };
 
 /**
@@ -62,11 +82,14 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 	(
 		{
 			children,
+			stickyChildren,
 			backgroundColor,
 			'aria-label': ariaLabel,
 			'aria-hidden': ariaHidden,
 			'aria-role': role,
 			'aria-state': ariaState,
+			sticky,
+			opaque,
 			...style
 		},
 		ref,
@@ -94,8 +117,21 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 					role,
 					state: ariaState,
 				}}
+				sticky={sticky}
+				opaque={opaque}
 			>
 				{isScreenReaderEnabled && label ? label : children}
+				{sticky && stickyChildren && !isScreenReaderEnabled && (
+					<ink-box
+						internalStickyAlternate
+						style={{
+							position: 'absolute',
+							...style,
+						}}
+					>
+						{stickyChildren}
+					</ink-box>
+				)}
 			</ink-box>
 		);
 

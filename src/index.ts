@@ -30,8 +30,7 @@ export {
 	getBoundingBox,
 	getInnerWidth,
 	getInnerHeight,
-	getScrollHeight,
-	getScrollWidth,
 } from './measure-element.js';
+export {getScrollHeight, getScrollWidth} from './scroll.js';
 export {clearStringWidthCache, setStringWidthFunction} from './measure-text.js';
 export type {DOMElement} from './dom.js';

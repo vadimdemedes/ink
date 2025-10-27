@@ -1,5 +1,5 @@
 import colorize from './colorize.js';
-import {type DOMNode} from './dom.js';
+import {type DOMElement, type DOMNode} from './dom.js';
 import type Output from './output.js';
 
 const renderBackground = (
@@ -8,7 +8,7 @@ const renderBackground = (
 	node: DOMNode,
 	output: Output,
 ): void => {
-	if (!node.style.backgroundColor) {
+	if (!(node as DOMElement).internal_opaque && !node.style.backgroundColor) {
 		return;
 	}
 
