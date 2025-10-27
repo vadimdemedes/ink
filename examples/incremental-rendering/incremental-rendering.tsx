@@ -65,7 +65,7 @@ function IncrementalRendering() {
 	useEffect(() => {
 		const timer = setInterval(() => {
 			setTimestamp(new Date().toLocaleTimeString());
-			setCounter(prev => prev + 1);
+			setCounter(previous => previous + 1);
 		}, 1000);
 
 		return () => {
@@ -79,14 +79,14 @@ function IncrementalRendering() {
 		let lastTime = Date.now();
 
 		const timer = setInterval(() => {
-			setProgress1(prev => (prev + 1) % 101);
-			setProgress2(prev => (prev + 2) % 101);
-			setProgress3(prev => (prev + 3) % 101);
+			setProgress1(previous => (previous + 1) % 101);
+			setProgress2(previous => (previous + 2) % 101);
+			setProgress3(previous => (previous + 3) % 101);
 			setRandomValue(Math.floor(Math.random() * 1000));
 
 			// Update only 1-2 log lines each frame (simulating real log updates)
-			setLogLines(prev => {
-				const newLines = [...prev];
+			setLogLines(previous => {
+				const newLines = [...previous];
 				const updateIndex = Math.floor(Math.random() * newLines.length);
 				newLines[updateIndex] = generateLogLine(
 					updateIndex,
@@ -110,7 +110,7 @@ function IncrementalRendering() {
 		};
 	}, []);
 
-	useInput((input, key) => {
+	useInput((_input, key) => {
 		if (key.upArrow) {
 			setSelectedIndex(previousIndex =>
 				previousIndex === 0 ? rows.length - 1 : previousIndex - 1,
@@ -121,10 +121,6 @@ function IncrementalRendering() {
 			setSelectedIndex(previousIndex =>
 				previousIndex === rows.length - 1 ? 0 : previousIndex + 1,
 			);
-		}
-
-		if (input === 'q') {
-			process.exit(0);
 		}
 	});
 
@@ -176,7 +172,7 @@ function IncrementalRendering() {
 						Live Logs (only 1-2 lines update per frame):
 					</Text>
 					{logLines.map((line, index) => (
-						<Text key={index} color="green">
+						<Text key={`log-${index}-${line}`} color="green">
 							{line}
 						</Text>
 					))}
@@ -209,7 +205,7 @@ function IncrementalRendering() {
 			<Box borderStyle="round" borderColor="magenta" paddingX={2} marginTop={1}>
 				<Text>
 					Selected:{' '}
-					<Text color="magenta" bold>
+					<Text bold color="magenta">
 						{rows[selectedIndex]}
 					</Text>
 				</Text>
