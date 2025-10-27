@@ -57,6 +57,14 @@ export type RenderOptions = {
 	@default 30
 	*/
 	maxFps?: number;
+
+	/**
+	Enable incremental rendering mode which only updates changed lines instead of redrawing the entire output.
+	This can reduce flickering and improve performance for frequently updating UIs.
+
+	@default false
+	*/
+	incrementalRendering?: boolean;
 };
 
 export type Instance = {
@@ -95,6 +103,7 @@ const render = (
 		exitOnCtrlC: true,
 		patchConsole: true,
 		maxFps: 30,
+		incrementalRendering: false,
 		...getOptions(options),
 	};
 
