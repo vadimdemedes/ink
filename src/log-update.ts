@@ -152,6 +152,7 @@ const create = (
 	if (incremental) {
 		return createIncremental(stream, {showCursor});
 	}
+
 	return createStandard(stream, {showCursor});
 };
 
