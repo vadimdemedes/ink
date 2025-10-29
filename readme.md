@@ -499,13 +499,13 @@ Default: `0`
 Padding on all sides. Equivalent to setting `paddingTop`, `paddingBottom`, `paddingLeft` and `paddingRight`.
 
 ```jsx
-<Box paddingTop={2}>Top</Box>
-<Box paddingBottom={2}>Bottom</Box>
-<Box paddingLeft={2}>Left</Box>
-<Box paddingRight={2}>Right</Box>
-<Box paddingX={2}>Left and right</Box>
-<Box paddingY={2}>Top and bottom</Box>
-<Box padding={2}>Top, bottom, left and right</Box>
+<Box paddingTop={2}><Text>Top</Text></Box>
+<Box paddingBottom={2}><Text>Bottom</Text></Box>
+<Box paddingLeft={2}><Text>Left</Text></Box>
+<Box paddingRight={2}><Text>Right</Text></Box>
+<Box paddingX={2}><Text>Left and right</Text></Box>
+<Box paddingY={2}><Text>Top and bottom</Text></Box>
+<Box padding={2}><Text>Top, bottom, left and right</Text></Box>
 ```
 
 #### Margin
@@ -560,13 +560,13 @@ Default: `0`
 Margin on all sides. Equivalent to setting `marginTop`, `marginBottom`, `marginLeft` and `marginRight`.
 
 ```jsx
-<Box marginTop={2}>Top</Box>
-<Box marginBottom={2}>Bottom</Box>
-<Box marginLeft={2}>Left</Box>
-<Box marginRight={2}>Right</Box>
-<Box marginX={2}>Left and right</Box>
-<Box marginY={2}>Top and bottom</Box>
-<Box margin={2}>Top, bottom, left and right</Box>
+<Box marginTop={2}><Text>Top</Text></Box>
+<Box marginBottom={2}><Text>Bottom</Text></Box>
+<Box marginLeft={2}><Text>Left</Text></Box>
+<Box marginRight={2}><Text>Right</Text></Box>
+<Box marginX={2}><Text>Left and right</Text></Box>
+<Box marginY={2}><Text>Top and bottom</Text></Box>
+<Box margin={2}><Text>Top, bottom, left and right</Text></Box>
 ```
 
 #### Gap
