@@ -1,13 +1,13 @@
 {
-	"name": "ink",
+	"name": "@jrichman/ink",
 	"version": "6.4.0",
 	"description": "React for CLI",
 	"license": "MIT",
-	"repository": "vadimdemedes/ink",
+	"repository": "jacob314/ink",
 	"author": {
-		"name": "Vadim Demedes",
-		"email": "vadimdemedes@hey.com",
-		"url": "https://github.com/vadimdemedes"
+		"name": "Jacob Richman",
+		"email": "jacob314@gmail.com",
+		"url": "https://github.com/jacob314"
 	},
 	"type": "module",
 	"exports": {
