@@ -4,7 +4,7 @@ import {
 	DefaultEventPriority,
 	NoEventPriority,
 } from 'react-reconciler/constants.js';
-import Yoga, {type Node as YogaNode} from 'yoga-layout';
+import {type YogaNode, DISPLAY_NONE, DISPLAY_FLEX} from './yoga-init.js';
 import {createContext} from 'react';
 import {
 	createTextNode,
@@ -216,10 +216,10 @@ export default createReconciler<
 	},
 	getPublicInstance: instance => instance,
 	hideInstance(node) {
-		node.yogaNode?.setDisplay(Yoga.DISPLAY_NONE);
+		node.yogaNode?.setDisplay(DISPLAY_NONE());
 	},
 	unhideInstance(node) {
-		node.yogaNode?.setDisplay(Yoga.DISPLAY_FLEX);
+		node.yogaNode?.setDisplay(DISPLAY_FLEX());
 	},
 	appendInitialChild: appendChildNode,
 	appendChild: appendChildNode,

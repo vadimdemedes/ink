@@ -1,12 +1,12 @@
-import Yoga, {type Node as YogaNode} from 'yoga-layout';
+import {type YogaNode, EDGE_LEFT, EDGE_RIGHT} from './yoga-init.js';
 
 const getMaxWidth = (yogaNode: YogaNode) => {
 	return (
 		yogaNode.getComputedWidth() -
-		yogaNode.getComputedPadding(Yoga.EDGE_LEFT) -
-		yogaNode.getComputedPadding(Yoga.EDGE_RIGHT) -
-		yogaNode.getComputedBorder(Yoga.EDGE_LEFT) -
-		yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
+		yogaNode.getComputedPadding(EDGE_LEFT()) -
+		yogaNode.getComputedPadding(EDGE_RIGHT()) -
+		yogaNode.getComputedBorder(EDGE_LEFT()) -
+		yogaNode.getComputedBorder(EDGE_RIGHT())
 	);
 };
 

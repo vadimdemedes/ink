@@ -8,7 +8,7 @@ import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
 import {LegacyRoot} from 'react-reconciler/constants.js';
 import {type FiberRoot} from 'react-reconciler';
-import Yoga from 'yoga-layout';
+import {DIRECTION_LTR} from './yoga-init.js';
 import wrapAnsi from 'wrap-ansi';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
@@ -165,7 +165,7 @@ export default class Ink {
 		this.rootNode.yogaNode!.calculateLayout(
 			undefined,
 			undefined,
-			Yoga.DIRECTION_LTR,
+			DIRECTION_LTR(),
 		);
 	};
 

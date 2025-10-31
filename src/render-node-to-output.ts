@@ -1,6 +1,6 @@
 import widestLine from 'widest-line';
 import indentString from 'indent-string';
-import Yoga from 'yoga-layout';
+import {DISPLAY_NONE, EDGE_LEFT, EDGE_RIGHT, EDGE_TOP, EDGE_BOTTOM} from './yoga-init.js';
 import wrapText from './wrap-text.js';
 import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';
@@ -40,7 +40,7 @@ export const renderNodeToScreenReaderOutput = (
 		return '';
 	}
 
-	if (node.yogaNode?.getDisplay() === Yoga.DISPLAY_NONE) {
+	if (node.yogaNode?.getDisplay() === DISPLAY_NONE()) {
 		return '';
 	}
 
@@ -121,7 +121,7 @@ const renderNodeToOutput = (
 	const {yogaNode} = node;
 
 	if (yogaNode) {
-		if (yogaNode.getDisplay() === Yoga.DISPLAY_NONE) {
+		if (yogaNode.getDisplay() === DISPLAY_NONE()) {
 			return;
 		}
 
@@ -170,23 +170,23 @@ const renderNodeToOutput = (
 
 			if (clipHorizontally || clipVertically) {
 				const x1 = clipHorizontally
-					? x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT)
+					? x + yogaNode.getComputedBorder(EDGE_LEFT())
 					: undefined;
 
 				const x2 = clipHorizontally
 					? x +
 						yogaNode.getComputedWidth() -
-						yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
+						yogaNode.getComputedBorder(EDGE_RIGHT())
 					: undefined;
 
 				const y1 = clipVertically
-					? y + yogaNode.getComputedBorder(Yoga.EDGE_TOP)
+					? y + yogaNode.getComputedBorder(EDGE_TOP())
 					: undefined;
 
 				const y2 = clipVertically
 					? y +
 						yogaNode.getComputedHeight() -
-						yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
+						yogaNode.getComputedBorder(EDGE_BOTTOM())
 					: undefined;
 
 				output.clip({x1, x2, y1, y2});
