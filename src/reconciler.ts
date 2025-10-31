@@ -27,9 +27,7 @@ import {type OutputTransformer} from './render-node-to-output.js';
 // accidentally breaking other third-party code.
 // See https://github.com/vadimdemedes/ink/issues/384
 if (process.env['DEV'] === 'true') {
-	try {
-		await import('./devtools.js');
-	} catch (error: any) {
+	import('./devtools.js').catch((error: any) => {
 		if (error.code === 'ERR_MODULE_NOT_FOUND') {
 			console.warn(
 				`
@@ -45,7 +43,7 @@ $ npm install --save-dev react-devtools-core
 			// eslint-disable-next-line @typescript-eslint/only-throw-error
 			throw error;
 		}
-	}
+	});
 }
 
 type AnyObject = Record<string, unknown>;
