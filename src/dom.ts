@@ -1,4 +1,10 @@
-import {type YogaNode, getYoga} from './yoga-init.js';
+/* eslint-disable promise/prefer-await-to-then, @typescript-eslint/use-unknown-in-catch-callback-variable */
+import {
+	type YogaNode,
+	getYoga,
+	getYogaIfAvailable,
+	initYoga,
+} from './yoga-init.js';
 import measureText from './measure-text.js';
 import {type Styles} from './styles.js';
 import wrapText from './wrap-text.js';
@@ -87,19 +93,46 @@ export type DOMNode<T = {nodeName: NodeNames}> = T extends {
 export type DOMNodeAttribute = boolean | string | number;
 
 export const createNode = (nodeName: ElementNames): DOMElement => {
+	// Try to create a yoga node if Yoga is available
+	let yogaNode: YogaNode | undefined;
+
+	if (nodeName !== 'ink-virtual-text') {
+		const yoga = getYogaIfAvailable();
+		if (yoga) {
+			yogaNode = yoga.Node.create();
+		} else {
+			// Yoga not yet initialized, create a placeholder that will be replaced later
+			yogaNode = undefined;
+
+			// Schedule creation once Yoga is loaded
+			initYoga()
+				.then(() => {
+					if (!node.yogaNode) {
+						node.yogaNode = getYoga().Node.create();
+						if (nodeName === 'ink-text' && node.yogaNode) {
+							node.yogaNode.setMeasureFunc(measureTextNode.bind(null, node));
+						}
+					}
+				})
+				.catch(error => {
+					console.error('Failed to initialize Yoga for node:', error);
+				});
+		}
+	}
+
 	const node: DOMElement = {
 		nodeName,
 		style: {},
 		attributes: {},
 		childNodes: [],
 		parentNode: undefined,
-		yogaNode: nodeName === 'ink-virtual-text' ? undefined : getYoga().Node.create(),
+		yogaNode,
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		internal_accessibility: {},
 	};
 
-	if (nodeName === 'ink-text') {
-		node.yogaNode?.setMeasureFunc(measureTextNode.bind(null, node));
+	if (nodeName === 'ink-text' && yogaNode) {
+		yogaNode.setMeasureFunc(measureTextNode.bind(null, node));
 	}
 
 	return node;

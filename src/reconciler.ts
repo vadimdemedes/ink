@@ -1,11 +1,12 @@
+/* eslint-disable new-cap, unicorn/prefer-top-level-await, promise/prefer-await-to-then, @typescript-eslint/use-unknown-in-catch-callback-variable */
 import process from 'node:process';
 import createReconciler, {type ReactContext} from 'react-reconciler';
 import {
 	DefaultEventPriority,
 	NoEventPriority,
 } from 'react-reconciler/constants.js';
-import {type YogaNode, DISPLAY_NONE, DISPLAY_FLEX} from './yoga-init.js';
 import {createContext} from 'react';
+import {type YogaNode, DISPLAY_NONE, DISPLAY_FLEX} from './yoga-init.js';
 import {
 	createTextNode,
 	appendChildNode,

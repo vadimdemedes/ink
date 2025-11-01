@@ -1,3 +1,4 @@
+/* eslint-disable new-cap */
 import {type YogaNode, EDGE_LEFT, EDGE_RIGHT} from './yoga-init.js';
 
 const getMaxWidth = (yogaNode: YogaNode) => {

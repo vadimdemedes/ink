@@ -24,6 +24,7 @@ test('yoga constants work as functions', async t => {
 	await initYoga();
 
 	// Import the constants
+	/* eslint-disable @typescript-eslint/naming-convention, new-cap */
 	const {DISPLAY_NONE, DISPLAY_FLEX, EDGE_LEFT, EDGE_RIGHT, DIRECTION_LTR} =
 		await import('../src/yoga-init.js');
 
@@ -44,6 +45,7 @@ test('yoga constants work as functions', async t => {
 		DISPLAY_FLEX(),
 		'DISPLAY_NONE and DISPLAY_FLEX should be different',
 	);
+	/* eslint-enable @typescript-eslint/naming-convention, new-cap */
 });
 
 test('can create and use yoga nodes', async t => {
@@ -108,6 +110,7 @@ test('render works with yoga-layout/load', async t => {
 	(stdout as any).columns = 80;
 	(stdout as any).rows = 24;
 
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 	const {unmount} = render(<TestComponent />, {stdout: stdout as any});
 
 	// Give it time to render

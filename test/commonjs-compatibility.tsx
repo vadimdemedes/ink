@@ -90,12 +90,14 @@ async function testYogaInit() {
 	return true;
 }
 
+/* eslint-disable n/prefer-global/process, unicorn/no-process-exit */
 testYogaInit().then(result => {
 	process.exit(result ? 0 : 1);
 }).catch(err => {
 	console.error('FAIL:', err.message);
 	process.exit(1);
 });
+/* eslint-enable n/prefer-global/process, unicorn/no-process-exit */
 `;
 
 		writeFileSync(join(tempDir, 'src', 'test.js'), testCode);
@@ -153,6 +155,7 @@ test('yoga loads successfully without blocking', async t => {
 
 	// Yoga should start loading immediately
 	// Give it a small amount of time to load
+	// eslint-disable-next-line no-promise-executor-return
 	await new Promise(resolve => setTimeout(resolve, 100));
 
 	// Check that Yoga is initialized

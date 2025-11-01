@@ -3,7 +3,6 @@ import process from 'node:process';
 import type {ReactNode} from 'react';
 import Ink, {type Options as InkOptions, type RenderMetrics} from './ink.js';
 import instances from './instances.js';
-import {ensureYogaInitialized} from './yoga-init.js';
 
 export type RenderOptions = {
 	/**
@@ -100,10 +99,6 @@ const render = (
 	node: ReactNode,
 	options?: NodeJS.WriteStream | RenderOptions,
 ): Instance => {
-	// Ensure Yoga is initialized before creating any Ink instance
-	// This will throw an error if Yoga hasn't loaded yet (very rare)
-	ensureYogaInitialized();
-
 	const inkOptions: InkOptions = {
 		stdout: process.stdout,
 		stdin: process.stdin,

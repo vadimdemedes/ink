@@ -1,6 +1,13 @@
+/* eslint-disable new-cap */
 import widestLine from 'widest-line';
 import indentString from 'indent-string';
-import {DISPLAY_NONE, EDGE_LEFT, EDGE_RIGHT, EDGE_TOP, EDGE_BOTTOM} from './yoga-init.js';
+import {
+	DISPLAY_NONE,
+	EDGE_LEFT,
+	EDGE_RIGHT,
+	EDGE_TOP,
+	EDGE_BOTTOM,
+} from './yoga-init.js';
 import wrapText from './wrap-text.js';
 import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';

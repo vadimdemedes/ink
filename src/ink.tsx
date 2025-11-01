@@ -1,3 +1,4 @@
+/* eslint-disable new-cap, promise/prefer-await-to-then, @typescript-eslint/use-unknown-in-catch-callback-variable */
 import process from 'node:process';
 import React, {type ReactNode} from 'react';
 import {throttle} from 'es-toolkit/compat';
@@ -8,8 +9,8 @@ import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
 import {LegacyRoot} from 'react-reconciler/constants.js';
 import {type FiberRoot} from 'react-reconciler';
-import {DIRECTION_LTR} from './yoga-init.js';
 import wrapAnsi from 'wrap-ansi';
+import {DIRECTION_LTR, initYoga, isYogaInitialized} from './yoga-init.js';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
@@ -68,6 +69,20 @@ export default class Ink {
 		this.options = options;
 		this.rootNode = dom.createNode('ink-root');
 		this.rootNode.onComputeLayout = this.calculateLayout;
+
+		// Ensure layout is recalculated when Yoga becomes available
+		if (!isYogaInitialized()) {
+			initYoga()
+				.then(() => {
+					if (!this.isUnmounted) {
+						this.calculateLayout();
+						this.onRender();
+					}
+				})
+				.catch(error => {
+					console.error('Failed to initialize Yoga:', error);
+				});
+		}
 
 		this.isScreenReaderEnabled =
 			options.isScreenReaderEnabled ??
@@ -156,13 +171,18 @@ export default class Ink {
 	unsubscribeExit: () => void = () => {};
 
 	calculateLayout = () => {
+		// Skip if yogaNode is not yet available
+		if (!this.rootNode.yogaNode) {
+			return;
+		}
+
 		// The 'columns' property can be undefined or 0 when not using a TTY.
 		// In that case we fall back to 80.
 		const terminalWidth = this.options.stdout.columns || 80;
 
-		this.rootNode.yogaNode!.setWidth(terminalWidth);
+		this.rootNode.yogaNode.setWidth(terminalWidth);
 
-		this.rootNode.yogaNode!.calculateLayout(
+		this.rootNode.yogaNode.calculateLayout(
 			undefined,
 			undefined,
 			DIRECTION_LTR(),

@@ -24,6 +24,7 @@ let isInitialized = false;
 
 // Start loading immediately when module is imported
 // This runs in the background and doesn't block
+// eslint-disable-next-line unicorn/prefer-top-level-await, promise/prefer-await-to-then
 const loadingPromise = loadYoga()
 	.then(yoga => {
 		yogaInstance = yoga;
@@ -53,10 +54,19 @@ export function getYoga(): YogaType {
 }
 
 /**
+ * Try to get the Yoga instance synchronously without throwing.
+ * Returns undefined if Yoga is not yet initialized.
+ */
+export function getYogaIfAvailable(): YogaType | undefined {
+	return yogaInstance;
+}
+
+/**
  * Initialize Yoga asynchronously.
  * Can be called multiple times safely - subsequent calls return the same promise.
  */
 export async function initYoga(): Promise<YogaType> {
+	// eslint-disable-next-line @typescript-eslint/no-misused-promises
 	if (loadingPromise) {
 		return loadingPromise;
 	}
@@ -138,3 +148,4 @@ export const WRAP_WRAP_REVERSE = () => getYoga().WRAP_WRAP_REVERSE;
 export const GUTTER_ALL = () => getYoga().GUTTER_ALL;
 export const GUTTER_COLUMN = () => getYoga().GUTTER_COLUMN;
 export const GUTTER_ROW = () => getYoga().GUTTER_ROW;
+/* eslint-enable @typescript-eslint/naming-convention */

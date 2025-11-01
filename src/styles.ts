@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing, new-cap */
 import {type Boxes, type BoxStyle} from 'cli-boxes';
 import {type LiteralUnion} from 'type-fest';
 import {type ForegroundColorName} from 'ansi-styles'; // Note: We import directly from `ansi-styles` to avoid a bug in TypeScript.
@@ -565,9 +565,7 @@ const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
 
 const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
 	if ('display' in style) {
-		node.setDisplay(
-			style.display === 'flex' ? DISPLAY_FLEX() : DISPLAY_NONE(),
-		);
+		node.setDisplay(style.display === 'flex' ? DISPLAY_FLEX() : DISPLAY_NONE());
 	}
 };
 
