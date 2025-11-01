@@ -1,4 +1,4 @@
-import {loadYoga, type Yoga as YogaType, type Node as YogaNode} from 'yoga-layout/load';
+import {loadYoga, type Yoga as YogaType} from 'yoga-layout/load';
 
 // Re-export enums - these are available synchronously
 export {
@@ -12,26 +12,28 @@ export {
 	PositionType,
 	Unit,
 	Wrap,
+	type Yoga,
+	type Node as YogaNode,
 } from 'yoga-layout/load';
 
 // Re-export types
-export type {YogaType as Yoga, YogaNode};
 
 // Singleton instance management
 let yogaInstance: YogaType | undefined;
-let loadingPromise: Promise<YogaType> | undefined;
 let isInitialized = false;
 
 // Start loading immediately when module is imported
 // This runs in the background and doesn't block
-loadingPromise = loadYoga().then(yoga => {
-	yogaInstance = yoga;
-	isInitialized = true;
-	return yoga;
-}).catch(error => {
-	console.error('Failed to load Yoga layout engine:', error);
-	throw error;
-});
+const loadingPromise = loadYoga()
+	.then(yoga => {
+		yogaInstance = yoga;
+		isInitialized = true;
+		return yoga;
+	})
+	.catch((error: unknown) => {
+		console.error('Failed to load Yoga layout engine:', error);
+		throw error as Error;
+	});
 
 /**
  * Get the Yoga instance synchronously.
@@ -42,10 +44,11 @@ export function getYoga(): YogaType {
 	if (!yogaInstance) {
 		throw new Error(
 			'Yoga layout engine is not yet initialized. ' +
-			'This usually means render() was called immediately on module load. ' +
-			'Please ensure Yoga is loaded by awaiting initYoga() or adding a small delay.'
+				'This usually means render() was called immediately on module load. ' +
+				'Please ensure Yoga is loaded by awaiting initYoga() or adding a small delay.',
 		);
 	}
+
 	return yogaInstance;
 }
 
@@ -57,10 +60,12 @@ export async function initYoga(): Promise<YogaType> {
 	if (loadingPromise) {
 		return loadingPromise;
 	}
+
 	// Should never reach here, but handle it gracefully
 	if (yogaInstance) {
 		return yogaInstance;
 	}
+
 	throw new Error('Yoga initialization was not started properly');
 }
 
@@ -82,13 +87,14 @@ export function ensureYogaInitialized(): void {
 		// and completes very quickly (typically under 50ms)
 		throw new Error(
 			'Yoga is still loading. The application tried to use Yoga before it finished initializing. ' +
-			'This is likely a timing issue. Consider adding await initYoga() before rendering.'
+				'This is likely a timing issue. Consider adding await initYoga() before rendering.',
 		);
 	}
 }
 
 // Export commonly used constants as getters for backward compatibility
 // These will access the constants from the loaded Yoga instance
+/* eslint-disable @typescript-eslint/naming-convention */
 export const DISPLAY_NONE = () => getYoga().DISPLAY_NONE;
 export const DISPLAY_FLEX = () => getYoga().DISPLAY_FLEX;
 export const EDGE_LEFT = () => getYoga().EDGE_LEFT;
@@ -121,9 +127,11 @@ export const JUSTIFY_SPACE_BETWEEN = () => getYoga().JUSTIFY_SPACE_BETWEEN;
 export const JUSTIFY_SPACE_AROUND = () => getYoga().JUSTIFY_SPACE_AROUND;
 export const JUSTIFY_SPACE_EVENLY = () => getYoga().JUSTIFY_SPACE_EVENLY;
 export const FLEX_DIRECTION_ROW = () => getYoga().FLEX_DIRECTION_ROW;
-export const FLEX_DIRECTION_ROW_REVERSE = () => getYoga().FLEX_DIRECTION_ROW_REVERSE;
+export const FLEX_DIRECTION_ROW_REVERSE = () =>
+	getYoga().FLEX_DIRECTION_ROW_REVERSE;
 export const FLEX_DIRECTION_COLUMN = () => getYoga().FLEX_DIRECTION_COLUMN;
-export const FLEX_DIRECTION_COLUMN_REVERSE = () => getYoga().FLEX_DIRECTION_COLUMN_REVERSE;
+export const FLEX_DIRECTION_COLUMN_REVERSE = () =>
+	getYoga().FLEX_DIRECTION_COLUMN_REVERSE;
 export const WRAP_NO_WRAP = () => getYoga().WRAP_NO_WRAP;
 export const WRAP_WRAP = () => getYoga().WRAP_WRAP;
 export const WRAP_WRAP_REVERSE = () => getYoga().WRAP_WRAP_REVERSE;
