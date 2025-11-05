@@ -34,3 +34,7 @@ export {
 export {getScrollHeight, getScrollWidth} from './scroll.js';
 export {clearStringWidthCache, setStringWidthFunction} from './measure-text.js';
 export type {DOMElement} from './dom.js';
+export {
+	default as ResizeObserver,
+	ResizeObserverEntry,
+} from './resize-observer.js';

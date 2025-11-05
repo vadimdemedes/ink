@@ -18,6 +18,10 @@ import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
 import {calculateScroll} from './scroll.js';
+// eslint-disable-next-line import/no-duplicates
+import type ResizeObserver from './resize-observer.js';
+// eslint-disable-next-line import/no-duplicates
+import {ResizeObserverEntry} from './resize-observer.js';
 
 const noop = () => {};
 
@@ -111,8 +115,6 @@ export default class Ink {
 			'id',
 			() => {},
 			() => {},
-			// TODO(jacobr): change this back to ts-expect-error if we can
-			// figure out how to align the Gemini CLI version with the Ink ones.
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore the types for `react-reconciler` are not up to date with the library.
 			// See https://github.com/facebook/react/blob/c0464aedb16b1c970d717651bba8d1c66c578729/packages/react-reconciler/src/ReactFiberReconciler.js#L236-L259
@@ -169,10 +171,18 @@ export default class Ink {
 			Yoga.DIRECTION_LTR,
 		);
 
-		this.recalculateScroll(this.rootNode);
+		const observerEntries = new Map<ResizeObserver, ResizeObserverEntry[]>();
+		this.calculateLayoutAndTriggerObservers(this.rootNode, observerEntries);
+
+		for (const [observer, entries] of observerEntries) {
+			observer.internalTrigger(entries);
+		}
 	};
 
-	recalculateScroll(node: dom.DOMElement) {
+	calculateLayoutAndTriggerObservers(
+		node: dom.DOMElement,
+		observerEntries: Map<ResizeObserver, ResizeObserverEntry[]>,
+	) {
 		if (node.nodeName === 'ink-box') {
 			const {style} = node;
 			const overflow = style.overflow ?? 'visible';
@@ -186,9 +196,33 @@ export default class Ink {
 			}
 		}
 
+		if (
+			node.resizeObservers &&
+			node.resizeObservers.size > 0 &&
+			node.yogaNode
+		) {
+			const width = node.yogaNode.getComputedWidth();
+			const height = node.yogaNode.getComputedHeight();
+			const lastSize = node.internal_lastMeasuredSize;
+
+			if (!lastSize || lastSize.width !== width || lastSize.height !== height) {
+				const entry = new ResizeObserverEntry(node, {width, height});
+
+				for (const observer of node.resizeObservers) {
+					if (!observerEntries.has(observer)) {
+						observerEntries.set(observer, []);
+					}
+
+					observerEntries.get(observer)!.push(entry);
+				}
+
+				node.internal_lastMeasuredSize = {width, height};
+			}
+		}
+
 		for (const child of node.childNodes) {
 			if (child.nodeName !== '#text') {
-				this.recalculateScroll(child);
+				this.calculateLayoutAndTriggerObservers(child, observerEntries);
 			}
 		}
 	}
