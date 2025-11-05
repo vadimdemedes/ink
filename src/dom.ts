@@ -8,6 +8,7 @@ import {type Styles} from './styles.js';
 import {wrapStyledChars, truncateStyledChars} from './wrap-text.js';
 import squashTextNodes from './squash-text-nodes.js';
 import {type OutputTransformer} from './render-node-to-output.js';
+import type ResizeObserver from './resize-observer.js';
 
 type InkNode = {
 	parentNode: DOMElement | undefined;
@@ -75,6 +76,8 @@ export type DOMElement = {
 	internalSticky?: boolean;
 	internalStickyAlternate?: boolean;
 	internal_opaque?: boolean;
+	resizeObservers?: Set<ResizeObserver>;
+	internal_lastMeasuredSize?: {width: number; height: number};
 } & InkNode;
 
 export type ScrollState = {

@@ -18,6 +18,8 @@ import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
 import {calculateScroll} from './scroll.js';
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+import ResizeObserver, {ResizeObserverEntry} from './resize-observer.js';
 
 const noop = () => {};
 
@@ -174,10 +176,18 @@ export default class Ink {
 			Yoga.DIRECTION_LTR,
 		);
 
-		this.recalculateScroll(this.rootNode);
+		const observerEntries = new Map<ResizeObserver, ResizeObserverEntry[]>();
+		this.calculateLayoutAndTriggerObservers(this.rootNode, observerEntries);
+
+		for (const [observer, entries] of observerEntries) {
+			observer.internalTrigger(entries);
+		}
 	};
 
-	recalculateScroll(node: dom.DOMElement) {
+	calculateLayoutAndTriggerObservers(
+		node: dom.DOMElement,
+		observerEntries: Map<ResizeObserver, ResizeObserverEntry[]>,
+	) {
 		if (node.nodeName === 'ink-box') {
 			const {style} = node;
 			const overflow = style.overflow ?? 'visible';
@@ -191,9 +201,33 @@ export default class Ink {
 			}
 		}
 
+		if (
+			node.resizeObservers &&
+			node.resizeObservers.size > 0 &&
+			node.yogaNode
+		) {
+			const width = node.yogaNode.getComputedWidth();
+			const height = node.yogaNode.getComputedHeight();
+			const lastSize = node.internal_lastMeasuredSize;
+
+			if (!lastSize || lastSize.width !== width || lastSize.height !== height) {
+				const entry = new ResizeObserverEntry(node, {width, height});
+
+				for (const observer of node.resizeObservers) {
+					if (!observerEntries.has(observer)) {
+						observerEntries.set(observer, []);
+					}
+
+					observerEntries.get(observer)!.push(entry);
+				}
+
+				node.internal_lastMeasuredSize = {width, height};
+			}
+		}
+
 		for (const child of node.childNodes) {
 			if (child.nodeName !== '#text') {
-				this.recalculateScroll(child);
+				this.calculateLayoutAndTriggerObservers(child, observerEntries);
 			}
 		}
 	}
