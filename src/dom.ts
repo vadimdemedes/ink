@@ -5,7 +5,7 @@ import {
 	widestLineFromStyledChars,
 } from './measure-text.js';
 import {type Styles} from './styles.js';
-import {wrapStyledChars, truncateStyledChars} from './wrap-text.js';
+import {wrapStyledChars, truncateStyledChars} from './text-wrap.js';
 import squashTextNodes from './squash-text-nodes.js';
 import {type OutputTransformer} from './render-node-to-output.js';
 import type ResizeObserver from './resize-observer.js';

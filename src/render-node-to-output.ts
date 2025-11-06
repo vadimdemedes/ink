@@ -1,6 +1,6 @@
 import Yoga from 'yoga-layout';
 import {type StyledChar} from '@alcalzone/ansi-tokenize';
-import {truncateStyledChars, wrapStyledChars} from './wrap-text.js';
+import {truncateStyledChars, wrapStyledChars} from './text-wrap.js';
 import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';
 import renderBorder from './render-border.js';

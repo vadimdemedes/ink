@@ -46,7 +46,7 @@ function TextWrap() {
 
 	useEffect(() => {
 		const timer = setInterval(() => {
-			setCounter(prev => prev + 1);
+			setCounter(previous => previous + 1);
 		}, 100);
 
 		return () => {
@@ -75,6 +75,7 @@ function TextWrap() {
 			</Box>
 			<Box width={size.columns} flexDirection="column" borderStyle="single">
 				{tsExample.split('\n').map((line, i) => (
+					// eslint-disable-next-line react/no-array-index-key
 					<Box key={i} flexDirection="row">
 						<Box width={3} flexShrink={0} flexGrow={0}>
 							<Text>{i + 1}</Text>

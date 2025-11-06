@@ -96,8 +96,9 @@ const wrapWord = (
 
 		if (visible + characterLength > columns && visible > 0) {
 			rows.push([]);
+
 			currentLine = rows.at(-1)!;
-			visible = 0;
+			visible = styledCharsWidth(currentLine);
 		}
 
 		currentLine.push(character);
@@ -114,12 +115,20 @@ export const wrapStyledChars = (
 	let currentWord: StyledChar[] = [];
 
 	for (const char of styledChars) {
-		if (char.value === ' ') {
+		if (char.value === '\n') {
 			if (currentWord.length > 0) {
 				words.push(currentWord);
 			}
 
 			currentWord = [];
+			words.push([char]);
+		} else if (char.value === ' ') {
+			if (currentWord.length > 0) {
+				words.push(currentWord);
+			}
+
+			currentWord = [];
+			words.push([char]);
 		} else {
 			currentWord.push(char);
 		}
@@ -129,43 +138,56 @@ export const wrapStyledChars = (
 		words.push(currentWord);
 	}
 
-	const space: StyledChar = {
-		type: 'char',
-		value: ' ',
-		fullWidth: false,
-		styles: [],
-	};
+	let isAtStartOfLogicalLine = true;
 
-	for (const [index, word] of words.entries()) {
-		const wordWidth = styledCharsWidth(word);
-		let rowWidth = styledCharsWidth(rows.at(-1)!);
-
-		if (index > 0) {
-			rows.at(-1)!.push(space);
-			rowWidth++;
-		}
-
-		if (wordWidth > columns) {
-			if (index > 0) {
-				rows[rows.length - 1] = rows.at(-1)!.slice(0, -1);
-
-				if (rows.at(-1)!.length > 0) {
-					rows.push([]);
-				}
-			}
-
-			wrapWord(rows, word, columns);
+	for (const word of words) {
+		if (word.length === 0) {
 			continue;
 		}
 
-		if (rowWidth + wordWidth > columns && rowWidth > 0) {
-			if (index > 0) {
-				rows[rows.length - 1] = rows.at(-1)!.slice(0, -1);
+		if (word[0]!.value === '\n') {
+			rows.push([]);
+			isAtStartOfLogicalLine = true;
+			continue;
+		}
+
+		const wordWidth = styledCharsWidth(word);
+		const rowWidth = styledCharsWidth(rows.at(-1)!);
+
+		if (rowWidth + wordWidth > columns) {
+			if (
+				!isAtStartOfLogicalLine &&
+				word[0]!.value === ' ' &&
+				word.length === 1
+			) {
+				continue;
 			}
 
-			rows.push(word);
+			if (!isAtStartOfLogicalLine) {
+				while (rows.at(-1)!.length > 0 && rows.at(-1)!.at(-1)!.value === ' ') {
+					rows.at(-1)!.pop();
+				}
+			}
+
+			if (wordWidth > columns) {
+				if (rowWidth > 0) {
+					rows.push([]);
+				}
+
+				wrapWord(rows, word, columns);
+			} else {
+				rows.push([]);
+				rows.at(-1)!.push(...word);
+			}
 		} else {
 			rows.at(-1)!.push(...word);
+		}
+
+		if (
+			isAtStartOfLogicalLine &&
+			!(word[0]!.value === ' ' && word.length === 1)
+		) {
+			isAtStartOfLogicalLine = false;
 		}
 	}
 
