@@ -12,6 +12,15 @@ import delay from 'delay';
 import {Box, Text, render, useInput} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
+import {enableTestColors, disableTestColors} from './helpers/force-colors.js';
+
+test.before(() => {
+	enableTestColors();
+});
+
+test.after(() => {
+	disableTestColors();
+});
 
 const tallText = Array.from({length: 20})
 	.map((_, i) => `line ${i}`)
