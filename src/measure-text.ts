@@ -4,6 +4,7 @@ import {
 	styledCharsFromTokens,
 	type StyledChar,
 } from '@alcalzone/ansi-tokenize';
+import {DataLimitedLruMap} from './data-limited-lru-map.js';
 
 export type StringWidth = (text: string) => number;
 
@@ -11,11 +12,20 @@ const defaultStringWidth: StringWidth = stringWidth;
 
 let currentStringWidth: StringWidth = defaultStringWidth;
 
-// This cache must be cleared each time the output is changed.
+// This cache must be cleared each time the string width function is changed.
+// The strings passed as input are single characters so there is no need to
+// limit the size of the cache as there are only a limited number of valid
+// characters.
 const widthCache = new Map<string, number>();
 
 // This cache can persist for the lifetime of the application.
-const toStyledCharactersCache = new Map<string, StyledChar[]>();
+// The keys for this cache can be very large so we need to limit the size
+// of the data cached as well as the number of keys cached to prevent
+// memory issues.
+const toStyledCharactersCache = new DataLimitedLruMap<StyledChar[]>(
+	10_000,
+	1_000_000,
+);
 
 export function setStringWidthFunction(fn: StringWidth) {
 	currentStringWidth = fn;
@@ -28,8 +38,9 @@ export function clearStringWidthCache() {
 }
 
 export function toStyledCharacters(text: string): StyledChar[] {
-	if (toStyledCharactersCache.has(text)) {
-		return toStyledCharactersCache.get(text)!;
+	const cached = toStyledCharactersCache.get(text);
+	if (cached !== undefined) {
+		return cached;
 	}
 
 	const tokens = tokenize(text);
@@ -164,6 +175,7 @@ export function toStyledCharacters(text: string): StyledChar[] {
 	}
 
 	toStyledCharactersCache.set(text, combinedCharacters);
+
 	return combinedCharacters;
 }
 
