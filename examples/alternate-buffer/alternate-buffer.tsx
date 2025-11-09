@@ -70,4 +70,4 @@ function AlternateBufferExample() {
 	);
 }
 
-render(<AlternateBufferExample />, {alternateBuffer: true});
+render(<AlternateBufferExample />, {alternateBuffer: true, alternateBufferAlreadyActive: true});
