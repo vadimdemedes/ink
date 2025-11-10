@@ -1,5 +1,12 @@
 import React, {useState, useEffect} from 'react';
-import {render, Text, Box, useInput, useStdout} from '../../src/index.js';
+import {
+	render,
+	Text,
+	Box,
+	useInput,
+	useStdout,
+	useApp,
+} from '../../src/index.js';
 
 const rows = [
 	'Server Authentication Module - Handles JWT token validation, OAuth2 flows, and session management across distributed systems',
@@ -49,6 +56,7 @@ const generateLogLine = (index: number, value: number) => {
 };
 
 function IncrementalRendering() {
+	const {exit} = useApp();
 	const {stdout} = useStdout();
 	const terminalHeight = stdout.rows || 24; // Default to 24 if not available
 
@@ -143,7 +151,7 @@ function IncrementalRendering() {
 		}
 
 		if (input === 'q') {
-			process.exit(0);
+			exit();
 		}
 	});
 
