@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {render, Text, Box, useInput} from '../../src/index.js';
+import {render, Text, Box, useInput, useStdout} from '../../src/index.js';
 
 const rows = [
 	'Server Authentication Module - Handles JWT token validation, OAuth2 flows, and session management across distributed systems',
@@ -49,6 +49,25 @@ const generateLogLine = (index: number, value: number) => {
 };
 
 function IncrementalRendering() {
+	const {stdout} = useStdout();
+	const terminalHeight = stdout.rows || 24; // Default to 24 if not available
+
+	// Calculate available space for dynamic content
+	// Header box: ~9 lines (border + content)
+	// Logs box: variable (border + title + log lines)
+	// Services box: variable (border + title + services)
+	// Footer box: ~3 lines
+	// Margins: ~3 lines
+	// Total fixed: ~15 lines, so available = terminalHeight - 15
+	const availableLines = Math.max(terminalHeight - 15, 10);
+
+	// Split available space: ~30% for logs, ~70% for services
+	const logLineCount = Math.max(Math.floor(availableLines * 0.3), 3);
+	const serviceCount = Math.min(
+		Math.max(Math.floor(availableLines * 0.7), 5),
+		rows.length,
+	);
+
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [timestamp, setTimestamp] = useState(new Date().toLocaleTimeString());
 	const [counter, setCounter] = useState(0);
@@ -58,7 +77,7 @@ function IncrementalRendering() {
 	const [progress3, setProgress3] = useState(0);
 	const [randomValue, setRandomValue] = useState(0);
 	const [logLines, setLogLines] = useState(
-		Array.from({length: 5}, (_, i) => generateLogLine(i, 0)),
+		Array.from({length: logLineCount}, (_, i) => generateLogLine(i, 0)),
 	);
 
 	// Update timestamp and counter every second to show live updates
@@ -113,13 +132,13 @@ function IncrementalRendering() {
 	useInput((input, key) => {
 		if (key.upArrow) {
 			setSelectedIndex(previousIndex =>
-				previousIndex === 0 ? rows.length - 1 : previousIndex - 1,
+				previousIndex === 0 ? serviceCount - 1 : previousIndex - 1,
 			);
 		}
 
 		if (key.downArrow) {
 			setSelectedIndex(previousIndex =>
-				previousIndex === rows.length - 1 ? 0 : previousIndex + 1,
+				previousIndex === serviceCount - 1 ? 0 : previousIndex + 1,
 			);
 		}
 
@@ -193,9 +212,9 @@ function IncrementalRendering() {
 				flexDirection="column"
 			>
 				<Text bold color="magenta">
-					System Services Monitor (30 services with long descriptions):
+					System Services Monitor ({serviceCount} of {rows.length} services):
 				</Text>
-				{rows.map((row, index) => {
+				{rows.slice(0, serviceCount).map((row, index) => {
 					const isSelected = index === selectedIndex;
 					return (
 						<Text key={row} color={isSelected ? 'blue' : 'white'}>
@@ -210,7 +229,7 @@ function IncrementalRendering() {
 				<Text>
 					Selected:{' '}
 					<Text bold color="magenta">
-						{rows[selectedIndex]}
+						{rows.slice(0, serviceCount)[selectedIndex]}
 					</Text>
 				</Text>
 			</Box>
