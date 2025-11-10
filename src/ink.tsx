@@ -45,6 +45,7 @@ export type Options = {
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
 	alternateBuffer?: boolean;
+	alternateBufferAlreadyActive?: boolean;
 };
 
 export default class Ink {
@@ -93,6 +94,7 @@ export default class Ink {
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout, {
 			alternateBuffer: options.alternateBuffer,
+			alternateBufferAlreadyActive: options.alternateBufferAlreadyActive,
 			getRows: () => options.stdout.rows,
 		});
 		this.throttledLog = unthrottled

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import process from 'node:process';
 import React, {useState, useEffect} from 'react';
 import {
 	render,
@@ -70,4 +71,8 @@ function AlternateBufferExample() {
 	);
 }
 
-render(<AlternateBufferExample />, {alternateBuffer: true});
+process.stdout.write('\u001B[?1049h');
+render(<AlternateBufferExample />, {
+	alternateBuffer: true,
+	alternateBufferAlreadyActive: true,
+});

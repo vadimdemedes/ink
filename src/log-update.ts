@@ -18,10 +18,12 @@ const create = (
 	{
 		showCursor = false,
 		alternateBuffer = false,
+		alternateBufferAlreadyActive = false,
 		getRows = () => 0,
 	}: {
 		showCursor?: boolean;
 		alternateBuffer?: boolean;
+		alternateBufferAlreadyActive?: boolean;
 		getRows?: () => number;
 	} = {},
 ): LogUpdate => {
@@ -32,7 +34,7 @@ const create = (
 	let previousOutputAlternateBuffer = '';
 	let hasHiddenCursor = false;
 
-	if (alternateBuffer) {
+	if (alternateBuffer && !alternateBufferAlreadyActive) {
 		stream.write(ansiEscapes.enterAlternativeScreen);
 	}
 

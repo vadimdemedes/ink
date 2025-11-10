@@ -73,6 +73,14 @@ export type RenderOptions = {
 	 * @default false
 	 */
 	alternateBuffer?: boolean;
+
+	/**
+	 * If true, Ink will not emit the control sequence to enter alternate buffer mode,
+	 * but will still emit the sequence to exit it.
+	 *
+	 * @default false
+	 */
+	alternateBufferAlreadyActive?: boolean;
 };
 
 export type Instance = {
@@ -120,6 +128,7 @@ const render = (
 		patchConsole: true,
 		maxFps: 30,
 		alternateBuffer: false,
+		alternateBufferAlreadyActive: false,
 		...getOptions(options),
 	};
 
