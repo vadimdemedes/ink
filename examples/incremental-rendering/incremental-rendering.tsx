@@ -139,7 +139,7 @@ function IncrementalRendering() {
 			<Box borderStyle="round" borderColor="cyan" paddingX={2} paddingY={1}>
 				<Box flexDirection="column">
 					<Text bold color="cyan">
-						Incremental Rendering Demo - incrementalRendering={String(false)}
+						Incremental Rendering Demo - incrementalRendering={String(true)}
 					</Text>
 					<Text dimColor>
 						Use ↑/↓ arrows to navigate • Press q to quit • FPS: {fps}
