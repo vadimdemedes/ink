@@ -124,6 +124,7 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
 - [Qodo Command](https://github.com/qodo-ai/command) - Build, run, and manage AI agents.
 - [Nanocoder](https://github.com/nano-collective/nanocoder) - A community-built, local-first AI coding agent with multi-provider support.
 - [Neovate Code](https://github.com/neovateai/neovate-code) - An agentic coding tool made by AntGroup.
+- [instagram-cli](https://github.com/supreme-gg-gg/instagram-cli) - Instagram client.
 
 *(PRs welcome. Append new entries at the end. Repos must have 100+ stars and showcase Ink beyond a basic list picker.)*
 
