@@ -110,7 +110,7 @@ function IncrementalRendering() {
 		};
 	}, []);
 
-	useInput((_input, key) => {
+	useInput((input, key) => {
 		if (key.upArrow) {
 			setSelectedIndex(previousIndex =>
 				previousIndex === 0 ? rows.length - 1 : previousIndex - 1,
@@ -121,6 +121,10 @@ function IncrementalRendering() {
 			setSelectedIndex(previousIndex =>
 				previousIndex === rows.length - 1 ? 0 : previousIndex + 1,
 			);
+		}
+
+		if (input === 'q') {
+			process.exit(0);
 		}
 	});
 
