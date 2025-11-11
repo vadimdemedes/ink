@@ -2208,7 +2208,7 @@ For example, for this code:
 
 ```jsx
 <Box aria-role="checkbox" aria-state={{checked: true}}>
-	Accept terms and conditions
+	<Text>Accept terms and conditions</Text>
 </Box>
 ```
 
