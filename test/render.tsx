@@ -150,10 +150,28 @@ test.serial('erase screen where state changes', async t => {
 	const ps = term('erase-with-state-change', ['4']);
 	await ps.waitForExit();
 
-	const secondFrame = ps.output.split(ansiEscapes.eraseLines(3))[1];
+	// The final frame is between the last eraseLines sequence and cursorShow
+	// Split on cursorShow to isolate the final rendered content before the cursor is shown
+	const beforeCursorShow = ps.output.split(ansiEscapes.cursorShow)[0];
+	if (!beforeCursorShow) {
+		t.fail('beforeCursorShow is undefined');
+		return;
+	}
+
+	// Find the last occurrence of an eraseLines sequence
+	// eraseLines(1) is the minimal erase pattern used by Ink
+	const eraseLinesPattern = ansiEscapes.eraseLines(1);
+	const lastEraseIndex = beforeCursorShow.lastIndexOf(eraseLinesPattern);
+
+	const lastFrame =
+		lastEraseIndex === -1
+			? beforeCursorShow
+			: beforeCursorShow.slice(lastEraseIndex + eraseLinesPattern.length);
+
+	const lastFrameContent = stripAnsi(lastFrame);
 
 	for (const letter of ['A', 'B', 'C']) {
-		t.false(secondFrame?.includes(letter));
+		t.false(lastFrameContent.includes(letter));
 	}
 });
 
