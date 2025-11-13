@@ -1,6 +1,6 @@
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
-import Ink from './ink';
+import type Ink from './ink.js';
 
 export type LogUpdate = {
 	clear: () => void;
@@ -148,7 +148,7 @@ const createIncremental = (
 
 const create = (
 	inkInstance: Ink,
-  {showCursor = false, incremental = false} = {}
+	{showCursor = false, incremental = false} = {},
 ): LogUpdate => {
 	if (incremental) {
 		return createIncremental(inkInstance, {showCursor});
