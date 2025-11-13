@@ -45,15 +45,15 @@ export type Options = {
 };
 
 export default class Ink {
-	private readonly options: Options;
+	public lastOutput: string;
+	public lastOutputHeight: number;
+	public readonly options: Options;
 	private readonly log: LogUpdate;
 	private readonly throttledLog: LogUpdate;
 	private readonly isScreenReaderEnabled: boolean;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
-	private lastOutput: string;
-	private lastOutputHeight: number;
 	private readonly container: FiberRoot;
 	private readonly rootNode: dom.DOMElement;
 	// This variable is used only in debug mode to store full static output
@@ -87,7 +87,7 @@ export default class Ink {
 				});
 
 		this.rootNode.onImmediateRender = this.onRender;
-		this.log = logUpdate.create(options.stdout, {
+		this.log = logUpdate.create(this, {
 			incremental: options.incrementalRendering,
 		});
 		this.throttledLog = unthrottled
