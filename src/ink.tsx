@@ -54,8 +54,6 @@ export default class Ink {
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
-	// Prevent rendering after clear() has been called
-	private isCleared: boolean;
 	private readonly container: FiberRoot;
 	private readonly rootNode: dom.DOMElement;
 	// This variable is used only in debug mode to store full static output
@@ -101,8 +99,6 @@ export default class Ink {
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
-		// Prevent rendering after clear() has been called
-		this.isCleared = false;
 
 		// Store last output to only rerender when needed
 		this.lastOutput = '';
@@ -177,7 +173,7 @@ export default class Ink {
 	};
 
 	onRender: () => void = () => {
-		if (this.isUnmounted || this.isCleared) {
+		if (this.isUnmounted) {
 			return;
 		}
 
@@ -403,7 +399,6 @@ export default class Ink {
 	clear(): void {
 		if (!isInCi && !this.options.debug) {
 			this.log.clear();
-			this.isCleared = true;
 		}
 	}
 
