@@ -122,7 +122,6 @@ const createIncremental = (
 
 	render.clear = () => {
 		stream.write(ansiEscapes.eraseLines(previousLines.length));
-		inkInstance.lastOutput = '';
 		previousLines = [];
 	};
 
