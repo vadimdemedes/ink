@@ -36,7 +36,6 @@ const createStandard = (
 
 	render.clear = () => {
 		stream.write(ansiEscapes.eraseLines(previousLineCount));
-		inkInstance.lastOutput = '';
 		previousLineCount = 0;
 	};
 
