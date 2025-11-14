@@ -8,7 +8,7 @@ test('standard rendering - renders and updates output', t => {
 	const inkInstance = {
 		options: {stdout},
 		lastOutput: '',
-	};
+	} as any;
 	const render = logUpdate.create(inkInstance);
 
 	render('Hello');
@@ -27,7 +27,7 @@ test('standard rendering - skips identical output', t => {
 	const inkInstance = {
 		options: {stdout},
 		lastOutput: '',
-	};
+	} as any;
 	const render = logUpdate.create(inkInstance);
 
 	render('Hello');
@@ -41,7 +41,7 @@ test('incremental rendering - renders and updates output', t => {
 	const inkInstance = {
 		options: {stdout},
 		lastOutput: '',
-	};
+	} as any;
 	const render = logUpdate.create(inkInstance, {incremental: true});
 
 	render('Hello');
@@ -60,7 +60,7 @@ test('incremental rendering - skips identical output', t => {
 	const inkInstance = {
 		options: {stdout},
 		lastOutput: '',
-	};
+	} as any;
 	const render = logUpdate.create(inkInstance, {incremental: true});
 
 	render('Hello');
@@ -74,7 +74,7 @@ test('incremental rendering - surgical updates', t => {
 	const inkInstance = {
 		options: {stdout},
 		lastOutput: '',
-	};
+	} as any;
 	const render = logUpdate.create(inkInstance, {incremental: true});
 
 	render('Line 1\nLine 2\nLine 3');
@@ -92,7 +92,7 @@ test('incremental rendering - clears extra lines when output shrinks', t => {
 	const inkInstance = {
 		options: {stdout},
 		lastOutput: '',
-	};
+	} as any;
 	const render = logUpdate.create(inkInstance, {incremental: true});
 
 	render('Line 1\nLine 2\nLine 3');
@@ -107,7 +107,7 @@ test('incremental rendering - when output grows', t => {
 	const inkInstance = {
 		options: {stdout},
 		lastOutput: '',
-	};
+	} as any;
 	const render = logUpdate.create(inkInstance, {incremental: true});
 
 	render('Line 1');
@@ -125,7 +125,7 @@ test('incremental rendering - single write call with multiple surgical updates',
 	const inkInstance = {
 		options: {stdout},
 		lastOutput: '',
-	};
+	} as any;
 	const render = logUpdate.create(inkInstance, {incremental: true});
 
 	render(
@@ -143,7 +143,7 @@ test('incremental rendering - shrinking output keeps screen tight', t => {
 	const inkInstance = {
 		options: {stdout},
 		lastOutput: '',
-	};
+	} as any;
 	const render = logUpdate.create(inkInstance, {incremental: true});
 
 	render('Line 1\nLine 2\nLine 3');
@@ -165,7 +165,7 @@ test('incremental rendering - clear() fully resets incremental state', t => {
 	const inkInstance = {
 		options: {stdout},
 		lastOutput: '',
-	};
+	} as any;
 	const render = logUpdate.create(inkInstance, {incremental: true});
 
 	render('Line 1\nLine 2\nLine 3');
@@ -182,7 +182,7 @@ test('incremental rendering - done() resets before next render', t => {
 	const inkInstance = {
 		options: {stdout},
 		lastOutput: '',
-	};
+	} as any;
 	const render = logUpdate.create(inkInstance, {incremental: true});
 
 	render('Line 1\nLine 2\nLine 3');
@@ -199,7 +199,7 @@ test('incremental rendering - multiple consecutive clear() calls (should be harm
 	const inkInstance = {
 		options: {stdout},
 		lastOutput: '',
-	};
+	} as any;
 	const render = logUpdate.create(inkInstance, {incremental: true});
 
 	render('Line 1\nLine 2\nLine 3');
@@ -220,7 +220,7 @@ test('incremental rendering - sync() followed by update (assert incremental path
 	const inkInstance = {
 		options: {stdout},
 		lastOutput: '',
-	};
+	} as any;
 	const render = logUpdate.create(inkInstance, {incremental: true});
 
 	render.sync('Line 1\nLine 2\nLine 3');
@@ -241,7 +241,7 @@ test('incremental rendering - render to empty string (full clear vs early exit)'
 	const inkInstance = {
 		options: {stdout},
 		lastOutput: '',
-	};
+	} as any;
 	const render = logUpdate.create(inkInstance, {incremental: true});
 
 	render('Line 1\nLine 2\nLine 3');
