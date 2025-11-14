@@ -1,6 +1,6 @@
-import {type Writable} from 'node:stream';
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
+import type Ink from './ink.js';
 
 export type LogUpdate = {
 	clear: () => void;
@@ -10,12 +10,13 @@ export type LogUpdate = {
 };
 
 const createStandard = (
-	stream: Writable,
+	inkInstance: Ink,
 	{showCursor = false} = {},
 ): LogUpdate => {
 	let previousLineCount = 0;
-	let previousOutput = '';
 	let hasHiddenCursor = false;
+
+	const stream = inkInstance.options.stdout;
 
 	const render = (str: string) => {
 		if (!showCursor && !hasHiddenCursor) {
@@ -24,23 +25,22 @@ const createStandard = (
 		}
 
 		const output = str + '\n';
-		if (output === previousOutput) {
+		if (output === inkInstance.lastOutput) {
 			return;
 		}
 
-		previousOutput = output;
+		inkInstance.lastOutput = output;
 		stream.write(ansiEscapes.eraseLines(previousLineCount) + output);
 		previousLineCount = output.split('\n').length;
 	};
 
 	render.clear = () => {
 		stream.write(ansiEscapes.eraseLines(previousLineCount));
-		previousOutput = '';
 		previousLineCount = 0;
 	};
 
 	render.done = () => {
-		previousOutput = '';
+		inkInstance.lastOutput = '';
 		previousLineCount = 0;
 
 		if (!showCursor) {
@@ -51,7 +51,7 @@ const createStandard = (
 
 	render.sync = (str: string) => {
 		const output = str + '\n';
-		previousOutput = output;
+		inkInstance.lastOutput = output;
 		previousLineCount = output.split('\n').length;
 	};
 
@@ -59,12 +59,12 @@ const createStandard = (
 };
 
 const createIncremental = (
-	stream: Writable,
+	inkInstance: Ink,
 	{showCursor = false} = {},
 ): LogUpdate => {
 	let previousLines: string[] = [];
-	let previousOutput = '';
 	let hasHiddenCursor = false;
+	const stream = inkInstance.options.stdout;
 
 	const render = (str: string) => {
 		if (!showCursor && !hasHiddenCursor) {
@@ -73,7 +73,7 @@ const createIncremental = (
 		}
 
 		const output = str + '\n';
-		if (output === previousOutput) {
+		if (output === inkInstance.lastOutput) {
 			return;
 		}
 
@@ -82,9 +82,9 @@ const createIncremental = (
 		const nextCount = nextLines.length;
 		const visibleCount = nextCount - 1;
 
-		if (output === '\n' || previousOutput.length === 0) {
+		if (output === '\n' || inkInstance.lastOutput.length === 0) {
 			stream.write(ansiEscapes.eraseLines(previousCount) + output);
-			previousOutput = output;
+			inkInstance.lastOutput = output;
 			previousLines = nextLines;
 			return;
 		}
@@ -116,18 +116,17 @@ const createIncremental = (
 
 		stream.write(buffer.join(''));
 
-		previousOutput = output;
+		inkInstance.lastOutput = output;
 		previousLines = nextLines;
 	};
 
 	render.clear = () => {
 		stream.write(ansiEscapes.eraseLines(previousLines.length));
-		previousOutput = '';
 		previousLines = [];
 	};
 
 	render.done = () => {
-		previousOutput = '';
+		inkInstance.lastOutput = '';
 		previousLines = [];
 
 		if (!showCursor) {
@@ -138,7 +137,7 @@ const createIncremental = (
 
 	render.sync = (str: string) => {
 		const output = str + '\n';
-		previousOutput = output;
+		inkInstance.lastOutput = output;
 		previousLines = output.split('\n');
 	};
 
@@ -146,14 +145,14 @@ const createIncremental = (
 };
 
 const create = (
-	stream: Writable,
+	inkInstance: Ink,
 	{showCursor = false, incremental = false} = {},
 ): LogUpdate => {
 	if (incremental) {
-		return createIncremental(stream, {showCursor});
+		return createIncremental(inkInstance, {showCursor});
 	}
 
-	return createStandard(stream, {showCursor});
+	return createStandard(inkInstance, {showCursor});
 };
 
 const logUpdate = {create};
