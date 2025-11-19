@@ -54,6 +54,7 @@ export default class Ink {
 	private isUnmounted: boolean;
 	private lastOutput: string;
 	private lastOutputHeight: number;
+	private lastTerminalWidth: number;
 	private readonly container: FiberRoot;
 	private readonly rootNode: dom.DOMElement;
 	// This variable is used only in debug mode to store full static output
@@ -103,6 +104,7 @@ export default class Ink {
 		// Store last output to only rerender when needed
 		this.lastOutput = '';
 		this.lastOutputHeight = 0;
+		this.lastTerminalWidth = this.getTerminalWidth();
 
 		// This variable is used only in debug mode to store full static output
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
@@ -149,9 +151,25 @@ export default class Ink {
 		}
 	}
 
+	getTerminalWidth = () => {
+		// The 'columns' property can be undefined or 0 when not using a TTY.
+		// In that case we fall back to 80.
+		return this.options.stdout.columns || 80;
+	};
+
 	resized = () => {
+		const currentWidth = this.getTerminalWidth();
+
+		if (currentWidth < this.lastTerminalWidth) {
+			// We clear the screen when decreasing terminal width to prevent duplicate overlapping re-renders.
+			this.log.clear();
+			this.lastOutput = '';
+		}
+
 		this.calculateLayout();
 		this.onRender();
+
+		this.lastTerminalWidth = currentWidth;
 	};
 
 	resolveExitPromise: () => void = () => {};
@@ -159,9 +177,7 @@ export default class Ink {
 	unsubscribeExit: () => void = () => {};
 
 	calculateLayout = () => {
-		// The 'columns' property can be undefined or 0 when not using a TTY.
-		// In that case we fall back to 80.
-		const terminalWidth = this.options.stdout.columns || 80;
+		const terminalWidth = this.getTerminalWidth();
 
 		this.rootNode.yogaNode!.setWidth(terminalWidth);
 
