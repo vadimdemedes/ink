@@ -1,5 +1,6 @@
 import React from 'react';
 import {render, useInput, useApp} from '../../src/index.js';
+import {writeReadySignal} from '../helpers/ready.js';
 
 function UserInput() {
 	const {exit} = useApp();
@@ -17,6 +18,9 @@ function UserInput() {
 }
 
 const app = render(<UserInput />, {exitOnCtrlC: false});
+
+// Signal to test harness that Ink is ready to accept input
+writeReadySignal();
 
 await app.waitUntilExit();
 console.log('exited');
