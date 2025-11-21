@@ -116,6 +116,16 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		if (test === 'home' && key.home && !key.meta) {
+			exit();
+			return;
+		}
+
+		if (test === 'end' && key.end && !key.meta) {
+			exit();
+			return;
+		}
+
 		if (test === 'tab' && input === '' && key.tab && !key.ctrl) {
 			exit();
 			return;

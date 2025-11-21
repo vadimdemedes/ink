@@ -225,6 +225,20 @@ test.serial('useInput - handle page up', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - handle home', async t => {
+	const ps = term('use-input', ['home']);
+	ps.write('\u001B[H');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle end', async t => {
+	const ps = term('use-input', ['end']);
+	ps.write('\u001B[F');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - handle tab', async t => {
 	const ps = term('use-input', ['tab']);
 	ps.write('\t');
