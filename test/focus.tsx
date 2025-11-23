@@ -508,3 +508,30 @@ test('skips disabled elements when wrapping around from the front', async t => {
 		['First', 'Second ✔', 'Third'].join('\n'),
 	);
 });
+
+test('the focus helper reports whichever id currently holds focus', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+
+	let activeId: string | undefined;
+
+	function TestActiveId() {
+		const focusManager = useFocusManager();
+		activeId = focusManager.activeId;
+
+		return <Test autoFocus />;
+	}
+
+	render(<TestActiveId />, {
+		stdout,
+		stdin,
+		debug: true,
+	});
+
+	await delay(100);
+	t.not(activeId, undefined);
+
+	emitReadable(stdin, '\u001B');
+	await delay(100);
+	t.is(activeId, undefined);
+});

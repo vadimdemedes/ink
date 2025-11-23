@@ -26,6 +26,11 @@ type Output = {
 	Switch focus to the element with provided `id`. If there's no element with that `id`, focus will be given to the first focusable component.
 	*/
 	focus: Props['focus'];
+
+	/**
+	Contains the `id` of the currently focused component. If no component is focused, the value will be `undefined`.
+	*/
+	activeId: Props['activeId'];
 };
 
 /**
@@ -40,6 +45,7 @@ const useFocusManager = (): Output => {
 		focusNext: focusContext.focusNext,
 		focusPrevious: focusContext.focusPrevious,
 		focus: focusContext.focus,
+		activeId: focusContext.activeId,
 	};
 };
 

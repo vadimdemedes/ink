@@ -1962,6 +1962,22 @@ const Example = () => {
 };
 ```
 
+#### activeId
+
+Type: `string | undefined`
+
+[`id`](#id) of the currently focused component. If there's no active focus on component right now, the value is `undefined`.
+
+```js
+import {useFocusManager} from 'ink';
+
+const Example = () => {
+	const {activeId} = useFocusManager();
+
+	return <Text>Focused component ID: {activeId ?? "-"}</Text>;
+};
+```
+
 ### useIsScreenReaderEnabled()
 
 Returns whether a screen reader is enabled. This is useful when you want to render different output for screen readers.
