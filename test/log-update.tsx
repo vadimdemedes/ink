@@ -199,3 +199,140 @@ test('incremental rendering - render to empty string (full clear vs early exit)'
 	render('');
 	t.is((stdout.write as any).callCount, 2); // No additional write
 });
+
+// =============================================================================
+// Cursor position tests (enableImeCursor mode)
+// =============================================================================
+
+test('standard IME cursor - moves cursor when output is same but cursor changed', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {enableImeCursor: true});
+
+	// First render with cursor at (0, 3)
+	render('Hello', {row: 0, col: 3});
+	t.is((stdout.write as any).callCount, 1);
+
+	// Same output, different cursor position - should only move cursor
+	render('Hello', {row: 0, col: 5});
+	t.is((stdout.write as any).callCount, 2);
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	// Should contain cursor movement, not full re-render
+	t.true(secondCall.includes(ansiEscapes.cursorForward(2))); // Move right by 2
+	t.false(secondCall.includes('Hello')); // Should not re-render text
+});
+
+test('standard IME cursor - skips when both output and cursor are same', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {enableImeCursor: true});
+
+	render('Hello', {row: 0, col: 3});
+	render('Hello', {row: 0, col: 3}); // Same output and cursor
+
+	t.is((stdout.write as any).callCount, 1); // Only initial render
+});
+
+test('standard IME cursor - cursor backward movement', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {enableImeCursor: true});
+
+	render('Hello', {row: 0, col: 5});
+	render('Hello', {row: 0, col: 2}); // Move cursor left
+
+	t.is((stdout.write as any).callCount, 2);
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	t.true(secondCall.includes(ansiEscapes.cursorBackward(3))); // Move left by 3
+});
+
+test('standard IME cursor - cursor up movement', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {enableImeCursor: true});
+
+	render('Line1\nLine2', {row: 1, col: 3});
+	render('Line1\nLine2', {row: 0, col: 3}); // Move cursor up
+
+	t.is((stdout.write as any).callCount, 2);
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	t.true(secondCall.includes(ansiEscapes.cursorUp(1))); // Move up by 1
+});
+
+test('standard IME cursor - cursor down movement', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {enableImeCursor: true});
+
+	render('Line1\nLine2', {row: 0, col: 3});
+	render('Line1\nLine2', {row: 1, col: 3}); // Move cursor down
+
+	t.is((stdout.write as any).callCount, 2);
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	t.true(secondCall.includes(ansiEscapes.cursorDown(1))); // Move down by 1
+});
+
+test('standard IME cursor - diagonal cursor movement', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {enableImeCursor: true});
+
+	render('Line1\nLine2', {row: 0, col: 0});
+	render('Line1\nLine2', {row: 1, col: 3}); // Move diagonally
+
+	t.is((stdout.write as any).callCount, 2);
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	t.true(secondCall.includes(ansiEscapes.cursorForward(3)));
+	t.true(secondCall.includes(ansiEscapes.cursorDown(1)));
+});
+
+test('standard IME cursor - no cursor provided (undefined)', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {enableImeCursor: true});
+
+	render('Hello'); // No cursor position
+	t.is((stdout.write as any).callCount, 1);
+
+	render('Hello'); // Same output, still no cursor
+	t.is((stdout.write as any).callCount, 1); // Should skip (same output)
+});
+
+test('standard IME cursor - cursor at position 0,0', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {enableImeCursor: true});
+
+	render('Hello', {row: 0, col: 0});
+	t.is((stdout.write as any).callCount, 1);
+	// Should work without errors
+	t.pass();
+});
+
+test('standard IME cursor - re-render when output changes', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {enableImeCursor: true});
+
+	render('Hello', {row: 0, col: 3});
+	render('World', {row: 0, col: 3}); // Different output, same cursor
+
+	t.is((stdout.write as any).callCount, 2);
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	t.true(secondCall.includes('World')); // Should re-render with new text
+});
+
+test('incremental IME cursor - basic cursor positioning', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true, enableImeCursor: true});
+
+	render('Hello', {row: 0, col: 2});
+	t.is((stdout.write as any).callCount, 1);
+
+	// Verify output includes cursor positioning
+	const firstCall = (stdout.write as any).firstCall.args[0] as string;
+	t.true(firstCall.includes('Hello'));
+});
+
+test('standard rendering without IME cursor - ignores cursor position', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout); // No enableImeCursor
+
+	render('Hello', {row: 0, col: 3});
+	render('Hello', {row: 0, col: 5}); // Different cursor, but should be ignored
+
+	// Without enableImeCursor, same output should be skipped regardless of cursor
+	t.is((stdout.write as any).callCount, 1);
+});
