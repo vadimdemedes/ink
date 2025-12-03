@@ -61,7 +61,7 @@ export default class Output {
 	height: number;
 
 	private readonly operations: Operation[] = [];
-	private cursorFocusInfo: TermCursorFocusInfo | null = null;
+	private cursorFocusInfo: TermCursorFocusInfo | undefined = undefined;
 
 	constructor(options: Options) {
 		const {width, height} = options;
@@ -74,9 +74,19 @@ export default class Output {
 		x: number,
 		y: number,
 		text: string,
-		options: {transformers: OutputTransformer[]; isTerminalCursorFocused?: boolean; terminalCursorPosition?: number; originalText?: string},
+		options: {
+			transformers: OutputTransformer[];
+			isTerminalCursorFocused?: boolean;
+			terminalCursorPosition?: number;
+			originalText?: string;
+		},
 	): void {
-		const {transformers, isTerminalCursorFocused, terminalCursorPosition, originalText} = options;
+		const {
+			transformers,
+			isTerminalCursorFocused,
+			terminalCursorPosition,
+			originalText,
+		} = options;
 
 		// Track cursor target position for terminal cursor synchronization
 		// This should be set even for empty text (e.g., empty input field with prefix in separate Text)
@@ -86,8 +96,8 @@ export default class Output {
 				y,
 				text: text || '',
 				// Use originalText for cursor calculation (before applyPaddingToText)
-				originalText: originalText || text || '',
-				terminalCursorPosition: terminalCursorPosition
+				originalText: originalText ?? text ?? '',
+				terminalCursorPosition,
 			};
 		}
 
@@ -117,7 +127,11 @@ export default class Output {
 		});
 	}
 
-	get(): {output: string; height: number; cursorPosition?: {row: number; col: number} | null} {
+	get(): {
+		output: string;
+		height: number;
+		cursorPosition?: {row: number; col: number} | undefined;
+	} {
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
 		const output: StyledChar[][] = [];
 
@@ -250,37 +264,44 @@ export default class Output {
 		}
 
 		// Calculate cursor position from cursor target (if exists)
-		let cursorPosition: {row: number; col: number} | null = null;
+		let cursorPosition: {row: number; col: number} | undefined;
 		if (this.cursorFocusInfo) {
-			const {x, y, text, originalText, terminalCursorPosition: charIndex} = this.cursorFocusInfo;
+			const {
+				x,
+				y,
+				text,
+				originalText,
+				terminalCursorPosition: charIndex,
+			} = this.cursorFocusInfo;
 
-			if (charIndex !== undefined) {
-				// Use character index to calculate cursor position
-				// Use originalText (before applyPaddingToText) for correct index calculation
-				const clampedIndex = Math.min(charIndex, originalText.length);
-				const textBeforeCursor = originalText.slice(0, clampedIndex);
-				const lines = textBeforeCursor.split('\n');
-				const lineIndex = lines.length - 1;
-				const currentLine = lines[lineIndex] || '';
+			if (charIndex === undefined) {
+				// Use text end (backward compatible)
+				const textLines = text.split('\n');
+				const lastLineIndex = textLines.length - 1;
+				const lastLine = textLines[lastLineIndex] ?? '';
 
-				const cursorRow = y + lineIndex;
-				// For multi-line text, all lines start at x position (due to indentString in applyPaddingToText)
-				const expectedCol = x + stringWidth(currentLine);
+				const cursorRow = y + lastLineIndex;
+				const expectedCol =
+					lastLineIndex === 0
+						? x + stringWidth(lastLine)
+						: stringWidth(lastLine);
 
 				cursorPosition = {
 					row: cursorRow,
 					col: expectedCol,
 				};
 			} else {
-				// Use text end (backward compatible)
-				const textLines = text.split('\n');
-				const lastLineIndex = textLines.length - 1;
-				const lastLine = textLines[lastLineIndex] || '';
+				// Use character index to calculate cursor position
+				// Use originalText (before applyPaddingToText) for correct index calculation
+				const clampedIndex = Math.min(charIndex, originalText.length);
+				const textBeforeCursor = originalText.slice(0, clampedIndex);
+				const lines = textBeforeCursor.split('\n');
+				const lineIndex = lines.length - 1;
+				const currentLine = lines[lineIndex] ?? '';
 
-				const cursorRow = y + lastLineIndex;
-				const expectedCol = lastLineIndex === 0
-					? x + stringWidth(lastLine)
-					: stringWidth(lastLine);
+				const cursorRow = y + lineIndex;
+				// For multi-line text, all lines start at x position (due to indentString in applyPaddingToText)
+				const expectedCol = x + stringWidth(currentLine);
 
 				cursorPosition = {
 					row: cursorRow,

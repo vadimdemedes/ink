@@ -8,7 +8,7 @@ type Result = {
 	output: string;
 	outputHeight: number;
 	staticOutput: string;
-	cursorPosition?: {row: number; col: number} | null;
+	cursorPosition?: {row: number; col: number} | undefined;
 };
 
 const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
@@ -57,7 +57,11 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			});
 		}
 
-		const {output: generatedOutput, height: outputHeight, cursorPosition} = output.get();
+		const {
+			output: generatedOutput,
+			height: outputHeight,
+			cursorPosition,
+		} = output.get();
 
 		return {
 			output: generatedOutput,

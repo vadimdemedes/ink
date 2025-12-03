@@ -1,8 +1,8 @@
 import React from 'react';
 import test from 'ava';
 import {render, Box, Text} from '../src/index.js';
-import createStdout from './helpers/create-stdout.js';
 import Output from '../src/output.js';
+import createStdout from './helpers/create-stdout.js';
 
 // =============================================================================
 // Output class - cursorFocusInfo tests
@@ -213,7 +213,7 @@ test('Output.get() handles x offset', t => {
 	});
 
 	const result = output.get();
-	// x=5 + cursor position 2 = col 7
+	// X=5 + cursor position 2 = col 7
 	t.deepEqual(result.cursorPosition, {row: 0, col: 7});
 });
 
@@ -238,7 +238,7 @@ test('Output.get() handles both x and y offset with multiline', t => {
 	});
 
 	const result = output.get();
-	// y=1, lineIndex=1, so row = 1+1 = 2
+	// Y=1, lineIndex=1, so row = 1+1 = 2
 	// x=3, col in "Line2" = 2, so col = 3+2 = 5
 	t.deepEqual(result.cursorPosition, {row: 2, col: 5});
 });
@@ -290,10 +290,11 @@ test('Output.get() backward compatible - multiline without terminalCursorPositio
 
 test('Text with terminalCursorFocus returns cursor position', t => {
 	const stdout = createStdout();
-	render(
-		<Text terminalCursorFocus>Hello</Text>,
-		{stdout, debug: true, enableImeCursor: true},
-	);
+	render(<Text terminalCursorFocus>Hello</Text>, {
+		stdout,
+		debug: true,
+		enableImeCursor: true,
+	});
 
 	// The stdout.write spy captures the raw output, but cursor position
 	// is handled internally. We verify by checking the output exists.
@@ -305,7 +306,9 @@ test('Text with terminalCursorFocus returns cursor position', t => {
 test('Text with terminalCursorFocus and terminalCursorPosition', t => {
 	const stdout = createStdout();
 	render(
-		<Text terminalCursorFocus terminalCursorPosition={2}>Hello</Text>,
+		<Text terminalCursorFocus terminalCursorPosition={2}>
+			Hello
+		</Text>,
 		{stdout, debug: true, enableImeCursor: true},
 	);
 
@@ -316,10 +319,11 @@ test('Text with terminalCursorFocus and terminalCursorPosition', t => {
 
 test('Text with undefined children and cursor focus', t => {
 	const stdout = createStdout();
-	render(
-		<Text terminalCursorFocus terminalCursorPosition={0} />,
-		{stdout, debug: true, enableImeCursor: true},
-	);
+	render(<Text terminalCursorFocus terminalCursorPosition={0} />, {
+		stdout,
+		debug: true,
+		enableImeCursor: true,
+	});
 
 	// Should not throw
 	t.pass();
@@ -328,7 +332,9 @@ test('Text with undefined children and cursor focus', t => {
 test('Text with null children and cursor focus', t => {
 	const stdout = createStdout();
 	render(
-		<Text terminalCursorFocus terminalCursorPosition={0}>{null}</Text>,
+		<Text terminalCursorFocus terminalCursorPosition={0}>
+			{null}
+		</Text>,
 		{stdout, debug: true, enableImeCursor: true},
 	);
 
@@ -341,7 +347,9 @@ test('Multiple Text components - only focused one affects cursor', t => {
 	render(
 		<Box flexDirection="column">
 			<Text>Not focused</Text>
-			<Text terminalCursorFocus terminalCursorPosition={3}>Focused</Text>
+			<Text terminalCursorFocus terminalCursorPosition={3}>
+				Focused
+			</Text>
 			<Text>Also not focused</Text>
 		</Box>,
 		{stdout, debug: true, enableImeCursor: true},
@@ -357,7 +365,9 @@ test('Switching focus between Text components', t => {
 	const stdout = createStdout();
 	const {rerender} = render(
 		<Box flexDirection="column">
-			<Text terminalCursorFocus terminalCursorPosition={0}>First</Text>
+			<Text terminalCursorFocus terminalCursorPosition={0}>
+				First
+			</Text>
 			<Text>Second</Text>
 		</Box>,
 		{stdout, debug: true, enableImeCursor: true},
@@ -370,7 +380,9 @@ test('Switching focus between Text components', t => {
 	rerender(
 		<Box flexDirection="column">
 			<Text>First</Text>
-			<Text terminalCursorFocus terminalCursorPosition={0}>Second</Text>
+			<Text terminalCursorFocus terminalCursorPosition={0}>
+				Second
+			</Text>
 		</Box>,
 	);
 
@@ -454,7 +466,7 @@ test('Output cursorFocusInfo is replaced by subsequent focused write', t => {
 
 	const result = output.get();
 	// Should use the second focus info
-	t.deepEqual(result.cursorPosition, {row: 1, col: 8}); // x=5 + 3
+	t.deepEqual(result.cursorPosition, {row: 1, col: 8}); // X=5 + 3
 });
 
 test('Output non-focused write after focused write preserves cursor', t => {

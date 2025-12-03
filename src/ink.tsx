@@ -56,7 +56,7 @@ export default class Ink {
 	private lastOutput: string;
 	private lastOutputHeight: number;
 	private lastTerminalWidth: number;
-	private lastCursorPosition?: {row: number; col: number} | null;
+	private lastCursorPosition?: {row: number; col: number} | undefined;
 	private readonly container: FiberRoot;
 	private readonly rootNode: dom.DOMElement;
 	// This variable is used only in debug mode to store full static output
@@ -77,7 +77,8 @@ export default class Ink {
 			options.isScreenReaderEnabled ??
 			process.env['INK_SCREEN_READER'] === 'true';
 
-		const unthrottled = options.debug || this.isScreenReaderEnabled || options.enableImeCursor;
+		const unthrottled =
+			options.debug || this.isScreenReaderEnabled || options.enableImeCursor;
 		const maxFps = options.maxFps ?? 30;
 		const renderThrottleMs =
 			maxFps > 0 ? Math.max(1, Math.ceil(1000 / maxFps)) : 0;
@@ -275,14 +276,15 @@ export default class Ink {
 				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
 			);
 
-			// enableImeCursor mode: position cursor after screen clear
+			// EnableImeCursor mode: position cursor after screen clear
 			if (this.options.enableImeCursor && cursorPosition) {
-				const lineCount = (output).split('\n').length;
-				const moveUp = (lineCount - 1) - cursorPosition.row;
+				const lineCount = output.split('\n').length;
+				const moveUp = lineCount - 1 - cursorPosition.row;
 
 				if (moveUp > 0) {
 					this.options.stdout.write(ansiEscapes.cursorUp(moveUp));
 				}
+
 				this.options.stdout.write(ansiEscapes.cursorTo(cursorPosition.col));
 				this.options.stdout.write(ansiEscapes.cursorShow);
 			}
@@ -303,10 +305,11 @@ export default class Ink {
 
 		const outputChanged = output !== this.lastOutput;
 		const cursorChanged =
-			(cursorPosition !== this.lastCursorPosition) &&
-			(!cursorPosition || !this.lastCursorPosition ||
-			 cursorPosition.row !== this.lastCursorPosition.row ||
-			 cursorPosition.col !== this.lastCursorPosition.col);
+			cursorPosition !== this.lastCursorPosition &&
+			(!cursorPosition ||
+				!this.lastCursorPosition ||
+				cursorPosition.row !== this.lastCursorPosition.row ||
+				cursorPosition.col !== this.lastCursorPosition.col);
 
 		if (!hasStaticOutput && (outputChanged || cursorChanged)) {
 			this.throttledLog(output, cursorPosition ?? undefined);
@@ -329,8 +332,8 @@ export default class Ink {
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
-					onExit={this.unmount}
 					enableImeCursor={this.options.enableImeCursor}
+					onExit={this.unmount}
 				>
 					{node}
 				</App>

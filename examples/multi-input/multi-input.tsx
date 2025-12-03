@@ -20,16 +20,16 @@ function ChatApp() {
 	>([]);
 
 	// Use refs to always have the latest values
-	const inputRef = useRef('');
-	const nameRef = useRef('');
-	const inputCursorRef = useRef(0);
-	const nameCursorRef = useRef(0);
+	const inputReference = useRef('');
+	const nameReference = useRef('');
+	const inputCursorReference = useRef(0);
+	const nameCursorReference = useRef(0);
 
 	useEffect(() => {
-		inputRef.current = input;
-		nameRef.current = name;
-		inputCursorRef.current = inputCursor;
-		nameCursorRef.current = nameCursor;
+		inputReference.current = input;
+		nameReference.current = name;
+		inputCursorReference.current = inputCursor;
+		nameCursorReference.current = nameCursor;
 	}, [input, name, inputCursor, nameCursor]);
 
 	// Helper function to get line info from cursor position
@@ -40,48 +40,62 @@ function ChatApp() {
 		const currentLineIndex = linesBeforeCursor.length - 1;
 		const currentLineStart = textBeforeCursor.lastIndexOf('\n') + 1;
 		const colInLine = cursor - currentLineStart;
-		return { lines, currentLineIndex, colInLine, currentLineStart };
+		return {lines, currentLineIndex, colInLine, currentLineStart};
 	};
 
 	useInput((character, key) => {
 		// Switch focus with Tab key only
 		if (key.tab) {
-			setActiveField(current => current === 'input' ? 'name' : 'input');
+			setActiveField(current => (current === 'input' ? 'name' : 'input'));
 			return;
 		}
 
 		const isInputField = activeField === 'input';
-		const currentText = isInputField ? inputRef.current : nameRef.current;
-		const currentCursor = isInputField ? inputCursorRef.current : nameCursorRef.current;
+		const currentText = isInputField
+			? inputReference.current
+			: nameReference.current;
+		const currentCursor = isInputField
+			? inputCursorReference.current
+			: nameCursorReference.current;
 		const setText = isInputField ? setInput : setName;
 		const setCursor = isInputField ? setInputCursor : setNameCursor;
-		const textRef = isInputField ? inputRef : nameRef;
-		const cursorRef = isInputField ? inputCursorRef : nameCursorRef;
+		const textReference = isInputField ? inputReference : nameReference;
+		const cursorReference = isInputField
+			? inputCursorReference
+			: nameCursorReference;
 
 		// Up arrow or Ctrl+P - Move cursor up (do nothing if at first line)
 		if (key.upArrow || (key.ctrl && character === 'p')) {
-			const { lines, currentLineIndex, colInLine } = getLineInfo(currentText, currentCursor);
+			const {lines, currentLineIndex, colInLine} = getLineInfo(
+				currentText,
+				currentCursor,
+			);
 			if (currentLineIndex > 0) {
 				// Move to previous line
-				const prevLine = lines[currentLineIndex - 1]!;
-				const newCol = Math.min(colInLine, prevLine.length);
+				const previousLine = lines[currentLineIndex - 1]!;
+				const newCol = Math.min(colInLine, previousLine.length);
 				// Calculate new cursor position
 				let newPos = 0;
 				for (let i = 0; i < currentLineIndex - 1; i++) {
 					newPos += lines[i]!.length + 1; // +1 for newline
 				}
+
 				newPos += newCol;
 				setCursor(newPos);
-				cursorRef.current = newPos;
+				cursorReference.current = newPos;
 				forceUpdate();
 			}
+
 			// At first line, do nothing (keep cursor position)
 			return;
 		}
 
 		// Down arrow or Ctrl+N - Move cursor down (do nothing if at last line)
 		if (key.downArrow || (key.ctrl && character === 'n')) {
-			const { lines, currentLineIndex, colInLine } = getLineInfo(currentText, currentCursor);
+			const {lines, currentLineIndex, colInLine} = getLineInfo(
+				currentText,
+				currentCursor,
+			);
 			if (currentLineIndex < lines.length - 1) {
 				// Move to next line
 				const nextLine = lines[currentLineIndex + 1]!;
@@ -91,11 +105,13 @@ function ChatApp() {
 				for (let i = 0; i <= currentLineIndex; i++) {
 					newPos += lines[i]!.length + 1; // +1 for newline
 				}
+
 				newPos += newCol;
 				setCursor(newPos);
-				cursorRef.current = newPos;
+				cursorReference.current = newPos;
 				forceUpdate();
 			}
+
 			// At last line, do nothing (keep cursor position)
 			return;
 		}
@@ -104,7 +120,7 @@ function ChatApp() {
 		if (key.leftArrow || (key.ctrl && character === 'b')) {
 			const newPos = Math.max(0, currentCursor - 1);
 			setCursor(newPos);
-			cursorRef.current = newPos;
+			cursorReference.current = newPos;
 			forceUpdate();
 			return;
 		}
@@ -113,7 +129,7 @@ function ChatApp() {
 		if (key.rightArrow || (key.ctrl && character === 'f')) {
 			const newPos = Math.min(currentText.length, currentCursor + 1);
 			setCursor(newPos);
-			cursorRef.current = newPos;
+			cursorReference.current = newPos;
 			forceUpdate();
 			return;
 		}
@@ -121,7 +137,7 @@ function ChatApp() {
 		// Home or Ctrl+A - Move cursor to beginning
 		if (key.home || (key.ctrl && character === 'a')) {
 			setCursor(0);
-			cursorRef.current = 0;
+			cursorReference.current = 0;
 			forceUpdate();
 			return;
 		}
@@ -130,7 +146,7 @@ function ChatApp() {
 		if (key.end || (key.ctrl && character === 'e')) {
 			const newPos = currentText.length;
 			setCursor(newPos);
-			cursorRef.current = newPos;
+			cursorReference.current = newPos;
 			forceUpdate();
 			return;
 		}
@@ -139,8 +155,8 @@ function ChatApp() {
 		if (key.return) {
 			// IME FIX: If there's input text with return key, add it to current text before submitting
 			let finalText = currentText;
-			if (character && !character.match(/[\r\n]/)) {
-				finalText = finalText + character;
+			if (character && !/[\r\n]/.test(character)) {
+				finalText += character;
 			}
 
 			const trimmedText = finalText.trim();
@@ -154,25 +170,29 @@ function ChatApp() {
 					},
 				]);
 			}
+
 			setText('');
-			textRef.current = '';
+			textReference.current = '';
 			setCursor(0);
-			cursorRef.current = 0;
+			cursorReference.current = 0;
 			return;
 		}
 
 		// Backspace - Delete character before cursor
 		if (key.backspace) {
 			if (currentCursor > 0) {
-				setText(prev => {
-					const newText = prev.slice(0, currentCursor - 1) + prev.slice(currentCursor);
-					textRef.current = newText;
+				setText(previous => {
+					const newText =
+						previous.slice(0, currentCursor - 1) +
+						previous.slice(currentCursor);
+					textReference.current = newText;
 					return newText;
 				});
 				const newPos = currentCursor - 1;
 				setCursor(newPos);
-				cursorRef.current = newPos;
+				cursorReference.current = newPos;
 			}
+
 			return;
 		}
 
@@ -180,39 +200,46 @@ function ChatApp() {
 		// So we treat delete as backspace (delete character before cursor)
 		if (key.delete) {
 			if (currentCursor > 0) {
-				setText(prev => {
-					const newText = prev.slice(0, currentCursor - 1) + prev.slice(currentCursor);
-					textRef.current = newText;
+				setText(previous => {
+					const newText =
+						previous.slice(0, currentCursor - 1) +
+						previous.slice(currentCursor);
+					textReference.current = newText;
 					return newText;
 				});
 				const newPos = currentCursor - 1;
 				setCursor(newPos);
-				cursorRef.current = newPos;
+				cursorReference.current = newPos;
 			}
+
 			return;
 		}
 
 		// General input - Insert at cursor position
 		if (!key.ctrl && !key.meta && character) {
-			setText(prev => {
-				const newText = prev.slice(0, currentCursor) + character + prev.slice(currentCursor);
-				textRef.current = newText;
+			setText(previous => {
+				const newText =
+					previous.slice(0, currentCursor) +
+					character +
+					previous.slice(currentCursor);
+				textReference.current = newText;
 				return newText;
 			});
 			const newPos = currentCursor + character.length;
 			setCursor(newPos);
-			cursorRef.current = newPos;
+			cursorReference.current = newPos;
 		}
 	});
 
-	const NAME_PREFIX_STRING = "Enter your name: ";
+	const namePrefixString = 'Enter your name: ';
 	return (
 		<Box flexDirection="column" padding={1}>
 			<Text bold color="cyan">
 				=== Multi-Input Arrow Key Test ===
 			</Text>
 			<Text dimColor>
-				Arrow keys (↑↓←→) or Ctrl+P/N/B/F to move. Tab/Up/Down to switch fields. Home/End or Ctrl+A/E to jump.
+				Arrow keys (↑↓←→) or Ctrl+P/N/B/F to move. Tab/Up/Down to switch fields.
+				Home/End or Ctrl+A/E to jump.
 			</Text>
 
 			<Box flexDirection="column" marginTop={1}>
@@ -223,16 +250,24 @@ function ChatApp() {
 
 			<Box marginTop={1}>
 				<Text>Enter your message: </Text>
-				<Text terminalCursorFocus={activeField === 'input'} terminalCursorPosition={inputCursor} color={activeField === 'input' ? 'green' : 'white'}>
+				<Text
+					terminalCursorFocus={activeField === 'input'}
+					terminalCursorPosition={inputCursor}
+					color={activeField === 'input' ? 'green' : 'white'}
+				>
 					{input}
 				</Text>
 			</Box>
 			<Box marginTop={1}>
-				<Text terminalCursorFocus={activeField === 'name'} terminalCursorPosition={stringWidth(NAME_PREFIX_STRING) + nameCursor} color={activeField === 'name' ? 'green' : 'white'}>
-					{NAME_PREFIX_STRING}{name}
+				<Text
+					terminalCursorFocus={activeField === 'name'}
+					terminalCursorPosition={stringWidth(namePrefixString) + nameCursor}
+					color={activeField === 'name' ? 'green' : 'white'}
+				>
+					{namePrefixString}
+					{name}
 				</Text>
 			</Box>
-
 		</Box>
 	);
 }

@@ -37,22 +37,26 @@ const createStandard = (
 
 		const output = str + '\n';
 
-		const cursorChanged = enableImeCursor && cursorPosition && previousCursorPosition &&
-			(cursorPosition.row !== previousCursorPosition.row || cursorPosition.col !== previousCursorPosition.col);
+		const cursorChanged =
+			enableImeCursor &&
+			cursorPosition &&
+			previousCursorPosition &&
+			(cursorPosition.row !== previousCursorPosition.row ||
+				cursorPosition.col !== previousCursorPosition.col);
 
 		if (output === previousOutput) {
 			// Output is the same, but cursor position may have changed
 			if (cursorChanged) {
 				let buffer = '';
 
-				const colDiff = cursorPosition!.col - previousCursorPosition!.col;
+				const colDiff = cursorPosition.col - previousCursorPosition!.col;
 				if (colDiff > 0) {
 					buffer += ansiEscapes.cursorForward(colDiff);
 				} else if (colDiff < 0) {
 					buffer += ansiEscapes.cursorBackward(-colDiff);
 				}
 
-				const rowDiff = cursorPosition!.row - previousCursorPosition!.row;
+				const rowDiff = cursorPosition.row - previousCursorPosition!.row;
 				if (rowDiff > 0) {
 					buffer += ansiEscapes.cursorDown(rowDiff);
 				} else if (rowDiff < 0) {
@@ -62,6 +66,7 @@ const createStandard = (
 				previousCursorPosition = cursorPosition;
 				stream.write(buffer);
 			}
+
 			return;
 		}
 
@@ -74,6 +79,7 @@ const createStandard = (
 				if (moveDown > 0) {
 					buffer += ansiEscapes.cursorDown(moveDown);
 				}
+
 				buffer += ansiEscapes.eraseLines(previousLineCount);
 			}
 
@@ -82,7 +88,7 @@ const createStandard = (
 			isFirstRender = false;
 
 			// Calculate relative distance within output, regardless of scroll
-			const moveUp = (lineCount - 1) - cursorPosition.row;
+			const moveUp = lineCount - 1 - cursorPosition.row;
 
 			if (moveUp > 0) {
 				buffer += ansiEscapes.cursorUp(moveUp);
@@ -188,7 +194,7 @@ const createIncremental = (
 
 			// Move cursor to specified position
 			const moveUp = visibleCount - cursorPosition.row;
-			buffer += (moveUp > 0 ? ansiEscapes.cursorUp(moveUp) : '');
+			buffer += moveUp > 0 ? ansiEscapes.cursorUp(moveUp) : '';
 			buffer += ansiEscapes.cursorTo(cursorPosition.col);
 
 			stream.write(buffer);

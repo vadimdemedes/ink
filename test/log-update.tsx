@@ -316,7 +316,10 @@ test('standard IME cursor - re-render when output changes', t => {
 
 test('incremental IME cursor - basic cursor positioning', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true, enableImeCursor: true});
+	const render = logUpdate.create(stdout, {
+		incremental: true,
+		enableImeCursor: true,
+	});
 
 	render('Hello', {row: 0, col: 2});
 	t.is((stdout.write as any).callCount, 1);
