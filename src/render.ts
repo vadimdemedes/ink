@@ -74,6 +74,14 @@ export type RenderOptions = {
 	@default false
 	*/
 	incrementalRendering?: boolean;
+
+	/**
+	Enable IME (Input Method Editor) cursor support for CJK input.
+	When enabled, the terminal cursor will be visible and synchronized with the input field position.
+
+	@default false
+	*/
+	enableImeCursor?: boolean;
 };
 
 export type Instance = {
