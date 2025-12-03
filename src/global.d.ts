@@ -30,6 +30,10 @@ declare namespace Ink {
 
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		internal_transform?: (children: string, index: number) => string;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		internal_terminalCursorFocus?: boolean;
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		internal_terminalCursorPosition?: number;
 		internal_accessibility?: DOMElement['internal_accessibility'];
 	};
 }
