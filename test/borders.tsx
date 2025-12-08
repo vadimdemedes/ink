@@ -1,9 +1,9 @@
 import React from 'react';
 import test from 'ava';
 import boxen from 'boxen';
-import indentString from 'indent-string';
 import cliBoxes from 'cli-boxes';
 import chalk from 'chalk';
+import indentString from '../src/indent-string.js';
 import {render, Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
