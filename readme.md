@@ -2306,6 +2306,8 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-link](https://github.com/sindresorhus/ink-link) - Link.
 - [ink-gradient](https://github.com/sindresorhus/ink-gradient) - Gradient color.
 - [ink-big-text](https://github.com/sindresorhus/ink-big-text) - Awesome text.
+- [ink-scroll-view](https://github.com/ByteLandTechnology/ink-scroll-view) - A ScrollView component for Ink CLI applications.
+- [ink-scroll-list](https://github.com/ByteLandTechnology/ink-scroll-list) - A ScrollList component for Ink CLI applications.
 - [ink-picture](https://github.com/endernoke/ink-picture) - Display images.
 - [ink-tab](https://github.com/jdeniau/ink-tab) - Tab.
 - [ink-color-pipe](https://github.com/LitoMore/ink-color-pipe) - Create color text with simpler style strings.
