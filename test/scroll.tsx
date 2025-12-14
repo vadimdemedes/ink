@@ -323,3 +323,96 @@ test('BoxRef - partial scrollTo updates only specified axis', t => {
 
 	t.deepEqual(capturedPosition, {x: 5, y: 20});
 });
+
+test('BoxRef - scrollToTop scrolls to y=0', async t => {
+	const stdout = createStdout(100);
+
+	function TestComponent() {
+		const boxReference = useRef<BoxRef>(null);
+		const [step, setStep] = useState(0);
+
+		useEffect(() => {
+			if (boxReference.current && step === 0) {
+				boxReference.current.scrollTo({y: 5});
+				setStep(1);
+			}
+		}, [step]);
+
+		useEffect(() => {
+			if (boxReference.current && step === 1) {
+				boxReference.current.scrollToTop();
+				setStep(2);
+			}
+		}, [step]);
+
+		return (
+			<Box
+				ref={boxReference}
+				width={10}
+				height={3}
+				overflow="scroll"
+				flexDirection="column"
+			>
+				{Array.from({length: 10}, (_, i) => (
+					<Box key={i} flexShrink={0}>
+						<Text>Line {i}</Text>
+					</Box>
+				))}
+			</Box>
+		);
+	}
+
+	render(<TestComponent />, {stdout, debug: true});
+
+	await delay(100);
+
+	const output = stdout.get();
+	t.true(output.includes('Line 0'));
+	t.true(output.includes('Line 1'));
+	t.true(output.includes('Line 2'));
+});
+
+test('BoxRef - scrollToBottom scrolls to max y', async t => {
+	const stdout = createStdout(100);
+
+	function TestComponent() {
+		const boxReference = useRef<BoxRef>(null);
+		const [ready, setReady] = useState(false);
+
+		useEffect(() => {
+			setReady(true);
+		}, []);
+
+		useEffect(() => {
+			if (boxReference.current && ready) {
+				boxReference.current.scrollToBottom();
+			}
+		}, [ready]);
+
+		return (
+			<Box
+				ref={boxReference}
+				width={10}
+				height={3}
+				overflow="scroll"
+				flexDirection="column"
+			>
+				{Array.from({length: 10}, (_, i) => (
+					<Box key={i} flexShrink={0}>
+						<Text>Line {i}</Text>
+					</Box>
+				))}
+			</Box>
+		);
+	}
+
+	render(<TestComponent />, {stdout, debug: true});
+
+	await delay(100);
+
+	const output = stdout.get();
+	t.true(output.includes('Line 7'));
+	t.true(output.includes('Line 8'));
+	t.true(output.includes('Line 9'));
+	t.false(output.includes('Line 0'));
+});

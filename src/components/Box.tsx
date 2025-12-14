@@ -7,6 +7,7 @@ import React, {
 	useReducer,
 	type PropsWithChildren,
 } from 'react';
+import Yoga from 'yoga-layout';
 import {type Except} from 'type-fest';
 import {type Styles} from '../styles.js';
 import {type DOMElement} from '../dom.js';
@@ -16,6 +17,8 @@ import {backgroundContext} from './BackgroundContext.js';
 export type BoxRef = DOMElement & {
 	scrollTo: (options: {x?: number; y?: number}) => void;
 	getScrollPosition: () => {x: number; y: number};
+	scrollToTop: () => void;
+	scrollToBottom: () => void;
 };
 
 export type Props = Except<Styles, 'textWrap'> & {
@@ -94,6 +97,48 @@ const Box = forwardRef<BoxRef, PropsWithChildren<Props>>(
 				return null as unknown as BoxRef;
 			}
 
+			const getContentDimensions = () => {
+				const {yogaNode} = element;
+				if (!yogaNode) return {width: 0, height: 0};
+
+				let maxWidth = 0;
+				let maxHeight = 0;
+
+				for (const child of element.childNodes) {
+					if ('yogaNode' in child && child.yogaNode) {
+						const childYoga = child.yogaNode;
+						const right =
+							childYoga.getComputedLeft() + childYoga.getComputedWidth();
+						const bottom =
+							childYoga.getComputedTop() + childYoga.getComputedHeight();
+						maxWidth = Math.max(maxWidth, right);
+						maxHeight = Math.max(maxHeight, bottom);
+					}
+				}
+
+				return {width: maxWidth, height: maxHeight};
+			};
+
+			const getMaxScroll = () => {
+				const {yogaNode} = element;
+				if (!yogaNode) return {x: 0, y: 0};
+
+				const containerWidth =
+					yogaNode.getComputedWidth() -
+					yogaNode.getComputedBorder(Yoga.EDGE_LEFT) -
+					yogaNode.getComputedBorder(Yoga.EDGE_RIGHT);
+				const containerHeight =
+					yogaNode.getComputedHeight() -
+					yogaNode.getComputedBorder(Yoga.EDGE_TOP) -
+					yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM);
+				const content = getContentDimensions();
+
+				return {
+					x: Math.max(0, content.width - containerWidth),
+					y: Math.max(0, content.height - containerHeight),
+				};
+			};
+
 			return Object.assign(element, {
 				scrollTo({x, y}: {x?: number; y?: number}) {
 					if (x !== undefined) scrollStateRef.current.x = x;
@@ -107,6 +152,17 @@ const Box = forwardRef<BoxRef, PropsWithChildren<Props>>(
 				},
 				getScrollPosition() {
 					return {...scrollStateRef.current};
+				},
+				scrollToTop() {
+					scrollStateRef.current.y = 0;
+					element.internal_scrollOffset = {...scrollStateRef.current};
+					forceUpdate();
+				},
+				scrollToBottom() {
+					const maxScroll = getMaxScroll();
+					scrollStateRef.current.y = maxScroll.y;
+					element.internal_scrollOffset = {...scrollStateRef.current};
+					forceUpdate();
 				},
 			});
 		}, []);
