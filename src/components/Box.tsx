@@ -1,9 +1,22 @@
-import React, {forwardRef, useContext, type PropsWithChildren} from 'react';
+import React, {
+	forwardRef,
+	useContext,
+	useRef,
+	useImperativeHandle,
+	useLayoutEffect,
+	useReducer,
+	type PropsWithChildren,
+} from 'react';
 import {type Except} from 'type-fest';
 import {type Styles} from '../styles.js';
 import {type DOMElement} from '../dom.js';
 import {accessibilityContext} from './AccessibilityContext.js';
 import {backgroundContext} from './BackgroundContext.js';
+
+export type BoxRef = DOMElement & {
+	scrollTo: (options: {x?: number; y?: number}) => void;
+	getScrollPosition: () => {x: number; y: number};
+};
 
 export type Props = Except<Styles, 'textWrap'> & {
 	/**
@@ -58,7 +71,7 @@ export type Props = Except<Styles, 'textWrap'> & {
 /**
 `<Box>` is an essential Ink component to build your layout. It's like `<div style="display: flex">` in the browser.
 */
-const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
+const Box = forwardRef<BoxRef, PropsWithChildren<Props>>(
 	(
 		{
 			children,
@@ -71,6 +84,44 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 		},
 		ref,
 	) => {
+		const internalRef = useRef<DOMElement>(null);
+		const scrollStateRef = useRef({x: 0, y: 0});
+		const [, forceUpdate] = useReducer((c: number) => c + 1, 0);
+
+		useImperativeHandle(ref, () => {
+			const element = internalRef.current;
+			if (!element) {
+				return null as unknown as BoxRef;
+			}
+
+			return Object.assign(element, {
+				scrollTo({x, y}: {x?: number; y?: number}) {
+					if (x !== undefined) scrollStateRef.current.x = x;
+					if (y !== undefined) scrollStateRef.current.y = y;
+
+					element.internal_scrollOffset = {
+						...scrollStateRef.current,
+					};
+
+					forceUpdate();
+				},
+				getScrollPosition() {
+					return {...scrollStateRef.current};
+				},
+			});
+		}, []);
+
+		const isScrollContainer =
+			style.overflow === 'scroll' ||
+			style.overflowX === 'scroll' ||
+			style.overflowY === 'scroll';
+
+		useLayoutEffect(() => {
+			if (internalRef.current && isScrollContainer) {
+				internalRef.current.internal_scrollOffset = scrollStateRef.current;
+			}
+		});
+
 		const {isScreenReaderEnabled} = useContext(accessibilityContext);
 		const label = ariaLabel ? <ink-text>{ariaLabel}</ink-text> : undefined;
 		if (isScreenReaderEnabled && ariaHidden) {
@@ -79,7 +130,7 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 
 		const boxElement = (
 			<ink-box
-				ref={ref}
+				ref={internalRef}
 				style={{
 					flexWrap: 'nowrap',
 					flexDirection: 'row',
@@ -99,7 +150,6 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 			</ink-box>
 		);
 
-		// If this Box has a background color, provide it to children via context
 		if (backgroundColor) {
 			return (
 				<backgroundContext.Provider value={backgroundColor}>

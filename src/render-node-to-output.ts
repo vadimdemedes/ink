@@ -164,9 +164,15 @@ const renderNodeToOutput = (
 			renderBorder(x, y, node, output);
 
 			const clipHorizontally =
-				node.style.overflowX === 'hidden' || node.style.overflow === 'hidden';
+				node.style.overflowX === 'hidden' ||
+				node.style.overflow === 'hidden' ||
+				node.style.overflowX === 'scroll' ||
+				node.style.overflow === 'scroll';
 			const clipVertically =
-				node.style.overflowY === 'hidden' || node.style.overflow === 'hidden';
+				node.style.overflowY === 'hidden' ||
+				node.style.overflow === 'hidden' ||
+				node.style.overflowY === 'scroll' ||
+				node.style.overflow === 'scroll';
 
 			if (clipHorizontally || clipVertically) {
 				const x1 = clipHorizontally
@@ -195,10 +201,20 @@ const renderNodeToOutput = (
 		}
 
 		if (node.nodeName === 'ink-root' || node.nodeName === 'ink-box') {
+			const isScrollContainer =
+				node.style.overflow === 'scroll' ||
+				node.style.overflowX === 'scroll' ||
+				node.style.overflowY === 'scroll';
+
+			const scrollOffset =
+				isScrollContainer && node.internal_scrollOffset
+					? node.internal_scrollOffset
+					: {x: 0, y: 0};
+
 			for (const childNode of node.childNodes) {
 				renderNodeToOutput(childNode as DOMElement, output, {
-					offsetX: x,
-					offsetY: y,
+					offsetX: x - scrollOffset.x,
+					offsetY: y - scrollOffset.y,
 					transformers: newTransformers,
 					skipStaticElements,
 				});

@@ -1,9 +1,9 @@
 {
-	"name": "ink",
-	"version": "6.5.1",
+	"name": "@nuvin/ink",
+	"version": "6.5.1-box-1",
 	"description": "React for CLI",
 	"license": "MIT",
-	"repository": "vadimdemedes/ink",
+	"repository": "marschhuynh/ink",
 	"author": {
 		"name": "Vadim Demedes",
 		"email": "vadimdemedes@hey.com",
