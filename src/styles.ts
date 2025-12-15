@@ -14,7 +14,27 @@ export type Styles = {
 		| 'truncate-middle'
 		| 'truncate-start';
 
-	readonly position?: 'absolute' | 'relative';
+	readonly position?: 'absolute' | 'relative' | 'sticky';
+
+	/**
+	Top offset. Used with position="absolute" or position="sticky".
+	*/
+	readonly top?: number;
+
+	/**
+	Bottom offset. Used with position="absolute" or position="sticky".
+	*/
+	readonly bottom?: number;
+
+	/**
+	Left offset. Used with position="absolute" or position="sticky".
+	*/
+	readonly left?: number;
+
+	/**
+	Right offset. Used with position="absolute" or position="sticky".
+	*/
+	readonly right?: number;
 
 	/**
 	Size of the gap between an element's columns.

@@ -16,6 +16,7 @@ declare module 'react' {
 declare namespace Ink {
 	type Box = {
 		internal_static?: boolean;
+		internal_scrollVersion?: number;
 		children?: ReactNode;
 		key?: Key;
 		ref?: LegacyRef<DOMElement>;

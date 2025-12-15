@@ -195,6 +195,11 @@ export default createReconciler<
 				continue;
 			}
 
+			if (key === 'internal_scrollVersion') {
+				node.internal_scrollVersion = value as number;
+				continue;
+			}
+
 			setAttribute(node, key, value as DOMNodeAttribute);
 		}
 
@@ -278,6 +283,11 @@ export default createReconciler<
 
 				if (key === 'internal_static') {
 					node.internal_static = true;
+					continue;
+				}
+
+				if (key === 'internal_scrollVersion') {
+					node.internal_scrollVersion = value as number;
 					continue;
 				}
 

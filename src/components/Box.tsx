@@ -4,7 +4,7 @@ import React, {
 	useRef,
 	useImperativeHandle,
 	useLayoutEffect,
-	useReducer,
+	useState,
 	type PropsWithChildren,
 } from 'react';
 import Yoga from 'yoga-layout';
@@ -89,7 +89,7 @@ const Box = forwardRef<BoxRef, PropsWithChildren<Props>>(
 	) => {
 		const internalRef = useRef<DOMElement>(null);
 		const scrollStateRef = useRef({x: 0, y: 0});
-		const [, forceUpdate] = useReducer((c: number) => c + 1, 0);
+		const [scrollVersion, setScrollVersion] = useState(0);
 
 		useImperativeHandle(ref, () => {
 			const element = internalRef.current;
@@ -148,7 +148,7 @@ const Box = forwardRef<BoxRef, PropsWithChildren<Props>>(
 						...scrollStateRef.current,
 					};
 
-					forceUpdate();
+					setScrollVersion(v => v + 1);
 				},
 				getScrollPosition() {
 					return {...scrollStateRef.current};
@@ -156,13 +156,13 @@ const Box = forwardRef<BoxRef, PropsWithChildren<Props>>(
 				scrollToTop() {
 					scrollStateRef.current.y = 0;
 					element.internal_scrollOffset = {...scrollStateRef.current};
-					forceUpdate();
+					setScrollVersion(v => v + 1);
 				},
 				scrollToBottom() {
 					const maxScroll = getMaxScroll();
 					scrollStateRef.current.y = maxScroll.y;
 					element.internal_scrollOffset = {...scrollStateRef.current};
-					forceUpdate();
+					setScrollVersion(v => v + 1);
 				},
 			});
 		}, []);
@@ -201,6 +201,7 @@ const Box = forwardRef<BoxRef, PropsWithChildren<Props>>(
 					role,
 					state: ariaState,
 				}}
+				internal_scrollVersion={isScrollContainer ? scrollVersion : undefined}
 			>
 				{isScreenReaderEnabled && label ? label : children}
 			</ink-box>
