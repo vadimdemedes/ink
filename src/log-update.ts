@@ -111,7 +111,12 @@ const createIncremental = (
 				continue;
 			}
 
-			buffer.push(ansiEscapes.eraseLine + nextLines[i] + '\n');
+			buffer.push(
+				ansiEscapes.cursorTo(0) +
+					nextLines[i] +
+					ansiEscapes.eraseEndLine +
+					'\n',
+			);
 		}
 
 		stream.write(buffer.join(''));
