@@ -6,7 +6,7 @@ import instances from './instances.js';
 
 export type RenderOptions = {
 	/**
-	Output stream where app will be rendered.
+	Output stream where the app will be rendered.
 
 	@default process.stdout
 	*/
