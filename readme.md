@@ -2325,7 +2325,7 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-chart](https://github.com/pppp606/ink-chart) - Sparkline and bar chart.
 - [ink-scroll-view](https://github.com/ByteLandTechnology/ink-scroll-view) - Scroll container.
 - [ink-scroll-list](https://github.com/ByteLandTechnology/ink-scroll-list) - Scrollable list.
-- [ink-virtual-list](https://github.com/archcorsair/ink-virtual-list/) - A virtualized list component. Only renders visible items for optimal performance.
+- [ink-virtual-list](https://github.com/archcorsair/ink-virtual-list/) - Virtualized list that renders only visible items for performance.
 
 ## Useful Hooks
 
