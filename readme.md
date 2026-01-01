@@ -2325,6 +2325,7 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-chart](https://github.com/pppp606/ink-chart) - Sparkline and bar chart.
 - [ink-scroll-view](https://github.com/ByteLandTechnology/ink-scroll-view) - Scroll container.
 - [ink-scroll-list](https://github.com/ByteLandTechnology/ink-scroll-list) - Scrollable list.
+- [ink-stepper](https://github.com/archcorsair/ink-stepper) - Step-by-step wizard.
 
 ## Useful Hooks
 
