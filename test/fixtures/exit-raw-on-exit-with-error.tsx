@@ -1,5 +1,6 @@
 import React from 'react';
 import {render, Text, useApp, useStdin} from '../../src/index.js';
+import {writeReadySignal} from '../helpers/ready.js';
 
 class Exit extends React.Component<{
 	onSetRawMode: (value: boolean) => void;
@@ -26,6 +27,9 @@ function Test() {
 }
 
 const app = render(<Test />);
+
+// Signal to test harness that Ink is ready to accept input
+writeReadySignal();
 
 try {
 	await app.waitUntilExit();

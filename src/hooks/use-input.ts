@@ -1,5 +1,6 @@
 import {useEffect} from 'react';
 import parseKeypress, {nonAlphanumericKeys} from '../parse-keypress.js';
+import type {EmitMetadata} from '../parser/index.js';
 import reconciler from '../reconciler.js';
 import useStdin from './use-stdin.js';
 
@@ -86,6 +87,11 @@ export type Key = {
 	[Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 	*/
 	meta: boolean;
+
+	/**
+	Input came from a paste operation (bracketed paste mode).
+	*/
+	isPaste: boolean;
 };
 
 type Handler = (input: string, key: Key) => void;
@@ -142,7 +148,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			return;
 		}
 
-		const handleData = (data: string) => {
+		const handleData = (data: string, metadata?: EmitMetadata) => {
 			const keypress = parseKeypress(data);
 
 			const key = {
@@ -166,6 +172,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				// to avoid breaking changes in Ink.
 				// TODO(vadimdemedes): consider removing this in the next major version.
 				meta: keypress.meta || keypress.name === 'escape' || keypress.option,
+				isPaste: metadata?.isPaste ?? false,
 			};
 
 			let input = keypress.ctrl ? keypress.name : keypress.sequence;
