@@ -126,6 +126,7 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
 - [Neovate Code](https://github.com/neovateai/neovate-code) - An agentic coding tool made by AntGroup.
 - [instagram-cli](https://github.com/supreme-gg-gg/instagram-cli) - Instagram client.
 - [ElevenLabs CLI](https://github.com/elevenlabs/cli) - ElevenLabs agents client.
+- [savitr](https://github.com/snowwowl/savitr) - A disk benchmarking tool
 
 *(PRs welcome. Append new entries at the end. Repos must have 100+ stars and showcase Ink beyond a basic list picker.)*
 
