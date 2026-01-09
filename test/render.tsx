@@ -3,6 +3,7 @@ import process from 'node:process';
 import url from 'node:url';
 import * as path from 'node:path';
 import {createRequire} from 'node:module';
+import crypto from 'node:crypto';
 import FakeTimers from '@sinonjs/fake-timers';
 import {stub} from 'sinon';
 import test from 'ava';
@@ -14,6 +15,7 @@ import delay from 'delay';
 import {render, Box, Text, useInput} from '../src/index.js';
 import {type RenderMetrics} from '../src/ink.js';
 import createStdout from './helpers/create-stdout.js';
+import {ReadySignalFilter} from './helpers/ready-signal-filter.js';
 
 const require = createRequire(import.meta.url);
 
@@ -54,10 +56,16 @@ const term = (fixture: string, args: string[] = []) => {
 		reject = reject2;
 	});
 
+	// Generate unique ready token for this test
+	const readyToken = crypto.randomUUID();
+	const readyFilter = new ReadySignalFilter(readyToken);
+
 	const env = {
 		...process.env,
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		NODE_NO_WARNINGS: '1',
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		INK_READY_TOKEN: readyToken,
 	};
 
 	const ps = spawn(
@@ -84,7 +92,7 @@ const term = (fixture: string, args: string[] = []) => {
 	};
 
 	ps.onData(data => {
-		result.output += data;
+		result.output += readyFilter.process(data);
 	});
 
 	ps.onExit(({exitCode}) => {
