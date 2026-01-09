@@ -8,6 +8,7 @@ type Result = {
 	output: string;
 	outputHeight: number;
 	staticOutput: string;
+	cursorPosition?: {row: number; col: number} | undefined;
 };
 
 const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
@@ -56,7 +57,11 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			});
 		}
 
-		const {output: generatedOutput, height: outputHeight} = output.get();
+		const {
+			output: generatedOutput,
+			height: outputHeight,
+			cursorPosition,
+		} = output.get();
 
 		return {
 			output: generatedOutput,
@@ -64,6 +69,7 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			// Newline at the end is needed, because static output doesn't have one, so
 			// interactive output will override last line of static output
 			staticOutput: staticOutput ? `${staticOutput.get().output}\n` : '',
+			cursorPosition,
 		};
 	}
 
