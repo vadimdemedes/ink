@@ -29,7 +29,12 @@ const createStandard = (
 		}
 
 		previousOutput = output;
+		// Begin Synchronized Update Mode - prevents terminal multiplexers from reading
+		// intermediate cursor positions during rendering, fixing IME issues
+		stream.write('\u001B[?2026h');
 		stream.write(ansiEscapes.eraseLines(previousLineCount) + output);
+		// End Synchronized Update Mode
+		stream.write('\u001B[?2026l');
 		previousLineCount = output.split('\n').length;
 	};
 
@@ -82,8 +87,13 @@ const createIncremental = (
 		const nextCount = nextLines.length;
 		const visibleCount = nextCount - 1;
 
+		// Begin Synchronized Update Mode
+		stream.write('\u001B[?2026h');
+
 		if (output === '\n' || previousOutput.length === 0) {
 			stream.write(ansiEscapes.eraseLines(previousCount) + output);
+			// End Synchronized Update Mode
+			stream.write('\u001B[?2026l');
 			previousOutput = output;
 			previousLines = nextLines;
 			return;
@@ -120,6 +130,8 @@ const createIncremental = (
 		}
 
 		stream.write(buffer.join(''));
+		// End Synchronized Update Mode
+		stream.write('\u001B[?2026l');
 
 		previousOutput = output;
 		previousLines = nextLines;
