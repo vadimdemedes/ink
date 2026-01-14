@@ -210,17 +210,17 @@ export default class Ink {
 			}
 
 			// Use Synchronized Update Mode to fix IME issues
-			this.options.stdout.write('\u001B[?2026h');
-			this.options.stdout.write(this.fullStaticOutput + output);
-			this.options.stdout.write('\u001B[?2026l');
+			this.options.stdout.write(
+				'\u001B[?2026h' + this.fullStaticOutput + output + '\u001B[?2026l',
+			);
 			return;
 		}
 
 		if (isInCi) {
 			if (hasStaticOutput) {
-				this.options.stdout.write('\u001B[?2026h');
-				this.options.stdout.write(staticOutput);
-				this.options.stdout.write('\u001B[?2026l');
+				this.options.stdout.write(
+					'\u001B[?2026h' + staticOutput + '\u001B[?2026l',
+				);
 			}
 
 			this.lastOutput = output;
@@ -235,9 +235,9 @@ export default class Ink {
 					this.lastOutputHeight > 0
 						? ansiEscapes.eraseLines(this.lastOutputHeight)
 						: '';
-				this.options.stdout.write('\u001B[?2026h');
-				this.options.stdout.write(erase + staticOutput);
-				this.options.stdout.write('\u001B[?2026l');
+				this.options.stdout.write(
+					'\u001B[?2026h' + erase + staticOutput + '\u001B[?2026l',
+				);
 				// After erasing, the last output is gone, so we should reset its height
 				this.lastOutputHeight = 0;
 			}
@@ -254,18 +254,19 @@ export default class Ink {
 			});
 
 			// If we haven't erased yet, do it now.
-			this.options.stdout.write('\u001B[?2026h');
+			let toWrite = '\u001B[?2026h';
 			if (hasStaticOutput) {
-				this.options.stdout.write(wrappedOutput);
+				toWrite += wrappedOutput;
 			} else {
 				const erase =
 					this.lastOutputHeight > 0
 						? ansiEscapes.eraseLines(this.lastOutputHeight)
 						: '';
-				this.options.stdout.write(erase + wrappedOutput);
+				toWrite += erase + wrappedOutput;
 			}
 
-			this.options.stdout.write('\u001B[?2026l');
+			toWrite += '\u001B[?2026l';
+			this.options.stdout.write(toWrite);
 
 			this.lastOutput = output;
 			this.lastOutputHeight =
@@ -278,11 +279,13 @@ export default class Ink {
 		}
 
 		if (this.lastOutputHeight >= this.options.stdout.rows) {
-			this.options.stdout.write('\u001B[?2026h');
 			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
+				'\u001B[?2026h' +
+					ansiEscapes.clearTerminal +
+					this.fullStaticOutput +
+					output +
+					'\u001B[?2026l',
 			);
-			this.options.stdout.write('\u001B[?2026l');
 			this.lastOutput = output;
 			this.lastOutputHeight = outputHeight;
 			this.log.sync(output);
@@ -292,9 +295,9 @@ export default class Ink {
 		// To ensure static output is cleanly rendered before main output, clear main output first
 		if (hasStaticOutput) {
 			this.log.clear();
-			this.options.stdout.write('\u001B[?2026h');
-			this.options.stdout.write(staticOutput);
-			this.options.stdout.write('\u001B[?2026l');
+			this.options.stdout.write(
+				'\u001B[?2026h' + staticOutput + '\u001B[?2026l',
+			);
 			this.log(output);
 		}
 
@@ -339,23 +342,23 @@ export default class Ink {
 		}
 
 		if (this.options.debug) {
-			this.options.stdout.write('\u001B[?2026h');
-			this.options.stdout.write(data + this.fullStaticOutput + this.lastOutput);
-			this.options.stdout.write('\u001B[?2026l');
+			this.options.stdout.write(
+				'\u001B[?2026h' +
+					data +
+					this.fullStaticOutput +
+					this.lastOutput +
+					'\u001B[?2026l',
+			);
 			return;
 		}
 
 		if (isInCi) {
-			this.options.stdout.write('\u001B[?2026h');
-			this.options.stdout.write(data);
-			this.options.stdout.write('\u001B[?2026l');
+			this.options.stdout.write('\u001B[?2026h' + data + '\u001B[?2026l');
 			return;
 		}
 
 		this.log.clear();
-		this.options.stdout.write('\u001B[?2026h');
-		this.options.stdout.write(data);
-		this.options.stdout.write('\u001B[?2026l');
+		this.options.stdout.write('\u001B[?2026h' + data + '\u001B[?2026l');
 		this.log(this.lastOutput);
 	}
 
@@ -365,26 +368,23 @@ export default class Ink {
 		}
 
 		if (this.options.debug) {
-			this.options.stderr.write('\u001B[?2026h');
-			this.options.stderr.write(data);
-			this.options.stderr.write('\u001B[?2026l');
-			this.options.stdout.write('\u001B[?2026h');
-			this.options.stdout.write(this.fullStaticOutput + this.lastOutput);
-			this.options.stdout.write('\u001B[?2026l');
+			this.options.stderr.write('\u001B[?2026h' + data + '\u001B[?2026l');
+			this.options.stdout.write(
+				'\u001B[?2026h' +
+					this.fullStaticOutput +
+					this.lastOutput +
+					'\u001B[?2026l',
+			);
 			return;
 		}
 
 		if (isInCi) {
-			this.options.stderr.write('\u001B[?2026h');
-			this.options.stderr.write(data);
-			this.options.stderr.write('\u001B[?2026l');
+			this.options.stderr.write('\u001B[?2026h' + data + '\u001B[?2026l');
 			return;
 		}
 
 		this.log.clear();
-		this.options.stderr.write('\u001B[?2026h');
-		this.options.stderr.write(data);
-		this.options.stderr.write('\u001B[?2026l');
+		this.options.stderr.write('\u001B[?2026h' + data + '\u001B[?2026l');
 		this.log(this.lastOutput);
 	}
 

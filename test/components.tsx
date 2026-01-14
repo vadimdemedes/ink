@@ -17,6 +17,15 @@ import {
 import createStdout from './helpers/create-stdout.js';
 import {renderToString} from './helpers/render-to-string.js';
 import {run} from './helpers/run.js';
+import {enableTestColors, disableTestColors} from './helpers/force-colors.js';
+
+test.before(() => {
+	enableTestColors();
+});
+
+test.after(() => {
+	disableTestColors();
+});
 
 test('text', t => {
 	const output = renderToString(<Text>Hello World</Text>);
@@ -230,7 +239,7 @@ test('remesure text dimensions on text change', t => {
 		{stdout, debug: true},
 	);
 
-	t.is((stdout.write as any).lastCall.args[0], 'Hello');
+	t.is(stdout.get(), 'Hello');
 
 	rerender(
 		<Box>
@@ -238,7 +247,7 @@ test('remesure text dimensions on text change', t => {
 		</Box>,
 	);
 
-	t.is((stdout.write as any).lastCall.args[0], 'Hello World');
+	t.is(stdout.get(), 'Hello World');
 });
 
 test('fragment', t => {
@@ -386,10 +395,10 @@ test('skip previous output when rendering new static output', t => {
 		debug: true,
 	});
 
-	t.is((stdout.write as any).lastCall.args[0], 'A\n');
+	t.is(stdout.get(), 'A\n');
 
 	rerender(<Dynamic items={['A', 'B']} />);
-	t.is((stdout.write as any).lastCall.args[0], 'A\nB\n');
+	t.is(stdout.get(), 'A\nB\n');
 });
 
 test('render only new items in static output on final render', t => {
@@ -406,14 +415,14 @@ test('render only new items in static output on final render', t => {
 		debug: true,
 	});
 
-	t.is((stdout.write as any).lastCall.args[0], '');
+	t.is(stdout.get(), '');
 
 	rerender(<Dynamic items={['A']} />);
-	t.is((stdout.write as any).lastCall.args[0], 'A\n');
+	t.is(stdout.get(), 'A\n');
 
 	rerender(<Dynamic items={['A', 'B']} />);
 	unmount();
-	t.is((stdout.write as any).lastCall.args[0], 'A\nB\n');
+	t.is(stdout.get(), 'A\nB\n');
 });
 
 // See https://github.com/chalk/wrap-ansi/issues/27
@@ -435,10 +444,10 @@ test('replace child node with text', t => {
 		debug: true,
 	});
 
-	t.is((stdout.write as any).lastCall.args[0], chalk.green('test'));
+	t.is(stdout.get(), chalk.green('test'));
 
 	rerender(<Dynamic replace />);
-	t.is((stdout.write as any).lastCall.args[0], 'x');
+	t.is(stdout.get(), 'x');
 });
 
 // See https://github.com/vadimdemedes/ink/issues/145
@@ -677,10 +686,10 @@ test('reset prop when it’s removed from the element', t => {
 		debug: true,
 	});
 
-	t.is((stdout.write as any).lastCall.args[0], '\n\n\nx');
+	t.is(stdout.get(), '\n\n\nx');
 
 	rerender(<Dynamic remove />);
-	t.is((stdout.write as any).lastCall.args[0], 'x');
+	t.is(stdout.get(), 'x');
 });
 
 test('newline', t => {

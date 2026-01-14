@@ -13,7 +13,20 @@ const createStdout = (columns?: number): FakeStdout => {
 	const write = spy();
 	stdout.write = write;
 
-	stdout.get = () => write.lastCall.args[0] as string;
+	stdout.get = () => {
+		const calls = write.getCalls();
+		// Iterate backwards to find the last write that isn't just control characters
+		for (let i = calls.length - 1; i >= 0; i--) {
+			const output = calls[i].args[0] as string;
+			// eslint-disable-next-line no-control-regex
+			const cleanOutput = output.replaceAll(/\u001B\[\?2026[hl]/g, '');
+			if (cleanOutput !== '') {
+				return cleanOutput;
+			}
+		}
+
+		return '';
+	};
 
 	return stdout;
 };

@@ -118,10 +118,7 @@ test('dont focus on register when auto focus is off', async t => {
 
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second', 'Third'].join('\n'),
-	);
+	t.is(stdout.get(), ['First', 'Second', 'Third'].join('\n'));
 });
 
 test('focus the first component to register', async t => {
@@ -135,10 +132,7 @@ test('focus the first component to register', async t => {
 
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First ✔', 'Second', 'Third'].join('\n'),
-	);
+	t.is(stdout.get(), ['First ✔', 'Second', 'Third'].join('\n'));
 });
 
 test('unfocus active component on Esc', async t => {
@@ -153,10 +147,7 @@ test('unfocus active component on Esc', async t => {
 	await delay(100);
 	emitReadable(stdin, '\u001B');
 	await delay(100);
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second', 'Third'].join('\n'),
-	);
+	t.is(stdout.get(), ['First', 'Second', 'Third'].join('\n'));
 });
 
 test('switch focus to first component on Tab', async t => {
@@ -172,10 +163,7 @@ test('switch focus to first component on Tab', async t => {
 	emitReadable(stdin, '\t');
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First ✔', 'Second', 'Third'].join('\n'),
-	);
+	t.is(stdout.get(), ['First ✔', 'Second', 'Third'].join('\n'));
 });
 
 test('switch focus to the next component on Tab', async t => {
@@ -192,10 +180,7 @@ test('switch focus to the next component on Tab', async t => {
 	emitReadable(stdin, '\t');
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second ✔', 'Third'].join('\n'),
-	);
+	t.is(stdout.get(), ['First', 'Second ✔', 'Third'].join('\n'));
 });
 
 test('switch focus to the first component if currently focused component is the last one on Tab', async t => {
@@ -212,18 +197,12 @@ test('switch focus to the first component if currently focused component is the 
 	emitReadable(stdin, '\t');
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second', 'Third ✔'].join('\n'),
-	);
+	t.is(stdout.get(), ['First', 'Second', 'Third ✔'].join('\n'));
 
 	emitReadable(stdin, '\t');
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First ✔', 'Second', 'Third'].join('\n'),
-	);
+	t.is(stdout.get(), ['First ✔', 'Second', 'Third'].join('\n'));
 });
 
 test('skip disabled component on Tab', async t => {
@@ -239,10 +218,7 @@ test('skip disabled component on Tab', async t => {
 	emitReadable(stdin, '\t');
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second', 'Third ✔'].join('\n'),
-	);
+	t.is(stdout.get(), ['First', 'Second', 'Third ✔'].join('\n'));
 });
 
 test('switch focus to the previous component on Shift+Tab', async t => {
@@ -258,18 +234,12 @@ test('switch focus to the previous component on Shift+Tab', async t => {
 	emitReadable(stdin, '\t');
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second ✔', 'Third'].join('\n'),
-	);
+	t.is(stdout.get(), ['First', 'Second ✔', 'Third'].join('\n'));
 
 	emitReadable(stdin, '\u001B[Z');
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First ✔', 'Second', 'Third'].join('\n'),
-	);
+	t.is(stdout.get(), ['First ✔', 'Second', 'Third'].join('\n'));
 });
 
 test('switch focus to the last component if currently focused component is the first one on Shift+Tab', async t => {
@@ -285,10 +255,7 @@ test('switch focus to the last component if currently focused component is the f
 	emitReadable(stdin, '\u001B[Z');
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second', 'Third ✔'].join('\n'),
-	);
+	t.is(stdout.get(), ['First', 'Second', 'Third ✔'].join('\n'));
 });
 
 test('skip disabled component on Shift+Tab', async t => {
@@ -305,10 +272,7 @@ test('skip disabled component on Shift+Tab', async t => {
 	emitReadable(stdin, '\u001B[Z');
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First ✔', 'Second', 'Third'].join('\n'),
-	);
+	t.is(stdout.get(), ['First ✔', 'Second', 'Third'].join('\n'));
 });
 
 test('reset focus when focused component unregisters', async t => {
@@ -324,7 +288,7 @@ test('reset focus when focused component unregisters', async t => {
 	rerender(<Test autoFocus showFirst={false} />);
 	await delay(100);
 
-	t.is((stdout.write as any).lastCall.args[0], ['Second', 'Third'].join('\n'));
+	t.is(stdout.get(), ['Second', 'Third'].join('\n'));
 });
 
 test('focus first component after focused component unregisters', async t => {
@@ -340,15 +304,12 @@ test('focus first component after focused component unregisters', async t => {
 	rerender(<Test autoFocus showFirst={false} />);
 	await delay(100);
 
-	t.is((stdout.write as any).lastCall.args[0], ['Second', 'Third'].join('\n'));
+	t.is(stdout.get(), ['Second', 'Third'].join('\n'));
 
 	emitReadable(stdin, '\t');
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['Second ✔', 'Third'].join('\n'),
-	);
+	t.is(stdout.get(), ['Second ✔', 'Third'].join('\n'));
 });
 
 test('toggle focus management', async t => {
@@ -366,20 +327,14 @@ test('toggle focus management', async t => {
 	emitReadable(stdin, '\t');
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First ✔', 'Second', 'Third'].join('\n'),
-	);
+	t.is(stdout.get(), ['First ✔', 'Second', 'Third'].join('\n'));
 
 	rerender(<Test autoFocus />);
 	await delay(100);
 	emitReadable(stdin, '\t');
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second ✔', 'Third'].join('\n'),
-	);
+	t.is(stdout.get(), ['First', 'Second ✔', 'Third'].join('\n'));
 });
 
 test('manually focus next component', async t => {
@@ -395,10 +350,7 @@ test('manually focus next component', async t => {
 	rerender(<Test autoFocus focusNext />);
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second ✔', 'Third'].join('\n'),
-	);
+	t.is(stdout.get(), ['First', 'Second ✔', 'Third'].join('\n'));
 });
 
 test('manually focus previous component', async t => {
@@ -414,10 +366,7 @@ test('manually focus previous component', async t => {
 	rerender(<Test autoFocus focusPrevious />);
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second', 'Third ✔'].join('\n'),
-	);
+	t.is(stdout.get(), ['First', 'Second', 'Third ✔'].join('\n'));
 });
 
 test('doesnt crash when focusing next on unmounted children', async t => {
@@ -433,7 +382,7 @@ test('doesnt crash when focusing next on unmounted children', async t => {
 	rerender(<Test focusNext unmountChildren />);
 	await delay(100);
 
-	t.is((stdout.write as any).lastCall.args[0], '');
+	t.is(stdout.get(), '');
 });
 
 test('doesnt crash when focusing previous on unmounted children', async t => {
@@ -449,7 +398,7 @@ test('doesnt crash when focusing previous on unmounted children', async t => {
 	rerender(<Test focusPrevious unmountChildren />);
 	await delay(100);
 
-	t.is((stdout.write as any).lastCall.args[0], '');
+	t.is(stdout.get(), '');
 });
 
 test('focuses first non-disabled component', async t => {
@@ -463,10 +412,7 @@ test('focuses first non-disabled component', async t => {
 
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second', 'Third ✔'].join('\n'),
-	);
+	t.is(stdout.get(), ['First', 'Second', 'Third ✔'].join('\n'));
 });
 
 test('skips disabled elements when wrapping around', async t => {
@@ -484,10 +430,7 @@ test('skips disabled elements when wrapping around', async t => {
 	emitReadable(stdin, '\t');
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second ✔', 'Third'].join('\n'),
-	);
+	t.is(stdout.get(), ['First', 'Second ✔', 'Third'].join('\n'));
 });
 
 test('skips disabled elements when wrapping around from the front', async t => {
@@ -503,8 +446,5 @@ test('skips disabled elements when wrapping around from the front', async t => {
 	emitReadable(stdin, '\u001B[Z');
 	await delay(100);
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		['First', 'Second ✔', 'Third'].join('\n'),
-	);
+	t.is(stdout.get(), ['First', 'Second ✔', 'Third'].join('\n'));
 });

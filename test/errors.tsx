@@ -24,25 +24,20 @@ test('catch and display error', t => {
 
 	render(<Test />, {stdout});
 
-	t.deepEqual(
-		stripAnsi((stdout.write as any).lastCall.args[0] as string)
-			.split('\n')
-			.slice(0, 14),
-		[
-			'',
-			'  ERROR  Oh no',
-			'',
-			' test/errors.tsx:22:9',
-			'',
-			' 19:   const stdout = createStdout();',
-			' 20:',
-			' 21:   const Test = () => {',
-			" 22:     throw new Error('Oh no');",
-			' 23:   };',
-			' 24:',
-			' 25:   render(<Test />, {stdout});',
-			'',
-			' - Test (test/errors.tsx:22:9)',
-		],
-	);
+	t.deepEqual(stripAnsi(stdout.get()).split('\n').slice(0, 14), [
+		'',
+		'  ERROR  Oh no',
+		'',
+		' test/errors.tsx:22:9',
+		'',
+		' 19:   const stdout = createStdout();',
+		' 20:',
+		' 21:   const Test = () => {',
+		" 22:     throw new Error('Oh no');",
+		' 23:   };',
+		' 24:',
+		' 25:   render(<Test />, {stdout});',
+		'',
+		' - Test (test/errors.tsx:22:9)',
+	]);
 });

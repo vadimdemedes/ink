@@ -96,10 +96,10 @@ test('remeasure text when text is changed', t => {
 
 	const stdout = createStdout();
 	const {rerender} = render(<Test />, {stdout, debug: true});
-	t.is((stdout.write as any).lastCall.args[0], 'abc');
+	t.is(stdout.get(), 'abc');
 
 	rerender(<Test add />);
-	t.is((stdout.write as any).lastCall.args[0], 'abcx');
+	t.is(stdout.get(), 'abcx');
 });
 
 test('remeasure text when text nodes are changed', t => {
@@ -117,10 +117,10 @@ test('remeasure text when text nodes are changed', t => {
 	const stdout = createStdout();
 
 	const {rerender} = render(<Test />, {stdout, debug: true});
-	t.is((stdout.write as any).lastCall.args[0], 'abc');
+	t.is(stdout.get(), 'abc');
 
 	rerender(<Test add />);
-	t.is((stdout.write as any).lastCall.args[0], 'abcx');
+	t.is(stdout.get(), 'abcx');
 });
 
 // See https://github.com/vadimdemedes/ink/issues/743

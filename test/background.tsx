@@ -366,11 +366,11 @@ test('Box background updates on rerender', t => {
 		debug: true,
 	});
 
-	t.is((stdout.write as any).lastCall.args[0], 'Hello');
+	t.is(stdout.get(), 'Hello');
 
 	rerender(<Test bgColor="green" />);
-	t.is((stdout.write as any).lastCall.args[0], chalk.bgGreen('Hello'));
+	t.is(stdout.get(), chalk.bgGreen('Hello'));
 
 	rerender(<Test />);
-	t.is((stdout.write as any).lastCall.args[0], 'Hello');
+	t.is(stdout.get(), 'Hello');
 });

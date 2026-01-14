@@ -30,9 +30,7 @@ test.serial('clear screen when terminal width decreases', async t => {
 	await delay(100);
 
 	// Verify the output was updated for smaller width
-	const lastOutput = stripAnsi(
-		(stdout.write as any).lastCall.args[0] as string,
-	);
+	const lastOutput = stripAnsi(stdout.get());
 	t.true(lastOutput.includes('Hello World'));
 	t.true(lastOutput.includes('╭')); // Box border
 	t.not(initialOutput, lastOutput); // Output should change due to width
@@ -58,7 +56,7 @@ test.serial('no screen clear when terminal width increases', async t => {
 	stdout.emit('resize');
 	await delay(100);
 
-	const lastOutput = (stdout.write as any).lastCall.args[0] as string;
+	const lastOutput = stdout.get();
 
 	// When increasing width, we don't clear, so we should see eraseLines used for incremental update
 	// But when decreasing, the clear() is called which also uses eraseLines
@@ -91,9 +89,7 @@ test.serial(
 		stdout.emit('resize');
 		await delay(100);
 
-		const afterFirstDecrease = stripAnsi(
-			(stdout.write as any).lastCall.args[0] as string,
-		);
+		const afterFirstDecrease = stripAnsi(stdout.get());
 		t.not(initialOutput, afterFirstDecrease);
 		t.true(afterFirstDecrease.includes('Content'));
 
@@ -102,9 +98,7 @@ test.serial(
 		stdout.emit('resize');
 		await delay(100);
 
-		const afterSecondDecrease = stripAnsi(
-			(stdout.write as any).lastCall.args[0] as string,
-		);
+		const afterSecondDecrease = stripAnsi(stdout.get());
 		t.not(afterFirstDecrease, afterSecondDecrease);
 		t.true(afterSecondDecrease.includes('Content'));
 	},
@@ -132,9 +126,7 @@ test.serial('width decrease clears lastOutput to force rerender', async t => {
 	stdout.emit('resize');
 	await delay(100);
 
-	const afterResizeOutput = stripAnsi(
-		(stdout.write as any).lastCall.args[0] as string,
-	);
+	const afterResizeOutput = stripAnsi(stdout.get());
 
 	// Outputs should be different because the border width changed
 	t.not(initialOutput, afterResizeOutput);
@@ -149,9 +141,5 @@ test.serial('width decrease clears lastOutput to force rerender', async t => {
 	await delay(100);
 
 	// Verify content was updated
-	t.true(
-		stripAnsi((stdout.write as any).lastCall.args[0] as string).includes(
-			'Updated Content',
-		),
-	);
+	t.true(stripAnsi(stdout.get()).includes('Updated Content'));
 });

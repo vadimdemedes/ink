@@ -36,7 +36,7 @@ test('measure element', async t => {
 	render(<Test />, {stdout, debug: true});
 	t.is((stdout.write as any).firstCall.args[0], 'Width: 0');
 	await delay(100);
-	t.is((stdout.write as any).lastCall.args[0], 'Width: 100');
+	t.is(stdout.get(), 'Width: 100');
 });
 
 test.serial('calculate layout while rendering is throttled', async t => {
