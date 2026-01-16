@@ -1,5 +1,6 @@
 // Copied from https://github.com/enquirer/enquirer/blob/36785f3399a41cd61e9d28d1eb9c2fcd73d69b4c/lib/keypress.js
 import {Buffer} from 'node:buffer';
+import {isKittySequence, parseKittySequence} from './kitty-keyboard.js';
 
 const metaKeyCodeRe = /^(?:\x1b)([a-zA-Z0-9])$/;
 
@@ -132,9 +133,15 @@ type ParsedKey = {
 	meta: boolean;
 	shift: boolean;
 	option: boolean;
+	super: boolean;
 	sequence: string;
 	raw: string | undefined;
 	code?: string;
+	/**
+	 * Whether this keypress was parsed from a Kitty keyboard protocol sequence.
+	 * When true, modifier detection is more reliable.
+	 */
+	isKittyProtocol?: boolean;
 };
 
 const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
@@ -153,12 +160,31 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 		s = '';
 	}
 
+	// Try parsing as Kitty keyboard protocol sequence first
+	if (isKittySequence(s)) {
+		const kittyKey = parseKittySequence(s);
+		if (kittyKey) {
+			return {
+				name: kittyKey.name,
+				ctrl: kittyKey.ctrl,
+				meta: kittyKey.meta,
+				shift: kittyKey.shift,
+				option: false,
+				super: kittyKey.super,
+				sequence: kittyKey.sequence,
+				raw: kittyKey.sequence,
+				isKittyProtocol: true,
+			};
+		}
+	}
+
 	const key: ParsedKey = {
 		name: '',
 		ctrl: false,
 		meta: false,
 		shift: false,
 		option: false,
+		super: false,
 		sequence: s,
 		raw: s,
 	};

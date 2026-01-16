@@ -8,6 +8,14 @@ import StdoutContext from './StdoutContext.js';
 import StderrContext from './StderrContext.js';
 import FocusContext from './FocusContext.js';
 import ErrorOverview from './ErrorOverview.js';
+import {
+	enableKittyProtocol,
+	disableKittyProtocol,
+	queryKittyProtocol,
+	isKittyQueryResponse,
+	parseKittyQueryResponse,
+	KittyFlags,
+} from '../kitty-keyboard.js';
 
 const tab = '\t';
 const shiftTab = '\u001B[Z';
@@ -29,6 +37,7 @@ type State = {
 	readonly activeFocusId?: string;
 	readonly focusables: Focusable[];
 	readonly error?: Error;
+	readonly isKittyProtocolEnabled: boolean;
 };
 
 type Focusable = {
@@ -51,6 +60,7 @@ export default class App extends PureComponent<Props, State> {
 		activeFocusId: undefined,
 		focusables: [],
 		error: undefined,
+		isKittyProtocolEnabled: false,
 	};
 
 	// Count how many components enabled raw mode to avoid disabling
@@ -78,6 +88,7 @@ export default class App extends PureComponent<Props, State> {
 						stdin: this.props.stdin,
 						setRawMode: this.handleSetRawMode,
 						isRawModeSupported: this.isRawModeSupported(),
+						isKittyProtocolEnabled: this.state.isKittyProtocolEnabled,
 						// eslint-disable-next-line @typescript-eslint/naming-convention
 						internal_exitOnCtrlC: this.props.exitOnCtrlC,
 						// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -144,7 +155,7 @@ export default class App extends PureComponent<Props, State> {
 	}
 
 	handleSetRawMode = (isEnabled: boolean): void => {
-		const {stdin} = this.props;
+		const {stdin, stdout} = this.props;
 
 		if (!this.isRawModeSupported()) {
 			if (stdin === process.stdin) {
@@ -166,6 +177,9 @@ export default class App extends PureComponent<Props, State> {
 				stdin.ref();
 				stdin.setRawMode(true);
 				stdin.addListener('readable', this.handleReadable);
+
+				// Try to enable Kitty keyboard protocol for enhanced modifier detection
+				this.tryEnableKittyProtocol();
 			}
 
 			this.rawModeEnabledCount++;
@@ -174,16 +188,68 @@ export default class App extends PureComponent<Props, State> {
 
 		// Disable raw mode only when no components left that are using it
 		if (--this.rawModeEnabledCount === 0) {
+			// Disable Kitty keyboard protocol before disabling raw mode
+			if (this.state.isKittyProtocolEnabled) {
+				stdout.write(disableKittyProtocol());
+				this.setState({isKittyProtocolEnabled: false});
+			}
+
 			stdin.setRawMode(false);
 			stdin.removeListener('readable', this.handleReadable);
 			stdin.unref();
 		}
 	};
 
+	// Track whether we're waiting for a Kitty protocol query response
+	private kittyQueryPending = false;
+	private kittyQueryTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	tryEnableKittyProtocol = (): void => {
+		const {stdout} = this.props;
+
+		// Send query to check if Kitty protocol is supported
+		// Terminal will respond with CSI ? flags u if supported
+		this.kittyQueryPending = true;
+		stdout.write(queryKittyProtocol());
+
+		// Set a timeout - if no response, assume protocol is not supported
+		this.kittyQueryTimeout = setTimeout(() => {
+			if (this.kittyQueryPending) {
+				this.kittyQueryPending = false;
+				// No response means Kitty protocol is not supported
+				// This is fine - we'll fall back to legacy key parsing
+			}
+		}, 100);
+	};
+
+	handleKittyQueryResponse = (_flags: number): void => {
+		const {stdout} = this.props;
+
+		if (this.kittyQueryTimeout) {
+			clearTimeout(this.kittyQueryTimeout);
+			this.kittyQueryTimeout = null;
+		}
+		this.kittyQueryPending = false;
+
+		// Terminal supports Kitty protocol - enable it with disambiguate escape codes flag
+		// Note: _flags contains the current protocol flags reported by terminal (unused for now)
+		stdout.write(enableKittyProtocol(KittyFlags.disambiguateEscapeCodes));
+		this.setState({isKittyProtocolEnabled: true});
+	};
+
 	handleReadable = (): void => {
 		let chunk;
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		while ((chunk = this.props.stdin.read() as string | null) !== null) {
+			// Check if this is a Kitty protocol query response
+			if (this.kittyQueryPending && isKittyQueryResponse(chunk)) {
+				const flags = parseKittyQueryResponse(chunk);
+				if (flags !== null) {
+					this.handleKittyQueryResponse(flags);
+					continue; // Don't pass the query response to input handlers
+				}
+			}
+
 			this.handleInput(chunk);
 			this.internal_eventEmitter.emit('input', chunk);
 		}
@@ -215,6 +281,12 @@ export default class App extends PureComponent<Props, State> {
 	};
 
 	handleExit = (error?: Error): void => {
+		// Clear any pending Kitty protocol timeout
+		if (this.kittyQueryTimeout) {
+			clearTimeout(this.kittyQueryTimeout);
+			this.kittyQueryTimeout = null;
+		}
+
 		if (this.isRawModeSupported()) {
 			this.handleSetRawMode(false);
 		}

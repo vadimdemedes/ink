@@ -18,6 +18,12 @@ export type Props = {
 	*/
 	readonly isRawModeSupported: boolean;
 
+	/**
+	Whether the Kitty keyboard protocol is enabled. When enabled, modifier key detection
+	is more reliable (e.g., Shift+Enter is distinguishable from Enter).
+	*/
+	readonly isKittyProtocolEnabled: boolean;
+
 	readonly internal_exitOnCtrlC: boolean;
 
 	readonly internal_eventEmitter: EventEmitter;
@@ -33,6 +39,7 @@ const StdinContext = createContext<Props>({
 	internal_eventEmitter: new EventEmitter(),
 	setRawMode() {},
 	isRawModeSupported: false,
+	isKittyProtocolEnabled: false,
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	internal_exitOnCtrlC: true,
 });

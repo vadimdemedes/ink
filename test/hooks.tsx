@@ -274,6 +274,61 @@ test.serial('useInput - handle remove (delete)', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+// Kitty keyboard protocol tests
+// These test the enhanced modifier detection available when a terminal
+// supports the Kitty keyboard protocol
+test.serial(
+	'useInput - handle Shift+Enter via Kitty protocol (CSI 13;2 u)',
+	async t => {
+		const ps = term('use-input', ['kittyShiftEnter']);
+		// Kitty protocol: Enter (13) with Shift modifier (1+1=2)
+		ps.write('\u001B[13;2u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial(
+	'useInput - handle Ctrl+Tab via Kitty protocol (CSI 9;5 u)',
+	async t => {
+		const ps = term('use-input', ['kittyCtrlTab']);
+		// Kitty protocol: Tab (9) with Ctrl modifier (1+4=5)
+		ps.write('\u001B[9;5u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial(
+	'useInput - handle Ctrl+I via Kitty protocol (distinguishable from Tab)',
+	async t => {
+		const ps = term('use-input', ['kittyCtrlI']);
+		// Kitty protocol: 'i' (105) with Ctrl modifier (1+4=5)
+		ps.write('\u001B[105;5u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial('useInput - handle Super+a via Kitty protocol', async t => {
+	const ps = term('use-input', ['kittySuper']);
+	// Kitty protocol: 'a' (97) with Super modifier (1+8=9)
+	ps.write('\u001B[97;9u');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial(
+	'useInput - handle Ctrl+Shift+a via Kitty protocol',
+	async t => {
+		const ps = term('use-input', ['kittyMultiMod']);
+		// Kitty protocol: 'a' (97) with Ctrl+Shift modifiers (1+4+1=6)
+		ps.write('\u001B[97;6u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
 test.serial('useInput - ignore input if not active', async t => {
 	const ps = term('use-input-multiple');
 	ps.write('x');

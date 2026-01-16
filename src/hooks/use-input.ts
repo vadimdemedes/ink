@@ -86,6 +86,19 @@ export type Key = {
 	[Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 	*/
 	meta: boolean;
+
+	/**
+	Super key (Windows key or Command key on macOS) was pressed.
+	Only reliably detected when Kitty keyboard protocol is enabled.
+	*/
+	super: boolean;
+
+	/**
+	Whether this keypress was detected via the Kitty keyboard protocol.
+	When true, modifier detection is more reliable (e.g., Shift+Enter
+	is distinguishable from Enter, Ctrl+I is distinguishable from Tab).
+	*/
+	isKittyProtocol: boolean;
 };
 
 type Handler = (input: string, key: Key) => void;
@@ -145,7 +158,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 		const handleData = (data: string) => {
 			const keypress = parseKeypress(data);
 
-			const key = {
+			const key: Key = {
 				upArrow: keypress.name === 'up',
 				downArrow: keypress.name === 'down',
 				leftArrow: keypress.name === 'left',
@@ -154,7 +167,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				pageUp: keypress.name === 'pageup',
 				home: keypress.name === 'home',
 				end: keypress.name === 'end',
-				return: keypress.name === 'return',
+				return: keypress.name === 'return' || keypress.name === 'enter',
 				escape: keypress.name === 'escape',
 				ctrl: keypress.ctrl,
 				shift: keypress.shift,
@@ -166,6 +179,8 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				// to avoid breaking changes in Ink.
 				// TODO(vadimdemedes): consider removing this in the next major version.
 				meta: keypress.meta || keypress.name === 'escape' || keypress.option,
+				super: keypress.super ?? false,
+				isKittyProtocol: keypress.isKittyProtocol ?? false,
 			};
 
 			let input = keypress.ctrl ? keypress.name : keypress.sequence;

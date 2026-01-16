@@ -154,6 +154,7 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
 - [Useful Components](#useful-components)
 - [Useful Hooks](#useful-hooks)
 - [Examples](#examples)
+- [Kitty Keyboard Protocol](#kitty-keyboard-protocol)
 
 ## Getting Started
 
@@ -1589,6 +1590,22 @@ Default: `false`
 
 [Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 
+###### key.super
+
+Type: `boolean`\
+Default: `false`
+
+Super key (Windows key or Command key on macOS) was pressed.
+This is only reliably detected when the terminal supports the [Kitty keyboard protocol](#kitty-keyboard-protocol).
+
+###### key.isKittyProtocol
+
+Type: `boolean`\
+Default: `false`
+
+Whether this keypress was detected via the [Kitty keyboard protocol](#kitty-keyboard-protocol).
+When `true`, modifier detection is more reliable (e.g., Shift+Enter is distinguishable from Enter, Ctrl+I is distinguishable from Tab).
+
 #### options
 
 Type: `object`
@@ -2353,6 +2370,74 @@ npm run example examples/[example name]
 - [Write to stderr](examples/use-stderr/use-stderr.tsx) - Write to stderr, bypassing main Ink output.
 - [Static](examples/static/static.tsx) - Use the `<Static>` component to render permanent output.
 - [Child process](examples/subprocess-output) - Renders output from a child process.
+
+## Kitty Keyboard Protocol
+
+Ink supports the [Kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/), which provides enhanced keyboard input detection in supporting terminals.
+
+### What it enables
+
+With the Kitty keyboard protocol, Ink can reliably distinguish between:
+- **Shift+Enter vs Enter** - Traditional terminals send the same escape code for both
+- **Ctrl+I vs Tab** - These are normally indistinguishable
+- **Ctrl+M vs Enter** - Same issue as above
+- **Super key (⌘/Windows)** - Not detectable in legacy mode
+
+### Supported terminals
+
+The following terminals support the Kitty keyboard protocol:
+- [Kitty](https://sw.kovidgoyal.net/kitty/)
+- [iTerm2](https://iterm2.com/)
+- [Alacritty](https://alacritty.org/)
+- [Ghostty](https://ghostty.org/)
+- [WezTerm](https://wezfurlong.org/wezterm/)
+- [Foot](https://codeberg.org/dnkl/foot)
+- [Rio](https://raphamorim.io/rio/)
+
+### Usage
+
+The protocol is automatically enabled when Ink detects a supporting terminal. No configuration is needed.
+
+To check if a keypress was detected via the Kitty protocol, use the `isKittyProtocol` property:
+
+```jsx
+import {useInput} from 'ink';
+
+const Example = () => {
+	useInput((input, key) => {
+		if (key.return && key.shift) {
+			// This only works reliably when key.isKittyProtocol is true
+			console.log('Shift+Enter pressed!');
+		}
+
+		if (key.isKittyProtocol) {
+			console.log('Enhanced keyboard detection is active');
+		}
+	});
+
+	return null;
+};
+```
+
+### Exported constants
+
+Ink exports the following constants for advanced use cases:
+
+```jsx
+import {KittyModifiers, KittyFlags} from 'ink';
+
+// Modifier bit values
+KittyModifiers.shift   // 1
+KittyModifiers.alt     // 2
+KittyModifiers.ctrl    // 4
+KittyModifiers.super   // 8
+
+// Protocol enhancement flags
+KittyFlags.disambiguateEscapeCodes    // 1 (enabled by default)
+KittyFlags.reportEventTypes           // 2
+KittyFlags.reportAlternateKeys        // 4
+KittyFlags.reportAllKeysAsEscapeCodes // 8
+```
 
 ## Maintainers
 

@@ -151,6 +151,32 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		// Kitty protocol tests - these test the enhanced modifier detection
+		if (test === 'kittyShiftEnter' && key.return && key.shift) {
+			exit();
+			return;
+		}
+
+		if (test === 'kittyCtrlTab' && key.tab && key.ctrl) {
+			exit();
+			return;
+		}
+
+		if (test === 'kittyCtrlI' && input === 'i' && key.ctrl && !key.tab) {
+			exit();
+			return;
+		}
+
+		if (test === 'kittySuper' && input === 'a' && key.super) {
+			exit();
+			return;
+		}
+
+		if (test === 'kittyMultiMod' && input === 'a' && key.ctrl && key.shift) {
+			exit();
+			return;
+		}
+
 		throw new Error('Crash');
 	});
 

@@ -17,6 +17,12 @@ export {default as Newline} from './components/Newline.js';
 export {default as Spacer} from './components/Spacer.js';
 export type {Key} from './hooks/use-input.js';
 export {default as useInput} from './hooks/use-input.js';
+export {
+	KittyModifiers,
+	KittyFlags,
+	type KittyKeypress,
+	type KittyEventType,
+} from './kitty-keyboard.js';
 export {default as useApp} from './hooks/use-app.js';
 export {default as useStdin} from './hooks/use-stdin.js';
 export {default as useStdout} from './hooks/use-stdout.js';
