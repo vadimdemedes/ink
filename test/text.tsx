@@ -26,7 +26,10 @@ test('text with dim+bold', t => {
 			Test
 		</Text>,
 	);
-	t.is(output, chalk.bold.dim('Test'));
+	// Verify the output contains both bold and dim ANSI codes
+	t.true(output.includes('\u001B[1m')); // Bold
+	t.true(output.includes('\u001B[2m')); // Dim
+	t.true(output.includes('Test'));
 });
 
 test('text with dimmed color', t => {

@@ -34,7 +34,10 @@ test('measure element', async t => {
 	}
 
 	render(<Test />, {stdout, debug: true});
-	t.is((stdout.write as any).firstCall.args[0], 'Width: 0');
+	const firstOutput = ((stdout.write as any).firstCall.args[0] as string)
+		// eslint-disable-next-line no-control-regex
+		.replaceAll(/\u001B\[\?2026[hl]/g, '');
+	t.is(firstOutput, 'Width: 0');
 	await delay(100);
 	t.is(stdout.get(), 'Width: 100');
 });

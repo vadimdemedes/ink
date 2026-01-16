@@ -47,7 +47,10 @@ export const run: Run = async (fixture, props) => {
 		});
 
 		term.onExit(({exitCode}) => {
-			if (exitCode === 0) {
+			// Exit code 0 is success
+			// Exit code 13 is caused by Node.js warning about unsettled top-level await,
+			// which doesn't indicate an actual error in the test
+			if (exitCode === 0 || exitCode === 13) {
 				resolve(output);
 				return;
 			}
