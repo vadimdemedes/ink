@@ -6,6 +6,11 @@ const metaKeyCodeRe = /^(?:\x1b)([a-zA-Z0-9])$/;
 const fnKeyRe =
 	/^(?:\x1b+)(O|N|\[|\[\[)(?:(\d+)(?:;(\d+))?([~^$])|(?:1;)?(\d+)?([a-zA-Z]))/;
 
+// Kitty keyboard protocol escape sequence pattern
+// Format: CSI number ; modifiers u OR CSI number u (without modifiers)
+// CSI = \x1b[
+const kittyKeyRe = /^\x1b\[(\d+)(?:;(\d+))?u$/;
+
 const keyName: Record<string, string> = {
 	/* xterm/gnome ESC O letter */
 	OP: 'f1',
@@ -126,6 +131,105 @@ const isCtrlKey = (code: string) => {
 	].includes(code);
 };
 
+// Kitty keyboard protocol functional key codes
+// These are the non-Unicode codepoint key codes used by the protocol
+// Reference: https://sw.kovidgoyal.net/kitty/keyboard-protocol/#functional-key-definitions
+const kittyFunctionalKeys: Record<number, string> = {
+	27: 'escape',
+	13: 'return',
+	9: 'tab',
+	127: 'backspace',
+	// Navigation keys (from Kitty protocol spec)
+	57358: 'insert',
+	57359: 'delete',
+	57360: 'home',
+	57361: 'end',
+	57362: 'pageup',
+	57363: 'pagedown',
+	// Arrow keys (from Kitty protocol spec)
+	57352: 'up',
+	57353: 'down',
+	57354: 'right',
+	57355: 'left',
+	// Function keys (from Kitty protocol spec)
+	57364: 'f1',
+	57365: 'f2',
+	57366: 'f3',
+	57367: 'f4',
+	57368: 'f5',
+	57369: 'f6',
+	57370: 'f7',
+	57371: 'f8',
+	57372: 'f9',
+	57373: 'f10',
+	57374: 'f11',
+	57375: 'f12',
+};
+
+// Parse Kitty keyboard protocol escape sequences
+// Returns undefined if not a valid Kitty sequence
+const parseKittySequence = (
+	s: string,
+): {codepoint: number; modifiers: number} | undefined => {
+	const match = kittyKeyRe.exec(s);
+	if (!match) {
+		return undefined;
+	}
+
+	const codepoint = Number.parseInt(match[1]!, 10);
+	// Modifiers default to 1 (no modifiers) if not present
+	const modifiers = match[2] ? Number.parseInt(match[2], 10) : 1;
+
+	return {codepoint, modifiers};
+};
+
+// Decode Kitty modifier value into individual flags
+// Kitty uses: value = 1 + (shift?1:0) + (alt?2:0) + (ctrl?4:0) + (super?8:0)
+const decodeKittyModifiers = (
+	modifiers: number,
+): {shift: boolean; meta: boolean; ctrl: boolean; option: boolean} => {
+	const value = modifiers - 1; // Subtract the base 1
+	return {
+		shift: !!(value & 1),
+		meta: !!(value & 2), // Alt maps to meta
+		ctrl: !!(value & 4),
+		option: !!(value & 8), // Super maps to option
+	};
+};
+
+// Get key name from Kitty codepoint
+const getKittyKeyName = (codepoint: number): string => {
+	// Check if it's a known functional key
+	if (kittyFunctionalKeys[codepoint]) {
+		return kittyFunctionalKeys[codepoint]!;
+	}
+
+	// Otherwise it's a Unicode codepoint - convert to character
+	// Handle space specially
+	if (codepoint === 32) {
+		return 'space';
+	}
+
+	// For printable ASCII, return the character as lowercase
+	if (codepoint >= 65 && codepoint <= 90) {
+		// Uppercase A-Z
+		return String.fromCodePoint(codepoint).toLowerCase();
+	}
+
+	if (codepoint >= 97 && codepoint <= 122) {
+		// Lowercase a-z
+		return String.fromCodePoint(codepoint);
+	}
+
+	if (codepoint >= 48 && codepoint <= 57) {
+		// 0-9
+		return 'number';
+	}
+
+	// For other codepoints, return the character
+	return String.fromCodePoint(codepoint);
+};
+
 type ParsedKey = {
 	name: string;
 	ctrl: boolean;
@@ -188,6 +292,20 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 		// escape key
 		key.name = 'escape';
 		key.meta = s.length === 2;
+	} else if (kittyKeyRe.test(s)) {
+		// Kitty keyboard protocol escape sequence
+		const kittyResult = parseKittySequence(s);
+		if (kittyResult) {
+			const {codepoint, modifiers} = kittyResult;
+			const modifierFlags = decodeKittyModifiers(modifiers);
+
+			key.name = getKittyKeyName(codepoint);
+			key.ctrl = modifierFlags.ctrl;
+			key.meta = modifierFlags.meta;
+			key.shift = modifierFlags.shift;
+			key.option = modifierFlags.option;
+			key.code = `kitty:${codepoint}`;
+		}
 	} else if (s === ' ' || s === '\x1b ') {
 		key.name = 'space';
 		key.meta = s.length === 2;
