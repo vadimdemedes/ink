@@ -2,6 +2,7 @@ import {EventEmitter} from 'node:events';
 import process from 'node:process';
 import React, {PureComponent, type ReactNode} from 'react';
 import cliCursor from 'cli-cursor';
+import {enableKittyProtocol, disableKittyProtocol} from '../kitty-keyboard.js';
 import AppContext from './AppContext.js';
 import StdinContext from './StdinContext.js';
 import StdoutContext from './StdoutContext.js';
@@ -56,6 +57,8 @@ export default class App extends PureComponent<Props, State> {
 	// Count how many components enabled raw mode to avoid disabling
 	// raw mode until all components don't need it anymore
 	rawModeEnabledCount = 0;
+	// Track if Kitty keyboard protocol is currently enabled
+	kittyProtocolEnabled = false;
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	internal_eventEmitter = new EventEmitter();
 
@@ -133,6 +136,12 @@ export default class App extends PureComponent<Props, State> {
 	override componentWillUnmount() {
 		cliCursor.show(this.props.stdout);
 
+		// Ensure Kitty keyboard protocol is disabled on unmount
+		if (this.kittyProtocolEnabled) {
+			disableKittyProtocol(this.props.stdout);
+			this.kittyProtocolEnabled = false;
+		}
+
 		// ignore calling setRawMode on an handle stdin it cannot be called
 		if (this.isRawModeSupported()) {
 			this.handleSetRawMode(false);
@@ -144,7 +153,7 @@ export default class App extends PureComponent<Props, State> {
 	}
 
 	handleSetRawMode = (isEnabled: boolean): void => {
-		const {stdin} = this.props;
+		const {stdin, stdout} = this.props;
 
 		if (!this.isRawModeSupported()) {
 			if (stdin === process.stdin) {
@@ -166,6 +175,10 @@ export default class App extends PureComponent<Props, State> {
 				stdin.ref();
 				stdin.setRawMode(true);
 				stdin.addListener('readable', this.handleReadable);
+
+				// Enable Kitty keyboard protocol when raw mode first enables
+				enableKittyProtocol(stdout);
+				this.kittyProtocolEnabled = true;
 			}
 
 			this.rawModeEnabledCount++;
@@ -174,6 +187,12 @@ export default class App extends PureComponent<Props, State> {
 
 		// Disable raw mode only when no components left that are using it
 		if (--this.rawModeEnabledCount === 0) {
+			// Disable Kitty keyboard protocol when raw mode fully disables
+			if (this.kittyProtocolEnabled) {
+				disableKittyProtocol(stdout);
+				this.kittyProtocolEnabled = false;
+			}
+
 			stdin.setRawMode(false);
 			stdin.removeListener('readable', this.handleReadable);
 			stdin.unref();
@@ -215,6 +234,12 @@ export default class App extends PureComponent<Props, State> {
 	};
 
 	handleExit = (error?: Error): void => {
+		// Ensure Kitty keyboard protocol is disabled on exit
+		if (this.kittyProtocolEnabled) {
+			disableKittyProtocol(this.props.stdout);
+			this.kittyProtocolEnabled = false;
+		}
+
 		if (this.isRawModeSupported()) {
 			this.handleSetRawMode(false);
 		}
