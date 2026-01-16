@@ -157,20 +157,6 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
 
 ## Getting Started
 
-Use [create-ink-app](https://github.com/vadimdemedes/create-ink-app) to quickly scaffold a new Ink-based CLI.
-
-```sh
-npx create-ink-app my-ink-cli
-```
-
-Alternatively, create a TypeScript project:
-
-```sh
-npx create-ink-app --typescript my-ink-cli
-```
-
-<details><summary>Manual JavaScript setup</summary>
-<p>
 Ink requires the same Babel setup as you would do for regular React-based apps in the browser.
 
 Set up Babel with a React preset to ensure all examples in this readme work as expected.
@@ -210,9 +196,6 @@ node cli
 ```
 
 If you don't like transpiling files during development, you can use [import-jsx](https://github.com/vadimdemedes/import-jsx) or [@esbuild-kit/esm-loader](https://github.com/esbuild-kit/esm-loader) to `import` a JSX file and transpile it on the fly.
-
-</p>
-</details>
 
 Ink uses [Yoga](https://github.com/facebook/yoga), a Flexbox layout engine, to build great user interfaces for your CLIs using familiar CSS-like properties you've used when building apps for the browser.
 It's important to remember that each element is a Flexbox container.
