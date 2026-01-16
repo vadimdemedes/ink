@@ -34,7 +34,15 @@ test('measure element', async t => {
 	}
 
 	render(<Test />, {stdout, debug: true});
-	t.is((stdout.write as any).firstCall.args[0], 'Width: 0');
+	t.is(
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+		(stdout.write as any).firstCall.args[0].replaceAll(
+			// eslint-disable-next-line no-control-regex
+			/\u001B\[\?2026[hl]/g,
+			'',
+		),
+		'Width: 0',
+	);
 	await delay(100);
 	t.is(stdout.get(), 'Width: 100');
 });

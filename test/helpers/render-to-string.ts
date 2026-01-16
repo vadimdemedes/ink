@@ -13,6 +13,6 @@ export const renderToString: (
 		isScreenReaderEnabled: options?.isScreenReaderEnabled,
 	});
 
-	const output = stdout.get();
+	const output = stdout.get({skipEmpty: true});
 	return output;
 };
