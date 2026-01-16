@@ -283,6 +283,67 @@ test.serial('useInput - ignore input if not active', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+// ==========================================
+// Kitty Keyboard Protocol Integration Tests
+// ==========================================
+// These tests verify that Kitty keyboard protocol sequences are correctly
+// parsed and mapped through useInput's full component lifecycle.
+// Reference: https://sw.kovidgoyal.net/kitty/keyboard-protocol/
+
+test.serial(
+	'useInput - Kitty: Shift+Enter reports shift=true, return=true',
+	async t => {
+		const ps = term('use-input', ['kittyShiftEnter']);
+		// Kitty sequence: \u001B[13;2u = Enter (codepoint 13) with Shift (modifier 2)
+		ps.write('\u001B[13;2u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial(
+	'useInput - Kitty: Ctrl+I reports ctrl=true, input=i (NOT tab)',
+	async t => {
+		const ps = term('use-input', ['kittyCtrlI']);
+		// Kitty sequence: \u001B[105;5u = 'i' (codepoint 105) with Ctrl (modifier 5)
+		// This is distinguishable from Tab, unlike legacy terminals
+		ps.write('\u001B[105;5u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial(
+	'useInput - regular Enter still works (backward compat)',
+	async t => {
+		const ps = term('use-input', ['kittyRegularEnter']);
+		// Standard carriage return - should still work as return key
+		ps.write('\r');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial('useInput - regular Tab still works (backward compat)', async t => {
+	const ps = term('use-input', ['kittyRegularTab']);
+	// Standard tab character - should still work as tab key
+	ps.write('\t');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial(
+	'useInput - legacy Ctrl+I still reports as tab (for non-Kitty terminals)',
+	async t => {
+		const ps = term('use-input', ['legacyCtrlI']);
+		// In legacy terminals, Ctrl+I sends \t (0x09) which is tab
+		// This tests backward compatibility for non-Kitty terminals
+		ps.write('\t');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
 // For some reason this test is flaky, so we have to resort to using `t.try` to run it multiple times
 test.serial(
 	'useInput - handle Ctrl+C when `exitOnCtrlC` is `false`',

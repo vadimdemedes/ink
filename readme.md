@@ -1589,6 +1589,58 @@ Default: `false`
 
 [Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 
+#### Enhanced Modifier Detection (Kitty Keyboard Protocol)
+
+Ink automatically enables the [Kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) in terminals that support it. This provides more accurate modifier detection that isn't possible with traditional terminal input.
+
+**What this enables:**
+
+- Distinguish **Shift+Enter** from **Enter** (previously impossible)
+- Distinguish **Ctrl+I** from **Tab** (both sent the same escape code)
+- Distinguish **Ctrl+M** from **Enter**
+- More reliable modifier key detection in general
+
+**Example: Detecting Shift+Enter**
+
+```jsx
+import {useInput} from 'ink';
+
+const Example = () => {
+	useInput((input, key) => {
+		if (key.return && key.shift) {
+			// Shift+Enter was pressed - only detectable with Kitty protocol
+			// In legacy terminals, this would just be key.return without key.shift
+		}
+
+		if (key.return && !key.shift) {
+			// Regular Enter
+		}
+	});
+
+	return …
+};
+```
+
+**Supported terminals:**
+
+- [Kitty](https://sw.kovidgoyal.net/kitty/)
+- [iTerm2](https://iterm2.com/) (3.5+)
+- [WezTerm](https://wezfurlong.org/wezterm/)
+- [Ghostty](https://ghostty.org/)
+- [Alacritty](https://alacritty.org/) (0.13+)
+- [Foot](https://codeberg.org/dnkl/foot)
+- [Rio](https://raphamorim.io/rio/)
+- [Contour](https://contour-terminal.org/)
+
+**Backward compatibility:**
+
+The enhanced detection is automatic and backward compatible:
+
+- In supported terminals: Full modifier detection is available
+- In legacy terminals: Ink falls back to standard escape sequence parsing
+
+No API changes or code modifications are required. Your existing `useInput` handlers continue to work, but gain additional modifier information when running in supported terminals.
+
 #### options
 
 Type: `object`

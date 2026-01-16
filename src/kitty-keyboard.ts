@@ -12,33 +12,34 @@
  * Query sequence to check if the terminal supports the Kitty keyboard protocol.
  * Terminals that support the protocol will respond with `CSI ? flags u`.
  */
-export const KITTY_QUERY = '\x1b[?u';
+export const kittyQuery = '\u001B[?u';
 
 /**
  * Enable the Kitty keyboard protocol at level 1 (disambiguate escape codes).
  * This level makes it possible to distinguish special keys that would otherwise
  * be ambiguous in legacy mode.
  */
-export const KITTY_ENABLE = '\x1b[>1u';
+export const kittyEnable = '\u001B[>1u';
 
 /**
  * Disable the Kitty keyboard protocol and return to legacy mode.
  */
-export const KITTY_DISABLE = '\x1b[<u';
+export const kittyDisable = '\u001B[<u';
 
 /**
  * Default timeout in milliseconds for protocol detection.
  * If no response is received within this time, the terminal is assumed
  * to not support the Kitty keyboard protocol.
  */
-export const KITTY_DETECTION_TIMEOUT_MS = 100;
+export const kittyDetectionTimeoutMs = 100;
 
 /**
  * Regex pattern to match the Kitty keyboard protocol query response.
  * The response format is: CSI ? flags u
  * where flags is a number indicating the supported protocol features.
  */
-export const KITTY_RESPONSE_PATTERN = /^\x1b\[\?(\d+)u$/;
+// eslint-disable-next-line no-control-regex
+export const kittyResponsePattern = /^\u001B\[\?(\d+)u$/;
 
 export type KittyDetectionResult = {
 	readonly supported: boolean;
@@ -61,7 +62,7 @@ export type KittyDetectionResult = {
 export async function isKittySupported(
 	stdin: NodeJS.ReadStream,
 	stdout: NodeJS.WriteStream,
-	timeout: number = KITTY_DETECTION_TIMEOUT_MS,
+	timeout: number = kittyDetectionTimeoutMs,
 ): Promise<KittyDetectionResult> {
 	return new Promise(resolve => {
 		// If stdin is not a TTY, we cannot detect protocol support
@@ -82,15 +83,16 @@ export async function isKittySupported(
 			stdin.removeListener('data', onData);
 		};
 
-		const onData = (data: Buffer | string) => {
+		const onData = (data: Uint8Array | string) => {
 			if (resolved) {
 				return;
 			}
 
-			const input = typeof data === 'string' ? data : data.toString('utf8');
+			const input =
+				typeof data === 'string' ? data : new TextDecoder().decode(data);
 
 			// Check if this is a Kitty protocol response
-			const match = KITTY_RESPONSE_PATTERN.exec(input);
+			const match = kittyResponsePattern.exec(input);
 			if (match) {
 				resolved = true;
 				cleanup();
@@ -114,7 +116,7 @@ export async function isKittySupported(
 		stdin.on('data', onData);
 
 		// Send query
-		stdout.write(KITTY_QUERY);
+		stdout.write(kittyQuery);
 	});
 }
 
@@ -124,7 +126,7 @@ export async function isKittySupported(
  * @param stdout - The output stream to write the enable sequence
  */
 export function enableKittyProtocol(stdout: NodeJS.WriteStream): void {
-	stdout.write(KITTY_ENABLE);
+	stdout.write(kittyEnable);
 }
 
 /**
@@ -133,5 +135,5 @@ export function enableKittyProtocol(stdout: NodeJS.WriteStream): void {
  * @param stdout - The output stream to write the disable sequence
  */
 export function disableKittyProtocol(stdout: NodeJS.WriteStream): void {
-	stdout.write(KITTY_DISABLE);
+	stdout.write(kittyDisable);
 }

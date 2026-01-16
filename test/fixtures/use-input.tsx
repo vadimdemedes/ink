@@ -151,6 +151,39 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		// Kitty keyboard protocol tests
+		if (test === 'kittyShiftEnter' && key.return && key.shift) {
+			exit();
+			return;
+		}
+
+		if (test === 'kittyCtrlI' && input === 'i' && key.ctrl && !key.tab) {
+			exit();
+			return;
+		}
+
+		if (test === 'kittyRegularEnter' && key.return && !key.shift && !key.ctrl) {
+			exit();
+			return;
+		}
+
+		if (
+			test === 'kittyRegularTab' &&
+			key.tab &&
+			!key.shift &&
+			!key.ctrl &&
+			input === ''
+		) {
+			exit();
+			return;
+		}
+
+		if (test === 'legacyCtrlI' && key.tab && input === '') {
+			// Legacy Ctrl+I sends \t which is interpreted as tab
+			exit();
+			return;
+		}
+
 		throw new Error('Crash');
 	});
 
