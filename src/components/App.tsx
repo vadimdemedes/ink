@@ -7,6 +7,7 @@ import StdinContext from './StdinContext.js';
 import StdoutContext from './StdoutContext.js';
 import StderrContext from './StderrContext.js';
 import FocusContext from './FocusContext.js';
+import CursorContext, {type CursorPosition} from './CursorContext.js';
 import ErrorOverview from './ErrorOverview.js';
 
 const tab = '\t';
@@ -22,6 +23,9 @@ type Props = {
 	readonly writeToStderr: (data: string) => void;
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (error?: Error) => void;
+	readonly onCursorPositionChange?: (
+		position: CursorPosition | undefined,
+	) => void;
 };
 
 type State = {
@@ -29,6 +33,7 @@ type State = {
 	readonly activeFocusId?: string;
 	readonly focusables: Focusable[];
 	readonly error?: Error;
+	readonly cursorPosition?: CursorPosition;
 };
 
 type Focusable = {
@@ -51,6 +56,7 @@ export default class App extends PureComponent<Props, State> {
 		activeFocusId: undefined,
 		focusables: [],
 		error: undefined,
+		cursorPosition: undefined,
 	};
 
 	// Count how many components enabled raw mode to avoid disabling
@@ -113,11 +119,19 @@ export default class App extends PureComponent<Props, State> {
 									focus: this.focus,
 								}}
 							>
-								{this.state.error ? (
-									<ErrorOverview error={this.state.error as Error} />
-								) : (
-									this.props.children
-								)}
+								<CursorContext.Provider
+									// eslint-disable-next-line react/jsx-no-constructed-context-values
+									value={{
+										setCursorPosition: this.handleSetCursorPosition,
+										cursorPosition: this.state.cursorPosition,
+									}}
+								>
+									{this.state.error ? (
+										<ErrorOverview error={this.state.error as Error} />
+									) : (
+										this.props.children
+									)}
+								</CursorContext.Provider>
 							</FocusContext.Provider>
 						</StderrContext.Provider>
 					</StdoutContext.Provider>
@@ -220,6 +234,12 @@ export default class App extends PureComponent<Props, State> {
 		}
 
 		this.props.onExit(error);
+	};
+
+	handleSetCursorPosition = (position: CursorPosition | undefined): void => {
+		this.setState({cursorPosition: position}, () => {
+			this.props.onCursorPositionChange?.(position);
+		});
 	};
 
 	enableFocus = (): void => {

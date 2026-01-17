@@ -315,10 +315,10 @@ test('replace child node with text', t => {
 		debug: true,
 	});
 
-	t.is((stdout.write as any).lastCall.args[0], chalk.green('test'));
+	t.is(stdout.get(), chalk.green('test'));
 
 	rerender(<Dynamic replace />);
-	t.is((stdout.write as any).lastCall.args[0], 'x');
+	t.is(stdout.get(), 'x');
 });
 
 test('support suspense', async t => {
@@ -368,10 +368,10 @@ test('support suspense', async t => {
 		debug: true,
 	});
 
-	t.is((stdout.write as any).lastCall.args[0], 'Loading');
+	t.is(stdout.get(), 'Loading');
 
 	await promise;
 	out.rerender(<Test />);
 
-	t.is((stdout.write as any).lastCall.args[0], 'Hello World');
+	t.is(stdout.get(), 'Hello World');
 });

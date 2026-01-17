@@ -266,7 +266,7 @@ test.serial('rerender on resize', async t => {
 	await delay(100);
 
 	t.is(
-		stripAnsi((stdout.write as any).lastCall.args[0] as string),
+		stripAnsi(stdout.get()),
 		boxen('Test'.padEnd(6), {borderStyle: 'round'}) + '\n',
 	);
 
@@ -290,10 +290,7 @@ test.serial('throttle renders to maxFps', t => {
 
 		// Initial render (leading call)
 		t.is((stdout.write as any).callCount, 1);
-		t.is(
-			stripAnsi((stdout.write as any).lastCall.args[0] as string),
-			'Hello\n',
-		);
+		t.is(stripAnsi(stdout.get()), 'Hello\n');
 
 		// Trigger another render inside the throttle window
 		rerender(<ThrottleTestComponent text="World" />);
@@ -306,10 +303,7 @@ test.serial('throttle renders to maxFps', t => {
 		// Cross the boundary: trailing render fires once
 		clock.tick(1);
 		t.is((stdout.write as any).callCount, 2);
-		t.is(
-			stripAnsi((stdout.write as any).lastCall.args[0] as string),
-			'World\n',
-		);
+		t.is(stripAnsi(stdout.get()), 'World\n');
 
 		unmount();
 	} finally {

@@ -426,15 +426,12 @@ test('render border after update', t => {
 		debug: true,
 	});
 
-	t.is(
-		(stdout.write as any).lastCall.args[0],
-		boxen('Hello World', {width: 100, borderStyle: 'round'}),
-	);
+	t.is(stdout.get(), boxen('Hello World', {width: 100, borderStyle: 'round'}));
 
 	rerender(<Test borderColor="green" />);
 
 	t.is(
-		(stdout.write as any).lastCall.args[0],
+		stdout.get(),
 		boxen('Hello World', {
 			width: 100,
 			borderStyle: 'round',
@@ -445,7 +442,7 @@ test('render border after update', t => {
 	rerender(<Test />);
 
 	t.is(
-		(stdout.write as any).lastCall.args[0],
+		stdout.get(),
 		boxen('Hello World', {
 			width: 100,
 			borderStyle: 'round',
