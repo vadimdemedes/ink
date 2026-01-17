@@ -17,7 +17,8 @@ export type {CursorPosition} from '../components/CursorContext.js';
  *
  *   useEffect(() => {
  *     // Position cursor 2 lines from bottom, at column 10
- *     setCursorPosition({x: 10, y: 2});
+ *     // Set visible: true to show cursor for IME support (especially for Zellij)
+ *     setCursorPosition({x: 10, y: 2, visible: true});
  *
  *     return () => {
  *       // Clear cursor position on unmount

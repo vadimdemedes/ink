@@ -11,6 +11,13 @@ export type CursorPosition = {
 	 * If undefined, cursor row is not changed.
 	 */
 	readonly y?: number;
+
+	/**
+	 * Whether to show the cursor. When true, the cursor will be visible at the specified position.
+	 * This is useful for IME support, as IME candidate windows typically appear at the cursor position.
+	 * Defaults to false.
+	 */
+	readonly visible?: boolean;
 };
 
 export type Props = {
