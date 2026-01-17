@@ -1,9 +1,7 @@
 import {useContext} from 'react';
-import CursorContext, {
-	type CursorPosition,
-} from '../components/CursorContext.js';
+import CursorContext from '../components/CursorContext.js';
 
-export type {CursorPosition};
+export type {CursorPosition} from '../components/CursorContext.js';
 
 /**
  * `useCursor` is a React hook that allows components to control the cursor position

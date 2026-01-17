@@ -46,11 +46,11 @@ const createStandard = (
 		}
 
 		previousOutput = output;
-		// lineCount includes the empty string after the trailing newline
-		// e.g., "a\nb\n" splits to ["a", "b", ""] with length 3
+		// LineCount includes the empty string after the trailing newline
+		// E.g., "a\nb\n" splits to ["a", "b", ""] with length 3
 		const lines = output.split('\n');
 		const lineCount = lines.length;
-		// visibleLineCount is the actual number of visible lines
+		// VisibleLineCount is the actual number of visible lines
 		const visibleLineCount = lineCount - 1;
 
 		// If cursor was moved up for IME, move it back down before erasing
@@ -218,6 +218,7 @@ const createIncremental = (
 					cursorMove += ansiEscapes.cursorTo(x);
 				}
 			}
+
 			return cursorMove;
 		};
 
