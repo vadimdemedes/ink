@@ -12,6 +12,13 @@ export type CursorPosition = {
 	 * Row position from the bottom of the output (0 = last line, 1 = second to last, etc.)
 	 */
 	readonly y?: number;
+
+	/**
+	 * Whether to show the cursor. When true, the cursor will be visible at the specified position.
+	 * This is useful for IME support, as IME candidate windows typically appear at the cursor position.
+	 * Defaults to false.
+	 */
+	readonly visible?: boolean;
 };
 
 export type LogUpdate = {
@@ -63,7 +70,7 @@ const createStandard = (
 		// Calculate cursor position for IME (to be applied within the same write)
 		let postCursorMove = '';
 		if (cursorPosition) {
-			const {x, y} = cursorPosition;
+			const {x, y, visible} = cursorPosition;
 
 			// After writing output (ending with \n), cursor is at the start of a new line
 			// below the last visible line. cursorUp(y) moves y lines up.
@@ -76,6 +83,11 @@ const createStandard = (
 			// Move cursor to specific column if x is specified
 			if (x !== undefined) {
 				postCursorMove += ansiEscapes.cursorTo(x);
+			}
+
+			// Show cursor if visible is true (for IME support)
+			if (visible) {
+				postCursorMove += ansiEscapes.cursorShow;
 			}
 		}
 
@@ -139,7 +151,7 @@ const createStandard = (
 		}
 
 		const visibleLineCount = previousLineCount - 1;
-		const {x, y} = cursorPosition;
+		const {x, y, visible} = cursorPosition;
 		let cursorMove = '';
 
 		// First, restore cursor to bottom if it was moved up
@@ -156,6 +168,11 @@ const createStandard = (
 
 		if (x !== undefined) {
 			cursorMove += ansiEscapes.cursorTo(x);
+		}
+
+		// Show cursor if visible is true (for IME support)
+		if (visible) {
+			cursorMove += ansiEscapes.cursorShow;
 		}
 
 		if (cursorMove) {
@@ -204,7 +221,7 @@ const createIncremental = (
 		const calcPostCursorMove = (): string => {
 			let cursorMove = '';
 			if (cursorPosition) {
-				const {x, y} = cursorPosition;
+				const {x, y, visible} = cursorPosition;
 
 				// After writing output, cursor is below the last visible line
 				// y=1 means last visible line, y=2 means second-to-last, etc.
@@ -216,6 +233,11 @@ const createIncremental = (
 				// Move cursor to specific column if x is specified
 				if (x !== undefined) {
 					cursorMove += ansiEscapes.cursorTo(x);
+				}
+
+				// Show cursor if visible is true (for IME support)
+				if (visible) {
+					cursorMove += ansiEscapes.cursorShow;
 				}
 			}
 
@@ -329,7 +351,7 @@ const createIncremental = (
 		}
 
 		const visibleLineCount = previousLines.length - 1;
-		const {x, y} = cursorPosition;
+		const {x, y, visible} = cursorPosition;
 		let cursorMove = '';
 
 		// First, restore cursor to bottom if it was moved up
@@ -346,6 +368,11 @@ const createIncremental = (
 
 		if (x !== undefined) {
 			cursorMove += ansiEscapes.cursorTo(x);
+		}
+
+		// Show cursor if visible is true (for IME support)
+		if (visible) {
+			cursorMove += ansiEscapes.cursorShow;
 		}
 
 		if (cursorMove) {
