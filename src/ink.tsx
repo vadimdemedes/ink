@@ -17,6 +17,7 @@ import logUpdate, {type LogUpdate} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
+import {type CursorPosition} from './components/CursorContext.js';
 
 const noop = () => {};
 
@@ -309,6 +310,18 @@ export default class Ink {
 		this.lastOutputHeight = outputHeight;
 	};
 
+	// Handle cursor position change from App component
+	handleCursorPositionChange = (position: CursorPosition | undefined): void => {
+		// Set cursor position in log-update for IME support
+		this.log.setCursorPosition(position);
+
+		// Apply cursor position immediately so IME sees correct position
+		// without waiting for next render
+		if (!this.options.debug && !isInCi) {
+			this.log.applyCursorPositionNow();
+		}
+	};
+
 	render(node: ReactNode): void {
 		const tree = (
 			<AccessibilityContext.Provider
@@ -322,6 +335,7 @@ export default class Ink {
 					writeToStderr={this.writeToStderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
 					onExit={this.unmount}
+					onCursorPositionChange={this.handleCursorPositionChange}
 				>
 					{node}
 				</App>
