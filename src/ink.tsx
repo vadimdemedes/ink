@@ -6,7 +6,7 @@ import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
-import {LegacyRoot} from 'react-reconciler/constants.js';
+import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/constants.js';
 import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import wrapAnsi from 'wrap-ansi';
@@ -43,6 +43,18 @@ export type Options = {
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
 	incrementalRendering?: boolean;
+	/**
+	 * Enable React Concurrent Rendering mode.
+	 *
+	 * When enabled:
+	 * - Suspense boundaries work correctly with async data
+	 * - useTransition and useDeferredValue are fully functional
+	 * - Updates can be interrupted for higher priority work
+	 *
+	 * @default false
+	 * @experimental
+	 */
+	concurrent?: boolean;
 };
 
 export default class Ink {
@@ -111,10 +123,13 @@ export default class Ink {
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
 		this.fullStaticOutput = '';
 
+		// Use ConcurrentRoot for concurrent mode, LegacyRoot for legacy mode
+		const rootTag = options.concurrent ? ConcurrentRoot : LegacyRoot;
+
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		this.container = reconciler.createContainer(
 			this.rootNode,
-			LegacyRoot,
+			rootTag,
 			null,
 			false,
 			null,
@@ -316,9 +331,14 @@ export default class Ink {
 			</AccessibilityContext.Provider>
 		);
 
-		reconciler.updateContainerSync(tree, this.container, null, noop);
-
-		reconciler.flushSyncWork();
+		if (this.options.concurrent) {
+			// Concurrent mode: use updateContainer (async scheduling)
+			reconciler.updateContainer(tree, this.container, null, noop);
+		} else {
+			// Legacy mode: use updateContainerSync + flushSyncWork (sync)
+			reconciler.updateContainerSync(tree, this.container, null, noop);
+			reconciler.flushSyncWork();
+		}
 	}
 
 	writeToStdout(data: string): void {
@@ -390,9 +410,15 @@ export default class Ink {
 
 		this.isUnmounted = true;
 
-		reconciler.updateContainerSync(null, this.container, null, noop);
+		if (this.options.concurrent) {
+			// Concurrent mode: use updateContainer (async scheduling)
+			reconciler.updateContainer(null, this.container, null, noop);
+		} else {
+			// Legacy mode: use updateContainerSync + flushSyncWork (sync)
+			reconciler.updateContainerSync(null, this.container, null, noop);
+			reconciler.flushSyncWork();
+		}
 
-		reconciler.flushSyncWork();
 		instances.delete(this.options.stdout);
 
 		if (error instanceof Error) {
