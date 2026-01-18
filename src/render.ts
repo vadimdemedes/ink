@@ -74,6 +74,21 @@ export type RenderOptions = {
 	@default false
 	*/
 	incrementalRendering?: boolean;
+
+	/**
+	Enable React Concurrent Rendering mode.
+
+	When enabled:
+	- Suspense boundaries work correctly with async data
+	- useTransition and useDeferredValue are fully functional
+	- Updates can be interrupted for higher priority work
+
+	Note: Concurrent mode changes the timing of renders.
+	Some tests may need to use act() to properly await updates.
+
+	@default false
+	*/
+	concurrent?: boolean;
 };
 
 export type Instance = {
@@ -116,6 +131,7 @@ const render = (
 		patchConsole: true,
 		maxFps: 30,
 		incrementalRendering: false,
+		concurrent: false,
 		...getOptions(options),
 	};
 
