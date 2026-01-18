@@ -15,8 +15,12 @@ import {
 	useStdin,
 } from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
-import {renderToString} from './helpers/render-to-string.js';
+import {
+	renderToString,
+	renderToStringAsync,
+} from './helpers/render-to-string.js';
 import {run} from './helpers/run.js';
+import {renderAsync} from './helpers/test-renderer.js';
 
 test('text', t => {
 	const output = renderToString(<Text>Hello World</Text>);
@@ -735,4 +739,119 @@ test('link ansi escapes are closed properly', t => {
 	);
 
 	t.is(output, ']8;;https://example.comExample]8;;');
+});
+
+// Concurrent mode tests
+test('text - concurrent', async t => {
+	const output = await renderToStringAsync(<Text>Hello World</Text>);
+	t.is(output, 'Hello World');
+});
+
+test('multiple text nodes - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Text>
+			{'Hello'}
+			{' World'}
+		</Text>,
+	);
+	t.is(output, 'Hello World');
+});
+
+test('wrap text - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box width={7}>
+			<Text wrap="wrap">Hello World</Text>
+		</Box>,
+	);
+	t.is(output, 'Hello\nWorld');
+});
+
+test('truncate text in the end - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box width={7}>
+			<Text wrap="truncate">Hello World</Text>
+		</Box>,
+	);
+	t.is(output, 'Hello …');
+});
+
+test('transform children - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Transform
+			transform={(string: string, index: number) => `[${index}: ${string}]`}
+		>
+			<Text>
+				<Transform
+					transform={(string: string, index: number) => `{${index}: ${string}}`}
+				>
+					<Text>test</Text>
+				</Transform>
+			</Text>
+		</Transform>,
+	);
+	t.is(output, '[0: {0: test}]');
+});
+
+test('static output - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box>
+			<Static items={['A', 'B', 'C']} style={{paddingBottom: 1}}>
+				{letter => <Text key={letter}>{letter}</Text>}
+			</Static>
+
+			<Box marginTop={1}>
+				<Text>X</Text>
+			</Box>
+		</Box>,
+	);
+	t.is(output, 'A\nB\nC\n\n\nX');
+});
+
+test('remeasure text dimensions on text change - concurrent', async t => {
+	const {getOutput, rerenderAsync} = await renderAsync(
+		<Box>
+			<Text>Hello</Text>
+		</Box>,
+	);
+	t.is(getOutput(), 'Hello');
+
+	await rerenderAsync(
+		<Box>
+			<Text>Hello World</Text>
+		</Box>,
+	);
+	t.is(getOutput(), 'Hello World');
+});
+
+test('newline - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Text>
+			Hello
+			<Newline />
+			World
+		</Text>,
+	);
+	t.is(output, 'Hello\nWorld');
+});
+
+test('horizontal spacer - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box width={20}>
+			<Text>Left</Text>
+			<Spacer />
+			<Text>Right</Text>
+		</Box>,
+	);
+	t.is(output, 'Left           Right');
+});
+
+test('vertical spacer - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box flexDirection="column" height={6}>
+			<Text>Top</Text>
+			<Spacer />
+			<Text>Bottom</Text>
+		</Box>,
+	);
+	t.is(output, 'Top\n\n\n\n\nBottom');
 });

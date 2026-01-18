@@ -5,8 +5,12 @@ import indentString from 'indent-string';
 import cliBoxes from 'cli-boxes';
 import chalk from 'chalk';
 import {render, Box, Text} from '../src/index.js';
-import {renderToString} from './helpers/render-to-string.js';
+import {
+	renderToString,
+	renderToStringAsync,
+} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
+import {renderAsync} from './helpers/test-renderer.js';
 
 test('single node - full width box', t => {
 	const output = renderToString(
@@ -910,4 +914,70 @@ test('borderDimColor does not dim styled child Text touching left edge', t => {
 			cliBoxes.round.topRight,
 	);
 	t.true(output.includes(dimmedTopBorder), 'Border should be dimmed');
+});
+
+// Concurrent mode tests
+test('single node - full width box - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box borderStyle="round">
+			<Text>Hello World</Text>
+		</Box>,
+	);
+
+	t.is(output, boxen('Hello World', {width: 100, borderStyle: 'round'}));
+});
+
+test('single node - fit-content box - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box borderStyle="round" alignSelf="flex-start">
+			<Text>Hello World</Text>
+		</Box>,
+	);
+
+	t.is(output, boxen('Hello World', {borderStyle: 'round'}));
+});
+
+test('nested boxes - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box borderStyle="round" width={40} padding={1}>
+			<Box borderStyle="round" justifyContent="center" padding={1}>
+				<Text>Hello World</Text>
+			</Box>
+		</Box>,
+	);
+
+	const nestedBox = indentString(
+		boxen('\n Hello World \n', {borderStyle: 'round'}),
+		1,
+	);
+
+	t.is(
+		output,
+		boxen(`${' '.repeat(38)}\n${nestedBox}\n`, {borderStyle: 'round'}),
+	);
+});
+
+test('render border after update - concurrent', async t => {
+	function Test({borderColor}: {readonly borderColor?: string}) {
+		return (
+			<Box borderStyle="round" borderColor={borderColor}>
+				<Text>Hello World</Text>
+			</Box>
+		);
+	}
+
+	const {getOutput, rerenderAsync} = await renderAsync(<Test />);
+
+	t.is(getOutput(), boxen('Hello World', {width: 100, borderStyle: 'round'}));
+
+	await rerenderAsync(<Test borderColor="green" />);
+
+	t.is(
+		getOutput(),
+		boxen('Hello World', {
+			width: 100,
+			borderStyle: 'round',
+			borderColor: 'green',
+		}),
+	);
 });

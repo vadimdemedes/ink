@@ -3,8 +3,12 @@ import test from 'ava';
 import chalk from 'chalk';
 import stripAnsi from 'strip-ansi';
 import {render, Box, Text} from '../src/index.js';
-import {renderToString} from './helpers/render-to-string.js';
+import {
+	renderToString,
+	renderToStringAsync,
+} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
+import {renderAsync} from './helpers/test-renderer.js';
 
 test('<Text> with undefined children', t => {
 	const output = renderToString(<Text />);
@@ -131,4 +135,74 @@ test('remeasure text when text nodes are changed', t => {
 test('text with content "constructor" wraps correctly', t => {
 	const output = renderToString(<Text>constructor</Text>);
 	t.is(output, 'constructor');
+});
+
+// Concurrent mode tests
+test('<Text> with undefined children - concurrent', async t => {
+	const output = await renderToStringAsync(<Text />);
+	t.is(output, '');
+});
+
+test('<Text> with null children - concurrent', async t => {
+	const output = await renderToStringAsync(<Text>{null}</Text>);
+	t.is(output, '');
+});
+
+test('text with standard color - concurrent', async t => {
+	const output = await renderToStringAsync(<Text color="green">Test</Text>);
+	t.is(output, chalk.green('Test'));
+});
+
+test('text with dim+bold - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Text dimColor bold>
+			Test
+		</Text>,
+	);
+	t.is(output, chalk.bold.dim('Test'));
+});
+
+test('text with hex color - concurrent', async t => {
+	const output = await renderToStringAsync(<Text color="#FF8800">Test</Text>);
+	t.is(output, chalk.hex('#FF8800')('Test'));
+});
+
+test('text with inversion - concurrent', async t => {
+	const output = await renderToStringAsync(<Text inverse>Test</Text>);
+	t.is(output, chalk.inverse('Test'));
+});
+
+test('remeasure text when text is changed - concurrent', async t => {
+	function Test({add}: {readonly add?: boolean}) {
+		return (
+			<Box>
+				<Text>{add ? 'abcx' : 'abc'}</Text>
+			</Box>
+		);
+	}
+
+	const {getOutput, rerenderAsync} = await renderAsync(<Test />);
+	t.is(getOutput(), 'abc');
+
+	await rerenderAsync(<Test add />);
+	t.is(getOutput(), 'abcx');
+});
+
+test('remeasure text when text nodes are changed - concurrent', async t => {
+	function Test({add}: {readonly add?: boolean}) {
+		return (
+			<Box>
+				<Text>
+					abc
+					{add && <Text>x</Text>}
+				</Text>
+			</Box>
+		);
+	}
+
+	const {getOutput, rerenderAsync} = await renderAsync(<Test />);
+	t.is(getOutput(), 'abc');
+
+	await rerenderAsync(<Test add />);
+	t.is(getOutput(), 'abcx');
 });
