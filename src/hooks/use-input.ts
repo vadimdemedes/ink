@@ -86,6 +86,13 @@ export type Key = {
 	[Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 	*/
 	meta: boolean;
+
+	/**
+	Super key (Windows/Command/Meta key) was pressed.
+	This modifier is only detected when the terminal supports the Kitty keyboard protocol.
+	In legacy mode, this will always be `false`.
+	*/
+	super: boolean;
 };
 
 type Handler = (input: string, key: Key) => void;
@@ -166,6 +173,8 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				// to avoid breaking changes in Ink.
 				// TODO(vadimdemedes): consider removing this in the next major version.
 				meta: keypress.meta || keypress.name === 'escape' || keypress.option,
+				// Super key is only available from Kitty protocol, defaults to false in legacy mode
+				super: keypress.super ?? false,
 			};
 
 			let input = keypress.ctrl ? keypress.name : keypress.sequence;

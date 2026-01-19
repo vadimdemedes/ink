@@ -22,6 +22,7 @@ type Props = {
 	readonly writeToStderr: (data: string) => void;
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (error?: Error) => void;
+	readonly isKittyProtocolSupported: boolean;
 };
 
 type State = {
@@ -78,6 +79,7 @@ export default class App extends PureComponent<Props, State> {
 						stdin: this.props.stdin,
 						setRawMode: this.handleSetRawMode,
 						isRawModeSupported: this.isRawModeSupported(),
+						isKittyProtocolSupported: this.props.isKittyProtocolSupported,
 						// eslint-disable-next-line @typescript-eslint/naming-convention
 						internal_exitOnCtrlC: this.props.exitOnCtrlC,
 						// eslint-disable-next-line @typescript-eslint/naming-convention

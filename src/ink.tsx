@@ -17,6 +17,7 @@ import logUpdate, {type LogUpdate} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
+import {kittyQuery, kittyEnable, kittyDisable} from './kitty-keyboard.js';
 
 const noop = () => {};
 
@@ -42,7 +43,16 @@ export type Options = {
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
 	incrementalRendering?: boolean;
+	/**
+	Disable Kitty keyboard protocol detection and usage.
+	When true, Ink will not attempt to detect or enable the Kitty protocol.
+	@default false
+	*/
+	disableKittyProtocol?: boolean;
 };
+
+// Timeout for Kitty keyboard protocol detection (in milliseconds)
+const kittyDetectionTimeout = 200;
 
 export default class Ink {
 	private readonly options: Options;
@@ -63,6 +73,9 @@ export default class Ink {
 	private exitPromise?: Promise<void>;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
+	// Kitty keyboard protocol support
+	private isKittyProtocolSupported = false;
+	private isKittyProtocolEnabled = false;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -148,6 +161,12 @@ export default class Ink {
 			this.unsubscribeResize = () => {
 				options.stdout.off('resize', this.resized);
 			};
+		}
+
+		// Start Kitty protocol detection asynchronously (non-blocking)
+		// Detection runs in background and enables protocol if supported
+		if (!options.disableKittyProtocol && options.stdin.isTTY) {
+			void this.detectKittyProtocol();
 		}
 	}
 
@@ -298,12 +317,13 @@ export default class Ink {
 				value={{isScreenReaderEnabled: this.isScreenReaderEnabled}}
 			>
 				<App
+					exitOnCtrlC={this.options.exitOnCtrlC}
+					isKittyProtocolSupported={this.isKittyProtocolSupported}
+					stderr={this.options.stderr}
 					stdin={this.options.stdin}
 					stdout={this.options.stdout}
-					stderr={this.options.stderr}
-					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
-					exitOnCtrlC={this.options.exitOnCtrlC}
+					writeToStdout={this.writeToStdout}
 					onExit={this.unmount}
 				>
 					{node}
@@ -369,6 +389,9 @@ export default class Ink {
 		this.calculateLayout();
 		this.onRender();
 		this.unsubscribeExit();
+
+		// Disable Kitty protocol to restore terminal to original mode
+		this.disableKittyProtocol();
 
 		if (typeof this.restoreConsole === 'function') {
 			this.restoreConsole();
@@ -436,5 +459,92 @@ export default class Ink {
 				}
 			}
 		});
+	}
+
+	/**
+	 * Detect if the terminal supports the Kitty keyboard protocol.
+	 * This sends a query sequence and waits for a response with a timeout.
+	 * If supported, enables the protocol.
+	 */
+	async detectKittyProtocol(): Promise<void> {
+		const {stdin, stdout} = this.options;
+
+		// Skip detection if disabled, stdin doesn't support raw mode, or already unmounted
+		if (this.options.disableKittyProtocol === true) {
+			return;
+		}
+
+		if (!stdin.isTTY || this.isUnmounted) {
+			return;
+		}
+
+		try {
+			const isSupported = await new Promise<boolean>(resolve => {
+				let resolved = false;
+
+				// Set up timeout
+				const timeout = setTimeout(() => {
+					if (!resolved) {
+						resolved = true;
+						stdin.removeListener('data', onData);
+						resolve(false);
+					}
+				}, kittyDetectionTimeout);
+
+				// Listen for response
+				// The response format is: CSI ? flags u (e.g., \u001B[?1u)
+				// eslint-disable-next-line no-control-regex
+				const kittyResponseRegex = /\u001B\[\?\d+u/;
+
+				const onData = (data: Uint8Array | string): void => {
+					const str =
+						typeof data === 'string' ? data : new TextDecoder().decode(data);
+
+					if (kittyResponseRegex.test(str) && !resolved) {
+						resolved = true;
+						clearTimeout(timeout);
+						stdin.removeListener('data', onData);
+						resolve(true);
+					}
+				};
+
+				stdin.on('data', onData);
+
+				// Send the query sequence
+				stdout.write(kittyQuery);
+			});
+
+			if (isSupported && !this.isUnmounted) {
+				this.isKittyProtocolSupported = true;
+				this.enableKittyProtocol();
+			}
+		} catch {
+			// Detection failed, leave protocol disabled
+		}
+	}
+
+	/**
+	 * Enable the Kitty keyboard protocol by sending the opt-in sequence.
+	 */
+	enableKittyProtocol(): void {
+		if (this.isKittyProtocolEnabled || this.isUnmounted) {
+			return;
+		}
+
+		this.options.stdout.write(kittyEnable);
+		this.isKittyProtocolEnabled = true;
+	}
+
+	/**
+	 * Disable the Kitty keyboard protocol by sending the opt-out sequence.
+	 * This restores the terminal to its original mode.
+	 */
+	disableKittyProtocol(): void {
+		if (!this.isKittyProtocolEnabled) {
+			return;
+		}
+
+		this.options.stdout.write(kittyDisable);
+		this.isKittyProtocolEnabled = false;
 	}
 }

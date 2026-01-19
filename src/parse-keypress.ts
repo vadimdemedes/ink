@@ -1,5 +1,6 @@
 // Copied from https://github.com/enquirer/enquirer/blob/36785f3399a41cd61e9d28d1eb9c2fcd73d69b4c/lib/keypress.js
 import {Buffer} from 'node:buffer';
+import {isKittySequence, parseKittySequence} from './kitty-keyboard.js';
 
 const metaKeyCodeRe = /^(?:\x1b)([a-zA-Z0-9])$/;
 
@@ -135,6 +136,49 @@ type ParsedKey = {
 	sequence: string;
 	raw: string | undefined;
 	code?: string;
+	super?: boolean;
+};
+
+/**
+ * Map Kitty protocol codepoints to key names.
+ * Returns the human-readable key name for special keys,
+ * or the character itself for regular keys.
+ */
+const kittyCodepointToKeyName = (codepoint: number): string => {
+	switch (codepoint) {
+		case 13: {
+			return 'return';
+		}
+
+		case 9: {
+			return 'tab';
+		}
+
+		case 27: {
+			return 'escape';
+		}
+
+		case 127: {
+			return 'delete';
+		}
+
+		case 8: {
+			return 'backspace';
+		}
+
+		case 32: {
+			return 'space';
+		}
+
+		case 10: {
+			return 'enter';
+		}
+
+		default: {
+			// For regular characters, convert codepoint to character
+			return String.fromCodePoint(codepoint);
+		}
+	}
 };
 
 const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
@@ -151,6 +195,23 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 		s = String(s);
 	} else if (!s) {
 		s = '';
+	}
+
+	// Try Kitty protocol parsing first
+	if (isKittySequence(s)) {
+		const kittyKey = parseKittySequence(s);
+		if (kittyKey) {
+			return {
+				name: kittyCodepointToKeyName(kittyKey.codepoint),
+				ctrl: kittyKey.modifiers.ctrl,
+				meta: kittyKey.modifiers.alt,
+				shift: kittyKey.modifiers.shift,
+				option: false,
+				sequence: s,
+				raw: s,
+				super: kittyKey.modifiers.super,
+			};
+		}
 	}
 
 	const key: ParsedKey = {

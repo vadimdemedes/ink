@@ -1589,6 +1589,45 @@ Default: `false`
 
 [Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 
+###### key.super
+
+Type: `boolean`\
+Default: `false`
+
+Super key (Windows/Command/Meta key) was pressed.
+This modifier is only detected when the terminal supports the [Kitty keyboard protocol](#kitty-keyboard-protocol).
+In terminals that don't support the protocol, this will always be `false`.
+
+#### Kitty Keyboard Protocol
+
+Ink automatically detects and enables the [Kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) in supporting terminals. This enables detection of modifier combinations that are normally indistinguishable in legacy terminal input:
+
+- `Shift+Enter` vs `Enter`
+- `Ctrl+I` vs `Tab`
+- `Ctrl+M` vs `Enter`
+
+**Supported terminals:** Kitty, iTerm2, Alacritty, Ghostty, WezTerm, Foot, Rio
+
+```jsx
+import {useInput} from 'ink';
+
+const Example = () => {
+	useInput((input, key) => {
+		if (key.return && key.shift) {
+			// Shift+Enter was pressed
+		}
+
+		if (input === 'i' && key.ctrl) {
+			// Ctrl+I was pressed (not Tab)
+		}
+	});
+
+	return ...
+};
+```
+
+When running in a terminal that doesn't support the Kitty protocol, Ink falls back to legacy input handling. Your code will still work, but some modifier combinations may not be distinguishable (e.g., `Ctrl+I` will appear as `Tab`).
+
 #### options
 
 Type: `object`

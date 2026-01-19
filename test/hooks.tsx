@@ -334,3 +334,64 @@ test.serial('useStdout - write to stdout', async t => {
 // how to test useStderr() hook. child_process.spawn() can't be used, because
 // Ink fails with "raw mode unsupported" error.
 test.todo('useStderr - write to stderr');
+
+// ============================================================================
+// Kitty Keyboard Protocol Integration Tests
+// ============================================================================
+
+test.serial(
+	'useInput - handle Kitty shift+enter (distinguishable from enter)',
+	async t => {
+		const ps = term('use-input', ['kittyShiftEnter']);
+		// ESC[13;2u = enter (codepoint 13) with shift modifier
+		ps.write('\u001B[13;2u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial(
+	'useInput - handle Kitty ctrl+i (distinguishable from tab)',
+	async t => {
+		const ps = term('use-input', ['kittyCtrlI']);
+		// ESC[105;5u = 'i' (codepoint 105) with ctrl modifier
+		ps.write('\u001B[105;5u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial('useInput - handle Kitty basic letter', async t => {
+	const ps = term('use-input', ['kittyBasicLetter']);
+	// ESC[97u = 'a' with no modifiers
+	ps.write('\u001B[97u');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle Kitty alt+letter', async t => {
+	const ps = term('use-input', ['kittyAltLetter']);
+	// ESC[97;3u = 'a' with alt (bitfield 3)
+	ps.write('\u001B[97;3u');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle Kitty super modifier', async t => {
+	const ps = term('use-input', ['kittySuperKey']);
+	// ESC[97;9u = 'a' with super modifier (bitfield 9)
+	ps.write('\u001B[97;9u');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial(
+	'useInput - handle Kitty combined modifiers (ctrl+alt)',
+	async t => {
+		const ps = term('use-input', ['kittyCtrlAlt']);
+		// ESC[97;7u = 'a' with ctrl+alt (bitfield 7 = ctrl(4) + alt(2) + 1)
+		ps.write('\u001B[97;7u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
