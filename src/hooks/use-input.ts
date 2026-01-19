@@ -177,7 +177,14 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				super: keypress.super ?? false,
 			};
 
-			let input = keypress.ctrl ? keypress.name : keypress.sequence;
+			// For ctrl sequences, use name. For Kitty protocol sequences (which start with ESC[
+			// and end with 'u'), use name since sequence contains the raw escape code.
+			// Otherwise use the raw sequence.
+			const isKittySequence =
+				keypress.sequence.startsWith('\u001B[') &&
+				keypress.sequence.endsWith('u');
+			let input =
+				keypress.ctrl || isKittySequence ? keypress.name : keypress.sequence;
 
 			if (nonAlphanumericKeys.includes(keypress.name)) {
 				input = '';
