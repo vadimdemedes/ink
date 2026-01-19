@@ -1,8 +1,8 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import test from 'ava';
 import patchConsole from 'patch-console';
 import stripAnsi from 'strip-ansi';
-import {render} from '../src/index.js';
+import {render, useStdin, Text} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
 let restore = () => {};
@@ -44,5 +44,80 @@ test('catch and display error', t => {
 			'',
 			' - Test (test/errors.tsx:22:9)',
 		],
+	);
+});
+
+test('ErrorBoundary catches and displays nested component errors', t => {
+	const stdout = createStdout();
+
+	const NestedComponent = () => {
+		throw new Error('Nested component error');
+	};
+
+	const Parent = () => (
+		<Text>
+			Before error
+			<NestedComponent />
+		</Text>
+	);
+
+	render(<Parent />, {stdout});
+
+	const output = stripAnsi((stdout.write as any).lastCall.args[0] as string);
+	t.true(output.includes('ERROR'), 'Error label should be displayed');
+	t.true(
+		output.includes('Nested component error'),
+		'Error message should be shown',
+	);
+});
+
+test('clean up raw mode when error is thrown', async t => {
+	const stdout = createStdout();
+
+	// Track setRawMode calls
+	let setRawModeCalls: boolean[] = [];
+	const originalSetRawMode = process.stdin.setRawMode?.bind(process.stdin);
+
+	// Only run this test if raw mode is supported
+	if (!process.stdin.isTTY) {
+		t.pass('Skipping test - stdin is not a TTY');
+		return;
+	}
+
+	process.stdin.setRawMode = (mode: boolean) => {
+		setRawModeCalls.push(mode);
+
+		return originalSetRawMode?.(mode) ?? process.stdin;
+	};
+
+	const Test = () => {
+		const {setRawMode} = useStdin();
+
+		useEffect(() => {
+			setRawMode(true);
+			// Throw after enabling raw mode
+			throw new Error('Error after raw mode enabled');
+		}, [setRawMode]);
+
+		return <Text>Test</Text>;
+	};
+
+	const app = render(<Test />, {stdout});
+
+	await t.throwsAsync(app.waitUntilExit());
+
+	// Restore original setRawMode
+	if (originalSetRawMode) {
+		process.stdin.setRawMode = originalSetRawMode;
+	}
+
+	// Verify raw mode was enabled then disabled
+	t.true(
+		setRawModeCalls.includes(true),
+		'Raw mode should have been enabled',
+	);
+	t.true(
+		setRawModeCalls.includes(false),
+		'Raw mode should have been disabled on cleanup',
 	);
 });
