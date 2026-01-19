@@ -59,20 +59,6 @@ const createStandard = (
 			previousOutput = output;
 			previousMarkerPosition = position ? {...position} : undefined;
 
-			// Build cursor control sequences
-			let cursorControl = '';
-			const shouldShowCursor = position !== undefined;
-
-			// Show/hide cursor based on marker presence
-			if (shouldShowCursor && !hasHiddenCursor) {
-				// Actually we want to SHOW the cursor when IME is active
-				cliCursor.show();
-			} else if (!shouldShowCursor && hasHiddenCursor) {
-				cliCursor.hide();
-			}
-
-			hasHiddenCursor = !shouldShowCursor;
-
 			// Write output first
 			stream.write(ansiEscapes.eraseLines(previousLineCount) + output);
 
@@ -84,15 +70,25 @@ const createStandard = (
 				const endRow = outputLines.length - 1;
 				const endCol = 0;
 
-				cursorControl = calculateCursorMovement(
+				const cursorMovement = calculateCursorMovement(
 					endRow,
 					endCol,
 					position.row,
 					position.col,
 				);
 
-				if (cursorControl) {
-					stream.write(cursorControl);
+				// Move cursor to marker position, then show it
+				if (cursorMovement) {
+					stream.write(cursorMovement);
+				}
+				// Always show cursor when IME marker is present
+				stream.write('\u001B[?25h'); // DECTCEM: Show cursor
+				hasHiddenCursor = false;
+			} else {
+				// Hide cursor when no marker
+				if (!hasHiddenCursor) {
+					stream.write('\u001B[?25l'); // DECTCEM: Hide cursor
+					hasHiddenCursor = true;
 				}
 			}
 
@@ -179,16 +175,6 @@ const createIncremental = (
 				return;
 			}
 
-			const shouldShowCursor = position !== undefined;
-
-			if (shouldShowCursor && !hasHiddenCursor) {
-				cliCursor.show();
-			} else if (!shouldShowCursor && hasHiddenCursor) {
-				cliCursor.hide();
-			}
-
-			hasHiddenCursor = !shouldShowCursor;
-
 			const previousCount = previousLines.length;
 			const nextLines = output.split('\n');
 			const nextCount = nextLines.length;
@@ -200,8 +186,7 @@ const createIncremental = (
 				previousLines = nextLines;
 				previousMarkerPosition = position ? {...position} : undefined;
 
-				// Move cursor to marker position
-				// After writing output (ending with \n), cursor is at start of new line
+				// Move cursor to marker position and show it
 				if (position) {
 					const endRow = nextCount - 1;
 					const endCol = 0;
@@ -209,6 +194,11 @@ const createIncremental = (
 					if (movement) {
 						stream.write(movement);
 					}
+					stream.write('\u001B[?25h'); // Show cursor
+					hasHiddenCursor = false;
+				} else if (!hasHiddenCursor) {
+					stream.write('\u001B[?25l'); // Hide cursor
+					hasHiddenCursor = true;
 				}
 
 				return;
@@ -241,8 +231,7 @@ const createIncremental = (
 
 			stream.write(buffer.join(''));
 
-			// Move cursor to marker position
-			// After incremental render, cursor is at start of the line after visible content
+			// Move cursor to marker position and show it
 			if (position) {
 				const endRow = visibleCount;
 				const endCol = 0;
@@ -250,6 +239,11 @@ const createIncremental = (
 				if (movement) {
 					stream.write(movement);
 				}
+				stream.write('\u001B[?25h'); // Show cursor
+				hasHiddenCursor = false;
+			} else if (!hasHiddenCursor) {
+				stream.write('\u001B[?25l'); // Hide cursor
+				hasHiddenCursor = true;
 			}
 
 			previousOutput = output;
