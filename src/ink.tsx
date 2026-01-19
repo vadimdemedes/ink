@@ -165,7 +165,14 @@ export default class Ink {
 
 		// Start Kitty protocol detection asynchronously (non-blocking)
 		// Detection runs in background and enables protocol if supported
-		if (!options.disableKittyProtocol && options.stdin.isTTY) {
+		// Skip in CI/test environments as detection can interfere with test input handling
+		const isTestEnvironment =
+			isInCi || process.env['GITHUB_ACTIONS'] !== undefined;
+		if (
+			!options.disableKittyProtocol &&
+			options.stdin.isTTY &&
+			!isTestEnvironment
+		) {
 			void this.detectKittyProtocol();
 		}
 	}
