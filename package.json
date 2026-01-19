@@ -146,7 +146,9 @@
 			"complexity": "off"
 		},
 		"ignores": [
-			"src/parse-keypress.ts"
+			"src/parse-keypress.ts",
+			"debug-*.js",
+			"debug-*.tsx"
 		],
 		"overrides": [
 			{

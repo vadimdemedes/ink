@@ -5,6 +5,7 @@ import stringWidth from 'string-width';
  * Cursor position marker (invisible ANSI control sequence).
  * SGR 999 is recognized but has no visual effect, excluded from layout calculations.
  */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const CURSOR_MARKER = '\u001B[999m';
 
 /**
@@ -56,6 +57,54 @@ export function findAndRemoveMarker(text: string): MarkerInfo {
 		cleaned: lines.join('\n'),
 		position,
 	};
+}
+
+/** Save Cursor Position sequence */
+const saveCursorPosition = '\u001B[s';
+/** Restore Cursor Position sequence */
+const restoreCursorPosition = '\u001B[u';
+/** Show Cursor sequence */
+const showCursorSequence = '\u001B[?25h';
+/** Hide Cursor sequence */
+const hideCursorSequence = '\u001B[?25l';
+
+/**
+ * Result of processing marker with save/restore approach.
+ */
+export type ProcessedOutput = {
+	/** Text with marker replaced by save cursor sequence */
+	output: string;
+	/** Whether a marker was found */
+	hasMarker: boolean;
+};
+
+/**
+ * Replace cursor marker with save cursor position sequence.
+ * After writing this output, call restoreCursor() to move cursor back.
+ */
+export function replaceMarkerWithSave(text: string): ProcessedOutput {
+	const hasMarker = text.includes(CURSOR_MARKER);
+	if (!hasMarker) {
+		return {output: text, hasMarker: false};
+	}
+
+	// Replace marker with save cursor position sequence
+	const output = text.replace(CURSOR_MARKER, saveCursorPosition);
+	return {output, hasMarker: true};
+}
+
+/**
+ * Get sequence to restore cursor and show it.
+ */
+export function getRestoreAndShowCursor(): string {
+	return restoreCursorPosition + showCursorSequence;
+}
+
+/**
+ * Get sequence to hide cursor.
+ */
+export function getHideCursor(): string {
+	return hideCursorSequence;
 }
 
 /**

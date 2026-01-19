@@ -2,9 +2,9 @@ import {type Writable} from 'node:stream';
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
 import {
-	findAndRemoveMarker,
-	calculateCursorMovement,
-	type CursorPosition,
+	replaceMarkerWithSave,
+	getRestoreAndShowCursor,
+	getHideCursor,
 } from './cursor-marker.js';
 
 export type LogUpdate = {
@@ -33,63 +33,34 @@ const createStandard = (
 	let previousLineCount = 0;
 	let previousOutput = '';
 	let hasHiddenCursor = false;
-	let previousMarkerPosition: CursorPosition | undefined;
+	let previousHadMarker = false;
 
 	const render = (str: string) => {
 		// Handle IME cursor mode
 		if (enableImeCursor) {
-			const {cleaned, position} = findAndRemoveMarker(str);
-			const output = cleaned + '\n';
-
-			// Check if position changed
-			const positionChanged =
-				position !== previousMarkerPosition &&
-				!(
-					position &&
-					previousMarkerPosition &&
-					position.row === previousMarkerPosition.row &&
-					position.col === previousMarkerPosition.col
-				);
+			const {output: processed, hasMarker} = replaceMarkerWithSave(str);
+			const output = processed + '\n';
 
 			// Skip if nothing changed
-			if (output === previousOutput && !positionChanged) {
+			if (output === previousOutput && hasMarker === previousHadMarker) {
 				return;
 			}
 
 			previousOutput = output;
-			previousMarkerPosition = position ? {...position} : undefined;
+			previousHadMarker = hasMarker;
 
-			// Write output first
+			// Erase previous output and write new output
+			// The output contains \u001B[s (save cursor) at marker position
 			stream.write(ansiEscapes.eraseLines(previousLineCount) + output);
 
-			// Calculate and apply cursor movement to marker position
-			// After writing output (ending with \n), cursor is at start of new line
-			if (position) {
-				const outputLines = output.split('\n');
-				// Cursor is at the last line (empty string after trailing \n), col 0
-				const endRow = outputLines.length - 1;
-				const endCol = 0;
-
-				const cursorMovement = calculateCursorMovement(
-					endRow,
-					endCol,
-					position.row,
-					position.col,
-				);
-
-				// Move cursor to marker position, then show it
-				if (cursorMovement) {
-					stream.write(cursorMovement);
-				}
-				// Always show cursor when IME marker is present
-				stream.write('\u001B[?25h'); // DECTCEM: Show cursor
+			// After writing, restore cursor to saved position and show it
+			if (hasMarker) {
+				stream.write(getRestoreAndShowCursor());
 				hasHiddenCursor = false;
-			} else {
+			} else if (!hasHiddenCursor) {
 				// Hide cursor when no marker
-				if (!hasHiddenCursor) {
-					stream.write('\u001B[?25l'); // DECTCEM: Hide cursor
-					hasHiddenCursor = true;
-				}
+				stream.write(getHideCursor());
+				hasHiddenCursor = true;
 			}
 
 			previousLineCount = output.split('\n').length;
@@ -121,7 +92,7 @@ const createStandard = (
 	render.done = () => {
 		previousOutput = '';
 		previousLineCount = 0;
-		previousMarkerPosition = undefined;
+		previousHadMarker = false;
 
 		if (!showCursor || enableImeCursor) {
 			cliCursor.show();
@@ -131,11 +102,11 @@ const createStandard = (
 
 	render.sync = (str: string) => {
 		if (enableImeCursor) {
-			const {cleaned, position} = findAndRemoveMarker(str);
-			const output = cleaned + '\n';
+			const {output: processed, hasMarker} = replaceMarkerWithSave(str);
+			const output = processed + '\n';
 			previousOutput = output;
 			previousLineCount = output.split('\n').length;
-			previousMarkerPosition = position ? {...position} : undefined;
+			previousHadMarker = hasMarker;
 		} else {
 			const output = str + '\n';
 			previousOutput = output;
@@ -153,106 +124,37 @@ const createIncremental = (
 	let previousLines: string[] = [];
 	let previousOutput = '';
 	let hasHiddenCursor = false;
-	let previousMarkerPosition: CursorPosition | undefined;
+	let previousHadMarker = false;
 
 	const render = (str: string) => {
-		// Handle IME cursor mode
+		// Handle IME cursor mode - use standard (non-incremental) rendering for simplicity
 		if (enableImeCursor) {
-			const {cleaned, position} = findAndRemoveMarker(str);
-			const output = cleaned + '\n';
+			const {output: processed, hasMarker} = replaceMarkerWithSave(str);
+			const output = processed + '\n';
 
-			// Check if position changed
-			const positionChanged =
-				position !== previousMarkerPosition &&
-				!(
-					position &&
-					previousMarkerPosition &&
-					position.row === previousMarkerPosition.row &&
-					position.col === previousMarkerPosition.col
-				);
-
-			if (output === previousOutput && !positionChanged) {
+			if (output === previousOutput && hasMarker === previousHadMarker) {
 				return;
-			}
-
-			const previousCount = previousLines.length;
-			const nextLines = output.split('\n');
-			const nextCount = nextLines.length;
-			const visibleCount = nextCount - 1;
-
-			if (output === '\n' || previousOutput.length === 0) {
-				stream.write(ansiEscapes.eraseLines(previousCount) + output);
-				previousOutput = output;
-				previousLines = nextLines;
-				previousMarkerPosition = position ? {...position} : undefined;
-
-				// Move cursor to marker position and show it
-				if (position) {
-					const endRow = nextCount - 1;
-					const endCol = 0;
-					const movement = calculateCursorMovement(endRow, endCol, position.row, position.col);
-					if (movement) {
-						stream.write(movement);
-					}
-					stream.write('\u001B[?25h'); // Show cursor
-					hasHiddenCursor = false;
-				} else if (!hasHiddenCursor) {
-					stream.write('\u001B[?25l'); // Hide cursor
-					hasHiddenCursor = true;
-				}
-
-				return;
-			}
-
-			const buffer: string[] = [];
-
-			if (nextCount < previousCount) {
-				buffer.push(
-					ansiEscapes.eraseLines(previousCount - nextCount + 1),
-					ansiEscapes.cursorUp(visibleCount),
-				);
-			} else {
-				buffer.push(ansiEscapes.cursorUp(previousCount - 1));
-			}
-
-			for (let i = 0; i < visibleCount; i++) {
-				if (nextLines[i] === previousLines[i]) {
-					buffer.push(ansiEscapes.cursorNextLine);
-					continue;
-				}
-
-				buffer.push(
-					ansiEscapes.cursorTo(0) +
-						nextLines[i] +
-						ansiEscapes.eraseEndLine +
-						'\n',
-				);
-			}
-
-			stream.write(buffer.join(''));
-
-			// Move cursor to marker position and show it
-			if (position) {
-				const endRow = visibleCount;
-				const endCol = 0;
-				const movement = calculateCursorMovement(endRow, endCol, position.row, position.col);
-				if (movement) {
-					stream.write(movement);
-				}
-				stream.write('\u001B[?25h'); // Show cursor
-				hasHiddenCursor = false;
-			} else if (!hasHiddenCursor) {
-				stream.write('\u001B[?25l'); // Hide cursor
-				hasHiddenCursor = true;
 			}
 
 			previousOutput = output;
-			previousLines = nextLines;
-			previousMarkerPosition = position ? {...position} : undefined;
+			previousHadMarker = hasMarker;
+
+			// For IME mode, use simple full redraw to ensure cursor save/restore works correctly
+			stream.write(ansiEscapes.eraseLines(previousLines.length) + output);
+
+			if (hasMarker) {
+				stream.write(getRestoreAndShowCursor());
+				hasHiddenCursor = false;
+			} else if (!hasHiddenCursor) {
+				stream.write(getHideCursor());
+				hasHiddenCursor = true;
+			}
+
+			previousLines = output.split('\n');
 			return;
 		}
 
-		// Original behavior
+		// Original incremental behavior
 		if (!showCursor && !hasHiddenCursor) {
 			cliCursor.hide();
 			hasHiddenCursor = true;
@@ -275,15 +177,11 @@ const createIncremental = (
 			return;
 		}
 
-		// We aggregate all chunks for incremental rendering into a buffer, and then write them to stdout at the end.
 		const buffer: string[] = [];
 
-		// Clear extra lines if the current content's line count is lower than the previous.
 		if (nextCount < previousCount) {
 			buffer.push(
-				// Erases the trailing lines and the final newline slot.
 				ansiEscapes.eraseLines(previousCount - nextCount + 1),
-				// Positions cursor to the top of the rendered output.
 				ansiEscapes.cursorUp(visibleCount),
 			);
 		} else {
@@ -291,7 +189,6 @@ const createIncremental = (
 		}
 
 		for (let i = 0; i < visibleCount; i++) {
-			// We do not write lines if the contents are the same. This prevents flickering during renders.
 			if (nextLines[i] === previousLines[i]) {
 				buffer.push(ansiEscapes.cursorNextLine);
 				continue;
@@ -320,7 +217,7 @@ const createIncremental = (
 	render.done = () => {
 		previousOutput = '';
 		previousLines = [];
-		previousMarkerPosition = undefined;
+		previousHadMarker = false;
 
 		if (!showCursor || enableImeCursor) {
 			cliCursor.show();
@@ -330,11 +227,11 @@ const createIncremental = (
 
 	render.sync = (str: string) => {
 		if (enableImeCursor) {
-			const {cleaned, position} = findAndRemoveMarker(str);
-			const output = cleaned + '\n';
+			const {output: processed, hasMarker} = replaceMarkerWithSave(str);
+			const output = processed + '\n';
 			previousOutput = output;
 			previousLines = output.split('\n');
-			previousMarkerPosition = position ? {...position} : undefined;
+			previousHadMarker = hasMarker;
 		} else {
 			const output = str + '\n';
 			previousOutput = output;
@@ -347,7 +244,11 @@ const createIncremental = (
 
 const create = (
 	stream: Writable,
-	{showCursor = false, incremental = false, enableImeCursor = false}: LogUpdateOptions = {},
+	{
+		showCursor = false,
+		incremental = false,
+		enableImeCursor = false,
+	}: LogUpdateOptions = {},
 ): LogUpdate => {
 	if (incremental) {
 		return createIncremental(stream, {showCursor, enableImeCursor});

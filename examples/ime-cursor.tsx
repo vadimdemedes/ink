@@ -4,6 +4,7 @@
  * Demonstrates the enableImeCursor feature for proper CJK input support.
  * Run with: npm run example examples/ime-cursor.tsx
  */
+import process from 'node:process';
 import React, {useState} from 'react';
 import {render, Box, Text, useInput, CURSOR_MARKER} from '../src/index.js';
 
@@ -12,9 +13,9 @@ function TextInput({
 	onChange,
 	placeholder,
 }: {
-	value: string;
-	onChange: (value: string) => void;
-	placeholder?: string;
+	readonly value: string;
+	readonly onChange: (value: string) => void;
+	readonly placeholder?: string;
 }) {
 	const [cursorPosition, setCursorPosition] = useState(value.length);
 
@@ -36,6 +37,7 @@ function TextInput({
 				onChange(newValue);
 				setCursorPosition(cursorPosition - 1);
 			}
+
 			return;
 		}
 
@@ -52,7 +54,7 @@ function TextInput({
 	});
 
 	const before = value.slice(0, cursorPosition);
-	const cursorChar = value[cursorPosition] || ' ';
+	const cursorChar = value[cursorPosition] ?? ' ';
 	const after = value.slice(cursorPosition + 1);
 
 	const showPlaceholder = value.length === 0 && placeholder;
@@ -80,6 +82,7 @@ function App() {
 
 	useInput((_input, key) => {
 		if (key.escape) {
+			// eslint-disable-next-line unicorn/no-process-exit
 			process.exit(0);
 		}
 	});
@@ -97,9 +100,9 @@ function App() {
 			<Box>
 				<Text>Input: </Text>
 				<TextInput
+					placeholder="Type here... (日本語入力OK)"
 					value={value}
 					onChange={setValue}
-					placeholder="Type here... (日本語入力OK)"
 				/>
 			</Box>
 			<Box marginTop={1}>
