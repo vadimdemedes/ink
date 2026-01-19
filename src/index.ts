@@ -1,5 +1,6 @@
 export type {RenderOptions, Instance} from './render.js';
 export {default as render} from './render.js';
+export {CURSOR_MARKER, type CursorPosition} from './cursor-marker.js';
 export type {Props as BoxProps} from './components/Box.js';
 export {default as Box} from './components/Box.js';
 export type {Props as TextProps} from './components/Text.js';

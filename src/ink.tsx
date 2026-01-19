@@ -42,6 +42,7 @@ export type Options = {
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
 	incrementalRendering?: boolean;
+	enableImeCursor?: boolean;
 };
 
 export default class Ink {
@@ -90,6 +91,7 @@ export default class Ink {
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout, {
 			incremental: options.incrementalRendering,
+			enableImeCursor: options.enableImeCursor,
 		});
 		this.throttledLog = unthrottled
 			? this.log

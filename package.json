@@ -1,9 +1,9 @@
 {
-	"name": "ink",
-	"version": "6.6.0",
-	"description": "React for CLI",
+	"name": "@koshikawa/ink-ime-cursor",
+	"version": "6.6.0-ime.1",
+	"description": "React for CLI - Fork with IME cursor position support for CJK input",
 	"license": "MIT",
-	"repository": "vadimdemedes/ink",
+	"repository": "koshikawa-masato/ink-ime-fork",
 	"author": {
 		"name": "Vadim Demedes",
 		"email": "vadimdemedes@hey.com",
