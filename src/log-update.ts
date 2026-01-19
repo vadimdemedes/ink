@@ -1,8 +1,6 @@
 import {type Writable} from 'node:stream';
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
-import stripAnsi from 'strip-ansi';
-import stringWidth from 'string-width';
 import {
 	findAndRemoveMarker,
 	calculateCursorMovement,
@@ -75,12 +73,16 @@ const createStandard = (
 
 			hasHiddenCursor = !shouldShowCursor;
 
-			// Calculate cursor movement to marker position
+			// Write output first
+			stream.write(ansiEscapes.eraseLines(previousLineCount) + output);
+
+			// Calculate and apply cursor movement to marker position
+			// After writing output (ending with \n), cursor is at start of new line
 			if (position) {
-				const lines = cleaned.split('\n');
-				const lastLine = lines.at(-1) ?? '';
-				const endRow = lines.length - 1;
-				const endCol = stringWidth(stripAnsi(lastLine));
+				const outputLines = output.split('\n');
+				// Cursor is at the last line (empty string after trailing \n), col 0
+				const endRow = outputLines.length - 1;
+				const endCol = 0;
 
 				cursorControl = calculateCursorMovement(
 					endRow,
@@ -88,12 +90,10 @@ const createStandard = (
 					position.row,
 					position.col,
 				);
-			}
 
-			// Write output then move cursor
-			stream.write(ansiEscapes.eraseLines(previousLineCount) + output);
-			if (cursorControl) {
-				stream.write(cursorControl);
+				if (cursorControl) {
+					stream.write(cursorControl);
+				}
 			}
 
 			previousLineCount = output.split('\n').length;
@@ -201,14 +201,14 @@ const createIncremental = (
 				previousMarkerPosition = position ? {...position} : undefined;
 
 				// Move cursor to marker position
+				// After writing output (ending with \n), cursor is at start of new line
 				if (position) {
-					const lines = cleaned.split('\n');
-					const lastLine = lines.at(-1) ?? '';
-					const endRow = lines.length - 1;
-					const endCol = stringWidth(stripAnsi(lastLine));
-					stream.write(
-						calculateCursorMovement(endRow, endCol, position.row, position.col),
-					);
+					const endRow = nextCount - 1;
+					const endCol = 0;
+					const movement = calculateCursorMovement(endRow, endCol, position.row, position.col);
+					if (movement) {
+						stream.write(movement);
+					}
 				}
 
 				return;
@@ -242,14 +242,14 @@ const createIncremental = (
 			stream.write(buffer.join(''));
 
 			// Move cursor to marker position
+			// After incremental render, cursor is at start of the line after visible content
 			if (position) {
-				const lines = cleaned.split('\n');
-				const lastLine = lines.at(-1) ?? '';
-				const endRow = lines.length - 1;
-				const endCol = stringWidth(stripAnsi(lastLine));
-				stream.write(
-					calculateCursorMovement(endRow, endCol, position.row, position.col),
-				);
+				const endRow = visibleCount;
+				const endCol = 0;
+				const movement = calculateCursorMovement(endRow, endCol, position.row, position.col);
+				if (movement) {
+					stream.write(movement);
+				}
 			}
 
 			previousOutput = output;
