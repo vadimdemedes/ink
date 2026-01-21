@@ -43,6 +43,7 @@ export type Options = {
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
 	incrementalRendering?: boolean;
+	enableImeCursor?: boolean;
 };
 
 export default class Ink {
@@ -56,6 +57,7 @@ export default class Ink {
 	private lastOutput: string;
 	private lastOutputHeight: number;
 	private lastTerminalWidth: number;
+	private lastCursorPosition?: {row: number; col: number} | undefined;
 	private readonly container: FiberRoot;
 	private readonly rootNode: dom.DOMElement;
 	// This variable is used only in debug mode to store full static output
@@ -76,7 +78,8 @@ export default class Ink {
 			options.isScreenReaderEnabled ??
 			process.env['INK_SCREEN_READER'] === 'true';
 
-		const unthrottled = options.debug || this.isScreenReaderEnabled;
+		const unthrottled =
+			options.debug || this.isScreenReaderEnabled || options.enableImeCursor;
 		const maxFps = options.maxFps ?? 30;
 		const renderThrottleMs =
 			maxFps > 0 ? Math.max(1, Math.ceil(1000 / maxFps)) : 0;
@@ -91,6 +94,7 @@ export default class Ink {
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout, {
 			incremental: options.incrementalRendering,
+			enableImeCursor: options.enableImeCursor,
 		});
 		this.throttledLog = unthrottled
 			? this.log
@@ -200,7 +204,7 @@ export default class Ink {
 		}
 
 		const startTime = performance.now();
-		const {output, outputHeight, staticOutput} = render(
+		const {output, outputHeight, staticOutput, cursorPosition} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
 		);
@@ -277,9 +281,24 @@ export default class Ink {
 			this.options.stdout.write(
 				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
 			);
+
+			// EnableImeCursor mode: position cursor after screen clear
+			if (this.options.enableImeCursor && cursorPosition) {
+				const lineCount = output.split('\n').length;
+				const moveUp = lineCount - 1 - cursorPosition.row;
+
+				if (moveUp > 0) {
+					this.options.stdout.write(ansiEscapes.cursorUp(moveUp));
+				}
+
+				this.options.stdout.write(ansiEscapes.cursorTo(cursorPosition.col));
+				this.options.stdout.write(ansiEscapes.cursorShow);
+			}
+
 			this.lastOutput = output;
 			this.lastOutputHeight = outputHeight;
-			this.log.sync(output);
+			this.lastCursorPosition = cursorPosition;
+			this.log.sync(output, cursorPosition ?? undefined);
 			return;
 		}
 
@@ -287,15 +306,24 @@ export default class Ink {
 		if (hasStaticOutput) {
 			this.log.clear();
 			this.options.stdout.write(staticOutput);
-			this.log(output);
+			this.log(output, cursorPosition ?? undefined);
 		}
 
-		if (!hasStaticOutput && output !== this.lastOutput) {
-			this.throttledLog(output);
+		const outputChanged = output !== this.lastOutput;
+		const cursorChanged =
+			cursorPosition !== this.lastCursorPosition &&
+			(!cursorPosition ||
+				!this.lastCursorPosition ||
+				cursorPosition.row !== this.lastCursorPosition.row ||
+				cursorPosition.col !== this.lastCursorPosition.col);
+
+		if (!hasStaticOutput && (outputChanged || cursorChanged)) {
+			this.throttledLog(output, cursorPosition ?? undefined);
 		}
 
 		this.lastOutput = output;
 		this.lastOutputHeight = outputHeight;
+		this.lastCursorPosition = cursorPosition;
 	};
 
 	render(node: ReactNode): void {
@@ -310,6 +338,7 @@ export default class Ink {
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
+					enableImeCursor={this.options.enableImeCursor}
 					onExit={this.unmount}
 				>
 					{node}
