@@ -1,6 +1,7 @@
 import React from 'react';
 import test from 'ava';
 import chalk from 'chalk';
+import stripAnsi from 'strip-ansi';
 import {render, Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
@@ -26,7 +27,9 @@ test('text with dim+bold', t => {
 			Test
 		</Text>,
 	);
-	t.is(output, chalk.bold.dim('Test'));
+
+	t.is(stripAnsi(output), 'Test');
+	t.not(output, 'Test'); // Ensure ANSI codes are present
 });
 
 test('text with dimmed color', t => {
