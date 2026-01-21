@@ -10,6 +10,7 @@ import {LegacyRoot} from 'react-reconciler/constants.js';
 import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import wrapAnsi from 'wrap-ansi';
+import terminalSize from 'terminal-size';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
@@ -153,8 +154,13 @@ export default class Ink {
 
 	getTerminalWidth = () => {
 		// The 'columns' property can be undefined or 0 when not using a TTY.
-		// In that case we fall back to 80.
-		return this.options.stdout.columns || 80;
+		// Use terminal-size as a fallback for piped processes, then default to 80.
+		if (this.options.stdout.columns) {
+			return this.options.stdout.columns;
+		}
+
+		const size = terminalSize();
+		return size?.columns ?? 80;
 	};
 
 	resized = () => {
@@ -239,7 +245,7 @@ export default class Ink {
 				return;
 			}
 
-			const terminalWidth = this.options.stdout.columns || 80;
+			const terminalWidth = this.getTerminalWidth();
 
 			const wrappedOutput = wrapAnsi(output, terminalWidth, {
 				trim: false,
