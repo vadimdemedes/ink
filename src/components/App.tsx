@@ -2,16 +2,13 @@ import {EventEmitter} from 'node:events';
 import process from 'node:process';
 import React, {PureComponent, type ReactNode} from 'react';
 import cliCursor from 'cli-cursor';
+import {createKeypressParser, tab, shiftTab, escape} from '../parser/index.js';
 import AppContext from './AppContext.js';
 import StdinContext from './StdinContext.js';
 import StdoutContext from './StdoutContext.js';
 import StderrContext from './StderrContext.js';
 import FocusContext from './FocusContext.js';
 import ErrorOverview from './ErrorOverview.js';
-
-const tab = '\t';
-const shiftTab = '\u001B[Z';
-const escape = '\u001B';
 
 type Props = {
 	readonly children: ReactNode;
@@ -58,6 +55,16 @@ export default class App extends PureComponent<Props, State> {
 	rawModeEnabledCount = 0;
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	internal_eventEmitter = new EventEmitter();
+	private readonly keypressParser = createKeypressParser(
+		(sequence, metadata) => {
+			this.handleInput(sequence);
+			this.internal_eventEmitter.emit('input', sequence, metadata);
+		},
+	);
+
+	handleStdinError = (): void => {
+		this.keypressParser.reset();
+	};
 
 	// Determines if TTY is supported on the provided stdin
 	isRawModeSupported(): boolean {
@@ -128,15 +135,19 @@ export default class App extends PureComponent<Props, State> {
 
 	override componentDidMount() {
 		cliCursor.hide(this.props.stdout);
+		this.props.stdin.on('error', this.handleStdinError);
 	}
 
 	override componentWillUnmount() {
 		cliCursor.show(this.props.stdout);
+		this.keypressParser.reset();
 
 		// ignore calling setRawMode on an handle stdin it cannot be called
 		if (this.isRawModeSupported()) {
 			this.handleSetRawMode(false);
 		}
+
+		this.props.stdin.off('error', this.handleStdinError);
 	}
 
 	override componentDidCatch(error: Error) {
@@ -177,6 +188,7 @@ export default class App extends PureComponent<Props, State> {
 			stdin.setRawMode(false);
 			stdin.removeListener('readable', this.handleReadable);
 			stdin.unref();
+			this.keypressParser.reset();
 		}
 	};
 
@@ -184,8 +196,7 @@ export default class App extends PureComponent<Props, State> {
 		let chunk;
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		while ((chunk = this.props.stdin.read() as string | null) !== null) {
-			this.handleInput(chunk);
-			this.internal_eventEmitter.emit('input', chunk);
+			this.keypressParser.push(chunk);
 		}
 	};
 
