@@ -28,3 +28,5 @@ export {default as useCursor} from './hooks/use-cursor.js';
 export type {CursorPosition} from './log-update.js';
 export {default as measureElement} from './measure-element.js';
 export type {DOMElement} from './dom.js';
+export {kittyFlags, kittyModifiers} from './kitty-keyboard.js';
+export type {KittyKeyboardOptions} from './kitty-keyboard.js';

@@ -3,6 +3,7 @@ import process from 'node:process';
 import type {ReactNode} from 'react';
 import Ink, {type Options as InkOptions, type RenderMetrics} from './ink.js';
 import instances from './instances.js';
+import {type KittyKeyboardOptions} from './kitty-keyboard.js';
 
 export type RenderOptions = {
 	/**
@@ -88,6 +89,15 @@ export type RenderOptions = {
 	@default false
 	*/
 	concurrent?: boolean;
+
+	/**
+	Configure kitty keyboard protocol support for enhanced keyboard input.
+	Enables additional modifiers (super, hyper, capsLock, numLock) and
+	disambiguated key events in terminals that support the protocol.
+
+	@see https://sw.kovidgoyal.net/kitty/keyboard-protocol/
+	*/
+	kittyKeyboard?: KittyKeyboardOptions;
 };
 
 export type Instance = {

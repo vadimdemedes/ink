@@ -19,6 +19,7 @@ import {bsu, esu, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
+import {type KittyKeyboardOptions, kittyFlags} from './kitty-keyboard.js';
 
 const noop = () => {};
 
@@ -47,18 +48,19 @@ export type Options = {
 
 	/**
 	Enable React Concurrent Rendering mode.
-	
+
 	When enabled:
 	- Suspense boundaries work correctly with async data
 	- `useTransition` and `useDeferredValue` are fully functional
 	- Updates can be interrupted for higher priority work
 
 	Note: Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
-	
+
 	@default false
 	@experimental
 	*/
 	concurrent?: boolean;
+	kittyKeyboard?: KittyKeyboardOptions;
 };
 
 export default class Ink {
@@ -92,6 +94,7 @@ export default class Ink {
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
 	private readonly throttledOnRender?: DebouncedFunc<() => void>;
+	private kittyProtocolEnabled = false;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -206,6 +209,8 @@ export default class Ink {
 				options.stdout.off('resize', this.resized);
 			};
 		}
+
+		this.initKittyKeyboard();
 	}
 
 	getTerminalWidth = () => {
@@ -534,6 +539,13 @@ export default class Ink {
 			throttledLog.flush();
 		}
 
+		// Disable kitty keyboard protocol if it was enabled
+		if (this.kittyProtocolEnabled) {
+			// CSI < u - pop keyboard mode
+			this.options.stdout.write('\u001B[<u');
+			this.kittyProtocolEnabled = false;
+		}
+
 		// CIs don't handle erasing ansi escapes well, so it's better to
 		// only render last frame of non-static output
 		if (isInCi) {
@@ -629,5 +641,37 @@ export default class Ink {
 				}
 			}
 		});
+	}
+
+	private initKittyKeyboard(): void {
+		const opts = this.options.kittyKeyboard ?? {mode: 'auto'};
+
+		if (opts.mode === 'disabled' || !this.options.stdin.isTTY) {
+			return;
+		}
+
+		if (opts.mode === 'enabled') {
+			this.enableKittyProtocol(
+				opts.flags ?? kittyFlags.disambiguateEscapeCodes,
+			);
+			return;
+		}
+
+		// Auto mode: detect support
+		// For now, we just enable it if we're in a TTY and not in CI
+		// A more sophisticated implementation could send a query sequence
+		// and wait for a response to detect actual support
+		if (!isInCi && this.options.stdin.isTTY) {
+			this.enableKittyProtocol(
+				opts.flags ?? kittyFlags.disambiguateEscapeCodes,
+			);
+		}
+	}
+
+	private enableKittyProtocol(flags: number): void {
+		// Push keyboard mode with specified flags
+		// CSI > flags u - push keyboard mode
+		this.options.stdout.write(`\u001B[>${flags}u`);
+		this.kittyProtocolEnabled = true;
 	}
 }
