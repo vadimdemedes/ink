@@ -657,11 +657,21 @@ export default class Ink {
 			return;
 		}
 
-		// Auto mode: detect support
-		// For now, we just enable it if we're in a TTY and not in CI
-		// A more sophisticated implementation could send a query sequence
+		// Auto mode: detect support by checking for known supporting terminals
+		// Known indicators:
+		// - KITTY_WINDOW_ID env var (set by kitty terminal)
+		// - TERM=xterm-kitty (kitty terminal)
+		// - TERM_PROGRAM=WezTerm (WezTerm terminal)
+		// A more sophisticated implementation could send CSI ? u query
 		// and wait for a response to detect actual support
-		if (!isInCi && this.options.stdin.isTTY) {
+		const term = process.env['TERM'] ?? '';
+		const termProgram = process.env['TERM_PROGRAM'] ?? '';
+		const hasKittyWindowId = 'KITTY_WINDOW_ID' in process.env;
+
+		const isKnownSupportingTerminal =
+			hasKittyWindowId || term === 'xterm-kitty' || termProgram === 'WezTerm';
+
+		if (!isInCi && this.options.stdin.isTTY && isKnownSupportingTerminal) {
 			this.enableKittyProtocol(
 				opts.flags ?? kittyFlags.disambiguateEscapeCodes,
 			);
