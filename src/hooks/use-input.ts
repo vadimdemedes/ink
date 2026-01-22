@@ -204,7 +204,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				eventType: keypress.eventType,
 			};
 
-				let input =
+			let input =
 				keypress.ctrl || keypress.isKittyProtocol
 					? keypress.name
 					: keypress.sequence;
