@@ -1,3 +1,4 @@
+import process from 'node:process';
 import React, {useEffect} from 'react';
 import test from 'ava';
 import patchConsole from 'patch-console';
@@ -54,12 +55,14 @@ test('ErrorBoundary catches and displays nested component errors', t => {
 		throw new Error('Nested component error');
 	};
 
-	const Parent = () => (
-		<Text>
-			Before error
-			<NestedComponent />
-		</Text>
-	);
+	function Parent() {
+		return (
+			<Text>
+				Before error
+				<NestedComponent />
+			</Text>
+		);
+	}
 
 	render(<Parent />, {stdout});
 
@@ -75,7 +78,7 @@ test('clean up raw mode when error is thrown', async t => {
 	const stdout = createStdout();
 
 	// Track setRawMode calls
-	let setRawModeCalls: boolean[] = [];
+	const setRawModeCalls: boolean[] = [];
 	const originalSetRawMode = process.stdin.setRawMode?.bind(process.stdin);
 
 	// Only run this test if raw mode is supported
@@ -90,7 +93,7 @@ test('clean up raw mode when error is thrown', async t => {
 		return originalSetRawMode?.(mode) ?? process.stdin;
 	};
 
-	const Test = () => {
+	function Test() {
 		const {setRawMode} = useStdin();
 
 		useEffect(() => {
@@ -100,7 +103,7 @@ test('clean up raw mode when error is thrown', async t => {
 		}, [setRawMode]);
 
 		return <Text>Test</Text>;
-	};
+	}
 
 	const app = render(<Test />, {stdout});
 
@@ -112,10 +115,7 @@ test('clean up raw mode when error is thrown', async t => {
 	}
 
 	// Verify raw mode was enabled then disabled
-	t.true(
-		setRawModeCalls.includes(true),
-		'Raw mode should have been enabled',
-	);
+	t.true(setRawModeCalls.includes(true), 'Raw mode should have been enabled');
 	t.true(
 		setRawModeCalls.includes(false),
 		'Raw mode should have been disabled on cleanup',
