@@ -204,7 +204,10 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				eventType: keypress.eventType,
 			};
 
-			let input = keypress.ctrl ? keypress.name : keypress.sequence;
+				let input =
+				keypress.ctrl || keypress.isKittyProtocol
+					? keypress.name
+					: keypress.sequence;
 
 			if (nonAlphanumericKeys.includes(keypress.name)) {
 				input = '';
