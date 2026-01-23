@@ -1,12 +1,12 @@
 import sliceAnsi from 'slice-ansi';
 import stringWidth from 'string-width';
-import widestLine from './widest-line.js';
 import {
 	type StyledChar,
 	styledCharsFromTokens,
 	styledCharsToString,
 	tokenize,
 } from '@alcalzone/ansi-tokenize';
+import widestLine from './widest-line.js';
 import {type OutputTransformer} from './render-node-to-output.js';
 
 /**
