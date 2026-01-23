@@ -11,7 +11,7 @@ export type LogUpdate = {
 
 const createStandard = (
 	stream: Writable,
-	{showCursor = false} = {},
+	{showCursor = false, fullscreen = false} = {},
 ): LogUpdate => {
 	let previousLineCount = 0;
 	let previousOutput = '';
@@ -23,7 +23,8 @@ const createStandard = (
 			hasHiddenCursor = true;
 		}
 
-		const output = str;
+		// In fullscreen mode, don't add trailing newline to prevent first line cutoff
+		const output = fullscreen ? str : str + '\n';
 		if (output === previousOutput) {
 			return;
 		}
@@ -40,6 +41,11 @@ const createStandard = (
 	};
 
 	render.done = () => {
+		// In fullscreen mode, add a newline on exit so subsequent output starts on a new line
+		if (fullscreen) {
+			stream.write('\n');
+		}
+
 		previousOutput = '';
 		previousLineCount = 0;
 
@@ -50,7 +56,7 @@ const createStandard = (
 	};
 
 	render.sync = (str: string) => {
-		const output = str;
+		const output = fullscreen ? str : str + '\n';
 		previousOutput = output;
 		previousLineCount = output.split('\n').length;
 	};
@@ -60,7 +66,7 @@ const createStandard = (
 
 const createIncremental = (
 	stream: Writable,
-	{showCursor = false} = {},
+	{showCursor = false, fullscreen = false} = {},
 ): LogUpdate => {
 	let previousLines: string[] = [];
 	let previousOutput = '';
@@ -72,7 +78,8 @@ const createIncremental = (
 			hasHiddenCursor = true;
 		}
 
-		const output = str + '\n';
+		// In fullscreen mode, don't add trailing newline to prevent first line cutoff
+		const output = fullscreen ? str : str + '\n';
 		if (output === previousOutput) {
 			return;
 		}
@@ -80,9 +87,9 @@ const createIncremental = (
 		const previousCount = previousLines.length;
 		const nextLines = output.split('\n');
 		const nextCount = nextLines.length;
-		const visibleCount = nextCount - 1;
+		const visibleCount = fullscreen ? nextCount : nextCount - 1;
 
-		if (output === '\n' || previousOutput.length === 0) {
+		if ((!fullscreen && output === '\n') || previousOutput.length === 0) {
 			stream.write(ansiEscapes.eraseLines(previousCount) + output);
 			previousOutput = output;
 			previousLines = nextLines;
@@ -101,7 +108,9 @@ const createIncremental = (
 				ansiEscapes.cursorUp(visibleCount),
 			);
 		} else {
-			buffer.push(ansiEscapes.cursorUp(previousCount - 1));
+			buffer.push(
+				ansiEscapes.cursorUp(fullscreen ? previousCount : previousCount - 1),
+			);
 		}
 
 		for (let i = 0; i < visibleCount; i++) {
@@ -132,6 +141,11 @@ const createIncremental = (
 	};
 
 	render.done = () => {
+		// In fullscreen mode, add a newline on exit so subsequent output starts on a new line
+		if (fullscreen) {
+			stream.write('\n');
+		}
+
 		previousOutput = '';
 		previousLines = [];
 
@@ -142,7 +156,7 @@ const createIncremental = (
 	};
 
 	render.sync = (str: string) => {
-		const output = str + '\n';
+		const output = fullscreen ? str : str + '\n';
 		previousOutput = output;
 		previousLines = output.split('\n');
 	};
@@ -152,13 +166,13 @@ const createIncremental = (
 
 const create = (
 	stream: Writable,
-	{showCursor = false, incremental = false} = {},
+	{showCursor = false, incremental = false, fullscreen = false} = {},
 ): LogUpdate => {
 	if (incremental) {
-		return createIncremental(stream, {showCursor});
+		return createIncremental(stream, {showCursor, fullscreen});
 	}
 
-	return createStandard(stream, {showCursor});
+	return createStandard(stream, {showCursor, fullscreen});
 };
 
 const logUpdate = {create};

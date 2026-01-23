@@ -74,6 +74,14 @@ export type RenderOptions = {
 	@default false
 	*/
 	incrementalRendering?: boolean;
+
+	/**
+	Enable fullscreen mode for terminal applications that use the entire screen.
+	In fullscreen mode, trailing newlines are not added to prevent the first line from being cut off.
+
+	@default false
+	*/
+	fullscreen?: boolean;
 };
 
 export type Instance = {
@@ -116,6 +124,7 @@ const render = (
 		patchConsole: true,
 		maxFps: 30,
 		incrementalRendering: false,
+		fullscreen: false,
 		...getOptions(options),
 	};
 

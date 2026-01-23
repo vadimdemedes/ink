@@ -9,7 +9,7 @@ test('standard rendering - renders and updates output', t => {
 
 	render('Hello');
 	t.is((stdout.write as any).callCount, 1);
-	t.is((stdout.write as any).firstCall.args[0], 'Hello');
+	t.is((stdout.write as any).firstCall.args[0], 'Hello\n');
 
 	render('World');
 	t.is((stdout.write as any).callCount, 2);
