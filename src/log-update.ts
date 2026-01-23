@@ -23,7 +23,7 @@ const createStandard = (
 			hasHiddenCursor = true;
 		}
 
-		const output = str + '\n';
+		const output = str;
 		if (output === previousOutput) {
 			return;
 		}
@@ -50,7 +50,7 @@ const createStandard = (
 	};
 
 	render.sync = (str: string) => {
-		const output = str + '\n';
+		const output = str;
 		previousOutput = output;
 		previousLineCount = output.split('\n').length;
 	};

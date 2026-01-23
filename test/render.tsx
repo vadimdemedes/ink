@@ -217,7 +217,7 @@ test.serial('clear output', async t => {
 	const ps = term('clear');
 	await ps.waitForExit();
 
-	const secondFrame = ps.output.split(ansiEscapes.eraseLines(4))[1];
+	const secondFrame = ps.output.split(ansiEscapes.eraseLines(3))[1];
 
 	for (const letter of ['A', 'B', 'C']) {
 		t.false(secondFrame?.includes(letter));
@@ -230,13 +230,13 @@ test.serial(
 		const ps = term('console');
 		await ps.waitForExit();
 
-		const frames = ps.output.split(ansiEscapes.eraseLines(2)).map(line => {
+		const frames = ps.output.split(ansiEscapes.eraseLines(1)).map(line => {
 			return stripAnsi(line);
 		});
 
 		t.deepEqual(frames, [
-			'Hello World\r\n',
-			'First log\r\nHello World\r\nSecond log\r\n',
+			'Hello World',
+			'First log\r\nHello WorldSecond log\r\n',
 		]);
 	},
 );
@@ -256,7 +256,7 @@ test.serial('rerender on resize', async t => {
 
 	t.is(
 		stripAnsi((stdout.write as any).firstCall.args[0] as string),
-		boxen('Test'.padEnd(8), {borderStyle: 'round'}) + '\n',
+		boxen('Test'.padEnd(8), {borderStyle: 'round'}),
 	);
 
 	t.is(stdout.listeners('resize').length, 1);
@@ -267,7 +267,7 @@ test.serial('rerender on resize', async t => {
 
 	t.is(
 		stripAnsi((stdout.write as any).lastCall.args[0] as string),
-		boxen('Test'.padEnd(6), {borderStyle: 'round'}) + '\n',
+		boxen('Test'.padEnd(6), {borderStyle: 'round'}),
 	);
 
 	unmount();
@@ -290,10 +290,7 @@ test.serial('throttle renders to maxFps', t => {
 
 		// Initial render (leading call)
 		t.is((stdout.write as any).callCount, 1);
-		t.is(
-			stripAnsi((stdout.write as any).lastCall.args[0] as string),
-			'Hello\n',
-		);
+		t.is(stripAnsi((stdout.write as any).lastCall.args[0] as string), 'Hello');
 
 		// Trigger another render inside the throttle window
 		rerender(<ThrottleTestComponent text="World" />);
@@ -306,10 +303,7 @@ test.serial('throttle renders to maxFps', t => {
 		// Cross the boundary: trailing render fires once
 		clock.tick(1);
 		t.is((stdout.write as any).callCount, 2);
-		t.is(
-			stripAnsi((stdout.write as any).lastCall.args[0] as string),
-			'World\n',
-		);
+		t.is(stripAnsi((stdout.write as any).lastCall.args[0] as string), 'World');
 
 		unmount();
 	} finally {

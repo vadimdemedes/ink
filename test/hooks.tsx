@@ -323,10 +323,10 @@ test.serial('useStdout - write to stdout', async t => {
 
 	const lines = stripAnsi(ps.output).split('\r\n');
 
+	// Note: Without trailing newline on render, "Hello World" and "exited" are on the same line
 	t.deepEqual(lines.slice(1, -1), [
 		'Hello from Ink to stdout',
-		'Hello World',
-		'exited',
+		'Hello Worldexited',
 	]);
 });
 
