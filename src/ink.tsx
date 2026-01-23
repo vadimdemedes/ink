@@ -43,6 +43,7 @@ export type Options = {
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
 	incrementalRendering?: boolean;
+
 	/**
 	 * Enable React Concurrent Rendering mode.
 	 *
