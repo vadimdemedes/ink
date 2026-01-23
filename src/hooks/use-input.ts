@@ -89,7 +89,9 @@ export type Key = {
 
 	/**
 	Super key (Windows/Command/Meta key) was pressed.
+
 	This modifier is only detected when the terminal supports the Kitty keyboard protocol.
+
 	In legacy mode, this will always be `false`.
 	*/
 	super: boolean;
@@ -177,12 +179,13 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				super: keypress.super ?? false,
 			};
 
-			// For ctrl sequences, use name. For Kitty protocol sequences (which start with ESC[
-			// and end with 'u'), use name since sequence contains the raw escape code.
+			// For `ctrl` sequences, use `name`. For Kitty protocol sequences (which start with `ESC[`
+			// and end with `u`), use `name` since sequence contains the raw escape code.
 			// Otherwise use the raw sequence.
 			const isKittySequence =
 				keypress.sequence.startsWith('\u001B[') &&
 				keypress.sequence.endsWith('u');
+
 			let input =
 				keypress.ctrl || isKittySequence ? keypress.name : keypress.sequence;
 
