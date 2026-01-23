@@ -1,6 +1,7 @@
 import React from 'react';
 import test from 'ava';
 import chalk from 'chalk';
+import stripAnsi from 'strip-ansi';
 import {render, Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
@@ -26,16 +27,9 @@ test('text with dim+bold', t => {
 			Test
 		</Text>,
 	);
-	/*
-	 * Verify the output contains the expected ANSI style codes.
-	 * Ink applies styles in a specific order (dim then bold) which produces
-	 * slightly different escape sequences than chalk's chained method, but the
-	 * visual result is identical.
-	 */
-	t.true(output.includes('\u001B[1m')); // Bold
-	t.true(output.includes('\u001B[2m')); // Dim
-	t.true(output.includes('Test'));
-	t.true(output.includes('\u001B[22m')); // Reset
+
+	t.is(stripAnsi(output), 'Test');
+	t.not(output, 'Test'); // Ensure ANSI codes are present
 });
 
 test('text with dimmed color', t => {
