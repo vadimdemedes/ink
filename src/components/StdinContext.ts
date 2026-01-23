@@ -18,6 +18,12 @@ export type Props = {
 	*/
 	readonly isRawModeSupported: boolean;
 
+	/**
+	A boolean flag indicating whether the terminal supports the Kitty keyboard protocol.
+	When true, enhanced key parsing with better modifier detection is available.
+	*/
+	readonly isKittyProtocolSupported: boolean;
+
 	readonly internal_exitOnCtrlC: boolean;
 
 	readonly internal_eventEmitter: EventEmitter;
@@ -33,6 +39,7 @@ const StdinContext = createContext<Props>({
 	internal_eventEmitter: new EventEmitter(),
 	setRawMode() {},
 	isRawModeSupported: false,
+	isKittyProtocolSupported: false,
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	internal_exitOnCtrlC: true,
 });

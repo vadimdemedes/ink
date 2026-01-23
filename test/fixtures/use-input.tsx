@@ -151,6 +151,53 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		// Kitty keyboard protocol test cases
+
+		// Test that shift+enter is distinguishable from plain enter
+		// This is a key benefit of the Kitty protocol
+		if (test === 'kittyShiftEnter' && key.return && key.shift) {
+			exit();
+			return;
+		}
+
+		// Test that ctrl+i is distinguishable from tab
+		// In legacy mode, ctrl+i sends the same code as tab (\t)
+		// With Kitty protocol, we can distinguish them
+		if (test === 'kittyCtrlI' && input === 'i' && key.ctrl && !key.tab) {
+			exit();
+			return;
+		}
+
+		// Test basic Kitty sequence parsing for a letter
+		if (
+			test === 'kittyBasicLetter' &&
+			input === 'a' &&
+			!key.ctrl &&
+			!key.shift &&
+			!key.meta
+		) {
+			exit();
+			return;
+		}
+
+		// Test alt modifier with Kitty protocol
+		if (test === 'kittyAltLetter' && input === 'a' && key.meta && !key.ctrl) {
+			exit();
+			return;
+		}
+
+		// Test super modifier (only available via Kitty protocol)
+		if (test === 'kittySuperKey' && input === 'a' && key.super && !key.ctrl) {
+			exit();
+			return;
+		}
+
+		// Test combined modifiers (ctrl+alt)
+		if (test === 'kittyCtrlAlt' && input === 'a' && key.ctrl && key.meta) {
+			exit();
+			return;
+		}
+
 		throw new Error('Crash');
 	});
 
