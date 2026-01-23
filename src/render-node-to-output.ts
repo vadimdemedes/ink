@@ -1,4 +1,4 @@
-import widestLine from 'widest-line';
+import widestLine from './widest-line.js';
 import indentString from 'indent-string';
 import Yoga from 'yoga-layout';
 import wrapText from './wrap-text.js';

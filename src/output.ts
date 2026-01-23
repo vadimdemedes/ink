@@ -1,6 +1,6 @@
 import sliceAnsi from 'slice-ansi';
 import stringWidth from 'string-width';
-import widestLine from 'widest-line';
+import widestLine from './widest-line.js';
 import {
 	type StyledChar,
 	styledCharsFromTokens,

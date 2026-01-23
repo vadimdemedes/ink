@@ -63,7 +63,6 @@
 		"string-width": "^8.1.0",
 		"terminal-size": "^4.0.0",
 		"type-fest": "^4.27.0",
-		"widest-line": "^5.0.0",
 		"wrap-ansi": "^9.0.0",
 		"ws": "^8.18.0",
 		"yoga-layout": "~3.2.1"
