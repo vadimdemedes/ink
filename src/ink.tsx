@@ -473,10 +473,10 @@ export default class Ink {
 	}
 
 	/**
-	 * Detect if the terminal supports the Kitty keyboard protocol.
-	 * This sends a query sequence and waits for a response with a timeout.
-	 * If supported, enables the protocol.
-	 */
+	Detect if the terminal supports the Kitty keyboard protocol.
+	This sends a query sequence and waits for a response with a timeout.
+	If supported, enables the protocol.
+	*/
 	async detectKittyProtocol(): Promise<void> {
 		const {stdin, stdout} = this.options;
 
@@ -535,8 +535,8 @@ export default class Ink {
 	}
 
 	/**
-	 * Enable the Kitty keyboard protocol by sending the opt-in sequence.
-	 */
+	Enable the Kitty keyboard protocol by sending the opt-in sequence.
+	*/
 	enableKittyProtocol(): void {
 		if (this.isKittyProtocolEnabled || this.isUnmounted) {
 			return;
@@ -547,9 +547,9 @@ export default class Ink {
 	}
 
 	/**
-	 * Disable the Kitty keyboard protocol by sending the opt-out sequence.
-	 * This restores the terminal to its original mode.
-	 */
+	Disable the Kitty keyboard protocol by sending the opt-out sequence.
+	This restores the terminal to its original mode.
+	*/
 	disableKittyProtocol(): void {
 		if (!this.isKittyProtocolEnabled) {
 			return;
