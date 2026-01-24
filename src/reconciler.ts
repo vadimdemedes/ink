@@ -235,6 +235,7 @@ export default createReconciler<
 	supportsPersistence: false,
 	supportsHydration: false,
 	// Scheduler integration for concurrent mode
+	supportsMicrotasks: true,
 	scheduleMicrotask: queueMicrotask,
 	// @ts-expect-error @types/react-reconciler is outdated and doesn't include scheduleCallback
 	scheduleCallback: Scheduler.unstable_scheduleCallback,
