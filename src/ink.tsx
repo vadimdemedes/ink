@@ -123,7 +123,6 @@ export default class Ink {
 			() => {},
 			() => {},
 			() => {},
-			null,
 		);
 
 		// Unmount when process exits
@@ -317,11 +316,8 @@ export default class Ink {
 			</AccessibilityContext.Provider>
 		);
 
-		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		reconciler.updateContainerSync(tree, this.container, null, noop);
-		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
 		reconciler.flushSyncWork();
 	}
 
@@ -394,11 +390,8 @@ export default class Ink {
 
 		this.isUnmounted = true;
 
-		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		reconciler.updateContainerSync(null, this.container, null, noop);
-		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
 		reconciler.flushSyncWork();
 		instances.delete(this.options.stdout);
 
