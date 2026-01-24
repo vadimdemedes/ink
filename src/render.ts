@@ -76,12 +76,14 @@ export type RenderOptions = {
 	incrementalRendering?: boolean;
 
 	/**
-	Disable Kitty keyboard protocol detection and usage.
-	When true, Ink will not attempt to detect or enable the Kitty protocol.
+	Enable Kitty keyboard protocol detection and usage.
+	When true, Ink will attempt to detect and enable the Kitty protocol
+	for enhanced keyboard handling in supported terminals.
 
 	@default false
 	*/
-	disableKittyProtocol?: boolean;
+	// TODO: Enable by default in next major version
+	useKittyProtocol?: boolean;
 };
 
 export type Instance = {
@@ -124,7 +126,7 @@ const render = (
 		patchConsole: true,
 		maxFps: 30,
 		incrementalRendering: false,
-		disableKittyProtocol: false,
+		useKittyProtocol: false,
 		...getOptions(options),
 	};
 

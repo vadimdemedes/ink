@@ -45,11 +45,13 @@ export type Options = {
 	maxFps?: number;
 	incrementalRendering?: boolean;
 	/**
-	Disable Kitty keyboard protocol detection and usage.
-	When true, Ink will not attempt to detect or enable the Kitty protocol.
+	Enable Kitty keyboard protocol detection and usage.
+	When true, Ink will attempt to detect and enable the Kitty protocol
+	for enhanced keyboard handling in supported terminals.
 	@default false
 	*/
-	disableKittyProtocol?: boolean;
+	// TODO: Enable by default in next major version
+	useKittyProtocol?: boolean;
 };
 
 // Timeout for Kitty keyboard protocol detection (in milliseconds)
@@ -169,11 +171,7 @@ export default class Ink {
 		// Skip in CI/test environments as detection can interfere with test input handling
 		const isTestEnvironment =
 			isInCi || process.env['GITHUB_ACTIONS'] !== undefined;
-		if (
-			!options.disableKittyProtocol &&
-			options.stdin.isTTY &&
-			!isTestEnvironment
-		) {
+		if (options.useKittyProtocol && options.stdin.isTTY && !isTestEnvironment) {
 			void this.detectKittyProtocol();
 		}
 	}
@@ -483,7 +481,7 @@ export default class Ink {
 		const {stdin, stdout} = this.options;
 
 		// Skip detection if disabled, stdin doesn't support raw mode, or already unmounted
-		if (this.options.disableKittyProtocol === true) {
+		if (!this.options.useKittyProtocol) {
 			return;
 		}
 
