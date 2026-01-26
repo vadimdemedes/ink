@@ -1,7 +1,10 @@
 import React from 'react';
 import test from 'ava';
 import {Box, Text} from '../src/index.js';
-import {renderToString} from './helpers/render-to-string.js';
+import {
+	renderToString,
+	renderToStringAsync,
+} from './helpers/render-to-string.js';
 
 test('set width', t => {
 	const output = renderToString(
@@ -119,4 +122,29 @@ test('set min height', t => {
 	);
 
 	t.is(largerOutput, 'A\n\n\n');
+});
+
+// Concurrent mode tests
+test('set width - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box>
+			<Box width={5}>
+				<Text>A</Text>
+			</Box>
+			<Text>B</Text>
+		</Box>,
+	);
+
+	t.is(output, 'A    B');
+});
+
+test('set height - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box height={4}>
+			<Text>A</Text>
+			<Text>B</Text>
+		</Box>,
+	);
+
+	t.is(output, 'AB\n\n\n');
 });
