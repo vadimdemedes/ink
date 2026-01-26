@@ -11,7 +11,7 @@ export type LogUpdate = {
 
 const createStandard = (
 	stream: Writable,
-	{showCursor = false, fullscreen = false} = {},
+	{showCursor = false} = {},
 ): LogUpdate => {
 	let previousLineCount = 0;
 	let previousOutput = '';
@@ -23,8 +23,10 @@ const createStandard = (
 			hasHiddenCursor = true;
 		}
 
-		// In fullscreen mode, don't add trailing newline to prevent first line cutoff
-		const output = fullscreen ? str : str + '\n';
+		// Detect if input already has trailing newline (automatic fullscreen detection)
+		// If not, add one for proper cursor positioning in non-fullscreen mode
+		const hasTrailingNewline = str.endsWith('\n');
+		const output = hasTrailingNewline ? str : str + '\n';
 		if (output === previousOutput) {
 			return;
 		}
@@ -41,8 +43,14 @@ const createStandard = (
 	};
 
 	render.done = () => {
-		// In fullscreen mode, add a newline on exit so subsequent output starts on a new line
-		if (fullscreen) {
+		// If the last output didn't have a trailing newline (fullscreen mode),
+		// add one on exit so subsequent console output starts on a new line
+		const needsTrailingNewline =
+			previousOutput.length > 0 &&
+			!previousOutput.endsWith('\n\n') &&
+			!previousOutput.endsWith('\n');
+
+		if (needsTrailingNewline) {
 			stream.write('\n');
 		}
 
@@ -56,7 +64,8 @@ const createStandard = (
 	};
 
 	render.sync = (str: string) => {
-		const output = fullscreen ? str : str + '\n';
+		const hasTrailingNewline = str.endsWith('\n');
+		const output = hasTrailingNewline ? str : str + '\n';
 		previousOutput = output;
 		previousLineCount = output.split('\n').length;
 	};
@@ -66,7 +75,7 @@ const createStandard = (
 
 const createIncremental = (
 	stream: Writable,
-	{showCursor = false, fullscreen = false} = {},
+	{showCursor = false} = {},
 ): LogUpdate => {
 	let previousLines: string[] = [];
 	let previousOutput = '';
@@ -78,8 +87,9 @@ const createIncremental = (
 			hasHiddenCursor = true;
 		}
 
-		// In fullscreen mode, don't add trailing newline to prevent first line cutoff
-		const output = fullscreen ? str : str + '\n';
+		// Detect if input already has trailing newline (automatic fullscreen detection)
+		const hasTrailingNewline = str.endsWith('\n');
+		const output = hasTrailingNewline ? str : str + '\n';
 		if (output === previousOutput) {
 			return;
 		}
@@ -87,14 +97,24 @@ const createIncremental = (
 		const previousCount = previousLines.length;
 		const nextLines = output.split('\n');
 		const nextCount = nextLines.length;
-		const visibleCount = fullscreen ? nextCount : nextCount - 1;
+		// In fullscreen mode (no trailing newline added), we count all lines as visible
+		// In non-fullscreen mode, the last empty line from the added newline is not visible
+		const visibleCount = hasTrailingNewline ? nextCount : nextCount - 1;
 
-		if ((!fullscreen && output === '\n') || previousOutput.length === 0) {
+		const isEmptyNonFullscreen = !hasTrailingNewline && output === '\n';
+		if (isEmptyNonFullscreen || previousOutput.length === 0) {
 			stream.write(ansiEscapes.eraseLines(previousCount) + output);
 			previousOutput = output;
 			previousLines = nextLines;
 			return;
 		}
+
+		// Detect if previous output had trailing newline
+		const previousHadTrailingNewline =
+			previousOutput.endsWith('\n') && !previousOutput.endsWith('\n\n');
+		const previousVisibleCount = previousHadTrailingNewline
+			? previousCount
+			: previousCount - 1;
 
 		// We aggregate all chunks for incremental rendering into a buffer, and then write them to stdout at the end.
 		const buffer: string[] = [];
@@ -108,9 +128,7 @@ const createIncremental = (
 				ansiEscapes.cursorUp(visibleCount),
 			);
 		} else {
-			buffer.push(
-				ansiEscapes.cursorUp(fullscreen ? previousCount : previousCount - 1),
-			);
+			buffer.push(ansiEscapes.cursorUp(Math.max(0, previousVisibleCount)));
 		}
 
 		for (let i = 0; i < visibleCount; i++) {
@@ -141,8 +159,14 @@ const createIncremental = (
 	};
 
 	render.done = () => {
-		// In fullscreen mode, add a newline on exit so subsequent output starts on a new line
-		if (fullscreen) {
+		// If the last output didn't have a trailing newline (fullscreen mode),
+		// add one on exit so subsequent console output starts on a new line
+		const needsTrailingNewline =
+			previousOutput.length > 0 &&
+			!previousOutput.endsWith('\n\n') &&
+			!previousOutput.endsWith('\n');
+
+		if (needsTrailingNewline) {
 			stream.write('\n');
 		}
 
@@ -156,7 +180,8 @@ const createIncremental = (
 	};
 
 	render.sync = (str: string) => {
-		const output = fullscreen ? str : str + '\n';
+		const hasTrailingNewline = str.endsWith('\n');
+		const output = hasTrailingNewline ? str : str + '\n';
 		previousOutput = output;
 		previousLines = output.split('\n');
 	};
@@ -166,13 +191,13 @@ const createIncremental = (
 
 const create = (
 	stream: Writable,
-	{showCursor = false, incremental = false, fullscreen = false} = {},
+	{showCursor = false, incremental = false} = {},
 ): LogUpdate => {
 	if (incremental) {
-		return createIncremental(stream, {showCursor, fullscreen});
+		return createIncremental(stream, {showCursor});
 	}
 
-	return createStandard(stream, {showCursor, fullscreen});
+	return createStandard(stream, {showCursor});
 };
 
 const logUpdate = {create};
