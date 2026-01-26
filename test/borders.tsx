@@ -65,6 +65,17 @@ test('single node - fit-content box with emojis', t => {
 	t.is(output, boxen('🌊🌊', {borderStyle: 'round'}));
 });
 
+// Issue #733: Emojis with variation selectors (FE0F) should align properly
+test('single node - fit-content box with variation selector emojis', t => {
+	const output = renderToString(
+		<Box borderStyle="round" alignSelf="flex-start">
+			<Text>🌡️⚠️✅</Text>
+		</Box>,
+	);
+
+	t.is(output, boxen('🌡️⚠️✅', {borderStyle: 'round'}));
+});
+
 test('single node - fixed width box', t => {
 	const output = renderToString(
 		<Box borderStyle="round" width={20}>
@@ -874,7 +885,7 @@ test('dim right border color', t => {
 });
 
 // Regression test for https://github.com/vadimdemedes/ink/issues/840
-// borderDimColor should only dim the border, not styled child Text components
+// borderDimColor should not dim styled child Text components touching the left edge
 test('borderDimColor does not dim styled child Text touching left edge', t => {
 	const output = renderToString(
 		<Box borderDimColor borderStyle="round" alignSelf="flex-start">
@@ -884,16 +895,19 @@ test('borderDimColor does not dim styled child Text touching left edge', t => {
 		</Box>,
 	);
 
-	// The border should be dimmed, but the text should retain its blue color and bold styling
-	// Text should NOT be dimmed
+	// The styled text should be bold and blue (not dimmed)
+	// Note: Text component applies color first then bold, so the escape code order is bold+blue
+	const styledText = chalk.bold(chalk.blue('styled text'));
 	t.true(
-		output.includes(chalk.blue.bold('styled text')),
-		'Child text should retain its color and bold styling when borderDimColor is used',
+		output.includes(styledText),
+		'Child text should retain its color and bold styling, not be dimmed',
 	);
 
-	// Border should be dimmed
-	t.true(
-		output.includes(chalk.dim(cliBoxes.round.topLeft)),
-		'Border should be dimmed',
+	// The border should be dimmed (entire top border line is dimmed as a unit)
+	const dimmedTopBorder = chalk.dim(
+		cliBoxes.round.topLeft +
+			cliBoxes.round.top.repeat(11) +
+			cliBoxes.round.topRight,
 	);
+	t.true(output.includes(dimmedTopBorder), 'Border should be dimmed');
 });
