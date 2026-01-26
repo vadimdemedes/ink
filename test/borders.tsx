@@ -65,6 +65,17 @@ test('single node - fit-content box with emojis', t => {
 	t.is(output, boxen('🌊🌊', {borderStyle: 'round'}));
 });
 
+// Issue #733: Emojis with variation selectors (FE0F) should align properly
+test('single node - fit-content box with variation selector emojis', t => {
+	const output = renderToString(
+		<Box borderStyle="round" alignSelf="flex-start">
+			<Text>🌡️⚠️✅</Text>
+		</Box>,
+	);
+
+	t.is(output, boxen('🌡️⚠️✅', {borderStyle: 'round'}));
+});
+
 test('single node - fixed width box', t => {
 	const output = renderToString(
 		<Box borderStyle="round" width={20}>
