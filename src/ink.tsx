@@ -1,6 +1,6 @@
 import process from 'node:process';
 import React, {type ReactNode} from 'react';
-import {throttle} from 'es-toolkit/compat';
+import {throttle, type DebouncedFunc} from 'es-toolkit/compat';
 import ansiEscapes from 'ansi-escapes';
 import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
@@ -48,7 +48,7 @@ export type Options = {
 export default class Ink {
 	private readonly options: Options;
 	private readonly log: LogUpdate;
-	private readonly throttledLog: LogUpdate;
+	private readonly throttledLog: LogUpdate | DebouncedFunc<LogUpdate>;
 	private readonly isScreenReaderEnabled: boolean;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
@@ -64,6 +64,8 @@ export default class Ink {
 	private exitPromise?: Promise<void>;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
+	// Store reference to throttled onRender for flushing
+	private readonly throttledOnRender?: DebouncedFunc<() => void>;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -81,12 +83,17 @@ export default class Ink {
 		const renderThrottleMs =
 			maxFps > 0 ? Math.max(1, Math.ceil(1000 / maxFps)) : 0;
 
-		this.rootNode.onRender = unthrottled
-			? this.onRender
-			: throttle(this.onRender, renderThrottleMs, {
-					leading: true,
-					trailing: true,
-				});
+		if (unthrottled) {
+			this.rootNode.onRender = this.onRender;
+			this.throttledOnRender = undefined;
+		} else {
+			const throttled = throttle(this.onRender, renderThrottleMs, {
+				leading: true,
+				trailing: true,
+			});
+			this.rootNode.onRender = throttled;
+			this.throttledOnRender = throttled;
+		}
 
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout, {
@@ -97,7 +104,7 @@ export default class Ink {
 			: (throttle(this.log, undefined, {
 					leading: true,
 					trailing: true,
-				}) as unknown as LogUpdate);
+				}) as unknown as DebouncedFunc<LogUpdate>);
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
@@ -433,6 +440,34 @@ export default class Ink {
 				if (!isReactMessage) {
 					this.writeToStderr(data);
 				}
+			}
+		});
+	}
+
+	/**
+	 * Flush any pending renders to ensure all output is written immediately.
+	 * This is useful before process exit to ensure the final render is displayed.
+	 *
+	 * @returns A promise that resolves when stdout has been flushed
+	 */
+	async flush(): Promise<void> {
+		// Flush pending throttled render calls
+		if (this.throttledOnRender) {
+			this.throttledOnRender.flush();
+		}
+
+		// Flush pending throttled log calls
+		const throttledLog = this.throttledLog as DebouncedFunc<LogUpdate>;
+		if (typeof throttledLog.flush === 'function') {
+			throttledLog.flush();
+		}
+
+		// Wait for stdout to drain
+		return new Promise<void>(resolve => {
+			if (this.options.stdout.writableNeedDrain) {
+				this.options.stdout.once('drain', resolve);
+			} else {
+				resolve();
 			}
 		});
 	}
