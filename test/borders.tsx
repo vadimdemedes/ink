@@ -872,3 +872,28 @@ test('dim right border color', t => {
 		].join('\n'),
 	);
 });
+
+// Regression test for https://github.com/vadimdemedes/ink/issues/840
+// borderDimColor should only dim the border, not styled child Text components
+test('borderDimColor does not dim styled child Text touching left edge', t => {
+	const output = renderToString(
+		<Box borderDimColor borderStyle="round" alignSelf="flex-start">
+			<Text bold color="blue">
+				styled text
+			</Text>
+		</Box>,
+	);
+
+	// The border should be dimmed, but the text should retain its blue color and bold styling
+	// Text should NOT be dimmed
+	t.true(
+		output.includes(chalk.blue.bold('styled text')),
+		'Child text should retain its color and bold styling when borderDimColor is used',
+	);
+
+	// Border should be dimmed
+	t.true(
+		output.includes(chalk.dim(cliBoxes.round.topLeft)),
+		'Border should be dimmed',
+	);
+});
