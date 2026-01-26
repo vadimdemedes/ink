@@ -1,6 +1,6 @@
 import process from 'node:process';
 import React, {type ReactNode} from 'react';
-import {throttle} from 'es-toolkit/compat';
+import {throttle, type DebouncedFunc} from 'es-toolkit/compat';
 import ansiEscapes from 'ansi-escapes';
 import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
@@ -68,7 +68,7 @@ export default class Ink {
 
 	private readonly options: Options;
 	private readonly log: LogUpdate;
-	private readonly throttledLog: LogUpdate;
+	private readonly throttledLog: LogUpdate | DebouncedFunc<LogUpdate>;
 	private readonly isScreenReaderEnabled: boolean;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
@@ -84,6 +84,8 @@ export default class Ink {
 	private exitPromise?: Promise<void>;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
+	// Store reference to throttled onRender for flushing
+	private readonly throttledOnRender?: DebouncedFunc<() => void>;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -101,12 +103,17 @@ export default class Ink {
 		const renderThrottleMs =
 			maxFps > 0 ? Math.max(1, Math.ceil(1000 / maxFps)) : 0;
 
-		this.rootNode.onRender = unthrottled
-			? this.onRender
-			: throttle(this.onRender, renderThrottleMs, {
-					leading: true,
-					trailing: true,
-				});
+		if (unthrottled) {
+			this.rootNode.onRender = this.onRender;
+			this.throttledOnRender = undefined;
+		} else {
+			const throttled = throttle(this.onRender, renderThrottleMs, {
+				leading: true,
+				trailing: true,
+			});
+			this.rootNode.onRender = throttled;
+			this.throttledOnRender = throttled;
+		}
 
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout, {
@@ -117,7 +124,7 @@ export default class Ink {
 			: (throttle(this.log, undefined, {
 					leading: true,
 					trailing: true,
-				}) as unknown as LogUpdate);
+				}) as unknown as DebouncedFunc<LogUpdate>);
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
@@ -399,6 +406,11 @@ export default class Ink {
 			return;
 		}
 
+		// Flush any pending throttled render to ensure the final frame is rendered
+		if (this.throttledOnRender) {
+			this.throttledOnRender.flush();
+		}
+
 		this.calculateLayout();
 		this.onRender();
 		this.unsubscribeExit();
@@ -409,6 +421,12 @@ export default class Ink {
 
 		if (typeof this.unsubscribeResize === 'function') {
 			this.unsubscribeResize();
+		}
+
+		// Flush any pending throttled log writes
+		const throttledLog = this.throttledLog as DebouncedFunc<LogUpdate>;
+		if (typeof throttledLog.flush === 'function') {
+			throttledLog.flush();
 		}
 
 		// CIs don't handle erasing ansi escapes well, so it's better to
@@ -432,10 +450,20 @@ export default class Ink {
 
 		instances.delete(this.options.stdout);
 
-		if (error instanceof Error) {
-			this.rejectExitPromise(error);
+		// Wait for stdout to drain before resolving the exit promise,
+		// ensuring all buffered writes are flushed to the terminal
+		const resolveOrReject = () => {
+			if (error instanceof Error) {
+				this.rejectExitPromise(error);
+			} else {
+				this.resolveExitPromise();
+			}
+		};
+
+		if (this.options.stdout.writableNeedDrain) {
+			this.options.stdout.once('drain', resolveOrReject);
 		} else {
-			this.resolveExitPromise();
+			resolveOrReject();
 		}
 	}
 

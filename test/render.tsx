@@ -402,3 +402,39 @@ test.serial('no throttled renders after unmount', t => {
 		clock.uninstall();
 	}
 });
+
+test.serial('unmount forces pending throttled render', t => {
+	const clock = FakeTimers.install();
+	try {
+		const stdout = createStdout();
+
+		const {unmount, rerender} = render(<ThrottleTestComponent text="Hello" />, {
+			stdout,
+			maxFps: 1, // 1 Hz => ~1000 ms throttle window
+		});
+
+		// Initial render (leading call)
+		t.is((stdout.write as any).callCount, 1);
+		t.is(
+			stripAnsi((stdout.write as any).lastCall.args[0] as string),
+			'Hello\n',
+		);
+
+		// Trigger another render inside the throttle window
+		rerender(<ThrottleTestComponent text="Final" />);
+		// Not rendered yet due to throttling
+		t.is((stdout.write as any).callCount, 1);
+
+		// Unmount should flush the pending render so the final frame is visible
+		unmount();
+
+		// The final frame should have been rendered
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+		const allCalls: string[] = (stdout.write as any).args.map(
+			(args: string[]) => stripAnsi(args[0]!),
+		);
+		t.true(allCalls.some((call: string) => call.includes('Final')));
+	} finally {
+		clock.uninstall();
+	}
+});
