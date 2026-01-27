@@ -272,13 +272,22 @@ export default class Ink {
 			this.fullStaticOutput += staticOutput;
 		}
 
-		if (this.lastOutputHeight >= this.options.stdout.rows) {
+		// Automatically detect fullscreen mode: if output fills or exceeds terminal height,
+		// don't add trailing newline (prevents first line cutoff in fullscreen apps)
+		const terminalRows = this.options.stdout.rows || 24;
+		const isFullscreen = outputHeight >= terminalRows;
+		// In fullscreen mode, we pass output without trailing newline.
+		// In non-fullscreen mode, we pass output with trailing newline.
+		// log-update will detect this and handle cursor positioning accordingly.
+		const outputToRender = isFullscreen ? output : output + '\n';
+
+		if (this.lastOutputHeight >= terminalRows) {
 			this.options.stdout.write(
 				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
 			);
 			this.lastOutput = output;
 			this.lastOutputHeight = outputHeight;
-			this.log.sync(output);
+			this.log.sync(outputToRender);
 			return;
 		}
 
@@ -286,11 +295,11 @@ export default class Ink {
 		if (hasStaticOutput) {
 			this.log.clear();
 			this.options.stdout.write(staticOutput);
-			this.log(output);
+			this.log(outputToRender);
 		}
 
 		if (!hasStaticOutput && output !== this.lastOutput) {
-			this.throttledLog(output);
+			this.throttledLog(outputToRender);
 		}
 
 		this.lastOutput = output;
