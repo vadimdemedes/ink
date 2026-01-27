@@ -98,6 +98,14 @@ export type Instance = {
 	Clear output.
 	*/
 	clear: () => void;
+
+	/**
+	Flush any pending renders and wait for stdout to finish writing.
+	This is useful before process exit to ensure the final render is displayed.
+
+	@returns A promise that resolves when all pending output has been flushed.
+	*/
+	flush: () => Promise<void>;
 };
 
 /**
@@ -134,6 +142,7 @@ const render = (
 		waitUntilExit: instance.waitUntilExit,
 		cleanup: () => instances.delete(inkOptions.stdout),
 		clear: instance.clear,
+		flush: instance.flush,
 	};
 };
 
