@@ -18,6 +18,7 @@ import logUpdate, {type LogUpdate} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
+import {type KittyKeyboardOptions, kittyFlags} from './kitty-keyboard.js';
 
 const noop = () => {};
 
@@ -43,6 +44,7 @@ export type Options = {
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
 	incrementalRendering?: boolean;
+	kittyKeyboard?: KittyKeyboardOptions;
 };
 
 export default class Ink {
@@ -64,6 +66,7 @@ export default class Ink {
 	private exitPromise?: Promise<void>;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
+	private kittyProtocolEnabled = false;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -149,6 +152,8 @@ export default class Ink {
 				options.stdout.off('resize', this.resized);
 			};
 		}
+
+		this.initKittyKeyboard();
 	}
 
 	getTerminalWidth = () => {
@@ -380,6 +385,13 @@ export default class Ink {
 			this.unsubscribeResize();
 		}
 
+		// Disable kitty keyboard protocol if it was enabled
+		if (this.kittyProtocolEnabled) {
+			// CSI < u - pop keyboard mode
+			this.options.stdout.write('\u001B[<u');
+			this.kittyProtocolEnabled = false;
+		}
+
 		// CIs don't handle erasing ansi escapes well, so it's better to
 		// only render last frame of non-static output
 		if (isInCi) {
@@ -435,5 +447,47 @@ export default class Ink {
 				}
 			}
 		});
+	}
+
+	private initKittyKeyboard(): void {
+		const opts = this.options.kittyKeyboard ?? {mode: 'auto'};
+
+		if (opts.mode === 'disabled' || !this.options.stdin.isTTY) {
+			return;
+		}
+
+		if (opts.mode === 'enabled') {
+			this.enableKittyProtocol(
+				opts.flags ?? kittyFlags.disambiguateEscapeCodes,
+			);
+			return;
+		}
+
+		// Auto mode: detect support by checking for known supporting terminals
+		// Known indicators:
+		// - KITTY_WINDOW_ID env var (set by kitty terminal)
+		// - TERM=xterm-kitty (kitty terminal)
+		// - TERM_PROGRAM=WezTerm (WezTerm terminal)
+		// A more sophisticated implementation could send CSI ? u query
+		// and wait for a response to detect actual support
+		const term = process.env['TERM'] ?? '';
+		const termProgram = process.env['TERM_PROGRAM'] ?? '';
+		const hasKittyWindowId = 'KITTY_WINDOW_ID' in process.env;
+
+		const isKnownSupportingTerminal =
+			hasKittyWindowId || term === 'xterm-kitty' || termProgram === 'WezTerm';
+
+		if (!isInCi && this.options.stdin.isTTY && isKnownSupportingTerminal) {
+			this.enableKittyProtocol(
+				opts.flags ?? kittyFlags.disambiguateEscapeCodes,
+			);
+		}
+	}
+
+	private enableKittyProtocol(flags: number): void {
+		// Push keyboard mode with specified flags
+		// CSI > flags u - push keyboard mode
+		this.options.stdout.write(`\u001B[>${flags}u`);
+		this.kittyProtocolEnabled = true;
 	}
 }
