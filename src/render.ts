@@ -74,6 +74,18 @@ export type RenderOptions = {
 	@default false
 	*/
 	incrementalRendering?: boolean;
+
+	/**
+	Enable IME cursor position control.
+	When enabled, the terminal's real cursor will move to the input position,
+	allowing IME candidate windows to display at the correct position.
+	This is required for proper CJK (Chinese, Japanese, Korean) input support.
+
+	Use CURSOR_MARKER from 'ink' to mark the cursor position in your input component.
+
+	@default false
+	*/
+	enableImeCursor?: boolean;
 };
 
 export type Instance = {
@@ -116,6 +128,7 @@ const render = (
 		patchConsole: true,
 		maxFps: 30,
 		incrementalRendering: false,
+		enableImeCursor: false,
 		...getOptions(options),
 	};
 

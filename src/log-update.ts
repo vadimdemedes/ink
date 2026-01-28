@@ -1,6 +1,11 @@
 import {type Writable} from 'node:stream';
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
+import {
+	replaceMarkerWithSave,
+	getRestoreAndShowCursor,
+	getHideCursor,
+} from './cursor-marker.js';
 
 export type LogUpdate = {
 	clear: () => void;
@@ -9,15 +14,60 @@ export type LogUpdate = {
 	(str: string): void;
 };
 
+export type LogUpdateOptions = {
+	showCursor?: boolean;
+	incremental?: boolean;
+	/**
+	 * Enable IME cursor position control.
+	 * When enabled, the terminal's real cursor will move to the input position,
+	 * allowing IME candidate windows to display at the correct position (required for CJK input).
+	 * @default false
+	 */
+	enableImeCursor?: boolean;
+};
+
 const createStandard = (
 	stream: Writable,
-	{showCursor = false} = {},
+	{showCursor = false, enableImeCursor = false}: LogUpdateOptions = {},
 ): LogUpdate => {
 	let previousLineCount = 0;
 	let previousOutput = '';
 	let hasHiddenCursor = false;
+	let previousHadMarker = false;
 
 	const render = (str: string) => {
+		// Handle IME cursor mode
+		if (enableImeCursor) {
+			const {output: processed, hasMarker} = replaceMarkerWithSave(str);
+			const output = processed + '\n';
+
+			// Skip if nothing changed
+			if (output === previousOutput && hasMarker === previousHadMarker) {
+				return;
+			}
+
+			previousOutput = output;
+			previousHadMarker = hasMarker;
+
+			// Erase previous output and write new output
+			// The output contains \u001B[s (save cursor) at marker position
+			stream.write(ansiEscapes.eraseLines(previousLineCount) + output);
+
+			// After writing, restore cursor to saved position and show it
+			if (hasMarker) {
+				stream.write(getRestoreAndShowCursor());
+				hasHiddenCursor = false;
+			} else if (!hasHiddenCursor) {
+				// Hide cursor when no marker
+				stream.write(getHideCursor());
+				hasHiddenCursor = true;
+			}
+
+			previousLineCount = output.split('\n').length;
+			return;
+		}
+
+		// Original behavior when IME cursor is disabled
 		if (!showCursor && !hasHiddenCursor) {
 			cliCursor.hide();
 			hasHiddenCursor = true;
@@ -42,17 +92,26 @@ const createStandard = (
 	render.done = () => {
 		previousOutput = '';
 		previousLineCount = 0;
+		previousHadMarker = false;
 
-		if (!showCursor) {
+		if (!showCursor || enableImeCursor) {
 			cliCursor.show();
 			hasHiddenCursor = false;
 		}
 	};
 
 	render.sync = (str: string) => {
-		const output = str + '\n';
-		previousOutput = output;
-		previousLineCount = output.split('\n').length;
+		if (enableImeCursor) {
+			const {output: processed, hasMarker} = replaceMarkerWithSave(str);
+			const output = processed + '\n';
+			previousOutput = output;
+			previousLineCount = output.split('\n').length;
+			previousHadMarker = hasMarker;
+		} else {
+			const output = str + '\n';
+			previousOutput = output;
+			previousLineCount = output.split('\n').length;
+		}
 	};
 
 	return render;
@@ -60,13 +119,42 @@ const createStandard = (
 
 const createIncremental = (
 	stream: Writable,
-	{showCursor = false} = {},
+	{showCursor = false, enableImeCursor = false}: LogUpdateOptions = {},
 ): LogUpdate => {
 	let previousLines: string[] = [];
 	let previousOutput = '';
 	let hasHiddenCursor = false;
+	let previousHadMarker = false;
 
 	const render = (str: string) => {
+		// Handle IME cursor mode - use standard (non-incremental) rendering for simplicity
+		if (enableImeCursor) {
+			const {output: processed, hasMarker} = replaceMarkerWithSave(str);
+			const output = processed + '\n';
+
+			if (output === previousOutput && hasMarker === previousHadMarker) {
+				return;
+			}
+
+			previousOutput = output;
+			previousHadMarker = hasMarker;
+
+			// For IME mode, use simple full redraw to ensure cursor save/restore works correctly
+			stream.write(ansiEscapes.eraseLines(previousLines.length) + output);
+
+			if (hasMarker) {
+				stream.write(getRestoreAndShowCursor());
+				hasHiddenCursor = false;
+			} else if (!hasHiddenCursor) {
+				stream.write(getHideCursor());
+				hasHiddenCursor = true;
+			}
+
+			previousLines = output.split('\n');
+			return;
+		}
+
+		// Original incremental behavior
 		if (!showCursor && !hasHiddenCursor) {
 			cliCursor.hide();
 			hasHiddenCursor = true;
@@ -89,15 +177,11 @@ const createIncremental = (
 			return;
 		}
 
-		// We aggregate all chunks for incremental rendering into a buffer, and then write them to stdout at the end.
 		const buffer: string[] = [];
 
-		// Clear extra lines if the current content's line count is lower than the previous.
 		if (nextCount < previousCount) {
 			buffer.push(
-				// Erases the trailing lines and the final newline slot.
 				ansiEscapes.eraseLines(previousCount - nextCount + 1),
-				// Positions cursor to the top of the rendered output.
 				ansiEscapes.cursorUp(visibleCount),
 			);
 		} else {
@@ -105,7 +189,6 @@ const createIncremental = (
 		}
 
 		for (let i = 0; i < visibleCount; i++) {
-			// We do not write lines if the contents are the same. This prevents flickering during renders.
 			if (nextLines[i] === previousLines[i]) {
 				buffer.push(ansiEscapes.cursorNextLine);
 				continue;
@@ -134,17 +217,26 @@ const createIncremental = (
 	render.done = () => {
 		previousOutput = '';
 		previousLines = [];
+		previousHadMarker = false;
 
-		if (!showCursor) {
+		if (!showCursor || enableImeCursor) {
 			cliCursor.show();
 			hasHiddenCursor = false;
 		}
 	};
 
 	render.sync = (str: string) => {
-		const output = str + '\n';
-		previousOutput = output;
-		previousLines = output.split('\n');
+		if (enableImeCursor) {
+			const {output: processed, hasMarker} = replaceMarkerWithSave(str);
+			const output = processed + '\n';
+			previousOutput = output;
+			previousLines = output.split('\n');
+			previousHadMarker = hasMarker;
+		} else {
+			const output = str + '\n';
+			previousOutput = output;
+			previousLines = output.split('\n');
+		}
 	};
 
 	return render;
@@ -152,13 +244,17 @@ const createIncremental = (
 
 const create = (
 	stream: Writable,
-	{showCursor = false, incremental = false} = {},
+	{
+		showCursor = false,
+		incremental = false,
+		enableImeCursor = false,
+	}: LogUpdateOptions = {},
 ): LogUpdate => {
 	if (incremental) {
-		return createIncremental(stream, {showCursor});
+		return createIncremental(stream, {showCursor, enableImeCursor});
 	}
 
-	return createStandard(stream, {showCursor});
+	return createStandard(stream, {showCursor, enableImeCursor});
 };
 
 const logUpdate = {create};
