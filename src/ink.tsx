@@ -45,20 +45,25 @@ export type Options = {
 	incrementalRendering?: boolean;
 
 	/**
-	 * Enable React Concurrent Rendering mode.
-	 *
-	 * When enabled:
-	 * - Suspense boundaries work correctly with async data
-	 * - useTransition and useDeferredValue are fully functional
-	 * - Updates can be interrupted for higher priority work
-	 *
-	 * @default false
-	 * @experimental
+	 Enable React Concurrent Rendering mode.
+
+	 When enabled:
+	 - Suspense boundaries work correctly with async data
+	 - useTransition and useDeferredValue are fully functional
+	 - Updates can be interrupted for higher priority work
+
+	 @default false
+	 @experimental
 	 */
 	concurrent?: boolean;
 };
 
 export default class Ink {
+	/**
+	 * Whether this instance is using concurrent rendering mode.
+	 */
+	readonly isConcurrent: boolean;
+
 	private readonly options: Options;
 	private readonly log: LogUpdate;
 	private readonly throttledLog: LogUpdate;
@@ -114,6 +119,9 @@ export default class Ink {
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
+
+		// Store concurrent mode setting
+		this.isConcurrent = options.concurrent ?? false;
 
 		// Store last output to only rerender when needed
 		this.lastOutput = '';

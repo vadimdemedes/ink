@@ -2070,6 +2070,24 @@ Default: `false`
 Enable incremental rendering mode which only updates changed lines instead of redrawing the entire output.
 This can reduce flickering and improve performance for frequently updating UIs.
 
+###### concurrent
+
+Type: `boolean`\
+Default: `false`
+
+Enable React Concurrent Rendering mode.
+
+When enabled:
+- Suspense boundaries work correctly with async data fetching
+- `useTransition` and `useDeferredValue` hooks are fully functional
+- Updates can be interrupted for higher priority work
+
+```jsx
+render(<MyApp />, {concurrent: true});
+```
+
+**Note:** Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
+
 #### Instance
 
 This is the object that `render()` returns.

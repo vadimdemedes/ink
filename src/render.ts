@@ -138,6 +138,7 @@ const render = (
 	const instance: Ink = getInstance(
 		inkOptions.stdout,
 		() => new Ink(inkOptions),
+		inkOptions.concurrent ?? false,
 	);
 
 	instance.render(node);
@@ -171,12 +172,18 @@ const getOptions = (
 const getInstance = (
 	stdout: NodeJS.WriteStream,
 	createInstance: () => Ink,
+	concurrent: boolean,
 ): Ink => {
 	let instance = instances.get(stdout);
 
 	if (!instance) {
 		instance = createInstance();
 		instances.set(stdout, instance);
+	} else if (instance.isConcurrent !== concurrent) {
+		console.warn(
+			`Warning: render() was called with concurrent: ${concurrent}, but the existing instance for this stdout uses concurrent: ${instance.isConcurrent}. ` +
+				`The concurrent option only takes effect on the first render. Call unmount() first if you need to change the rendering mode.`,
+		);
 	}
 
 	return instance;
