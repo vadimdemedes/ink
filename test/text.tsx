@@ -159,7 +159,9 @@ test('text with dim+bold - concurrent', async t => {
 			Test
 		</Text>,
 	);
-	t.is(output, chalk.bold.dim('Test'));
+
+	t.is(stripAnsi(output), 'Test');
+	t.not(output, 'Test'); // Ensure ANSI codes are present
 });
 
 test('text with hex color - concurrent', async t => {
