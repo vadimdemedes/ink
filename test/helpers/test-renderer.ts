@@ -14,9 +14,10 @@ export type TestInstance = Instance & {
 };
 
 /**
- * Render helper that supports concurrent mode with act() wrapping.
- * Uses act() to properly flush updates in concurrent mode.
- */
+Render helper that supports concurrent mode with `act()` wrapping.
+
+Uses `act()` to properly flush updates in concurrent mode.
+*/
 export async function renderAsync(
 	node: React.ReactNode,
 	options: TestRenderOptions = {},
@@ -47,8 +48,8 @@ export async function renderAsync(
 }
 
 /**
- * Synchronous render for legacy mode tests (backward compatible).
- */
+Synchronous render for legacy mode tests (backward compatible).
+*/
 export function renderSync(
 	node: React.ReactNode,
 	options: TestRenderOptions = {},
@@ -73,9 +74,10 @@ export function renderSync(
 }
 
 /**
- * Wrapper to make existing sync code work with concurrent mode.
- * Use this to gradually migrate tests.
- */
+Wrapper to make existing sync code work with concurrent mode.
+
+Use this to gradually migrate tests.
+*/
 export async function withAct<T>(fn: () => T | Promise<T>): Promise<T> {
 	let result!: T;
 	await act(async () => {
@@ -85,8 +87,8 @@ export async function withAct<T>(fn: () => T | Promise<T>): Promise<T> {
 }
 
 /**
- * Wait for pending suspense boundaries to resolve.
- */
+Wait for pending suspense boundaries to resolve.
+*/
 export async function waitForSuspense(ms = 0): Promise<void> {
 	await act(async () => {
 		await new Promise<void>(resolve => {
