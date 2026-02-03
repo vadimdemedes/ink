@@ -80,11 +80,10 @@ export type RenderOptions = {
 
 	When enabled:
 	- Suspense boundaries work correctly with async data
-	- useTransition and useDeferredValue are fully functional
+	- `useTransition` and `useDeferredValue` are fully functional
 	- Updates can be interrupted for higher priority work
 
-	Note: Concurrent mode changes the timing of renders.
-	Some tests may need to use act() to properly await updates.
+	Note: Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates.
 
 	@default false
 	*/
