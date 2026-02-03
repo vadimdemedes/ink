@@ -83,7 +83,7 @@ export type RenderOptions = {
 	- `useTransition` and `useDeferredValue` are fully functional
 	- Updates can be interrupted for higher priority work
 
-	Note: Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates.
+	Note: Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
 
 	@default false
 	*/
