@@ -1,7 +1,8 @@
-import {useEffect} from 'react';
+import {useEffect, useRef} from 'react';
 import parseKeypress, {nonAlphanumericKeys} from '../parse-keypress.js';
 import reconciler from '../reconciler.js';
 import useStdin from './use-stdin.js';
+import {isIMEInput, IMECompositionBuffer} from '../ime-utils.js';
 
 /**
 Handy information about a key that was pressed.
@@ -97,6 +98,20 @@ type Options = {
 	@default true
 	*/
 	isActive?: boolean;
+
+	/**
+	Enable IME (Input Method Editor) composition buffering for Vietnamese, Chinese, Japanese, Korean, and other non-ASCII input methods.
+
+	@default true
+	*/
+	imeEnabled?: boolean;
+
+	/**
+	Timeout in milliseconds to wait before flushing IME composition buffer.
+
+	@default 50
+	*/
+	imeTimeout?: number;
 };
 
 /**
@@ -125,6 +140,60 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 	const {stdin, setRawMode, internal_exitOnCtrlC, internal_eventEmitter} =
 		useStdin();
 
+	const imeEnabled = options.imeEnabled ?? true;
+	const imeTimeout = options.imeTimeout ?? 50;
+
+	// IME composition buffer ref
+	const imeBufferRef = useRef<IMECompositionBuffer | null>(null);
+	const inputHandlerRef = useRef(inputHandler);
+
+	// Keep inputHandler ref up to date
+	useEffect(() => {
+		inputHandlerRef.current = inputHandler;
+	}, [inputHandler]);
+
+	// Initialize IME buffer
+	useEffect(() => {
+		if (!imeEnabled) {
+			return;
+		}
+
+		imeBufferRef.current = new IMECompositionBuffer({
+			timeout: imeTimeout,
+			onFlush: (text: string) => {
+				// Create a key object for IME input (no special keys pressed)
+				const key: Key = {
+					upArrow: false,
+					downArrow: false,
+					leftArrow: false,
+					rightArrow: false,
+					pageDown: false,
+					pageUp: false,
+					home: false,
+					end: false,
+					return: false,
+					escape: false,
+					ctrl: false,
+					shift: false,
+					tab: false,
+					backspace: false,
+					delete: false,
+					meta: false,
+				};
+
+				// @ts-expect-error TypeScript types for `batchedUpdates` require an argument
+				reconciler.batchedUpdates(() => {
+					inputHandlerRef.current(text, key);
+				});
+			},
+		});
+
+		return () => {
+			imeBufferRef.current?.destroy();
+			imeBufferRef.current = null;
+		};
+	}, [imeEnabled, imeTimeout]);
+
 	useEffect(() => {
 		if (options.isActive === false) {
 			return;
@@ -143,6 +212,15 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 		}
 
 		const handleData = (data: string) => {
+			// Check if this is IME input
+			if (imeEnabled && isIMEInput(data)) {
+				imeBufferRef.current?.add(data);
+				return;
+			}
+
+			// Flush any pending IME input before processing regular input
+			imeBufferRef.current?.flush();
+
 			const keypress = parseKeypress(data);
 
 			const key = {
@@ -202,7 +280,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 		return () => {
 			internal_eventEmitter?.removeListener('input', handleData);
 		};
-	}, [options.isActive, stdin, internal_exitOnCtrlC, inputHandler]);
+	}, [options.isActive, stdin, internal_exitOnCtrlC, inputHandler, imeEnabled]);
 };
 
 export default useInput;
