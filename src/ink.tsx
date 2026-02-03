@@ -45,23 +45,23 @@ export type Options = {
 	incrementalRendering?: boolean;
 
 	/**
-	 Enable React Concurrent Rendering mode.
-
-	 When enabled:
-	 - Suspense boundaries work correctly with async data
-	 - useTransition and useDeferredValue are fully functional
-	 - Updates can be interrupted for higher priority work
-
-	 @default false
-	 @experimental
-	 */
+	Enable React Concurrent Rendering mode.
+	
+	When enabled:
+	- Suspense boundaries work correctly with async data
+	- `useTransition` and `useDeferredValue` are fully functional
+	- Updates can be interrupted for higher priority work
+	
+	@default false
+	@experimental
+	*/
 	concurrent?: boolean;
 };
 
 export default class Ink {
 	/**
-	 * Whether this instance is using concurrent rendering mode.
-	 */
+	Whether this instance is using concurrent rendering mode.
+	*/
 	readonly isConcurrent: boolean;
 
 	private readonly options: Options;
