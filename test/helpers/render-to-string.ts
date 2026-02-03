@@ -8,8 +8,8 @@ type RenderToStringOptions = {
 };
 
 /**
- * Synchronous render to string (legacy mode).
- */
+Synchronous render to string (legacy mode).
+*/
 export const renderToString: (
 	node: React.JSX.Element,
 	options?: RenderToStringOptions,
@@ -27,9 +27,10 @@ export const renderToString: (
 };
 
 /**
- * Async render to string with concurrent mode support.
- * Uses act() to properly flush updates.
- */
+Async render to string with concurrent mode support.
+
+Uses `act()` to properly flush updates.
+*/
 export const renderToStringAsync: (
 	node: React.JSX.Element,
 	options?: RenderToStringOptions,
