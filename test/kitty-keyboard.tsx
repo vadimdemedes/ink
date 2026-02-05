@@ -257,6 +257,87 @@ test('kitty protocol - no text field when not present', t => {
 	t.true(result.isKittyProtocol);
 });
 
+// --- Kitty-enhanced special key tests ---
+
+test('kitty protocol - arrow keys with event type', t => {
+	// Up arrow press: CSI 1;1:1 A
+	const up = parseKeypress('\u001B[1;1:1A');
+	t.is(up.name, 'up');
+	t.is(up.eventType, 'press');
+	t.true(up.isKittyProtocol);
+
+	// Down arrow release: CSI 1;1:3 B
+	const down = parseKeypress('\u001B[1;1:3B');
+	t.is(down.name, 'down');
+	t.is(down.eventType, 'release');
+	t.true(down.isKittyProtocol);
+
+	// Right arrow repeat: CSI 1;1:2 C
+	const right = parseKeypress('\u001B[1;1:2C');
+	t.is(right.name, 'right');
+	t.is(right.eventType, 'repeat');
+	t.true(right.isKittyProtocol);
+
+	// Left arrow: CSI 1;1:1 D
+	const left = parseKeypress('\u001B[1;1:1D');
+	t.is(left.name, 'left');
+	t.is(left.eventType, 'press');
+	t.true(left.isKittyProtocol);
+});
+
+test('kitty protocol - arrow keys with modifiers', t => {
+	// Ctrl+up: CSI 1;5:1 A (modifiers=5 means ctrl(4)+1)
+	const result = parseKeypress('\u001B[1;5:1A');
+	t.is(result.name, 'up');
+	t.true(result.ctrl);
+	t.is(result.eventType, 'press');
+	t.true(result.isKittyProtocol);
+});
+
+test('kitty protocol - home and end keys', t => {
+	const home = parseKeypress('\u001B[1;1:1H');
+	t.is(home.name, 'home');
+	t.is(home.eventType, 'press');
+	t.true(home.isKittyProtocol);
+
+	const end = parseKeypress('\u001B[1;1:1F');
+	t.is(end.name, 'end');
+	t.is(end.eventType, 'press');
+	t.true(end.isKittyProtocol);
+});
+
+test('kitty protocol - tilde-terminated special keys', t => {
+	// Delete: CSI 3;1:1 ~
+	const del = parseKeypress('\u001B[3;1:1~');
+	t.is(del.name, 'delete');
+	t.is(del.eventType, 'press');
+	t.true(del.isKittyProtocol);
+
+	// Insert: CSI 2;1:1 ~
+	const ins = parseKeypress('\u001B[2;1:1~');
+	t.is(ins.name, 'insert');
+	t.true(ins.isKittyProtocol);
+
+	// Page up: CSI 5;1:1 ~
+	const pgup = parseKeypress('\u001B[5;1:1~');
+	t.is(pgup.name, 'pageup');
+	t.true(pgup.isKittyProtocol);
+
+	// F5: CSI 15;1:1 ~
+	const f5 = parseKeypress('\u001B[15;1:1~');
+	t.is(f5.name, 'f5');
+	t.true(f5.isKittyProtocol);
+});
+
+test('kitty protocol - tilde keys with modifiers', t => {
+	// Shift+Delete: CSI 3;2:1 ~ (modifiers=2 means shift(1)+1)
+	const result = parseKeypress('\u001B[3;2:1~');
+	t.is(result.name, 'delete');
+	t.true(result.shift);
+	t.is(result.eventType, 'press');
+	t.true(result.isKittyProtocol);
+});
+
 test('non-kitty sequences fall back to legacy parsing', t => {
 	// Regular escape sequence (not kitty protocol)
 	// Up arrow key
