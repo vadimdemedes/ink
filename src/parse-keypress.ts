@@ -91,14 +91,7 @@ const keyName: Record<string, string> = {
 	'[Z': 'tab',
 };
 
-export const nonAlphanumericKeys = [
-	...Object.values(keyName),
-	'backspace',
-	// Additional keys from kitty keyboard protocol
-	'escape',
-	'return',
-	'space',
-];
+export const nonAlphanumericKeys = [...Object.values(keyName), 'backspace'];
 
 const isShiftKey = (code: string) => {
 	return [
