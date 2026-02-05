@@ -91,7 +91,14 @@ const keyName: Record<string, string> = {
 	'[Z': 'tab',
 };
 
-export const nonAlphanumericKeys = [...Object.values(keyName), 'backspace'];
+export const nonAlphanumericKeys = [
+	...Object.values(keyName),
+	'backspace',
+	// Additional keys from kitty keyboard protocol
+	'escape',
+	'return',
+	'space',
+];
 
 const isShiftKey = (code: string) => {
 	return [
@@ -141,10 +148,11 @@ type ParsedKey = {
 	numLock?: boolean;
 	eventType?: 'press' | 'repeat' | 'release';
 	isKittyProtocol?: boolean;
+	text?: string;
 };
 
-// Kitty keyboard protocol: CSI codepoint ; modifiers [: eventType] u
-const kittyKeyRe = /^\x1b\[(\d+)(?:;(\d+))?(?::(\d+))?u$/;
+// Kitty keyboard protocol: CSI codepoint ; modifiers [: eventType] [; text-as-codepoints] u
+const kittyKeyRe = /^\x1b\[(\d+)(?:;(\d+)(?::(\d+))?(?:;([\d:]+))?)?u$/;
 
 // Map of special codepoints to key names in kitty protocol
 const kittyCodepointNames: Record<number, string> = {
@@ -247,6 +255,16 @@ const parseKittyKeypress = (s: string): ParsedKey | null => {
 	const codepoint = parseInt(match[1]!, 10);
 	const modifiers = match[2] ? parseInt(match[2], 10) - 1 : 0;
 	const eventType = match[3] ? parseInt(match[3], 10) : 1;
+	const textField = match[4];
+
+	// Parse text-as-codepoints field (colon-separated Unicode codepoints)
+	let text: string | undefined;
+	if (textField) {
+		text = textField
+			.split(':')
+			.map(cp => String.fromCodePoint(parseInt(cp, 10)))
+			.join('');
+	}
 
 	// Determine key name from codepoint
 	let name: string;
@@ -256,9 +274,9 @@ const parseKittyKeypress = (s: string): ParsedKey | null => {
 		name = 'space';
 	} else if (codepoint >= 1 && codepoint <= 26) {
 		// Ctrl+letter comes as codepoint 1-26
-		name = String.fromCharCode(codepoint + 96); // 'a' is 97
+		name = String.fromCodePoint(codepoint + 96); // 'a' is 97
 	} else {
-		name = String.fromCharCode(codepoint).toLowerCase();
+		name = String.fromCodePoint(codepoint).toLowerCase();
 	}
 
 	return {
@@ -275,6 +293,7 @@ const parseKittyKeypress = (s: string): ParsedKey | null => {
 		sequence: s,
 		raw: s,
 		isKittyProtocol: true,
+		text,
 	};
 };
 
