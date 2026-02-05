@@ -1,5 +1,8 @@
 import {useEffect} from 'react';
-import parseKeypress, {nonAlphanumericKeys, kittyModifierKeyNames} from '../parse-keypress.js';
+import parseKeypress, {
+	nonAlphanumericKeys,
+	kittyModifierKeyNames,
+} from '../parse-keypress.js';
 import reconciler from '../reconciler.js';
 import useStdin from './use-stdin.js';
 
@@ -229,7 +232,10 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				input = keypress.sequence;
 			}
 
-			if (!keypress.isKittyProtocol && nonAlphanumericKeys.includes(keypress.name)) {
+			if (
+				!keypress.isKittyProtocol &&
+				nonAlphanumericKeys.includes(keypress.name)
+			) {
 				input = '';
 			}
 

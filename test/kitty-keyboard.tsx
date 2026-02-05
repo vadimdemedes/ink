@@ -239,14 +239,14 @@ test('kitty protocol - text-as-codepoints with multiple codepoints', t => {
 
 test('kitty protocol - supplementary unicode codepoint', t => {
 	// Emoji: 😀 (U+1F600 = 128512)
-	const result = parseKeypress(kittyKey(128512));
+	const result = parseKeypress(kittyKey(128_512));
 	t.is(result.name, '😀');
 	t.true(result.isKittyProtocol);
 });
 
 test('kitty protocol - text-as-codepoints with supplementary unicode', t => {
 	// Text field with emoji codepoint
-	const result = parseKeypress(kittyKey(97, 1, 1, [128512]));
+	const result = parseKeypress(kittyKey(97, 1, 1, [128_512]));
 	t.is(result.text, '😀');
 	t.true(result.isKittyProtocol);
 });
