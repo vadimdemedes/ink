@@ -6,14 +6,23 @@ const kittyKey = (
 	codepoint: number,
 	modifiers?: number,
 	eventType?: number,
+	textCodepoints?: number[],
 ): string => {
 	let seq = `\u001B[${codepoint}`;
-	if (modifiers !== undefined || eventType !== undefined) {
+	if (
+		modifiers !== undefined ||
+		eventType !== undefined ||
+		textCodepoints !== undefined
+	) {
 		seq += `;${modifiers ?? 1}`;
 	}
 
-	if (eventType !== undefined) {
-		seq += `:${eventType}`;
+	if (eventType !== undefined || textCodepoints !== undefined) {
+		seq += `:${eventType ?? 1}`;
+	}
+
+	if (textCodepoints !== undefined) {
+		seq += `;${textCodepoints.join(':')}`;
 	}
 
 	seq += 'u';
@@ -210,6 +219,42 @@ test('kitty protocol - preserves sequence and raw', t => {
 	const result = parseKeypress(seq);
 	t.is(result.sequence, seq);
 	t.is(result.raw, seq);
+});
+
+test('kitty protocol - text-as-codepoints field', t => {
+	// 'a' key with text-as-codepoints containing 'A' (shifted)
+	const result = parseKeypress(kittyKey(97, 2, 1, [65]));
+	t.is(result.name, 'a');
+	t.is(result.text, 'A');
+	t.true(result.shift);
+	t.true(result.isKittyProtocol);
+});
+
+test('kitty protocol - text-as-codepoints with multiple codepoints', t => {
+	// Key with text containing multiple codepoints (e.g., composed character)
+	const result = parseKeypress(kittyKey(97, 1, 1, [72, 101]));
+	t.is(result.text, 'He');
+	t.true(result.isKittyProtocol);
+});
+
+test('kitty protocol - supplementary unicode codepoint', t => {
+	// Emoji: 😀 (U+1F600 = 128512)
+	const result = parseKeypress(kittyKey(128512));
+	t.is(result.name, '😀');
+	t.true(result.isKittyProtocol);
+});
+
+test('kitty protocol - text-as-codepoints with supplementary unicode', t => {
+	// Text field with emoji codepoint
+	const result = parseKeypress(kittyKey(97, 1, 1, [128512]));
+	t.is(result.text, '😀');
+	t.true(result.isKittyProtocol);
+});
+
+test('kitty protocol - no text field when not present', t => {
+	const result = parseKeypress(kittyKey(97));
+	t.is(result.text, undefined);
+	t.true(result.isKittyProtocol);
 });
 
 test('non-kitty sequences fall back to legacy parsing', t => {

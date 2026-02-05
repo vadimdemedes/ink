@@ -540,7 +540,11 @@ export default class Ink {
 	private initKittyKeyboard(): void {
 		const opts = this.options.kittyKeyboard ?? {mode: 'auto'};
 
-		if (opts.mode === 'disabled' || !this.options.stdin.isTTY) {
+		if (
+			opts.mode === 'disabled' ||
+			!this.options.stdin.isTTY ||
+			!this.options.stdout.isTTY
+		) {
 			return;
 		}
 

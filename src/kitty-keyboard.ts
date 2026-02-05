@@ -47,11 +47,4 @@ export type KittyKeyboardOptions = {
 	 * @default KittyFlags.DISAMBIGUATE_ESCAPE_CODES
 	 */
 	flags?: number;
-
-	/**
-	 * Timeout in milliseconds to wait for terminal response during auto-detection.
-	 *
-	 * @default 100
-	 */
-	detectionTimeout?: number;
 };

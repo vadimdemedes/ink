@@ -204,10 +204,16 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				eventType: keypress.eventType,
 			};
 
-			let input =
-				keypress.ctrl || keypress.isKittyProtocol
-					? keypress.name
-					: keypress.sequence;
+			let input: string;
+			if (keypress.isKittyProtocol) {
+				// Prefer text-as-codepoints field when available (needed when
+				// reportAllKeysAsEscapeCodes flag is enabled)
+				input = keypress.text ?? keypress.name;
+			} else if (keypress.ctrl) {
+				input = keypress.name;
+			} else {
+				input = keypress.sequence;
+			}
 
 			if (nonAlphanumericKeys.includes(keypress.name)) {
 				input = '';
