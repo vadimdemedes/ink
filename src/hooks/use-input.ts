@@ -209,13 +209,25 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				// Prefer text-as-codepoints field when available (needed when
 				// reportAllKeysAsEscapeCodes flag is enabled)
 				input = keypress.text ?? keypress.name;
+
+				// Suppress input for non-printable keys reported by kitty protocol.
+				// The legacy nonAlphanumericKeys list doesn't include escape/return/space
+				// because the legacy parser passes their raw sequences through as input.
+				if (
+					nonAlphanumericKeys.includes(keypress.name) ||
+					keypress.name === 'escape' ||
+					keypress.name === 'return' ||
+					keypress.name === 'space'
+				) {
+					input = '';
+				}
 			} else if (keypress.ctrl) {
 				input = keypress.name;
 			} else {
 				input = keypress.sequence;
 			}
 
-			if (nonAlphanumericKeys.includes(keypress.name)) {
+			if (!keypress.isKittyProtocol && nonAlphanumericKeys.includes(keypress.name)) {
 				input = '';
 			}
 
