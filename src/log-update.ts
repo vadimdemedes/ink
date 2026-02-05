@@ -9,6 +9,11 @@ export type LogUpdate = {
 	(str: string): void;
 };
 
+// Count visible lines in a string, ignoring the trailing empty element
+// that `split('\n')` produces when the string ends with '\n'.
+const visibleLineCount = (lines: string[], str: string): number =>
+	str.endsWith('\n') ? lines.length - 1 : lines.length;
+
 const createStandard = (
 	stream: Writable,
 	{showCursor = false} = {},
@@ -23,14 +28,13 @@ const createStandard = (
 			hasHiddenCursor = true;
 		}
 
-		const output = str + '\n';
-		if (output === previousOutput) {
+		if (str === previousOutput) {
 			return;
 		}
 
-		previousOutput = output;
-		stream.write(ansiEscapes.eraseLines(previousLineCount) + output);
-		previousLineCount = output.split('\n').length;
+		previousOutput = str;
+		stream.write(ansiEscapes.eraseLines(previousLineCount) + str);
+		previousLineCount = str.split('\n').length;
 	};
 
 	render.clear = () => {
@@ -50,9 +54,8 @@ const createStandard = (
 	};
 
 	render.sync = (str: string) => {
-		const output = str + '\n';
-		previousOutput = output;
-		previousLineCount = output.split('\n').length;
+		previousOutput = str;
+		previousLineCount = str.split('\n').length;
 	};
 
 	return render;
@@ -72,36 +75,33 @@ const createIncremental = (
 			hasHiddenCursor = true;
 		}
 
-		const output = str + '\n';
-		if (output === previousOutput) {
+		if (str === previousOutput) {
 			return;
 		}
 
-		const previousCount = previousLines.length;
-		const nextLines = output.split('\n');
-		const nextCount = nextLines.length;
-		const visibleCount = nextCount - 1;
+		const nextLines = str.split('\n');
+		const visibleCount = visibleLineCount(nextLines, str);
 
-		if (output === '\n' || previousOutput.length === 0) {
-			stream.write(ansiEscapes.eraseLines(previousCount) + output);
-			previousOutput = output;
+		if (str === '\n' || previousOutput.length === 0) {
+			stream.write(ansiEscapes.eraseLines(previousLines.length) + str);
+			previousOutput = str;
 			previousLines = nextLines;
 			return;
 		}
+
+		const previousVisible = visibleLineCount(previousLines, previousOutput);
 
 		// We aggregate all chunks for incremental rendering into a buffer, and then write them to stdout at the end.
 		const buffer: string[] = [];
 
 		// Clear extra lines if the current content's line count is lower than the previous.
-		if (nextCount < previousCount) {
+		if (visibleCount < previousVisible) {
 			buffer.push(
-				// Erases the trailing lines and the final newline slot.
-				ansiEscapes.eraseLines(previousCount - nextCount + 1),
-				// Positions cursor to the top of the rendered output.
+				ansiEscapes.eraseLines(previousVisible - visibleCount + 1),
 				ansiEscapes.cursorUp(visibleCount),
 			);
 		} else {
-			buffer.push(ansiEscapes.cursorUp(previousCount - 1));
+			buffer.push(ansiEscapes.cursorUp(previousVisible - 1));
 		}
 
 		for (let i = 0; i < visibleCount; i++) {
@@ -121,7 +121,7 @@ const createIncremental = (
 
 		stream.write(buffer.join(''));
 
-		previousOutput = output;
+		previousOutput = str;
 		previousLines = nextLines;
 	};
 
@@ -142,9 +142,8 @@ const createIncremental = (
 	};
 
 	render.sync = (str: string) => {
-		const output = str + '\n';
-		previousOutput = output;
-		previousLines = output.split('\n');
+		previousOutput = str;
+		previousLines = str.split('\n');
 	};
 
 	return render;

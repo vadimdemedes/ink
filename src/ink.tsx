@@ -74,6 +74,7 @@ export default class Ink {
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
 	private lastOutput: string;
+	private lastOutputToRender: string;
 	private lastOutputHeight: number;
 	private lastTerminalWidth: number;
 	private readonly container: FiberRoot;
@@ -127,6 +128,7 @@ export default class Ink {
 
 		// Store last output to only rerender when needed
 		this.lastOutput = '';
+		this.lastOutputToRender = '';
 		this.lastOutputHeight = 0;
 		this.lastTerminalWidth = this.getTerminalWidth();
 
@@ -298,13 +300,20 @@ export default class Ink {
 			this.fullStaticOutput += staticOutput;
 		}
 
+		// Detect fullscreen: output fills or exceeds terminal height.
+		// Only apply when writing to a real TTY — piped output always gets trailing newlines.
+		const isFullscreen =
+			this.options.stdout.isTTY && outputHeight >= this.options.stdout.rows;
+		const outputToRender = isFullscreen ? output : output + '\n';
+
 		if (this.lastOutputHeight >= this.options.stdout.rows) {
 			this.options.stdout.write(
 				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
 			);
 			this.lastOutput = output;
+			this.lastOutputToRender = outputToRender;
 			this.lastOutputHeight = outputHeight;
-			this.log.sync(output);
+			this.log.sync(outputToRender);
 			return;
 		}
 
@@ -312,14 +321,15 @@ export default class Ink {
 		if (hasStaticOutput) {
 			this.log.clear();
 			this.options.stdout.write(staticOutput);
-			this.log(output);
+			this.log(outputToRender);
 		}
 
 		if (!hasStaticOutput && output !== this.lastOutput) {
-			this.throttledLog(output);
+			this.throttledLog(outputToRender);
 		}
 
 		this.lastOutput = output;
+		this.lastOutputToRender = outputToRender;
 		this.lastOutputHeight = outputHeight;
 	};
 
@@ -369,7 +379,7 @@ export default class Ink {
 
 		this.log.clear();
 		this.options.stdout.write(data);
-		this.log(this.lastOutput);
+		this.log(this.lastOutputToRender);
 	}
 
 	writeToStderr(data: string): void {
@@ -390,7 +400,7 @@ export default class Ink {
 
 		this.log.clear();
 		this.options.stderr.write(data);
-		this.log(this.lastOutput);
+		this.log(this.lastOutputToRender);
 	}
 
 	// eslint-disable-next-line @typescript-eslint/ban-types
