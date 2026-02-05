@@ -147,6 +147,48 @@ type ParsedKey = {
 // Kitty keyboard protocol: CSI codepoint ; modifiers [: eventType] [; text-as-codepoints] u
 const kittyKeyRe = /^\x1b\[(\d+)(?:;(\d+)(?::(\d+))?(?:;([\d:]+))?)?u$/;
 
+// Kitty-enhanced special keys: CSI number ; modifiers : eventType {letter|~}
+// These are legacy CSI sequences enhanced with the :eventType field.
+// Examples: \x1b[1;1:1A (up arrow press), \x1b[3;1:3~ (delete release)
+const kittySpecialKeyRe = /^\x1b\[(\d+);(\d+):(\d+)([A-Za-z~])$/;
+
+// Letter-terminated special key names (CSI 1 ; mods letter)
+const kittySpecialLetterKeys: Record<string, string> = {
+	A: 'up',
+	B: 'down',
+	C: 'right',
+	D: 'left',
+	E: 'clear',
+	F: 'end',
+	H: 'home',
+	P: 'f1',
+	Q: 'f2',
+	R: 'f3',
+	S: 'f4',
+};
+
+// Number-terminated special key names (CSI number ; mods ~)
+const kittySpecialNumberKeys: Record<number, string> = {
+	2: 'insert',
+	3: 'delete',
+	5: 'pageup',
+	6: 'pagedown',
+	7: 'home',
+	8: 'end',
+	11: 'f1',
+	12: 'f2',
+	13: 'f3',
+	14: 'f4',
+	15: 'f5',
+	17: 'f6',
+	18: 'f7',
+	19: 'f8',
+	20: 'f9',
+	21: 'f10',
+	23: 'f11',
+	24: 'f12',
+};
+
 // Map of special codepoints to key names in kitty protocol
 const kittyCodepointNames: Record<number, string> = {
 	27: 'escape',
@@ -290,6 +332,50 @@ const parseKittyKeypress = (s: string): ParsedKey | null => {
 	};
 };
 
+// Parse kitty-enhanced special key sequences (arrow keys, function keys, etc.)
+// These use the legacy CSI format but with an added :eventType field.
+const parseKittySpecialKey = (s: string): ParsedKey | null => {
+	const match = kittySpecialKeyRe.exec(s);
+	if (!match) return null;
+
+	const number = parseInt(match[1]!, 10);
+	const modifiers = parseInt(match[2]!, 10) - 1;
+	const eventType = parseInt(match[3]!, 10);
+	const terminator = match[4]!;
+
+	let name: string;
+	if (terminator === '~') {
+		name = kittySpecialNumberKeys[number] ?? '';
+	} else {
+		name = kittySpecialLetterKeys[terminator] ?? '';
+	}
+
+	if (!name) return null;
+
+	return {
+		name,
+		ctrl: !!(modifiers & 4),
+		shift: !!(modifiers & 1),
+		meta: !!(modifiers & 32),
+		option: !!(modifiers & 2),
+		super: !!(modifiers & 8),
+		hyper: !!(modifiers & 16),
+		capsLock: !!(modifiers & 64),
+		numLock: !!(modifiers & 128),
+		eventType: eventType === 3 ? 'release' : eventType === 2 ? 'repeat' : 'press',
+		sequence: s,
+		raw: s,
+		isKittyProtocol: true,
+	};
+};
+
+// Modifier-only key names that should produce empty input
+export const kittyModifierKeyNames = new Set([
+	'leftshift', 'leftcontrol', 'leftalt', 'leftsuper', 'lefthyper', 'leftmeta',
+	'rightshift', 'rightcontrol', 'rightalt', 'rightsuper', 'righthyper', 'rightmeta',
+	'isoLevel3Shift', 'isoLevel5Shift',
+]);
+
 const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 	let parts;
 
@@ -306,9 +392,12 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 		s = '';
 	}
 
-	// Try kitty keyboard protocol first
+	// Try kitty keyboard protocol parsers first
 	const kittyResult = parseKittyKeypress(s);
 	if (kittyResult) return kittyResult;
+
+	const kittySpecialResult = parseKittySpecialKey(s);
+	if (kittySpecialResult) return kittySpecialResult;
 
 	const key: ParsedKey = {
 		name: '',

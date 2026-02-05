@@ -1,5 +1,5 @@
 import {useEffect} from 'react';
-import parseKeypress, {nonAlphanumericKeys} from '../parse-keypress.js';
+import parseKeypress, {nonAlphanumericKeys, kittyModifierKeyNames} from '../parse-keypress.js';
 import reconciler from '../reconciler.js';
 import useStdin from './use-stdin.js';
 
@@ -213,8 +213,10 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				// Suppress input for non-printable keys reported by kitty protocol.
 				// The legacy nonAlphanumericKeys list doesn't include escape/return/space
 				// because the legacy parser passes their raw sequences through as input.
+				// Also suppress modifier-only keys (leftsuper, leftcontrol, etc.)
 				if (
 					nonAlphanumericKeys.includes(keypress.name) ||
+					kittyModifierKeyNames.has(keypress.name) ||
 					keypress.name === 'escape' ||
 					keypress.name === 'return' ||
 					keypress.name === 'space'
