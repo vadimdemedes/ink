@@ -15,7 +15,7 @@ import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
 import logUpdate, {type LogUpdate, type CursorPosition} from './log-update.js';
-import {BSU, ESU, shouldSynchronize} from './write-synchronized.js';
+import {bsu, esu, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
@@ -119,13 +119,13 @@ export default class Ink {
 					(output: string) => {
 						const sync = shouldSynchronize(this.options.stdout);
 						if (sync) {
-							this.options.stdout.write(BSU);
+							this.options.stdout.write(bsu);
 						}
 
 						this.log(output);
 
 						if (sync) {
-							this.options.stdout.write(ESU);
+							this.options.stdout.write(esu);
 						}
 					},
 					undefined,
@@ -277,7 +277,7 @@ export default class Ink {
 		if (this.isScreenReaderEnabled) {
 			const sync = shouldSynchronize(this.options.stdout);
 			if (sync) {
-				this.options.stdout.write(BSU);
+				this.options.stdout.write(bsu);
 			}
 
 			if (hasStaticOutput) {
@@ -293,7 +293,7 @@ export default class Ink {
 
 			if (output === this.lastOutput && !hasStaticOutput) {
 				if (sync) {
-					this.options.stdout.write(ESU);
+					this.options.stdout.write(esu);
 				}
 
 				return;
@@ -322,7 +322,7 @@ export default class Ink {
 				wrappedOutput === '' ? 0 : wrappedOutput.split('\n').length;
 
 			if (sync) {
-				this.options.stdout.write(ESU);
+				this.options.stdout.write(esu);
 			}
 
 			return;
@@ -335,7 +335,7 @@ export default class Ink {
 		if (this.lastOutputHeight >= this.options.stdout.rows) {
 			const sync = shouldSynchronize(this.options.stdout);
 			if (sync) {
-				this.options.stdout.write(BSU);
+				this.options.stdout.write(bsu);
 			}
 
 			this.options.stdout.write(
@@ -346,7 +346,7 @@ export default class Ink {
 			this.log.sync(output);
 
 			if (sync) {
-				this.options.stdout.write(ESU);
+				this.options.stdout.write(esu);
 			}
 
 			return;
@@ -356,7 +356,7 @@ export default class Ink {
 		if (hasStaticOutput) {
 			const sync = shouldSynchronize(this.options.stdout);
 			if (sync) {
-				this.options.stdout.write(BSU);
+				this.options.stdout.write(bsu);
 			}
 
 			this.log.clear();
@@ -364,10 +364,10 @@ export default class Ink {
 			this.log(output);
 
 			if (sync) {
-				this.options.stdout.write(ESU);
+				this.options.stdout.write(esu);
 			}
 		} else if (output !== this.lastOutput || this.log.isCursorDirty()) {
-			// ThrottledLog manages its own BSU/ESU at actual write time
+			// ThrottledLog manages its own bsu/esu at actual write time
 			this.throttledLog(output);
 		}
 
@@ -422,7 +422,7 @@ export default class Ink {
 
 		const sync = shouldSynchronize(this.options.stdout);
 		if (sync) {
-			this.options.stdout.write(BSU);
+			this.options.stdout.write(bsu);
 		}
 
 		this.log.clear();
@@ -430,7 +430,7 @@ export default class Ink {
 		this.log(this.lastOutput);
 
 		if (sync) {
-			this.options.stdout.write(ESU);
+			this.options.stdout.write(esu);
 		}
 	}
 
@@ -452,7 +452,7 @@ export default class Ink {
 
 		const sync = shouldSynchronize(this.options.stdout);
 		if (sync) {
-			this.options.stdout.write(BSU);
+			this.options.stdout.write(bsu);
 		}
 
 		this.log.clear();
@@ -460,7 +460,7 @@ export default class Ink {
 		this.log(this.lastOutput);
 
 		if (sync) {
-			this.options.stdout.write(ESU);
+			this.options.stdout.write(esu);
 		}
 	}
 

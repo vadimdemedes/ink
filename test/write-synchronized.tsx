@@ -1,6 +1,6 @@
 import EventEmitter from 'node:events';
 import test from 'ava';
-import {BSU, ESU, shouldSynchronize} from '../src/write-synchronized.js';
+import {bsu, esu, shouldSynchronize} from '../src/write-synchronized.js';
 
 const createStream = ({tty = false} = {}) => {
 	const stream = new EventEmitter() as unknown as NodeJS.WriteStream;
@@ -11,12 +11,12 @@ const createStream = ({tty = false} = {}) => {
 	return stream;
 };
 
-test('BSU is the Begin Synchronized Update sequence', t => {
-	t.is(BSU, '\u001B[?2026h');
+test('bsu is the Begin Synchronized Update sequence', t => {
+	t.is(bsu, '\u001B[?2026h');
 });
 
-test('ESU is the End Synchronized Update sequence', t => {
-	t.is(ESU, '\u001B[?2026l');
+test('esu is the End Synchronized Update sequence', t => {
+	t.is(esu, '\u001B[?2026l');
 });
 
 test('shouldSynchronize returns true for TTY stream', t => {

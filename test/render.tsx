@@ -13,7 +13,7 @@ import boxen from 'boxen';
 import delay from 'delay';
 import {render, Box, Text, useInput} from '../src/index.js';
 import {type RenderMetrics} from '../src/ink.js';
-import {BSU, ESU} from '../src/write-synchronized.js';
+import {bsu, esu} from '../src/write-synchronized.js';
 import createStdout from './helpers/create-stdout.js';
 
 const require = createRequire(import.meta.url);
@@ -85,7 +85,7 @@ const term = (fixture: string, args: string[] = []) => {
 	};
 
 	ps.onData(data => {
-		// Strip Synchronized Update Mode sequences (BSU/ESU) so tests
+		// Strip Synchronized Update Mode sequences (bsu/esu) so tests
 		// only see the actual content, not the transport wrapper.
 		result.output += data
 			.replaceAll('\u001B[?2026h', '')
@@ -414,7 +414,7 @@ const createTtyStdout = (columns?: number) => {
 	return stdout;
 };
 
-test.serial('no BSU/ESU when output is unchanged', t => {
+test.serial('no bsu/esu when output is unchanged', t => {
 	const clock = FakeTimers.install();
 	try {
 		const stdout = createTtyStdout();
@@ -422,16 +422,17 @@ test.serial('no BSU/ESU when output is unchanged', t => {
 		const originalWrite = stdout.write;
 		(stdout as any).write = (...args: any[]) => {
 			writes.push(args[0] as string);
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
 			return (originalWrite as any)(...args);
 		};
 
-		const {unmount, rerender} = render(
-			<ThrottleTestComponent text="Hello" />,
-			{stdout, maxFps: 1},
-		);
+		const {unmount, rerender} = render(<ThrottleTestComponent text="Hello" />, {
+			stdout,
+			maxFps: 1,
+		});
 
-		// Leading call writes BSU + content + ESU (expected)
-		t.true(writes.some(w => w === BSU), 'initial render should include BSU');
+		// Leading call writes bsu + content + esu (expected)
+		t.true(writes.includes(bsu), 'initial render should include bsu');
 
 		// Clear writes, rerender with SAME text
 		writes.length = 0;
@@ -440,15 +441,9 @@ test.serial('no BSU/ESU when output is unchanged', t => {
 		// Advance past throttle window to trigger trailing call
 		clock.tick(1000);
 
-		// No BSU/ESU should be emitted because output didn't change
-		t.false(
-			writes.some(w => w === BSU),
-			'unchanged output should not emit BSU',
-		);
-		t.false(
-			writes.some(w => w === ESU),
-			'unchanged output should not emit ESU',
-		);
+		// No bsu/esu should be emitted because output didn't change
+		t.false(writes.includes(bsu), 'unchanged output should not emit bsu');
+		t.false(writes.includes(esu), 'unchanged output should not emit esu');
 
 		unmount();
 	} finally {
@@ -456,7 +451,7 @@ test.serial('no BSU/ESU when output is unchanged', t => {
 	}
 });
 
-test.serial('BSU/ESU wraps throttledLog trailing call', t => {
+test.serial('bsu/esu wraps throttledLog trailing call', t => {
 	const clock = FakeTimers.install();
 	try {
 		const stdout = createTtyStdout();
@@ -464,24 +459,19 @@ test.serial('BSU/ESU wraps throttledLog trailing call', t => {
 		const originalWrite = stdout.write;
 		(stdout as any).write = (...args: any[]) => {
 			writes.push(args[0] as string);
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
 			return (originalWrite as any)(...args);
 		};
 
-		const {unmount, rerender} = render(
-			<ThrottleTestComponent text="Hello" />,
-			{stdout, maxFps: 1},
-		);
+		const {unmount, rerender} = render(<ThrottleTestComponent text="Hello" />, {
+			stdout,
+			maxFps: 1,
+		});
 
-		// Leading call writes: BSU, content, ESU
-		const leadingWrites = [...writes];
-		t.true(
-			leadingWrites.some(w => w === BSU),
-			'leading call should include BSU',
-		);
-		t.true(
-			leadingWrites.some(w => w === ESU),
-			'leading call should include ESU',
-		);
+		// Leading call writes: bsu, content, esu
+		const leadingWrites = new Set(writes);
+		t.true(leadingWrites.has(bsu), 'leading call should include bsu');
+		t.true(leadingWrites.has(esu), 'leading call should include esu');
 
 		// Trigger a rerender inside the throttle window (will be deferred as trailing)
 		writes.length = 0;
@@ -498,20 +488,14 @@ test.serial('BSU/ESU wraps throttledLog trailing call', t => {
 		writes.length = 0;
 		clock.tick(1000);
 
-		// Trailing call should also be wrapped with BSU/ESU
-		t.true(
-			writes.some(w => w === BSU),
-			'trailing call should include BSU',
-		);
-		t.true(
-			writes.some(w => w === ESU),
-			'trailing call should include ESU',
-		);
+		// Trailing call should also be wrapped with bsu/esu
+		t.true(writes.includes(bsu), 'trailing call should include bsu');
+		t.true(writes.includes(esu), 'trailing call should include esu');
 
-		// Verify BSU comes before content and ESU comes after
-		const bsuIdx = writes.indexOf(BSU);
-		const esuIdx = writes.indexOf(ESU);
-		t.true(bsuIdx < esuIdx, 'BSU should come before ESU');
+		// Verify bsu comes before content and esu comes after
+		const bsuIdx = writes.indexOf(bsu);
+		const esuIdx = writes.indexOf(esu);
+		t.true(bsuIdx < esuIdx, 'bsu should come before esu');
 
 		unmount();
 	} finally {

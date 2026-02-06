@@ -34,7 +34,7 @@ const createStandard = (
 
 	const render = (str: string) => {
 		if (!showCursor && !hasHiddenCursor) {
-			cliCursor.hide();
+			cliCursor.hide(stream);
 			hasHiddenCursor = true;
 		}
 
@@ -106,17 +106,26 @@ const createStandard = (
 		cursorWasShown = false;
 
 		if (!showCursor) {
-			cliCursor.show();
+			cliCursor.show(stream);
 			hasHiddenCursor = false;
 		}
 	};
 
 	render.sync = (str: string) => {
+		const activeCursor = cursorDirty ? cursorPosition : undefined;
+		cursorDirty = false;
+
 		const output = str + '\n';
 		previousOutput = output;
 		previousLineCount = output.split('\n').length;
-		previousCursorPosition = undefined;
-		cursorWasShown = false;
+
+		if (activeCursor) {
+			const visibleLineCount = output.split('\n').length - 1;
+			stream.write(buildCursorSuffix(visibleLineCount, activeCursor));
+		}
+
+		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+		cursorWasShown = activeCursor !== undefined;
 	};
 
 	render.setCursorPosition = (position: CursorPosition | undefined) => {
@@ -143,7 +152,7 @@ const createIncremental = (
 
 	const render = (str: string) => {
 		if (!showCursor && !hasHiddenCursor) {
-			cliCursor.hide();
+			cliCursor.hide(stream);
 			hasHiddenCursor = true;
 		}
 
@@ -266,17 +275,26 @@ const createIncremental = (
 		cursorWasShown = false;
 
 		if (!showCursor) {
-			cliCursor.show();
+			cliCursor.show(stream);
 			hasHiddenCursor = false;
 		}
 	};
 
 	render.sync = (str: string) => {
+		const activeCursor = cursorDirty ? cursorPosition : undefined;
+		cursorDirty = false;
+
 		const output = str + '\n';
 		previousOutput = output;
 		previousLines = output.split('\n');
-		previousCursorPosition = undefined;
-		cursorWasShown = false;
+
+		if (activeCursor) {
+			const visibleLineCount = output.split('\n').length - 1;
+			stream.write(buildCursorSuffix(visibleLineCount, activeCursor));
+		}
+
+		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+		cursorWasShown = activeCursor !== undefined;
 	};
 
 	render.setCursorPosition = (position: CursorPosition | undefined) => {

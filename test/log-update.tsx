@@ -398,7 +398,7 @@ test('standard rendering - sync() resets cursor state', t => {
 	render.setCursorPosition({x: 5, y: 0});
 	render('Line 1\nLine 2\nLine 3');
 
-	// sync() simulates clearTerminal path: screen is fully reset
+	// Sync() simulates clearTerminal path: screen is fully reset
 	render.sync('Fresh output');
 
 	// Next render should NOT include hideCursor + cursorDown (return-to-bottom prefix)
@@ -417,7 +417,7 @@ test('incremental rendering - sync() resets cursor state', t => {
 	render.setCursorPosition({x: 5, y: 0});
 	render('Line 1\nLine 2\nLine 3');
 
-	// sync() simulates clearTerminal path
+	// Sync() simulates clearTerminal path
 	render.sync('Fresh output');
 
 	render('Updated output');
@@ -425,6 +425,75 @@ test('incremental rendering - sync() resets cursor state', t => {
 	const afterSync = stdout.get();
 	t.false(afterSync.includes(hideCursorEscape));
 	t.false(afterSync.includes(ansiEscapes.cursorDown(3)));
+});
+
+test('standard rendering - sync() writes cursor suffix when cursor is dirty', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render.setCursorPosition({x: 5, y: 1});
+	render.sync('Line 1\nLine 2\nLine 3');
+
+	// sync() should write cursor suffix to position cursor
+	// 3 visible lines, cursor at y=1 → cursorUp(3-1) = cursorUp(2)
+	t.is((stdout.write as any).callCount, 1);
+	const written = (stdout.write as any).firstCall.args[0] as string;
+	t.is(
+		written,
+		ansiEscapes.cursorUp(2) + ansiEscapes.cursorTo(5) + showCursorEscape,
+	);
+});
+
+test('incremental rendering - sync() writes cursor suffix when cursor is dirty', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render.setCursorPosition({x: 5, y: 1});
+	render.sync('Line 1\nLine 2\nLine 3');
+
+	t.is((stdout.write as any).callCount, 1);
+	const written = (stdout.write as any).firstCall.args[0] as string;
+	t.is(
+		written,
+		ansiEscapes.cursorUp(2) + ansiEscapes.cursorTo(5) + showCursorEscape,
+	);
+});
+
+test('standard rendering - sync() with cursor sets cursorWasShown for next render', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render.setCursorPosition({x: 5, y: 1});
+	render.sync('Line 1\nLine 2\nLine 3');
+
+	// Next render should hide cursor before erasing (cursorWasShown = true from sync)
+	render('Updated');
+
+	const renderCall = stdout.get();
+	t.true(renderCall.startsWith(hideCursorEscape));
+});
+
+test('incremental rendering - sync() with cursor sets cursorWasShown for next render', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render.setCursorPosition({x: 5, y: 1});
+	render.sync('Line 1\nLine 2\nLine 3');
+
+	// Next render should hide cursor before erasing (cursorWasShown = true from sync)
+	render('Updated');
+
+	const renderCall = stdout.get();
+	t.true(renderCall.startsWith(hideCursorEscape));
+});
+
+test('standard rendering - sync() without cursor does not write to stream', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render.sync('Line 1\nLine 2\nLine 3');
+
+	t.is((stdout.write as any).callCount, 0);
 });
 
 test('incremental rendering - render to empty string (full clear vs early exit)', t => {

@@ -1,10 +1,9 @@
 import EventEmitter from 'node:events';
 import {stub} from 'sinon';
 import test from 'ava';
-import React, {Suspense, useState} from 'react';
+import React, {Suspense, act, useState} from 'react';
 import ansiEscapes from 'ansi-escapes';
 import delay from 'delay';
-import {act} from 'react';
 import {render, Box, Text, useInput, useCursor} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
@@ -234,7 +233,7 @@ test.serial(
 
 		function CursorChild() {
 			const {setCursorPosition} = useCursor();
-			setCursorPosition({x: 5, y: 0}); // render-phase side effect
+			setCursorPosition({x: 5, y: 0}); // Render-phase side effect
 			if (suspended) {
 				// eslint-disable-next-line @typescript-eslint/only-throw-error
 				throw promise;
