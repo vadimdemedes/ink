@@ -391,6 +391,42 @@ test('incremental rendering - repositions cursor when only cursor position chang
 	t.true(secondCall.endsWith(ansiEscapes.cursorTo(3) + showCursorEscape));
 });
 
+test('standard rendering - sync() resets cursor state', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render.setCursorPosition({x: 5, y: 0});
+	render('Line 1\nLine 2\nLine 3');
+
+	// sync() simulates clearTerminal path: screen is fully reset
+	render.sync('Fresh output');
+
+	// Next render should NOT include hideCursor + cursorDown (return-to-bottom prefix)
+	// because sync() should have reset previousCursorPosition and cursorWasShown
+	render('Updated output');
+
+	const afterSync = stdout.get();
+	t.false(afterSync.includes(hideCursorEscape));
+	t.false(afterSync.includes(ansiEscapes.cursorDown(3)));
+});
+
+test('incremental rendering - sync() resets cursor state', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render.setCursorPosition({x: 5, y: 0});
+	render('Line 1\nLine 2\nLine 3');
+
+	// sync() simulates clearTerminal path
+	render.sync('Fresh output');
+
+	render('Updated output');
+
+	const afterSync = stdout.get();
+	t.false(afterSync.includes(hideCursorEscape));
+	t.false(afterSync.includes(ansiEscapes.cursorDown(3)));
+});
+
 test('incremental rendering - render to empty string (full clear vs early exit)', t => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout, {incremental: true});

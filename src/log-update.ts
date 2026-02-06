@@ -115,6 +115,8 @@ const createStandard = (
 		const output = str + '\n';
 		previousOutput = output;
 		previousLineCount = output.split('\n').length;
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
 	};
 
 	render.setCursorPosition = (position: CursorPosition | undefined) => {
@@ -273,6 +275,8 @@ const createIncremental = (
 		const output = str + '\n';
 		previousOutput = output;
 		previousLines = output.split('\n');
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
 	};
 
 	render.setCursorPosition = (position: CursorPosition | undefined) => {
