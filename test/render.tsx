@@ -84,7 +84,11 @@ const term = (fixture: string, args: string[] = []) => {
 	};
 
 	ps.onData(data => {
-		result.output += data;
+		// Strip Synchronized Update Mode sequences (BSU/ESU) so tests
+		// only see the actual content, not the transport wrapper.
+		result.output += data
+			.replaceAll('\u001B[?2026h', '')
+			.replaceAll('\u001B[?2026l', '');
 	});
 
 	ps.onExit(({exitCode}) => {
@@ -217,11 +221,7 @@ test.serial('clear output', async t => {
 	const ps = term('clear');
 	await ps.waitForExit();
 
-	// Strip Synchronized Update Mode sequences before splitting
-	const output = ps.output
-		.replaceAll('\u001B[?2026h', '')
-		.replaceAll('\u001B[?2026l', '');
-	const secondFrame = output.split(ansiEscapes.eraseLines(4))[1];
+	const secondFrame = ps.output.split(ansiEscapes.eraseLines(4))[1];
 
 	for (const letter of ['A', 'B', 'C']) {
 		t.false(secondFrame?.includes(letter));
