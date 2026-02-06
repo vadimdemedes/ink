@@ -2,11 +2,15 @@ import {type Writable} from 'node:stream';
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
 import writeSynchronized from './write-synchronized.js';
+import {
+	type CursorPosition,
+	cursorPositionChanged,
+	buildCursorSuffix,
+	buildCursorOnlySequence,
+	buildReturnToBottomPrefix,
+} from './cursor-helpers.js';
 
-export type CursorPosition = {
-	x: number;
-	y: number;
-};
+export type {CursorPosition} from './cursor-helpers.js';
 
 export type LogUpdate = {
 	clear: () => void;
@@ -14,49 +18,6 @@ export type LogUpdate = {
 	sync: (str: string) => void;
 	setCursorPosition: (position: CursorPosition | undefined) => void;
 	(str: string): void;
-};
-
-const showCursorEscape = '\u001B[?25h';
-const hideCursorEscape = '\u001B[?25l';
-
-/**
-Build escape sequence to move cursor from bottom of output to the target position and show it.
-Assumes cursor is at (col 0, line visibleLineCount) — i.e. just after the last output line.
-*/
-const buildCursorSuffix = (
-	visibleLineCount: number,
-	cursorPosition: CursorPosition | undefined,
-): string => {
-	if (!cursorPosition) {
-		return '';
-	}
-
-	const moveUp = visibleLineCount - cursorPosition.y;
-	return (
-		(moveUp > 0 ? ansiEscapes.cursorUp(moveUp) : '') +
-		ansiEscapes.cursorTo(cursorPosition.x) +
-		showCursorEscape
-	);
-};
-
-/**
-Build escape sequence to move cursor from previousCursorPosition back to the bottom of output.
-This must be done before eraseLines or any operation that assumes cursor is at the bottom.
-*/
-const buildReturnToBottom = (
-	previousLineCount: number,
-	previousCursorPosition: CursorPosition | undefined,
-): string => {
-	if (!previousCursorPosition) {
-		return '';
-	}
-
-	// PreviousLineCount includes trailing newline, so visible lines = previousLineCount - 1
-	// cursor is at previousCursorPosition.y, need to go to line (previousLineCount - 1)
-	const down = previousLineCount - 1 - previousCursorPosition.y;
-	return (
-		(down > 0 ? ansiEscapes.cursorDown(down) : '') + ansiEscapes.cursorTo(0)
-	);
 };
 
 const createStandard = (
@@ -77,9 +38,10 @@ const createStandard = (
 		}
 
 		const output = str + '\n';
-		const cursorChanged =
-			cursorPosition?.x !== previousCursorPosition?.x ||
-			cursorPosition?.y !== previousCursorPosition?.y;
+		const cursorChanged = cursorPositionChanged(
+			cursorPosition,
+			previousCursorPosition,
+		);
 
 		if (output === previousOutput && !cursorChanged) {
 			return;
@@ -89,23 +51,26 @@ const createStandard = (
 		const cursorSuffix = buildCursorSuffix(visibleLineCount, cursorPosition);
 
 		if (output === previousOutput && cursorChanged) {
-			// Output unchanged but cursor moved — return to bottom, then reposition
-			const returnToBottom = buildReturnToBottom(
+			writeSynchronized(
+				stream,
+				buildCursorOnlySequence({
+					cursorWasShown,
+					previousLineCount,
+					previousCursorPosition,
+					visibleLineCount,
+					cursorPosition,
+				}),
+			);
+		} else {
+			previousOutput = output;
+			const returnPrefix = buildReturnToBottomPrefix(
+				cursorWasShown,
 				previousLineCount,
 				previousCursorPosition,
 			);
-			const hidePrefix = cursorWasShown ? hideCursorEscape : '';
-			writeSynchronized(stream, hidePrefix + returnToBottom + cursorSuffix);
-		} else {
-			previousOutput = output;
-			// Return to bottom before erasing, so eraseLines works from the correct position
-			const returnToBottom = cursorWasShown
-				? hideCursorEscape +
-					buildReturnToBottom(previousLineCount, previousCursorPosition)
-				: '';
 			writeSynchronized(
 				stream,
-				returnToBottom +
+				returnPrefix +
 					ansiEscapes.eraseLines(previousLineCount) +
 					output +
 					cursorSuffix,
@@ -117,37 +82,27 @@ const createStandard = (
 		cursorWasShown = cursorPosition !== undefined;
 	};
 
-	const resetCursorState = () => {
-		previousCursorPosition = undefined;
-		cursorWasShown = false;
-	};
-
-	const returnToBottomSequence = () => {
-		if (!cursorWasShown) {
-			return '';
-		}
-
-		return (
-			hideCursorEscape +
-			buildReturnToBottom(previousLineCount, previousCursorPosition)
-		);
-	};
-
 	render.clear = () => {
-		const prefix = returnToBottomSequence();
+		const prefix = buildReturnToBottomPrefix(
+			cursorWasShown,
+			previousLineCount,
+			previousCursorPosition,
+		);
 		writeSynchronized(
 			stream,
 			prefix + ansiEscapes.eraseLines(previousLineCount),
 		);
 		previousOutput = '';
 		previousLineCount = 0;
-		resetCursorState();
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
 	};
 
 	render.done = () => {
 		previousOutput = '';
 		previousLineCount = 0;
-		resetCursorState();
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
 
 		if (!showCursor) {
 			cliCursor.show();
@@ -186,9 +141,10 @@ const createIncremental = (
 		}
 
 		const output = str + '\n';
-		const cursorChanged =
-			cursorPosition?.x !== previousCursorPosition?.x ||
-			cursorPosition?.y !== previousCursorPosition?.y;
+		const cursorChanged = cursorPositionChanged(
+			cursorPosition,
+			previousCursorPosition,
+		);
 
 		if (output === previousOutput && !cursorChanged) {
 			return;
@@ -200,30 +156,32 @@ const createIncremental = (
 		const visibleCount = nextCount - 1;
 
 		if (output === previousOutput && cursorChanged) {
-			// Output unchanged but cursor moved — return to bottom, then reposition
-			const returnToBottom = buildReturnToBottom(
-				previousCount,
-				previousCursorPosition,
+			writeSynchronized(
+				stream,
+				buildCursorOnlySequence({
+					cursorWasShown,
+					previousLineCount: previousCount,
+					previousCursorPosition,
+					visibleLineCount: visibleCount,
+					cursorPosition,
+				}),
 			);
-			const cursorSuffix = buildCursorSuffix(visibleCount, cursorPosition);
-			const hidePrefix = cursorWasShown ? hideCursorEscape : '';
-			writeSynchronized(stream, hidePrefix + returnToBottom + cursorSuffix);
 			previousCursorPosition = cursorPosition ? {...cursorPosition} : undefined;
 			cursorWasShown = cursorPosition !== undefined;
 			return;
 		}
 
-		// Return to bottom before modifying output
-		const returnToBottom = cursorWasShown
-			? hideCursorEscape +
-				buildReturnToBottom(previousCount, previousCursorPosition)
-			: '';
+		const returnPrefix = buildReturnToBottomPrefix(
+			cursorWasShown,
+			previousCount,
+			previousCursorPosition,
+		);
 
 		if (output === '\n' || previousOutput.length === 0) {
 			const cursorSuffix = buildCursorSuffix(visibleCount, cursorPosition);
 			writeSynchronized(
 				stream,
-				returnToBottom +
+				returnPrefix +
 					ansiEscapes.eraseLines(previousCount) +
 					output +
 					cursorSuffix,
@@ -238,7 +196,7 @@ const createIncremental = (
 		// We aggregate all chunks for incremental rendering into a buffer, and then write them to stdout at the end.
 		const buffer: string[] = [];
 
-		buffer.push(returnToBottom);
+		buffer.push(returnPrefix);
 
 		// Clear extra lines if the current content's line count is lower than the previous.
 		if (nextCount < previousCount) {
@@ -278,37 +236,27 @@ const createIncremental = (
 		previousLines = nextLines;
 	};
 
-	const resetCursorState = () => {
-		previousCursorPosition = undefined;
-		cursorWasShown = false;
-	};
-
-	const returnToBottomSequence = () => {
-		if (!cursorWasShown) {
-			return '';
-		}
-
-		return (
-			hideCursorEscape +
-			buildReturnToBottom(previousLines.length, previousCursorPosition)
-		);
-	};
-
 	render.clear = () => {
-		const prefix = returnToBottomSequence();
+		const prefix = buildReturnToBottomPrefix(
+			cursorWasShown,
+			previousLines.length,
+			previousCursorPosition,
+		);
 		writeSynchronized(
 			stream,
 			prefix + ansiEscapes.eraseLines(previousLines.length),
 		);
 		previousOutput = '';
 		previousLines = [];
-		resetCursorState();
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
 	};
 
 	render.done = () => {
 		previousOutput = '';
 		previousLines = [];
-		resetCursorState();
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
 
 		if (!showCursor) {
 			cliCursor.show();
