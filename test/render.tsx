@@ -414,6 +414,48 @@ const createTtyStdout = (columns?: number) => {
 	return stdout;
 };
 
+test.serial('no BSU/ESU when output is unchanged', t => {
+	const clock = FakeTimers.install();
+	try {
+		const stdout = createTtyStdout();
+		const writes: string[] = [];
+		const originalWrite = stdout.write;
+		(stdout as any).write = (...args: any[]) => {
+			writes.push(args[0] as string);
+			return (originalWrite as any)(...args);
+		};
+
+		const {unmount, rerender} = render(
+			<ThrottleTestComponent text="Hello" />,
+			{stdout, maxFps: 1},
+		);
+
+		// Leading call writes BSU + content + ESU (expected)
+		t.true(writes.some(w => w === BSU), 'initial render should include BSU');
+
+		// Clear writes, rerender with SAME text
+		writes.length = 0;
+		rerender(<ThrottleTestComponent text="Hello" />);
+
+		// Advance past throttle window to trigger trailing call
+		clock.tick(1000);
+
+		// No BSU/ESU should be emitted because output didn't change
+		t.false(
+			writes.some(w => w === BSU),
+			'unchanged output should not emit BSU',
+		);
+		t.false(
+			writes.some(w => w === ESU),
+			'unchanged output should not emit ESU',
+		);
+
+		unmount();
+	} finally {
+		clock.uninstall();
+	}
+});
+
 test.serial('BSU/ESU wraps throttledLog trailing call', t => {
 	const clock = FakeTimers.install();
 	try {
