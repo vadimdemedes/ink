@@ -162,6 +162,62 @@ test.serial(
 	},
 );
 
+test.serial(
+	'cursor is cleared when component using useCursor unmounts',
+	async t => {
+		const stdout = createStdout();
+		const stdin = createStdin();
+
+		function CursorChild() {
+			const {setCursorPosition} = useCursor();
+			setCursorPosition({x: 5, y: 0});
+			return <Text>child</Text>;
+		}
+
+		function Parent() {
+			const [showChild, setShowChild] = useState(true);
+
+			useInput((_input, key) => {
+				if (key.return) {
+					setShowChild(false);
+				}
+			});
+
+			return <Box>{showChild ? <CursorChild /> : <Text>no cursor</Text>}</Box>;
+		}
+
+		const {unmount} = render(<Parent />, {stdout, stdin});
+		await delay(100);
+
+		// Cursor should be shown after first render
+		const firstWrite = (stdout.write as any).firstCall.args[0] as string;
+		t.true(
+			firstWrite.includes(showCursorEscape),
+			'cursor should be visible initially',
+		);
+
+		// Unmount the child by pressing Enter
+		emitReadable(stdin, '\r');
+		await delay(100);
+
+		// After child unmounts, cursor position should be cleared.
+		// The last write should NOT contain showCursorEscape.
+		const allWrites: string[] = [];
+		for (let i = 0; i < (stdout.write as any).callCount; i++) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+			allWrites.push((stdout.write as any).getCall(i).args[0] as string);
+		}
+
+		const lastWrite = allWrites.at(-1) ?? '';
+		t.false(
+			lastWrite.includes(showCursorEscape),
+			'cursor should not be shown after child with useCursor unmounts',
+		);
+
+		unmount();
+	},
+);
+
 test.serial('screen does not scroll up on subsequent renders', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();

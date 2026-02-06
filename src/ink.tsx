@@ -274,12 +274,12 @@ export default class Ink {
 			return;
 		}
 
-		const sync = shouldSynchronize(this.options.stdout);
-		if (sync) {
-			this.options.stdout.write(BSU);
-		}
-
 		if (this.isScreenReaderEnabled) {
+			const sync = shouldSynchronize(this.options.stdout);
+			if (sync) {
+				this.options.stdout.write(BSU);
+			}
+
 			if (hasStaticOutput) {
 				// We need to erase the main output before writing new static output
 				const erase =
@@ -333,6 +333,11 @@ export default class Ink {
 		}
 
 		if (this.lastOutputHeight >= this.options.stdout.rows) {
+			const sync = shouldSynchronize(this.options.stdout);
+			if (sync) {
+				this.options.stdout.write(BSU);
+			}
+
 			this.options.stdout.write(
 				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
 			);
@@ -349,6 +354,11 @@ export default class Ink {
 
 		// To ensure static output is cleanly rendered before main output, clear main output first
 		if (hasStaticOutput) {
+			const sync = shouldSynchronize(this.options.stdout);
+			if (sync) {
+				this.options.stdout.write(BSU);
+			}
+
 			this.log.clear();
 			this.options.stdout.write(staticOutput);
 			this.log(output);
@@ -357,12 +367,7 @@ export default class Ink {
 				this.options.stdout.write(ESU);
 			}
 		} else {
-			// Close outer BSU (no immediate writes in this path) and let
-			// throttledLog manage its own BSU/ESU at actual write time
-			if (sync) {
-				this.options.stdout.write(ESU);
-			}
-
+			// ThrottledLog manages its own BSU/ESU at actual write time
 			this.throttledLog(output);
 		}
 

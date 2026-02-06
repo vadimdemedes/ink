@@ -13,6 +13,7 @@ import boxen from 'boxen';
 import delay from 'delay';
 import {render, Box, Text, useInput} from '../src/index.js';
 import {type RenderMetrics} from '../src/ink.js';
+import {BSU, ESU} from '../src/write-synchronized.js';
 import createStdout from './helpers/create-stdout.js';
 
 const require = createRequire(import.meta.url);
@@ -402,6 +403,75 @@ test.serial('no throttled renders after unmount', t => {
 		// Regression test for https://github.com/vadimdemedes/ink/issues/692
 		clock.tick(1000);
 		t.is((stdout.write as any).callCount, callCountAfterUnmount);
+	} finally {
+		clock.uninstall();
+	}
+});
+
+const createTtyStdout = (columns?: number) => {
+	const stdout = createStdout(columns);
+	(stdout as any).isTTY = true;
+	return stdout;
+};
+
+test.serial('BSU/ESU wraps throttledLog trailing call', t => {
+	const clock = FakeTimers.install();
+	try {
+		const stdout = createTtyStdout();
+		const writes: string[] = [];
+		const originalWrite = stdout.write;
+		(stdout as any).write = (...args: any[]) => {
+			writes.push(args[0] as string);
+			return (originalWrite as any)(...args);
+		};
+
+		const {unmount, rerender} = render(
+			<ThrottleTestComponent text="Hello" />,
+			{stdout, maxFps: 1},
+		);
+
+		// Leading call writes: BSU, content, ESU
+		const leadingWrites = [...writes];
+		t.true(
+			leadingWrites.some(w => w === BSU),
+			'leading call should include BSU',
+		);
+		t.true(
+			leadingWrites.some(w => w === ESU),
+			'leading call should include ESU',
+		);
+
+		// Trigger a rerender inside the throttle window (will be deferred as trailing)
+		writes.length = 0;
+		rerender(<ThrottleTestComponent text="World" />);
+
+		// No immediate write yet (throttled)
+		const midWrites = [...writes];
+		t.false(
+			midWrites.some(w => w.includes('World')),
+			'trailing call should not write immediately',
+		);
+
+		// Advance past throttle window to trigger trailing call
+		writes.length = 0;
+		clock.tick(1000);
+
+		// Trailing call should also be wrapped with BSU/ESU
+		t.true(
+			writes.some(w => w === BSU),
+			'trailing call should include BSU',
+		);
+		t.true(
+			writes.some(w => w === ESU),
+			'trailing call should include ESU',
+		);
+
+		// Verify BSU comes before content and ESU comes after
+		const bsuIdx = writes.indexOf(BSU);
+		const esuIdx = writes.indexOf(ESU);
+		t.true(bsuIdx < esuIdx, 'BSU should come before ESU');
+
+		unmount();
 	} finally {
 		clock.uninstall();
 	}

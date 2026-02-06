@@ -215,6 +215,7 @@ test('standard rendering - hides cursor before erase when cursor was previously 
 
 	render.setCursorPosition({x: 0, y: 0});
 	render('Hello');
+	render.setCursorPosition({x: 0, y: 0});
 	render('World');
 
 	const secondCall = (stdout.write as any).secondCall.args[0] as string;
@@ -324,6 +325,7 @@ test('incremental rendering - positions cursor after update', t => {
 
 	render.setCursorPosition({x: 2, y: 0});
 	render('Line 1\nLine 2\nLine 3');
+	render.setCursorPosition({x: 2, y: 0});
 	render('Line 1\nUpdated\nLine 3');
 
 	const secondCall = (stdout.write as any).secondCall.args[0] as string;

@@ -1,4 +1,4 @@
-import {useContext} from 'react';
+import {useContext, useEffect} from 'react';
 import CursorContext from '../components/CursorContext.js';
 
 /**
@@ -10,5 +10,16 @@ support, where the composing character is displayed at the cursor location.
 
 Pass `undefined` to hide the cursor.
 */
-const useCursor = () => useContext(CursorContext);
+const useCursor = () => {
+	const context = useContext(CursorContext);
+
+	useEffect(() => {
+		return () => {
+			context.setCursorPosition(undefined);
+		};
+	}, [context]);
+
+	return context;
+};
+
 export default useCursor;

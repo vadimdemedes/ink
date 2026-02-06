@@ -27,6 +27,7 @@ const createStandard = (
 	let previousOutput = '';
 	let hasHiddenCursor = false;
 	let cursorPosition: CursorPosition | undefined;
+	let cursorDirty = false;
 	let previousCursorPosition: CursorPosition | undefined;
 	let cursorWasShown = false;
 
@@ -36,9 +37,14 @@ const createStandard = (
 			hasHiddenCursor = true;
 		}
 
+		// Only use cursor if setCursorPosition was called since last render.
+		// This ensures stale positions don't persist after component unmount.
+		const activeCursor = cursorDirty ? cursorPosition : undefined;
+		cursorDirty = false;
+
 		const output = str + '\n';
 		const cursorChanged = cursorPositionChanged(
-			cursorPosition,
+			activeCursor,
 			previousCursorPosition,
 		);
 
@@ -47,7 +53,7 @@ const createStandard = (
 		}
 
 		const visibleLineCount = output.split('\n').length - 1;
-		const cursorSuffix = buildCursorSuffix(visibleLineCount, cursorPosition);
+		const cursorSuffix = buildCursorSuffix(visibleLineCount, activeCursor);
 
 		if (output === previousOutput && cursorChanged) {
 			stream.write(
@@ -56,7 +62,7 @@ const createStandard = (
 					previousLineCount,
 					previousCursorPosition,
 					visibleLineCount,
-					cursorPosition,
+					cursorPosition: activeCursor,
 				}),
 			);
 		} else {
@@ -75,8 +81,8 @@ const createStandard = (
 			previousLineCount = output.split('\n').length;
 		}
 
-		previousCursorPosition = cursorPosition ? {...cursorPosition} : undefined;
-		cursorWasShown = cursorPosition !== undefined;
+		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+		cursorWasShown = activeCursor !== undefined;
 	};
 
 	render.clear = () => {
@@ -85,9 +91,7 @@ const createStandard = (
 			previousLineCount,
 			previousCursorPosition,
 		);
-		stream.write(
-			prefix + ansiEscapes.eraseLines(previousLineCount),
-		);
+		stream.write(prefix + ansiEscapes.eraseLines(previousLineCount));
 		previousOutput = '';
 		previousLineCount = 0;
 		previousCursorPosition = undefined;
@@ -114,6 +118,7 @@ const createStandard = (
 
 	render.setCursorPosition = (position: CursorPosition | undefined) => {
 		cursorPosition = position;
+		cursorDirty = true;
 	};
 
 	return render;
@@ -127,6 +132,7 @@ const createIncremental = (
 	let previousOutput = '';
 	let hasHiddenCursor = false;
 	let cursorPosition: CursorPosition | undefined;
+	let cursorDirty = false;
 	let previousCursorPosition: CursorPosition | undefined;
 	let cursorWasShown = false;
 
@@ -136,9 +142,14 @@ const createIncremental = (
 			hasHiddenCursor = true;
 		}
 
+		// Only use cursor if setCursorPosition was called since last render.
+		// This ensures stale positions don't persist after component unmount.
+		const activeCursor = cursorDirty ? cursorPosition : undefined;
+		cursorDirty = false;
+
 		const output = str + '\n';
 		const cursorChanged = cursorPositionChanged(
-			cursorPosition,
+			activeCursor,
 			previousCursorPosition,
 		);
 
@@ -158,11 +169,11 @@ const createIncremental = (
 					previousLineCount: previousCount,
 					previousCursorPosition,
 					visibleLineCount: visibleCount,
-					cursorPosition,
+					cursorPosition: activeCursor,
 				}),
 			);
-			previousCursorPosition = cursorPosition ? {...cursorPosition} : undefined;
-			cursorWasShown = cursorPosition !== undefined;
+			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+			cursorWasShown = activeCursor !== undefined;
 			return;
 		}
 
@@ -173,15 +184,15 @@ const createIncremental = (
 		);
 
 		if (output === '\n' || previousOutput.length === 0) {
-			const cursorSuffix = buildCursorSuffix(visibleCount, cursorPosition);
+			const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
 			stream.write(
 				returnPrefix +
 					ansiEscapes.eraseLines(previousCount) +
 					output +
 					cursorSuffix,
 			);
-			cursorWasShown = cursorPosition !== undefined;
-			previousCursorPosition = cursorPosition ? {...cursorPosition} : undefined;
+			cursorWasShown = activeCursor !== undefined;
+			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
 			previousOutput = output;
 			previousLines = nextLines;
 			return;
@@ -219,13 +230,13 @@ const createIncremental = (
 			);
 		}
 
-		const cursorSuffix = buildCursorSuffix(visibleCount, cursorPosition);
+		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
 		buffer.push(cursorSuffix);
 
 		stream.write(buffer.join(''));
 
-		cursorWasShown = cursorPosition !== undefined;
-		previousCursorPosition = cursorPosition ? {...cursorPosition} : undefined;
+		cursorWasShown = activeCursor !== undefined;
+		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
 		previousOutput = output;
 		previousLines = nextLines;
 	};
@@ -236,9 +247,7 @@ const createIncremental = (
 			previousLines.length,
 			previousCursorPosition,
 		);
-		stream.write(
-			prefix + ansiEscapes.eraseLines(previousLines.length),
-		);
+		stream.write(prefix + ansiEscapes.eraseLines(previousLines.length));
 		previousOutput = '';
 		previousLines = [];
 		previousCursorPosition = undefined;
@@ -265,6 +274,7 @@ const createIncremental = (
 
 	render.setCursorPosition = (position: CursorPosition | undefined) => {
 		cursorPosition = position;
+		cursorDirty = true;
 	};
 
 	return render;
