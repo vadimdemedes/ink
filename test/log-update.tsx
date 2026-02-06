@@ -238,7 +238,7 @@ test('standard rendering - no cursor positioning when cursorPosition is undefine
 	t.false(written.includes(showCursorEscape));
 });
 
-test('standard rendering - cursor position at last line does not emit cursorUp', t => {
+test('standard rendering - cursor position at second-to-last line emits cursorUp(1)', t => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout);
 
@@ -246,14 +246,45 @@ test('standard rendering - cursor position at last line does not emit cursorUp',
 	render('Line 1\nLine 2\nLine 3');
 
 	const written = (stdout.write as any).firstCall.args[0] as string;
-	// Y=2 is the last visible line (0-indexed), cursor is already there
-	// cursorUp(3 - 2) = cursorUp(1)... wait, output has 3 lines, after write cursor is at line 3
+	// Output has 3 visible lines. After write, cursor is at line 3 (past last visible).
 	// To reach y=2: cursorUp(3 - 2) = cursorUp(1)
 	t.true(
 		written.endsWith(
 			ansiEscapes.cursorUp(1) + ansiEscapes.cursorTo(3) + showCursorEscape,
 		),
 	);
+});
+
+test('standard rendering - clear() returns cursor to bottom before erasing', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render.setCursorPosition({x: 5, y: 0});
+	render('Line 1\nLine 2\nLine 3');
+
+	render.clear();
+
+	const clearCall = (stdout.write as any).secondCall.args[0] as string;
+	// Cursor was at y=0, output had 4 lines (3 visible + trailing newline).
+	// clear() should: hide cursor, move down to bottom (from y=0 to line 3), then erase
+	t.true(clearCall.includes(hideCursorEscape));
+	t.true(clearCall.includes(ansiEscapes.cursorDown(3)));
+	t.true(clearCall.includes(ansiEscapes.eraseLines(4)));
+});
+
+test('incremental rendering - clear() returns cursor to bottom before erasing', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render.setCursorPosition({x: 5, y: 0});
+	render('Line 1\nLine 2\nLine 3');
+
+	render.clear();
+
+	const clearCall = (stdout.write as any).secondCall.args[0] as string;
+	t.true(clearCall.includes(hideCursorEscape));
+	t.true(clearCall.includes(ansiEscapes.cursorDown(3)));
+	t.true(clearCall.includes(ansiEscapes.eraseLines(4)));
 });
 
 test('standard rendering - clearing cursor position stops cursor positioning', t => {

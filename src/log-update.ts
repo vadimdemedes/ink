@@ -117,15 +117,37 @@ const createStandard = (
 		cursorWasShown = cursorPosition !== undefined;
 	};
 
+	const resetCursorState = () => {
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
+	};
+
+	const returnToBottomSequence = () => {
+		if (!cursorWasShown) {
+			return '';
+		}
+
+		return (
+			hideCursorEscape +
+			buildReturnToBottom(previousLineCount, previousCursorPosition)
+		);
+	};
+
 	render.clear = () => {
-		writeSynchronized(stream, ansiEscapes.eraseLines(previousLineCount));
+		const prefix = returnToBottomSequence();
+		writeSynchronized(
+			stream,
+			prefix + ansiEscapes.eraseLines(previousLineCount),
+		);
 		previousOutput = '';
 		previousLineCount = 0;
+		resetCursorState();
 	};
 
 	render.done = () => {
 		previousOutput = '';
 		previousLineCount = 0;
+		resetCursorState();
 
 		if (!showCursor) {
 			cliCursor.show();
@@ -256,15 +278,37 @@ const createIncremental = (
 		previousLines = nextLines;
 	};
 
+	const resetCursorState = () => {
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
+	};
+
+	const returnToBottomSequence = () => {
+		if (!cursorWasShown) {
+			return '';
+		}
+
+		return (
+			hideCursorEscape +
+			buildReturnToBottom(previousLines.length, previousCursorPosition)
+		);
+	};
+
 	render.clear = () => {
-		writeSynchronized(stream, ansiEscapes.eraseLines(previousLines.length));
+		const prefix = returnToBottomSequence();
+		writeSynchronized(
+			stream,
+			prefix + ansiEscapes.eraseLines(previousLines.length),
+		);
 		previousOutput = '';
 		previousLines = [];
+		resetCursorState();
 	};
 
 	render.done = () => {
 		previousOutput = '';
 		previousLines = [];
+		resetCursorState();
 
 		if (!showCursor) {
 			cliCursor.show();
