@@ -450,21 +450,17 @@ export default class Ink {
 
 		instances.delete(this.options.stdout);
 
-		// Wait for stdout to drain before resolving the exit promise,
-		// ensuring all buffered writes are flushed to the terminal
-		const resolveOrReject = () => {
+		// Use a write callback barrier to ensure all queued writes have been
+		// processed before resolving the exit promise. An empty write queued
+		// after the real writes will have its callback invoked only after all
+		// prior write callbacks complete.
+		this.options.stdout.write('', () => {
 			if (error instanceof Error) {
 				this.rejectExitPromise(error);
 			} else {
 				this.resolveExitPromise();
 			}
-		};
-
-		if (this.options.stdout.writableNeedDrain) {
-			this.options.stdout.once('drain', resolveOrReject);
-		} else {
-			resolveOrReject();
-		}
+		});
 	}
 
 	async waitUntilExit(): Promise<void> {

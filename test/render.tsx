@@ -1,5 +1,6 @@
 import EventEmitter from 'node:events';
 import process from 'node:process';
+import {Writable} from 'node:stream';
 import url from 'node:url';
 import * as path from 'node:path';
 import {createRequire} from 'node:module';
@@ -437,4 +438,27 @@ test.serial('unmount forces pending throttled render', t => {
 	} finally {
 		clock.uninstall();
 	}
+});
+
+test.serial('waitUntilExit resolves after stdout write callback', async t => {
+	let writeCallbackFired = false;
+
+	const stdout = new Writable({
+		write(_chunk, _encoding, callback) {
+			setTimeout(() => {
+				writeCallbackFired = true;
+				callback();
+			}, 150);
+		},
+	}) as unknown as NodeJS.WriteStream;
+
+	stdout.columns = 100;
+
+	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {stdout});
+	const exitPromise = waitUntilExit();
+
+	unmount();
+	await exitPromise;
+
+	t.true(writeCallbackFired);
 });
