@@ -1,7 +1,6 @@
 import {type Writable} from 'node:stream';
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
-import writeSynchronized from './write-synchronized.js';
 import {
 	type CursorPosition,
 	cursorPositionChanged,
@@ -51,8 +50,7 @@ const createStandard = (
 		const cursorSuffix = buildCursorSuffix(visibleLineCount, cursorPosition);
 
 		if (output === previousOutput && cursorChanged) {
-			writeSynchronized(
-				stream,
+			stream.write(
 				buildCursorOnlySequence({
 					cursorWasShown,
 					previousLineCount,
@@ -68,8 +66,7 @@ const createStandard = (
 				previousLineCount,
 				previousCursorPosition,
 			);
-			writeSynchronized(
-				stream,
+			stream.write(
 				returnPrefix +
 					ansiEscapes.eraseLines(previousLineCount) +
 					output +
@@ -88,8 +85,7 @@ const createStandard = (
 			previousLineCount,
 			previousCursorPosition,
 		);
-		writeSynchronized(
-			stream,
+		stream.write(
 			prefix + ansiEscapes.eraseLines(previousLineCount),
 		);
 		previousOutput = '';
@@ -156,8 +152,7 @@ const createIncremental = (
 		const visibleCount = nextCount - 1;
 
 		if (output === previousOutput && cursorChanged) {
-			writeSynchronized(
-				stream,
+			stream.write(
 				buildCursorOnlySequence({
 					cursorWasShown,
 					previousLineCount: previousCount,
@@ -179,8 +174,7 @@ const createIncremental = (
 
 		if (output === '\n' || previousOutput.length === 0) {
 			const cursorSuffix = buildCursorSuffix(visibleCount, cursorPosition);
-			writeSynchronized(
-				stream,
+			stream.write(
 				returnPrefix +
 					ansiEscapes.eraseLines(previousCount) +
 					output +
@@ -228,7 +222,7 @@ const createIncremental = (
 		const cursorSuffix = buildCursorSuffix(visibleCount, cursorPosition);
 		buffer.push(cursorSuffix);
 
-		writeSynchronized(stream, buffer.join(''));
+		stream.write(buffer.join(''));
 
 		cursorWasShown = cursorPosition !== undefined;
 		previousCursorPosition = cursorPosition ? {...cursorPosition} : undefined;
@@ -242,8 +236,7 @@ const createIncremental = (
 			previousLines.length,
 			previousCursorPosition,
 		);
-		writeSynchronized(
-			stream,
+		stream.write(
 			prefix + ansiEscapes.eraseLines(previousLines.length),
 		);
 		previousOutput = '';

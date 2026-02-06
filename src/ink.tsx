@@ -15,7 +15,7 @@ import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
 import logUpdate, {type LogUpdate, type CursorPosition} from './log-update.js';
-import writeSynchronized from './write-synchronized.js';
+import {BSU, ESU, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
@@ -259,6 +259,11 @@ export default class Ink {
 			return;
 		}
 
+		const sync = shouldSynchronize(this.options.stdout);
+		if (sync) {
+			this.options.stdout.write(BSU);
+		}
+
 		if (this.isScreenReaderEnabled) {
 			if (hasStaticOutput) {
 				// We need to erase the main output before writing new static output
@@ -266,12 +271,16 @@ export default class Ink {
 					this.lastOutputHeight > 0
 						? ansiEscapes.eraseLines(this.lastOutputHeight)
 						: '';
-				writeSynchronized(this.options.stdout, erase + staticOutput);
+				this.options.stdout.write(erase + staticOutput);
 				// After erasing, the last output is gone, so we should reset its height
 				this.lastOutputHeight = 0;
 			}
 
 			if (output === this.lastOutput && !hasStaticOutput) {
+				if (sync) {
+					this.options.stdout.write(ESU);
+				}
+
 				return;
 			}
 
@@ -284,18 +293,23 @@ export default class Ink {
 
 			// If we haven't erased yet, do it now.
 			if (hasStaticOutput) {
-				writeSynchronized(this.options.stdout, wrappedOutput);
+				this.options.stdout.write(wrappedOutput);
 			} else {
 				const erase =
 					this.lastOutputHeight > 0
 						? ansiEscapes.eraseLines(this.lastOutputHeight)
 						: '';
-				writeSynchronized(this.options.stdout, erase + wrappedOutput);
+				this.options.stdout.write(erase + wrappedOutput);
 			}
 
 			this.lastOutput = output;
 			this.lastOutputHeight =
 				wrappedOutput === '' ? 0 : wrappedOutput.split('\n').length;
+
+			if (sync) {
+				this.options.stdout.write(ESU);
+			}
+
 			return;
 		}
 
@@ -304,20 +318,24 @@ export default class Ink {
 		}
 
 		if (this.lastOutputHeight >= this.options.stdout.rows) {
-			writeSynchronized(
-				this.options.stdout,
+			this.options.stdout.write(
 				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
 			);
 			this.lastOutput = output;
 			this.lastOutputHeight = outputHeight;
 			this.log.sync(output);
+
+			if (sync) {
+				this.options.stdout.write(ESU);
+			}
+
 			return;
 		}
 
 		// To ensure static output is cleanly rendered before main output, clear main output first
 		if (hasStaticOutput) {
 			this.log.clear();
-			writeSynchronized(this.options.stdout, staticOutput);
+			this.options.stdout.write(staticOutput);
 			this.log(output);
 		}
 
@@ -327,6 +345,10 @@ export default class Ink {
 
 		this.lastOutput = output;
 		this.lastOutputHeight = outputHeight;
+
+		if (sync) {
+			this.options.stdout.write(ESU);
+		}
 	};
 
 	render(node: ReactNode): void {
@@ -374,9 +396,18 @@ export default class Ink {
 			return;
 		}
 
+		const sync = shouldSynchronize(this.options.stdout);
+		if (sync) {
+			this.options.stdout.write(BSU);
+		}
+
 		this.log.clear();
-		writeSynchronized(this.options.stdout, data);
+		this.options.stdout.write(data);
 		this.log(this.lastOutput);
+
+		if (sync) {
+			this.options.stdout.write(ESU);
+		}
 	}
 
 	writeToStderr(data: string): void {
@@ -395,9 +426,18 @@ export default class Ink {
 			return;
 		}
 
+		const sync = shouldSynchronize(this.options.stdout);
+		if (sync) {
+			this.options.stdout.write(BSU);
+		}
+
 		this.log.clear();
-		writeSynchronized(this.options.stderr, data);
+		this.options.stderr.write(data);
 		this.log(this.lastOutput);
+
+		if (sync) {
+			this.options.stdout.write(ESU);
+		}
 	}
 
 	// eslint-disable-next-line @typescript-eslint/ban-types
