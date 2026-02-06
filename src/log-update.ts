@@ -90,14 +90,17 @@ const createIncremental = (
 		}
 
 		const previousVisible = visibleLineCount(previousLines, previousOutput);
+		const hasTrailingNewline = str.endsWith('\n');
 
 		// We aggregate all chunks for incremental rendering into a buffer, and then write them to stdout at the end.
 		const buffer: string[] = [];
 
 		// Clear extra lines if the current content's line count is lower than the previous.
 		if (visibleCount < previousVisible) {
+			const previousHadTrailingNewline = previousOutput.endsWith('\n');
+			const extraSlot = previousHadTrailingNewline ? 1 : 0;
 			buffer.push(
-				ansiEscapes.eraseLines(previousVisible - visibleCount + 1),
+				ansiEscapes.eraseLines(previousVisible - visibleCount + extraSlot),
 				ansiEscapes.cursorUp(visibleCount),
 			);
 		} else {
@@ -105,9 +108,16 @@ const createIncremental = (
 		}
 
 		for (let i = 0; i < visibleCount; i++) {
+			const isLastLine = i === visibleCount - 1;
+
 			// We do not write lines if the contents are the same. This prevents flickering during renders.
 			if (nextLines[i] === previousLines[i]) {
-				buffer.push(ansiEscapes.cursorNextLine);
+				// Don't move past the last line when there's no trailing newline,
+				// otherwise the cursor overshoots the rendered block.
+				if (!isLastLine || hasTrailingNewline) {
+					buffer.push(ansiEscapes.cursorNextLine);
+				}
+
 				continue;
 			}
 
@@ -115,7 +125,9 @@ const createIncremental = (
 				ansiEscapes.cursorTo(0) +
 					nextLines[i] +
 					ansiEscapes.eraseEndLine +
-					'\n',
+					// Don't append newline after the last line when the input
+					// has no trailing newline (fullscreen mode).
+					(isLastLine && !hasTrailingNewline ? '' : '\n'),
 			);
 		}
 

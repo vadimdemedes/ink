@@ -184,6 +184,85 @@ test('incremental rendering - sync() followed by update (assert incremental path
 	t.false(firstCall.includes('Line 3')); // Doesn't rewrite unchanged
 });
 
+// No-trailing-newline tests (fullscreen mode)
+
+test('incremental rendering - no trailing newline: trailing to no-trailing transition', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render('A\nB\n');
+	render('A\nB');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	// Both lines are unchanged, so only cursor movement should occur.
+	// The key is that the cursor does NOT overshoot past line B.
+	t.true(secondCall.includes(ansiEscapes.cursorNextLine)); // Skip unchanged A
+	t.false(secondCall.endsWith('\n')); // No trailing newline in output
+});
+
+test('incremental rendering - no trailing newline: no-trailing to no-trailing update', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render('A\nB');
+	render('A\nC');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	t.true(secondCall.includes(ansiEscapes.cursorNextLine)); // Skip unchanged A
+	t.true(secondCall.includes('C')); // Updates B to C
+	t.false(secondCall.endsWith('\n')); // No trailing newline
+});
+
+test('incremental rendering - no trailing newline: shrink', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render('A\nB');
+	render('A');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	// Should erase 1 extra line (B), not over-erase A
+	// previousVisible=2, visibleCount=1, no trailing newline -> eraseLines(2-1+0) = eraseLines(1)
+	t.true(secondCall.includes(ansiEscapes.eraseLines(1)));
+	t.false(secondCall.endsWith('\n')); // No trailing newline
+});
+
+test('incremental rendering - no trailing newline: grow', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render('A');
+	render('A\nB\nC');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	t.true(secondCall.includes('B')); // New line B
+	t.true(secondCall.includes('C')); // New line C
+	t.false(secondCall.endsWith('\n')); // No trailing newline
+});
+
+test('incremental rendering - no trailing newline: unchanged lines do not overshoot cursor', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render('A\nB');
+	render('A\nB'); // Identical - should be skipped entirely
+
+	t.is((stdout.write as any).callCount, 1); // No second write (identical)
+
+	// Now change only the first line
+	render('X\nB');
+
+	const thirdCall = (stdout.write as any).secondCall.args[0] as string;
+	// Should write X with newline to advance to B's line, then skip B.
+	// The buffer ends with the \n that moves to B's line, but no extra
+	// cursorNextLine past B -- the cursor stays on the last visible line.
+	t.true(thirdCall.includes('X'));
+	// Verify no cursorNextLine appears after B's position (B is unchanged
+	// and last, so no cursor movement is emitted for it)
+	const lastCursorNextLine = thirdCall.lastIndexOf(ansiEscapes.cursorNextLine);
+	t.is(lastCursorNextLine, -1); // No cursorNextLine at all since A is changed (written) not skipped
+});
+
 test('incremental rendering - render to empty string (full clear vs early exit)', t => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout, {incremental: true});
