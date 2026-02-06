@@ -1,5 +1,6 @@
-import {useContext, useEffect} from 'react';
+import {useContext, useRef, useCallback, useInsertionEffect} from 'react';
 import CursorContext from '../components/CursorContext.js';
+import {type CursorPosition} from '../log-update.js';
 
 /**
 `useCursor` is a React hook that lets you control the terminal cursor position.
@@ -12,14 +13,27 @@ Pass `undefined` to hide the cursor.
 */
 const useCursor = () => {
 	const context = useContext(CursorContext);
+	const positionRef = useRef<CursorPosition | undefined>(undefined);
 
-	useEffect(() => {
+	const setCursorPosition = useCallback(
+		(position: CursorPosition | undefined) => {
+			positionRef.current = position;
+		},
+		[],
+	);
+
+	// Propagate cursor position to log-update only during commit phase.
+	// useInsertionEffect runs before resetAfterCommit (which triggers onRender),
+	// and does NOT run for abandoned concurrent renders (e.g. suspended components).
+	// This prevents cursor state from leaking across render boundaries.
+	useInsertionEffect(() => {
+		context.setCursorPosition(positionRef.current);
 		return () => {
 			context.setCursorPosition(undefined);
 		};
-	}, [context]);
+	});
 
-	return context;
+	return {setCursorPosition};
 };
 
 export default useCursor;

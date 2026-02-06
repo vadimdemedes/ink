@@ -1,9 +1,10 @@
 import EventEmitter from 'node:events';
 import {stub} from 'sinon';
 import test from 'ava';
-import React, {useState} from 'react';
+import React, {Suspense, useState} from 'react';
 import ansiEscapes from 'ansi-escapes';
 import delay from 'delay';
+import {act} from 'react';
 import {render, Box, Text, useInput, useCursor} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
@@ -215,6 +216,65 @@ test.serial(
 		);
 
 		unmount();
+	},
+);
+
+test.serial(
+	'cursor position does not leak from suspended concurrent render to fallback',
+	async t => {
+		const stdout = createStdout();
+		const stdin = createStdin();
+
+		let resolvePromise: () => void;
+		const promise = new Promise<void>(resolve => {
+			resolvePromise = resolve;
+		});
+
+		let suspended = true;
+
+		function CursorChild() {
+			const {setCursorPosition} = useCursor();
+			setCursorPosition({x: 5, y: 0}); // render-phase side effect
+			if (suspended) {
+				// eslint-disable-next-line @typescript-eslint/only-throw-error
+				throw promise;
+			}
+
+			return <Text>loaded</Text>;
+		}
+
+		function Test() {
+			return (
+				<Suspense fallback={<Text>loading</Text>}>
+					<CursorChild />
+				</Suspense>
+			);
+		}
+
+		await act(async () => {
+			render(<Test />, {stdout, stdin, concurrent: true});
+		});
+
+		// Collect all writes during fallback render
+		const allWrites: string[] = [];
+		for (let i = 0; i < (stdout.write as any).callCount; i++) {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+			allWrites.push((stdout.write as any).getCall(i).args[0] as string);
+		}
+
+		// Fallback should NOT contain showCursorEscape from the suspended render
+		const hasShowCursor = allWrites.some(w => w.includes(showCursorEscape));
+		t.false(
+			hasShowCursor,
+			'fallback output should not contain show cursor escape from suspended concurrent render',
+		);
+
+		// Cleanup: resolve promise and unmount
+		suspended = false;
+		resolvePromise!();
+		await act(async () => {
+			await delay(50);
+		});
 	},
 );
 

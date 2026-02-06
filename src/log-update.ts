@@ -16,6 +16,7 @@ export type LogUpdate = {
 	done: () => void;
 	sync: (str: string) => void;
 	setCursorPosition: (position: CursorPosition | undefined) => void;
+	isCursorDirty: () => boolean;
 	(str: string): void;
 };
 
@@ -120,6 +121,8 @@ const createStandard = (
 		cursorPosition = position;
 		cursorDirty = true;
 	};
+
+	render.isCursorDirty = () => cursorDirty;
 
 	return render;
 };
@@ -276,6 +279,8 @@ const createIncremental = (
 		cursorPosition = position;
 		cursorDirty = true;
 	};
+
+	render.isCursorDirty = () => cursorDirty;
 
 	return render;
 };

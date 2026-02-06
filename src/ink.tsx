@@ -366,7 +366,7 @@ export default class Ink {
 			if (sync) {
 				this.options.stdout.write(ESU);
 			}
-		} else if (output !== this.lastOutput) {
+		} else if (output !== this.lastOutput || this.log.isCursorDirty()) {
 			// ThrottledLog manages its own BSU/ESU at actual write time
 			this.throttledLog(output);
 		}
