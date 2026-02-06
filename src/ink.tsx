@@ -115,10 +115,25 @@ export default class Ink {
 		});
 		this.throttledLog = unthrottled
 			? this.log
-			: (throttle(this.log, undefined, {
-					leading: true,
-					trailing: true,
-				}) as unknown as LogUpdate);
+			: (throttle(
+					(output: string) => {
+						const sync = shouldSynchronize(this.options.stdout);
+						if (sync) {
+							this.options.stdout.write(BSU);
+						}
+
+						this.log(output);
+
+						if (sync) {
+							this.options.stdout.write(ESU);
+						}
+					},
+					undefined,
+					{
+						leading: true,
+						trailing: true,
+					},
+				) as unknown as LogUpdate);
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
@@ -337,18 +352,22 @@ export default class Ink {
 			this.log.clear();
 			this.options.stdout.write(staticOutput);
 			this.log(output);
-		}
 
-		if (!hasStaticOutput) {
+			if (sync) {
+				this.options.stdout.write(ESU);
+			}
+		} else {
+			// Close outer BSU (no immediate writes in this path) and let
+			// throttledLog manage its own BSU/ESU at actual write time
+			if (sync) {
+				this.options.stdout.write(ESU);
+			}
+
 			this.throttledLog(output);
 		}
 
 		this.lastOutput = output;
 		this.lastOutputHeight = outputHeight;
-
-		if (sync) {
-			this.options.stdout.write(ESU);
-		}
 	};
 
 	render(node: ReactNode): void {
