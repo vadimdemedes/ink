@@ -14,7 +14,8 @@ import terminalSize from 'terminal-size';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
-import logUpdate, {type LogUpdate} from './log-update.js';
+import logUpdate, {type LogUpdate, type CursorPosition} from './log-update.js';
+import writeSynchronized from './write-synchronized.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
@@ -207,6 +208,10 @@ export default class Ink {
 	rejectExitPromise: (reason?: Error) => void = () => {};
 	unsubscribeExit: () => void = () => {};
 
+	setCursorPosition = (position: CursorPosition | undefined): void => {
+		this.log.setCursorPosition(position);
+	};
+
 	calculateLayout = () => {
 		const terminalWidth = this.getTerminalWidth();
 
@@ -261,7 +266,7 @@ export default class Ink {
 					this.lastOutputHeight > 0
 						? ansiEscapes.eraseLines(this.lastOutputHeight)
 						: '';
-				this.options.stdout.write(erase + staticOutput);
+				writeSynchronized(this.options.stdout, erase + staticOutput);
 				// After erasing, the last output is gone, so we should reset its height
 				this.lastOutputHeight = 0;
 			}
@@ -279,13 +284,13 @@ export default class Ink {
 
 			// If we haven't erased yet, do it now.
 			if (hasStaticOutput) {
-				this.options.stdout.write(wrappedOutput);
+				writeSynchronized(this.options.stdout, wrappedOutput);
 			} else {
 				const erase =
 					this.lastOutputHeight > 0
 						? ansiEscapes.eraseLines(this.lastOutputHeight)
 						: '';
-				this.options.stdout.write(erase + wrappedOutput);
+				writeSynchronized(this.options.stdout, erase + wrappedOutput);
 			}
 
 			this.lastOutput = output;
@@ -299,7 +304,8 @@ export default class Ink {
 		}
 
 		if (this.lastOutputHeight >= this.options.stdout.rows) {
-			this.options.stdout.write(
+			writeSynchronized(
+				this.options.stdout,
 				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
 			);
 			this.lastOutput = output;
@@ -311,11 +317,11 @@ export default class Ink {
 		// To ensure static output is cleanly rendered before main output, clear main output first
 		if (hasStaticOutput) {
 			this.log.clear();
-			this.options.stdout.write(staticOutput);
+			writeSynchronized(this.options.stdout, staticOutput);
 			this.log(output);
 		}
 
-		if (!hasStaticOutput && output !== this.lastOutput) {
+		if (!hasStaticOutput) {
 			this.throttledLog(output);
 		}
 
@@ -332,9 +338,10 @@ export default class Ink {
 					stdin={this.options.stdin}
 					stdout={this.options.stdout}
 					stderr={this.options.stderr}
+					exitOnCtrlC={this.options.exitOnCtrlC}
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
-					exitOnCtrlC={this.options.exitOnCtrlC}
+					setCursorPosition={this.setCursorPosition}
 					onExit={this.unmount}
 				>
 					{node}
@@ -368,7 +375,7 @@ export default class Ink {
 		}
 
 		this.log.clear();
-		this.options.stdout.write(data);
+		writeSynchronized(this.options.stdout, data);
 		this.log(this.lastOutput);
 	}
 
@@ -389,7 +396,7 @@ export default class Ink {
 		}
 
 		this.log.clear();
-		this.options.stderr.write(data);
+		writeSynchronized(this.options.stderr, data);
 		this.log(this.lastOutput);
 	}
 
@@ -451,6 +458,9 @@ export default class Ink {
 	clear(): void {
 		if (!isInCi && !this.options.debug) {
 			this.log.clear();
+			// Sync lastOutput so that unmount's final onRender
+			// sees it as unchanged and log-update skips it
+			this.log.sync(this.lastOutput);
 		}
 	}
 

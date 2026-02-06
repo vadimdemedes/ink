@@ -184,6 +184,180 @@ test('incremental rendering - sync() followed by update (assert incremental path
 	t.false(firstCall.includes('Line 3')); // Doesn't rewrite unchanged
 });
 
+// Cursor positioning tests
+
+const showCursorEscape = '\u001B[?25h';
+const hideCursorEscape = '\u001B[?25l';
+
+test('standard rendering - positions cursor after output when cursorPosition is set', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render.setCursorPosition({x: 5, y: 1});
+	render('Line 1\nLine 2\nLine 3');
+
+	const written = (stdout.write as any).firstCall.args[0] as string;
+	// Output is "Line 1\nLine 2\nLine 3\n" (3 visible lines)
+	// Cursor after write is at line 3 (0-indexed), col 0
+	// To reach y=1: cursorUp(3 - 1) = cursorUp(2)
+	// Then cursorTo(5) and show cursor
+	t.true(written.includes('Line 3'));
+	t.true(
+		written.endsWith(
+			ansiEscapes.cursorUp(2) + ansiEscapes.cursorTo(5) + showCursorEscape,
+		),
+	);
+});
+
+test('standard rendering - hides cursor before erase when cursor was previously shown', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render.setCursorPosition({x: 0, y: 0});
+	render('Hello');
+	render('World');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	// Should start with hide cursor before erasing
+	t.true(secondCall.startsWith(hideCursorEscape));
+	// Should end with show cursor at position
+	t.true(
+		secondCall.endsWith(
+			ansiEscapes.cursorUp(1) + ansiEscapes.cursorTo(0) + showCursorEscape,
+		),
+	);
+});
+
+test('standard rendering - no cursor positioning when cursorPosition is undefined', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render('Hello');
+
+	const written = (stdout.write as any).firstCall.args[0] as string;
+	t.false(written.includes(showCursorEscape));
+});
+
+test('standard rendering - cursor position at last line does not emit cursorUp', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render.setCursorPosition({x: 3, y: 2});
+	render('Line 1\nLine 2\nLine 3');
+
+	const written = (stdout.write as any).firstCall.args[0] as string;
+	// Y=2 is the last visible line (0-indexed), cursor is already there
+	// cursorUp(3 - 2) = cursorUp(1)... wait, output has 3 lines, after write cursor is at line 3
+	// To reach y=2: cursorUp(3 - 2) = cursorUp(1)
+	t.true(
+		written.endsWith(
+			ansiEscapes.cursorUp(1) + ansiEscapes.cursorTo(3) + showCursorEscape,
+		),
+	);
+});
+
+test('standard rendering - clearing cursor position stops cursor positioning', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render.setCursorPosition({x: 0, y: 0});
+	render('Hello');
+
+	render.setCursorPosition(undefined);
+	render('World');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	t.false(secondCall.includes(showCursorEscape));
+});
+
+test('incremental rendering - positions cursor after surgical updates', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render.setCursorPosition({x: 5, y: 1});
+	render('Line 1\nLine 2\nLine 3');
+
+	const written = (stdout.write as any).firstCall.args[0] as string;
+	// After incremental write, cursor is at line 3 (past last visible)
+	// To reach y=1: cursorUp(3 - 1) = cursorUp(2)
+	t.true(
+		written.endsWith(
+			ansiEscapes.cursorUp(2) + ansiEscapes.cursorTo(5) + showCursorEscape,
+		),
+	);
+});
+
+test('incremental rendering - positions cursor after update', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render.setCursorPosition({x: 2, y: 0});
+	render('Line 1\nLine 2\nLine 3');
+	render('Line 1\nUpdated\nLine 3');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	// After incremental update, cursor is at line 3
+	// To reach y=0: cursorUp(3)
+	t.true(
+		secondCall.endsWith(
+			ansiEscapes.cursorUp(3) + ansiEscapes.cursorTo(2) + showCursorEscape,
+		),
+	);
+});
+
+test('standard rendering - repositions cursor when only cursor position changes (same output)', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render.setCursorPosition({x: 2, y: 0});
+	render('Hello');
+	t.is((stdout.write as any).callCount, 1);
+
+	// Same output, but cursor moved (simulates space input where output is padded identically)
+	render.setCursorPosition({x: 3, y: 0});
+	render('Hello');
+
+	t.is((stdout.write as any).callCount, 2);
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	// Should reposition cursor: hide + return to bottom + move to new position + show
+	t.true(secondCall.includes(showCursorEscape));
+	t.true(secondCall.endsWith(ansiEscapes.cursorTo(3) + showCursorEscape));
+});
+
+test('standard rendering - returns to bottom before erase when cursor was positioned', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render.setCursorPosition({x: 0, y: 0});
+	render('Line 1\nLine 2\nLine 3');
+
+	render.setCursorPosition({x: 5, y: 0});
+	render('Line A\nLine B\nLine C');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	// Should: hide cursor, move down to bottom (from y=0 to line 3), then erase + rewrite
+	t.true(secondCall.startsWith(hideCursorEscape));
+	t.true(secondCall.includes(ansiEscapes.cursorDown(3)));
+	t.true(secondCall.includes('Line A'));
+});
+
+test('incremental rendering - repositions cursor when only cursor position changes (same output)', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render.setCursorPosition({x: 2, y: 0});
+	render('Hello');
+	t.is((stdout.write as any).callCount, 1);
+
+	render.setCursorPosition({x: 3, y: 0});
+	render('Hello');
+
+	t.is((stdout.write as any).callCount, 2);
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	t.true(secondCall.includes(showCursorEscape));
+	t.true(secondCall.endsWith(ansiEscapes.cursorTo(3) + showCursorEscape));
+});
+
 test('incremental rendering - render to empty string (full clear vs early exit)', t => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout, {incremental: true});

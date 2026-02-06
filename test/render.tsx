@@ -217,7 +217,11 @@ test.serial('clear output', async t => {
 	const ps = term('clear');
 	await ps.waitForExit();
 
-	const secondFrame = ps.output.split(ansiEscapes.eraseLines(4))[1];
+	// Strip Synchronized Update Mode sequences before splitting
+	const output = ps.output
+		.replaceAll('\u001B[?2026h', '')
+		.replaceAll('\u001B[?2026l', '');
+	const secondFrame = output.split(ansiEscapes.eraseLines(4))[1];
 
 	for (const letter of ['A', 'B', 'C']) {
 		t.false(secondFrame?.includes(letter));

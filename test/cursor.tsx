@@ -1,0 +1,207 @@
+import EventEmitter from 'node:events';
+import {stub} from 'sinon';
+import test from 'ava';
+import React, {useState} from 'react';
+import ansiEscapes from 'ansi-escapes';
+import delay from 'delay';
+import {render, Box, Text, useInput, useCursor} from '../src/index.js';
+import createStdout from './helpers/create-stdout.js';
+
+const showCursorEscape = '\u001B[?25h';
+const hideCursorEscape = '\u001B[?25l';
+
+const createStdin = () => {
+	const stdin = new EventEmitter() as unknown as NodeJS.WriteStream;
+	stdin.isTTY = true;
+	stdin.setRawMode = stub();
+	stdin.setEncoding = () => {};
+	stdin.read = stub();
+	stdin.unref = () => {};
+	stdin.ref = () => {};
+
+	return stdin;
+};
+
+const emitReadable = (stdin: NodeJS.WriteStream, chunk: string) => {
+	/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
+	const read = stdin.read as ReturnType<typeof stub>;
+	read.onCall(0).returns(chunk);
+	read.onCall(1).returns(null);
+	stdin.emit('readable');
+	read.reset();
+	/* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
+};
+
+function InputApp() {
+	const [text, setText] = useState('');
+	const {setCursorPosition} = useCursor();
+
+	useInput((input, key) => {
+		if (key.backspace || key.delete) {
+			setText(prev => prev.slice(0, -1));
+			return;
+		}
+
+		if (!key.ctrl && !key.meta && input) {
+			setText(prev => prev + input);
+		}
+	});
+
+	setCursorPosition({x: 2 + text.length, y: 0});
+
+	return (
+		<Box>
+			<Text>{`> ${text}`}</Text>
+		</Box>
+	);
+}
+
+test.serial('cursor is shown at specified position after render', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+
+	const {unmount} = render(<InputApp />, {stdout, stdin});
+	await delay(100);
+
+	const firstWrite = (stdout.write as any).firstCall.args[0] as string;
+	// Cursor should be shown at x=2 (after "> ")
+	t.true(
+		firstWrite.includes(showCursorEscape),
+		'cursor should be visible after first render',
+	);
+	t.true(
+		firstWrite.includes(ansiEscapes.cursorTo(2)),
+		'cursor should be at column 2',
+	);
+
+	unmount();
+});
+
+test.serial('cursor is not hidden by useEffect after first render', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+
+	const {unmount} = render(<InputApp />, {stdout, stdin});
+	await delay(100);
+
+	// Check all writes after the first render — none should be a bare hideCursorEscape
+	// that would undo the showCursorEscape from log-update.
+	// The last write to stdout should contain showCursorEscape (from log-update),
+	// not be followed by a separate hideCursorEscape write from App.tsx useEffect.
+	const allWrites: string[] = [];
+	for (let i = 0; i < (stdout.write as any).callCount; i++) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+		allWrites.push((stdout.write as any).getCall(i).args[0] as string);
+	}
+
+	// The last escape sequence affecting cursor visibility should be showCursorEscape
+	const lastVisibilityChange = allWrites.findLast(
+		w => w.includes(showCursorEscape) || w === hideCursorEscape,
+	);
+
+	t.true(
+		lastVisibilityChange?.includes(showCursorEscape) ?? false,
+		'last cursor visibility change should be SHOW, not HIDE',
+	);
+
+	unmount();
+});
+
+test.serial('cursor follows text input', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+
+	const {unmount} = render(<InputApp />, {stdout, stdin});
+	await delay(100);
+
+	emitReadable(stdin, 'a');
+	await delay(100);
+
+	const lastWrite = stdout.get();
+	// After typing 'a', cursor should be at x=3 ("> a" = 3 chars)
+	t.true(lastWrite.includes(showCursorEscape));
+	t.true(
+		lastWrite.includes(ansiEscapes.cursorTo(3)),
+		'cursor should move to column 3 after typing "a"',
+	);
+
+	unmount();
+});
+
+test.serial(
+	'cursor moves on space input even when output is identical',
+	async t => {
+		const stdout = createStdout();
+		const stdin = createStdin();
+
+		const {unmount} = render(<InputApp />, {stdout, stdin});
+		await delay(100);
+
+		emitReadable(stdin, 'a');
+		await delay(100);
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+		const afterA = (stdout.write as any).callCount;
+
+		emitReadable(stdin, ' ');
+		await delay(100);
+
+		// Space adds to text, cursor should move even if Ink output looks the same (padded)
+		t.true(
+			(stdout.write as any).callCount > afterA,
+			'should write to stdout after space input',
+		);
+
+		const lastWrite = stdout.get();
+		// After "a ", cursor should be at x=4
+		t.true(
+			lastWrite.includes(ansiEscapes.cursorTo(4)),
+			'cursor should be at column 4 after "a "',
+		);
+
+		unmount();
+	},
+);
+
+test.serial('screen does not scroll up on subsequent renders', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+
+	function MultiLineApp() {
+		const [text, setText] = useState('');
+		const {setCursorPosition} = useCursor();
+
+		useInput((input, key) => {
+			if (!key.ctrl && !key.meta && input) {
+				setText(prev => prev + input);
+			}
+		});
+
+		setCursorPosition({x: 2 + text.length, y: 1});
+
+		return (
+			<Box flexDirection="column">
+				<Text>Header</Text>
+				<Text>{`> ${text}`}</Text>
+			</Box>
+		);
+	}
+
+	const {unmount} = render(<MultiLineApp />, {stdout, stdin});
+	await delay(100);
+
+	emitReadable(stdin, 'x');
+	await delay(100);
+
+	const secondWrite = stdout.get();
+	// When cursor was at y=1 (line 1), next render should first cursorDown to bottom,
+	// then erase. The write should contain cursorDown to return to bottom.
+	// It should NOT just erase from cursor position (which would scroll screen up).
+	t.true(
+		secondWrite.includes(hideCursorEscape),
+		'should hide cursor before erase',
+	);
+	// The write should include the new text
+	t.true(secondWrite.includes('x'), 'should contain the typed character');
+
+	unmount();
+});
