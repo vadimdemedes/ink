@@ -454,6 +454,10 @@ export default class Ink {
 		// exit promise. For real writable streams, queue an empty write as a
 		// barrier — its callback fires only after all prior writes complete.
 		// For non-stream objects (e.g. test spies), resolve on next tick.
+		//
+		// When called from signal-exit during process shutdown (error is a
+		// number or null rather than undefined/Error), resolve synchronously
+		// because the event loop is draining and async callbacks won't fire.
 		const resolveOrReject = () => {
 			if (error instanceof Error) {
 				this.rejectExitPromise(error);
@@ -462,7 +466,11 @@ export default class Ink {
 			}
 		};
 
-		if (
+		const isProcessExiting = error !== undefined && !(error instanceof Error);
+
+		if (isProcessExiting) {
+			resolveOrReject();
+		} else if (
 			(this.options.stdout as any)._writableState !== undefined ||
 			this.options.stdout.writableLength !== undefined
 		) {
