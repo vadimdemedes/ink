@@ -338,26 +338,23 @@ test('incremental rendering - positions cursor after update', t => {
 });
 
 for (const {name, incremental} of renderingModes) {
-	test(
-		`${name} - repositions cursor when only cursor position changes (same output)`,
-		t => {
-			const {stdout, render} = createRenderForMode(incremental);
+	test(`${name} - repositions cursor when only cursor position changes (same output)`, t => {
+		const {stdout, render} = createRenderForMode(incremental);
 
-			render.setCursorPosition({x: 2, y: 0});
-			render('Hello\n');
-			t.is((stdout.write as any).callCount, 1);
+		render.setCursorPosition({x: 2, y: 0});
+		render('Hello\n');
+		t.is((stdout.write as any).callCount, 1);
 
-			// Same output, but cursor moved (simulates space input where output is padded identically)
-			render.setCursorPosition({x: 3, y: 0});
-			render('Hello\n');
+		// Same output, but cursor moved (simulates space input where output is padded identically)
+		render.setCursorPosition({x: 3, y: 0});
+		render('Hello\n');
 
-			t.is((stdout.write as any).callCount, 2);
-			const secondCall = (stdout.write as any).secondCall.args[0] as string;
-			// Should reposition cursor: hide + return to bottom + move to new position + show
-			t.true(secondCall.includes(showCursorEscape));
-			t.true(secondCall.endsWith(ansiEscapes.cursorTo(3) + showCursorEscape));
-		},
-	);
+		t.is((stdout.write as any).callCount, 2);
+		const secondCall = (stdout.write as any).secondCall.args[0] as string;
+		// Should reposition cursor: hide + return to bottom + move to new position + show
+		t.true(secondCall.includes(showCursorEscape));
+		t.true(secondCall.endsWith(ansiEscapes.cursorTo(3) + showCursorEscape));
+	});
 }
 
 test('standard rendering - returns to bottom before erase when cursor was positioned', t => {
@@ -372,9 +369,9 @@ test('standard rendering - returns to bottom before erase when cursor was positi
 
 	const secondCall = (stdout.write as any).secondCall.args[0] as string;
 	// Should: hide cursor, move down to bottom (from y=0 to line 3), then erase + rewrite
-t.true(secondCall.startsWith(hideCursorEscape));
-t.true(secondCall.includes(ansiEscapes.cursorDown(3)));
-t.true(secondCall.includes('Line A'));
+	t.true(secondCall.startsWith(hideCursorEscape));
+	t.true(secondCall.includes(ansiEscapes.cursorDown(3)));
+	t.true(secondCall.includes('Line A'));
 });
 
 for (const {name, incremental} of renderingModes) {

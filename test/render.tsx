@@ -458,7 +458,9 @@ const createTtyStdout = (columns?: number) => {
 	return stdout;
 };
 
-const withFakeClock = (run: (clock: ReturnType<typeof FakeTimers.install>) => void) => {
+const withFakeClock = (
+	run: (clock: ReturnType<typeof FakeTimers.install>) => void,
+) => {
 	const clock = FakeTimers.install();
 	try {
 		run(clock);

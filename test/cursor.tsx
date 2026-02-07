@@ -359,7 +359,7 @@ const hookWriteCases: HookWriteCase[] = [
 	{
 		testName: 'cursor remains visible after useStdout().write()',
 		App: StdoutWriteApp,
-		assertTargetWrite: (t, output) => {
+		assertTargetWrite(t, output) {
 			t.true(output.includes('from stdout hook'));
 		},
 	},
@@ -367,7 +367,7 @@ const hookWriteCases: HookWriteCase[] = [
 		testName: 'cursor remains visible after useStderr().write()',
 		App: StderrWriteApp,
 		includeStderr: true,
-		assertTargetWrite: (t, _output, stderr) => {
+		assertTargetWrite(t, _output, stderr) {
 			t.true((stderr?.write as any).called);
 		},
 	},

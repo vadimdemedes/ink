@@ -13,7 +13,10 @@ export const createStdin = (): NodeJS.WriteStream => {
 	return stdin;
 };
 
-export const emitReadable = (stdin: NodeJS.WriteStream, chunk: string): void => {
+export const emitReadable = (
+	stdin: NodeJS.WriteStream,
+	chunk: string,
+): void => {
 	/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 	const read = stdin.read as ReturnType<typeof stub>;
 	read.onCall(0).returns(chunk);
