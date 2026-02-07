@@ -450,17 +450,26 @@ export default class Ink {
 
 		instances.delete(this.options.stdout);
 
-		// Use a write callback barrier to ensure all queued writes have been
-		// processed before resolving the exit promise. An empty write queued
-		// after the real writes will have its callback invoked only after all
-		// prior write callbacks complete.
-		this.options.stdout.write('', () => {
+		// Ensure all queued writes have been processed before resolving the
+		// exit promise. For real writable streams, queue an empty write as a
+		// barrier — its callback fires only after all prior writes complete.
+		// For non-stream objects (e.g. test spies), resolve on next tick.
+		const resolveOrReject = () => {
 			if (error instanceof Error) {
 				this.rejectExitPromise(error);
 			} else {
 				this.resolveExitPromise();
 			}
-		});
+		};
+
+		if (
+			(this.options.stdout as any)._writableState !== undefined ||
+			this.options.stdout.writableLength !== undefined
+		) {
+			this.options.stdout.write('', resolveOrReject);
+		} else {
+			setImmediate(resolveOrReject);
+		}
 	}
 
 	async waitUntilExit(): Promise<void> {
