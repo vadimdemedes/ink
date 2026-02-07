@@ -6,7 +6,7 @@ import * as path from 'node:path';
 import {createRequire} from 'node:module';
 import FakeTimers from '@sinonjs/fake-timers';
 import {stub} from 'sinon';
-import test from 'ava';
+import test, {type ExecutionContext} from 'ava';
 import React, {type ReactNode, useEffect, useState} from 'react';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
@@ -480,126 +480,103 @@ const createTtyStdout = (columns?: number) => {
 	return stdout;
 };
 
-test.serial('no bsu/esu when output is unchanged', t => {
+const withFakeClock = (run: (clock: ReturnType<typeof FakeTimers.install>) => void) => {
 	const clock = FakeTimers.install();
 	try {
-		const stdout = createTtyStdout();
-		const writes: string[] = [];
-		const originalWrite = stdout.write;
-		(stdout as any).write = (...args: any[]) => {
-			writes.push(args[0] as string);
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
-			return (originalWrite as any)(...args);
-		};
-
-		const {unmount, rerender} = render(<ThrottleTestComponent text="Hello" />, {
-			stdout,
-			maxFps: 1,
-		});
-
-		// Leading call writes bsu + content + esu (expected)
-		t.true(writes.includes(bsu), 'initial render should include bsu');
-
-		// Clear writes, rerender with SAME text
-		writes.length = 0;
-		rerender(<ThrottleTestComponent text="Hello" />);
-
-		// Advance past throttle window to trigger trailing call
-		clock.tick(1000);
-
-		// No bsu/esu should be emitted because output didn't change
-		t.false(writes.includes(bsu), 'unchanged output should not emit bsu');
-		t.false(writes.includes(esu), 'unchanged output should not emit esu');
-
-		unmount();
+		run(clock);
 	} finally {
 		clock.uninstall();
 	}
+};
+
+const captureWrites = (stdout: NodeJS.WriteStream): string[] => {
+	const writes: string[] = [];
+	const originalWrite = stdout.write;
+	(stdout as any).write = (...args: any[]) => {
+		writes.push(args[0] as string);
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+		return (originalWrite as any)(...args);
+	};
+
+	return writes;
+};
+
+const assertNoBsuEsuForUnchangedTrailingRerender = (
+	t: ExecutionContext,
+	element: React.ReactElement,
+) => {
+	withFakeClock(clock => {
+		const stdout = createTtyStdout();
+		const writes = captureWrites(stdout);
+		const {unmount, rerender} = render(element, {stdout, maxFps: 1});
+		try {
+			t.true(writes.includes(bsu), 'initial render should include bsu');
+
+			writes.length = 0;
+			rerender(element);
+			clock.tick(1000);
+
+			t.false(writes.includes(bsu), 'unchanged rerender should not emit bsu');
+			t.false(writes.includes(esu), 'unchanged rerender should not emit esu');
+		} finally {
+			unmount();
+		}
+	});
+};
+
+test.serial('no bsu/esu when output is unchanged', t => {
+	assertNoBsuEsuForUnchangedTrailingRerender(
+		t,
+		<ThrottleTestComponent text="Hello" />,
+	);
 });
 
 test.serial('no bsu/esu when output and cursor are unchanged', t => {
-	const clock = FakeTimers.install();
-	try {
-		const stdout = createTtyStdout();
-		const writes: string[] = [];
-		const originalWrite = stdout.write;
-		(stdout as any).write = (...args: any[]) => {
-			writes.push(args[0] as string);
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
-			return (originalWrite as any)(...args);
-		};
-
-		const {unmount, rerender} = render(
-			<ThrottleCursorTestComponent text="Hello" />,
-			{
-				stdout,
-				maxFps: 1,
-			},
-		);
-
-		t.true(writes.includes(bsu), 'initial render should include bsu');
-
-		writes.length = 0;
-		rerender(<ThrottleCursorTestComponent text="Hello" />);
-		clock.tick(1000);
-
-		t.false(writes.includes(bsu), 'unchanged rerender should not emit bsu');
-		t.false(writes.includes(esu), 'unchanged rerender should not emit esu');
-
-		unmount();
-	} finally {
-		clock.uninstall();
-	}
+	assertNoBsuEsuForUnchangedTrailingRerender(
+		t,
+		<ThrottleCursorTestComponent text="Hello" />,
+	);
 });
 
 test.serial('bsu/esu wraps throttledLog trailing call', t => {
-	const clock = FakeTimers.install();
-	try {
+	withFakeClock(clock => {
 		const stdout = createTtyStdout();
-		const writes: string[] = [];
-		const originalWrite = stdout.write;
-		(stdout as any).write = (...args: any[]) => {
-			writes.push(args[0] as string);
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
-			return (originalWrite as any)(...args);
-		};
-
+		const writes = captureWrites(stdout);
 		const {unmount, rerender} = render(<ThrottleTestComponent text="Hello" />, {
 			stdout,
 			maxFps: 1,
 		});
+		try {
+			// Leading call writes: bsu, content, esu
+			const leadingWrites = new Set(writes);
+			t.true(leadingWrites.has(bsu), 'leading call should include bsu');
+			t.true(leadingWrites.has(esu), 'leading call should include esu');
 
-		// Leading call writes: bsu, content, esu
-		const leadingWrites = new Set(writes);
-		t.true(leadingWrites.has(bsu), 'leading call should include bsu');
-		t.true(leadingWrites.has(esu), 'leading call should include esu');
+			// Trigger a rerender inside the throttle window (will be deferred as trailing)
+			writes.length = 0;
+			rerender(<ThrottleTestComponent text="World" />);
 
-		// Trigger a rerender inside the throttle window (will be deferred as trailing)
-		writes.length = 0;
-		rerender(<ThrottleTestComponent text="World" />);
+			// No immediate write yet (throttled)
+			const midWrites = [...writes];
+			t.false(
+				midWrites.some(w => w.includes('World')),
+				'trailing call should not write immediately',
+			);
 
-		// No immediate write yet (throttled)
-		const midWrites = [...writes];
-		t.false(
-			midWrites.some(w => w.includes('World')),
-			'trailing call should not write immediately',
-		);
+			// Advance past throttle window to trigger trailing call
+			writes.length = 0;
+			clock.tick(1000);
 
-		// Advance past throttle window to trigger trailing call
-		writes.length = 0;
-		clock.tick(1000);
+			// Trailing call should also be wrapped with bsu/esu
+			t.true(writes.includes(bsu), 'trailing call should include bsu');
+			t.true(writes.includes(esu), 'trailing call should include esu');
 
-		// Trailing call should also be wrapped with bsu/esu
-		t.true(writes.includes(bsu), 'trailing call should include bsu');
-		t.true(writes.includes(esu), 'trailing call should include esu');
-
-		// Verify bsu comes before content and esu comes after
-		const bsuIdx = writes.indexOf(bsu);
-		const esuIdx = writes.indexOf(esu);
-		t.true(bsuIdx < esuIdx, 'bsu should come before esu');
-
-		unmount();
-	} finally {
-		clock.uninstall();
-	}
+			// Verify bsu comes before content and esu comes after
+			const bsuIdx = writes.indexOf(bsu);
+			const esuIdx = writes.indexOf(esu);
+			t.true(bsuIdx < esuIdx, 'bsu should come before esu');
+		} finally {
+			unmount();
+		}
+	});
 });

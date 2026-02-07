@@ -12,13 +12,14 @@ const createStream = ({tty = false} = {}) => {
 	return stream;
 };
 
-test('bsu is the Begin Synchronized Update sequence', t => {
-	t.is(bsu, '\u001B[?2026h');
-});
-
-test('esu is the End Synchronized Update sequence', t => {
-	t.is(esu, '\u001B[?2026l');
-});
+for (const [sequenceName, sequence, expected] of [
+	['bsu', bsu, '\u001B[?2026h'],
+	['esu', esu, '\u001B[?2026l'],
+] as const) {
+	test(`${sequenceName} is the expected synchronized update sequence`, t => {
+		t.is(sequence, expected);
+	});
+}
 
 test('shouldSynchronize returns !isInCi for TTY stream', t => {
 	const stream = createStream({tty: true});
