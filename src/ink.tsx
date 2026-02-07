@@ -1,6 +1,6 @@
 import process from 'node:process';
 import React, {type ReactNode} from 'react';
-import {throttle} from 'es-toolkit/compat';
+import {throttle, type DebouncedFunc} from 'es-toolkit/compat';
 import ansiEscapes from 'ansi-escapes';
 import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
@@ -69,12 +69,16 @@ export default class Ink {
 
 	private readonly options: Options;
 	private readonly log: LogUpdate;
-	private readonly throttledLog: LogUpdate;
+	private readonly throttledLog:
+		| LogUpdate
+		| DebouncedFunc<(output: string) => void>;
+
 	private readonly isScreenReaderEnabled: boolean;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
 	private lastOutput: string;
+	private lastOutputToRender: string;
 	private lastOutputHeight: number;
 	private lastTerminalWidth: number;
 	private readonly container: FiberRoot;
@@ -83,8 +87,10 @@ export default class Ink {
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	private fullStaticOutput: string;
 	private exitPromise?: Promise<void>;
+	private beforeExitHandler?: () => void;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
+	private readonly throttledOnRender?: DebouncedFunc<() => void>;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -102,12 +108,17 @@ export default class Ink {
 		const renderThrottleMs =
 			maxFps > 0 ? Math.max(1, Math.ceil(1000 / maxFps)) : 0;
 
-		this.rootNode.onRender = unthrottled
-			? this.onRender
-			: throttle(this.onRender, renderThrottleMs, {
-					leading: true,
-					trailing: true,
-				});
+		if (unthrottled) {
+			this.rootNode.onRender = this.onRender;
+			this.throttledOnRender = undefined;
+		} else {
+			const throttled = throttle(this.onRender, renderThrottleMs, {
+				leading: true,
+				trailing: true,
+			});
+			this.rootNode.onRender = throttled;
+			this.throttledOnRender = throttled;
+		}
 
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout, {
@@ -115,7 +126,7 @@ export default class Ink {
 		});
 		this.throttledLog = unthrottled
 			? this.log
-			: (throttle(
+			: throttle(
 					(output: string) => {
 						const sync = shouldSynchronize(this.options.stdout);
 						if (sync) {
@@ -133,7 +144,7 @@ export default class Ink {
 						leading: true,
 						trailing: true,
 					},
-				) as unknown as LogUpdate);
+				);
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
@@ -143,6 +154,7 @@ export default class Ink {
 
 		// Store last output to only rerender when needed
 		this.lastOutput = '';
+		this.lastOutputToRender = '';
 		this.lastOutputHeight = 0;
 		this.lastTerminalWidth = this.getTerminalWidth();
 
@@ -211,6 +223,7 @@ export default class Ink {
 			// We clear the screen when decreasing terminal width to prevent duplicate overlapping re-renders.
 			this.log.clear();
 			this.lastOutput = '';
+			this.lastOutputToRender = '';
 		}
 
 		this.calculateLayout();
@@ -270,6 +283,7 @@ export default class Ink {
 			}
 
 			this.lastOutput = output;
+			this.lastOutputToRender = output + '\n';
 			this.lastOutputHeight = outputHeight;
 			return;
 		}
@@ -318,6 +332,7 @@ export default class Ink {
 			}
 
 			this.lastOutput = output;
+			this.lastOutputToRender = wrappedOutput;
 			this.lastOutputHeight =
 				wrappedOutput === '' ? 0 : wrappedOutput.split('\n').length;
 
@@ -332,6 +347,12 @@ export default class Ink {
 			this.fullStaticOutput += staticOutput;
 		}
 
+		// Detect fullscreen: output fills or exceeds terminal height.
+		// Only apply when writing to a real TTY — piped output always gets trailing newlines.
+		const isFullscreen =
+			this.options.stdout.isTTY && outputHeight >= this.options.stdout.rows;
+		const outputToRender = isFullscreen ? output : output + '\n';
+
 		if (this.lastOutputHeight >= this.options.stdout.rows) {
 			const sync = shouldSynchronize(this.options.stdout);
 			if (sync) {
@@ -342,8 +363,9 @@ export default class Ink {
 				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
 			);
 			this.lastOutput = output;
+			this.lastOutputToRender = outputToRender;
 			this.lastOutputHeight = outputHeight;
-			this.log.sync(output);
+			this.log.sync(outputToRender);
 
 			if (sync) {
 				this.options.stdout.write(esu);
@@ -361,17 +383,18 @@ export default class Ink {
 
 			this.log.clear();
 			this.options.stdout.write(staticOutput);
-			this.log(output);
+			this.log(outputToRender);
 
 			if (sync) {
 				this.options.stdout.write(esu);
 			}
 		} else if (output !== this.lastOutput || this.log.isCursorDirty()) {
 			// ThrottledLog manages its own bsu/esu at actual write time
-			this.throttledLog(output);
+			this.throttledLog(outputToRender);
 		}
 
 		this.lastOutput = output;
+		this.lastOutputToRender = outputToRender;
 		this.lastOutputHeight = outputHeight;
 	};
 
@@ -427,7 +450,7 @@ export default class Ink {
 
 		this.log.clear();
 		this.options.stdout.write(data);
-		this.log(this.lastOutput);
+		this.log(this.lastOutputToRender || this.lastOutput + '\n');
 
 		if (sync) {
 			this.options.stdout.write(esu);
@@ -457,7 +480,7 @@ export default class Ink {
 
 		this.log.clear();
 		this.options.stderr.write(data);
-		this.log(this.lastOutput);
+		this.log(this.lastOutputToRender || this.lastOutput + '\n');
 
 		if (sync) {
 			this.options.stdout.write(esu);
@@ -470,6 +493,16 @@ export default class Ink {
 			return;
 		}
 
+		if (this.beforeExitHandler) {
+			process.off('beforeExit', this.beforeExitHandler);
+			this.beforeExitHandler = undefined;
+		}
+
+		// Flush any pending throttled render to ensure the final frame is rendered
+		if (this.throttledOnRender) {
+			this.throttledOnRender.flush();
+		}
+
 		this.calculateLayout();
 		this.onRender();
 		this.unsubscribeExit();
@@ -480,6 +513,14 @@ export default class Ink {
 
 		if (typeof this.unsubscribeResize === 'function') {
 			this.unsubscribeResize();
+		}
+
+		// Flush any pending throttled log writes
+		const throttledLog = this.throttledLog as DebouncedFunc<
+			(output: string) => void
+		>;
+		if (typeof throttledLog.flush === 'function') {
+			throttledLog.flush();
 		}
 
 		// CIs don't handle erasing ansi escapes well, so it's better to
@@ -503,10 +544,33 @@ export default class Ink {
 
 		instances.delete(this.options.stdout);
 
-		if (error instanceof Error) {
-			this.rejectExitPromise(error);
+		// Ensure all queued writes have been processed before resolving the
+		// exit promise. For real writable streams, queue an empty write as a
+		// barrier — its callback fires only after all prior writes complete.
+		// For non-stream objects (e.g. test spies), resolve on next tick.
+		//
+		// When called from signal-exit during process shutdown (error is a
+		// number or null rather than undefined/Error), resolve synchronously
+		// because the event loop is draining and async callbacks won't fire.
+		const resolveOrReject = () => {
+			if (error instanceof Error) {
+				this.rejectExitPromise(error);
+			} else {
+				this.resolveExitPromise();
+			}
+		};
+
+		const isProcessExiting = error !== undefined && !(error instanceof Error);
+
+		if (isProcessExiting) {
+			resolveOrReject();
+		} else if (
+			(this.options.stdout as any)._writableState !== undefined ||
+			this.options.stdout.writableLength !== undefined
+		) {
+			this.options.stdout.write('', resolveOrReject);
 		} else {
-			this.resolveExitPromise();
+			setImmediate(resolveOrReject);
 		}
 	}
 
@@ -516,6 +580,14 @@ export default class Ink {
 			this.rejectExitPromise = reject;
 		});
 
+		if (!this.beforeExitHandler) {
+			this.beforeExitHandler = () => {
+				this.unmount();
+			};
+
+			process.once('beforeExit', this.beforeExitHandler);
+		}
+
 		return this.exitPromise;
 	}
 
@@ -524,7 +596,7 @@ export default class Ink {
 			this.log.clear();
 			// Sync lastOutput so that unmount's final onRender
 			// sees it as unchanged and log-update skips it
-			this.log.sync(this.lastOutput);
+			this.log.sync(this.lastOutputToRender || this.lastOutput + '\n');
 		}
 	}
 
