@@ -7,6 +7,7 @@ import {
 	buildCursorSuffix,
 	buildCursorOnlySequence,
 	buildReturnToBottomPrefix,
+	hideCursorEscape,
 } from './cursor-helpers.js';
 
 export type {CursorPosition} from './cursor-helpers.js';
@@ -123,6 +124,10 @@ const createStandard = (
 		const lines = str.split('\n');
 		previousOutput = str;
 		previousLineCount = lines.length;
+
+		if (!activeCursor && cursorWasShown) {
+			stream.write(hideCursorEscape);
+		}
 
 		if (activeCursor) {
 			stream.write(
@@ -303,6 +308,10 @@ const createIncremental = (
 		previousOutput = str;
 		previousLines = lines;
 
+		if (!activeCursor && cursorWasShown) {
+			stream.write(hideCursorEscape);
+		}
+
 		if (activeCursor) {
 			stream.write(
 				buildCursorSuffix(visibleLineCount(lines, str), activeCursor),
@@ -336,3 +345,4 @@ const create = (
 
 const logUpdate = {create};
 export default logUpdate;
+ 

@@ -487,6 +487,34 @@ test('incremental rendering - sync() with cursor sets cursorWasShown for next re
 	t.true(renderCall.startsWith(hideCursorEscape));
 });
 
+test('standard rendering - sync() hides cursor when previous render showed cursor', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout);
+
+	render.setCursorPosition({x: 5, y: 1});
+	render('Line 1\nLine 2\nLine 3\n');
+	t.is((stdout.write as any).callCount, 1);
+
+	render.sync('Fresh output\n');
+
+	t.is((stdout.write as any).callCount, 2);
+	t.is((stdout.write as any).secondCall.args[0] as string, hideCursorEscape);
+});
+
+test('incremental rendering - sync() hides cursor when previous render showed cursor', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {incremental: true});
+
+	render.setCursorPosition({x: 5, y: 1});
+	render('Line 1\nLine 2\nLine 3\n');
+	t.is((stdout.write as any).callCount, 1);
+
+	render.sync('Fresh output\n');
+
+	t.is((stdout.write as any).callCount, 2);
+	t.is((stdout.write as any).secondCall.args[0] as string, hideCursorEscape);
+});
+
 test('standard rendering - sync() without cursor does not write to stream', t => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout);
