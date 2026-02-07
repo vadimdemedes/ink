@@ -1,10 +1,18 @@
 import EventEmitter from 'node:events';
 import {stub} from 'sinon';
 import test from 'ava';
-import React, {Suspense, act, useState} from 'react';
+import React, {Suspense, act, useEffect, useState} from 'react';
 import ansiEscapes from 'ansi-escapes';
 import delay from 'delay';
-import {render, Box, Text, useInput, useCursor} from '../src/index.js';
+import {
+	render,
+	Box,
+	Text,
+	useInput,
+	useCursor,
+	useStdout,
+	useStderr,
+} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
 const showCursorEscape = '\u001B[?25h';
@@ -317,6 +325,85 @@ test.serial('screen does not scroll up on subsequent renders', async t => {
 	);
 	// The write should include the new text
 	t.true(secondWrite.includes('x'), 'should contain the typed character');
+
+	unmount();
+});
+
+const cursorVisibilityFromStdoutWrites = (
+	stdout: NodeJS.WriteStream,
+): string => {
+	const writes: string[] = [];
+	for (let i = 0; i < (stdout.write as any).callCount; i++) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+		writes.push((stdout.write as any).getCall(i).args[0] as string);
+	}
+
+	return writes.join('');
+};
+
+test.serial('cursor remains visible after useStdout().write()', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+
+	function App() {
+		const {setCursorPosition} = useCursor();
+		const {write} = useStdout();
+
+		setCursorPosition({x: 2, y: 0});
+
+		useEffect(() => {
+			write('from stdout hook\n');
+		}, [write]);
+
+		return <Text>Hello</Text>;
+	}
+
+	const {unmount} = render(<App />, {stdout, stdin});
+	await delay(100);
+
+	const output = cursorVisibilityFromStdoutWrites(stdout);
+	const lastShowIndex = output.lastIndexOf(showCursorEscape);
+	const lastHideIndex = output.lastIndexOf(hideCursorEscape);
+
+	t.true(output.includes('from stdout hook'));
+	t.true(
+		lastShowIndex > lastHideIndex,
+		'last cursor visibility escape should be show after useStdout write',
+	);
+
+	unmount();
+});
+
+test.serial('cursor remains visible after useStderr().write()', async t => {
+	const stdout = createStdout();
+	const stderr = createStdout();
+	const stdin = createStdin();
+
+	function App() {
+		const {setCursorPosition} = useCursor();
+		const {write} = useStderr();
+
+		setCursorPosition({x: 2, y: 0});
+
+		useEffect(() => {
+			write('from stderr hook\n');
+		}, [write]);
+
+		return <Text>Hello</Text>;
+	}
+
+	const {unmount} = render(<App />, {stdout, stderr, stdin});
+	await delay(100);
+
+	const output = cursorVisibilityFromStdoutWrites(stdout);
+	const lastShowIndex = output.lastIndexOf(showCursorEscape);
+	const lastHideIndex = output.lastIndexOf(hideCursorEscape);
+
+	t.true((stderr.write as any).called);
+	t.true(
+		lastShowIndex > lastHideIndex,
+		'last cursor visibility escape should be show after useStderr write',
+	);
 
 	unmount();
 });
