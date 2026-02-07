@@ -29,7 +29,7 @@ type Output = {
 };
 
 /**
-This hook exposes methods to enable or disable focus management for all components or manually switch focus to next or previous components.
+This hook exposes methods to enable or disable focus management for all components or manually switch focus to the next or previous components.
 */
 const useFocusManager = (): Output => {
 	const focusContext = useContext(FocusContext);

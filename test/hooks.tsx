@@ -225,6 +225,20 @@ test.serial('useInput - handle page up', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - handle home', async t => {
+	const ps = term('use-input', ['home']);
+	ps.write('\u001B[H');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle end', async t => {
+	const ps = term('use-input', ['end']);
+	ps.write('\u001B[F');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - handle tab', async t => {
 	const ps = term('use-input', ['tab']);
 	ps.write('\t');
@@ -256,6 +270,13 @@ test.serial('useInput - handle delete', async t => {
 test.serial('useInput - handle remove (delete)', async t => {
 	const ps = term('use-input', ['remove']);
 	ps.write('\u001B[3~');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle option + return (macOS)', async t => {
+	const ps = term('use-input', ['returnMeta']);
+	ps.write('\u001B\r');
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });

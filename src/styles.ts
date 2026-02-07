@@ -186,28 +186,28 @@ export type Styles = {
 	readonly borderStyle?: keyof Boxes | BoxStyle;
 
 	/**
-	Determines whether top border is visible.
+	Determines whether the top border is visible.
 	
 	@default true
 	*/
 	readonly borderTop?: boolean;
 
 	/**
-	Determines whether bottom border is visible.
+	Determines whether the bottom border is visible.
 	
 	@default true
 	*/
 	readonly borderBottom?: boolean;
 
 	/**
-	Determines whether left border is visible.
+	Determines whether the left border is visible.
 	
 	@default true
 	*/
 	readonly borderLeft?: boolean;
 
 	/**
-	Determines whether right border is visible.
+	Determines whether the right border is visible.
 	
 	@default true
 	*/
@@ -219,22 +219,22 @@ export type Styles = {
 	readonly borderColor?: LiteralUnion<ForegroundColorName, string>;
 
 	/**
-	Change top border color. Accepts the same values as `color` in `Text` component.
+	Change the top border color. Accepts the same values as `color` in `Text` component.
 	*/
 	readonly borderTopColor?: LiteralUnion<ForegroundColorName, string>;
 
 	/**
-	Change bottom border color. Accepts the same values as `color` in `Text` component.
+	Change the bottom border color. Accepts the same values as `color` in `Text` component.
 	*/
 	readonly borderBottomColor?: LiteralUnion<ForegroundColorName, string>;
 
 	/**
-	Change left border color. Accepts the same values as `color` in `Text` component.
+	Change the left border color. Accepts the same values as `color` in `Text` component.
 	*/
 	readonly borderLeftColor?: LiteralUnion<ForegroundColorName, string>;
 
 	/**
-	Change right border color. Accepts the same values as `color` in `Text` component.
+	Change the right border color. Accepts the same values as `color` in `Text` component.
 	*/
 	readonly borderRightColor?: LiteralUnion<ForegroundColorName, string>;
 

@@ -38,6 +38,16 @@ export type Key = {
 	pageUp: boolean;
 
 	/**
+	Home key was pressed.
+	*/
+	home: boolean;
+
+	/**
+	End key was pressed.
+	*/
+	end: boolean;
+
+	/**
 	Return (Enter) key was pressed.
 	*/
 	return: boolean;
@@ -142,6 +152,8 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				rightArrow: keypress.name === 'right',
 				pageDown: keypress.name === 'pagedown',
 				pageUp: keypress.name === 'pageup',
+				home: keypress.name === 'home',
+				end: keypress.name === 'end',
 				return: keypress.name === 'return',
 				escape: keypress.name === 'escape',
 				ctrl: keypress.ctrl,

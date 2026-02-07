@@ -73,10 +73,9 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
 
 ## Who's Using Ink?
 
-- [Codex](https://github.com/openai/codex) - An agentic coding tool made by OpenAI.
 - [Claude Code](https://github.com/anthropics/claude-code) - An agentic coding tool made by Anthropic.
 - [Gemini CLI](https://github.com/google-gemini/gemini-cli) - An agentic coding tool made by Google.
-- [GitHub Copilot for CLI](https://githubnext.com/projects/copilot-cli) - Just say what you want the shell to do.
+- [GitHub Copilot CLI](https://github.com/features/copilot/cli) - Just say what you want the shell to do.
 - [Canva CLI](https://www.canva.dev/docs/apps/canva-cli/) - CLI for creating and managing Canva Apps.
 - [Cloudflare's Wrangler](https://github.com/cloudflare/wrangler2) - The CLI for Cloudflare Workers.
 - [Linear](https://linear.app) - Linear built an internal CLI for managing deployments, configs, and other housekeeping tasks.
@@ -125,6 +124,9 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
 - [Qodo Command](https://github.com/qodo-ai/command) - Build, run, and manage AI agents.
 - [Nanocoder](https://github.com/nano-collective/nanocoder) - A community-built, local-first AI coding agent with multi-provider support.
 - [dev3000](https://github.com/vercel-labs/dev3000) - An AI agent MCP orchestrator and developer browser.
+- [Neovate Code](https://github.com/neovateai/neovate-code) - An agentic coding tool made by AntGroup.
+- [instagram-cli](https://github.com/supreme-gg-gg/instagram-cli) - Instagram client.
+- [ElevenLabs CLI](https://github.com/elevenlabs/cli) - ElevenLabs agents client.
 
 *(PRs welcome. Append new entries at the end. Repos must have 100+ stars and showcase Ink beyond a basic list picker.)*
 
@@ -501,13 +503,13 @@ Default: `0`
 Padding on all sides. Equivalent to setting `paddingTop`, `paddingBottom`, `paddingLeft` and `paddingRight`.
 
 ```jsx
-<Box paddingTop={2}>Top</Box>
-<Box paddingBottom={2}>Bottom</Box>
-<Box paddingLeft={2}>Left</Box>
-<Box paddingRight={2}>Right</Box>
-<Box paddingX={2}>Left and right</Box>
-<Box paddingY={2}>Top and bottom</Box>
-<Box padding={2}>Top, bottom, left and right</Box>
+<Box paddingTop={2}><Text>Top</Text></Box>
+<Box paddingBottom={2}><Text>Bottom</Text></Box>
+<Box paddingLeft={2}><Text>Left</Text></Box>
+<Box paddingRight={2}><Text>Right</Text></Box>
+<Box paddingX={2}><Text>Left and right</Text></Box>
+<Box paddingY={2}><Text>Top and bottom</Text></Box>
+<Box padding={2}><Text>Top, bottom, left and right</Text></Box>
 ```
 
 #### Margin
@@ -562,13 +564,13 @@ Default: `0`
 Margin on all sides. Equivalent to setting `marginTop`, `marginBottom`, `marginLeft` and `marginRight`.
 
 ```jsx
-<Box marginTop={2}>Top</Box>
-<Box marginBottom={2}>Bottom</Box>
-<Box marginLeft={2}>Left</Box>
-<Box marginRight={2}>Right</Box>
-<Box marginX={2}>Left and right</Box>
-<Box marginY={2}>Top and bottom</Box>
-<Box margin={2}>Top, bottom, left and right</Box>
+<Box marginTop={2}><Text>Top</Text></Box>
+<Box marginBottom={2}><Text>Bottom</Text></Box>
+<Box marginLeft={2}><Text>Left</Text></Box>
+<Box marginRight={2}><Text>Right</Text></Box>
+<Box marginX={2}><Text>Left and right</Text></Box>
+<Box marginY={2}><Text>Top and bottom</Text></Box>
+<Box margin={2}><Text>Top, bottom, left and right</Text></Box>
 ```
 
 #### Gap
@@ -1022,7 +1024,7 @@ Accepts the same values as [`color`](#color) in `<Text>` component.
 
 Type: `string`
 
-Change right border color.
+Change the right border color.
 Accepts the same values as [`color`](#color) in `<Text>` component.
 
 ```jsx
@@ -1035,7 +1037,7 @@ Accepts the same values as [`color`](#color) in `<Text>` component.
 
 Type: `string`
 
-Change bottom border color.
+Change the bottom border color.
 Accepts the same values as [`color`](#color) in `<Text>` component.
 
 ```jsx
@@ -1048,7 +1050,7 @@ Accepts the same values as [`color`](#color) in `<Text>` component.
 
 Type: `string`
 
-Change left border color.
+Change the left border color.
 Accepts the same values as [`color`](#color) in `<Text>` component.
 
 ```jsx
@@ -1128,28 +1130,28 @@ Dim the right border color.
 Type: `boolean`\
 Default: `true`
 
-Determines whether top border is visible.
+Determines whether the top border is visible.
 
 ##### borderRight
 
 Type: `boolean`\
 Default: `true`
 
-Determines whether right border is visible.
+Determines whether the right border is visible.
 
 ##### borderBottom
 
 Type: `boolean`\
 Default: `true`
 
-Determines whether bottom border is visible.
+Determines whether the bottom border is visible.
 
 ##### borderLeft
 
 Type: `boolean`\
 Default: `true`
 
-Determines whether left border is visible.
+Determines whether the left border is visible.
 
 #### Background
 
@@ -1850,7 +1852,7 @@ See example in [examples/use-focus](examples/use-focus/use-focus.tsx) and [examp
 
 ### useFocusManager()
 
-This hook exposes methods to enable or disable focus management for all components or manually switch focus to next or previous components.
+This hook exposes methods to enable or disable focus management for all components or manually switch focus to the next or previous components.
 
 #### enableFocus()
 
@@ -2002,7 +2004,7 @@ Type: `object`
 Type: `stream.Writable`\
 Default: `process.stdout`
 
-Output stream where app will be rendered.
+Output stream where the app will be rendered.
 
 ###### stdin
 
@@ -2037,6 +2039,13 @@ That way, both are visible and don't overlap each other.
 
 This functionality is powered by [patch-console](https://github.com/vadimdemedes/patch-console), so if you need to disable Ink's interception of output but want to build something custom, you can use that.
 
+###### onRender
+
+Type: `({renderTime: number}) => void`\
+Default: `undefined`
+
+Runs the given callback after each render and re-render with a metrics object.
+
 ###### debug
 
 Type: `boolean`\
@@ -2054,13 +2063,39 @@ This controls how frequently the UI can update to prevent excessive re-rendering
 Higher values allow more frequent updates but may impact performance.
 Setting it to a lower value may be useful for components that update very frequently, to reduce CPU usage.
 
+###### incrementalRendering
+
+Type: `boolean`\
+Default: `false`
+
+Enable incremental rendering mode which only updates changed lines instead of redrawing the entire output.
+This can reduce flickering and improve performance for frequently updating UIs.
+
+###### concurrent
+
+Type: `boolean`\
+Default: `false`
+
+Enable React Concurrent Rendering mode.
+
+When enabled:
+- Suspense boundaries work correctly with async data fetching
+- `useTransition` and `useDeferredValue` hooks are fully functional
+- Updates can be interrupted for higher priority work
+
+```jsx
+render(<MyApp />, {concurrent: true});
+```
+
+**Note:** Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
+
 #### Instance
 
 This is the object that `render()` returns.
 
 ##### rerender(tree)
 
-Replace the previous root node with a new one or update props of the current root node.
+Replace the previous root node with a new one or update the props of the current root node.
 
 ###### tree
 
@@ -2147,7 +2182,7 @@ render(<Example />);
 ## Testing
 
 Ink components are simple to test with [ink-testing-library](https://github.com/vadimdemedes/ink-testing-library).
-Here's a simple example that checks how component is rendered:
+Here's a simple example that checks how the component is rendered:
 
 ```jsx
 import React from 'react';
@@ -2201,7 +2236,7 @@ For example, for this code:
 
 ```jsx
 <Box aria-role="checkbox" aria-state={{checked: true}}>
-	Accept terms and conditions
+	<Text>Accept terms and conditions</Text>
 </Box>
 ```
 
@@ -2307,6 +2342,10 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-spawn](https://github.com/kraenhansen/ink-spawn) - Spawn child processes.
 - [ink-titled-box](https://github.com/mishieck/ink-titled-box) - Box with a title.
 - [ink-chart](https://github.com/pppp606/ink-chart) - Sparkline and bar chart.
+- [ink-scroll-view](https://github.com/ByteLandTechnology/ink-scroll-view) - Scroll container.
+- [ink-scroll-list](https://github.com/ByteLandTechnology/ink-scroll-list) - Scrollable list.
+- [ink-stepper](https://github.com/archcorsair/ink-stepper) - Step-by-step wizard.
+- [ink-virtual-list](https://github.com/archcorsair/ink-virtual-list) - Virtualized list that renders only visible items for performance.
 
 ## Useful Hooks
 

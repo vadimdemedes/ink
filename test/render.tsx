@@ -1,15 +1,19 @@
+import EventEmitter from 'node:events';
 import process from 'node:process';
+import {Writable} from 'node:stream';
 import url from 'node:url';
 import * as path from 'node:path';
 import {createRequire} from 'node:module';
 import FakeTimers from '@sinonjs/fake-timers';
+import {stub} from 'sinon';
 import test from 'ava';
-import React from 'react';
+import React, {type ReactNode, useEffect, useState} from 'react';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
-import {render, Box, Text} from '../src/index.js';
+import {render, Box, Text, useInput} from '../src/index.js';
+import {type RenderMetrics} from '../src/ink.js';
 import createStdout from './helpers/create-stdout.js';
 
 const require = createRequire(import.meta.url);
@@ -18,6 +22,28 @@ const require = createRequire(import.meta.url);
 const {spawn} = require('node-pty') as typeof import('node-pty');
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+
+const createStdin = () => {
+	const stdin = new EventEmitter() as unknown as NodeJS.WriteStream;
+	stdin.isTTY = true;
+	stdin.setRawMode = stub();
+	stdin.setEncoding = () => {};
+	stdin.read = stub();
+	stdin.unref = () => {};
+	stdin.ref = () => {};
+
+	return stdin;
+};
+
+const emitReadable = (stdin: NodeJS.WriteStream, chunk: string) => {
+	/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
+	const read = stdin.read as ReturnType<typeof stub>;
+	read.onCall(0).returns(chunk);
+	read.onCall(1).returns(null);
+	stdin.emit('readable');
+	read.reset();
+	/* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
+};
 
 const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: unknown) => void;
@@ -125,10 +151,28 @@ test.serial('erase screen where state changes', async t => {
 	const ps = term('erase-with-state-change', ['4']);
 	await ps.waitForExit();
 
-	const secondFrame = ps.output.split(ansiEscapes.eraseLines(3))[1];
+	// The final frame is between the last eraseLines sequence and cursorShow
+	// Split on cursorShow to isolate the final rendered content before the cursor is shown
+	const beforeCursorShow = ps.output.split(ansiEscapes.cursorShow)[0];
+	if (!beforeCursorShow) {
+		t.fail('beforeCursorShow is undefined');
+		return;
+	}
+
+	// Find the last occurrence of an eraseLines sequence
+	// eraseLines(1) is the minimal erase pattern used by Ink
+	const eraseLinesPattern = ansiEscapes.eraseLines(1);
+	const lastEraseIndex = beforeCursorShow.lastIndexOf(eraseLinesPattern);
+
+	const lastFrame =
+		lastEraseIndex === -1
+			? beforeCursorShow
+			: beforeCursorShow.slice(lastEraseIndex + eraseLinesPattern.length);
+
+	const lastFrameContent = stripAnsi(lastFrame);
 
 	for (const letter of ['A', 'B', 'C']) {
-		t.false(secondFrame?.includes(letter));
+		t.false(lastFrameContent.includes(letter));
 	}
 });
 
@@ -274,6 +318,66 @@ test.serial('throttle renders to maxFps', t => {
 	}
 });
 
+test.serial('outputs renderTime when onRender is passed', async t => {
+	const renderTimes: number[] = [];
+	const funcObj = {
+		onRender(metrics: RenderMetrics) {
+			const {renderTime} = metrics;
+			renderTimes.push(renderTime);
+		},
+	};
+
+	const onRenderStub = stub(funcObj, 'onRender').callThrough();
+
+	function Test({children}: {readonly children?: ReactNode}) {
+		const [text, setText] = useState('Test');
+
+		useInput(input => {
+			setText(input);
+		});
+
+		return (
+			<Box borderStyle="round">
+				<Text>{text}</Text>
+				{children}
+			</Box>
+		);
+	}
+
+	const stdin = createStdin();
+	const {unmount, rerender} = render(<Test />, {
+		onRender: onRenderStub,
+		stdin,
+	});
+
+	// Initial render
+	t.is(onRenderStub.callCount, 1);
+	t.true(renderTimes[0] >= 0);
+
+	// Manual rerender
+	onRenderStub.resetHistory();
+	rerender(
+		<Test>
+			<Text>Updated</Text>
+		</Test>,
+	);
+	await delay(100);
+	t.is(onRenderStub.callCount, 1);
+	t.true(renderTimes[1] >= 0);
+
+	// Internal state update via useInput
+	onRenderStub.resetHistory();
+	emitReadable(stdin, 'a');
+	await delay(100);
+	t.is(onRenderStub.callCount, 1);
+	t.true(renderTimes[2] >= 0);
+
+	// Verify all renders were tracked
+	t.is(renderTimes.length, 3);
+
+	unmount();
+});
+
 test.serial('no throttled renders after unmount', t => {
 	const clock = FakeTimers.install();
 	try {
@@ -298,4 +402,63 @@ test.serial('no throttled renders after unmount', t => {
 	} finally {
 		clock.uninstall();
 	}
+});
+
+test.serial('unmount forces pending throttled render', t => {
+	const clock = FakeTimers.install();
+	try {
+		const stdout = createStdout();
+
+		const {unmount, rerender} = render(<ThrottleTestComponent text="Hello" />, {
+			stdout,
+			maxFps: 1, // 1 Hz => ~1000 ms throttle window
+		});
+
+		// Initial render (leading call)
+		t.is((stdout.write as any).callCount, 1);
+		t.is(
+			stripAnsi((stdout.write as any).lastCall.args[0] as string),
+			'Hello\n',
+		);
+
+		// Trigger another render inside the throttle window
+		rerender(<ThrottleTestComponent text="Final" />);
+		// Not rendered yet due to throttling
+		t.is((stdout.write as any).callCount, 1);
+
+		// Unmount should flush the pending render so the final frame is visible
+		unmount();
+
+		// The final frame should have been rendered
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+		const allCalls: string[] = (stdout.write as any).args.map(
+			(args: string[]) => stripAnsi(args[0]!),
+		);
+		t.true(allCalls.some((call: string) => call.includes('Final')));
+	} finally {
+		clock.uninstall();
+	}
+});
+
+test.serial('waitUntilExit resolves after stdout write callback', async t => {
+	let writeCallbackFired = false;
+
+	const stdout = new Writable({
+		write(_chunk, _encoding, callback) {
+			setTimeout(() => {
+				writeCallbackFired = true;
+				callback();
+			}, 150);
+		},
+	}) as unknown as NodeJS.WriteStream;
+
+	stdout.columns = 100;
+
+	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {stdout});
+	const exitPromise = waitUntilExit();
+
+	unmount();
+	await exitPromise;
+
+	t.true(writeCallbackFired);
 });
