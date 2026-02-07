@@ -1,4 +1,3 @@
-import EventEmitter from 'node:events';
 import process from 'node:process';
 import {Writable} from 'node:stream';
 import url from 'node:url';
@@ -15,6 +14,7 @@ import delay from 'delay';
 import {render, Box, Text, useCursor, useInput} from '../src/index.js';
 import {type RenderMetrics} from '../src/ink.js';
 import {bsu, esu} from '../src/write-synchronized.js';
+import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
 
 const require = createRequire(import.meta.url);
@@ -23,28 +23,6 @@ const require = createRequire(import.meta.url);
 const {spawn} = require('node-pty') as typeof import('node-pty');
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
-
-const createStdin = () => {
-	const stdin = new EventEmitter() as unknown as NodeJS.WriteStream;
-	stdin.isTTY = true;
-	stdin.setRawMode = stub();
-	stdin.setEncoding = () => {};
-	stdin.read = stub();
-	stdin.unref = () => {};
-	stdin.ref = () => {};
-
-	return stdin;
-};
-
-const emitReadable = (stdin: NodeJS.WriteStream, chunk: string) => {
-	/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
-	const read = stdin.read as ReturnType<typeof stub>;
-	read.onCall(0).returns(chunk);
-	read.onCall(1).returns(null);
-	stdin.emit('readable');
-	read.reset();
-	/* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
-};
 
 const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: unknown) => void;
