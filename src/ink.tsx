@@ -128,14 +128,15 @@ export default class Ink {
 			? this.log
 			: throttle(
 					(output: string) => {
+						const shouldWrite = this.log.willRender(output);
 						const sync = shouldSynchronize(this.options.stdout);
-						if (sync) {
+						if (sync && shouldWrite) {
 							this.options.stdout.write(bsu);
 						}
 
 						this.log(output);
 
-						if (sync) {
+						if (sync && shouldWrite) {
 							this.options.stdout.write(esu);
 						}
 					},

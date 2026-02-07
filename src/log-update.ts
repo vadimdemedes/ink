@@ -18,7 +18,8 @@ export type LogUpdate = {
 	sync: (str: string) => void;
 	setCursorPosition: (position: CursorPosition | undefined) => void;
 	isCursorDirty: () => boolean;
-	(str: string): void;
+	willRender: (str: string) => boolean;
+	(str: string): boolean;
 };
 
 // Count visible lines in a string, ignoring the trailing empty element
@@ -38,6 +39,18 @@ const createStandard = (
 	let previousCursorPosition: CursorPosition | undefined;
 	let cursorWasShown = false;
 
+	const getActiveCursor = () => (cursorDirty ? cursorPosition : undefined);
+	const hasChanges = (
+		str: string,
+		activeCursor: CursorPosition | undefined,
+	): boolean => {
+		const cursorChanged = cursorPositionChanged(
+			activeCursor,
+			previousCursorPosition,
+		);
+		return str !== previousOutput || cursorChanged;
+	};
+
 	const render = (str: string) => {
 		if (!showCursor && !hasHiddenCursor) {
 			cliCursor.hide(stream);
@@ -46,16 +59,15 @@ const createStandard = (
 
 		// Only use cursor if setCursorPosition was called since last render.
 		// This ensures stale positions don't persist after component unmount.
-		const activeCursor = cursorDirty ? cursorPosition : undefined;
+		const activeCursor = getActiveCursor();
 		cursorDirty = false;
-
 		const cursorChanged = cursorPositionChanged(
 			activeCursor,
 			previousCursorPosition,
 		);
 
-		if (str === previousOutput && !cursorChanged) {
-			return;
+		if (!hasChanges(str, activeCursor)) {
+			return false;
 		}
 
 		const lines = str.split('\n');
@@ -90,6 +102,7 @@ const createStandard = (
 
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
 		cursorWasShown = activeCursor !== undefined;
+		return true;
 	};
 
 	render.clear = () => {
@@ -145,6 +158,7 @@ const createStandard = (
 	};
 
 	render.isCursorDirty = () => cursorDirty;
+	render.willRender = (str: string) => hasChanges(str, getActiveCursor());
 
 	return render;
 };
@@ -161,6 +175,18 @@ const createIncremental = (
 	let previousCursorPosition: CursorPosition | undefined;
 	let cursorWasShown = false;
 
+	const getActiveCursor = () => (cursorDirty ? cursorPosition : undefined);
+	const hasChanges = (
+		str: string,
+		activeCursor: CursorPosition | undefined,
+	): boolean => {
+		const cursorChanged = cursorPositionChanged(
+			activeCursor,
+			previousCursorPosition,
+		);
+		return str !== previousOutput || cursorChanged;
+	};
+
 	const render = (str: string) => {
 		if (!showCursor && !hasHiddenCursor) {
 			cliCursor.hide(stream);
@@ -169,16 +195,15 @@ const createIncremental = (
 
 		// Only use cursor if setCursorPosition was called since last render.
 		// This ensures stale positions don't persist after component unmount.
-		const activeCursor = cursorDirty ? cursorPosition : undefined;
+		const activeCursor = getActiveCursor();
 		cursorDirty = false;
-
 		const cursorChanged = cursorPositionChanged(
 			activeCursor,
 			previousCursorPosition,
 		);
 
-		if (str === previousOutput && !cursorChanged) {
-			return;
+		if (!hasChanges(str, activeCursor)) {
+			return false;
 		}
 
 		const nextLines = str.split('\n');
@@ -197,7 +222,7 @@ const createIncremental = (
 			);
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
 			cursorWasShown = activeCursor !== undefined;
-			return;
+			return true;
 		}
 
 		const returnPrefix = buildReturnToBottomPrefix(
@@ -218,7 +243,7 @@ const createIncremental = (
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
 			previousOutput = str;
 			previousLines = nextLines;
-			return;
+			return true;
 		}
 
 		const hasTrailingNewline = str.endsWith('\n');
@@ -273,6 +298,7 @@ const createIncremental = (
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
 		previousOutput = str;
 		previousLines = nextLines;
+		return true;
 	};
 
 	render.clear = () => {
@@ -328,6 +354,7 @@ const createIncremental = (
 	};
 
 	render.isCursorDirty = () => cursorDirty;
+	render.willRender = (str: string) => hasChanges(str, getActiveCursor());
 
 	return render;
 };
@@ -345,4 +372,3 @@ const create = (
 
 const logUpdate = {create};
 export default logUpdate;
- 

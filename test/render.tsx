@@ -12,7 +12,7 @@ import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
-import {render, Box, Text, useInput} from '../src/index.js';
+import {render, Box, Text, useCursor, useInput} from '../src/index.js';
 import {type RenderMetrics} from '../src/ink.js';
 import {bsu, esu} from '../src/write-synchronized.js';
 import createStdout from './helpers/create-stdout.js';
@@ -284,6 +284,12 @@ function ThrottleTestComponent({text}: {readonly text: string}) {
 	return <Text>{text}</Text>;
 }
 
+function ThrottleCursorTestComponent({text}: {readonly text: string}) {
+	const {setCursorPosition} = useCursor();
+	setCursorPosition({x: 0, y: 0});
+	return <Text>{text}</Text>;
+}
+
 test.serial('throttle renders to maxFps', t => {
 	const clock = FakeTimers.install(); // Controls timers + Date.now()
 	try {
@@ -504,6 +510,41 @@ test.serial('no bsu/esu when output is unchanged', t => {
 		// No bsu/esu should be emitted because output didn't change
 		t.false(writes.includes(bsu), 'unchanged output should not emit bsu');
 		t.false(writes.includes(esu), 'unchanged output should not emit esu');
+
+		unmount();
+	} finally {
+		clock.uninstall();
+	}
+});
+
+test.serial('no bsu/esu when output and cursor are unchanged', t => {
+	const clock = FakeTimers.install();
+	try {
+		const stdout = createTtyStdout();
+		const writes: string[] = [];
+		const originalWrite = stdout.write;
+		(stdout as any).write = (...args: any[]) => {
+			writes.push(args[0] as string);
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+			return (originalWrite as any)(...args);
+		};
+
+		const {unmount, rerender} = render(
+			<ThrottleCursorTestComponent text="Hello" />,
+			{
+				stdout,
+				maxFps: 1,
+			},
+		);
+
+		t.true(writes.includes(bsu), 'initial render should include bsu');
+
+		writes.length = 0;
+		rerender(<ThrottleCursorTestComponent text="Hello" />);
+		clock.tick(1000);
+
+		t.false(writes.includes(bsu), 'unchanged rerender should not emit bsu');
+		t.false(writes.includes(esu), 'unchanged rerender should not emit esu');
 
 		unmount();
 	} finally {
