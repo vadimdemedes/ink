@@ -1,5 +1,6 @@
 import EventEmitter from 'node:events';
 import test from 'ava';
+import isInCi from 'is-in-ci';
 import {bsu, esu, shouldSynchronize} from '../src/write-synchronized.js';
 
 const createStream = ({tty = false} = {}) => {
@@ -19,9 +20,9 @@ test('esu is the End Synchronized Update sequence', t => {
 	t.is(esu, '\u001B[?2026l');
 });
 
-test('shouldSynchronize returns true for TTY stream', t => {
+test('shouldSynchronize returns !isInCi for TTY stream', t => {
 	const stream = createStream({tty: true});
-	t.true(shouldSynchronize(stream));
+	t.is(shouldSynchronize(stream), !isInCi);
 });
 
 test('shouldSynchronize returns false for non-TTY stream', t => {
