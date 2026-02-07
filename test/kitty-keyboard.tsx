@@ -1,5 +1,9 @@
+import EventEmitter from 'node:events';
+import React from 'react';
 import test from 'ava';
+import {stub, spy} from 'sinon';
 import parseKeypress from '../src/parse-keypress.js';
+import {render, Text} from '../src/index.js';
 
 // Helper to create kitty protocol CSI u sequences
 const kittyKey = (
@@ -338,6 +342,30 @@ test('kitty protocol - tilde keys with modifiers', t => {
 	t.true(result.isKittyProtocol);
 });
 
+// --- Malformed input handling ---
+
+test('kitty protocol - invalid codepoint above U+10FFFF returns null', t => {
+	// Codepoint 1114112 = 0x110000, one above max Unicode
+	const result = parseKeypress('\u001B[1114112u');
+	t.is(result.name, undefined);
+});
+
+test('kitty protocol - surrogate codepoint returns null', t => {
+	// Codepoint 0xD800 is a surrogate
+	const result = parseKeypress('\u001B[55296u');
+	t.is(result.name, undefined);
+});
+
+test('kitty protocol - invalid text codepoint replaced with fallback', t => {
+	// Valid primary codepoint, but text field has an invalid codepoint
+	const result = parseKeypress(kittyKey(97, 1, 1, [1_114_112]));
+	t.is(result.name, 'a');
+	t.is(result.text, '?');
+	t.true(result.isKittyProtocol);
+});
+
+// --- Legacy fallback ---
+
 test('non-kitty sequences fall back to legacy parsing', t => {
 	// Regular escape sequence (not kitty protocol)
 	// Up arrow key
@@ -352,4 +380,100 @@ test('non-kitty sequences - ctrl+c', t => {
 	t.is(result.name, 'c');
 	t.true(result.ctrl);
 	t.is(result.isKittyProtocol, undefined);
+});
+
+// --- Init/cleanup control sequence tests ---
+
+const createFakeStdout = () => {
+	const stdout = new EventEmitter() as unknown as NodeJS.WriteStream;
+	stdout.columns = 100;
+	stdout.isTTY = true;
+	const write = spy();
+	stdout.write = write;
+	return {stdout, write};
+};
+
+const createFakeStdin = () => {
+	const stdin = new EventEmitter() as unknown as NodeJS.ReadStream;
+	stdin.isTTY = true;
+	stdin.setRawMode = stub();
+	stdin.setEncoding = () => {};
+	stdin.read = stub();
+	return stdin;
+};
+
+const getWrittenStrings = (write: ReturnType<typeof spy>): string[] => {
+	const strings: string[] = [];
+	for (const args of write.args as string[][]) {
+		strings.push(args[0]!);
+	}
+
+	return strings;
+};
+
+test.serial(
+	'kitty protocol - writes enable sequence on init when mode is enabled',
+	t => {
+		const {stdout, write} = createFakeStdout();
+		const stdin = createFakeStdin();
+
+		const {unmount} = render(<Text>Hello</Text>, {
+			stdout,
+			stdin,
+			kittyKeyboard: {mode: 'enabled'},
+		});
+
+		// CSI > 1 u (push keyboard mode with disambiguateEscapeCodes flag)
+		t.true(getWrittenStrings(write).includes('\u001B[>1u'));
+
+		unmount();
+	},
+);
+
+test.serial('kitty protocol - writes disable sequence on unmount', t => {
+	const {stdout, write} = createFakeStdout();
+	const stdin = createFakeStdin();
+
+	const {unmount} = render(<Text>Hello</Text>, {
+		stdout,
+		stdin,
+		kittyKeyboard: {mode: 'enabled'},
+	});
+
+	unmount();
+
+	// CSI < u (pop keyboard mode)
+	t.true(getWrittenStrings(write).includes('\u001B[<u'));
+});
+
+test.serial('kitty protocol - not enabled when stdin is not a TTY', t => {
+	const {stdout, write} = createFakeStdout();
+	const stdin = createFakeStdin();
+	stdin.isTTY = false;
+
+	const {unmount} = render(<Text>Hello</Text>, {
+		stdout,
+		stdin,
+		kittyKeyboard: {mode: 'enabled'},
+	});
+
+	t.false(getWrittenStrings(write).includes('\u001B[>1u'));
+
+	unmount();
+});
+
+test.serial('kitty protocol - not enabled when stdout is not a TTY', t => {
+	const {stdout, write} = createFakeStdout();
+	stdout.isTTY = false;
+	const stdin = createFakeStdin();
+
+	const {unmount} = render(<Text>Hello</Text>, {
+		stdout,
+		stdin,
+		kittyKeyboard: {mode: 'enabled'},
+	});
+
+	t.false(getWrittenStrings(write).includes('\u001B[>1u'));
+
+	unmount();
 });

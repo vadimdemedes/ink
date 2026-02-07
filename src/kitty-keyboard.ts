@@ -42,9 +42,9 @@ export type KittyKeyboardOptions = {
 
 	/**
 	 * Protocol flags to request from the terminal.
-	 * Uses KittyFlags constants.
+	 * Uses `kittyFlags` constants.
 	 *
-	 * @default KittyFlags.DISAMBIGUATE_ESCAPE_CODES
+	 * @default kittyFlags.disambiguateEscapeCodes
 	 */
 	flags?: number;
 };

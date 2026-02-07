@@ -283,6 +283,13 @@ const kittyCodepointNames: Record<number, string> = {
 	57454: 'isoLevel5Shift',
 };
 
+// Valid Unicode codepoint range, excluding surrogates
+const isValidCodepoint = (cp: number): boolean =>
+	cp >= 0 && cp <= 0x10_ffff && !(cp >= 0xd8_00 && cp <= 0xdf_ff);
+
+const safeFromCodePoint = (cp: number): string =>
+	isValidCodepoint(cp) ? String.fromCodePoint(cp) : '?';
+
 const parseKittyKeypress = (s: string): ParsedKey | null => {
 	const match = kittyKeyRe.exec(s);
 	if (!match) return null;
@@ -292,12 +299,17 @@ const parseKittyKeypress = (s: string): ParsedKey | null => {
 	const eventType = match[3] ? parseInt(match[3], 10) : 1;
 	const textField = match[4];
 
+	// Bail on invalid primary codepoint
+	if (!isValidCodepoint(codepoint)) {
+		return null;
+	}
+
 	// Parse text-as-codepoints field (colon-separated Unicode codepoints)
 	let text: string | undefined;
 	if (textField) {
 		text = textField
 			.split(':')
-			.map(cp => String.fromCodePoint(parseInt(cp, 10)))
+			.map(cp => safeFromCodePoint(parseInt(cp, 10)))
 			.join('');
 	}
 
@@ -311,7 +323,7 @@ const parseKittyKeypress = (s: string): ParsedKey | null => {
 		// Ctrl+letter comes as codepoint 1-26
 		name = String.fromCodePoint(codepoint + 96); // 'a' is 97
 	} else {
-		name = String.fromCodePoint(codepoint).toLowerCase();
+		name = safeFromCodePoint(codepoint).toLowerCase();
 	}
 
 	return {

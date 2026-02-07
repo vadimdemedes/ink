@@ -666,6 +666,7 @@ export default class Ink {
 		// - KITTY_WINDOW_ID env var (set by kitty terminal)
 		// - TERM=xterm-kitty (kitty terminal)
 		// - TERM_PROGRAM=WezTerm (WezTerm terminal)
+		// - TERM_PROGRAM=ghostty (Ghostty terminal)
 		// A more sophisticated implementation could send CSI ? u query
 		// and wait for a response to detect actual support
 		const term = process.env['TERM'] ?? '';
@@ -673,7 +674,10 @@ export default class Ink {
 		const hasKittyWindowId = 'KITTY_WINDOW_ID' in process.env;
 
 		const isKnownSupportingTerminal =
-			hasKittyWindowId || term === 'xterm-kitty' || termProgram === 'WezTerm';
+			hasKittyWindowId ||
+			term === 'xterm-kitty' ||
+			termProgram === 'WezTerm' ||
+			termProgram === 'ghostty';
 
 		if (!isInCi && this.options.stdin.isTTY && isKnownSupportingTerminal) {
 			this.enableKittyProtocol(

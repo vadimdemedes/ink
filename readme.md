@@ -1592,6 +1592,41 @@ Default: `false`
 
 [Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 
+###### key.super
+
+Type: `boolean`\
+Default: `false`
+
+Super key (Cmd on macOS, Win on Windows) was pressed. Requires [kitty keyboard protocol](#kittykeyboard).
+
+###### key.hyper
+
+Type: `boolean`\
+Default: `false`
+
+Hyper key was pressed. Requires [kitty keyboard protocol](#kittykeyboard).
+
+###### key.capsLock
+
+Type: `boolean`\
+Default: `false`
+
+Caps Lock was active. Requires [kitty keyboard protocol](#kittykeyboard).
+
+###### key.numLock
+
+Type: `boolean`\
+Default: `false`
+
+Num Lock was active. Requires [kitty keyboard protocol](#kittykeyboard).
+
+###### key.eventType
+
+Type: `'press' | 'repeat' | 'release'`\
+Default: `undefined`
+
+The type of key event. Only available with [kitty keyboard protocol](#kittykeyboard). Without the protocol, this property is `undefined`.
+
 #### options
 
 Type: `object`
@@ -2139,6 +2174,46 @@ render(<MyApp />, {concurrent: true});
 ```
 
 **Note:** Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
+
+###### kittyKeyboard
+
+Type: `object`\
+Default: `undefined`
+
+Enable the [kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) for enhanced keyboard input handling. When enabled, terminals that support the protocol will report additional key information including `super`, `hyper`, `capsLock`, `numLock` modifiers and `eventType` (press/repeat/release).
+
+```jsx
+// Auto-detect terminal support (kitty, WezTerm)
+render(<MyApp />, {kittyKeyboard: {mode: 'auto'}});
+
+// Force enable
+render(<MyApp />, {kittyKeyboard: {mode: 'enabled'}});
+
+// Custom flags
+import {kittyFlags} from 'ink';
+render(<MyApp />, {
+	kittyKeyboard: {
+		mode: 'enabled',
+		flags: kittyFlags.disambiguateEscapeCodes | kittyFlags.reportEventTypes,
+	},
+});
+```
+
+**kittyKeyboard.mode**
+
+Type: `'auto' | 'enabled' | 'disabled'`\
+Default: `'auto'`
+
+- `'auto'`: Detect terminal support by checking for known supporting terminals (kitty, WezTerm).
+- `'enabled'`: Force enable the protocol. Both stdin and stdout must be TTYs.
+- `'disabled'`: Never enable the protocol.
+
+**kittyKeyboard.flags**
+
+Type: `number`\
+Default: `kittyFlags.disambiguateEscapeCodes`
+
+Protocol flags to request from the terminal. Use the exported `kittyFlags` constants and combine with bitwise OR.
 
 #### Instance
 
