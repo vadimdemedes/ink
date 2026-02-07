@@ -1,4 +1,4 @@
-import test from 'ava';
+import test, {type ExecutionContext} from 'ava';
 import React, {Suspense, act, useEffect, useState} from 'react';
 import ansiEscapes from 'ansi-escapes';
 import delay from 'delay';
@@ -318,69 +318,83 @@ const cursorVisibilityFromStdoutWrites = (
 	return writes.join('');
 };
 
-test.serial('cursor remains visible after useStdout().write()', async t => {
-	const stdout = createStdout();
-	const stdin = createStdin();
+function StdoutWriteApp() {
+	const {setCursorPosition} = useCursor();
+	const {write} = useStdout();
 
-	function App() {
-		const {setCursorPosition} = useCursor();
-		const {write} = useStdout();
+	setCursorPosition({x: 2, y: 0});
 
-		setCursorPosition({x: 2, y: 0});
+	useEffect(() => {
+		write('from stdout hook\n');
+	}, [write]);
 
-		useEffect(() => {
-			write('from stdout hook\n');
-		}, [write]);
+	return <Text>Hello</Text>;
+}
 
-		return <Text>Hello</Text>;
-	}
+function StderrWriteApp() {
+	const {setCursorPosition} = useCursor();
+	const {write} = useStderr();
 
-	const {unmount} = render(<App />, {stdout, stdin});
-	await delay(100);
+	setCursorPosition({x: 2, y: 0});
 
-	const output = cursorVisibilityFromStdoutWrites(stdout);
-	const lastShowIndex = output.lastIndexOf(showCursorEscape);
-	const lastHideIndex = output.lastIndexOf(hideCursorEscape);
+	useEffect(() => {
+		write('from stderr hook\n');
+	}, [write]);
 
-	t.true(output.includes('from stdout hook'));
-	t.true(
-		lastShowIndex > lastHideIndex,
-		'last cursor visibility escape should be show after useStdout write',
-	);
+	return <Text>Hello</Text>;
+}
 
-	unmount();
-});
+type HookWriteCase = {
+	readonly testName: string;
+	readonly App: () => React.JSX.Element;
+	readonly includeStderr?: boolean;
+	readonly assertTargetWrite: (
+		t: ExecutionContext,
+		output: string,
+		stderr: NodeJS.WriteStream | undefined,
+	) => void;
+};
 
-test.serial('cursor remains visible after useStderr().write()', async t => {
-	const stdout = createStdout();
-	const stderr = createStdout();
-	const stdin = createStdin();
+const hookWriteCases: HookWriteCase[] = [
+	{
+		testName: 'cursor remains visible after useStdout().write()',
+		App: StdoutWriteApp,
+		assertTargetWrite: (t, output) => {
+			t.true(output.includes('from stdout hook'));
+		},
+	},
+	{
+		testName: 'cursor remains visible after useStderr().write()',
+		App: StderrWriteApp,
+		includeStderr: true,
+		assertTargetWrite: (t, _output, stderr) => {
+			t.true((stderr?.write as any).called);
+		},
+	},
+];
 
-	function App() {
-		const {setCursorPosition} = useCursor();
-		const {write} = useStderr();
+for (const testCase of hookWriteCases) {
+	test.serial(testCase.testName, async t => {
+		const stdout = createStdout();
+		const stdin = createStdin();
+		const stderr = testCase.includeStderr ? createStdout() : undefined;
 
-		setCursorPosition({x: 2, y: 0});
+		const {unmount} = render(
+			<testCase.App />,
+			stderr ? {stdout, stderr, stdin} : {stdout, stdin},
+		);
+		await delay(100);
 
-		useEffect(() => {
-			write('from stderr hook\n');
-		}, [write]);
+		const output = cursorVisibilityFromStdoutWrites(stdout);
+		const lastShowIndex = output.lastIndexOf(showCursorEscape);
+		const lastHideIndex = output.lastIndexOf(hideCursorEscape);
 
-		return <Text>Hello</Text>;
-	}
+		testCase.assertTargetWrite(t, output, stderr);
+		t.true(
+			lastShowIndex > lastHideIndex,
+			'last cursor visibility escape should be show after hook write',
+		);
 
-	const {unmount} = render(<App />, {stdout, stderr, stdin});
-	await delay(100);
-
-	const output = cursorVisibilityFromStdoutWrites(stdout);
-	const lastShowIndex = output.lastIndexOf(showCursorEscape);
-	const lastHideIndex = output.lastIndexOf(hideCursorEscape);
-
-	t.true((stderr.write as any).called);
-	t.true(
-		lastShowIndex > lastHideIndex,
-		'last cursor visibility escape should be show after useStderr write',
-	);
-
-	unmount();
-});
+		unmount();
+	});
+}
