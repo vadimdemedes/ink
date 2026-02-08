@@ -334,6 +334,40 @@ test.serial(
 	},
 );
 
+test.serial(
+	'useInput - handle Ctrl+C via kitty codepoint-3 form when `exitOnCtrlC` is `false`',
+	async t => {
+		const run = async (tt: ExecutionContext) => {
+			const ps = term('use-input-ctrl-c');
+			// Ctrl+C via kitty codepoint 3 form (modifier 5 = ctrl(4) + 1)
+			ps.write('\u001B[3;5u');
+			await ps.waitForExit();
+			tt.true(ps.output.includes('exited'));
+		};
+
+		const firstTry = await t.try(run);
+
+		if (firstTry.passed) {
+			firstTry.commit();
+			return;
+		}
+
+		firstTry.discard();
+
+		const secondTry = await t.try(run);
+
+		if (secondTry.passed) {
+			secondTry.commit();
+			return;
+		}
+
+		secondTry.discard();
+
+		const thirdTry = await t.try(run);
+		thirdTry.commit();
+	},
+);
+
 test.serial('useStdout - write to stdout', async t => {
 	const ps = term('use-stdout');
 	await ps.waitForExit();
