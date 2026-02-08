@@ -424,3 +424,36 @@ test.serial('useInput - handle kitty protocol escape key', async t => {
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
+
+test.serial(
+	'useInput - non-printable kitty key (capslock) produces empty input',
+	async t => {
+		const ps = term('use-input-kitty', ['nonPrintable']);
+		// Capslock (codepoint 57358)
+		ps.write('\u001B[57358u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial(
+	'useInput - non-printable kitty key (f13) produces empty input',
+	async t => {
+		const ps = term('use-input-kitty', ['nonPrintable']);
+		// F13 (codepoint 57376)
+		ps.write('\u001B[57376u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial(
+	'useInput - non-printable kitty key (printscreen) produces empty input',
+	async t => {
+		const ps = term('use-input-kitty', ['nonPrintable']);
+		// PrintScreen (codepoint 57361)
+		ps.write('\u001B[57361u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);

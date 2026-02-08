@@ -60,6 +60,12 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		// Test non-printable keys produce empty input
+		if (test === 'nonPrintable' && input === '') {
+			exit();
+			return;
+		}
+
 		throw new Error(`Unexpected input: ${JSON.stringify({input, key})}`);
 	});
 
