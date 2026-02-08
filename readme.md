@@ -1968,7 +1968,8 @@ const Example = () => {
 `useCursor` lets you control the terminal cursor position after each render. This is essential for IME (Input Method Editor) support, where the composing character is displayed at the cursor location.
 
 ```jsx
-import {useCursor} from 'ink';
+import {useState} from 'react';
+import {Box, Text, useCursor} from 'ink';
 import stringWidth from 'string-width';
 
 const TextInput = () => {
