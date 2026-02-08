@@ -200,7 +200,8 @@ const kittySpecialNumberKeys: Record<number, string> = {
 // Map of special codepoints to key names in kitty protocol
 const kittyCodepointNames: Record<number, string> = {
 	27: 'escape',
-	13: 'return',
+	// 13 (return) and 32 (space) are handled before this lookup
+	// in parseKittyKeypress so they can be marked as printable.
 	9: 'tab',
 	127: 'delete',
 	8: 'backspace',

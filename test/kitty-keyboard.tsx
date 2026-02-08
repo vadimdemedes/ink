@@ -643,6 +643,13 @@ test.serial(
 
 		const origKittyId = process.env['KITTY_WINDOW_ID'];
 		process.env['KITTY_WINDOW_ID'] = '1';
+		t.teardown(() => {
+			if (origKittyId === undefined) {
+				delete process.env['KITTY_WINDOW_ID'];
+			} else {
+				process.env['KITTY_WINDOW_ID'] = origKittyId;
+			}
+		});
 
 		const {unmount} = render(<Text>Hello</Text>, {
 			stdout,
@@ -660,12 +667,6 @@ test.serial(
 		const strings = getWrittenStrings(write);
 		const enableCount = strings.filter(s => s === '\u001B[>1u').length;
 		t.is(enableCount, 0);
-
-		if (origKittyId === undefined) {
-			delete process.env['KITTY_WINDOW_ID'];
-		} else {
-			process.env['KITTY_WINDOW_ID'] = origKittyId;
-		}
 	},
 );
 
@@ -689,6 +690,13 @@ test.serial(
 
 		const origKittyId = process.env['KITTY_WINDOW_ID'];
 		process.env['KITTY_WINDOW_ID'] = '1';
+		t.teardown(() => {
+			if (origKittyId === undefined) {
+				delete process.env['KITTY_WINDOW_ID'];
+			} else {
+				process.env['KITTY_WINDOW_ID'] = origKittyId;
+			}
+		});
 
 		const {unmount} = render(<Text>Hello</Text>, {
 			stdout,
@@ -700,12 +708,6 @@ test.serial(
 		t.true(writtenStrings.includes('\u001B[>1u'));
 
 		unmount();
-
-		if (origKittyId === undefined) {
-			delete process.env['KITTY_WINDOW_ID'];
-		} else {
-			process.env['KITTY_WINDOW_ID'] = origKittyId;
-		}
 	},
 );
 
@@ -717,6 +719,13 @@ test.serial(
 
 		const origKittyId = process.env['KITTY_WINDOW_ID'];
 		process.env['KITTY_WINDOW_ID'] = '1';
+		t.teardown(() => {
+			if (origKittyId === undefined) {
+				delete process.env['KITTY_WINDOW_ID'];
+			} else {
+				process.env['KITTY_WINDOW_ID'] = origKittyId;
+			}
+		});
 
 		const {unmount} = render(<Text>Hello</Text>, {
 			stdout,
@@ -733,12 +742,6 @@ test.serial(
 		t.true(strings.includes('\u001B[>1u'));
 
 		unmount();
-
-		if (origKittyId === undefined) {
-			delete process.env['KITTY_WINDOW_ID'];
-		} else {
-			process.env['KITTY_WINDOW_ID'] = origKittyId;
-		}
 	},
 );
 

@@ -550,7 +550,12 @@ export default class Ink {
 		}
 
 		if (this.kittyProtocolEnabled) {
-			this.options.stdout.write('\u001B[<u');
+			try {
+				this.options.stdout.write('\u001B[<u');
+			} catch {
+				// Best-effort: stdout may already be destroyed during shutdown
+			}
+
 			this.kittyProtocolEnabled = false;
 		}
 
@@ -701,9 +706,11 @@ export default class Ink {
 			stdin.removeListener('data', onData);
 
 			// Re-emit any buffered data that wasn't the protocol response,
-			// so it isn't lost from Ink's normal input pipeline
+			// so it isn't lost from Ink's normal input pipeline.
+			// Clear responseBuffer afterwards to make cleanup idempotent.
 			// eslint-disable-next-line no-control-regex
 			const remaining = responseBuffer.replace(/\u001B\[\?\d+u/, '');
+			responseBuffer = '';
 			if (remaining) {
 				stdin.unshift(Buffer.from(remaining));
 			}
