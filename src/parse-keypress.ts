@@ -165,10 +165,11 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 
 	key.sequence = key.sequence || s || key.name;
 
-	if (s === '\r') {
-		// carriage return
+	if (s === '\r' || s === '\x1b\r') {
+		// carriage return (or option+return on macOS)
 		key.raw = undefined;
 		key.name = 'return';
+		key.option = s.length === 2;
 	} else if (s === '\n') {
 		// enter, should have been called linefeed
 		key.name = 'enter';

@@ -1,5 +1,6 @@
 import EventEmitter from 'node:events';
 import process from 'node:process';
+import {Writable} from 'node:stream';
 import url from 'node:url';
 import * as path from 'node:path';
 import {createRequire} from 'node:module';
@@ -150,10 +151,28 @@ test.serial('erase screen where state changes', async t => {
 	const ps = term('erase-with-state-change', ['4']);
 	await ps.waitForExit();
 
-	const secondFrame = ps.output.split(ansiEscapes.eraseLines(3))[1];
+	// The final frame is between the last eraseLines sequence and cursorShow
+	// Split on cursorShow to isolate the final rendered content before the cursor is shown
+	const beforeCursorShow = ps.output.split(ansiEscapes.cursorShow)[0];
+	if (!beforeCursorShow) {
+		t.fail('beforeCursorShow is undefined');
+		return;
+	}
+
+	// Find the last occurrence of an eraseLines sequence
+	// eraseLines(1) is the minimal erase pattern used by Ink
+	const eraseLinesPattern = ansiEscapes.eraseLines(1);
+	const lastEraseIndex = beforeCursorShow.lastIndexOf(eraseLinesPattern);
+
+	const lastFrame =
+		lastEraseIndex === -1
+			? beforeCursorShow
+			: beforeCursorShow.slice(lastEraseIndex + eraseLinesPattern.length);
+
+	const lastFrameContent = stripAnsi(lastFrame);
 
 	for (const letter of ['A', 'B', 'C']) {
-		t.false(secondFrame?.includes(letter));
+		t.false(lastFrameContent.includes(letter));
 	}
 });
 
@@ -383,4 +402,63 @@ test.serial('no throttled renders after unmount', t => {
 	} finally {
 		clock.uninstall();
 	}
+});
+
+test.serial('unmount forces pending throttled render', t => {
+	const clock = FakeTimers.install();
+	try {
+		const stdout = createStdout();
+
+		const {unmount, rerender} = render(<ThrottleTestComponent text="Hello" />, {
+			stdout,
+			maxFps: 1, // 1 Hz => ~1000 ms throttle window
+		});
+
+		// Initial render (leading call)
+		t.is((stdout.write as any).callCount, 1);
+		t.is(
+			stripAnsi((stdout.write as any).lastCall.args[0] as string),
+			'Hello\n',
+		);
+
+		// Trigger another render inside the throttle window
+		rerender(<ThrottleTestComponent text="Final" />);
+		// Not rendered yet due to throttling
+		t.is((stdout.write as any).callCount, 1);
+
+		// Unmount should flush the pending render so the final frame is visible
+		unmount();
+
+		// The final frame should have been rendered
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+		const allCalls: string[] = (stdout.write as any).args.map(
+			(args: string[]) => stripAnsi(args[0]!),
+		);
+		t.true(allCalls.some((call: string) => call.includes('Final')));
+	} finally {
+		clock.uninstall();
+	}
+});
+
+test.serial('waitUntilExit resolves after stdout write callback', async t => {
+	let writeCallbackFired = false;
+
+	const stdout = new Writable({
+		write(_chunk, _encoding, callback) {
+			setTimeout(() => {
+				writeCallbackFired = true;
+				callback();
+			}, 150);
+		},
+	}) as unknown as NodeJS.WriteStream;
+
+	stdout.columns = 100;
+
+	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {stdout});
+	const exitPromise = waitUntilExit();
+
+	unmount();
+	await exitPromise;
+
+	t.true(writeCallbackFired);
 });

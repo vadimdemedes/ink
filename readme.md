@@ -75,7 +75,7 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
 
 - [Claude Code](https://github.com/anthropics/claude-code) - An agentic coding tool made by Anthropic.
 - [Gemini CLI](https://github.com/google-gemini/gemini-cli) - An agentic coding tool made by Google.
-- [GitHub Copilot for CLI](https://githubnext.com/projects/copilot-cli) - Just say what you want the shell to do.
+- [GitHub Copilot CLI](https://github.com/features/copilot/cli) - Just say what you want the shell to do.
 - [Canva CLI](https://www.canva.dev/docs/apps/canva-cli/) - CLI for creating and managing Canva Apps.
 - [Cloudflare's Wrangler](https://github.com/cloudflare/wrangler2) - The CLI for Cloudflare Workers.
 - [Linear](https://linear.app) - Linear built an internal CLI for managing deployments, configs, and other housekeeping tasks.
@@ -125,6 +125,7 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
 - [Nanocoder](https://github.com/nano-collective/nanocoder) - A community-built, local-first AI coding agent with multi-provider support.
 - [Neovate Code](https://github.com/neovateai/neovate-code) - An agentic coding tool made by AntGroup.
 - [instagram-cli](https://github.com/supreme-gg-gg/instagram-cli) - Instagram client.
+- [ElevenLabs CLI](https://github.com/elevenlabs/cli) - ElevenLabs agents client.
 - [SSH AI Chat](https://github.com/ccbikai/ssh-ai-chat) - Chat with AI over SSH.
 
 *(PRs welcome. Append new entries at the end. Repos must have 100+ stars and showcase Ink beyond a basic list picker.)*
@@ -1023,7 +1024,7 @@ Accepts the same values as [`color`](#color) in `<Text>` component.
 
 Type: `string`
 
-Change right border color.
+Change the right border color.
 Accepts the same values as [`color`](#color) in `<Text>` component.
 
 ```jsx
@@ -1036,7 +1037,7 @@ Accepts the same values as [`color`](#color) in `<Text>` component.
 
 Type: `string`
 
-Change bottom border color.
+Change the bottom border color.
 Accepts the same values as [`color`](#color) in `<Text>` component.
 
 ```jsx
@@ -1049,7 +1050,7 @@ Accepts the same values as [`color`](#color) in `<Text>` component.
 
 Type: `string`
 
-Change left border color.
+Change the left border color.
 Accepts the same values as [`color`](#color) in `<Text>` component.
 
 ```jsx
@@ -1129,28 +1130,28 @@ Dim the right border color.
 Type: `boolean`\
 Default: `true`
 
-Determines whether top border is visible.
+Determines whether the top border is visible.
 
 ##### borderRight
 
 Type: `boolean`\
 Default: `true`
 
-Determines whether right border is visible.
+Determines whether the right border is visible.
 
 ##### borderBottom
 
 Type: `boolean`\
 Default: `true`
 
-Determines whether bottom border is visible.
+Determines whether the bottom border is visible.
 
 ##### borderLeft
 
 Type: `boolean`\
 Default: `true`
 
-Determines whether left border is visible.
+Determines whether the left border is visible.
 
 #### Background
 
@@ -1851,7 +1852,7 @@ See example in [examples/use-focus](examples/use-focus/use-focus.tsx) and [examp
 
 ### useFocusManager()
 
-This hook exposes methods to enable or disable focus management for all components or manually switch focus to next or previous components.
+This hook exposes methods to enable or disable focus management for all components or manually switch focus to the next or previous components.
 
 #### enableFocus()
 
@@ -2003,7 +2004,7 @@ Type: `object`
 Type: `stream.Writable`\
 Default: `process.stdout`
 
-Output stream where app will be rendered.
+Output stream where the app will be rendered.
 
 ###### stdin
 
@@ -2062,13 +2063,39 @@ This controls how frequently the UI can update to prevent excessive re-rendering
 Higher values allow more frequent updates but may impact performance.
 Setting it to a lower value may be useful for components that update very frequently, to reduce CPU usage.
 
+###### incrementalRendering
+
+Type: `boolean`\
+Default: `false`
+
+Enable incremental rendering mode which only updates changed lines instead of redrawing the entire output.
+This can reduce flickering and improve performance for frequently updating UIs.
+
+###### concurrent
+
+Type: `boolean`\
+Default: `false`
+
+Enable React Concurrent Rendering mode.
+
+When enabled:
+- Suspense boundaries work correctly with async data fetching
+- `useTransition` and `useDeferredValue` hooks are fully functional
+- Updates can be interrupted for higher priority work
+
+```jsx
+render(<MyApp />, {concurrent: true});
+```
+
+**Note:** Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
+
 #### Instance
 
 This is the object that `render()` returns.
 
 ##### rerender(tree)
 
-Replace the previous root node with a new one or update props of the current root node.
+Replace the previous root node with a new one or update the props of the current root node.
 
 ###### tree
 
@@ -2155,7 +2182,7 @@ render(<Example />);
 ## Testing
 
 Ink components are simple to test with [ink-testing-library](https://github.com/vadimdemedes/ink-testing-library).
-Here's a simple example that checks how component is rendered:
+Here's a simple example that checks how the component is rendered:
 
 ```jsx
 import React from 'react';
@@ -2209,7 +2236,7 @@ For example, for this code:
 
 ```jsx
 <Box aria-role="checkbox" aria-state={{checked: true}}>
-	Accept terms and conditions
+	<Text>Accept terms and conditions</Text>
 </Box>
 ```
 
@@ -2315,6 +2342,10 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-spawn](https://github.com/kraenhansen/ink-spawn) - Spawn child processes.
 - [ink-titled-box](https://github.com/mishieck/ink-titled-box) - Box with a title.
 - [ink-chart](https://github.com/pppp606/ink-chart) - Sparkline and bar chart.
+- [ink-scroll-view](https://github.com/ByteLandTechnology/ink-scroll-view) - Scroll container.
+- [ink-scroll-list](https://github.com/ByteLandTechnology/ink-scroll-list) - Scrollable list.
+- [ink-stepper](https://github.com/archcorsair/ink-stepper) - Step-by-step wizard.
+- [ink-virtual-list](https://github.com/archcorsair/ink-virtual-list) - Virtualized list that renders only visible items for performance.
 
 ## Useful Hooks
 

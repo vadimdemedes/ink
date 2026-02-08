@@ -1,0 +1,1 @@
+import './concurrent-suspense.js';

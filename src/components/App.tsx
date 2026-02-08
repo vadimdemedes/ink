@@ -1,13 +1,20 @@
 import {EventEmitter} from 'node:events';
 import process from 'node:process';
-import React, {PureComponent, type ReactNode} from 'react';
+import React, {
+	type ReactNode,
+	useState,
+	useRef,
+	useCallback,
+	useMemo,
+	useEffect,
+} from 'react';
 import cliCursor from 'cli-cursor';
 import AppContext from './AppContext.js';
 import StdinContext from './StdinContext.js';
 import StdoutContext from './StdoutContext.js';
 import StderrContext from './StderrContext.js';
 import FocusContext from './FocusContext.js';
-import ErrorOverview from './ErrorOverview.js';
+import ErrorBoundary from './ErrorBoundary.js';
 
 const tab = '\t';
 const shiftTab = '\u001B[Z';
@@ -24,13 +31,6 @@ type Props = {
 	readonly onExit: (error?: Error) => void;
 };
 
-type State = {
-	readonly isFocusEnabled: boolean;
-	readonly activeFocusId?: string;
-	readonly focusables: Focusable[];
-	readonly error?: Error;
-};
-
 type Focusable = {
 	readonly id: string;
 	readonly isActive: boolean;
@@ -39,277 +39,308 @@ type Focusable = {
 // Root component for all Ink apps
 // It renders stdin and stdout contexts, so that children can access them if needed
 // It also handles Ctrl+C exiting and cursor visibility
-export default class App extends PureComponent<Props, State> {
-	static displayName = 'InternalApp';
-
-	static getDerivedStateFromError(error: Error) {
-		return {error};
-	}
-
-	override state = {
-		isFocusEnabled: true,
-		activeFocusId: undefined,
-		focusables: [],
-		error: undefined,
-	};
+function App({
+	children,
+	stdin,
+	stdout,
+	stderr,
+	writeToStdout,
+	writeToStderr,
+	exitOnCtrlC,
+	onExit,
+}: Props): React.ReactNode {
+	const [isFocusEnabled, setIsFocusEnabled] = useState(true);
+	const [activeFocusId, setActiveFocusId] = useState<string | undefined>(
+		undefined,
+	);
+	// Focusables array is managed internally via setFocusables callback pattern
+	// eslint-disable-next-line react/hook-use-state
+	const [, setFocusables] = useState<Focusable[]>([]);
+	// Track focusables count for tab navigation check (avoids stale closure)
+	const focusablesCountRef = useRef(0);
 
 	// Count how many components enabled raw mode to avoid disabling
 	// raw mode until all components don't need it anymore
-	rawModeEnabledCount = 0;
+	const rawModeEnabledCount = useRef(0);
 	// eslint-disable-next-line @typescript-eslint/naming-convention
-	internal_eventEmitter = new EventEmitter();
+	const internal_eventEmitter = useRef(new EventEmitter());
+	// Store the currently attached readable listener to avoid stale closure issues
+	const readableListenerRef = useRef<(() => void) | undefined>(undefined);
 
 	// Determines if TTY is supported on the provided stdin
-	isRawModeSupported(): boolean {
-		return this.props.stdin.isTTY;
-	}
+	const isRawModeSupported = stdin.isTTY;
 
-	override render() {
-		return (
-			<AppContext.Provider
-				// eslint-disable-next-line react/jsx-no-constructed-context-values
-				value={{
-					exit: this.handleExit,
-				}}
-			>
-				<StdinContext.Provider
-					// eslint-disable-next-line react/jsx-no-constructed-context-values
-					value={{
-						stdin: this.props.stdin,
-						setRawMode: this.handleSetRawMode,
-						isRawModeSupported: this.isRawModeSupported(),
-						// eslint-disable-next-line @typescript-eslint/naming-convention
-						internal_exitOnCtrlC: this.props.exitOnCtrlC,
-						// eslint-disable-next-line @typescript-eslint/naming-convention
-						internal_eventEmitter: this.internal_eventEmitter,
-					}}
-				>
-					<StdoutContext.Provider
-						// eslint-disable-next-line react/jsx-no-constructed-context-values
-						value={{
-							stdout: this.props.stdout,
-							write: this.props.writeToStdout,
-						}}
-					>
-						<StderrContext.Provider
-							// eslint-disable-next-line react/jsx-no-constructed-context-values
-							value={{
-								stderr: this.props.stderr,
-								write: this.props.writeToStderr,
-							}}
-						>
-							<FocusContext.Provider
-								// eslint-disable-next-line react/jsx-no-constructed-context-values
-								value={{
-									activeId: this.state.activeFocusId,
-									add: this.addFocusable,
-									remove: this.removeFocusable,
-									activate: this.activateFocusable,
-									deactivate: this.deactivateFocusable,
-									enableFocus: this.enableFocus,
-									disableFocus: this.disableFocus,
-									focusNext: this.focusNext,
-									focusPrevious: this.focusPrevious,
-									focus: this.focus,
-								}}
-							>
-								{this.state.error ? (
-									<ErrorOverview error={this.state.error as Error} />
-								) : (
-									this.props.children
-								)}
-							</FocusContext.Provider>
-						</StderrContext.Provider>
-					</StdoutContext.Provider>
-				</StdinContext.Provider>
-			</AppContext.Provider>
-		);
-	}
+	const handleExit = useCallback(
+		(error?: Error): void => {
+			// Disable raw mode on exit - inline to avoid circular dependency
+			if (isRawModeSupported && rawModeEnabledCount.current > 0) {
+				stdin.setRawMode(false);
+				if (readableListenerRef.current) {
+					stdin.removeListener('readable', readableListenerRef.current);
+					readableListenerRef.current = undefined;
+				}
 
-	override componentDidMount() {
-		cliCursor.hide(this.props.stdout);
-	}
-
-	override componentWillUnmount() {
-		cliCursor.show(this.props.stdout);
-
-		// ignore calling setRawMode on an handle stdin it cannot be called
-		if (this.isRawModeSupported()) {
-			this.handleSetRawMode(false);
-		}
-	}
-
-	override componentDidCatch(error: Error) {
-		this.handleExit(error);
-	}
-
-	handleSetRawMode = (isEnabled: boolean): void => {
-		const {stdin} = this.props;
-
-		if (!this.isRawModeSupported()) {
-			if (stdin === process.stdin) {
-				throw new Error(
-					'Raw mode is not supported on the current process.stdin, which Ink uses as input stream by default.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported',
-				);
-			} else {
-				throw new Error(
-					'Raw mode is not supported on the stdin provided to Ink.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported',
-				);
-			}
-		}
-
-		stdin.setEncoding('utf8');
-
-		if (isEnabled) {
-			// Ensure raw mode is enabled only once
-			if (this.rawModeEnabledCount === 0) {
-				stdin.ref();
-				stdin.setRawMode(true);
-				stdin.addListener('readable', this.handleReadable);
+				stdin.unref();
+				rawModeEnabledCount.current = 0;
 			}
 
-			this.rawModeEnabledCount++;
-			return;
-		}
+			onExit(error);
+		},
+		[isRawModeSupported, stdin, onExit],
+	);
 
-		// Disable raw mode only when no components left that are using it
-		if (--this.rawModeEnabledCount === 0) {
-			stdin.setRawMode(false);
-			stdin.removeListener('readable', this.handleReadable);
-			stdin.unref();
-		}
-	};
+	const handleInput = useCallback(
+		(input: string): void => {
+			// Exit on Ctrl+C
+			// eslint-disable-next-line unicorn/no-hex-escape
+			if (input === '\x03' && exitOnCtrlC) {
+				handleExit();
+				return;
+			}
 
-	handleReadable = (): void => {
+			// Reset focus when there's an active focused component on Esc
+			if (input === escape) {
+				setActiveFocusId(currentActiveFocusId => {
+					if (currentActiveFocusId) {
+						return undefined;
+					}
+
+					return currentActiveFocusId;
+				});
+			}
+		},
+		[exitOnCtrlC, handleExit],
+	);
+
+	const handleReadable = useCallback((): void => {
 		let chunk;
 		// eslint-disable-next-line @typescript-eslint/ban-types
-		while ((chunk = this.props.stdin.read() as string | null) !== null) {
-			this.handleInput(chunk);
-			this.internal_eventEmitter.emit('input', chunk);
+		while ((chunk = stdin.read() as string | null) !== null) {
+			handleInput(chunk);
+			internal_eventEmitter.current.emit('input', chunk);
 		}
-	};
+	}, [stdin, handleInput]);
 
-	handleInput = (input: string): void => {
-		// Exit on Ctrl+C
-		// eslint-disable-next-line unicorn/no-hex-escape
-		if (input === '\x03' && this.props.exitOnCtrlC) {
-			this.handleExit();
-		}
+	const handleSetRawMode = useCallback(
+		(isEnabled: boolean): void => {
+			if (!isRawModeSupported) {
+				if (stdin === process.stdin) {
+					throw new Error(
+						'Raw mode is not supported on the current process.stdin, which Ink uses as input stream by default.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported',
+					);
+				} else {
+					throw new Error(
+						'Raw mode is not supported on the stdin provided to Ink.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported',
+					);
+				}
+			}
 
-		// Reset focus when there's an active focused component on Esc
-		if (input === escape && this.state.activeFocusId) {
-			this.setState({
-				activeFocusId: undefined,
+			stdin.setEncoding('utf8');
+
+			if (isEnabled) {
+				// Ensure raw mode is enabled only once
+				if (rawModeEnabledCount.current === 0) {
+					stdin.ref();
+					stdin.setRawMode(true);
+					// Store the listener reference to avoid stale closure when removing
+					readableListenerRef.current = handleReadable;
+					stdin.addListener('readable', handleReadable);
+				}
+
+				rawModeEnabledCount.current++;
+				return;
+			}
+
+			// Disable raw mode only when no components left that are using it
+			if (--rawModeEnabledCount.current === 0) {
+				stdin.setRawMode(false);
+				if (readableListenerRef.current) {
+					stdin.removeListener('readable', readableListenerRef.current);
+					readableListenerRef.current = undefined;
+				}
+
+				stdin.unref();
+			}
+		},
+		[isRawModeSupported, stdin, handleReadable],
+	);
+
+	// Focus navigation helpers
+	const findNextFocusable = useCallback(
+		(
+			currentFocusables: Focusable[],
+			currentActiveFocusId: string | undefined,
+		): string | undefined => {
+			const activeIndex = currentFocusables.findIndex(focusable => {
+				return focusable.id === currentActiveFocusId;
 			});
-		}
 
-		if (this.state.isFocusEnabled && this.state.focusables.length > 0) {
+			for (
+				let index = activeIndex + 1;
+				index < currentFocusables.length;
+				index++
+			) {
+				const focusable = currentFocusables[index];
+
+				if (focusable?.isActive) {
+					return focusable.id;
+				}
+			}
+
+			return undefined;
+		},
+		[],
+	);
+
+	const findPreviousFocusable = useCallback(
+		(
+			currentFocusables: Focusable[],
+			currentActiveFocusId: string | undefined,
+		): string | undefined => {
+			const activeIndex = currentFocusables.findIndex(focusable => {
+				return focusable.id === currentActiveFocusId;
+			});
+
+			for (let index = activeIndex - 1; index >= 0; index--) {
+				const focusable = currentFocusables[index];
+
+				if (focusable?.isActive) {
+					return focusable.id;
+				}
+			}
+
+			return undefined;
+		},
+		[],
+	);
+
+	const focusNext = useCallback((): void => {
+		setFocusables(currentFocusables => {
+			setActiveFocusId(currentActiveFocusId => {
+				const firstFocusableId = currentFocusables.find(
+					focusable => focusable.isActive,
+				)?.id;
+				const nextFocusableId = findNextFocusable(
+					currentFocusables,
+					currentActiveFocusId,
+				);
+
+				return nextFocusableId ?? firstFocusableId;
+			});
+			return currentFocusables;
+		});
+	}, [findNextFocusable]);
+
+	const focusPrevious = useCallback((): void => {
+		setFocusables(currentFocusables => {
+			setActiveFocusId(currentActiveFocusId => {
+				const lastFocusableId = currentFocusables.findLast(
+					focusable => focusable.isActive,
+				)?.id;
+				const previousFocusableId = findPreviousFocusable(
+					currentFocusables,
+					currentActiveFocusId,
+				);
+
+				return previousFocusableId ?? lastFocusableId;
+			});
+			return currentFocusables;
+		});
+	}, [findPreviousFocusable]);
+
+	// Handle tab navigation via effect that subscribes to input events
+	useEffect(() => {
+		const handleTabNavigation = (input: string): void => {
+			if (!isFocusEnabled || focusablesCountRef.current === 0) return;
+
 			if (input === tab) {
-				this.focusNext();
+				focusNext();
 			}
 
 			if (input === shiftTab) {
-				this.focusPrevious();
+				focusPrevious();
 			}
-		}
-	};
+		};
 
-	handleExit = (error?: Error): void => {
-		if (this.isRawModeSupported()) {
-			this.handleSetRawMode(false);
-		}
+		internal_eventEmitter.current.on('input', handleTabNavigation);
+		const emitter = internal_eventEmitter.current;
 
-		this.props.onExit(error);
-	};
+		return () => {
+			emitter.off('input', handleTabNavigation);
+		};
+	}, [isFocusEnabled, focusNext, focusPrevious]);
 
-	enableFocus = (): void => {
-		this.setState({
-			isFocusEnabled: true,
-		});
-	};
+	const enableFocus = useCallback((): void => {
+		setIsFocusEnabled(true);
+	}, []);
 
-	disableFocus = (): void => {
-		this.setState({
-			isFocusEnabled: false,
-		});
-	};
+	const disableFocus = useCallback((): void => {
+		setIsFocusEnabled(false);
+	}, []);
 
-	focus = (id: string): void => {
-		this.setState(previousState => {
-			const hasFocusableId = previousState.focusables.some(
+	const focus = useCallback((id: string): void => {
+		setFocusables(currentFocusables => {
+			const hasFocusableId = currentFocusables.some(
 				focusable => focusable?.id === id,
 			);
 
-			if (!hasFocusableId) {
-				return previousState;
+			if (hasFocusableId) {
+				setActiveFocusId(id);
 			}
 
-			return {activeFocusId: id};
+			return currentFocusables;
 		});
-	};
+	}, []);
 
-	focusNext = (): void => {
-		this.setState(previousState => {
-			const firstFocusableId = previousState.focusables.find(
-				focusable => focusable.isActive,
-			)?.id;
-			const nextFocusableId = this.findNextFocusable(previousState);
+	const addFocusable = useCallback(
+		(id: string, {autoFocus}: {autoFocus: boolean}): void => {
+			setFocusables(currentFocusables => {
+				focusablesCountRef.current = currentFocusables.length + 1;
 
-			return {
-				activeFocusId: nextFocusableId ?? firstFocusableId,
-			};
-		});
-	};
-
-	focusPrevious = (): void => {
-		this.setState(previousState => {
-			const lastFocusableId = previousState.focusables.findLast(
-				focusable => focusable.isActive,
-			)?.id;
-			const previousFocusableId = this.findPreviousFocusable(previousState);
-
-			return {
-				activeFocusId: previousFocusableId ?? lastFocusableId,
-			};
-		});
-	};
-
-	addFocusable = (id: string, {autoFocus}: {autoFocus: boolean}): void => {
-		this.setState(previousState => {
-			let nextFocusId = previousState.activeFocusId;
-
-			if (!nextFocusId && autoFocus) {
-				nextFocusId = id;
-			}
-
-			return {
-				activeFocusId: nextFocusId,
-				focusables: [
-					...previousState.focusables,
+				return [
+					...currentFocusables,
 					{
 						id,
 						isActive: true,
 					},
-				],
-			};
+				];
+			});
+
+			if (autoFocus) {
+				setActiveFocusId(currentActiveFocusId => {
+					if (!currentActiveFocusId) {
+						return id;
+					}
+
+					return currentActiveFocusId;
+				});
+			}
+		},
+		[],
+	);
+
+	const removeFocusable = useCallback((id: string): void => {
+		setActiveFocusId(currentActiveFocusId => {
+			if (currentActiveFocusId === id) {
+				return undefined;
+			}
+
+			return currentActiveFocusId;
 		});
-	};
 
-	removeFocusable = (id: string): void => {
-		this.setState(previousState => ({
-			activeFocusId:
-				previousState.activeFocusId === id
-					? undefined
-					: previousState.activeFocusId,
-			focusables: previousState.focusables.filter(focusable => {
+		setFocusables(currentFocusables => {
+			const filtered = currentFocusables.filter(focusable => {
 				return focusable.id !== id;
-			}),
-		}));
-	};
+			});
+			focusablesCountRef.current = filtered.length;
 
-	activateFocusable = (id: string): void => {
-		this.setState(previousState => ({
-			focusables: previousState.focusables.map(focusable => {
+			return filtered;
+		});
+	}, []);
+
+	const activateFocusable = useCallback((id: string): void => {
+		setFocusables(currentFocusables =>
+			currentFocusables.map(focusable => {
 				if (focusable.id !== id) {
 					return focusable;
 				}
@@ -319,16 +350,20 @@ export default class App extends PureComponent<Props, State> {
 					isActive: true,
 				};
 			}),
-		}));
-	};
+		);
+	}, []);
 
-	deactivateFocusable = (id: string): void => {
-		this.setState(previousState => ({
-			activeFocusId:
-				previousState.activeFocusId === id
-					? undefined
-					: previousState.activeFocusId,
-			focusables: previousState.focusables.map(focusable => {
+	const deactivateFocusable = useCallback((id: string): void => {
+		setActiveFocusId(currentActiveFocusId => {
+			if (currentActiveFocusId === id) {
+				return undefined;
+			}
+
+			return currentActiveFocusId;
+		});
+
+		setFocusables(currentFocusables =>
+			currentFocusables.map(focusable => {
 				if (focusable.id !== id) {
 					return focusable;
 				}
@@ -338,42 +373,108 @@ export default class App extends PureComponent<Props, State> {
 					isActive: false,
 				};
 			}),
-		}));
-	};
+		);
+	}, []);
 
-	findNextFocusable = (state: State): string | undefined => {
-		const activeIndex = state.focusables.findIndex(focusable => {
-			return focusable.id === state.activeFocusId;
-		});
+	// Handle cursor visibility on mount/unmount
+	useEffect(() => {
+		cliCursor.hide(stdout);
 
-		for (
-			let index = activeIndex + 1;
-			index < state.focusables.length;
-			index++
-		) {
-			const focusable = state.focusables[index];
+		return () => {
+			cliCursor.show(stdout);
 
-			if (focusable?.isActive) {
-				return focusable.id;
+			// Disable raw mode on unmount if supported
+			if (isRawModeSupported && rawModeEnabledCount.current > 0) {
+				stdin.setRawMode(false);
+				if (readableListenerRef.current) {
+					stdin.removeListener('readable', readableListenerRef.current);
+					readableListenerRef.current = undefined;
+				}
+
+				stdin.unref();
 			}
-		}
+		};
+	}, [stdout, stdin, isRawModeSupported]);
 
-		return undefined;
-	};
+	// Memoize context values to prevent unnecessary re-renders
+	const appContextValue = useMemo(
+		() => ({
+			exit: handleExit,
+		}),
+		[handleExit],
+	);
 
-	findPreviousFocusable = (state: State): string | undefined => {
-		const activeIndex = state.focusables.findIndex(focusable => {
-			return focusable.id === state.activeFocusId;
-		});
+	const stdinContextValue = useMemo(
+		() => ({
+			stdin,
+			setRawMode: handleSetRawMode,
+			isRawModeSupported,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			internal_exitOnCtrlC: exitOnCtrlC,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			internal_eventEmitter: internal_eventEmitter.current,
+		}),
+		[stdin, handleSetRawMode, isRawModeSupported, exitOnCtrlC],
+	);
 
-		for (let index = activeIndex - 1; index >= 0; index--) {
-			const focusable = state.focusables[index];
+	const stdoutContextValue = useMemo(
+		() => ({
+			stdout,
+			write: writeToStdout,
+		}),
+		[stdout, writeToStdout],
+	);
 
-			if (focusable?.isActive) {
-				return focusable.id;
-			}
-		}
+	const stderrContextValue = useMemo(
+		() => ({
+			stderr,
+			write: writeToStderr,
+		}),
+		[stderr, writeToStderr],
+	);
 
-		return undefined;
-	};
+	const focusContextValue = useMemo(
+		() => ({
+			activeId: activeFocusId,
+			add: addFocusable,
+			remove: removeFocusable,
+			activate: activateFocusable,
+			deactivate: deactivateFocusable,
+			enableFocus,
+			disableFocus,
+			focusNext,
+			focusPrevious,
+			focus,
+		}),
+		[
+			activeFocusId,
+			addFocusable,
+			removeFocusable,
+			activateFocusable,
+			deactivateFocusable,
+			enableFocus,
+			disableFocus,
+			focusNext,
+			focusPrevious,
+			focus,
+		],
+	);
+
+	return (
+		<AppContext.Provider value={appContextValue}>
+			<StdinContext.Provider value={stdinContextValue}>
+				<StdoutContext.Provider value={stdoutContextValue}>
+					<StderrContext.Provider value={stderrContextValue}>
+						<FocusContext.Provider value={focusContextValue}>
+							<ErrorBoundary onError={handleExit}>{children}</ErrorBoundary>
+						</FocusContext.Provider>
+					</StderrContext.Provider>
+				</StdoutContext.Provider>
+			</StdinContext.Provider>
+		</AppContext.Provider>
+	);
 }
+
+App.displayName = 'InternalApp';
+
+export default App;
