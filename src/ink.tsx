@@ -99,6 +99,7 @@ export default class Ink {
 	private readonly unsubscribeResize?: () => void;
 	private readonly throttledOnRender?: DebouncedFunc<() => void>;
 	private kittyProtocolEnabled = false;
+	private cancelKittyDetection?: () => void;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -543,6 +544,11 @@ export default class Ink {
 			throttledLog.flush();
 		}
 
+		// Cancel any in-progress auto-detection before checking protocol state
+		if (this.cancelKittyDetection) {
+			this.cancelKittyDetection();
+		}
+
 		if (this.kittyProtocolEnabled) {
 			this.options.stdout.write('\u001B[<u');
 			this.kittyProtocolEnabled = false;
@@ -687,11 +693,10 @@ export default class Ink {
 	private confirmKittySupport(flags: KittyFlagName[]): void {
 		const {stdin, stdout} = this.options;
 
-		stdout.write('\u001B[?u');
-
 		let responseBuffer = '';
 
 		const cleanup = (): void => {
+			this.cancelKittyDetection = undefined;
 			clearTimeout(timer);
 			stdin.removeListener('data', onData);
 
@@ -705,17 +710,25 @@ export default class Ink {
 		};
 
 		const onData = (data: Uint8Array | string): void => {
-			responseBuffer += String(data);
+			responseBuffer +=
+				typeof data === 'string' ? data : Buffer.from(data).toString();
 
 			// eslint-disable-next-line no-control-regex
 			if (/\u001B\[\?\d+u/.test(responseBuffer)) {
 				cleanup();
-				this.enableKittyProtocol(flags);
+				if (!this.isUnmounted) {
+					this.enableKittyProtocol(flags);
+				}
 			}
 		};
 
-		const timer = setTimeout(cleanup, 200);
+		// Attach listener before writing the query so that synchronous
+		// or immediate responses are not missed.
 		stdin.on('data', onData);
+		const timer = setTimeout(cleanup, 200);
+		this.cancelKittyDetection = cleanup;
+
+		stdout.write('\u001B[?u');
 	}
 
 	private enableKittyProtocol(flags: KittyFlagName[]): void {

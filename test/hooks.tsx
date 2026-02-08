@@ -457,3 +457,25 @@ test.serial(
 		t.true(ps.output.includes('exited'));
 	},
 );
+
+test.serial(
+	'useInput - kitty protocol space key produces space input',
+	async t => {
+		const ps = term('use-input-kitty', ['space']);
+		// Space key (codepoint 32)
+		ps.write('\u001B[32u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial(
+	'useInput - kitty protocol return key produces carriage return input',
+	async t => {
+		const ps = term('use-input-kitty', ['returnKey']);
+		// Return key (codepoint 13)
+		ps.write('\u001B[13u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
