@@ -151,6 +151,11 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		if (test === 'returnMeta' && key.return && key.meta) {
+			exit();
+			return;
+		}
+
 		throw new Error('Crash');
 	});
 

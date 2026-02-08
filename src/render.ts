@@ -74,6 +74,20 @@ export type RenderOptions = {
 	@default false
 	*/
 	incrementalRendering?: boolean;
+
+	/**
+	Enable React Concurrent Rendering mode.
+
+	When enabled:
+	- Suspense boundaries work correctly with async data
+	- `useTransition` and `useDeferredValue` are fully functional
+	- Updates can be interrupted for higher priority work
+
+	Note: Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
+
+	@default false
+	*/
+	concurrent?: boolean;
 };
 
 export type Instance = {
@@ -116,12 +130,14 @@ const render = (
 		patchConsole: true,
 		maxFps: 30,
 		incrementalRendering: false,
+		concurrent: false,
 		...getOptions(options),
 	};
 
 	const instance: Ink = getInstance(
 		inkOptions.stdout,
 		() => new Ink(inkOptions),
+		inkOptions.concurrent ?? false,
 	);
 
 	instance.render(node);
@@ -155,12 +171,18 @@ const getOptions = (
 const getInstance = (
 	stdout: NodeJS.WriteStream,
 	createInstance: () => Ink,
+	concurrent: boolean,
 ): Ink => {
 	let instance = instances.get(stdout);
 
 	if (!instance) {
 		instance = createInstance();
 		instances.set(stdout, instance);
+	} else if (instance.isConcurrent !== concurrent) {
+		console.warn(
+			`Warning: render() was called with concurrent: ${concurrent}, but the existing instance for this stdout uses concurrent: ${instance.isConcurrent}. ` +
+				`The concurrent option only takes effect on the first render. Call unmount() first if you need to change the rendering mode.`,
+		);
 	}
 
 	return instance;

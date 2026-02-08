@@ -1,6 +1,18 @@
 import {type Writable} from 'node:stream';
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
+import isInCi from 'is-in-ci';
+
+// Synchronized Update Mode escape sequences
+// These prevent terminal multiplexers from reading intermediate cursor positions
+const beginSynchronizedUpdate = '\u001B[?2026h';
+const endSynchronizedUpdate = '\u001B[?2026l';
+
+// Check if synchronized update should be used
+// Only use on TTY streams and not in CI environments
+const shouldSynchronize = (stream: Writable): boolean => {
+	return (stream as NodeJS.WriteStream).isTTY && !isInCi;
+};
 
 export type CursorPosition = {
 	/**
@@ -30,6 +42,11 @@ export type LogUpdate = {
 	(str: string): void;
 };
 
+// Count visible lines in a string, ignoring the trailing empty element
+// that `split('\n')` produces when the string ends with '\n'.
+const visibleLineCount = (lines: string[], str: string): number =>
+	str.endsWith('\n') ? lines.length - 1 : lines.length;
+
 const createStandard = (
 	stream: Writable,
 	{showCursor = false} = {},
@@ -40,6 +57,8 @@ const createStandard = (
 	// Track cursor position for IME support
 	let cursorPosition: CursorPosition | undefined;
 	let cursorMovedUp = 0;
+	// Cache whether to use synchronized update (TTY check)
+	const useSynchronizedUpdate = shouldSynchronize(stream);
 
 	const render = (str: string) => {
 		if (!showCursor && !hasHiddenCursor) {
@@ -47,18 +66,17 @@ const createStandard = (
 			hasHiddenCursor = true;
 		}
 
-		const output = str + '\n';
-		if (output === previousOutput) {
+		if (str === previousOutput) {
 			return;
 		}
 
-		previousOutput = output;
+		previousOutput = str;
 		// LineCount includes the empty string after the trailing newline
 		// E.g., "a\nb\n" splits to ["a", "b", ""] with length 3
-		const lines = output.split('\n');
+		const lines = str.split('\n');
 		const lineCount = lines.length;
 		// VisibleLineCount is the actual number of visible lines
-		const visibleLineCount = lineCount - 1;
+		const visibleCount = visibleLineCount(lines, str);
 
 		// If cursor was moved up for IME, move it back down before erasing
 		let preCursorFix = '';
@@ -69,13 +87,13 @@ const createStandard = (
 
 		// Calculate cursor position for IME (to be applied within the same write)
 		let postCursorMove = '';
-		if (cursorPosition) {
+		if (cursorPosition && useSynchronizedUpdate) {
 			const {x, y, visible} = cursorPosition;
 
 			// After writing output (ending with \n), cursor is at the start of a new line
 			// below the last visible line. cursorUp(y) moves y lines up.
 			// y=1 means last visible line, y=2 means second-to-last, etc.
-			if (y !== undefined && y > 0 && y <= visibleLineCount) {
+			if (y !== undefined && y > 0 && y <= visibleCount) {
 				postCursorMove += ansiEscapes.cursorUp(y);
 				cursorMovedUp = y;
 			}
@@ -91,16 +109,17 @@ const createStandard = (
 			}
 		}
 
-		// Begin Synchronized Update Mode - prevents terminal multiplexers from reading
-		// intermediate cursor positions during rendering, fixing IME issues
-		// Include cursor positioning within the synchronized update to ensure atomic operation
+		// Use Synchronized Update Mode only on TTY streams (not in CI)
+		// This prevents terminal multiplexers from reading intermediate cursor positions
+		const prefix = useSynchronizedUpdate
+			? beginSynchronizedUpdate + preCursorFix
+			: '';
+		const suffix = useSynchronizedUpdate
+			? endSynchronizedUpdate + postCursorMove
+			: '';
+
 		stream.write(
-			'\u001B[?2026h' +
-				preCursorFix +
-				ansiEscapes.eraseLines(previousLineCount) +
-				output +
-				'\u001B[?2026l' +
-				postCursorMove,
+			prefix + ansiEscapes.eraseLines(previousLineCount) + str + suffix,
 		);
 		previousLineCount = lineCount;
 	};
@@ -134,9 +153,8 @@ const createStandard = (
 	};
 
 	render.sync = (str: string) => {
-		const output = str + '\n';
-		previousOutput = output;
-		previousLineCount = output.split('\n').length;
+		previousOutput = str;
+		previousLineCount = str.split('\n').length;
 	};
 
 	render.setCursorPosition = (position: CursorPosition | undefined) => {
@@ -193,6 +211,8 @@ const createIncremental = (
 	// Track cursor position for IME support
 	let cursorPosition: CursorPosition | undefined;
 	let cursorMovedUp = 0;
+	// Cache whether to use synchronized update (TTY check)
+	const useSynchronizedUpdate = shouldSynchronize(stream);
 
 	const render = (str: string) => {
 		if (!showCursor && !hasHiddenCursor) {
@@ -200,25 +220,26 @@ const createIncremental = (
 			hasHiddenCursor = true;
 		}
 
-		const output = str + '\n';
-		if (output === previousOutput) {
+		if (str === previousOutput) {
 			return;
 		}
 
-		const previousCount = previousLines.length;
-		const nextLines = output.split('\n');
-		const nextCount = nextLines.length;
-		const visibleCount = nextCount - 1;
+		const nextLines = str.split('\n');
+		const visibleCount = visibleLineCount(nextLines, str);
 
 		// If cursor was moved up for IME, move it back down before processing
 		let preCursorFix = '';
-		if (cursorMovedUp > 0) {
+		if (cursorMovedUp > 0 && useSynchronizedUpdate) {
 			preCursorFix = ansiEscapes.cursorDown(cursorMovedUp);
 			cursorMovedUp = 0;
 		}
 
 		// Calculate cursor position for IME
 		const calcPostCursorMove = (): string => {
+			if (!useSynchronizedUpdate) {
+				return '';
+			}
+
 			let cursorMove = '';
 			if (cursorPosition) {
 				const {x, y, visible} = cursorPosition;
@@ -244,47 +265,58 @@ const createIncremental = (
 			return cursorMove;
 		};
 
-		// Begin Synchronized Update Mode
-		if (output === '\n' || previousOutput.length === 0) {
+		// Use Synchronized Update Mode only on TTY streams (not in CI)
+		if (str === '\n' || previousOutput.length === 0) {
 			const postCursorMove = calcPostCursorMove();
+			const prefix = useSynchronizedUpdate
+				? beginSynchronizedUpdate + preCursorFix
+				: '';
+			const suffix = useSynchronizedUpdate
+				? endSynchronizedUpdate + postCursorMove
+				: '';
 			stream.write(
-				'\u001B[?2026h' +
-					preCursorFix +
-					ansiEscapes.eraseLines(previousCount) +
-					output +
-					'\u001B[?2026l' +
-					postCursorMove,
+				prefix + ansiEscapes.eraseLines(previousLines.length) + str + suffix,
 			);
-			previousOutput = output;
+			previousOutput = str;
 			previousLines = nextLines;
 
 			return;
 		}
 
+		const previousVisible = visibleLineCount(previousLines, previousOutput);
+		const hasTrailingNewline = str.endsWith('\n');
+
 		// We aggregate all chunks for incremental rendering into a buffer, and then write them to stdout at the end.
 		const buffer: string[] = [];
 
-		// Add cursor fix at the beginning
-		if (preCursorFix) {
+		// Add cursor fix at the beginning (only when synchronized update is enabled)
+		if (preCursorFix && useSynchronizedUpdate) {
 			buffer.push(preCursorFix);
 		}
 
 		// Clear extra lines if the current content's line count is lower than the previous.
-		if (nextCount < previousCount) {
+		if (visibleCount < previousVisible) {
+			const previousHadTrailingNewline = previousOutput.endsWith('\n');
+			const extraSlot = previousHadTrailingNewline ? 1 : 0;
 			buffer.push(
-				// Erases the trailing lines and the final newline slot.
-				ansiEscapes.eraseLines(previousCount - nextCount + 1),
-				// Positions cursor to the top of the rendered output.
+				ansiEscapes.eraseLines(previousVisible - visibleCount + extraSlot),
 				ansiEscapes.cursorUp(visibleCount),
 			);
 		} else {
-			buffer.push(ansiEscapes.cursorUp(previousCount - 1));
+			buffer.push(ansiEscapes.cursorUp(previousVisible - 1));
 		}
 
 		for (let i = 0; i < visibleCount; i++) {
+			const isLastLine = i === visibleCount - 1;
+
 			// We do not write lines if the contents are the same. This prevents flickering during renders.
 			if (nextLines[i] === previousLines[i]) {
-				buffer.push(ansiEscapes.cursorNextLine);
+				// Don't move past the last line when there's no trailing newline,
+				// otherwise the cursor overshoots the rendered block.
+				if (!isLastLine || hasTrailingNewline) {
+					buffer.push(ansiEscapes.cursorNextLine);
+				}
+
 				continue;
 			}
 
@@ -292,16 +324,20 @@ const createIncremental = (
 				ansiEscapes.cursorTo(0) +
 					nextLines[i] +
 					ansiEscapes.eraseEndLine +
-					'\n',
+					// Don't append newline after the last line when the input
+					// has no trailing newline (fullscreen mode).
+					(isLastLine && !hasTrailingNewline ? '' : '\n'),
 			);
 		}
 
 		const postCursorMove = calcPostCursorMove();
-		stream.write(
-			'\u001B[?2026h' + buffer.join('') + '\u001B[?2026l' + postCursorMove,
-		);
+		const prefix = useSynchronizedUpdate ? beginSynchronizedUpdate : '';
+		const suffix = useSynchronizedUpdate
+			? endSynchronizedUpdate + postCursorMove
+			: '';
+		stream.write(prefix + buffer.join('') + suffix);
 
-		previousOutput = output;
+		previousOutput = str;
 		previousLines = nextLines;
 	};
 
@@ -334,9 +370,8 @@ const createIncremental = (
 	};
 
 	render.sync = (str: string) => {
-		const output = str + '\n';
-		previousOutput = output;
-		previousLines = output.split('\n');
+		previousOutput = str;
+		previousLines = str.split('\n');
 	};
 
 	render.setCursorPosition = (position: CursorPosition | undefined) => {

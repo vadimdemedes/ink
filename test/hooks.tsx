@@ -276,6 +276,13 @@ test.serial('useInput - handle remove (delete)', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - handle option + return (macOS)', async t => {
+	const ps = term('use-input', ['returnMeta']);
+	ps.write('\u001B\r');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - ignore input if not active', async t => {
 	const ps = term('use-input-multiple');
 	ps.write('x');

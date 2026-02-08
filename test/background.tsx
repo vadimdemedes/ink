@@ -2,8 +2,12 @@ import React from 'react';
 import test from 'ava';
 import chalk from 'chalk';
 import {render, Box, Text} from '../src/index.js';
-import {renderToString} from './helpers/render-to-string.js';
+import {
+	renderToString,
+	renderToStringAsync,
+} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
+import {renderAsync} from './helpers/test-renderer.js';
 import {enableTestColors, disableTestColors} from './helpers/force-colors.js';
 
 // ANSI escape sequences for background colors
@@ -373,4 +377,57 @@ test('Box background updates on rerender', t => {
 
 	rerender(<Test />);
 	t.is(stdout.get(), 'Hello');
+});
+
+// Concurrent mode tests
+test('Text inherits parent Box background color - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box backgroundColor="green" alignSelf="flex-start">
+			<Text>Hello World</Text>
+		</Box>,
+	);
+
+	t.is(output, chalk.bgGreen('Hello World'));
+});
+
+test('Nested Box background inheritance - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box backgroundColor="red" alignSelf="flex-start">
+			<Box backgroundColor="blue">
+				<Text>Hello World</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.is(output, chalk.bgBlue('Hello World'));
+});
+
+test('Box background with hex color - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box backgroundColor="#FF0000" alignSelf="flex-start">
+			<Text>Hello</Text>
+		</Box>,
+	);
+
+	t.is(output, chalk.bgHex('#FF0000')('Hello'));
+});
+
+test('Box background updates on rerender - concurrent', async t => {
+	function Test({bgColor}: {readonly bgColor?: string}) {
+		return (
+			<Box backgroundColor={bgColor} alignSelf="flex-start">
+				<Text>Hello</Text>
+			</Box>
+		);
+	}
+
+	const {getOutput, rerenderAsync} = await renderAsync(<Test />);
+
+	t.is(getOutput(), 'Hello');
+
+	await rerenderAsync(<Test bgColor="green" />);
+	t.is(getOutput(), chalk.bgGreen('Hello'));
+
+	await rerenderAsync(<Test />);
+	t.is(getOutput(), 'Hello');
 });

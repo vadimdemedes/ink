@@ -375,3 +375,53 @@ test('support suspense', async t => {
 
 	t.is(stdout.get(), 'Hello World');
 });
+
+test('support suspense with concurrent mode', async t => {
+	const stdout = createStdout();
+
+	let resolvePromise: () => void;
+	const promise = new Promise<void>(resolve => {
+		resolvePromise = resolve;
+	});
+
+	// eslint-disable-next-line prefer-const
+	let data: string | undefined;
+
+	function Suspendable() {
+		if (data === undefined) {
+			// eslint-disable-next-line @typescript-eslint/only-throw-error
+			throw promise;
+		}
+
+		return <Text>{data}</Text>;
+	}
+
+	function Test() {
+		return (
+			<Suspense fallback={<Text>Loading</Text>}>
+				<Suspendable />
+			</Suspense>
+		);
+	}
+
+	const {act} = await import('react');
+
+	await act(async () => {
+		render(<Test />, {
+			stdout,
+			debug: true,
+			concurrent: true,
+		});
+	});
+
+	t.is((stdout.write as any).lastCall.args[0], 'Loading');
+
+	// Resolve the suspense and wait for React to re-render
+	data = 'Hello Concurrent World';
+	await act(async () => {
+		resolvePromise();
+		await promise;
+	});
+
+	t.is((stdout.write as any).lastCall.args[0], 'Hello Concurrent World');
+});

@@ -3,7 +3,10 @@ import test from 'ava';
 import boxen, {type Options} from 'boxen';
 import sliceAnsi from 'slice-ansi';
 import {Box, Text} from '../src/index.js';
-import {renderToString} from './helpers/render-to-string.js';
+import {
+	renderToString,
+	renderToStringAsync,
+} from './helpers/render-to-string.js';
 
 const box = (text: string, options?: Options): string => {
 	return boxen(text, {
@@ -523,4 +526,61 @@ test('out of bounds writes do not crash', t => {
 		.join('\n');
 
 	t.is(output, expected);
+});
+
+// Concurrent mode tests
+test('overflowX - single text node in a box inside overflow container - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box width={6} overflowX="hidden">
+			<Box width={16} flexShrink={0}>
+				<Text>Hello World</Text>
+			</Box>
+		</Box>,
+	);
+	t.is(output, 'Hello');
+});
+
+test('overflowY - single text node inside overflow container - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box height={1} overflowY="hidden">
+			<Text>Hello{'\n'}World</Text>
+		</Box>,
+	);
+	t.is(output, 'Hello');
+});
+
+test('overflow - single text node inside overflow container - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box paddingBottom={1}>
+			<Box width={6} height={1} overflow="hidden">
+				<Box width={12} height={2} flexShrink={0}>
+					<Text>Hello{'\n'}World</Text>
+				</Box>
+			</Box>
+		</Box>,
+	);
+	t.is(output, 'Hello\n');
+});
+
+test('nested overflow - concurrent', async t => {
+	const output = await renderToStringAsync(
+		<Box paddingBottom={1}>
+			<Box width={4} height={4} overflow="hidden" flexDirection="column">
+				<Box width={2} height={2} overflow="hidden">
+					<Box width={4} height={4} flexShrink={0}>
+						<Text>
+							AAAA{'\n'}BBBB{'\n'}CCCC{'\n'}DDDD
+						</Text>
+					</Box>
+				</Box>
+
+				<Box width={4} height={3}>
+					<Text>
+						XXXX{'\n'}YYYY{'\n'}ZZZZ
+					</Text>
+				</Box>
+			</Box>
+		</Box>,
+	);
+	t.is(output, 'AA\nBB\nXXXX\nYYYY\n');
 });

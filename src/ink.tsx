@@ -1,15 +1,16 @@
 import process from 'node:process';
 import React, {type ReactNode} from 'react';
-import {throttle} from 'es-toolkit/compat';
+import {throttle, type DebouncedFunc} from 'es-toolkit/compat';
 import ansiEscapes from 'ansi-escapes';
 import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
-import {LegacyRoot} from 'react-reconciler/constants.js';
+import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/constants.js';
 import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import wrapAnsi from 'wrap-ansi';
+import terminalSize from 'terminal-size';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
@@ -43,17 +44,38 @@ export type Options = {
 	waitUntilExit?: () => Promise<void>;
 	maxFps?: number;
 	incrementalRendering?: boolean;
+
+	/**
+	Enable React Concurrent Rendering mode.
+	
+	When enabled:
+	- Suspense boundaries work correctly with async data
+	- `useTransition` and `useDeferredValue` are fully functional
+	- Updates can be interrupted for higher priority work
+
+	Note: Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
+	
+	@default false
+	@experimental
+	*/
+	concurrent?: boolean;
 };
 
 export default class Ink {
+	/**
+	Whether this instance is using concurrent rendering mode.
+	*/
+	readonly isConcurrent: boolean;
+
 	private readonly options: Options;
 	private readonly log: LogUpdate;
-	private readonly throttledLog: LogUpdate;
+	private readonly throttledLog: LogUpdate | DebouncedFunc<LogUpdate>;
 	private readonly isScreenReaderEnabled: boolean;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
 	private lastOutput: string;
+	private lastOutputToRender: string;
 	private lastOutputHeight: number;
 	private lastTerminalWidth: number;
 	private readonly container: FiberRoot;
@@ -64,6 +86,8 @@ export default class Ink {
 	private exitPromise?: Promise<void>;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
+	// Store reference to throttled onRender for flushing
+	private readonly throttledOnRender?: DebouncedFunc<() => void>;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -81,12 +105,17 @@ export default class Ink {
 		const renderThrottleMs =
 			maxFps > 0 ? Math.max(1, Math.ceil(1000 / maxFps)) : 0;
 
-		this.rootNode.onRender = unthrottled
-			? this.onRender
-			: throttle(this.onRender, renderThrottleMs, {
-					leading: true,
-					trailing: true,
-				});
+		if (unthrottled) {
+			this.rootNode.onRender = this.onRender;
+			this.throttledOnRender = undefined;
+		} else {
+			const throttled = throttle(this.onRender, renderThrottleMs, {
+				leading: true,
+				trailing: true,
+			});
+			this.rootNode.onRender = throttled;
+			this.throttledOnRender = throttled;
+		}
 
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout, {
@@ -97,13 +126,17 @@ export default class Ink {
 			: (throttle(this.log, undefined, {
 					leading: true,
 					trailing: true,
-				}) as unknown as LogUpdate);
+				}) as unknown as DebouncedFunc<LogUpdate>);
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
 
+		// Store concurrent mode setting
+		this.isConcurrent = options.concurrent ?? false;
+
 		// Store last output to only rerender when needed
 		this.lastOutput = '';
+		this.lastOutputToRender = '';
 		this.lastOutputHeight = 0;
 		this.lastTerminalWidth = this.getTerminalWidth();
 
@@ -111,10 +144,13 @@ export default class Ink {
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
 		this.fullStaticOutput = '';
 
+		// Use ConcurrentRoot for concurrent mode, LegacyRoot for legacy mode
+		const rootTag = options.concurrent ? ConcurrentRoot : LegacyRoot;
+
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		this.container = reconciler.createContainer(
 			this.rootNode,
-			LegacyRoot,
+			rootTag,
 			null,
 			false,
 			null,
@@ -123,7 +159,6 @@ export default class Ink {
 			() => {},
 			() => {},
 			() => {},
-			null,
 		);
 
 		// Unmount when process exits
@@ -154,8 +189,13 @@ export default class Ink {
 
 	getTerminalWidth = () => {
 		// The 'columns' property can be undefined or 0 when not using a TTY.
-		// In that case we fall back to 80.
-		return this.options.stdout.columns || 80;
+		// Use terminal-size as a fallback for piped processes, then default to 80.
+		if (this.options.stdout.columns) {
+			return this.options.stdout.columns;
+		}
+
+		const size = terminalSize();
+		return size?.columns ?? 80;
 	};
 
 	resized = () => {
@@ -205,23 +245,24 @@ export default class Ink {
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
 
+		// Only use Synchronized Update Mode on TTY streams (not in CI or debug)
+		const useSynchronizedUpdate =
+			this.options.stdout.isTTY && !isInCi && !this.options.debug;
+		const syncBegin = useSynchronizedUpdate ? '\u001B[?2026h' : '';
+		const syncEnd = useSynchronizedUpdate ? '\u001B[?2026l' : '';
+
 		if (this.options.debug) {
 			if (hasStaticOutput) {
 				this.fullStaticOutput += staticOutput;
 			}
 
-			// Use Synchronized Update Mode to fix IME issues
-			this.options.stdout.write(
-				'\u001B[?2026h' + this.fullStaticOutput + output + '\u001B[?2026l',
-			);
+			this.options.stdout.write(this.fullStaticOutput + output);
 			return;
 		}
 
 		if (isInCi) {
 			if (hasStaticOutput) {
-				this.options.stdout.write(
-					'\u001B[?2026h' + staticOutput + '\u001B[?2026l',
-				);
+				this.options.stdout.write(staticOutput);
 			}
 
 			this.lastOutput = output;
@@ -236,9 +277,7 @@ export default class Ink {
 					this.lastOutputHeight > 0
 						? ansiEscapes.eraseLines(this.lastOutputHeight)
 						: '';
-				this.options.stdout.write(
-					'\u001B[?2026h' + erase + staticOutput + '\u001B[?2026l',
-				);
+				this.options.stdout.write(syncBegin + erase + staticOutput + syncEnd);
 				// After erasing, the last output is gone, so we should reset its height
 				this.lastOutputHeight = 0;
 			}
@@ -247,7 +286,7 @@ export default class Ink {
 				return;
 			}
 
-			const terminalWidth = this.options.stdout.columns || 80;
+			const terminalWidth = this.getTerminalWidth();
 
 			const wrappedOutput = wrapAnsi(output, terminalWidth, {
 				trim: false,
@@ -255,7 +294,7 @@ export default class Ink {
 			});
 
 			// If we haven't erased yet, do it now.
-			let toWrite = '\u001B[?2026h';
+			let toWrite = syncBegin;
 			if (hasStaticOutput) {
 				toWrite += wrappedOutput;
 			} else {
@@ -266,7 +305,7 @@ export default class Ink {
 				toWrite += erase + wrappedOutput;
 			}
 
-			toWrite += '\u001B[?2026l';
+			toWrite += syncEnd;
 			this.options.stdout.write(toWrite);
 
 			this.lastOutput = output;
@@ -279,34 +318,40 @@ export default class Ink {
 			this.fullStaticOutput += staticOutput;
 		}
 
+		// Detect fullscreen: output fills or exceeds terminal height.
+		// Only apply when writing to a real TTY — piped output always gets trailing newlines.
+		const isFullscreen =
+			this.options.stdout.isTTY && outputHeight >= this.options.stdout.rows;
+		const outputToRender = isFullscreen ? output : output + '\n';
+
 		if (this.lastOutputHeight >= this.options.stdout.rows) {
 			this.options.stdout.write(
-				'\u001B[?2026h' +
+				syncBegin +
 					ansiEscapes.clearTerminal +
 					this.fullStaticOutput +
 					output +
-					'\u001B[?2026l',
+					syncEnd,
 			);
 			this.lastOutput = output;
+			this.lastOutputToRender = outputToRender;
 			this.lastOutputHeight = outputHeight;
-			this.log.sync(output);
+			this.log.sync(outputToRender);
 			return;
 		}
 
 		// To ensure static output is cleanly rendered before main output, clear main output first
 		if (hasStaticOutput) {
 			this.log.clear();
-			this.options.stdout.write(
-				'\u001B[?2026h' + staticOutput + '\u001B[?2026l',
-			);
-			this.log(output);
+			this.options.stdout.write(syncBegin + staticOutput + syncEnd);
+			this.log(outputToRender);
 		}
 
 		if (!hasStaticOutput && output !== this.lastOutput) {
-			this.throttledLog(output);
+			this.throttledLog(outputToRender);
 		}
 
 		this.lastOutput = output;
+		this.lastOutputToRender = outputToRender;
 		this.lastOutputHeight = outputHeight;
 	};
 
@@ -342,12 +387,14 @@ export default class Ink {
 			</AccessibilityContext.Provider>
 		);
 
-		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-		reconciler.updateContainerSync(tree, this.container, null, noop);
-		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-		reconciler.flushSyncWork();
+		if (this.options.concurrent) {
+			// Concurrent mode: use updateContainer (async scheduling)
+			reconciler.updateContainer(tree, this.container, null, noop);
+		} else {
+			// Legacy mode: use updateContainerSync + flushSyncWork (sync)
+			reconciler.updateContainerSync(tree, this.container, null, noop);
+			reconciler.flushSyncWork();
+		}
 	}
 
 	writeToStdout(data: string): void {
@@ -355,25 +402,25 @@ export default class Ink {
 			return;
 		}
 
+		// Only use Synchronized Update Mode on TTY streams (not in CI or debug)
+		const useSynchronizedUpdate =
+			this.options.stdout.isTTY && !isInCi && !this.options.debug;
+		const syncBegin = useSynchronizedUpdate ? '\u001B[?2026h' : '';
+		const syncEnd = useSynchronizedUpdate ? '\u001B[?2026l' : '';
+
 		if (this.options.debug) {
-			this.options.stdout.write(
-				'\u001B[?2026h' +
-					data +
-					this.fullStaticOutput +
-					this.lastOutput +
-					'\u001B[?2026l',
-			);
+			this.options.stdout.write(data + this.fullStaticOutput + this.lastOutput);
 			return;
 		}
 
 		if (isInCi) {
-			this.options.stdout.write('\u001B[?2026h' + data + '\u001B[?2026l');
+			this.options.stdout.write(data);
 			return;
 		}
 
 		this.log.clear();
-		this.options.stdout.write('\u001B[?2026h' + data + '\u001B[?2026l');
-		this.log(this.lastOutput);
+		this.options.stdout.write(syncBegin + data + syncEnd);
+		this.log(this.lastOutputToRender);
 	}
 
 	writeToStderr(data: string): void {
@@ -381,31 +428,37 @@ export default class Ink {
 			return;
 		}
 
+		// Only use Synchronized Update Mode on TTY streams (not in CI or debug)
+		const useStderrSync =
+			this.options.stderr.isTTY && !isInCi && !this.options.debug;
+		const stderrSyncBegin = useStderrSync ? '\u001B[?2026h' : '';
+		const stderrSyncEnd = useStderrSync ? '\u001B[?2026l' : '';
+
 		if (this.options.debug) {
-			this.options.stderr.write('\u001B[?2026h' + data + '\u001B[?2026l');
-			this.options.stdout.write(
-				'\u001B[?2026h' +
-					this.fullStaticOutput +
-					this.lastOutput +
-					'\u001B[?2026l',
-			);
+			this.options.stderr.write(data);
+			this.options.stdout.write(this.fullStaticOutput + this.lastOutput);
 			return;
 		}
 
 		if (isInCi) {
-			this.options.stderr.write('\u001B[?2026h' + data + '\u001B[?2026l');
+			this.options.stderr.write(data);
 			return;
 		}
 
 		this.log.clear();
-		this.options.stderr.write('\u001B[?2026h' + data + '\u001B[?2026l');
-		this.log(this.lastOutput);
+		this.options.stderr.write(stderrSyncBegin + data + stderrSyncEnd);
+		this.log(this.lastOutputToRender);
 	}
 
 	// eslint-disable-next-line @typescript-eslint/ban-types
 	unmount(error?: Error | number | null): void {
 		if (this.isUnmounted) {
 			return;
+		}
+
+		// Flush any pending throttled render to ensure the final frame is rendered
+		if (this.throttledOnRender) {
+			this.throttledOnRender.flush();
 		}
 
 		this.calculateLayout();
@@ -420,6 +473,12 @@ export default class Ink {
 			this.unsubscribeResize();
 		}
 
+		// Flush any pending throttled log writes
+		const throttledLog = this.throttledLog as DebouncedFunc<LogUpdate>;
+		if (typeof throttledLog.flush === 'function') {
+			throttledLog.flush();
+		}
+
 		// CIs don't handle erasing ansi escapes well, so it's better to
 		// only render last frame of non-static output
 		if (isInCi) {
@@ -430,18 +489,44 @@ export default class Ink {
 
 		this.isUnmounted = true;
 
-		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-		reconciler.updateContainerSync(null, this.container, null, noop);
-		// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-		reconciler.flushSyncWork();
+		if (this.options.concurrent) {
+			// Concurrent mode: use updateContainer (async scheduling)
+			reconciler.updateContainer(null, this.container, null, noop);
+		} else {
+			// Legacy mode: use updateContainerSync + flushSyncWork (sync)
+			reconciler.updateContainerSync(null, this.container, null, noop);
+			reconciler.flushSyncWork();
+		}
+
 		instances.delete(this.options.stdout);
 
-		if (error instanceof Error) {
-			this.rejectExitPromise(error);
+		// Ensure all queued writes have been processed before resolving the
+		// exit promise. For real writable streams, queue an empty write as a
+		// barrier — its callback fires only after all prior writes complete.
+		// For non-stream objects (e.g. test spies), resolve on next tick.
+		//
+		// When called from signal-exit during process shutdown (error is a
+		// number or null rather than undefined/Error), resolve synchronously
+		// because the event loop is draining and async callbacks won't fire.
+		const resolveOrReject = () => {
+			if (error instanceof Error) {
+				this.rejectExitPromise(error);
+			} else {
+				this.resolveExitPromise();
+			}
+		};
+
+		const isProcessExiting = error !== undefined && !(error instanceof Error);
+
+		if (isProcessExiting) {
+			resolveOrReject();
+		} else if (
+			(this.options.stdout as any)._writableState !== undefined ||
+			this.options.stdout.writableLength !== undefined
+		) {
+			this.options.stdout.write('', resolveOrReject);
 		} else {
-			this.resolveExitPromise();
+			setImmediate(resolveOrReject);
 		}
 	}
 

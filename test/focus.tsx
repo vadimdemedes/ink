@@ -452,3 +452,50 @@ test('skips disabled elements when wrapping around from the front', async t => {
 
 	t.is(stdout.get(), ['First', 'Second ✔', 'Third'].join('\n'));
 });
+
+// Concurrent mode tests
+// Note: Focus tests with stdin interaction are complex to migrate.
+// These tests verify basic concurrent rendering with focus components.
+test('focus component renders in concurrent mode', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	const {act} = await import('react');
+
+	await act(async () => {
+		render(<Test />, {
+			stdout,
+			stdin,
+			debug: true,
+			concurrent: true,
+		});
+	});
+
+	await delay(100);
+
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		['First', 'Second', 'Third'].join('\n'),
+	);
+});
+
+test('focus component with autoFocus renders in concurrent mode', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	const {act} = await import('react');
+
+	await act(async () => {
+		render(<Test autoFocus />, {
+			stdout,
+			stdin,
+			debug: true,
+			concurrent: true,
+		});
+	});
+
+	await delay(100);
+
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		['First ✔', 'Second', 'Third'].join('\n'),
+	);
+});
