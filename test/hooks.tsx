@@ -324,6 +324,16 @@ test.serial(
 	},
 );
 
+test.serial(
+	'useInput - no MaxListenersExceededWarning with many useInput hooks',
+	async t => {
+		const ps = term('use-input-many');
+		await ps.waitForExit();
+		t.false(ps.output.includes('MaxListenersExceededWarning'));
+		t.true(ps.output.includes('exited'));
+	},
+);
+
 test.serial('useStdout - write to stdout', async t => {
 	const ps = term('use-stdout');
 	await ps.waitForExit();

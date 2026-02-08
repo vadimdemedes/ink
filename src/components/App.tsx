@@ -68,6 +68,8 @@ function App({
 	const rawModeEnabledCount = useRef(0);
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const internal_eventEmitter = useRef(new EventEmitter());
+	// Each useInput hook adds a listener, so the count can legitimately exceed the default limit of 10.
+	internal_eventEmitter.current.setMaxListeners(Infinity);
 	// Store the currently attached readable listener to avoid stale closure issues
 	const readableListenerRef = useRef<(() => void) | undefined>(undefined);
 
