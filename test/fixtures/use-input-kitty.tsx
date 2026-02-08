@@ -66,6 +66,18 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		// Test space produces space character as input
+		if (test === 'space' && input === ' ') {
+			exit();
+			return;
+		}
+
+		// Test return produces carriage return as input
+		if (test === 'returnKey' && input === '\r') {
+			exit();
+			return;
+		}
+
 		throw new Error(`Unexpected input: ${JSON.stringify({input, key})}`);
 	});
 

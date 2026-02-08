@@ -255,9 +255,9 @@ test('kitty protocol - text-as-codepoints with supplementary unicode', t => {
 	t.true(result.isKittyProtocol);
 });
 
-test('kitty protocol - no text field when not present', t => {
+test('kitty protocol - text defaults to character from codepoint', t => {
 	const result = parseKeypress(kittyKey(97));
-	t.is(result.text, undefined);
+	t.is(result.text, 'a');
 	t.true(result.isKittyProtocol);
 });
 
@@ -418,9 +418,9 @@ test('kitty protocol - isPrintable is false for escape', t => {
 	t.false(result.isPrintable);
 });
 
-test('kitty protocol - isPrintable is false for return', t => {
+test('kitty protocol - isPrintable is true for return', t => {
 	const result = parseKeypress(kittyKey(13));
-	t.false(result.isPrintable);
+	t.true(result.isPrintable);
 });
 
 test('kitty protocol - isPrintable is false for tab', t => {
@@ -428,9 +428,9 @@ test('kitty protocol - isPrintable is false for tab', t => {
 	t.false(result.isPrintable);
 });
 
-test('kitty protocol - isPrintable is false for space', t => {
+test('kitty protocol - isPrintable is true for space', t => {
 	const result = parseKeypress(kittyKey(32));
-	t.false(result.isPrintable);
+	t.true(result.isPrintable);
 });
 
 test('kitty protocol - isPrintable is false for backspace', t => {
@@ -630,4 +630,125 @@ test.serial('kitty protocol - not enabled when stdout is not a TTY', t => {
 	t.false(getWrittenStrings(write).includes('\u001B[>1u'));
 
 	unmount();
+});
+
+// --- Auto-detection race condition tests ---
+
+test.serial(
+	'kitty protocol - auto detection does not enable protocol after unmount',
+	t => {
+		const {stdout, write} = createFakeStdout();
+		const stdin = createFakeStdin();
+
+		const origKittyId = process.env['KITTY_WINDOW_ID'];
+		process.env['KITTY_WINDOW_ID'] = '1';
+
+		const {unmount} = render(<Text>Hello</Text>, {
+			stdout,
+			stdin,
+			kittyKeyboard: {mode: 'auto'},
+		});
+
+		// Unmount before the terminal responds
+		unmount();
+
+		// Simulate a late terminal response arriving after unmount
+		stdin.emit('data', '\u001B[?1u');
+
+		// The enable sequence should NOT have been written after unmount
+		const strings = getWrittenStrings(write);
+		const enableCount = strings.filter(s => s === '\u001B[>1u').length;
+		t.is(enableCount, 0);
+
+		if (origKittyId === undefined) {
+			delete process.env['KITTY_WINDOW_ID'];
+		} else {
+			process.env['KITTY_WINDOW_ID'] = origKittyId;
+		}
+	},
+);
+
+test.serial(
+	'kitty protocol - auto detection handles synchronous query response',
+	t => {
+		const {stdout} = createFakeStdout();
+		const stdin = createFakeStdin();
+		const writtenStrings: string[] = [];
+
+		// Override stdout.write to synchronously emit the response on stdin
+		// when the query sequence is written, simulating a fast terminal
+		stdout.write = ((data: string) => {
+			writtenStrings.push(data);
+			if (data === '\u001B[?u') {
+				stdin.emit('data', '\u001B[?1u');
+			}
+
+			return true;
+		}) as typeof stdout.write;
+
+		const origKittyId = process.env['KITTY_WINDOW_ID'];
+		process.env['KITTY_WINDOW_ID'] = '1';
+
+		const {unmount} = render(<Text>Hello</Text>, {
+			stdout,
+			stdin,
+			kittyKeyboard: {mode: 'auto'},
+		});
+
+		// The enable sequence should have been written
+		t.true(writtenStrings.includes('\u001B[>1u'));
+
+		unmount();
+
+		if (origKittyId === undefined) {
+			delete process.env['KITTY_WINDOW_ID'];
+		} else {
+			process.env['KITTY_WINDOW_ID'] = origKittyId;
+		}
+	},
+);
+
+test.serial(
+	'kitty protocol - auto detection handles Uint8Array query response',
+	t => {
+		const {stdout, write} = createFakeStdout();
+		const stdin = createFakeStdin();
+
+		const origKittyId = process.env['KITTY_WINDOW_ID'];
+		process.env['KITTY_WINDOW_ID'] = '1';
+
+		const {unmount} = render(<Text>Hello</Text>, {
+			stdout,
+			stdin,
+			kittyKeyboard: {mode: 'auto'},
+		});
+
+		// Respond with Uint8Array instead of string
+		const response = Buffer.from('\u001B[?1u');
+		stdin.emit('data', new Uint8Array(response));
+
+		// The enable sequence should have been written
+		const strings = getWrittenStrings(write);
+		t.true(strings.includes('\u001B[>1u'));
+
+		unmount();
+
+		if (origKittyId === undefined) {
+			delete process.env['KITTY_WINDOW_ID'];
+		} else {
+			process.env['KITTY_WINDOW_ID'] = origKittyId;
+		}
+	},
+);
+
+// --- Space and return text input tests ---
+
+test('kitty protocol - space key has text field set to space character', t => {
+	const result = parseKeypress(kittyKey(32));
+	t.is(result.text, ' ');
+});
+
+test('kitty protocol - return key has text field set to carriage return', t => {
+	const result = parseKeypress(kittyKey(13));
+	t.is(result.text, '\r');
 });

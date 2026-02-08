@@ -306,9 +306,18 @@ function resolveEventType(value: number): EventType {
 	return 'press';
 }
 
-function parseKittyModifiers(modifiers: number): Pick<
+function parseKittyModifiers(
+	modifiers: number,
+): Pick<
 	ParsedKey,
-	'ctrl' | 'shift' | 'meta' | 'option' | 'super' | 'hyper' | 'capsLock' | 'numLock'
+	| 'ctrl'
+	| 'shift'
+	| 'meta'
+	| 'option'
+	| 'super'
+	| 'hyper'
+	| 'capsLock'
+	| 'numLock'
 > {
 	return {
 		ctrl: !!(modifiers & kittyModifiers.ctrl),
@@ -348,11 +357,14 @@ const parseKittyKeypress = (s: string): ParsedKey | null => {
 	// Determine key name from codepoint
 	let name: string;
 	let isPrintable: boolean;
-	if (kittyCodepointNames[codepoint]) {
-		name = kittyCodepointNames[codepoint]!;
-		isPrintable = false;
-	} else if (codepoint === 32) {
+	if (codepoint === 32) {
 		name = 'space';
+		isPrintable = true;
+	} else if (codepoint === 13) {
+		name = 'return';
+		isPrintable = true;
+	} else if (kittyCodepointNames[codepoint]) {
+		name = kittyCodepointNames[codepoint]!;
 		isPrintable = false;
 	} else if (codepoint >= 1 && codepoint <= 26) {
 		// Ctrl+letter comes as codepoint 1-26
@@ -361,6 +373,13 @@ const parseKittyKeypress = (s: string): ParsedKey | null => {
 	} else {
 		name = safeFromCodePoint(codepoint).toLowerCase();
 		isPrintable = true;
+	}
+
+	// Default text to the character from the codepoint when not explicitly
+	// provided by the protocol, so keys like space and return produce their
+	// expected text input (' ' and '\r' respectively).
+	if (isPrintable && !text) {
+		text = safeFromCodePoint(codepoint);
 	}
 
 	return {
@@ -386,9 +405,10 @@ const parseKittySpecialKey = (s: string): ParsedKey | null => {
 	const eventType = parseInt(match[3]!, 10);
 	const terminator = match[4]!;
 
-	const name = terminator === '~'
-		? kittySpecialNumberKeys[number]
-		: kittySpecialLetterKeys[terminator];
+	const name =
+		terminator === '~'
+			? kittySpecialNumberKeys[number]
+			: kittySpecialLetterKeys[terminator];
 
 	if (!name) return null;
 
