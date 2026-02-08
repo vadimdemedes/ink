@@ -1,3 +1,4 @@
+import process from 'node:process';
 import EventEmitter from 'node:events';
 import React from 'react';
 import test from 'ava';
