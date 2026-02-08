@@ -147,6 +147,7 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
   - [`useStderr`](#usestderr)
   - [`useFocus`](#usefocusoptions)
   - [`useFocusManager`](#usefocusmanager)
+  - [`useCursor`](#usecursor)
 - [API](#api)
 - [Testing](#testing)
 - [Using React Devtools](#using-react-devtools)
@@ -1961,6 +1962,55 @@ const Example = () => {
 	return …
 };
 ```
+
+### useCursor()
+
+`useCursor` lets you control the terminal cursor position after each render. This is essential for IME (Input Method Editor) support, where the composing character is displayed at the cursor location.
+
+```jsx
+import {useState} from 'react';
+import {Box, Text, useCursor} from 'ink';
+import stringWidth from 'string-width';
+
+const TextInput = () => {
+	const [text, setText] = useState('');
+	const {setCursorPosition} = useCursor();
+
+	const prompt = '> ';
+	setCursorPosition({x: stringWidth(prompt + text), y: 1});
+
+	return (
+		<Box flexDirection="column">
+			<Text>Type here:</Text>
+			<Text>{prompt}{text}</Text>
+		</Box>
+	);
+};
+```
+
+#### setCursorPosition(position)
+
+Set the cursor position relative to the Ink output. Pass `undefined` to hide the cursor.
+
+##### position
+
+Type: `object | undefined`
+
+Use [`string-width`](https://github.com/sindresorhus/string-width) to calculate `x` for strings containing wide characters (CJK, emoji).
+
+See a full example at [examples/cursor-ime](examples/cursor-ime/cursor-ime.tsx).
+
+###### x
+
+Type: `number`
+
+Column position (0-based).
+
+###### y
+
+Type: `number`
+
+Row position from the top of the Ink output (0 = first line).
 
 ### useIsScreenReaderEnabled()
 

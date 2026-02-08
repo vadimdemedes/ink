@@ -1,12 +1,25 @@
 import {type Writable} from 'node:stream';
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
+import {
+	type CursorPosition,
+	cursorPositionChanged,
+	buildCursorSuffix,
+	buildCursorOnlySequence,
+	buildReturnToBottomPrefix,
+	hideCursorEscape,
+} from './cursor-helpers.js';
+
+export type {CursorPosition} from './cursor-helpers.js';
 
 export type LogUpdate = {
 	clear: () => void;
 	done: () => void;
 	sync: (str: string) => void;
-	(str: string): void;
+	setCursorPosition: (position: CursorPosition | undefined) => void;
+	isCursorDirty: () => boolean;
+	willRender: (str: string) => boolean;
+	(str: string): boolean;
 };
 
 // Count visible lines in a string, ignoring the trailing empty element
@@ -21,42 +34,131 @@ const createStandard = (
 	let previousLineCount = 0;
 	let previousOutput = '';
 	let hasHiddenCursor = false;
+	let cursorPosition: CursorPosition | undefined;
+	let cursorDirty = false;
+	let previousCursorPosition: CursorPosition | undefined;
+	let cursorWasShown = false;
+
+	const getActiveCursor = () => (cursorDirty ? cursorPosition : undefined);
+	const hasChanges = (
+		str: string,
+		activeCursor: CursorPosition | undefined,
+	): boolean => {
+		const cursorChanged = cursorPositionChanged(
+			activeCursor,
+			previousCursorPosition,
+		);
+		return str !== previousOutput || cursorChanged;
+	};
 
 	const render = (str: string) => {
 		if (!showCursor && !hasHiddenCursor) {
-			cliCursor.hide();
+			cliCursor.hide(stream);
 			hasHiddenCursor = true;
 		}
 
-		if (str === previousOutput) {
-			return;
+		// Only use cursor if setCursorPosition was called since last render.
+		// This ensures stale positions don't persist after component unmount.
+		const activeCursor = getActiveCursor();
+		cursorDirty = false;
+		const cursorChanged = cursorPositionChanged(
+			activeCursor,
+			previousCursorPosition,
+		);
+
+		if (!hasChanges(str, activeCursor)) {
+			return false;
 		}
 
-		previousOutput = str;
-		stream.write(ansiEscapes.eraseLines(previousLineCount) + str);
-		previousLineCount = str.split('\n').length;
+		const lines = str.split('\n');
+		const visibleCount = visibleLineCount(lines, str);
+		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+
+		if (str === previousOutput && cursorChanged) {
+			stream.write(
+				buildCursorOnlySequence({
+					cursorWasShown,
+					previousLineCount,
+					previousCursorPosition,
+					visibleLineCount: visibleCount,
+					cursorPosition: activeCursor,
+				}),
+			);
+		} else {
+			previousOutput = str;
+			const returnPrefix = buildReturnToBottomPrefix(
+				cursorWasShown,
+				previousLineCount,
+				previousCursorPosition,
+			);
+			stream.write(
+				returnPrefix +
+					ansiEscapes.eraseLines(previousLineCount) +
+					str +
+					cursorSuffix,
+			);
+			previousLineCount = lines.length;
+		}
+
+		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+		cursorWasShown = activeCursor !== undefined;
+		return true;
 	};
 
 	render.clear = () => {
-		stream.write(ansiEscapes.eraseLines(previousLineCount));
+		const prefix = buildReturnToBottomPrefix(
+			cursorWasShown,
+			previousLineCount,
+			previousCursorPosition,
+		);
+		stream.write(prefix + ansiEscapes.eraseLines(previousLineCount));
 		previousOutput = '';
 		previousLineCount = 0;
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
 	};
 
 	render.done = () => {
 		previousOutput = '';
 		previousLineCount = 0;
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
 
 		if (!showCursor) {
-			cliCursor.show();
+			cliCursor.show(stream);
 			hasHiddenCursor = false;
 		}
 	};
 
 	render.sync = (str: string) => {
+		const activeCursor = cursorDirty ? cursorPosition : undefined;
+		cursorDirty = false;
+
+		const lines = str.split('\n');
 		previousOutput = str;
-		previousLineCount = str.split('\n').length;
+		previousLineCount = lines.length;
+
+		if (!activeCursor && cursorWasShown) {
+			stream.write(hideCursorEscape);
+		}
+
+		if (activeCursor) {
+			stream.write(
+				buildCursorSuffix(visibleLineCount(lines, str), activeCursor),
+			);
+		}
+
+		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+		cursorWasShown = activeCursor !== undefined;
 	};
+
+	render.setCursorPosition = (position: CursorPosition | undefined) => {
+		cursorPosition = position;
+		cursorDirty = true;
+	};
+
+	render.isCursorDirty = () => cursorDirty;
+	render.willRender = (str: string) => hasChanges(str, getActiveCursor());
 
 	return render;
 };
@@ -68,32 +170,88 @@ const createIncremental = (
 	let previousLines: string[] = [];
 	let previousOutput = '';
 	let hasHiddenCursor = false;
+	let cursorPosition: CursorPosition | undefined;
+	let cursorDirty = false;
+	let previousCursorPosition: CursorPosition | undefined;
+	let cursorWasShown = false;
+
+	const getActiveCursor = () => (cursorDirty ? cursorPosition : undefined);
+	const hasChanges = (
+		str: string,
+		activeCursor: CursorPosition | undefined,
+	): boolean => {
+		const cursorChanged = cursorPositionChanged(
+			activeCursor,
+			previousCursorPosition,
+		);
+		return str !== previousOutput || cursorChanged;
+	};
 
 	const render = (str: string) => {
 		if (!showCursor && !hasHiddenCursor) {
-			cliCursor.hide();
+			cliCursor.hide(stream);
 			hasHiddenCursor = true;
 		}
 
-		if (str === previousOutput) {
-			return;
+		// Only use cursor if setCursorPosition was called since last render.
+		// This ensures stale positions don't persist after component unmount.
+		const activeCursor = getActiveCursor();
+		cursorDirty = false;
+		const cursorChanged = cursorPositionChanged(
+			activeCursor,
+			previousCursorPosition,
+		);
+
+		if (!hasChanges(str, activeCursor)) {
+			return false;
 		}
 
 		const nextLines = str.split('\n');
 		const visibleCount = visibleLineCount(nextLines, str);
+		const previousVisible = visibleLineCount(previousLines, previousOutput);
 
-		if (str === '\n' || previousOutput.length === 0) {
-			stream.write(ansiEscapes.eraseLines(previousLines.length) + str);
-			previousOutput = str;
-			previousLines = nextLines;
-			return;
+		if (str === previousOutput && cursorChanged) {
+			stream.write(
+				buildCursorOnlySequence({
+					cursorWasShown,
+					previousLineCount: previousLines.length,
+					previousCursorPosition,
+					visibleLineCount: visibleCount,
+					cursorPosition: activeCursor,
+				}),
+			);
+			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+			cursorWasShown = activeCursor !== undefined;
+			return true;
 		}
 
-		const previousVisible = visibleLineCount(previousLines, previousOutput);
+		const returnPrefix = buildReturnToBottomPrefix(
+			cursorWasShown,
+			previousLines.length,
+			previousCursorPosition,
+		);
+
+		if (str === '\n' || previousOutput.length === 0) {
+			const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+			stream.write(
+				returnPrefix +
+					ansiEscapes.eraseLines(previousLines.length) +
+					str +
+					cursorSuffix,
+			);
+			cursorWasShown = activeCursor !== undefined;
+			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+			previousOutput = str;
+			previousLines = nextLines;
+			return true;
+		}
+
 		const hasTrailingNewline = str.endsWith('\n');
 
 		// We aggregate all chunks for incremental rendering into a buffer, and then write them to stdout at the end.
 		const buffer: string[] = [];
+
+		buffer.push(returnPrefix);
 
 		// Clear extra lines if the current content's line count is lower than the previous.
 		if (visibleCount < previousVisible) {
@@ -131,32 +289,72 @@ const createIncremental = (
 			);
 		}
 
+		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+		buffer.push(cursorSuffix);
+
 		stream.write(buffer.join(''));
 
+		cursorWasShown = activeCursor !== undefined;
+		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
 		previousOutput = str;
 		previousLines = nextLines;
+		return true;
 	};
 
 	render.clear = () => {
-		stream.write(ansiEscapes.eraseLines(previousLines.length));
+		const prefix = buildReturnToBottomPrefix(
+			cursorWasShown,
+			previousLines.length,
+			previousCursorPosition,
+		);
+		stream.write(prefix + ansiEscapes.eraseLines(previousLines.length));
 		previousOutput = '';
 		previousLines = [];
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
 	};
 
 	render.done = () => {
 		previousOutput = '';
 		previousLines = [];
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
 
 		if (!showCursor) {
-			cliCursor.show();
+			cliCursor.show(stream);
 			hasHiddenCursor = false;
 		}
 	};
 
 	render.sync = (str: string) => {
+		const activeCursor = cursorDirty ? cursorPosition : undefined;
+		cursorDirty = false;
+
+		const lines = str.split('\n');
 		previousOutput = str;
-		previousLines = str.split('\n');
+		previousLines = lines;
+
+		if (!activeCursor && cursorWasShown) {
+			stream.write(hideCursorEscape);
+		}
+
+		if (activeCursor) {
+			stream.write(
+				buildCursorSuffix(visibleLineCount(lines, str), activeCursor),
+			);
+		}
+
+		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+		cursorWasShown = activeCursor !== undefined;
 	};
+
+	render.setCursorPosition = (position: CursorPosition | undefined) => {
+		cursorPosition = position;
+		cursorDirty = true;
+	};
+
+	render.isCursorDirty = () => cursorDirty;
+	render.willRender = (str: string) => hasChanges(str, getActiveCursor());
 
 	return render;
 };

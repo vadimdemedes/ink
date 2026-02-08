@@ -1,4 +1,3 @@
-import EventEmitter from 'node:events';
 import process from 'node:process';
 import {Writable} from 'node:stream';
 import url from 'node:url';
@@ -6,14 +5,16 @@ import * as path from 'node:path';
 import {createRequire} from 'node:module';
 import FakeTimers from '@sinonjs/fake-timers';
 import {stub} from 'sinon';
-import test from 'ava';
+import test, {type ExecutionContext} from 'ava';
 import React, {type ReactNode, useEffect, useState} from 'react';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
-import {render, Box, Text, useInput} from '../src/index.js';
+import {render, Box, Text, useCursor, useInput} from '../src/index.js';
 import {type RenderMetrics} from '../src/ink.js';
+import {bsu, esu} from '../src/write-synchronized.js';
+import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
 
 const require = createRequire(import.meta.url);
@@ -22,28 +23,6 @@ const require = createRequire(import.meta.url);
 const {spawn} = require('node-pty') as typeof import('node-pty');
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
-
-const createStdin = () => {
-	const stdin = new EventEmitter() as unknown as NodeJS.WriteStream;
-	stdin.isTTY = true;
-	stdin.setRawMode = stub();
-	stdin.setEncoding = () => {};
-	stdin.read = stub();
-	stdin.unref = () => {};
-	stdin.ref = () => {};
-
-	return stdin;
-};
-
-const emitReadable = (stdin: NodeJS.WriteStream, chunk: string) => {
-	/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
-	const read = stdin.read as ReturnType<typeof stub>;
-	read.onCall(0).returns(chunk);
-	read.onCall(1).returns(null);
-	stdin.emit('readable');
-	read.reset();
-	/* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
-};
 
 const term = (fixture: string, args: string[] = []) => {
 	let resolve: (value?: unknown) => void;
@@ -85,7 +64,11 @@ const term = (fixture: string, args: string[] = []) => {
 	};
 
 	ps.onData(data => {
-		result.output += data;
+		// Strip Synchronized Update Mode sequences (bsu/esu) so tests
+		// only see the actual content, not the transport wrapper.
+		result.output += data
+			.replaceAll('\u001B[?2026h', '')
+			.replaceAll('\u001B[?2026l', '');
 	});
 
 	ps.onExit(({exitCode}) => {
@@ -279,6 +262,12 @@ function ThrottleTestComponent({text}: {readonly text: string}) {
 	return <Text>{text}</Text>;
 }
 
+function ThrottleCursorTestComponent({text}: {readonly text: string}) {
+	const {setCursorPosition} = useCursor();
+	setCursorPosition({x: 0, y: 0});
+	return <Text>{text}</Text>;
+}
+
 test.serial('throttle renders to maxFps', t => {
 	const clock = FakeTimers.install(); // Controls timers + Date.now()
 	try {
@@ -461,4 +450,113 @@ test.serial('waitUntilExit resolves after stdout write callback', async t => {
 	await exitPromise;
 
 	t.true(writeCallbackFired);
+});
+
+const createTtyStdout = (columns?: number) => {
+	const stdout = createStdout(columns);
+	(stdout as any).isTTY = true;
+	return stdout;
+};
+
+const withFakeClock = (
+	run: (clock: ReturnType<typeof FakeTimers.install>) => void,
+) => {
+	const clock = FakeTimers.install();
+	try {
+		run(clock);
+	} finally {
+		clock.uninstall();
+	}
+};
+
+const captureWrites = (stdout: NodeJS.WriteStream): string[] => {
+	const writes: string[] = [];
+	const originalWrite = stdout.write;
+	(stdout as any).write = (...args: any[]) => {
+		writes.push(args[0] as string);
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+		return (originalWrite as any)(...args);
+	};
+
+	return writes;
+};
+
+const assertNoBsuEsuForUnchangedTrailingRerender = (
+	t: ExecutionContext,
+	element: React.ReactElement,
+) => {
+	withFakeClock(clock => {
+		const stdout = createTtyStdout();
+		const writes = captureWrites(stdout);
+		const {unmount, rerender} = render(element, {stdout, maxFps: 1});
+		try {
+			t.true(writes.includes(bsu), 'initial render should include bsu');
+
+			writes.length = 0;
+			rerender(element);
+			clock.tick(1000);
+
+			t.false(writes.includes(bsu), 'unchanged rerender should not emit bsu');
+			t.false(writes.includes(esu), 'unchanged rerender should not emit esu');
+		} finally {
+			unmount();
+		}
+	});
+};
+
+test.serial('no bsu/esu when output is unchanged', t => {
+	assertNoBsuEsuForUnchangedTrailingRerender(
+		t,
+		<ThrottleTestComponent text="Hello" />,
+	);
+});
+
+test.serial('no bsu/esu when output and cursor are unchanged', t => {
+	assertNoBsuEsuForUnchangedTrailingRerender(
+		t,
+		<ThrottleCursorTestComponent text="Hello" />,
+	);
+});
+
+test.serial('bsu/esu wraps throttledLog trailing call', t => {
+	withFakeClock(clock => {
+		const stdout = createTtyStdout();
+		const writes = captureWrites(stdout);
+		const {unmount, rerender} = render(<ThrottleTestComponent text="Hello" />, {
+			stdout,
+			maxFps: 1,
+		});
+		try {
+			// Leading call writes: bsu, content, esu
+			const leadingWrites = new Set(writes);
+			t.true(leadingWrites.has(bsu), 'leading call should include bsu');
+			t.true(leadingWrites.has(esu), 'leading call should include esu');
+
+			// Trigger a rerender inside the throttle window (will be deferred as trailing)
+			writes.length = 0;
+			rerender(<ThrottleTestComponent text="World" />);
+
+			// No immediate write yet (throttled)
+			const midWrites = [...writes];
+			t.false(
+				midWrites.some(w => w.includes('World')),
+				'trailing call should not write immediately',
+			);
+
+			// Advance past throttle window to trigger trailing call
+			writes.length = 0;
+			clock.tick(1000);
+
+			// Trailing call should also be wrapped with bsu/esu
+			t.true(writes.includes(bsu), 'trailing call should include bsu');
+			t.true(writes.includes(esu), 'trailing call should include esu');
+
+			// Verify bsu comes before content and esu comes after
+			const bsuIdx = writes.indexOf(bsu);
+			const esuIdx = writes.indexOf(esu);
+			t.true(bsuIdx < esuIdx, 'bsu should come before esu');
+		} finally {
+			unmount();
+		}
+	});
 });

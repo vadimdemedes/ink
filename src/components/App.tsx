@@ -9,11 +9,13 @@ import React, {
 	useEffect,
 } from 'react';
 import cliCursor from 'cli-cursor';
+import {type CursorPosition} from '../log-update.js';
 import AppContext from './AppContext.js';
 import StdinContext from './StdinContext.js';
 import StdoutContext from './StdoutContext.js';
 import StderrContext from './StderrContext.js';
 import FocusContext from './FocusContext.js';
+import CursorContext from './CursorContext.js';
 import ErrorBoundary from './ErrorBoundary.js';
 
 const tab = '\t';
@@ -29,6 +31,7 @@ type Props = {
 	readonly writeToStderr: (data: string) => void;
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (error?: Error) => void;
+	readonly setCursorPosition: (position: CursorPosition | undefined) => void;
 };
 
 type Focusable = {
@@ -48,6 +51,7 @@ function App({
 	writeToStderr,
 	exitOnCtrlC,
 	onExit,
+	setCursorPosition,
 }: Props): React.ReactNode {
 	const [isFocusEnabled, setIsFocusEnabled] = useState(true);
 	const [activeFocusId, setActiveFocusId] = useState<string | undefined>(
@@ -376,10 +380,8 @@ function App({
 		);
 	}, []);
 
-	// Handle cursor visibility on mount/unmount
+	// Handle cursor visibility and raw mode cleanup on unmount
 	useEffect(() => {
-		cliCursor.hide(stdout);
-
 		return () => {
 			cliCursor.show(stdout);
 
@@ -433,6 +435,13 @@ function App({
 		[stderr, writeToStderr],
 	);
 
+	const cursorContextValue = useMemo(
+		() => ({
+			setCursorPosition,
+		}),
+		[setCursorPosition],
+	);
+
 	const focusContextValue = useMemo(
 		() => ({
 			activeId: activeFocusId,
@@ -466,7 +475,9 @@ function App({
 				<StdoutContext.Provider value={stdoutContextValue}>
 					<StderrContext.Provider value={stderrContextValue}>
 						<FocusContext.Provider value={focusContextValue}>
-							<ErrorBoundary onError={handleExit}>{children}</ErrorBoundary>
+							<CursorContext.Provider value={cursorContextValue}>
+								<ErrorBoundary onError={handleExit}>{children}</ErrorBoundary>
+							</CursorContext.Provider>
 						</FocusContext.Provider>
 					</StderrContext.Provider>
 				</StdoutContext.Provider>
