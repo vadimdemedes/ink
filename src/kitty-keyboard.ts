@@ -18,7 +18,7 @@ export type KittyFlagName = keyof typeof kittyFlags;
 /**
  * Converts an array of flag names to the corresponding bitmask value.
  */
-export const resolveFlags = (flags: KittyFlagName[]): number => {
+export function resolveFlags(flags: KittyFlagName[]): number {
 	let result = 0;
 	for (const flag of flags) {
 		// eslint-disable-next-line no-bitwise
@@ -26,7 +26,7 @@ export const resolveFlags = (flags: KittyFlagName[]): number => {
 	}
 
 	return result;
-};
+}
 
 /**
  * Kitty keyboard modifier bits.

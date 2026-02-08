@@ -556,14 +556,8 @@ const createFakeStdin = () => {
 	return stdin;
 };
 
-const getWrittenStrings = (write: ReturnType<typeof spy>): string[] => {
-	const strings: string[] = [];
-	for (const args of write.args as string[][]) {
-		strings.push(args[0]!);
-	}
-
-	return strings;
-};
+const getWrittenStrings = (write: ReturnType<typeof spy>): string[] =>
+	(write.args as string[][]).map(args => args[0]!);
 
 test.serial(
 	'kitty protocol - writes enable sequence on init when mode is enabled',

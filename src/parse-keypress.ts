@@ -1,5 +1,6 @@
 // Copied from https://github.com/enquirer/enquirer/blob/36785f3399a41cd61e9d28d1eb9c2fcd73d69b4c/lib/keypress.js
 import {Buffer} from 'node:buffer';
+import {kittyModifiers} from './kitty-keyboard.js';
 
 const metaKeyCodeRe = /^(?:\x1b)([a-zA-Z0-9])$/;
 
@@ -297,6 +298,30 @@ const isValidCodepoint = (cp: number): boolean =>
 const safeFromCodePoint = (cp: number): string =>
 	isValidCodepoint(cp) ? String.fromCodePoint(cp) : '?';
 
+type EventType = 'press' | 'repeat' | 'release';
+
+function resolveEventType(value: number): EventType {
+	if (value === 3) return 'release';
+	if (value === 2) return 'repeat';
+	return 'press';
+}
+
+function parseKittyModifiers(modifiers: number): Pick<
+	ParsedKey,
+	'ctrl' | 'shift' | 'meta' | 'option' | 'super' | 'hyper' | 'capsLock' | 'numLock'
+> {
+	return {
+		ctrl: !!(modifiers & kittyModifiers.ctrl),
+		shift: !!(modifiers & kittyModifiers.shift),
+		meta: !!(modifiers & kittyModifiers.meta),
+		option: !!(modifiers & kittyModifiers.alt),
+		super: !!(modifiers & kittyModifiers.super),
+		hyper: !!(modifiers & kittyModifiers.hyper),
+		capsLock: !!(modifiers & kittyModifiers.capsLock),
+		numLock: !!(modifiers & kittyModifiers.numLock),
+	};
+}
+
 const parseKittyKeypress = (s: string): ParsedKey | null => {
 	const match = kittyKeyRe.exec(s);
 	if (!match) return null;
@@ -340,15 +365,8 @@ const parseKittyKeypress = (s: string): ParsedKey | null => {
 
 	return {
 		name,
-		ctrl: !!(modifiers & 4),
-		shift: !!(modifiers & 1),
-		meta: !!(modifiers & 32),
-		option: !!(modifiers & 2),
-		super: !!(modifiers & 8),
-		hyper: !!(modifiers & 16),
-		capsLock: !!(modifiers & 64),
-		numLock: !!(modifiers & 128),
-		eventType: eventType === 3 ? 'release' : eventType === 2 ? 'repeat' : 'press',
+		...parseKittyModifiers(modifiers),
+		eventType: resolveEventType(eventType),
 		sequence: s,
 		raw: s,
 		isKittyProtocol: true,
@@ -368,26 +386,16 @@ const parseKittySpecialKey = (s: string): ParsedKey | null => {
 	const eventType = parseInt(match[3]!, 10);
 	const terminator = match[4]!;
 
-	let name: string;
-	if (terminator === '~') {
-		name = kittySpecialNumberKeys[number] ?? '';
-	} else {
-		name = kittySpecialLetterKeys[terminator] ?? '';
-	}
+	const name = terminator === '~'
+		? kittySpecialNumberKeys[number]
+		: kittySpecialLetterKeys[terminator];
 
 	if (!name) return null;
 
 	return {
 		name,
-		ctrl: !!(modifiers & 4),
-		shift: !!(modifiers & 1),
-		meta: !!(modifiers & 32),
-		option: !!(modifiers & 2),
-		super: !!(modifiers & 8),
-		hyper: !!(modifiers & 16),
-		capsLock: !!(modifiers & 64),
-		numLock: !!(modifiers & 128),
-		eventType: eventType === 3 ? 'release' : eventType === 2 ? 'repeat' : 'press',
+		...parseKittyModifiers(modifiers),
+		eventType: resolveEventType(eventType),
 		sequence: s,
 		raw: s,
 		isKittyProtocol: true,
