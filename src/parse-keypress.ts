@@ -426,6 +426,23 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 	const kittySpecialResult = parseKittySpecialKey(s);
 	if (kittySpecialResult) return kittySpecialResult;
 
+	// If the input matched the kitty CSI-u pattern but was rejected (e.g.,
+	// invalid codepoint), return a safe empty keypress instead of falling
+	// through to legacy parsing which can produce unsafe states (undefined name)
+	if (kittyKeyRe.test(s)) {
+		return {
+			name: '',
+			ctrl: false,
+			meta: false,
+			shift: false,
+			option: false,
+			sequence: s,
+			raw: s,
+			isKittyProtocol: true,
+			isPrintable: false,
+		};
+	}
+
 	const key: ParsedKey = {
 		name: '',
 		ctrl: false,
