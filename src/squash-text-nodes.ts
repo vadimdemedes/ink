@@ -1,4 +1,5 @@
 import {type DOMElement} from './dom.js';
+import sanitizeAnsi from './sanitize-ansi.js';
 
 // Squashing text nodes allows to combine multiple text nodes into one and write
 // to `Output` instance only once. For example, <Text>hello{' '}world</Text>
@@ -41,7 +42,7 @@ const squashTextNodes = (node: DOMElement): string => {
 		text += nodeText;
 	}
 
-	return text;
+	return sanitizeAnsi(text);
 };
 
 export default squashTextNodes;
