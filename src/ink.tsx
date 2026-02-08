@@ -646,19 +646,25 @@ export default class Ink {
 	}
 
 	private initKittyKeyboard(): void {
-		const opts = this.options.kittyKeyboard ?? {mode: 'auto'};
+		// Protocol is opt-in: if kittyKeyboard is not specified, do nothing
+		if (!this.options.kittyKeyboard) {
+			return;
+		}
+
+		const opts = this.options.kittyKeyboard;
+		const mode = opts.mode ?? 'auto';
 
 		if (
-			opts.mode === 'disabled' ||
+			mode === 'disabled' ||
 			!this.options.stdin.isTTY ||
 			!this.options.stdout.isTTY
 		) {
 			return;
 		}
 
-		const flags = opts.flags ?? (['disambiguateEscapeCodes'] as KittyFlagName[]);
+		const flags: KittyFlagName[] = opts.flags ?? ['disambiguateEscapeCodes'];
 
-		if (opts.mode === 'enabled') {
+		if (mode === 'enabled') {
 			this.enableKittyProtocol(flags);
 			return;
 		}
@@ -681,8 +687,6 @@ export default class Ink {
 	private confirmKittySupport(flags: KittyFlagName[]): void {
 		const {stdin, stdout} = this.options;
 
-		// Send the protocol query: CSI ? u
-		// A supporting terminal responds with CSI ? <flags> u
 		stdout.write('\u001B[?u');
 
 		let responseBuffer = '';
@@ -690,13 +694,21 @@ export default class Ink {
 		const cleanup = (): void => {
 			clearTimeout(timer);
 			stdin.removeListener('data', onData);
+
+			// Re-emit any buffered data that wasn't the protocol response,
+			// so it isn't lost from Ink's normal input pipeline
+			// eslint-disable-next-line no-control-regex
+			const remaining = responseBuffer.replace(/\u001B\[\?\d+u/, '');
+			if (remaining) {
+				stdin.unshift(Buffer.from(remaining));
+			}
 		};
 
 		const onData = (data: Uint8Array | string): void => {
 			responseBuffer += String(data);
 
 			// eslint-disable-next-line no-control-regex
-			if (/\u001B\[\?(\d+)u/.test(responseBuffer)) {
+			if (/\u001B\[\?\d+u/.test(responseBuffer)) {
 				cleanup();
 				this.enableKittyProtocol(flags);
 			}

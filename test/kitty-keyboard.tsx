@@ -344,16 +344,22 @@ test('kitty protocol - tilde keys with modifiers', t => {
 
 // --- Malformed input handling ---
 
-test('kitty protocol - invalid codepoint above U+10FFFF returns null', t => {
+test('kitty protocol - invalid codepoint above U+10FFFF returns safe empty keypress', t => {
 	// Codepoint 1114112 = 0x110000, one above max Unicode
 	const result = parseKeypress('\u001B[1114112u');
-	t.is(result.name, undefined);
+	t.is(result.name, '');
+	t.false(result.ctrl);
+	t.true(result.isKittyProtocol);
+	t.false(result.isPrintable);
 });
 
-test('kitty protocol - surrogate codepoint returns null', t => {
+test('kitty protocol - surrogate codepoint returns safe empty keypress', t => {
 	// Codepoint 0xD800 is a surrogate
 	const result = parseKeypress('\u001B[55296u');
-	t.is(result.name, undefined);
+	t.is(result.name, '');
+	t.false(result.ctrl);
+	t.true(result.isKittyProtocol);
+	t.false(result.isPrintable);
 });
 
 test('kitty protocol - invalid text codepoint replaced with fallback', t => {
