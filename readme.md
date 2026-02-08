@@ -2183,18 +2183,17 @@ Default: `undefined`
 Enable the [kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) for enhanced keyboard input handling. When enabled, terminals that support the protocol will report additional key information including `super`, `hyper`, `capsLock`, `numLock` modifiers and `eventType` (press/repeat/release).
 
 ```jsx
-// Auto-detect terminal support (kitty, WezTerm)
+// Auto-detect terminal support (kitty, WezTerm, Ghostty)
 render(<MyApp />, {kittyKeyboard: {mode: 'auto'}});
 
 // Force enable
 render(<MyApp />, {kittyKeyboard: {mode: 'enabled'}});
 
 // Custom flags
-import {kittyFlags} from 'ink';
 render(<MyApp />, {
 	kittyKeyboard: {
 		mode: 'enabled',
-		flags: kittyFlags.disambiguateEscapeCodes | kittyFlags.reportEventTypes,
+		flags: ['disambiguateEscapeCodes', 'reportEventTypes'],
 	},
 });
 ```
@@ -2204,16 +2203,34 @@ render(<MyApp />, {
 Type: `'auto' | 'enabled' | 'disabled'`\
 Default: `'auto'`
 
-- `'auto'`: Detect terminal support by checking for known supporting terminals (kitty, WezTerm).
+- `'auto'`: Detect terminal support using a heuristic precheck (known terminals like kitty, WezTerm, Ghostty) followed by a protocol query confirmation (`CSI ? u`). The protocol is only enabled if the terminal responds to the query within a short timeout.
 - `'enabled'`: Force enable the protocol. Both stdin and stdout must be TTYs.
 - `'disabled'`: Never enable the protocol.
 
 **kittyKeyboard.flags**
 
-Type: `number`\
-Default: `kittyFlags.disambiguateEscapeCodes`
+Type: `string[]`\
+Default: `['disambiguateEscapeCodes']`
 
-Protocol flags to request from the terminal. Use the exported `kittyFlags` constants and combine with bitwise OR.
+Protocol flags to request from the terminal. Pass an array of flag name strings.
+
+Available flags:
+- `'disambiguateEscapeCodes'` - Disambiguate escape codes
+- `'reportEventTypes'` - Report key press, repeat, and release events
+- `'reportAlternateKeys'` - Report alternate key encodings
+- `'reportAllKeysAsEscapeCodes'` - Report all keys as escape codes
+- `'reportAssociatedText'` - Report associated text with key events
+
+**Behavior notes**
+
+When the kitty keyboard protocol is enabled, input handling changes in several ways:
+
+- **Non-printable keys produce empty input.** Keys like function keys (F1-F35), modifier-only keys (Shift, Control, Super), media keys, Caps Lock, Print Screen, and similar keys will not produce any text in the `input` parameter of `useInput`. They can still be detected via the `key` object properties.
+- **Key disambiguation.** The protocol allows the terminal to distinguish between keys that normally produce the same escape sequence. For example:
+  - `Ctrl+I` vs `Tab` - without the protocol, both produce the same byte (`\x09`). With the protocol, they are reported as distinct keys.
+  - `Shift+Enter` vs `Enter` - the shift modifier is correctly reported.
+  - `Escape` key vs `Ctrl+[` - these are disambiguated.
+- **Event types.** With the `reportEventTypes` flag, key press, repeat, and release events are distinguished via `key.eventType`.
 
 #### Instance
 

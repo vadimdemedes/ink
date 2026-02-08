@@ -19,7 +19,11 @@ import {bsu, esu, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
-import {type KittyKeyboardOptions, kittyFlags} from './kitty-keyboard.js';
+import {
+	type KittyKeyboardOptions,
+	type KittyFlagName,
+	resolveFlags,
+} from './kitty-keyboard.js';
 
 const noop = () => {};
 
@@ -654,21 +658,20 @@ export default class Ink {
 			return;
 		}
 
+		const defaultFlags: KittyFlagName[] = ['disambiguateEscapeCodes'];
+		const flags = opts.flags ?? defaultFlags;
+
 		if (opts.mode === 'enabled') {
-			this.enableKittyProtocol(
-				opts.flags ?? kittyFlags.disambiguateEscapeCodes,
-			);
+			this.enableKittyProtocol(flags);
 			return;
 		}
 
-		// Auto mode: detect support by checking for known supporting terminals
+		// Auto mode: use heuristic precheck, then confirm with protocol query
 		// Known indicators:
 		// - KITTY_WINDOW_ID env var (set by kitty terminal)
 		// - TERM=xterm-kitty (kitty terminal)
 		// - TERM_PROGRAM=WezTerm (WezTerm terminal)
 		// - TERM_PROGRAM=ghostty (Ghostty terminal)
-		// A more sophisticated implementation could send CSI ? u query
-		// and wait for a response to detect actual support
 		const term = process.env['TERM'] ?? '';
 		const termProgram = process.env['TERM_PROGRAM'] ?? '';
 		const hasKittyWindowId = 'KITTY_WINDOW_ID' in process.env;
@@ -680,16 +683,54 @@ export default class Ink {
 			termProgram === 'ghostty';
 
 		if (!isInCi && this.options.stdin.isTTY && isKnownSupportingTerminal) {
-			this.enableKittyProtocol(
-				opts.flags ?? kittyFlags.disambiguateEscapeCodes,
-			);
+			// Heuristic passed — confirm with protocol query (CSI ? u)
+			this.confirmKittySupport(flags);
 		}
 	}
 
-	private enableKittyProtocol(flags: number): void {
+	private confirmKittySupport(flags: KittyFlagName[]): void {
+		const {stdin, stdout} = this.options;
+
+		// Send the protocol query: CSI ? u
+		// A supporting terminal responds with CSI ? <flags> u
+		stdout.write('\u001B[?u');
+
+		let responseBuffer = '';
+		const queryTimeout = 200;
+
+		const onData = (data: Uint8Array | string): void => {
+			responseBuffer += String(data);
+
+			// Look for CSI ? <number> u response
+			// eslint-disable-next-line no-control-regex
+			const match = /\u001B\[\?(\d+)u/.exec(responseBuffer);
+			if (match) {
+				cleanup();
+				// Terminal confirmed support - enable the protocol
+				this.enableKittyProtocol(flags);
+			}
+		};
+
+		const onTimeout = (): void => {
+			cleanup();
+			// No response within timeout - terminal does not support the protocol
+		};
+
+		const timer = setTimeout(onTimeout, queryTimeout);
+
+		const cleanup = (): void => {
+			clearTimeout(timer);
+			stdin.removeListener('data', onData);
+		};
+
+		stdin.on('data', onData);
+	}
+
+	private enableKittyProtocol(flags: KittyFlagName[]): void {
 		// Push keyboard mode with specified flags
 		// CSI > flags u - push keyboard mode
-		this.options.stdout.write(`\u001B[>${flags}u`);
+		const flagBits = resolveFlags(flags);
+		this.options.stdout.write(`\u001B[>${flagBits}u`);
 		this.kittyProtocolEnabled = true;
 	}
 }

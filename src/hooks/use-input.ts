@@ -1,8 +1,5 @@
 import {useEffect} from 'react';
-import parseKeypress, {
-	nonAlphanumericKeys,
-	kittyModifierKeyNames,
-} from '../parse-keypress.js';
+import parseKeypress, {nonAlphanumericKeys} from '../parse-keypress.js';
 import reconciler from '../reconciler.js';
 import useStdin from './use-stdin.js';
 
@@ -209,23 +206,9 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 
 			let input: string;
 			if (keypress.isKittyProtocol) {
-				// Prefer text-as-codepoints field when available (needed when
-				// reportAllKeysAsEscapeCodes flag is enabled)
-				input = keypress.text ?? keypress.name;
-
-				// Suppress input for non-printable keys reported by kitty protocol.
-				// The legacy nonAlphanumericKeys list doesn't include escape/return/space
-				// because the legacy parser passes their raw sequences through as input.
-				// Also suppress modifier-only keys (leftsuper, leftcontrol, etc.)
-				if (
-					nonAlphanumericKeys.includes(keypress.name) ||
-					kittyModifierKeyNames.has(keypress.name) ||
-					keypress.name === 'escape' ||
-					keypress.name === 'return' ||
-					keypress.name === 'space'
-				) {
-					input = '';
-				}
+				// Use text-as-codepoints field for printable keys (needed when
+				// reportAllKeysAsEscapeCodes flag is enabled), suppress non-printable
+				input = keypress.isPrintable ? (keypress.text ?? keypress.name) : '';
 			} else if (keypress.ctrl) {
 				input = keypress.name;
 			} else {

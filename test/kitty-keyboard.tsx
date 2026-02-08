@@ -382,6 +382,160 @@ test('non-kitty sequences - ctrl+c', t => {
 	t.is(result.isKittyProtocol, undefined);
 });
 
+// --- isPrintable field tests ---
+
+test('kitty protocol - isPrintable is true for regular characters', t => {
+	// 'a' key
+	const result = parseKeypress(kittyKey(97));
+	t.true(result.isPrintable);
+});
+
+test('kitty protocol - isPrintable is true for digits', t => {
+	// '1' key
+	const result = parseKeypress(kittyKey(49));
+	t.true(result.isPrintable);
+});
+
+test('kitty protocol - isPrintable is true for symbols', t => {
+	// '@' key
+	const result = parseKeypress(kittyKey(64));
+	t.true(result.isPrintable);
+});
+
+test('kitty protocol - isPrintable is true for emoji', t => {
+	const result = parseKeypress(kittyKey(128_512));
+	t.true(result.isPrintable);
+});
+
+test('kitty protocol - isPrintable is false for escape', t => {
+	const result = parseKeypress(kittyKey(27));
+	t.false(result.isPrintable);
+});
+
+test('kitty protocol - isPrintable is false for return', t => {
+	const result = parseKeypress(kittyKey(13));
+	t.false(result.isPrintable);
+});
+
+test('kitty protocol - isPrintable is false for tab', t => {
+	const result = parseKeypress(kittyKey(9));
+	t.false(result.isPrintable);
+});
+
+test('kitty protocol - isPrintable is false for space', t => {
+	const result = parseKeypress(kittyKey(32));
+	t.false(result.isPrintable);
+});
+
+test('kitty protocol - isPrintable is false for backspace', t => {
+	const result = parseKeypress(kittyKey(8));
+	t.false(result.isPrintable);
+});
+
+test('kitty protocol - isPrintable is false for ctrl+letter', t => {
+	// Ctrl+a (codepoint 1)
+	const result = parseKeypress(kittyKey(1, 5));
+	t.false(result.isPrintable);
+});
+
+test('kitty protocol - isPrintable is false for special keys (arrows)', t => {
+	// Up arrow via kitty enhanced special key format
+	const result = parseKeypress('\u001B[1;1:1A');
+	t.false(result.isPrintable);
+});
+
+// --- Non-printable key suppression tests (feedback #3 repros) ---
+
+test('kitty protocol - capslock (57358) is non-printable', t => {
+	// \x1b[57358u -> capslock should have isPrintable=false
+	const result = parseKeypress('\u001B[57358u');
+	t.is(result.name, 'capslock');
+	t.false(result.isPrintable);
+	t.true(result.isKittyProtocol);
+});
+
+test('kitty protocol - printscreen (57361) is non-printable', t => {
+	// \x1b[57361u -> printscreen should have isPrintable=false
+	const result = parseKeypress('\u001B[57361u');
+	t.is(result.name, 'printscreen');
+	t.false(result.isPrintable);
+	t.true(result.isKittyProtocol);
+});
+
+test('kitty protocol - f13 (57376) is non-printable', t => {
+	// \x1b[57376u -> f13 should have isPrintable=false
+	const result = parseKeypress('\u001B[57376u');
+	t.is(result.name, 'f13');
+	t.false(result.isPrintable);
+	t.true(result.isKittyProtocol);
+});
+
+test('kitty protocol - media key (57428 mediaplay) is non-printable', t => {
+	const result = parseKeypress('\u001B[57428u');
+	t.is(result.name, 'mediaplay');
+	t.false(result.isPrintable);
+	t.true(result.isKittyProtocol);
+});
+
+test('kitty protocol - modifier-only key (57441 leftshift) is non-printable', t => {
+	const result = parseKeypress('\u001B[57441u');
+	t.is(result.name, 'leftshift');
+	t.false(result.isPrintable);
+	t.true(result.isKittyProtocol);
+});
+
+test('kitty protocol - modifier-only key (57442 leftcontrol) is non-printable', t => {
+	const result = parseKeypress('\u001B[57442u');
+	t.is(result.name, 'leftcontrol');
+	t.false(result.isPrintable);
+	t.true(result.isKittyProtocol);
+});
+
+test('kitty protocol - kp keys (57399 kp0) are non-printable', t => {
+	const result = parseKeypress('\u001B[57399u');
+	t.is(result.name, 'kp0');
+	t.false(result.isPrintable);
+	t.true(result.isKittyProtocol);
+});
+
+test('kitty protocol - scrolllock (57359) is non-printable', t => {
+	const result = parseKeypress('\u001B[57359u');
+	t.is(result.name, 'scrolllock');
+	t.false(result.isPrintable);
+	t.true(result.isKittyProtocol);
+});
+
+test('kitty protocol - numlock (57360) is non-printable', t => {
+	const result = parseKeypress('\u001B[57360u');
+	t.is(result.name, 'numlock');
+	t.false(result.isPrintable);
+	t.true(result.isKittyProtocol);
+});
+
+test('kitty protocol - pause (57362) is non-printable', t => {
+	const result = parseKeypress('\u001B[57362u');
+	t.is(result.name, 'pause');
+	t.false(result.isPrintable);
+	t.true(result.isKittyProtocol);
+});
+
+test('kitty protocol - volume keys are non-printable', t => {
+	// Lower volume (57438)
+	const lower = parseKeypress('\u001B[57438u');
+	t.is(lower.name, 'lowervolume');
+	t.false(lower.isPrintable);
+
+	// Raise volume (57439)
+	const raise = parseKeypress('\u001B[57439u');
+	t.is(raise.name, 'raisevolume');
+	t.false(raise.isPrintable);
+
+	// Mute volume (57440)
+	const mute = parseKeypress('\u001B[57440u');
+	t.is(mute.name, 'mutevolume');
+	t.false(mute.isPrintable);
+});
+
 // --- Init/cleanup control sequence tests ---
 
 const createFakeStdout = () => {
