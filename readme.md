@@ -1996,6 +1996,10 @@ Set the cursor position relative to the Ink output. Pass `undefined` to hide the
 
 Type: `object | undefined`
 
+Use [`string-width`](https://github.com/sindresorhus/string-width) to calculate `x` for strings containing wide characters (CJK, emoji).
+
+See a full example at [examples/cursor-ime](examples/cursor-ime/cursor-ime.tsx).
+
 ###### x
 
 Type: `number`
@@ -2007,10 +2011,6 @@ Column position (0-based).
 Type: `number`
 
 Row position from the top of the Ink output (0 = first line).
-
-Use `string-width` to calculate `x` for strings containing wide characters (CJK, emoji).
-
-See a full example at [examples/cursor-ime](examples/cursor-ime/cursor-ime.tsx).
 
 ### useIsScreenReaderEnabled()
 
