@@ -2183,13 +2183,14 @@ Default: `undefined`
 Enable the [kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) for enhanced keyboard input handling. When enabled, terminals that support the protocol will report additional key information including `super`, `hyper`, `capsLock`, `numLock` modifiers and `eventType` (press/repeat/release).
 
 ```jsx
-// Auto-detect terminal support (kitty, WezTerm, Ghostty)
+import {render} from 'ink';
+
 render(<MyApp />, {kittyKeyboard: {mode: 'auto'}});
+```
 
-// Force enable
-render(<MyApp />, {kittyKeyboard: {mode: 'enabled'}});
+```jsx
+import {render} from 'ink';
 
-// Custom flags
 render(<MyApp />, {
 	kittyKeyboard: {
 		mode: 'enabled',
