@@ -371,6 +371,17 @@ test('kitty protocol - invalid text codepoint replaced with fallback', t => {
 	t.true(result.isKittyProtocol);
 });
 
+test('kitty protocol - malformed modifier 0 does not set all flags', t => {
+	// Malformed sequence with modifier 0 (should clamp to 0, not become -1)
+	const result = parseKeypress('\u001B[97;0u');
+	t.is(result.name, 'a');
+	t.false(result.ctrl);
+	t.false(result.shift);
+	t.false(result.option);
+	t.false(result.super ?? false);
+	t.true(result.isKittyProtocol);
+});
+
 // --- Legacy fallback ---
 
 test('non-kitty sequences fall back to legacy parsing', t => {

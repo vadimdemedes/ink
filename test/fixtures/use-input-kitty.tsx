@@ -66,6 +66,12 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		// Test ctrl+letter via codepoint 1-26 form still provides input
+		if (test === 'ctrlLetter' && input === 'a' && key.ctrl) {
+			exit();
+			return;
+		}
+
 		// Test space produces space character as input
 		if (test === 'space' && input === ' ') {
 			exit();

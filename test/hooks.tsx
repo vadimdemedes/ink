@@ -479,3 +479,14 @@ test.serial(
 		t.true(ps.output.includes('exited'));
 	},
 );
+
+test.serial(
+	'useInput - kitty protocol ctrl+letter via codepoint 1-26 produces input',
+	async t => {
+		const ps = term('use-input-kitty', ['ctrlLetter']);
+		// Ctrl+a via codepoint 1 form (modifier 5 = ctrl(4) + 1)
+		ps.write('\u001B[1;5u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);

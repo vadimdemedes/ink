@@ -2227,6 +2227,7 @@ Available flags:
 When the kitty keyboard protocol is enabled, input handling changes in several ways:
 
 - **Non-printable keys produce empty input.** Keys like function keys (F1-F35), modifier-only keys (Shift, Control, Super), media keys, Caps Lock, Print Screen, and similar keys will not produce any text in the `input` parameter of `useInput`. They can still be detected via the `key` object properties.
+- **Ctrl+letter shortcuts work as expected.** When the terminal sends `Ctrl+letter` as codepoint 1-26 (the kitty CSI-u alternate form), `input` is set to the letter name (e.g. `'c'` for `Ctrl+C`) and `key.ctrl` is `true`. This ensures `exitOnCtrlC` and custom `Ctrl+letter` handlers continue to work regardless of which codepoint form the terminal uses.
 - **Key disambiguation.** The protocol allows the terminal to distinguish between keys that normally produce the same escape sequence. For example:
   - `Ctrl+I` vs `Tab` - without the protocol, both produce the same byte (`\x09`). With the protocol, they are reported as distinct keys.
   - `Shift+Enter` vs `Enter` - the shift modifier is correctly reported.

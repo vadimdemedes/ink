@@ -143,12 +143,10 @@ type ParsedKey = {
 	eventType?: 'press' | 'repeat' | 'release';
 	isKittyProtocol?: boolean;
 	text?: string;
-	/**
-	 * Whether this key represents printable text input.
-	 * When false, the key is a control/function/modifier key that should not
-	 * produce text input (e.g., arrows, function keys, capslock, media keys).
-	 * Only set by the kitty protocol parser.
-	 */
+	// Whether this key represents printable text input.
+	// When false, the key is a control/function/modifier key that should not
+	// produce text input (e.g., arrows, function keys, capslock, media keys).
+	// Only set by the kitty protocol parser.
 	isPrintable?: boolean;
 };
 
@@ -337,7 +335,7 @@ const parseKittyKeypress = (s: string): ParsedKey | null => {
 	if (!match) return null;
 
 	const codepoint = parseInt(match[1]!, 10);
-	const modifiers = match[2] ? parseInt(match[2], 10) - 1 : 0;
+	const modifiers = match[2] ? Math.max(0, parseInt(match[2], 10) - 1) : 0;
 	const eventType = match[3] ? parseInt(match[3], 10) : 1;
 	const textField = match[4];
 
@@ -402,7 +400,7 @@ const parseKittySpecialKey = (s: string): ParsedKey | null => {
 	if (!match) return null;
 
 	const number = parseInt(match[1]!, 10);
-	const modifiers = parseInt(match[2]!, 10) - 1;
+	const modifiers = Math.max(0, parseInt(match[2]!, 10) - 1);
 	const eventType = parseInt(match[3]!, 10);
 	const terminator = match[4]!;
 

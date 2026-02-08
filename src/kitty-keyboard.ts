@@ -1,7 +1,5 @@
-/**
- * Kitty keyboard protocol flags.
- * @see https://sw.kovidgoyal.net/kitty/keyboard-protocol/
- */
+// Kitty keyboard protocol flags.
+// @see https://sw.kovidgoyal.net/kitty/keyboard-protocol/
 export const kittyFlags = {
 	disambiguateEscapeCodes: 1,
 	reportEventTypes: 2,
@@ -10,14 +8,10 @@ export const kittyFlags = {
 	reportAssociatedText: 16,
 } as const;
 
-/**
- * Valid flag names for the kitty keyboard protocol.
- */
+// Valid flag names for the kitty keyboard protocol.
 export type KittyFlagName = keyof typeof kittyFlags;
 
-/**
- * Converts an array of flag names to the corresponding bitmask value.
- */
+// Converts an array of flag names to the corresponding bitmask value.
 export function resolveFlags(flags: KittyFlagName[]): number {
 	let result = 0;
 	for (const flag of flags) {
@@ -28,11 +22,9 @@ export function resolveFlags(flags: KittyFlagName[]): number {
 	return result;
 }
 
-/**
- * Kitty keyboard modifier bits.
- * These are used in the modifier parameter of CSI u sequences.
- * Note: The actual modifier value is (modifiers - 1) as per the protocol.
- */
+// Kitty keyboard modifier bits.
+// These are used in the modifier parameter of CSI u sequences.
+// Note: The actual modifier value is (modifiers - 1) as per the protocol.
 export const kittyModifiers = {
 	shift: 1,
 	alt: 2,
@@ -44,32 +36,22 @@ export const kittyModifiers = {
 	numLock: 128,
 } as const;
 
-/**
- * Options for configuring kitty keyboard protocol.
- */
+// Options for configuring kitty keyboard protocol.
 export type KittyKeyboardOptions = {
-	/**
-	 * Mode for kitty keyboard protocol support.
-	 * - 'auto': Attempt to detect terminal support (default)
-	 * - 'enabled': Force enable the protocol
-	 * - 'disabled': Never enable the protocol
-	 *
-	 * @default 'auto'
-	 */
+	// Mode for kitty keyboard protocol support.
+	// - 'auto': Attempt to detect terminal support (default)
+	// - 'enabled': Force enable the protocol
+	// - 'disabled': Never enable the protocol
 	mode?: 'auto' | 'enabled' | 'disabled';
 
-	/**
-	 * Protocol flags to request from the terminal.
-	 * Pass an array of flag name strings.
-	 *
-	 * Available flags:
-	 * - `'disambiguateEscapeCodes'` - Disambiguate escape codes (default)
-	 * - `'reportEventTypes'` - Report key press, repeat, and release events
-	 * - `'reportAlternateKeys'` - Report alternate key encodings
-	 * - `'reportAllKeysAsEscapeCodes'` - Report all keys as escape codes
-	 * - `'reportAssociatedText'` - Report associated text with key events
-	 *
-	 * @default ['disambiguateEscapeCodes']
-	 */
+	// Protocol flags to request from the terminal.
+	// Pass an array of flag name strings.
+	//
+	// Available flags:
+	// - 'disambiguateEscapeCodes' - Disambiguate escape codes (default)
+	// - 'reportEventTypes' - Report key press, repeat, and release events
+	// - 'reportAlternateKeys' - Report alternate key encodings
+	// - 'reportAllKeysAsEscapeCodes' - Report all keys as escape codes
+	// - 'reportAssociatedText' - Report associated text with key events
 	flags?: KittyFlagName[];
 };

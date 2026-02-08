@@ -208,7 +208,16 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			if (keypress.isKittyProtocol) {
 				// Use text-as-codepoints field for printable keys (needed when
 				// reportAllKeysAsEscapeCodes flag is enabled), suppress non-printable
-				input = keypress.isPrintable ? (keypress.text ?? keypress.name) : '';
+				if (keypress.isPrintable) {
+					input = keypress.text ?? keypress.name;
+				} else if (keypress.ctrl && keypress.name.length === 1) {
+					// Ctrl+letter via codepoint 1-26 form: not printable text, but
+					// the letter name must flow through so handlers (e.g. exitOnCtrlC
+					// checking `input === 'c' && key.ctrl`) still work.
+					input = keypress.name;
+				} else {
+					input = '';
+				}
 			} else if (keypress.ctrl) {
 				input = keypress.name;
 			} else {
