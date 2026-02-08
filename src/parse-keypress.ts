@@ -142,6 +142,13 @@ type ParsedKey = {
 	eventType?: 'press' | 'repeat' | 'release';
 	isKittyProtocol?: boolean;
 	text?: string;
+	/**
+	 * Whether this key represents printable text input.
+	 * When false, the key is a control/function/modifier key that should not
+	 * produce text input (e.g., arrows, function keys, capslock, media keys).
+	 * Only set by the kitty protocol parser.
+	 */
+	isPrintable?: boolean;
 };
 
 // Kitty keyboard protocol: CSI codepoint ; modifiers [: eventType] [; text-as-codepoints] u
@@ -315,15 +322,20 @@ const parseKittyKeypress = (s: string): ParsedKey | null => {
 
 	// Determine key name from codepoint
 	let name: string;
+	let isPrintable: boolean;
 	if (kittyCodepointNames[codepoint]) {
 		name = kittyCodepointNames[codepoint]!;
+		isPrintable = false;
 	} else if (codepoint === 32) {
 		name = 'space';
+		isPrintable = false;
 	} else if (codepoint >= 1 && codepoint <= 26) {
 		// Ctrl+letter comes as codepoint 1-26
 		name = String.fromCodePoint(codepoint + 96); // 'a' is 97
+		isPrintable = false;
 	} else {
 		name = safeFromCodePoint(codepoint).toLowerCase();
+		isPrintable = true;
 	}
 
 	return {
@@ -340,6 +352,7 @@ const parseKittyKeypress = (s: string): ParsedKey | null => {
 		sequence: s,
 		raw: s,
 		isKittyProtocol: true,
+		isPrintable,
 		text,
 	};
 };
@@ -378,15 +391,9 @@ const parseKittySpecialKey = (s: string): ParsedKey | null => {
 		sequence: s,
 		raw: s,
 		isKittyProtocol: true,
+		isPrintable: false,
 	};
 };
-
-// Modifier-only key names that should produce empty input
-export const kittyModifierKeyNames = new Set([
-	'leftshift', 'leftcontrol', 'leftalt', 'leftsuper', 'lefthyper', 'leftmeta',
-	'rightshift', 'rightcontrol', 'rightalt', 'rightsuper', 'righthyper', 'rightmeta',
-	'isoLevel3Shift', 'isoLevel5Shift',
-]);
 
 const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 	let parts;

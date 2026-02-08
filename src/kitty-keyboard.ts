@@ -11,6 +11,24 @@ export const kittyFlags = {
 } as const;
 
 /**
+ * Valid flag names for the kitty keyboard protocol.
+ */
+export type KittyFlagName = keyof typeof kittyFlags;
+
+/**
+ * Converts an array of flag names to the corresponding bitmask value.
+ */
+export const resolveFlags = (flags: KittyFlagName[]): number => {
+	let result = 0;
+	for (const flag of flags) {
+		// eslint-disable-next-line no-bitwise
+		result |= kittyFlags[flag];
+	}
+
+	return result;
+};
+
+/**
  * Kitty keyboard modifier bits.
  * These are used in the modifier parameter of CSI u sequences.
  * Note: The actual modifier value is (modifiers - 1) as per the protocol.
@@ -42,9 +60,16 @@ export type KittyKeyboardOptions = {
 
 	/**
 	 * Protocol flags to request from the terminal.
-	 * Uses `kittyFlags` constants.
+	 * Pass an array of flag name strings.
 	 *
-	 * @default kittyFlags.disambiguateEscapeCodes
+	 * Available flags:
+	 * - `'disambiguateEscapeCodes'` - Disambiguate escape codes (default)
+	 * - `'reportEventTypes'` - Report key press, repeat, and release events
+	 * - `'reportAlternateKeys'` - Report alternate key encodings
+	 * - `'reportAllKeysAsEscapeCodes'` - Report all keys as escape codes
+	 * - `'reportAssociatedText'` - Report associated text with key events
+	 *
+	 * @default ['disambiguateEscapeCodes']
 	 */
-	flags?: number;
+	flags?: KittyFlagName[];
 };
