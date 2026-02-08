@@ -123,6 +123,7 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
 - [argonaut](https://github.com/darksworm/argonaut) - Manage Argo CD resources.
 - [Qodo Command](https://github.com/qodo-ai/command) - Build, run, and manage AI agents.
 - [Nanocoder](https://github.com/nano-collective/nanocoder) - A community-built, local-first AI coding agent with multi-provider support.
+- [dev3000](https://github.com/vercel-labs/dev3000) - An AI agent MCP orchestrator and developer browser.
 - [Neovate Code](https://github.com/neovateai/neovate-code) - An agentic coding tool made by AntGroup.
 - [instagram-cli](https://github.com/supreme-gg-gg/instagram-cli) - Instagram client.
 - [ElevenLabs CLI](https://github.com/elevenlabs/cli) - ElevenLabs agents client.
