@@ -89,30 +89,35 @@ export type Key = {
 
 	/**
 	Super key (Cmd on Mac, Win on Windows) was pressed.
+
 	Only available with kitty keyboard protocol.
 	*/
 	super: boolean;
 
 	/**
 	Hyper key was pressed.
+
 	Only available with kitty keyboard protocol.
 	*/
 	hyper: boolean;
 
 	/**
 	Caps Lock is active.
+
 	Only available with kitty keyboard protocol.
 	*/
 	capsLock: boolean;
 
 	/**
 	Num Lock is active.
+
 	Only available with kitty keyboard protocol.
 	*/
 	numLock: boolean;
 
 	/**
 	Event type for key events.
+
 	Only available with kitty keyboard protocol.
 	*/
 	eventType?: 'press' | 'repeat' | 'release';
