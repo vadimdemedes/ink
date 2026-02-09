@@ -27,6 +27,87 @@ import {
 
 const noop = () => {};
 
+const kittyQueryEscapeByte = 0x1b;
+const kittyQueryOpenBracketByte = 0x5b;
+const kittyQueryQuestionMarkByte = 0x3f;
+const kittyQueryLetterByte = 0x75;
+const zeroByte = 0x30;
+const nineByte = 0x39;
+
+type KittyQueryResponseMatch =
+	| {state: 'complete'; endIndex: number}
+	| {state: 'partial'};
+
+const isDigitByte = (byte: number): boolean =>
+	byte >= zeroByte && byte <= nineByte;
+
+const matchKittyQueryResponse = (
+	buffer: number[],
+	startIndex: number,
+): KittyQueryResponseMatch | undefined => {
+	if (
+		buffer[startIndex] !== kittyQueryEscapeByte ||
+		buffer[startIndex + 1] !== kittyQueryOpenBracketByte ||
+		buffer[startIndex + 2] !== kittyQueryQuestionMarkByte
+	) {
+		return undefined;
+	}
+
+	let index = startIndex + 3;
+	const digitsStartIndex = index;
+	while (index < buffer.length && isDigitByte(buffer[index]!)) {
+		index++;
+	}
+
+	if (index === digitsStartIndex) {
+		return undefined;
+	}
+
+	if (index === buffer.length) {
+		return {state: 'partial'};
+	}
+
+	if (buffer[index] === kittyQueryLetterByte) {
+		return {state: 'complete', endIndex: index};
+	}
+
+	return undefined;
+};
+
+const hasCompleteKittyQueryResponse = (buffer: number[]): boolean => {
+	for (let index = 0; index < buffer.length; index++) {
+		const match = matchKittyQueryResponse(buffer, index);
+		if (match?.state === 'complete') {
+			return true;
+		}
+	}
+
+	return false;
+};
+
+const stripKittyQueryResponsesAndTrailingPartial = (
+	buffer: number[],
+): number[] => {
+	const keptBytes: number[] = [];
+	let index = 0;
+	while (index < buffer.length) {
+		const match = matchKittyQueryResponse(buffer, index);
+		if (match?.state === 'complete') {
+			index = match.endIndex + 1;
+			continue;
+		}
+
+		if (match?.state === 'partial') {
+			break;
+		}
+
+		keptBytes.push(buffer[index]!);
+		index++;
+	}
+
+	return keptBytes;
+};
+
 /**
 Performance metrics for a render operation.
 */
@@ -698,7 +779,7 @@ export default class Ink {
 	private confirmKittySupport(flags: KittyFlagName[]): void {
 		const {stdin, stdout} = this.options;
 
-		let responseBuffer = '';
+		let responseBuffer: number[] = [];
 
 		const cleanup = (): void => {
 			this.cancelKittyDetection = undefined;
@@ -708,20 +789,21 @@ export default class Ink {
 			// Re-emit any buffered data that wasn't the protocol response,
 			// so it isn't lost from Ink's normal input pipeline.
 			// Clear responseBuffer afterwards to make cleanup idempotent.
-			// eslint-disable-next-line no-control-regex
-			const remaining = responseBuffer.replace(/\u001B\[\?\d+u/, '');
-			responseBuffer = '';
-			if (remaining) {
+			const remaining =
+				stripKittyQueryResponsesAndTrailingPartial(responseBuffer);
+			responseBuffer = [];
+			if (remaining.length > 0) {
 				stdin.unshift(Buffer.from(remaining));
 			}
 		};
 
 		const onData = (data: Uint8Array | string): void => {
-			responseBuffer +=
-				typeof data === 'string' ? data : Buffer.from(data).toString();
+			const chunk = typeof data === 'string' ? Buffer.from(data) : data;
+			for (const byte of chunk) {
+				responseBuffer.push(byte);
+			}
 
-			// eslint-disable-next-line no-control-regex
-			if (/\u001B\[\?\d+u/.test(responseBuffer)) {
+			if (hasCompleteKittyQueryResponse(responseBuffer)) {
 				cleanup();
 				if (!this.isUnmounted) {
 					this.enableKittyProtocol(flags);

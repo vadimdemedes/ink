@@ -756,6 +756,233 @@ test.serial(
 	},
 );
 
+test.serial(
+	'kitty protocol - auto detection preserves split UTF-8 input bytes',
+	async t => {
+		const {stdout} = createFakeStdout();
+		const stdin = createFakeStdin();
+		const unshifted: Uint8Array[] = [];
+
+		const concatUint8Arrays = (chunks: Uint8Array[]): number[] => {
+			const merged: number[] = [];
+			for (const chunk of chunks) {
+				for (const byte of chunk) {
+					merged.push(byte);
+				}
+			}
+
+			return merged;
+		};
+
+		stdin.unshift = ((chunk: Uint8Array) => {
+			unshifted.push(Uint8Array.from(chunk));
+			return true;
+		}) as typeof stdin.unshift;
+
+		const origKittyId = process.env['KITTY_WINDOW_ID'];
+		process.env['KITTY_WINDOW_ID'] = '1';
+		t.teardown(() => {
+			if (origKittyId === undefined) {
+				delete process.env['KITTY_WINDOW_ID'];
+			} else {
+				process.env['KITTY_WINDOW_ID'] = origKittyId;
+			}
+		});
+
+		const {unmount} = render(<Text>Hello</Text>, {
+			stdout,
+			stdin,
+			kittyKeyboard: {mode: 'auto'},
+		});
+
+		// Emit one UTF-8 emoji split across chunks during detection.
+		stdin.emit('data', new Uint8Array([0xf0, 0x9f]));
+		stdin.emit('data', new Uint8Array([0x92, 0xa9]));
+
+		await new Promise(resolve => {
+			setTimeout(resolve, 250);
+		});
+
+		t.deepEqual(concatUint8Arrays(unshifted), [0xf0, 0x9f, 0x92, 0xa9]);
+		unmount();
+	},
+);
+
+test.serial(
+	'kitty protocol - auto detection timeout does not leak partial query response',
+	async t => {
+		const {stdout} = createFakeStdout();
+		const stdin = createFakeStdin();
+		const unshifted: Uint8Array[] = [];
+
+		stdin.unshift = ((chunk: Uint8Array) => {
+			unshifted.push(Uint8Array.from(chunk));
+			return true;
+		}) as typeof stdin.unshift;
+
+		const origKittyId = process.env['KITTY_WINDOW_ID'];
+		process.env['KITTY_WINDOW_ID'] = '1';
+		t.teardown(() => {
+			if (origKittyId === undefined) {
+				delete process.env['KITTY_WINDOW_ID'];
+			} else {
+				process.env['KITTY_WINDOW_ID'] = origKittyId;
+			}
+		});
+
+		const {unmount} = render(<Text>Hello</Text>, {
+			stdout,
+			stdin,
+			kittyKeyboard: {mode: 'auto'},
+		});
+
+		// Simulate partial terminal response that times out before completion.
+		stdin.emit('data', '\u001B[?1');
+
+		await new Promise(resolve => {
+			setTimeout(resolve, 250);
+		});
+
+		t.is(unshifted.length, 0);
+		unmount();
+	},
+);
+
+test.serial(
+	'kitty protocol - auto detection timeout preserves query prefix without digits',
+	async t => {
+		const {stdout, write} = createFakeStdout();
+		const stdin = createFakeStdin();
+		const unshifted: Uint8Array[] = [];
+
+		stdin.unshift = ((chunk: Uint8Array) => {
+			unshifted.push(Uint8Array.from(chunk));
+			return true;
+		}) as typeof stdin.unshift;
+
+		const origKittyId = process.env['KITTY_WINDOW_ID'];
+		process.env['KITTY_WINDOW_ID'] = '1';
+		t.teardown(() => {
+			if (origKittyId === undefined) {
+				delete process.env['KITTY_WINDOW_ID'];
+			} else {
+				process.env['KITTY_WINDOW_ID'] = origKittyId;
+			}
+		});
+
+		const {unmount} = render(<Text>Hello</Text>, {
+			stdout,
+			stdin,
+			kittyKeyboard: {mode: 'auto'},
+		});
+
+		stdin.emit('data', '\u001B[?');
+
+		await new Promise(resolve => {
+			setTimeout(resolve, 250);
+		});
+
+		const strings = getWrittenStrings(write);
+		const enableCount = strings.filter(s => s === '\u001B[>1u').length;
+		t.is(enableCount, 0);
+		t.deepEqual(
+			unshifted.map(chunk => [...chunk]),
+			[[0x1b, 0x5b, 0x3f]],
+		);
+		unmount();
+	},
+);
+
+test.serial(
+	'kitty protocol - auto detection ignores query response without digits',
+	async t => {
+		const {stdout, write} = createFakeStdout();
+		const stdin = createFakeStdin();
+		const unshifted: Uint8Array[] = [];
+
+		stdin.unshift = ((chunk: Uint8Array) => {
+			unshifted.push(Uint8Array.from(chunk));
+			return true;
+		}) as typeof stdin.unshift;
+
+		const origKittyId = process.env['KITTY_WINDOW_ID'];
+		process.env['KITTY_WINDOW_ID'] = '1';
+		t.teardown(() => {
+			if (origKittyId === undefined) {
+				delete process.env['KITTY_WINDOW_ID'];
+			} else {
+				process.env['KITTY_WINDOW_ID'] = origKittyId;
+			}
+		});
+
+		const {unmount} = render(<Text>Hello</Text>, {
+			stdout,
+			stdin,
+			kittyKeyboard: {mode: 'auto'},
+		});
+
+		stdin.emit('data', '\u001B[?u');
+
+		await new Promise(resolve => {
+			setTimeout(resolve, 250);
+		});
+
+		const strings = getWrittenStrings(write);
+		const enableCount = strings.filter(s => s === '\u001B[>1u').length;
+		t.is(enableCount, 0);
+		t.deepEqual(
+			unshifted.map(chunk => [...chunk]),
+			[[0x1b, 0x5b, 0x3f, 0x75]],
+		);
+		unmount();
+	},
+);
+
+test.serial(
+	'kitty protocol - auto detection preserves invalid query-like escape sequence',
+	async t => {
+		const {stdout, write} = createFakeStdout();
+		const stdin = createFakeStdin();
+		const unshifted: Uint8Array[] = [];
+
+		stdin.unshift = ((chunk: Uint8Array) => {
+			unshifted.push(Uint8Array.from(chunk));
+			return true;
+		}) as typeof stdin.unshift;
+
+		const origKittyId = process.env['KITTY_WINDOW_ID'];
+		process.env['KITTY_WINDOW_ID'] = '1';
+		t.teardown(() => {
+			if (origKittyId === undefined) {
+				delete process.env['KITTY_WINDOW_ID'];
+			} else {
+				process.env['KITTY_WINDOW_ID'] = origKittyId;
+			}
+		});
+
+		const {unmount} = render(<Text>Hello</Text>, {
+			stdout,
+			stdin,
+			kittyKeyboard: {mode: 'auto'},
+		});
+
+		stdin.emit('data', '\u001B[?1x');
+
+		await new Promise(resolve => {
+			setTimeout(resolve, 250);
+		});
+
+		const strings = getWrittenStrings(write);
+		const enableCount = strings.filter(s => s === '\u001B[>1u').length;
+		t.is(enableCount, 0);
+		t.deepEqual(
+			unshifted.map(chunk => [...chunk]),
+			[[0x1b, 0x5b, 0x3f, 0x31, 0x78]],
+		);
+		unmount();
+	},
+);
+
 // --- Space and return text input tests ---
 
 test('kitty protocol - space key has text field set to space character', t => {
