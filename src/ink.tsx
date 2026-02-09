@@ -19,6 +19,11 @@ import {bsu, esu, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
+import {
+	type KittyKeyboardOptions,
+	type KittyFlagName,
+	resolveFlags,
+} from './kitty-keyboard.js';
 
 const noop = () => {};
 
@@ -47,18 +52,19 @@ export type Options = {
 
 	/**
 	Enable React Concurrent Rendering mode.
-	
+
 	When enabled:
 	- Suspense boundaries work correctly with async data
 	- `useTransition` and `useDeferredValue` are fully functional
 	- Updates can be interrupted for higher priority work
 
 	Note: Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
-	
+
 	@default false
 	@experimental
 	*/
 	concurrent?: boolean;
+	kittyKeyboard?: KittyKeyboardOptions;
 };
 
 export default class Ink {
@@ -92,6 +98,8 @@ export default class Ink {
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
 	private readonly throttledOnRender?: DebouncedFunc<() => void>;
+	private kittyProtocolEnabled = false;
+	private cancelKittyDetection?: () => void;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -206,6 +214,8 @@ export default class Ink {
 				options.stdout.off('resize', this.resized);
 			};
 		}
+
+		this.initKittyKeyboard();
 	}
 
 	getTerminalWidth = () => {
@@ -534,6 +544,21 @@ export default class Ink {
 			throttledLog.flush();
 		}
 
+		// Cancel any in-progress auto-detection before checking protocol state
+		if (this.cancelKittyDetection) {
+			this.cancelKittyDetection();
+		}
+
+		if (this.kittyProtocolEnabled) {
+			try {
+				this.options.stdout.write('\u001B[<u');
+			} catch {
+				// Best-effort: stdout may already be destroyed during shutdown
+			}
+
+			this.kittyProtocolEnabled = false;
+		}
+
 		// CIs don't handle erasing ansi escapes well, so it's better to
 		// only render last frame of non-static output
 		if (isInCi) {
@@ -629,5 +654,92 @@ export default class Ink {
 				}
 			}
 		});
+	}
+
+	private initKittyKeyboard(): void {
+		// Protocol is opt-in: if kittyKeyboard is not specified, do nothing
+		if (!this.options.kittyKeyboard) {
+			return;
+		}
+
+		const opts = this.options.kittyKeyboard;
+		const mode = opts.mode ?? 'auto';
+
+		if (
+			mode === 'disabled' ||
+			!this.options.stdin.isTTY ||
+			!this.options.stdout.isTTY
+		) {
+			return;
+		}
+
+		const flags: KittyFlagName[] = opts.flags ?? ['disambiguateEscapeCodes'];
+
+		if (mode === 'enabled') {
+			this.enableKittyProtocol(flags);
+			return;
+		}
+
+		// Auto mode: use heuristic precheck, then confirm with protocol query
+		const term = process.env['TERM'] ?? '';
+		const termProgram = process.env['TERM_PROGRAM'] ?? '';
+
+		const isKnownSupportingTerminal =
+			'KITTY_WINDOW_ID' in process.env ||
+			term === 'xterm-kitty' ||
+			termProgram === 'WezTerm' ||
+			termProgram === 'ghostty';
+
+		if (!isInCi && isKnownSupportingTerminal) {
+			this.confirmKittySupport(flags);
+		}
+	}
+
+	private confirmKittySupport(flags: KittyFlagName[]): void {
+		const {stdin, stdout} = this.options;
+
+		let responseBuffer = '';
+
+		const cleanup = (): void => {
+			this.cancelKittyDetection = undefined;
+			clearTimeout(timer);
+			stdin.removeListener('data', onData);
+
+			// Re-emit any buffered data that wasn't the protocol response,
+			// so it isn't lost from Ink's normal input pipeline.
+			// Clear responseBuffer afterwards to make cleanup idempotent.
+			// eslint-disable-next-line no-control-regex
+			const remaining = responseBuffer.replace(/\u001B\[\?\d+u/, '');
+			responseBuffer = '';
+			if (remaining) {
+				stdin.unshift(Buffer.from(remaining));
+			}
+		};
+
+		const onData = (data: Uint8Array | string): void => {
+			responseBuffer +=
+				typeof data === 'string' ? data : Buffer.from(data).toString();
+
+			// eslint-disable-next-line no-control-regex
+			if (/\u001B\[\?\d+u/.test(responseBuffer)) {
+				cleanup();
+				if (!this.isUnmounted) {
+					this.enableKittyProtocol(flags);
+				}
+			}
+		};
+
+		// Attach listener before writing the query so that synchronous
+		// or immediate responses are not missed.
+		stdin.on('data', onData);
+		const timer = setTimeout(cleanup, 200);
+		this.cancelKittyDetection = cleanup;
+
+		stdout.write('\u001B[?u');
+	}
+
+	private enableKittyProtocol(flags: KittyFlagName[]): void {
+		this.options.stdout.write(`\u001B[>${resolveFlags(flags)}u`);
+		this.kittyProtocolEnabled = true;
 	}
 }

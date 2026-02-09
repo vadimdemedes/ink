@@ -86,6 +86,41 @@ export type Key = {
 	[Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 	*/
 	meta: boolean;
+
+	/**
+	Super key (Cmd on Mac, Win on Windows) was pressed.
+
+	Only available with kitty keyboard protocol.
+	*/
+	super: boolean;
+
+	/**
+	Hyper key was pressed.
+
+	Only available with kitty keyboard protocol.
+	*/
+	hyper: boolean;
+
+	/**
+	Caps Lock is active.
+
+	Only available with kitty keyboard protocol.
+	*/
+	capsLock: boolean;
+
+	/**
+	Num Lock is active.
+
+	Only available with kitty keyboard protocol.
+	*/
+	numLock: boolean;
+
+	/**
+	Event type for key events.
+
+	Only available with kitty keyboard protocol.
+	*/
+	eventType?: 'press' | 'repeat' | 'release';
 };
 
 type Handler = (input: string, key: Key) => void;
@@ -145,7 +180,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 		const handleData = (data: string) => {
 			const keypress = parseKeypress(data);
 
-			const key = {
+			const key: Key = {
 				upArrow: keypress.name === 'up',
 				downArrow: keypress.name === 'down',
 				leftArrow: keypress.name === 'left',
@@ -166,11 +201,38 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				// to avoid breaking changes in Ink.
 				// TODO(vadimdemedes): consider removing this in the next major version.
 				meta: keypress.meta || keypress.name === 'escape' || keypress.option,
+				// Kitty keyboard protocol modifiers
+				super: keypress.super ?? false,
+				hyper: keypress.hyper ?? false,
+				capsLock: keypress.capsLock ?? false,
+				numLock: keypress.numLock ?? false,
+				eventType: keypress.eventType,
 			};
 
-			let input = keypress.ctrl ? keypress.name : keypress.sequence;
+			let input: string;
+			if (keypress.isKittyProtocol) {
+				// Use text-as-codepoints field for printable keys (needed when
+				// reportAllKeysAsEscapeCodes flag is enabled), suppress non-printable
+				if (keypress.isPrintable) {
+					input = keypress.text ?? keypress.name;
+				} else if (keypress.ctrl && keypress.name.length === 1) {
+					// Ctrl+letter via codepoint 1-26 form: not printable text, but
+					// the letter name must flow through so handlers (e.g. exitOnCtrlC
+					// checking `input === 'c' && key.ctrl`) still work.
+					input = keypress.name;
+				} else {
+					input = '';
+				}
+			} else if (keypress.ctrl) {
+				input = keypress.name;
+			} else {
+				input = keypress.sequence;
+			}
 
-			if (nonAlphanumericKeys.includes(keypress.name)) {
+			if (
+				!keypress.isKittyProtocol &&
+				nonAlphanumericKeys.includes(keypress.name)
+			) {
 				input = '';
 			}
 

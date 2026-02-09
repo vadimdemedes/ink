@@ -1592,6 +1592,41 @@ Default: `false`
 
 [Meta key](https://en.wikipedia.org/wiki/Meta_key) was pressed.
 
+###### key.super
+
+Type: `boolean`\
+Default: `false`
+
+Super key (Cmd on macOS, Win on Windows) was pressed. Requires [kitty keyboard protocol](#kittykeyboard).
+
+###### key.hyper
+
+Type: `boolean`\
+Default: `false`
+
+Hyper key was pressed. Requires [kitty keyboard protocol](#kittykeyboard).
+
+###### key.capsLock
+
+Type: `boolean`\
+Default: `false`
+
+Caps Lock was active. Requires [kitty keyboard protocol](#kittykeyboard).
+
+###### key.numLock
+
+Type: `boolean`\
+Default: `false`
+
+Num Lock was active. Requires [kitty keyboard protocol](#kittykeyboard).
+
+###### key.eventType
+
+Type: `'press' | 'repeat' | 'release'`\
+Default: `undefined`
+
+The type of key event. Only available with [kitty keyboard protocol](#kittykeyboard). Without the protocol, this property is `undefined`.
+
 #### options
 
 Type: `object`
@@ -2139,6 +2174,65 @@ render(<MyApp />, {concurrent: true});
 ```
 
 **Note:** Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
+
+###### kittyKeyboard
+
+Type: `object`\
+Default: `undefined`
+
+Enable the [kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) for enhanced keyboard input handling. When enabled, terminals that support the protocol will report additional key information including `super`, `hyper`, `capsLock`, `numLock` modifiers and `eventType` (press/repeat/release).
+
+```jsx
+import {render} from 'ink';
+
+render(<MyApp />, {kittyKeyboard: {mode: 'auto'}});
+```
+
+```jsx
+import {render} from 'ink';
+
+render(<MyApp />, {
+	kittyKeyboard: {
+		mode: 'enabled',
+		flags: ['disambiguateEscapeCodes', 'reportEventTypes'],
+	},
+});
+```
+
+**kittyKeyboard.mode**
+
+Type: `'auto' | 'enabled' | 'disabled'`\
+Default: `'auto'`
+
+- `'auto'`: Detect terminal support using a heuristic precheck (known terminals like kitty, WezTerm, Ghostty) followed by a protocol query confirmation (`CSI ? u`). The protocol is only enabled if the terminal responds to the query within a short timeout.
+- `'enabled'`: Force enable the protocol. Both stdin and stdout must be TTYs.
+- `'disabled'`: Never enable the protocol.
+
+**kittyKeyboard.flags**
+
+Type: `string[]`\
+Default: `['disambiguateEscapeCodes']`
+
+Protocol flags to request from the terminal. Pass an array of flag name strings.
+
+Available flags:
+- `'disambiguateEscapeCodes'` - Disambiguate escape codes
+- `'reportEventTypes'` - Report key press, repeat, and release events
+- `'reportAlternateKeys'` - Report alternate key encodings
+- `'reportAllKeysAsEscapeCodes'` - Report all keys as escape codes
+- `'reportAssociatedText'` - Report associated text with key events
+
+**Behavior notes**
+
+When the kitty keyboard protocol is enabled, input handling changes in several ways:
+
+- **Non-printable keys produce empty input.** Keys like function keys (F1-F35), modifier-only keys (Shift, Control, Super), media keys, Caps Lock, Print Screen, and similar keys will not produce any text in the `input` parameter of `useInput`. They can still be detected via the `key` object properties.
+- **Ctrl+letter shortcuts work as expected.** When the terminal sends `Ctrl+letter` as codepoint 1-26 (the kitty CSI-u alternate form), `input` is set to the letter name (e.g. `'c'` for `Ctrl+C`) and `key.ctrl` is `true`. This ensures `exitOnCtrlC` and custom `Ctrl+letter` handlers continue to work regardless of which codepoint form the terminal uses.
+- **Key disambiguation.** The protocol allows the terminal to distinguish between keys that normally produce the same escape sequence. For example:
+  - `Ctrl+I` vs `Tab` - without the protocol, both produce the same byte (`\x09`). With the protocol, they are reported as distinct keys.
+  - `Shift+Enter` vs `Enter` - the shift modifier is correctly reported.
+  - `Escape` key vs `Ctrl+[` - these are disambiguated.
+- **Event types.** With the `reportEventTypes` flag, key press, repeat, and release events are distinguished via `key.eventType`.
 
 #### Instance
 
