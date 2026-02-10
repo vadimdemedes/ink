@@ -1,7 +1,7 @@
 import test from 'ava';
 import chalk from 'chalk';
 import boxen from 'boxen';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useState} from 'react';
 import {
 	Box,
 	Text,
@@ -252,6 +252,21 @@ test('captures initial render output before effect-driven state updates', t => {
 	t.is(output, 'Initial');
 });
 
+test('useLayoutEffect state updates are reflected in output', t => {
+	function App() {
+		const [text, setText] = useState('Initial');
+
+		useLayoutEffect(() => {
+			setText('Layout Updated');
+		}, []);
+
+		return <Text>{text}</Text>;
+	}
+
+	const output = renderToString(<App />);
+	t.is(output, 'Layout Updated');
+});
+
 test('runs effect cleanup on teardown', t => {
 	let cleanupRan = false;
 
@@ -272,18 +287,18 @@ test('runs effect cleanup on teardown', t => {
 
 // ── Error handling ──────────────────────────────────────
 
-test('component that throws returns empty string without crashing', t => {
+test('component that throws propagates the error', t => {
 	function Broken(): React.JSX.Element {
 		throw new Error('Component error');
 	}
 
-	const output = renderToString(<Broken />);
-	t.is(output, '');
+	t.throws(() => renderToString(<Broken />), {message: 'Component error'});
 });
 
-test('text outside Text component returns empty string without crashing', t => {
-	const output = renderToString(<Box>{'raw text'}</Box>);
-	t.is(output, '');
+test('text outside Text component throws', t => {
+	t.throws(() => renderToString(<Box>{'raw text'}</Box>), {
+		message: /must be rendered inside <Text>/,
+	});
 });
 
 test('subsequent calls work after a component error', t => {
@@ -291,7 +306,7 @@ test('subsequent calls work after a component error', t => {
 		throw new Error('Boom');
 	}
 
-	renderToString(<Broken />);
+	t.throws(() => renderToString(<Broken />));
 	const output = renderToString(<Text>Still works</Text>);
 	t.is(output, 'Still works');
 });

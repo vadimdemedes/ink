@@ -25,9 +25,10 @@ application.
 Useful for generating documentation, writing output to files, testing,
 or any scenario where you need the rendered output as a string.
 
-Note: `useEffect` callbacks will execute during rendering (due to synchronous
-rendering mode), but any state updates they trigger will not affect the returned
-output, which always reflects the initial render.
+Note: Effects execute during rendering due to synchronous mode. `useEffect`
+state updates will not affect the returned output, which reflects the initial
+render. However, `useLayoutEffect` fires during commit, so its state updates
+are processed immediately and will be reflected in the output.
 
 Terminal-specific hooks (`useInput`, `useStdin`, `useStdout`, `useStderr`,
 `useApp`, `useFocus`, `useFocusManager`) return default no-op values since
@@ -81,6 +82,12 @@ const renderToString = (
 		}
 	};
 
+	// Capture the first uncaught error so we can re-throw it after cleanup.
+	// React's reconciler catches component errors internally and reports them
+	// via onUncaughtError rather than letting them propagate. For a synchronous
+	// utility like renderToString, callers expect errors to throw.
+	let uncaughtError: unknown;
+
 	// Create a reconciler container in legacy (synchronous) mode.
 	// The four trailing callbacks are: onUncaughtError, onCaughtError,
 	// onRecoverableError, and onHostTransitionComplete.
@@ -92,7 +99,9 @@ const renderToString = (
 		false,
 		null,
 		'render-to-string',
-		() => {},
+		(error: unknown) => {
+			uncaughtError ??= error;
+		},
 		() => {},
 		() => {},
 		() => {},
@@ -118,6 +127,13 @@ const renderToString = (
 
 		// Free the root yoga node itself (children already freed by reconciler)
 		rootNode.yogaNode!.free();
+
+		// Re-throw after full cleanup so callers see the original error.
+		if (uncaughtError !== undefined) {
+			throw uncaughtError instanceof Error
+				? uncaughtError
+				: new Error(String(uncaughtError));
+		}
 
 		return capturedStaticOutput ? capturedStaticOutput + output : output;
 	} finally {
