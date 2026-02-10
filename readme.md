@@ -2254,6 +2254,14 @@ const output = renderToString(
 console.log(output);
 ```
 
+**Notes:**
+
+- Terminal-specific hooks (`useInput`, `useStdin`, `useStdout`, `useStderr`, `useApp`, `useFocus`, `useFocusManager`) return default no-op values since there is no terminal session. They will not throw, but they will not function as in a live terminal.
+- `useEffect` callbacks will execute during rendering (due to synchronous rendering mode), but state updates they trigger will not affect the returned output, which reflects the initial render.
+- `useLayoutEffect` callbacks fire synchronously during commit, so state updates they trigger **will** be reflected in the output.
+- The `<Static>` component is supported — its output is prepended to the dynamic output.
+- If a component throws during rendering, the error is propagated to the caller after cleanup.
+
 ##### tree
 
 Type: `ReactNode`
@@ -2275,14 +2283,6 @@ const output = renderToString(<Text>{'A'.repeat(100)}</Text>, {
 });
 // Text wraps at 40 columns
 ```
-
-**Notes:**
-
-- Terminal-specific hooks (`useInput`, `useStdin`, `useStdout`, `useStderr`, `useApp`, `useFocus`, `useFocusManager`) return default no-op values since there is no terminal session. They will not throw, but they will not function as in a live terminal.
-- `useEffect` callbacks will execute during rendering (due to synchronous rendering mode), but state updates they trigger will not affect the returned output, which reflects the initial render.
-- `useLayoutEffect` callbacks fire synchronously during commit, so state updates they trigger **will** be reflected in the output.
-- The `<Static>` component is supported — its output is prepended to the dynamic output.
-- If a component throws during rendering, the error is propagated to the caller after cleanup.
 
 #### Instance
 
