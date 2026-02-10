@@ -15,25 +15,17 @@ export type RenderToStringOptions = {
 };
 
 /**
-Render a React element to a string synchronously.
+Render a React element to a string synchronously. Unlike `render()`, this function does not write to stdout, does not set up any terminal event listeners, and returns the rendered output as a string.
 
-Unlike `render()`, this function does not write to stdout, does not set up
-any terminal event listeners, and returns the rendered output as a string.
-It captures the initial rendered frame without starting a persistent terminal
-application.
+Useful for generating documentation, writing output to files, testing, or any scenario where you need the rendered output as a string without starting a persistent terminal application.
 
-Useful for generating documentation, writing output to files, testing,
-or any scenario where you need the rendered output as a string.
+**Notes:**
 
-Note: Effects execute during rendering due to synchronous mode. `useEffect`
-state updates will not affect the returned output, which reflects the initial
-render. However, `useLayoutEffect` fires during commit, so its state updates
-are processed immediately and will be reflected in the output.
-
-Terminal-specific hooks (`useInput`, `useStdin`, `useStdout`, `useStderr`,
-`useApp`, `useFocus`, `useFocusManager`) return default no-op values since
-there is no terminal session. They will not throw, but they will not function
-as in a live terminal.
+- Terminal-specific hooks (`useInput`, `useStdin`, `useStdout`, `useStderr`, `useApp`, `useFocus`, `useFocusManager`) return default no-op values since there is no terminal session. They will not throw, but they will not function as in a live terminal.
+- `useEffect` callbacks will execute during rendering (due to synchronous rendering mode), but state updates they trigger will not affect the returned output, which reflects the initial render.
+- `useLayoutEffect` callbacks fire synchronously during commit, so state updates they trigger **will** be reflected in the output.
+- The `<Static>` component is supported — its output is prepended to the dynamic output.
+- If a component throws during rendering, the error is propagated to the caller after cleanup.
 
 @example
 ```
@@ -135,7 +127,18 @@ const renderToString = (
 				: new Error(String(uncaughtError));
 		}
 
-		return capturedStaticOutput ? capturedStaticOutput + output : output;
+		// The renderer appends a trailing newline to static output for terminal
+		// rendering (so dynamic output starts on a fresh line). Strip it here
+		// so renderToString returns clean output.
+		const normalizedStaticOutput = capturedStaticOutput.endsWith('\n')
+			? capturedStaticOutput.slice(0, -1)
+			: capturedStaticOutput;
+
+		if (normalizedStaticOutput && output) {
+			return normalizedStaticOutput + '\n' + output;
+		}
+
+		return normalizedStaticOutput || output;
 	} finally {
 		// Ensure native Yoga memory is freed even if rendering or teardown threw.
 		// Yoga nodes are WASM-backed and not garbage collected.

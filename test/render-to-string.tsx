@@ -235,6 +235,31 @@ test('render Static component with items', t => {
 	t.is(output, 'A\nB\nC\nDynamic');
 });
 
+test('render static-only output has no trailing newline', t => {
+	const items = ['A', 'B'];
+
+	const output = renderToString(
+		<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>,
+	);
+
+	t.is(output, 'A\nB');
+});
+
+test('render static + dynamic output has exactly one newline between parts', t => {
+	const items = ['A', 'B'];
+
+	const output = renderToString(
+		<Box flexDirection="column">
+			<Static items={items}>
+				{item => <Text key={item}>{item}</Text>}
+			</Static>
+			<Text>Dynamic</Text>
+		</Box>,
+	);
+
+	t.is(output, 'A\nB\nDynamic');
+});
+
 // ── Effect behavior ─────────────────────────────────────
 
 test('captures initial render output before effect-driven state updates', t => {
