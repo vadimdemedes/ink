@@ -127,6 +127,20 @@ test.serial('useInput - handle meta', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - flushes ESC[ prefix as literal input', async t => {
+	const ps = term('use-input', ['escapeBracketPrefix']);
+	ps.write('\u001B[');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle meta + O with pending flush', async t => {
+	const ps = term('use-input', ['metaUpperO']);
+	ps.write('\u001BO');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - handle up arrow', async t => {
 	const ps = term('use-input', ['upArrow']);
 	ps.write('\u001B[A');
@@ -154,6 +168,16 @@ test.serial('useInput - handle right arrow', async t => {
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
+
+test.serial(
+	'useInput - handles rapid arrows and enter in one chunk',
+	async t => {
+		const ps = term('use-input', ['rapidArrowsEnter']);
+		ps.write('\u001B[B\u001B[B\u001B[B\r');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
 
 test.serial('useInput - handle meta + up arrow', async t => {
 	const ps = term('use-input', ['upArrowMeta']);

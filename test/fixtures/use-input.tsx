@@ -4,8 +4,45 @@ import {render, useInput, useApp} from '../../src/index.js';
 
 function UserInput({test}: {readonly test: string | undefined}) {
 	const {exit} = useApp();
+	const rapidDownArrowCountRef = React.useRef(0);
+
+	React.useEffect(() => {
+		if (test !== 'rapidArrowsEnter') {
+			return;
+		}
+
+		const timeout = setTimeout(() => {
+			throw new Error(
+				`Expected 3 down arrows and enter, received ${rapidDownArrowCountRef.current} down arrow events`,
+			);
+		}, 6000);
+
+		return () => {
+			clearTimeout(timeout);
+		};
+	}, [test]);
 
 	useInput((input, key) => {
+		if (test === 'rapidArrowsEnter') {
+			if (key.downArrow) {
+				rapidDownArrowCountRef.current++;
+				return;
+			}
+
+			if (key.return) {
+				if (rapidDownArrowCountRef.current === 3) {
+					exit();
+					return;
+				}
+
+				throw new Error(
+					`Expected enter after 3 down arrows, received ${rapidDownArrowCountRef.current}`,
+				);
+			}
+
+			throw new Error('Expected only down arrows and enter');
+		}
+
 		if (test === 'lowercase' && input === 'q') {
 			exit();
 			return;
@@ -42,6 +79,16 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		if (test === 'meta' && input === 'm' && key.meta) {
+			exit();
+			return;
+		}
+
+		if (test === 'escapeBracketPrefix' && input === '[' && !key.meta) {
+			exit();
+			return;
+		}
+
+		if (test === 'metaUpperO' && input === 'O' && key.meta) {
 			exit();
 			return;
 		}

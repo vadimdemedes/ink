@@ -10,6 +10,7 @@ import React, {
 } from 'react';
 import cliCursor from 'cli-cursor';
 import {type CursorPosition} from '../log-update.js';
+import {createInputParser} from '../input-parser.js';
 import AppContext from './AppContext.js';
 import StdinContext from './StdinContext.js';
 import StdoutContext from './StdoutContext.js';
@@ -72,27 +73,48 @@ function App({
 	internal_eventEmitter.current.setMaxListeners(Infinity);
 	// Store the currently attached readable listener to avoid stale closure issues
 	const readableListenerRef = useRef<(() => void) | undefined>(undefined);
+	const inputParserRef = useRef(createInputParser());
+	const pendingInputFlushRef = useRef<NodeJS.Immediate | undefined>(undefined);
+
+	const clearPendingInputFlush = useCallback((): void => {
+		if (!pendingInputFlushRef.current) {
+			return;
+		}
+
+		clearImmediate(pendingInputFlushRef.current);
+		pendingInputFlushRef.current = undefined;
+	}, []);
 
 	// Determines if TTY is supported on the provided stdin
 	const isRawModeSupported = stdin.isTTY;
 
+	const detachReadableListener = useCallback((): void => {
+		if (!readableListenerRef.current) {
+			return;
+		}
+
+		stdin.removeListener('readable', readableListenerRef.current);
+		readableListenerRef.current = undefined;
+	}, [stdin]);
+
+	const disableRawMode = useCallback((): void => {
+		stdin.setRawMode(false);
+		detachReadableListener();
+		stdin.unref();
+		rawModeEnabledCount.current = 0;
+		inputParserRef.current.reset();
+		clearPendingInputFlush();
+	}, [stdin, detachReadableListener, clearPendingInputFlush]);
+
 	const handleExit = useCallback(
 		(error?: Error): void => {
-			// Disable raw mode on exit - inline to avoid circular dependency
 			if (isRawModeSupported && rawModeEnabledCount.current > 0) {
-				stdin.setRawMode(false);
-				if (readableListenerRef.current) {
-					stdin.removeListener('readable', readableListenerRef.current);
-					readableListenerRef.current = undefined;
-				}
-
-				stdin.unref();
-				rawModeEnabledCount.current = 0;
+				disableRawMode();
 			}
 
 			onExit(error);
 		},
-		[isRawModeSupported, stdin, onExit],
+		[isRawModeSupported, disableRawMode, onExit],
 	);
 
 	const handleInput = useCallback(
@@ -118,14 +140,42 @@ function App({
 		[exitOnCtrlC, handleExit],
 	);
 
+	const emitInput = useCallback(
+		(input: string): void => {
+			handleInput(input);
+			internal_eventEmitter.current.emit('input', input);
+		},
+		[handleInput],
+	);
+
+	const schedulePendingInputFlush = useCallback((): void => {
+		clearPendingInputFlush();
+		pendingInputFlushRef.current = setImmediate(() => {
+			pendingInputFlushRef.current = undefined;
+			const pendingEscape = inputParserRef.current.flushPendingEscape();
+			if (!pendingEscape) {
+				return;
+			}
+
+			emitInput(pendingEscape);
+		});
+	}, [clearPendingInputFlush, emitInput]);
+
 	const handleReadable = useCallback((): void => {
+		clearPendingInputFlush();
 		let chunk;
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		while ((chunk = stdin.read() as string | null) !== null) {
-			handleInput(chunk);
-			internal_eventEmitter.current.emit('input', chunk);
+			const inputEvents = inputParserRef.current.push(chunk);
+			for (const input of inputEvents) {
+				emitInput(input);
+			}
 		}
-	}, [stdin, handleInput]);
+
+		if (inputParserRef.current.hasPendingEscape()) {
+			schedulePendingInputFlush();
+		}
+	}, [stdin, emitInput, clearPendingInputFlush, schedulePendingInputFlush]);
 
 	const handleSetRawMode = useCallback(
 		(isEnabled: boolean): void => {
@@ -158,17 +208,15 @@ function App({
 			}
 
 			// Disable raw mode only when no components left that are using it
-			if (--rawModeEnabledCount.current === 0) {
-				stdin.setRawMode(false);
-				if (readableListenerRef.current) {
-					stdin.removeListener('readable', readableListenerRef.current);
-					readableListenerRef.current = undefined;
-				}
+			if (rawModeEnabledCount.current === 0) {
+				return;
+			}
 
-				stdin.unref();
+			if (--rawModeEnabledCount.current === 0) {
+				disableRawMode();
 			}
 		},
-		[isRawModeSupported, stdin, handleReadable],
+		[isRawModeSupported, stdin, handleReadable, disableRawMode],
 	);
 
 	// Focus navigation helpers
@@ -386,19 +434,11 @@ function App({
 	useEffect(() => {
 		return () => {
 			cliCursor.show(stdout);
-
-			// Disable raw mode on unmount if supported
 			if (isRawModeSupported && rawModeEnabledCount.current > 0) {
-				stdin.setRawMode(false);
-				if (readableListenerRef.current) {
-					stdin.removeListener('readable', readableListenerRef.current);
-					readableListenerRef.current = undefined;
-				}
-
-				stdin.unref();
+				disableRawMode();
 			}
 		};
-	}, [stdout, stdin, isRawModeSupported]);
+	}, [stdout, isRawModeSupported, disableRawMode]);
 
 	// Memoize context values to prevent unnecessary re-renders
 	const appContextValue = useMemo(
