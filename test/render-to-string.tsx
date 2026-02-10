@@ -250,9 +250,7 @@ test('render static + dynamic output has exactly one newline between parts', t =
 
 	const output = renderToString(
 		<Box flexDirection="column">
-			<Static items={items}>
-				{item => <Text key={item}>{item}</Text>}
-			</Static>
+			<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
 			<Text>Dynamic</Text>
 		</Box>,
 	);
