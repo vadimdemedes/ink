@@ -2234,6 +2234,54 @@ When the kitty keyboard protocol is enabled, input handling changes in several w
   - `Escape` key vs `Ctrl+[` - these are disambiguated.
 - **Event types.** With the `reportEventTypes` flag, key press, repeat, and release events are distinguished via `key.eventType`.
 
+#### renderToString(tree, options?)
+
+Returns: `string`
+
+Render a React element to a string synchronously. Unlike `render()`, this function does not write to stdout, does not set up any terminal event listeners, and returns the rendered output as a string.
+
+Useful for generating documentation, writing output to files, testing, or any scenario where you need the rendered output as a string without starting a persistent terminal application.
+
+```jsx
+import {renderToString, Text, Box} from 'ink';
+
+const output = renderToString(
+	<Box padding={1}>
+		<Text color="green">Hello World</Text>
+	</Box>,
+);
+
+console.log(output);
+```
+
+##### tree
+
+Type: `ReactNode`
+
+##### options
+
+Type: `object`
+
+###### columns
+
+Type: `number`\
+Default: `80`
+
+Width of the virtual terminal in columns. Controls where text wrapping occurs.
+
+```jsx
+const output = renderToString(<Text>{'A'.repeat(100)}</Text>, {
+	columns: 40,
+});
+// Text wraps at 40 columns
+```
+
+**Notes:**
+
+- Terminal-specific hooks (`useInput`, `useStdin`, `useStdout`, `useStderr`, `useApp`, `useFocus`, `useFocusManager`) return default no-op values since there is no terminal session. They will not throw, but they will not function as in a live terminal.
+- `useEffect` callbacks will execute during rendering (due to synchronous rendering mode), but the returned output always reflects the initial render.
+- The `<Static>` component is supported — its output is prepended to the dynamic output.
+
 #### Instance
 
 This is the object that `render()` returns.
