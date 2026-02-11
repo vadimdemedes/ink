@@ -107,7 +107,7 @@ function Item({label, autoFocus, disabled = false}: ItemProps) {
 	);
 }
 
-test('dont focus on register when auto focus is off', async t => {
+test('do not focus on register when auto focus is off', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	render(<Test />, {
@@ -420,7 +420,7 @@ test('manually focus previous component', async t => {
 	);
 });
 
-test('doesnt crash when focusing next on unmounted children', async t => {
+test('does not crash when focusing next on unmounted children', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	const {rerender} = render(<Test autoFocus />, {
@@ -436,7 +436,7 @@ test('doesnt crash when focusing next on unmounted children', async t => {
 	t.is((stdout.write as any).lastCall.args[0], '');
 });
 
-test('doesnt crash when focusing previous on unmounted children', async t => {
+test('does not crash when focusing previous on unmounted children', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	const {rerender} = render(<Test autoFocus />, {

@@ -1585,6 +1585,16 @@ Default: `false`
 If the Page Up or Page Down key was pressed, the corresponding property will be `true`.
 For example, if the user presses Page Down, `key.pageDown` equals `true`.
 
+###### key.home
+
+###### key.end
+
+Type: `boolean`\
+Default: `false`
+
+If the Home or End key was pressed, the corresponding property will be `true`.
+For example, if the user presses End, `key.end` equals `true`.
+
 ###### key.meta
 
 Type: `boolean`\
@@ -2079,7 +2089,7 @@ Mount a component and render the output.
 
 ##### tree
 
-Type: `ReactElement`
+Type: `ReactNode`
 
 ##### options
 
@@ -2131,6 +2141,13 @@ Type: `({renderTime: number}) => void`\
 Default: `undefined`
 
 Runs the given callback after each render and re-render with a metrics object.
+
+###### isScreenReaderEnabled
+
+Type: `boolean`\
+Default: `process.env['INK_SCREEN_READER'] === 'true'`
+
+Enable screen reader support. See [Screen Reader Support](#screen-reader-support).
 
 ###### debug
 
@@ -2294,7 +2311,7 @@ Replace the previous root node with a new one or update the props of the current
 
 ###### tree
 
-Type: `ReactElement`
+Type: `ReactNode`
 
 ```jsx
 // Update props of the root node
@@ -2326,6 +2343,12 @@ setTimeout(unmount, 1000);
 
 await waitUntilExit(); // resolves after `unmount()` is called
 ```
+
+##### cleanup()
+
+Delete the internal Ink instance associated with the current `stdout`.
+This is mostly useful for advanced cases (for example, tests) where you need `render()` to create a fresh instance for the same stream.
+This does not unmount the current app.
 
 ##### clear()
 

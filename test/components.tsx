@@ -224,7 +224,7 @@ test('fail when <Box> is inside <Text> component', t => {
 	t.is((error as any).message, '<Box> can’t be nested inside <Text> component');
 });
 
-test('remesure text dimensions on text change', t => {
+test('remeasure text dimensions on text change', t => {
 	const stdout = createStdout();
 
 	const {rerender} = render(

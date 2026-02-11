@@ -31,7 +31,7 @@ test('grow one element', t => {
 	t.is(output, 'A    B');
 });
 
-test('dont shrink', t => {
+test('do not shrink', t => {
 	const output = renderToString(
 		<Box width={16}>
 			<Box flexShrink={0} width={6}>
