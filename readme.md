@@ -157,6 +157,7 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
 - [Useful Components](#useful-components)
 - [Useful Hooks](#useful-hooks)
 - [Examples](#examples)
+- [Continuous Integration](#continuous-integration)
 
 ## Getting Started
 
@@ -2588,6 +2589,19 @@ npm run example examples/[example name]
 - [Write to stderr](examples/use-stderr/use-stderr.tsx) - Write to stderr, bypassing main Ink output.
 - [Static](examples/static/static.tsx) - Use the `<Static>` component to render permanent output.
 - [Child process](examples/subprocess-output) - Renders output from a child process.
+
+## Continuous Integration
+
+When running on CI (detected via the `CI` environment variable), Ink adapts its rendering:
+
+- Only the last frame is rendered on exit, instead of continuously updating the terminal. This is because most CI environments don't support the ANSI escape sequences used to overwrite previous output.
+- Terminal resize events are not listened to.
+
+If your CI environment supports full terminal rendering and you want to opt out of this behavior, set `CI=false`:
+
+```sh
+CI=false node my-cli.js
+```
 
 ## Maintainers
 
