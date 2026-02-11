@@ -156,6 +156,7 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
 - [Screen Reader Support](#screen-reader-support)
 - [Useful Components](#useful-components)
 - [Useful Hooks](#useful-hooks)
+- [Recipes](#recipes)
 - [Examples](#examples)
 
 ## Getting Started
@@ -2569,6 +2570,61 @@ For a practical example of building an accessible component, see the [ARIA examp
 
 - [ink-use-stdout-dimensions](https://github.com/cameronhunter/ink-monorepo/tree/master/packages/ink-use-stdout-dimensions) - Subscribe to stdout dimensions.
 
+## Recipes
+
+### Routing with React Router
+
+[React Router](https://reactrouter.com) can be used for routing in Ink apps via its [`MemoryRouter`](https://reactrouter.com/api/declarative-routers/MemoryRouter). Unlike `BrowserRouter`, `MemoryRouter` doesn't rely on the browser's history API, storing the navigation stack in memory instead — which is exactly what a terminal app needs.
+
+```tsx
+import React from 'react';
+import {MemoryRouter, Routes, Route, useNavigate} from 'react-router';
+import {render, useInput, Text} from 'ink';
+
+function Home() {
+	const navigate = useNavigate();
+
+	useInput((input, key) => {
+		if (key.return) {
+			navigate('/about');
+		}
+	});
+
+	return <Text>Home. Press Enter to go to About.</Text>;
+}
+
+function About() {
+	const navigate = useNavigate();
+
+	useInput((input, key) => {
+		if (key.return) {
+			navigate('/');
+		}
+	});
+
+	return <Text>About. Press Enter to go back Home.</Text>;
+}
+
+function App() {
+	return (
+		<MemoryRouter>
+			<Routes>
+				<Route path="/" element={<Home />} />
+				<Route path="/about" element={<About />} />
+			</Routes>
+		</MemoryRouter>
+	);
+}
+
+render(<App />);
+```
+
+Things to keep in mind:
+
+- `<Link>` can't be used in Ink since it renders an `<a>` tag. Use the `useNavigate` hook for all navigation instead.
+- `MemoryRouter` starts at `"/"` by default. Set the `initialEntries` prop to start at a different route.
+- Terminal routing is an abstraction for conditional rendering — routes aren't URLs, they're just screen states.
+
 ## Examples
 
 The [`examples`](/examples) directory contains a set of real examples. You can run them with:
@@ -2590,6 +2646,7 @@ npm run example examples/[example name]
 - [Write to stderr](examples/use-stderr/use-stderr.tsx) - Write to stderr, bypassing main Ink output.
 - [Static](examples/static/static.tsx) - Use the `<Static>` component to render permanent output.
 - [Child process](examples/subprocess-output) - Renders output from a child process.
+- [Router](examples/router/router.tsx) - Navigate between routes using React Router's `MemoryRouter`.
 
 ## Maintainers
 
