@@ -156,7 +156,9 @@ export default class Ink {
 
 	private readonly options: Options;
 	private readonly log: LogUpdate;
-	private cursorPosition: CursorPosition | undefined;
+	private manualCursorPosition: CursorPosition | undefined;
+	private renderedCursorPosition: CursorPosition | undefined;
+	private renderedCursorRequested: boolean;
 	private readonly throttledLog:
 		| LogUpdate
 		| DebouncedFunc<(output: string) => void>;
@@ -214,7 +216,9 @@ export default class Ink {
 		this.log = logUpdate.create(options.stdout, {
 			incremental: options.incrementalRendering,
 		});
-		this.cursorPosition = undefined;
+		this.manualCursorPosition = undefined;
+		this.renderedCursorPosition = undefined;
+		this.renderedCursorRequested = false;
 		this.throttledLog = unthrottled
 			? this.log
 			: throttle(
@@ -330,15 +334,23 @@ export default class Ink {
 	rejectExitPromise: (reason?: Error) => void = () => {};
 	unsubscribeExit: () => void = () => {};
 
+	getActiveCursorPosition = (): CursorPosition | undefined => {
+		if (this.renderedCursorRequested) {
+			return this.renderedCursorPosition;
+		}
+
+		return this.manualCursorPosition;
+	};
+
 	setCursorPosition = (position: CursorPosition | undefined): void => {
-		this.cursorPosition = position;
-		this.log.setCursorPosition(position);
+		this.manualCursorPosition = position;
+		this.log.setCursorPosition(this.getActiveCursorPosition());
 	};
 
 	restoreLastOutput = (): void => {
 		// Clear() resets log-update's cursor state, so replay the latest cursor intent
 		// before restoring output after external stdout/stderr writes.
-		this.log.setCursorPosition(this.cursorPosition);
+		this.log.setCursorPosition(this.getActiveCursorPosition());
 		this.log(this.lastOutputToRender || this.lastOutput + '\n');
 	};
 
@@ -360,10 +372,16 @@ export default class Ink {
 		}
 
 		const startTime = performance.now();
-		const {output, outputHeight, staticOutput} = render(
-			this.rootNode,
-			this.isScreenReaderEnabled,
-		);
+		const {
+			output,
+			outputHeight,
+			staticOutput,
+			cursorRequested,
+			cursorPosition,
+		} = render(this.rootNode, this.isScreenReaderEnabled);
+		this.renderedCursorRequested = cursorRequested;
+		this.renderedCursorPosition = cursorPosition;
+		this.log.setCursorPosition(this.getActiveCursorPosition());
 
 		this.options.onRender?.({renderTime: performance.now() - startTime});
 

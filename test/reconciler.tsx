@@ -1,7 +1,7 @@
 import React, {Suspense} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
-import {Box, Text, render} from '../src/index.js';
+import {Box, Cursor, Text, render} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
 test('update child', t => {
@@ -180,6 +180,64 @@ test('insert child between other children', t => {
 			<Text>A</Text>
 			<Text>B</Text>
 			<Text>C</Text>
+		</Box>,
+	);
+
+	t.is(
+		(stdoutActual.write as any).lastCall.args[0],
+		(stdoutExpected.write as any).lastCall.args[0],
+	);
+});
+
+test('insert child before existing sibling when cursor marker is present', t => {
+	function Test({insert}: {readonly insert?: boolean}) {
+		if (insert) {
+			return (
+				<Box flexDirection="row">
+					<Cursor key="cursor" x={0} />
+					<Text key="a">A</Text>
+					<Text key="b">B</Text>
+				</Box>
+			);
+		}
+
+		return (
+			<Box flexDirection="row">
+				<Cursor key="cursor" x={0} />
+				<Text key="b">B</Text>
+			</Box>
+		);
+	}
+
+	const stdoutActual = createStdout();
+	const stdoutExpected = createStdout();
+
+	const actual = render(<Test />, {
+		stdout: stdoutActual,
+		debug: true,
+	});
+
+	const expected = render(
+		<Box flexDirection="row">
+			<Text>B</Text>
+		</Box>,
+		{
+			stdout: stdoutExpected,
+			debug: true,
+		},
+	);
+
+	t.is(
+		(stdoutActual.write as any).lastCall.args[0],
+		(stdoutExpected.write as any).lastCall.args[0],
+	);
+
+	actual.rerender(<Test insert />);
+
+	expected.rerender(
+		<Box flexDirection="row">
+			<Text>A</Text>
+			<Text>B</Text>
 		</Box>,
 	);
 

@@ -8,6 +8,7 @@ import renderBorder from './render-border.js';
 import renderBackground from './render-background.js';
 import {type DOMElement} from './dom.js';
 import type Output from './output.js';
+import {getAbsoluteContentPosition} from './layout.js';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.
@@ -27,7 +28,67 @@ const applyPaddingToText = (node: DOMElement, text: string): string => {
 	return text;
 };
 
+const findRootNode = (node: DOMElement): DOMElement => {
+	let currentNode = node;
+
+	while (currentNode.parentNode) {
+		currentNode = currentNode.parentNode;
+	}
+
+	return currentNode;
+};
+
+const findNodeByReference = (
+	node: DOMElement,
+	reference: unknown,
+): DOMElement | undefined => {
+	if (node.internal_ref === reference) {
+		return node;
+	}
+
+	for (const childNode of node.childNodes) {
+		if (childNode.nodeName === '#text') {
+			continue;
+		}
+
+		const matchedNode = findNodeByReference(childNode, reference);
+		if (matchedNode) {
+			return matchedNode;
+		}
+	}
+
+	return undefined;
+};
+
+const isNodeHidden = (node: DOMElement): boolean =>
+	(node.internal_hidden ?? false) ||
+	node.yogaNode?.getDisplay() === Yoga.DISPLAY_NONE;
+
+const isNodeOrAncestorHidden = (node: DOMElement): boolean => {
+	let currentNode: DOMElement | undefined = node;
+
+	while (currentNode) {
+		if (isNodeHidden(currentNode)) {
+			return true;
+		}
+
+		currentNode = currentNode.parentNode;
+	}
+
+	return false;
+};
+
 export type OutputTransformer = (s: string, index: number) => string;
+
+export type CursorOutputPosition = {
+	x: number;
+	y: number;
+};
+
+export type RenderState = {
+	cursorRequested: boolean;
+	cursorPosition: CursorOutputPosition | undefined;
+};
 
 export const renderNodeToScreenReaderOutput = (
 	node: DOMElement,
@@ -37,6 +98,10 @@ export const renderNodeToScreenReaderOutput = (
 	} = {},
 ): string => {
 	if (options.skipStaticElements && node.internal_static) {
+		return '';
+	}
+
+	if (node.internal_hidden) {
 		return '';
 	}
 
@@ -105,6 +170,7 @@ const renderNodeToOutput = (
 		offsetY?: number;
 		transformers?: OutputTransformer[];
 		skipStaticElements: boolean;
+		renderState?: RenderState;
 	},
 ) => {
 	const {
@@ -112,9 +178,56 @@ const renderNodeToOutput = (
 		offsetY = 0,
 		transformers = [],
 		skipStaticElements,
+		renderState,
 	} = options;
 
 	if (skipStaticElements && node.internal_static) {
+		return;
+	}
+
+	if (node.internal_hidden) {
+		return;
+	}
+
+	if (node.nodeName === 'ink-cursor') {
+		if (!renderState) {
+			return;
+		}
+
+		renderState.cursorRequested = true;
+
+		const marker = node.internal_cursor;
+		if (!marker) {
+			renderState.cursorPosition = undefined;
+			return;
+		}
+
+		const anchorNode =
+			marker.anchorRef?.current ??
+			(marker.anchorRef
+				? findNodeByReference(findRootNode(node), marker.anchorRef)
+				: undefined);
+		const resolvedAnchorNode = marker.anchorRef ? anchorNode : node.parentNode;
+		if (!resolvedAnchorNode) {
+			renderState.cursorPosition = undefined;
+			return;
+		}
+
+		if (marker.anchorRef && isNodeOrAncestorHidden(resolvedAnchorNode)) {
+			renderState.cursorPosition = undefined;
+			return;
+		}
+
+		const anchorPosition = getAbsoluteContentPosition(resolvedAnchorNode);
+		if (!anchorPosition) {
+			renderState.cursorPosition = undefined;
+			return;
+		}
+
+		renderState.cursorPosition = {
+			x: anchorPosition.x + marker.x,
+			y: anchorPosition.y + marker.y,
+		};
 		return;
 	}
 
@@ -201,6 +314,7 @@ const renderNodeToOutput = (
 					offsetY: y,
 					transformers: newTransformers,
 					skipStaticElements,
+					renderState,
 				});
 			}
 

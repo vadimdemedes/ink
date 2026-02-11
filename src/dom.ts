@@ -17,9 +17,21 @@ export type ElementNames =
 	| 'ink-root'
 	| 'ink-box'
 	| 'ink-text'
+	| 'ink-cursor'
 	| 'ink-virtual-text';
 
 export type NodeNames = ElementNames | TextName;
+
+export type CursorAnchorRef = {
+	// eslint-disable-next-line @typescript-eslint/ban-types
+	readonly current: DOMElement | undefined | null;
+};
+
+export type CursorMarker = {
+	x: number;
+	y: number;
+	anchorRef?: CursorAnchorRef;
+};
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export type DOMElement = {
@@ -27,6 +39,9 @@ export type DOMElement = {
 	attributes: Record<string, DOMNodeAttribute>;
 	childNodes: DOMNode[];
 	internal_transform?: OutputTransformer;
+	internal_cursor?: CursorMarker;
+	internal_ref?: unknown;
+	internal_hidden?: boolean;
 
 	internal_accessibility?: {
 		role?:
@@ -93,7 +108,10 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		attributes: {},
 		childNodes: [],
 		parentNode: undefined,
-		yogaNode: nodeName === 'ink-virtual-text' ? undefined : Yoga.Node.create(),
+		yogaNode:
+			nodeName === 'ink-virtual-text' || nodeName === 'ink-cursor'
+				? undefined
+				: Yoga.Node.create(),
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		internal_accessibility: {},
 	};
@@ -143,7 +161,10 @@ export const insertBeforeNode = (
 	if (index >= 0) {
 		node.childNodes.splice(index, 0, newChildNode);
 		if (newChildNode.yogaNode) {
-			node.yogaNode?.insertChild(newChildNode.yogaNode, index);
+			const yogaIndex = node.childNodes
+				.slice(0, index)
+				.filter(childNode => Boolean(childNode.yogaNode)).length;
+			node.yogaNode?.insertChild(newChildNode.yogaNode, yogaIndex);
 		}
 
 		return;

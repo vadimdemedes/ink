@@ -6,6 +6,7 @@ import {spy} from 'sinon';
 import ansiEscapes from 'ansi-escapes';
 import {
 	Box,
+	Cursor,
 	Newline,
 	render,
 	Spacer,
@@ -222,6 +223,35 @@ test('fail when <Box> is inside <Text> component', t => {
 
 	t.truthy(error);
 	t.is((error as any).message, '<Box> can’t be nested inside <Text> component');
+});
+
+test('fail when <Cursor> is inside <Text> component', t => {
+	let error: Error | undefined;
+
+	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
+		override render() {
+			return this.props.children;
+		}
+
+		override componentDidCatch(reactError: Error) {
+			error = reactError;
+		}
+	}
+
+	renderToString(
+		<ErrorBoundary>
+			<Text>
+				Hello World
+				<Cursor x={1} />
+			</Text>
+		</ErrorBoundary>,
+	);
+
+	t.truthy(error);
+	t.is(
+		(error as any).message,
+		'<Cursor> can’t be nested inside <Text> component',
+	);
 });
 
 test('remeasure text dimensions on text change', t => {
