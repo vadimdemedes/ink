@@ -179,6 +179,7 @@ export default class Ink {
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
 	private readonly throttledOnRender?: DebouncedFunc<() => void>;
+	private hasPendingThrottledRender = false;
 	private kittyProtocolEnabled = false;
 	private cancelKittyDetection?: () => void;
 
@@ -206,7 +207,11 @@ export default class Ink {
 				leading: true,
 				trailing: true,
 			});
-			this.rootNode.onRender = throttled;
+			this.rootNode.onRender = () => {
+				this.hasPendingThrottledRender = true;
+				throttled();
+			};
+
 			this.throttledOnRender = throttled;
 		}
 
@@ -355,6 +360,8 @@ export default class Ink {
 	};
 
 	onRender: () => void = () => {
+		this.hasPendingThrottledRender = false;
+
 		if (this.isUnmounted) {
 			return;
 		}
@@ -600,13 +607,21 @@ export default class Ink {
 			this.beforeExitHandler = undefined;
 		}
 
-		// Flush any pending throttled render to ensure the final frame is rendered
-		if (this.throttledOnRender) {
-			this.throttledOnRender.flush();
+		// Flush any pending throttled render to ensure the final frame is rendered.
+		// If throttling is enabled and there is already a pending render, flushing is sufficient.
+		// Also avoid calling onRender() again when static output already exists, as that can
+		// duplicate <Static> children output on exit (see issue #397).
+		const shouldRenderFinalFrame =
+			!this.throttledOnRender ||
+			(!this.hasPendingThrottledRender && this.fullStaticOutput === '');
+
+		this.throttledOnRender?.flush();
+
+		if (shouldRenderFinalFrame) {
+			this.calculateLayout();
+			this.onRender();
 		}
 
-		this.calculateLayout();
-		this.onRender();
 		this.unsubscribeExit();
 
 		if (typeof this.restoreConsole === 'function') {

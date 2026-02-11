@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import url from 'node:url';
 import {createRequire} from 'node:module';
 import test from 'ava';
+import stripAnsi from 'strip-ansi';
 import {run} from './helpers/run.js';
 
 const require = createRequire(import.meta.url);
@@ -114,4 +115,17 @@ test.serial('don’t exit while raw mode is active', async t => {
 			resolve();
 		});
 	});
+});
+
+test.serial('exit on exit() with error and static output', async t => {
+	const output = await run('exit-with-static');
+	// Error is propagated, not swallowed
+	t.true(output.includes('errored'));
+	// Static items rendered
+	t.true(output.includes('A'));
+	t.true(output.includes('B'));
+	t.true(output.includes('C'));
+	// Static items NOT duplicated (the bug from #397)
+	const cleaned = stripAnsi(output);
+	t.is(cleaned.split('A').length - 1, 1);
 });
