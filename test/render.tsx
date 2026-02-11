@@ -197,6 +197,30 @@ test.serial(
 	},
 );
 
+test.serial(
+	'#442: full terminal-size box should not add an extra scroll line',
+	async t => {
+		const rows = 5;
+		const ps = term('issue-442-full-height', [String(rows)]);
+		await ps.waitForExit();
+
+		const lastFrame = ps.output.split(ansiEscapes.clearTerminal).at(-1) ?? '';
+		const lastFrameContent = stripAnsi(lastFrame);
+		const lines = lastFrameContent.split('\n');
+
+		t.false(
+			lastFrameContent.endsWith('\n'),
+			'Should not end with a trailing newline in fullscreen mode',
+		);
+		t.is(
+			lines.length,
+			rows,
+			'Should render exactly terminal row count without an extra line',
+		);
+		t.true(lines.at(-1)?.includes('#442 bottom') ?? false);
+	},
+);
+
 test.serial('clear output', async t => {
 	const ps = term('clear');
 	await ps.waitForExit();
