@@ -112,7 +112,18 @@ export type Instance = {
 	unmount: Ink['unmount'];
 
 	/**
-	Returns a promise that resolves when the app is unmounted.
+	Returns a promise that settles when the app is unmounted.
+
+	It resolves with the value passed to `exit(value)` and rejects with the error passed to `exit(error)`.
+
+	@example
+	```jsx
+	const {unmount, waitUntilExit} = render(<MyApp />);
+
+	setTimeout(unmount, 1000);
+
+	await waitUntilExit(); // resolves after `unmount()` is called
+	```
 	*/
 	waitUntilExit: Ink['waitUntilExit'];
 

@@ -1,4 +1,5 @@
 import process from 'node:process';
+import vm from 'node:vm';
 import {PassThrough, Writable} from 'node:stream';
 import url from 'node:url';
 import * as path from 'node:path';
@@ -11,7 +12,7 @@ import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
-import {render, Box, Text, useCursor, useInput} from '../src/index.js';
+import {render, Box, Text, useApp, useCursor, useInput} from '../src/index.js';
 import {type RenderMetrics} from '../src/ink.js';
 import {bsu, esu} from '../src/write-synchronized.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
@@ -475,6 +476,258 @@ test.serial('waitUntilExit resolves after stdout write callback', async t => {
 
 	t.true(writeCallbackFired);
 });
+
+test.serial(
+	'waitUntilExit resolves first exit value when duplicate exits happen during teardown',
+	async t => {
+		let barrierWriteCallback: (() => void) | undefined;
+
+		const stdout = new Writable({
+			write(chunk, _encoding, callback) {
+				if (
+					(typeof chunk === 'string' && chunk === '') ||
+					(chunk instanceof Uint8Array && chunk.length === 0)
+				) {
+					barrierWriteCallback = callback;
+					return;
+				}
+
+				callback();
+			},
+		}) as unknown as NodeJS.WriteStream;
+
+		stdout.columns = 100;
+
+		function Test() {
+			const {exit} = useApp();
+
+			useEffect(() => {
+				exit('first');
+				setTimeout(() => {
+					exit('second');
+				}, 0);
+			}, []);
+
+			return <Text>Hello</Text>;
+		}
+
+		const {waitUntilExit} = render(<Test />, {stdout});
+		const exitPromise = waitUntilExit();
+
+		await delay(0);
+
+		if (!barrierWriteCallback) {
+			t.fail('Expected unmount to queue a write barrier callback');
+			return;
+		}
+
+		barrierWriteCallback();
+		const result = await exitPromise;
+		t.is(result, 'first');
+	},
+);
+
+test.serial(
+	'waitUntilExit resolves first exit value when exit is re-entered during unmount writes',
+	async t => {
+		let exit: ((errorOrResult?: unknown) => void) | undefined;
+		let shouldReenterExit = false;
+		let didReenterExit = false;
+
+		const stdout = new Writable({
+			write(_chunk, _encoding, callback) {
+				if (shouldReenterExit && !didReenterExit && exit) {
+					didReenterExit = true;
+					exit('second');
+				}
+
+				callback();
+			},
+		}) as unknown as NodeJS.WriteStream;
+
+		stdout.columns = 100;
+		stdout.isTTY = true;
+
+		function Test() {
+			const {exit: appExit} = useApp();
+
+			useEffect(() => {
+				exit = appExit;
+				shouldReenterExit = true;
+				appExit('first');
+			}, []);
+
+			return <Text>Hello</Text>;
+		}
+
+		const {waitUntilExit} = render(<Test />, {stdout});
+		const result = await waitUntilExit();
+
+		t.true(didReenterExit);
+		t.is(result, 'first');
+	},
+);
+
+test.serial(
+	'waitUntilExit resolves first exit value when exit is re-entered during unmount writes in debug mode',
+	async t => {
+		let exit: ((errorOrResult?: unknown) => void) | undefined;
+		let shouldReenterExit = false;
+		let didReenterExit = false;
+
+		const stdout = new Writable({
+			write(_chunk, _encoding, callback) {
+				if (shouldReenterExit && !didReenterExit && exit) {
+					didReenterExit = true;
+					exit('second');
+				}
+
+				callback();
+			},
+		}) as unknown as NodeJS.WriteStream;
+
+		stdout.columns = 100;
+		stdout.isTTY = true;
+
+		function Test() {
+			const {exit: appExit} = useApp();
+
+			useEffect(() => {
+				exit = appExit;
+				shouldReenterExit = true;
+				appExit('first');
+			}, []);
+
+			return <Text>Hello</Text>;
+		}
+
+		const {waitUntilExit} = render(<Test />, {stdout, debug: true});
+		const result = await waitUntilExit();
+
+		t.true(didReenterExit);
+		t.is(result, 'first');
+	},
+);
+
+test.serial(
+	'waitUntilExit resolves first exit value when exit is re-entered during unmount writes with screen reader',
+	async t => {
+		let exit: ((errorOrResult?: unknown) => void) | undefined;
+		let shouldReenterExit = false;
+		let didReenterExit = false;
+
+		const stdout = new Writable({
+			write(_chunk, _encoding, callback) {
+				if (shouldReenterExit && !didReenterExit && exit) {
+					didReenterExit = true;
+					exit('second');
+				}
+
+				callback();
+			},
+		}) as unknown as NodeJS.WriteStream;
+
+		stdout.columns = 100;
+		stdout.isTTY = true;
+
+		function Test() {
+			const {exit: appExit} = useApp();
+
+			useEffect(() => {
+				exit = appExit;
+				shouldReenterExit = true;
+				appExit('first');
+			}, []);
+
+			return <Text>Hello</Text>;
+		}
+
+		const {waitUntilExit} = render(<Test />, {
+			stdout,
+			isScreenReaderEnabled: true,
+			patchConsole: false,
+		});
+		const result = await waitUntilExit();
+
+		t.true(didReenterExit);
+		t.is(result, 'first');
+	},
+);
+
+test.serial('exit rejects on cross-realm Error', async t => {
+	const stdout = new PassThrough() as unknown as NodeJS.WriteStream;
+	stdout.columns = 100;
+
+	const foreignError = vm.runInNewContext(`new Error('boom')`) as Error;
+
+	function Test() {
+		const {exit} = useApp();
+
+		useEffect(() => {
+			setTimeout(() => {
+				exit(foreignError);
+			}, 0);
+		}, []);
+
+		return <Text>Hello</Text>;
+	}
+
+	const {waitUntilExit} = render(<Test />, {stdout, patchConsole: false});
+
+	await t.throwsAsync(waitUntilExit(), {
+		message: 'boom',
+	});
+});
+
+test.serial(
+	'exit with cross-realm Error rejects after stdout write callback',
+	async t => {
+		let writeCallbackFired = false;
+		let barrierWriteCallbackFired = false;
+
+		const stdout = new Writable({
+			write(chunk, _encoding, callback) {
+				setTimeout(() => {
+					writeCallbackFired = true;
+
+					if (
+						(typeof chunk === 'string' && chunk === '') ||
+						(chunk instanceof Uint8Array && chunk.length === 0)
+					) {
+						barrierWriteCallbackFired = true;
+					}
+
+					callback();
+				}, 150);
+			},
+		}) as unknown as NodeJS.WriteStream;
+
+		stdout.columns = 100;
+
+		const foreignError = vm.runInNewContext(`new Error('boom')`) as Error;
+
+		function Test() {
+			const {exit} = useApp();
+
+			useEffect(() => {
+				setTimeout(() => {
+					exit(foreignError);
+				}, 0);
+			}, []);
+
+			return <Text>Hello</Text>;
+		}
+
+		const {waitUntilExit} = render(<Test />, {stdout, patchConsole: false});
+
+		await t.throwsAsync(waitUntilExit(), {
+			message: 'boom',
+		});
+
+		t.true(writeCallbackFired);
+		t.true(barrierWriteCallbackFired);
+	},
+);
 
 test.serial('unmount does not write to ended stdout stream', async t => {
 	const stdout = new PassThrough() as unknown as NodeJS.WriteStream;

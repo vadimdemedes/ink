@@ -38,6 +38,21 @@ test.serial('exit on exit() with error', async t => {
 	t.true(output.includes('errored'));
 });
 
+test.serial('exit on exit() with error with value property', async t => {
+	const output = await run('exit-on-exit-with-error-value-property');
+	t.true(output.includes('errored'));
+});
+
+test.serial('exit on exit() with result value', async t => {
+	const output = await run('exit-on-exit-with-result');
+	t.true(output.includes('result:hello from ink'));
+});
+
+test.serial('exit on exit() with object result', async t => {
+	const output = await run('exit-on-exit-with-value-object');
+	t.true(output.includes('result:hello from ink object'));
+});
+
 test.serial('exit on exit() with raw mode', async t => {
 	const output = await run('exit-raw-on-exit');
 	t.true(output.includes('exited'));

@@ -108,6 +108,13 @@ const stripKittyQueryResponsesAndTrailingPartial = (
 	return keptBytes;
 };
 
+const isErrorInput = (value: unknown): value is Error => {
+	return (
+		value instanceof Error ||
+		Object.prototype.toString.call(value) === '[object Error]'
+	);
+};
+
 /**
 Performance metrics for a render operation.
 */
@@ -127,7 +134,7 @@ export type Options = {
 	patchConsole: boolean;
 	onRender?: (metrics: RenderMetrics) => void;
 	isScreenReaderEnabled?: boolean;
-	waitUntilExit?: () => Promise<void>;
+	waitUntilExit?: () => Promise<unknown>;
 	maxFps?: number;
 	incrementalRendering?: boolean;
 
@@ -165,6 +172,7 @@ export default class Ink {
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
+	private isUnmounting: boolean;
 	private lastOutput: string;
 	private lastOutputToRender: string;
 	private lastOutputHeight: number;
@@ -174,7 +182,8 @@ export default class Ink {
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	private fullStaticOutput: string;
-	private exitPromise?: Promise<void>;
+	private exitPromise?: Promise<unknown>;
+	private exitResult: unknown;
 	private beforeExitHandler?: () => void;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
@@ -245,6 +254,7 @@ export default class Ink {
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
+		this.isUnmounting = false;
 
 		// Store concurrent mode setting
 		this.isConcurrent = options.concurrent ?? false;
@@ -331,9 +341,23 @@ export default class Ink {
 		this.lastTerminalWidth = currentWidth;
 	};
 
-	resolveExitPromise: () => void = () => {};
+	resolveExitPromise: (result?: unknown) => void = () => {};
 	rejectExitPromise: (reason?: Error) => void = () => {};
 	unsubscribeExit: () => void = () => {};
+
+	handleAppExit = (errorOrResult?: unknown): void => {
+		if (this.isUnmounted || this.isUnmounting) {
+			return;
+		}
+
+		if (isErrorInput(errorOrResult)) {
+			this.unmount(errorOrResult);
+			return;
+		}
+
+		this.exitResult = errorOrResult;
+		this.unmount();
+	};
 
 	setCursorPosition = (position: CursorPosition | undefined): void => {
 		this.cursorPosition = position;
@@ -520,7 +544,7 @@ export default class Ink {
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
 					setCursorPosition={this.setCursorPosition}
-					onExit={this.unmount}
+					onExit={this.handleAppExit}
 				>
 					{node}
 				</App>
@@ -598,9 +622,11 @@ export default class Ink {
 
 	// eslint-disable-next-line @typescript-eslint/ban-types
 	unmount(error?: Error | number | null): void {
-		if (this.isUnmounted) {
+		if (this.isUnmounted || this.isUnmounting) {
 			return;
 		}
+
+		this.isUnmounting = true;
 
 		if (this.beforeExitHandler) {
 			process.off('beforeExit', this.beforeExitHandler);
@@ -648,6 +674,10 @@ export default class Ink {
 			}
 		}
 
+		// Mark as unmounted after the final render but before stdout writes
+		// that could re-enter exit() via synchronous write callbacks.
+		this.isUnmounted = true;
+
 		this.unsubscribeExit();
 
 		if (typeof this.restoreConsole === 'function') {
@@ -690,8 +720,6 @@ export default class Ink {
 
 		this.kittyProtocolEnabled = false;
 
-		this.isUnmounted = true;
-
 		if (this.options.concurrent) {
 			// Concurrent mode: use updateContainer (async scheduling)
 			reconciler.updateContainer(null, this.container, null, noop);
@@ -711,15 +739,17 @@ export default class Ink {
 		// When called from signal-exit during process shutdown (error is a
 		// number or null rather than undefined/Error), resolve synchronously
 		// because the event loop is draining and async callbacks won't fire.
+		const {exitResult} = this;
+
 		const resolveOrReject = () => {
-			if (error instanceof Error) {
+			if (isErrorInput(error)) {
 				this.rejectExitPromise(error);
 			} else {
-				this.resolveExitPromise();
+				this.resolveExitPromise(exitResult);
 			}
 		};
 
-		const isProcessExiting = error !== undefined && !(error instanceof Error);
+		const isProcessExiting = error !== undefined && !isErrorInput(error);
 		const hasWritableState =
 			(stdout as any)._writableState !== undefined ||
 			stdout.writableLength !== undefined;
@@ -733,7 +763,7 @@ export default class Ink {
 		}
 	}
 
-	async waitUntilExit(): Promise<void> {
+	async waitUntilExit(): Promise<unknown> {
 		this.exitPromise ||= new Promise((resolve, reject) => {
 			this.resolveExitPromise = resolve;
 			this.rejectExitPromise = reject;

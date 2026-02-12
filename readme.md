@@ -227,7 +227,7 @@ Note that all text must be wrapped in a [`<Text>`](#text) component.
 
 An Ink app is a Node.js process, so it stays alive only while there is active work in the event loop (timers, pending promises, [`useInput`](#useinputinputhandler-options) listening on `stdin`, etc.). If your component tree has no async work, the app will render once and exit immediately.
 
-To exit the app, press **Ctrl+C** (enabled by default via [`exitOnCtrlC`](#exitonctrlc)), call [`exit()`](#exiterror) from [`useApp`](#useapp) inside a component, or call [`unmount()`](#unmount) on the object returned by [`render()`](#rendertree-options).
+To exit the app, press **Ctrl+C** (enabled by default via [`exitOnCtrlC`](#exitonctrlc)), call [`exit()`](#exiterrororresult) from [`useApp`](#useapp) inside a component, or call [`unmount()`](#unmount) on the object returned by [`render()`](#rendertree-options).
 
 Use [`waitUntilExit()`](#waituntilexit) to run code after the app is unmounted:
 
@@ -1667,17 +1667,20 @@ Useful when there are multiple `useInput` hooks used at once to avoid handling t
 
 `useApp` is a React hook that exposes a method to manually exit the app (unmount).
 
-#### exit(error?)
+#### exit(errorOrResult?)
 
 Type: `Function`
 
 Exit (unmount) the whole Ink app.
 
-##### error
+##### errorOrResult
 
-Type: `Error`
+Type: `Error | unknown`
 
-Optional error. If passed, [`waitUntilExit`](waituntilexit) will reject with that error.
+Optional value that controls how [`waitUntilExit`](waituntilexit) settles:
+- `exit()` resolves with `undefined`.
+- `exit(error)` rejects when `error` is an `Error`.
+- `exit(value)` resolves with `value`.
 
 ```js
 import {useApp} from 'ink';
@@ -2348,7 +2351,9 @@ unmount();
 
 ##### waitUntilExit()
 
-Returns a promise that resolves when the app is unmounted.
+Returns a promise that settles when the app is unmounted.
+
+It resolves with the value passed to `exit(value)` and rejects with the error passed to `exit(error)`.
 
 ```jsx
 const {unmount, waitUntilExit} = render(<MyApp />);
