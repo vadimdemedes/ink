@@ -69,8 +69,6 @@ render(<Counter />);
 
 <img src="media/demo.svg" width="600">
 
-Feel free to play around with the code and fork this Repl at [https://repl.it/@vadimdemedes/ink-counter-demo](https://repl.it/@vadimdemedes/ink-counter-demo).
-
 ## Who's Using Ink?
 
 - [Claude Code](https://github.com/anthropics/claude-code) - An agentic coding tool made by Anthropic.
