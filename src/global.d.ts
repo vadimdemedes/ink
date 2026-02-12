@@ -9,6 +9,7 @@ declare module 'react' {
 		interface IntrinsicElements {
 			'ink-box': Ink.Box;
 			'ink-text': Ink.Text;
+			'ink-cursor': Ink.Cursor;
 		}
 	}
 }
@@ -31,5 +32,10 @@ declare namespace Ink {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		internal_transform?: (children: string, index: number) => string;
 		internal_accessibility?: DOMElement['internal_accessibility'];
+	};
+
+	type Cursor = {
+		key?: Key;
+		internal_cursor?: DOMElement['internal_cursor'];
 	};
 }

@@ -20,6 +20,7 @@ import {
 	type TextNode,
 	type ElementNames,
 	type DOMElement,
+	type CursorMarker,
 } from './dom.js';
 import applyStyles, {type Styles} from './styles.js';
 import {type OutputTransformer} from './render-node-to-output.js';
@@ -158,6 +159,10 @@ export default createReconciler<
 			throw new Error(`<Box> can’t be nested inside <Text> component`);
 		}
 
+		if (hostContext.isInsideText && originalType === 'ink-cursor') {
+			throw new Error(`<Cursor> can’t be nested inside <Text> component`);
+		}
+
 		const type =
 			originalType === 'ink-text' && hostContext.isInsideText
 				? 'ink-virtual-text'
@@ -196,6 +201,16 @@ export default createReconciler<
 				continue;
 			}
 
+			if (key === 'internal_cursor') {
+				node.internal_cursor = value as CursorMarker;
+				continue;
+			}
+
+			if (key === 'ref') {
+				node.internal_ref = value;
+				continue;
+			}
+
 			setAttribute(node, key, value as DOMNodeAttribute);
 		}
 
@@ -219,9 +234,11 @@ export default createReconciler<
 	},
 	getPublicInstance: instance => instance,
 	hideInstance(node) {
+		node.internal_hidden = true;
 		node.yogaNode?.setDisplay(Yoga.DISPLAY_NONE);
 	},
 	unhideInstance(node) {
+		node.internal_hidden = false;
 		node.yogaNode?.setDisplay(Yoga.DISPLAY_FLEX);
 	},
 	appendInitialChild: appendChildNode,
@@ -287,6 +304,16 @@ export default createReconciler<
 
 				if (key === 'internal_static') {
 					node.internal_static = true;
+					continue;
+				}
+
+				if (key === 'internal_cursor') {
+					node.internal_cursor = value as CursorMarker;
+					continue;
+				}
+
+				if (key === 'ref') {
+					node.internal_ref = value;
 					continue;
 				}
 

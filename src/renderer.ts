@@ -1,13 +1,17 @@
 import renderNodeToOutput, {
 	renderNodeToScreenReaderOutput,
+	type RenderState,
 } from './render-node-to-output.js';
 import Output from './output.js';
 import {type DOMElement} from './dom.js';
+import {type CursorPosition} from './log-update.js';
 
 type Result = {
 	output: string;
 	outputHeight: number;
 	staticOutput: string;
+	cursorRequested: boolean;
+	cursorPosition: CursorPosition | undefined;
 };
 
 const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
@@ -31,6 +35,8 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 				output,
 				outputHeight,
 				staticOutput: staticOutput ? `${staticOutput}\n` : '',
+				cursorRequested: false,
+				cursorPosition: undefined,
 			};
 		}
 
@@ -38,9 +44,14 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			width: node.yogaNode.getComputedWidth(),
 			height: node.yogaNode.getComputedHeight(),
 		});
+		const renderState: RenderState = {
+			cursorRequested: false,
+			cursorPosition: undefined,
+		};
 
 		renderNodeToOutput(node, output, {
 			skipStaticElements: true,
+			renderState,
 		});
 
 		let staticOutput;
@@ -64,6 +75,8 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			// Newline at the end is needed, because static output doesn't have one, so
 			// interactive output will override last line of static output
 			staticOutput: staticOutput ? `${staticOutput.get().output}\n` : '',
+			cursorRequested: renderState.cursorRequested,
+			cursorPosition: renderState.cursorPosition,
 		};
 	}
 
@@ -71,6 +84,8 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 		output: '',
 		outputHeight: 0,
 		staticOutput: '',
+		cursorRequested: false,
+		cursorPosition: undefined,
 	};
 };
 

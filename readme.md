@@ -135,6 +135,7 @@ render(<Counter />);
 - [Components](#components)
   - [`<Text>`](#text)
   - [`<Box>`](#box)
+  - [`<Cursor>`](#cursor)
   - [`<Newline>`](#newline)
   - [`<Spacer>`](#spacer)
   - [`<Static>`](#static)
@@ -1200,6 +1201,78 @@ Background colors work with borders and padding:
 
 See example in [examples/box-backgrounds](examples/box-backgrounds/box-backgrounds.tsx).
 
+### `<Cursor>`
+
+Declaratively position the terminal cursor relative to a container.
+
+Use this component when building reusable inputs where absolute root coordinates are inconvenient.
+
+`<Cursor>` must not be rendered inside `<Text>`.
+
+```jsx
+import {Box, Cursor, Text} from 'ink';
+import {useRef} from 'react';
+
+const prompt = '> ';
+const value = 'hello';
+
+const Example = () => {
+	const cursorAnchorReference = useRef();
+
+	return (
+		<Box flexDirection="row">
+			<Text>{prompt}</Text>
+			<Text>{value}</Text>
+			<Box ref={cursorAnchorReference} width={0} height={1} />
+			<Cursor anchorRef={cursorAnchorReference} />
+		</Box>
+	);
+};
+```
+
+#### x
+
+Type: `number`\
+Default: `0`
+
+Horizontal offset from anchor content origin.
+
+#### y
+
+Type: `number`\
+Default: `0`
+
+Vertical offset from anchor content origin.
+
+#### anchorRef
+
+Type: `RefObject<DOMElement | null>`
+
+Optional reference to anchor cursor coordinates to a different element.
+If omitted, `<Cursor>` uses the parent container as anchor.
+If `anchorRef` is set but currently unresolved, Ink hides the cursor for that frame.
+
+If multiple `<Cursor>` components are rendered in one frame, the last rendered one controls the terminal cursor position.
+
+```jsx
+import {Box, Cursor, Text} from 'ink';
+import {useRef} from 'react';
+
+const Example = () => {
+	const lineRef = useRef();
+
+	return (
+		<Box flexDirection="column">
+			<Text>Type here:</Text>
+			<Box ref={lineRef}>
+				<Text>&gt; </Text>
+			</Box>
+			<Cursor anchorRef={lineRef} x={2} />
+		</Box>
+	);
+};
+```
+
 ### `<Newline>`
 
 Adds one or more newline (`\n`) characters.
@@ -2011,6 +2084,8 @@ const Example = () => {
 
 `useCursor` lets you control the terminal cursor position after each render. This is essential for IME (Input Method Editor) support, where the composing character is displayed at the cursor location.
 
+For most component-level cases, prefer [`<Cursor>`](#cursor). `useCursor` is a low-level absolute-coordinate API.
+
 ```jsx
 import {useState} from 'react';
 import {Box, Text, useCursor} from 'ink';
@@ -2359,10 +2434,10 @@ clear();
 #### measureElement(ref)
 
 Measure the dimensions of a particular `<Box>` element.
-Returns an object with `width` and `height` properties.
+Returns an object with `x`, `y`, `width` and `height` properties.
 This function is useful when your component needs to know the amount of available space it has. You can use it when you need to change the layout based on the length of its content.
 
-**Note:** `measureElement()` returns correct results only after the initial render, when the layout has been calculated. Until then, `width` and `height` equal zero. It's recommended to call `measureElement()` in a `useEffect` hook, which fires after the component has rendered.
+**Note:** `measureElement()` returns correct results only after the initial render, when the layout has been calculated. Until then, measured values equal zero. It's recommended to call `measureElement()` in a `useEffect` hook, which fires after the component has rendered.
 
 ##### ref
 
@@ -2378,8 +2453,8 @@ const Example = () => {
 	const ref = useRef();
 
 	useEffect(() => {
-		const {width, height} = measureElement(ref.current);
-		// width = 100, height = 1
+		const {x, y, width, height} = measureElement(ref.current);
+		// x = 0, y = 0, width = 100, height = 1
 	}, []);
 
 	return (
