@@ -280,7 +280,7 @@ export default class Ink {
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 
 		if (process.env['DEV'] === 'true') {
-			// @ts-ignore outdated types
+			// @ts-expect-error outdated types
 			reconciler.injectIntoDevTools();
 		}
 
