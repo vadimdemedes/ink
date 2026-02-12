@@ -1,23 +1,5 @@
-/**
- * IME-Compatible TextInput Example for Ink
- *
- * Demonstrates how to build a text input that works correctly with IME
- * (Input Method Editor) for Korean, Japanese, and Chinese.
- *
- * Key concepts:
- *  1. useCursor() — Positions the REAL terminal cursor. IME composition
- *     windows anchor to the real cursor, so fake cursors (chalk.inverse)
- *     break CJK input completely.
- *  2. stringWidth() — CJK characters occupy 2 terminal columns but are
- *     1 character in JavaScript. Use stringWidth for correct column offset.
- *  3. Middle insertion — Arrow keys move the cursor; text inserts at cursor.
- *
- * Try it:
- *   npx tsx examples/cursor-ime/cursor-ime.tsx
- *
- * Switch your OS keyboard to Korean (한국어) and type. You should see
- * Hangul composition (ㅎ → 하 → 한) happening naturally at the cursor.
- */
+// IME-compatible text input using useCursor + stringWidth for correct
+// CJK cursor positioning.
 
 import React, {useState} from 'react';
 import stringWidth from 'string-width';
@@ -70,6 +52,10 @@ function TextInput() {
 		if (key.rightArrow) {
 			setCursorIndex(previous => Math.min(charCount(text), previous + 1));
 
+			return;
+		}
+
+		if (key.upArrow || key.downArrow) {
 			return;
 		}
 
