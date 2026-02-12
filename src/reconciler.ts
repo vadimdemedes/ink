@@ -346,7 +346,8 @@ export default createReconciler<
 	waitForCommitToBeReady() {
 		return null;
 	},
-	// TODO: get the name dynamically from package.json with "resolveJsonModule" but it's not supported due to outdated tsconfig
+	// TODO: get the name and version dynamically from package.json with "resolveJsonModule" but it's not supported due to outdated tsconfig
 	rendererPackageName: 'ink',
+	// We can also pass the ink release version? https://github.com/facebook/react/pull/30522#issuecomment-3890214971
 	rendererVersion: reactVersion,
 });
