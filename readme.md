@@ -132,6 +132,7 @@ render(<Counter />);
 ## Contents
 
 - [Getting Started](#getting-started)
+- [App Lifecycle](#app-lifecycle)
 - [Components](#components)
   - [`<Text>`](#text)
   - [`<Box>`](#box)
@@ -221,6 +222,22 @@ It's important to remember that each element is a Flexbox container.
 Think of it as if every `<div>` in the browser had `display: flex`.
 See [`<Box>`](#box) built-in component below for documentation on how to use Flexbox layouts in Ink.
 Note that all text must be wrapped in a [`<Text>`](#text) component.
+
+## App Lifecycle
+
+An Ink app is a Node.js process, so it stays alive only while there is active work in the event loop (timers, pending promises, [`useInput`](#useinputinputhandler-options) listening on `stdin`, etc.). If your component tree has no async work, the app will render once and exit immediately.
+
+To exit the app, press **Ctrl+C** (enabled by default via [`exitOnCtrlC`](#exitonctrlc)), call [`exit()`](#exiterror) from [`useApp`](#useapp) inside a component, or call [`unmount()`](#unmount) on the object returned by [`render()`](#rendertree-options).
+
+Use [`waitUntilExit()`](#waituntilexit) to run code after the app is unmounted:
+
+```jsx
+const {waitUntilExit} = render(<MyApp />);
+
+await waitUntilExit();
+
+console.log('App exited');
+```
 
 ## Components
 
