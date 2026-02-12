@@ -280,13 +280,8 @@ export default class Ink {
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 
 		if (process.env['DEV'] === 'true') {
-			reconciler.injectIntoDevTools({
-				bundleType: 0,
-				// Reporting React DOM's version, not Ink's
-				// See https://github.com/facebook/react/issues/16666#issuecomment-532639905
-				version: '16.13.1',
-				rendererPackageName: 'ink',
-			});
+			// @ts-ignore outdated types
+			reconciler.injectIntoDevTools();
 		}
 
 		if (options.patchConsole) {

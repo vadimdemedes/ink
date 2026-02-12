@@ -6,7 +6,7 @@ import {
 } from 'react-reconciler/constants.js';
 import * as Scheduler from 'scheduler';
 import Yoga, {type Node as YogaNode} from 'yoga-layout';
-import {createContext} from 'react';
+import {version as reactVersion, createContext} from 'react';
 import {
 	createTextNode,
 	appendChildNode,
@@ -346,4 +346,7 @@ export default createReconciler<
 	waitForCommitToBeReady() {
 		return null;
 	},
+	// we can get the name dynamically from package.json with "resolveJsonModule" but it's not supported due to outdated tsconfig
+  rendererPackageName: "ink",
+  rendererVersion: reactVersion,
 });
