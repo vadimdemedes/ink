@@ -607,19 +607,45 @@ export default class Ink {
 			this.beforeExitHandler = undefined;
 		}
 
-		// Flush any pending throttled render to ensure the final frame is rendered.
-		// If throttling is enabled and there is already a pending render, flushing is sufficient.
-		// Also avoid calling onRender() again when static output already exists, as that can
-		// duplicate <Static> children output on exit (see issue #397).
-		const shouldRenderFinalFrame =
-			!this.throttledOnRender ||
-			(!this.hasPendingThrottledRender && this.fullStaticOutput === '');
+		const stdout = this.options.stdout as NodeJS.WriteStream & {
+			writable?: boolean;
+			writableEnded?: boolean;
+			destroyed?: boolean;
+			writableLength?: number;
+		};
+		const canWriteToStdout =
+			!stdout.destroyed && !stdout.writableEnded && (stdout.writable ?? true);
+		const settleThrottle = (throttled: {
+			flush?: () => void;
+			cancel?: () => void;
+		}): void => {
+			if (typeof throttled.flush !== 'function') {
+				return;
+			}
 
-		this.throttledOnRender?.flush();
+			if (canWriteToStdout) {
+				throttled.flush();
+			} else if (typeof throttled.cancel === 'function') {
+				throttled.cancel();
+			}
+		};
 
-		if (shouldRenderFinalFrame) {
-			this.calculateLayout();
-			this.onRender();
+		// Clear any pending throttled render timer on unmount. When stdout is writable,
+		// flush so the final frame is emitted; otherwise cancel to avoid delayed callbacks.
+		settleThrottle(this.throttledOnRender ?? {});
+
+		if (canWriteToStdout) {
+			// If throttling is enabled and there is already a pending render, flushing above
+			// is sufficient. Also avoid calling onRender() again when static output already
+			// exists, as that can duplicate <Static> children output on exit (see issue #397).
+			const shouldRenderFinalFrame =
+				!this.throttledOnRender ||
+				(!this.hasPendingThrottledRender && this.fullStaticOutput === '');
+
+			if (shouldRenderFinalFrame) {
+				this.calculateLayout();
+				this.onRender();
+			}
 		}
 
 		this.unsubscribeExit();
@@ -632,36 +658,37 @@ export default class Ink {
 			this.unsubscribeResize();
 		}
 
-		// Flush any pending throttled log writes
-		const throttledLog = this.throttledLog as DebouncedFunc<
-			(output: string) => void
-		>;
-		if (typeof throttledLog.flush === 'function') {
-			throttledLog.flush();
-		}
-
 		// Cancel any in-progress auto-detection before checking protocol state
 		if (this.cancelKittyDetection) {
 			this.cancelKittyDetection();
 		}
 
-		if (this.kittyProtocolEnabled) {
-			try {
-				this.options.stdout.write('\u001B[<u');
-			} catch {
-				// Best-effort: stdout may already be destroyed during shutdown
+		// Flush any pending throttled log writes if possible, otherwise cancel to
+		// prevent delayed callbacks from writing to a closed stream.
+		const throttledLog = this.throttledLog as DebouncedFunc<
+			(output: string) => void
+		>;
+		settleThrottle(throttledLog);
+
+		if (canWriteToStdout) {
+			if (this.kittyProtocolEnabled) {
+				try {
+					this.options.stdout.write('\u001B[<u');
+				} catch {
+					// Best-effort: stdout may already be destroyed during shutdown
+				}
 			}
 
-			this.kittyProtocolEnabled = false;
+			// CIs don't handle erasing ansi escapes well, so it's better to
+			// only render last frame of non-static output
+			if (isInCi) {
+				this.options.stdout.write(this.lastOutput + '\n');
+			} else if (!this.options.debug) {
+				this.log.done();
+			}
 		}
 
-		// CIs don't handle erasing ansi escapes well, so it's better to
-		// only render last frame of non-static output
-		if (isInCi) {
-			this.options.stdout.write(this.lastOutput + '\n');
-		} else if (!this.options.debug) {
-			this.log.done();
-		}
+		this.kittyProtocolEnabled = false;
 
 		this.isUnmounted = true;
 
@@ -693,13 +720,13 @@ export default class Ink {
 		};
 
 		const isProcessExiting = error !== undefined && !(error instanceof Error);
+		const hasWritableState =
+			(stdout as any)._writableState !== undefined ||
+			stdout.writableLength !== undefined;
 
 		if (isProcessExiting) {
 			resolveOrReject();
-		} else if (
-			(this.options.stdout as any)._writableState !== undefined ||
-			this.options.stdout.writableLength !== undefined
-		) {
+		} else if (canWriteToStdout && hasWritableState) {
 			this.options.stdout.write('', resolveOrReject);
 		} else {
 			setImmediate(resolveOrReject);

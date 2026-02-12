@@ -1,5 +1,5 @@
 import process from 'node:process';
-import {Writable} from 'node:stream';
+import {PassThrough, Writable} from 'node:stream';
 import url from 'node:url';
 import * as path from 'node:path';
 import {createRequire} from 'node:module';
@@ -475,6 +475,108 @@ test.serial('waitUntilExit resolves after stdout write callback', async t => {
 
 	t.true(writeCallbackFired);
 });
+
+test.serial('unmount does not write to ended stdout stream', async t => {
+	const stdout = new PassThrough() as unknown as NodeJS.WriteStream;
+	stdout.columns = 100;
+
+	const writeErrors: Error[] = [];
+	stdout.on('error', error => {
+		writeErrors.push(error);
+	});
+
+	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {stdout});
+	const exitPromise = waitUntilExit();
+
+	stdout.end();
+	unmount();
+	await exitPromise;
+	await delay(0);
+
+	t.false(
+		writeErrors.some(
+			error =>
+				(error as NodeJS.ErrnoException).code === 'ERR_STREAM_WRITE_AFTER_END',
+		),
+	);
+});
+
+test.serial(
+	'unmount cancels pending throttled log writes when stdout is ended',
+	t => {
+		const clock = FakeTimers.install();
+		try {
+			const stdout = new PassThrough() as unknown as NodeJS.WriteStream;
+			stdout.columns = 100;
+
+			const writeErrors: Error[] = [];
+			stdout.on('error', error => {
+				writeErrors.push(error);
+			});
+
+			const {rerender, unmount} = render(
+				<ThrottleTestComponent text="Hello" />,
+				{
+					stdout,
+					maxFps: 1,
+				},
+			);
+
+			rerender(<ThrottleTestComponent text="World" />);
+			stdout.end();
+			unmount();
+			clock.tick(1000);
+
+			t.false(
+				writeErrors.some(
+					error =>
+						(error as NodeJS.ErrnoException).code ===
+						'ERR_STREAM_WRITE_AFTER_END',
+				),
+			);
+		} finally {
+			clock.uninstall();
+		}
+	},
+);
+
+test.serial(
+	'unmount cancels pending throttled render when stdout is ended',
+	t => {
+		const clock = FakeTimers.install();
+		try {
+			const baselineStdout = new PassThrough() as unknown as NodeJS.WriteStream;
+			baselineStdout.columns = 100;
+
+			const baselineApp = render(<ThrottleTestComponent text="Hello" />, {
+				stdout: baselineStdout,
+				maxFps: 1,
+			});
+			baselineStdout.end();
+			baselineApp.unmount();
+			const baselineTimers = clock.countTimers();
+			clock.runAll();
+
+			const stdout = new PassThrough() as unknown as NodeJS.WriteStream;
+			stdout.columns = 100;
+
+			const {rerender, unmount} = render(
+				<ThrottleTestComponent text="Hello" />,
+				{
+					stdout,
+					maxFps: 1,
+				},
+			);
+			rerender(<ThrottleTestComponent text="World" />);
+			stdout.end();
+			unmount();
+
+			t.is(clock.countTimers(), baselineTimers);
+		} finally {
+			clock.uninstall();
+		}
+	},
+);
 
 const createTtyStdout = (columns?: number) => {
 	const stdout = createStdout(columns);
