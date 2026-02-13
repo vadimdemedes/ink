@@ -2583,6 +2583,7 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-scroll-list](https://github.com/ByteLandTechnology/ink-scroll-list) - Scrollable list.
 - [ink-stepper](https://github.com/archcorsair/ink-stepper) - Step-by-step wizard.
 - [ink-virtual-list](https://github.com/archcorsair/ink-virtual-list) - Virtualized list that renders only visible items for performance.
+- [ink-color-picker](https://github.com/sina-byn/ink-color-picker) - Color picker.
 
 ## Useful Hooks
 
