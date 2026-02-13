@@ -1508,6 +1508,47 @@ const UserInput = () => {
 };
 ```
 
+#### Configurable Submit Behavior
+
+Ink supports configurable submit key behavior via the `submitKeyBehavior` option:
+
+```jsx
+import {render, useInput, useStdin} from 'ink';
+
+function MyApp() {
+	const {internal_submitKeyBehavior} = useStdin();
+
+	useInput((input, key) => {
+		const shouldSubmit =
+			internal_submitKeyBehavior === 'enter'
+				? key.return && !key.ctrl
+				: key.return && key.ctrl;
+
+		if (shouldSubmit) {
+			// Handle submission
+		} else if (key.return && internal_submitKeyBehavior === 'ctrl-enter') {
+			// In Ctrl+Enter mode, plain Enter adds newlines
+		}
+	});
+
+	return …
+}
+
+render(<MyApp />, {
+	submitKeyBehavior: 'ctrl-enter',
+	kittyKeyboard: {mode: 'enabled', flags: ['disambiguateEscapeCodes']},
+});
+```
+
+**Options:**
+
+- `'enter'` (default): Enter key submits
+- `'ctrl-enter'`: Ctrl+Enter submits, Enter can be used for newlines
+
+**Note:** Ctrl+Enter detection requires the [kitty keyboard protocol](#kittykeyboard) to be enabled. Without it, most terminals cannot distinguish Ctrl+Enter from Enter.
+
+See the [configurable-submit example](examples/configurable-submit) for a complete implementation.
+
 #### inputHandler(input, key)
 
 Type: `Function`
@@ -2140,6 +2181,31 @@ Default: `true`
 
 Configure whether Ink should listen for Ctrl+C keyboard input and exit the app.
 This is needed in case `process.stdin` is in [raw mode](https://nodejs.org/api/tty.html#tty_readstream_setrawmode_mode), because then Ctrl+C is ignored by default and the process is expected to handle it manually.
+
+###### submitKeyBehavior
+
+Type: `'enter' | 'ctrl-enter'`\
+Default: `'enter'`
+
+Configure submit key behavior for text input applications.
+
+- `'enter'`: Enter key triggers submit (traditional behavior)
+- `'ctrl-enter'`: Ctrl+Enter triggers submit, allowing Enter for newlines
+
+This option is made available to your application via `useStdin()` hook as `internal_submitKeyBehavior`. Your application code must implement the actual submit logic using this configuration.
+
+**Note:** Ctrl+Enter detection requires the [kitty keyboard protocol](#kittykeyboard) to be enabled.
+
+```jsx
+import {render} from 'ink';
+
+render(<MyApp />, {
+	submitKeyBehavior: 'ctrl-enter',
+	kittyKeyboard: {mode: 'enabled', flags: ['disambiguateEscapeCodes']},
+});
+```
+
+See the [configurable-submit example](examples/configurable-submit) for a complete implementation.
 
 ###### patchConsole
 

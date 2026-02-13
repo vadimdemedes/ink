@@ -20,6 +20,8 @@ export type Props = {
 
 	readonly internal_exitOnCtrlC: boolean;
 
+	readonly internal_submitKeyBehavior: 'enter' | 'ctrl-enter';
+
 	readonly internal_eventEmitter: EventEmitter;
 };
 
@@ -35,6 +37,8 @@ const StdinContext = createContext<Props>({
 	isRawModeSupported: false,
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	internal_exitOnCtrlC: true,
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	internal_submitKeyBehavior: 'enter',
 });
 
 StdinContext.displayName = 'InternalStdinContext';

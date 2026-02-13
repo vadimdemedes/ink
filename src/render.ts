@@ -98,6 +98,22 @@ export type RenderOptions = {
 	@see https://sw.kovidgoyal.net/kitty/keyboard-protocol/
 	*/
 	kittyKeyboard?: KittyKeyboardOptions;
+
+	/**
+	Configure submit key behavior for text input.
+	- 'enter': Enter key alone triggers submit (traditional behavior)
+	- 'ctrl-enter': Ctrl+Enter triggers submit, Enter can be used for newlines
+
+	This option is made available to your application via useStdin() hook.
+	Your application code must implement the actual submit logic.
+
+	@default 'enter'
+	@example
+	```tsx
+	render(<MyApp />, { submitKeyBehavior: 'ctrl-enter' });
+	```
+	*/
+	submitKeyBehavior?: 'enter' | 'ctrl-enter';
 };
 
 export type Instance = {
@@ -152,6 +168,7 @@ const render = (
 		maxFps: 30,
 		incrementalRendering: false,
 		concurrent: false,
+		submitKeyBehavior: 'enter',
 		...getOptions(options),
 	};
 

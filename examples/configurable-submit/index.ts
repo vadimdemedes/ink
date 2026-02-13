@@ -1,0 +1,1 @@
+import './configurable-submit.js';

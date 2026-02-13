@@ -153,6 +153,7 @@ export type Options = {
 	*/
 	concurrent?: boolean;
 	kittyKeyboard?: KittyKeyboardOptions;
+	submitKeyBehavior: 'enter' | 'ctrl-enter';
 };
 
 export default class Ink {
@@ -541,6 +542,7 @@ export default class Ink {
 					stdout={this.options.stdout}
 					stderr={this.options.stderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
+					submitKeyBehavior={this.options.submitKeyBehavior}
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
 					setCursorPosition={this.setCursorPosition}

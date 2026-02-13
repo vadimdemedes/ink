@@ -31,6 +31,7 @@ type Props = {
 	readonly writeToStdout: (data: string) => void;
 	readonly writeToStderr: (data: string) => void;
 	readonly exitOnCtrlC: boolean;
+	readonly submitKeyBehavior: 'enter' | 'ctrl-enter';
 	readonly onExit: (errorOrResult?: unknown) => void;
 	readonly setCursorPosition: (position: CursorPosition | undefined) => void;
 };
@@ -51,6 +52,7 @@ function App({
 	writeToStdout,
 	writeToStderr,
 	exitOnCtrlC,
+	submitKeyBehavior,
 	onExit,
 	setCursorPosition,
 }: Props): React.ReactNode {
@@ -456,9 +458,17 @@ function App({
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			internal_exitOnCtrlC: exitOnCtrlC,
 			// eslint-disable-next-line @typescript-eslint/naming-convention
+			internal_submitKeyBehavior: submitKeyBehavior,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
 			internal_eventEmitter: internal_eventEmitter.current,
 		}),
-		[stdin, handleSetRawMode, isRawModeSupported, exitOnCtrlC],
+		[
+			stdin,
+			handleSetRawMode,
+			isRawModeSupported,
+			exitOnCtrlC,
+			submitKeyBehavior,
+		],
 	);
 
 	const stdoutContextValue = useMemo(
