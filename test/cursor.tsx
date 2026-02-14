@@ -46,7 +46,7 @@ test.serial('cursor is shown at specified position after render', async t => {
 	const stdin = createStdin();
 
 	const {unmount} = render(<InputApp />, {stdout, stdin});
-	await delay(100);
+	await delay(50);
 
 	const firstWrite = (stdout.write as any).firstCall.args[0] as string;
 	// Cursor should be shown at x=2 (after "> ")
@@ -67,7 +67,7 @@ test.serial('cursor is not hidden by useEffect after first render', async t => {
 	const stdin = createStdin();
 
 	const {unmount} = render(<InputApp />, {stdout, stdin});
-	await delay(100);
+	await delay(50);
 
 	// Check all writes after the first render — none should be a bare hideCursorEscape
 	// that would undo the showCursorEscape from log-update.
@@ -97,10 +97,10 @@ test.serial('cursor follows text input', async t => {
 	const stdin = createStdin();
 
 	const {unmount} = render(<InputApp />, {stdout, stdin});
-	await delay(100);
+	await delay(50);
 
 	emitReadable(stdin, 'a');
-	await delay(100);
+	await delay(50);
 
 	const lastWrite = stdout.get();
 	// After typing 'a', cursor should be at x=3 ("> a" = 3 chars)
@@ -120,15 +120,15 @@ test.serial(
 		const stdin = createStdin();
 
 		const {unmount} = render(<InputApp />, {stdout, stdin});
-		await delay(100);
+		await delay(50);
 
 		emitReadable(stdin, 'a');
-		await delay(100);
+		await delay(50);
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const afterA = (stdout.write as any).callCount;
 
 		emitReadable(stdin, ' ');
-		await delay(100);
+		await delay(50);
 
 		// Space adds to text, cursor should move even if Ink output looks the same (padded)
 		t.true(
@@ -172,7 +172,7 @@ test.serial(
 		}
 
 		const {unmount} = render(<Parent />, {stdout, stdin});
-		await delay(100);
+		await delay(50);
 
 		// Cursor should be shown after first render
 		const firstWrite = (stdout.write as any).firstCall.args[0] as string;
@@ -183,7 +183,7 @@ test.serial(
 
 		// Unmount the child by pressing Enter
 		emitReadable(stdin, '\r');
-		await delay(100);
+		await delay(50);
 
 		// After child unmounts, cursor position should be cleared.
 		// The last write should NOT contain showCursorEscape.
@@ -287,10 +287,10 @@ test.serial('screen does not scroll up on subsequent renders', async t => {
 	}
 
 	const {unmount} = render(<MultiLineApp />, {stdout, stdin});
-	await delay(100);
+	await delay(50);
 
 	emitReadable(stdin, 'x');
-	await delay(100);
+	await delay(50);
 
 	const secondWrite = stdout.get();
 	// When cursor was at y=1 (line 1), next render should first cursorDown to bottom,
@@ -383,7 +383,7 @@ for (const testCase of hookWriteCases) {
 			<testCase.App />,
 			stderr ? {stdout, stderr, stdin} : {stdout, stdin},
 		);
-		await delay(100);
+		await delay(50);
 
 		const output = cursorVisibilityFromStdoutWrites(stdout);
 		const lastShowIndex = output.lastIndexOf(showCursorEscape);

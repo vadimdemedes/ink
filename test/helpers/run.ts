@@ -28,10 +28,7 @@ export const run: Run = async (fixture, props) => {
 	return new Promise<string>((resolve, reject) => {
 		const term = spawn(
 			'node',
-			[
-				'--loader=ts-node/esm',
-				path.join(__dirname, `/../fixtures/${fixture}.tsx`),
-			],
+			['--import=tsx', path.join(__dirname, `/../fixtures/${fixture}.tsx`)],
 			{
 				name: 'xterm-color',
 				cols: typeof props?.columns === 'number' ? props.columns : 100,

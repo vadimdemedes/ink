@@ -44,7 +44,7 @@ const term = (fixture: string, args: string[] = []) => {
 	const ps = spawn(
 		'node',
 		[
-			'--loader=ts-node/esm',
+			'--import=tsx',
 			path.join(__dirname, `./fixtures/${fixture}.tsx`),
 			...args,
 		],

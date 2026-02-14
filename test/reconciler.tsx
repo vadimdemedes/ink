@@ -331,7 +331,7 @@ test('support suspense', async t => {
 	const read = () => {
 		if (!promise) {
 			promise = new Promise(resolve => {
-				setTimeout(resolve, 500);
+				setTimeout(resolve, 100);
 			});
 
 			state = 'pending';

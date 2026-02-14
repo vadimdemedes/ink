@@ -22,10 +22,10 @@ class Test extends React.Component<Record<string, unknown>, {counter: number}> {
 				counter: prevState.counter + 1,
 			}));
 
-			this.timer = setTimeout(onTimeout, 100);
+			this.timer = setTimeout(onTimeout, 20);
 		};
 
-		this.timer = setTimeout(onTimeout, 100);
+		this.timer = setTimeout(onTimeout, 20);
 	}
 
 	override componentWillUnmount() {
