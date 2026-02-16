@@ -36,7 +36,8 @@ function TextInput() {
 		if (key.backspace || key.delete) {
 			if (cursorIndex > 0) {
 				const [before, after] = splitAt(text, cursorIndex);
-				setText(before.slice(0, -1) + after);
+				const [kept] = splitAt(before, charCount(before) - 1);
+				setText(kept + after);
 				setCursorIndex(previous => previous - 1);
 			}
 
