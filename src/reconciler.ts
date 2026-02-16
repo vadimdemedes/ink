@@ -6,7 +6,7 @@ import {
 } from 'react-reconciler/constants.js';
 import * as Scheduler from 'scheduler';
 import Yoga, {type Node as YogaNode} from 'yoga-layout';
-import {version as reactVersion, createContext} from 'react';
+import {createContext} from 'react';
 import {
 	createTextNode,
 	appendChildNode,
