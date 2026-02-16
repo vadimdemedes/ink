@@ -100,10 +100,10 @@ let currentUpdatePriority = NoEventPriority;
 let currentRootNode: DOMElement | undefined;
 
 export const packageJson = JSON.parse(
-	await import('node:fs').then(fs => 
-		fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')
-	)
-);
+	await import('node:fs').then(fs =>
+		fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+	),
+) as {name: string; version: string};
 
 export default createReconciler<
 	ElementNames,
