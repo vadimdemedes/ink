@@ -1,3 +1,4 @@
+import process from 'node:process';
 import React from 'react';
 import {render, useInput, useApp} from '../../src/index.js';
 
@@ -12,6 +13,10 @@ function UserInput() {
 
 		throw new Error('Crash');
 	});
+
+	React.useEffect(() => {
+		process.stdout.write('__READY__');
+	}, []);
 
 	return null;
 }

@@ -108,6 +108,13 @@ const stripKittyQueryResponsesAndTrailingPartial = (
 	return keptBytes;
 };
 
+const isErrorInput = (value: unknown): value is Error => {
+	return (
+		value instanceof Error ||
+		Object.prototype.toString.call(value) === '[object Error]'
+	);
+};
+
 /**
 Performance metrics for a render operation.
 */
@@ -127,7 +134,7 @@ export type Options = {
 	patchConsole: boolean;
 	onRender?: (metrics: RenderMetrics) => void;
 	isScreenReaderEnabled?: boolean;
-	waitUntilExit?: () => Promise<void>;
+	waitUntilExit?: () => Promise<unknown>;
 	maxFps?: number;
 	incrementalRendering?: boolean;
 
@@ -165,6 +172,7 @@ export default class Ink {
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
+	private isUnmounting: boolean;
 	private lastOutput: string;
 	private lastOutputToRender: string;
 	private lastOutputHeight: number;
@@ -174,7 +182,8 @@ export default class Ink {
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	private fullStaticOutput: string;
-	private exitPromise?: Promise<void>;
+	private exitPromise?: Promise<unknown>;
+	private exitResult: unknown;
 	private beforeExitHandler?: () => void;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
@@ -245,6 +254,7 @@ export default class Ink {
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
+		this.isUnmounting = false;
 
 		// Store concurrent mode setting
 		this.isConcurrent = options.concurrent ?? false;
@@ -326,9 +336,23 @@ export default class Ink {
 		this.lastTerminalWidth = currentWidth;
 	};
 
-	resolveExitPromise: () => void = () => {};
+	resolveExitPromise: (result?: unknown) => void = () => {};
 	rejectExitPromise: (reason?: Error) => void = () => {};
 	unsubscribeExit: () => void = () => {};
+
+	handleAppExit = (errorOrResult?: unknown): void => {
+		if (this.isUnmounted || this.isUnmounting) {
+			return;
+		}
+
+		if (isErrorInput(errorOrResult)) {
+			this.unmount(errorOrResult);
+			return;
+		}
+
+		this.exitResult = errorOrResult;
+		this.unmount();
+	};
 
 	setCursorPosition = (position: CursorPosition | undefined): void => {
 		this.cursorPosition = position;
@@ -515,7 +539,7 @@ export default class Ink {
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
 					setCursorPosition={this.setCursorPosition}
-					onExit={this.unmount}
+					onExit={this.handleAppExit}
 				>
 					{node}
 				</App>
@@ -593,29 +617,61 @@ export default class Ink {
 
 	// eslint-disable-next-line @typescript-eslint/ban-types
 	unmount(error?: Error | number | null): void {
-		if (this.isUnmounted) {
+		if (this.isUnmounted || this.isUnmounting) {
 			return;
 		}
+
+		this.isUnmounting = true;
 
 		if (this.beforeExitHandler) {
 			process.off('beforeExit', this.beforeExitHandler);
 			this.beforeExitHandler = undefined;
 		}
 
-		// Flush any pending throttled render to ensure the final frame is rendered.
-		// If throttling is enabled and there is already a pending render, flushing is sufficient.
-		// Also avoid calling onRender() again when static output already exists, as that can
-		// duplicate <Static> children output on exit (see issue #397).
-		const shouldRenderFinalFrame =
-			!this.throttledOnRender ||
-			(!this.hasPendingThrottledRender && this.fullStaticOutput === '');
+		const stdout = this.options.stdout as NodeJS.WriteStream & {
+			writable?: boolean;
+			writableEnded?: boolean;
+			destroyed?: boolean;
+			writableLength?: number;
+		};
+		const canWriteToStdout =
+			!stdout.destroyed && !stdout.writableEnded && (stdout.writable ?? true);
+		const settleThrottle = (throttled: {
+			flush?: () => void;
+			cancel?: () => void;
+		}): void => {
+			if (typeof throttled.flush !== 'function') {
+				return;
+			}
 
-		this.throttledOnRender?.flush();
+			if (canWriteToStdout) {
+				throttled.flush();
+			} else if (typeof throttled.cancel === 'function') {
+				throttled.cancel();
+			}
+		};
 
-		if (shouldRenderFinalFrame) {
-			this.calculateLayout();
-			this.onRender();
+		// Clear any pending throttled render timer on unmount. When stdout is writable,
+		// flush so the final frame is emitted; otherwise cancel to avoid delayed callbacks.
+		settleThrottle(this.throttledOnRender ?? {});
+
+		if (canWriteToStdout) {
+			// If throttling is enabled and there is already a pending render, flushing above
+			// is sufficient. Also avoid calling onRender() again when static output already
+			// exists, as that can duplicate <Static> children output on exit (see issue #397).
+			const shouldRenderFinalFrame =
+				!this.throttledOnRender ||
+				(!this.hasPendingThrottledRender && this.fullStaticOutput === '');
+
+			if (shouldRenderFinalFrame) {
+				this.calculateLayout();
+				this.onRender();
+			}
 		}
+
+		// Mark as unmounted after the final render but before stdout writes
+		// that could re-enter exit() via synchronous write callbacks.
+		this.isUnmounted = true;
 
 		this.unsubscribeExit();
 
@@ -627,38 +683,37 @@ export default class Ink {
 			this.unsubscribeResize();
 		}
 
-		// Flush any pending throttled log writes
-		const throttledLog = this.throttledLog as DebouncedFunc<
-			(output: string) => void
-		>;
-		if (typeof throttledLog.flush === 'function') {
-			throttledLog.flush();
-		}
-
 		// Cancel any in-progress auto-detection before checking protocol state
 		if (this.cancelKittyDetection) {
 			this.cancelKittyDetection();
 		}
 
-		if (this.kittyProtocolEnabled) {
-			try {
-				this.options.stdout.write('\u001B[<u');
-			} catch {
-				// Best-effort: stdout may already be destroyed during shutdown
+		// Flush any pending throttled log writes if possible, otherwise cancel to
+		// prevent delayed callbacks from writing to a closed stream.
+		const throttledLog = this.throttledLog as DebouncedFunc<
+			(output: string) => void
+		>;
+		settleThrottle(throttledLog);
+
+		if (canWriteToStdout) {
+			if (this.kittyProtocolEnabled) {
+				try {
+					this.options.stdout.write('\u001B[<u');
+				} catch {
+					// Best-effort: stdout may already be destroyed during shutdown
+				}
 			}
 
-			this.kittyProtocolEnabled = false;
+			// CIs don't handle erasing ansi escapes well, so it's better to
+			// only render last frame of non-static output
+			if (isInCi) {
+				this.options.stdout.write(this.lastOutput + '\n');
+			} else if (!this.options.debug) {
+				this.log.done();
+			}
 		}
 
-		// CIs don't handle erasing ansi escapes well, so it's better to
-		// only render last frame of non-static output
-		if (isInCi) {
-			this.options.stdout.write(this.lastOutput + '\n');
-		} else if (!this.options.debug) {
-			this.log.done();
-		}
-
-		this.isUnmounted = true;
+		this.kittyProtocolEnabled = false;
 
 		if (this.options.concurrent) {
 			// Concurrent mode: use updateContainer (async scheduling)
@@ -679,29 +734,31 @@ export default class Ink {
 		// When called from signal-exit during process shutdown (error is a
 		// number or null rather than undefined/Error), resolve synchronously
 		// because the event loop is draining and async callbacks won't fire.
+		const {exitResult} = this;
+
 		const resolveOrReject = () => {
-			if (error instanceof Error) {
+			if (isErrorInput(error)) {
 				this.rejectExitPromise(error);
 			} else {
-				this.resolveExitPromise();
+				this.resolveExitPromise(exitResult);
 			}
 		};
 
-		const isProcessExiting = error !== undefined && !(error instanceof Error);
+		const isProcessExiting = error !== undefined && !isErrorInput(error);
+		const hasWritableState =
+			(stdout as any)._writableState !== undefined ||
+			stdout.writableLength !== undefined;
 
 		if (isProcessExiting) {
 			resolveOrReject();
-		} else if (
-			(this.options.stdout as any)._writableState !== undefined ||
-			this.options.stdout.writableLength !== undefined
-		) {
+		} else if (canWriteToStdout && hasWritableState) {
 			this.options.stdout.write('', resolveOrReject);
 		} else {
 			setImmediate(resolveOrReject);
 		}
 	}
 
-	async waitUntilExit(): Promise<void> {
+	async waitUntilExit(): Promise<unknown> {
 		this.exitPromise ||= new Promise((resolve, reject) => {
 			this.resolveExitPromise = resolve;
 			this.rejectExitPromise = reject;

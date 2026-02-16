@@ -206,6 +206,10 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		throw new Error('Crash');
 	});
 
+	React.useEffect(() => {
+		process.stdout.write('__READY__');
+	}, []);
+
 	return null;
 }
 

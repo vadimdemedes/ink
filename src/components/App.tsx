@@ -31,7 +31,7 @@ type Props = {
 	readonly writeToStdout: (data: string) => void;
 	readonly writeToStderr: (data: string) => void;
 	readonly exitOnCtrlC: boolean;
-	readonly onExit: (error?: Error) => void;
+	readonly onExit: (errorOrResult?: unknown) => void;
 	readonly setCursorPosition: (position: CursorPosition | undefined) => void;
 };
 
@@ -107,12 +107,12 @@ function App({
 	}, [stdin, detachReadableListener, clearPendingInputFlush]);
 
 	const handleExit = useCallback(
-		(error?: Error): void => {
+		(errorOrResult?: unknown): void => {
 			if (isRawModeSupported && rawModeEnabledCount.current > 0) {
 				disableRawMode();
 			}
 
-			onExit(error);
+			onExit(errorOrResult);
 		},
 		[isRawModeSupported, disableRawMode, onExit],
 	);

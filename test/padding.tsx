@@ -123,6 +123,30 @@ test('apply padding to wrapped text', t => {
 	t.is(output, '\n Hel\n lo\n Wor\n ld\n');
 });
 
+test('text wrapping respects paddingX with flexGrow', t => {
+	// https://github.com/vadimdemedes/ink/issues/584
+	const output = renderToString(
+		<Box width={40} borderStyle="round">
+			<Box paddingX={2}>
+				<Box marginLeft={2}>
+					<Text>•</Text>
+					<Box flexGrow={1} marginLeft={1}>
+						<Text>Lorem ipsum dolor sit amet, consectetur adipiscing elit</Text>
+					</Box>
+				</Box>
+			</Box>
+		</Box>,
+	);
+
+	const lines = output.split('\n');
+	for (const line of lines) {
+		t.true(
+			line.length <= 40,
+			`Line "${line}" exceeds container width of 40 (got ${line.length})`,
+		);
+	}
+});
+
 // Concurrent mode tests
 test('padding - concurrent', async t => {
 	const output = await renderToStringAsync(

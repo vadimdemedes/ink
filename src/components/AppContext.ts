@@ -3,8 +3,12 @@ import {createContext} from 'react';
 export type Props = {
 	/**
 	Exit (unmount) the whole Ink app.
+
+	- `exit()` — resolves `waitUntilExit()` with `undefined`.
+	- `exit(new Error('…'))` — rejects `waitUntilExit()` with the error.
+	- `exit(value)` — resolves `waitUntilExit()` with `value`.
 	*/
-	readonly exit: (error?: Error) => void;
+	readonly exit: (errorOrResult?: Error | unknown) => void;
 };
 
 /**

@@ -145,17 +145,15 @@ export const insertBeforeNode = (
 		if (newChildNode.yogaNode) {
 			node.yogaNode?.insertChild(newChildNode.yogaNode, index);
 		}
+	} else {
+		node.childNodes.push(newChildNode);
 
-		return;
-	}
-
-	node.childNodes.push(newChildNode);
-
-	if (newChildNode.yogaNode) {
-		node.yogaNode?.insertChild(
-			newChildNode.yogaNode,
-			node.yogaNode.getChildCount(),
-		);
+		if (newChildNode.yogaNode) {
+			node.yogaNode?.insertChild(
+				newChildNode.yogaNode,
+				node.yogaNode.getChildCount(),
+			);
+		}
 	}
 
 	if (node.nodeName === 'ink-text' || node.nodeName === 'ink-virtual-text') {

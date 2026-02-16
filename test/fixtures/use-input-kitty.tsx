@@ -87,6 +87,10 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		throw new Error(`Unexpected input: ${JSON.stringify({input, key})}`);
 	});
 
+	React.useEffect(() => {
+		process.stdout.write('__READY__');
+	}, []);
+
 	return null;
 }
 

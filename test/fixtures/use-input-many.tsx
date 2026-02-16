@@ -18,7 +18,7 @@ function App() {
 	const {exit} = useApp();
 
 	useEffect(() => {
-		setTimeout(exit, 1000);
+		setTimeout(exit, 100);
 	}, []);
 
 	return (

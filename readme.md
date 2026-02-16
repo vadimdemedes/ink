@@ -69,8 +69,6 @@ render(<Counter />);
 
 <img src="media/demo.svg" width="600">
 
-Feel free to play around with the code and fork this Repl at [https://repl.it/@vadimdemedes/ink-counter-demo](https://repl.it/@vadimdemedes/ink-counter-demo).
-
 ## Who's Using Ink?
 
 - [Claude Code](https://github.com/anthropics/claude-code) - An agentic coding tool made by Anthropic.
@@ -134,6 +132,7 @@ Feel free to play around with the code and fork this Repl at [https://repl.it/@v
 ## Contents
 
 - [Getting Started](#getting-started)
+- [App Lifecycle](#app-lifecycle)
 - [Components](#components)
   - [`<Text>`](#text)
   - [`<Box>`](#box)
@@ -223,6 +222,22 @@ It's important to remember that each element is a Flexbox container.
 Think of it as if every `<div>` in the browser had `display: flex`.
 See [`<Box>`](#box) built-in component below for documentation on how to use Flexbox layouts in Ink.
 Note that all text must be wrapped in a [`<Text>`](#text) component.
+
+## App Lifecycle
+
+An Ink app is a Node.js process, so it stays alive only while there is active work in the event loop (timers, pending promises, [`useInput`](#useinputinputhandler-options) listening on `stdin`, etc.). If your component tree has no async work, the app will render once and exit immediately.
+
+To exit the app, press **Ctrl+C** (enabled by default via [`exitOnCtrlC`](#exitonctrlc)), call [`exit()`](#exiterrororresult) from [`useApp`](#useapp) inside a component, or call [`unmount()`](#unmount) on the object returned by [`render()`](#rendertree-options).
+
+Use [`waitUntilExit()`](#waituntilexit) to run code after the app is unmounted:
+
+```jsx
+const {waitUntilExit} = render(<MyApp />);
+
+await waitUntilExit();
+
+console.log('App exited');
+```
 
 ## Components
 
@@ -1652,17 +1667,20 @@ Useful when there are multiple `useInput` hooks used at once to avoid handling t
 
 `useApp` is a React hook that exposes a method to manually exit the app (unmount).
 
-#### exit(error?)
+#### exit(errorOrResult?)
 
 Type: `Function`
 
 Exit (unmount) the whole Ink app.
 
-##### error
+##### errorOrResult
 
-Type: `Error`
+Type: `Error | unknown`
 
-Optional error. If passed, [`waitUntilExit`](waituntilexit) will reject with that error.
+Optional value that controls how [`waitUntilExit`](waituntilexit) settles:
+- `exit()` resolves with `undefined`.
+- `exit(error)` rejects when `error` is an `Error`.
+- `exit(value)` resolves with `value`.
 
 ```js
 import {useApp} from 'ink';
@@ -2333,7 +2351,9 @@ unmount();
 
 ##### waitUntilExit()
 
-Returns a promise that resolves when the app is unmounted.
+Returns a promise that settles when the app is unmounted.
+
+It resolves with the value passed to `exit(value)` and rejects with the error passed to `exit(error)`.
 
 ```jsx
 const {unmount, waitUntilExit} = render(<MyApp />);
@@ -2563,6 +2583,7 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-scroll-list](https://github.com/ByteLandTechnology/ink-scroll-list) - Scrollable list.
 - [ink-stepper](https://github.com/archcorsair/ink-stepper) - Step-by-step wizard.
 - [ink-virtual-list](https://github.com/archcorsair/ink-virtual-list) - Virtualized list that renders only visible items for performance.
+- [ink-color-picker](https://github.com/sina-byn/ink-color-picker) - Color picker.
 
 ## Useful Hooks
 
