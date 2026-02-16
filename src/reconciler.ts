@@ -99,6 +99,12 @@ let currentUpdatePriority = NoEventPriority;
 
 let currentRootNode: DOMElement | undefined;
 
+export const packageJson = JSON.parse(
+	await import('node:fs').then(fs => 
+		fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')
+	)
+);
+
 export default createReconciler<
 	ElementNames,
 	Props,
@@ -155,7 +161,7 @@ export default createReconciler<
 	shouldSetTextContent: () => false,
 	createInstance(originalType, newProps, rootNode, hostContext) {
 		if (hostContext.isInsideText && originalType === 'ink-box') {
-			throw new Error(`<Box> can’t be nested inside <Text> component`);
+			throw new Error(`<Box> can't be nested inside <Text> component`);
 		}
 
 		const type =
@@ -346,8 +352,6 @@ export default createReconciler<
 	waitForCommitToBeReady() {
 		return null;
 	},
-	// TODO: get the name and version dynamically from package.json with "resolveJsonModule" but it's not supported due to outdated tsconfig
-	rendererPackageName: 'ink',
-	// We can also pass the ink release version? https://github.com/facebook/react/pull/30522#issuecomment-3890214971
-	rendererVersion: reactVersion,
+	rendererPackageName: packageJson.name,
+	rendererVersion: packageJson.version,
 });
