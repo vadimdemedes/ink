@@ -106,7 +106,7 @@
 	"peerDependencies": {
 		"@types/react": ">=19.0.0",
 		"react": ">=19.0.0",
-		"react-devtools-core": ">=7.0.0"
+		"react-devtools-core": ">=6.1.2"
 	},
 	"peerDependenciesMeta": {
 		"@types/react": {
