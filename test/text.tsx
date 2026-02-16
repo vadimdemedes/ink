@@ -99,6 +99,27 @@ test('text with inversion', t => {
 	t.is(output, chalk.inverse('Test'));
 });
 
+// See https://github.com/vadimdemedes/ink/issues/867
+test('text with empty-to-nonempty sibling does not wrap', t => {
+	function Test({show}: {readonly show?: boolean}) {
+		return (
+			<Box>
+				<Text>
+					{show ? 'x' : ''}
+					{'hello'}
+				</Text>
+			</Box>
+		);
+	}
+
+	const stdout = createStdout();
+	const {rerender} = render(<Test />, {stdout, debug: true});
+	t.is((stdout.write as any).lastCall.args[0], 'hello');
+
+	rerender(<Test show />);
+	t.is((stdout.write as any).lastCall.args[0], 'xhello');
+});
+
 test('remeasure text when text is changed', t => {
 	function Test({add}: {readonly add?: boolean}) {
 		return (
