@@ -54,7 +54,7 @@ class OutputCaches {
 
 	getStyledChars(line: string): StyledChar[] {
 		let cached = this.styledChars.get(line);
-		if (!cached) {
+		if (cached === undefined) {
 			cached = styledCharsFromTokens(tokenize(line));
 			this.styledChars.set(line, cached);
 		}
@@ -64,7 +64,7 @@ class OutputCaches {
 
 	getStringWidth(text: string): number {
 		let cached = this.widths.get(text);
-		if (!cached) {
+		if (cached === undefined) {
 			cached = stringWidth(text);
 			this.widths.set(text, cached);
 		}
@@ -74,7 +74,7 @@ class OutputCaches {
 
 	getWidestLine(text: string): number {
 		let cached = this.blockWidths.get(text);
-		if (!cached) {
+		if (cached === undefined) {
 			let lineWidth = 0;
 			for (const line of text.split('\n')) {
 				lineWidth = Math.max(lineWidth, this.getStringWidth(line));
