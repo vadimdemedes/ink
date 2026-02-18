@@ -108,7 +108,10 @@ async function loadPackageJson() {
 	return JSON.parse(content) as {name: string; version: string};
 }
 
-const packageJson = await loadPackageJson();
+const packageJson =
+	process.env['DEV'] === 'true'
+		? await loadPackageJson()
+		: {name: undefined, version: undefined};
 
 export default createReconciler<
 	ElementNames,
