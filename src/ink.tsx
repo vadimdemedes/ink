@@ -1,5 +1,6 @@
 import process from 'node:process';
 import React, {type ReactNode} from 'react';
+import {isDev} from './utils.js';
 import {throttle, type DebouncedFunc} from 'es-toolkit/compat';
 import ansiEscapes from 'ansi-escapes';
 import isInCi from 'is-in-ci';
@@ -289,7 +290,7 @@ export default class Ink {
 		// Unmount when process exits
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 
-		if (process.env['DEV'] === 'true') {
+		if (isDev()) {
 			// @ts-expect-error outdated types
 			reconciler.injectIntoDevTools();
 		}
