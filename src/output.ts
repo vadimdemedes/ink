@@ -1,6 +1,5 @@
 import sliceAnsi from 'slice-ansi';
 import stringWidth from 'string-width';
-import widestLine from 'widest-line';
 import {
 	type StyledChar,
 	styledCharsFromTokens,
@@ -48,11 +47,53 @@ type UnclipOperation = {
 	type: 'unclip';
 };
 
+class OutputCaches {
+	widths = new Map<string, number>();
+	blockWidths = new Map<string, number>();
+	styledChars = new Map<string, StyledChar[]>();
+
+	getStyledChars(line: string): StyledChar[] {
+		let cached = this.styledChars.get(line);
+		if (cached === undefined) {
+			cached = styledCharsFromTokens(tokenize(line));
+			this.styledChars.set(line, cached);
+		}
+
+		return cached;
+	}
+
+	getStringWidth(text: string): number {
+		let cached = this.widths.get(text);
+		if (cached === undefined) {
+			cached = stringWidth(text);
+			this.widths.set(text, cached);
+		}
+
+		return cached;
+	}
+
+	getWidestLine(text: string): number {
+		let cached = this.blockWidths.get(text);
+		if (cached === undefined) {
+			let lineWidth = 0;
+			for (const line of text.split('\n')) {
+				lineWidth = Math.max(lineWidth, this.getStringWidth(line));
+			}
+
+			cached = lineWidth;
+			this.blockWidths.set(text, cached);
+		}
+
+		return cached;
+	}
+}
+
 export default class Output {
 	width: number;
 	height: number;
 
 	private readonly operations: Operation[] = [];
+	private readonly caches: OutputCaches = new OutputCaches();
 
 	constructor(options: Options) {
 		const {width, height} = options;
@@ -142,7 +183,7 @@ export default class Output {
 					// If text is positioned outside of clipping area altogether,
 					// skip to the next operation to avoid unnecessary calculations
 					if (clipHorizontally) {
-						const width = widestLine(text);
+						const width = this.caches.getWidestLine(text);
 
 						if (x + width < clip.x1! || x > clip.x2!) {
 							continue;
@@ -160,7 +201,7 @@ export default class Output {
 					if (clipHorizontally) {
 						lines = lines.map(line => {
 							const from = x < clip.x1! ? clip.x1! - x : 0;
-							const width = stringWidth(line);
+							const width = this.caches.getStringWidth(line);
 							const to = x + width > clip.x2! ? clip.x2! - x : width;
 
 							return sliceAnsi(line, from, to);
@@ -198,14 +239,17 @@ export default class Output {
 						line = transformer(line, index);
 					}
 
-					const characters = styledCharsFromTokens(tokenize(line));
+					const characters = this.caches.getStyledChars(line);
 					let offsetX = x;
 
 					for (const character of characters) {
 						currentLine[offsetX] = character;
 
 						// Determine printed width using string-width to align with measurement
-						const characterWidth = Math.max(1, stringWidth(character.value));
+						const characterWidth = Math.max(
+							1,
+							this.caches.getStringWidth(character.value),
+						);
 
 						// For multi-column characters, clear following cells to avoid stray spaces/artifacts
 						if (characterWidth > 1) {

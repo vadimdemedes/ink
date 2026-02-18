@@ -155,6 +155,7 @@ render(<Counter />);
 - [Screen Reader Support](#screen-reader-support)
 - [Useful Components](#useful-components)
 - [Useful Hooks](#useful-hooks)
+- [Recipes](#recipes)
 - [Examples](#examples)
 - [Continuous Integration](#continuous-integration)
 
@@ -2589,6 +2590,10 @@ For a practical example of building an accessible component, see the [ARIA examp
 
 - [ink-use-stdout-dimensions](https://github.com/cameronhunter/ink-monorepo/tree/master/packages/ink-use-stdout-dimensions) - Subscribe to stdout dimensions.
 
+## Recipes
+
+- [Routing with React Router](recipes/routing.md) - Navigate between routes using `MemoryRouter`.
+
 ## Examples
 
 The [`examples`](/examples) directory contains a set of real examples. You can run them with:
@@ -2610,6 +2615,7 @@ npm run example examples/[example name]
 - [Write to stderr](examples/use-stderr/use-stderr.tsx) - Write to stderr, bypassing main Ink output.
 - [Static](examples/static/static.tsx) - Use the `<Static>` component to render permanent output.
 - [Child process](examples/subprocess-output) - Renders output from a child process.
+- [Router](examples/router/router.tsx) - Navigate between routes using React Router's `MemoryRouter`.
 
 ## Continuous Integration
 

@@ -41,17 +41,15 @@ function SearchApp() {
 	// Handle keyboard input
 	useInput((input, key) => {
 		if (key.backspace || key.delete) {
-			const newQuery = query.slice(0, -1);
-			setQuery(newQuery);
+			setQuery(previousQuery => previousQuery.slice(0, -1));
 			startTransition(() => {
-				setDeferredQuery(newQuery);
+				setDeferredQuery(previousQuery => previousQuery.slice(0, -1));
 			});
 		} else if (input && !key.ctrl && !key.meta) {
-			const newQuery = query + input;
-			setQuery(newQuery);
+			setQuery(previousQuery => previousQuery + input);
 			// Wrap the expensive update in a transition
 			startTransition(() => {
-				setDeferredQuery(newQuery);
+				setDeferredQuery(previousQuery => previousQuery + input);
 			});
 		}
 	});

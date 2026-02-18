@@ -97,6 +97,7 @@
 		"react": "^19.2.4",
 		"react-devtools-core": "^7.0.1",
 		"react-devtools": "^7.0.1",
+		"react-router": "^7.13.0",
 		"sinon": "^21.0.0",
 		"strip-ansi": "^7.1.0",
 		"tsx": "^4.21.0",
