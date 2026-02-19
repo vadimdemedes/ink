@@ -100,12 +100,8 @@ let currentUpdatePriority = NoEventPriority;
 let currentRootNode: DOMElement | undefined;
 
 async function loadPackageJson() {
-	const fs = await import('node:fs');
-	const content = fs.readFileSync(
-		new URL('../package.json', import.meta.url),
-		'utf8',
-	);
-	return JSON.parse(content) as {name: string; version: string};
+	const {default: packageJson} = await import('../package.json');
+	return packageJson;
 }
 
 const packageJson = isDev()

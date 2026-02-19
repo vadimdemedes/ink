@@ -2,20 +2,10 @@
 	"extends": "@sindresorhus/tsconfig",
 	"compilerOptions": {
 		"outDir": "build",
-		"lib": [
-			"DOM",
-			"DOM.Iterable",
-			"ES2023"
-		],
+		"lib": ["DOM", "DOM.Iterable", "ES2023"],
 		"sourceMap": true,
 		"jsx": "react",
 		"isolatedModules": true
 	},
-	"include": ["src"],
-	"ts-node": {
-		"transpileOnly": true,
-		"files": true,
-		"experimentalResolver": true,
-		"experimentalSpecifierResolution": "node"
-	}
+	"include": ["src"]
 }
