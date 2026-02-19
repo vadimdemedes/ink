@@ -23,9 +23,25 @@ type Output = {
 	focusPrevious: Props['focusPrevious'];
 
 	/**
-	Switch focus to the element with provided `id`. If there's no element with that `id`, focus will be given to the first focusable component.
+	Switch focus to the element with provided `id`. If there's no element with that `id`, focus is not changed.
 	*/
 	focus: Props['focus'];
+
+	/**
+	The ID of the currently focused component, or `undefined` if no component is focused.
+
+	@example
+	```tsx
+	import {Text, useFocusManager} from 'ink';
+
+	const Example = () => {
+		const {activeId} = useFocusManager();
+
+		return <Text>Focused: {activeId ?? 'none'}</Text>;
+	};
+	```
+	*/
+	activeId: Props['activeId'];
 };
 
 /**
@@ -40,6 +56,7 @@ const useFocusManager = (): Output => {
 		focusNext: focusContext.focusNext,
 		focusPrevious: focusContext.focusPrevious,
 		focus: focusContext.focus,
+		activeId: focusContext.activeId,
 	};
 };
 

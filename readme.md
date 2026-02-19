@@ -2009,7 +2009,7 @@ const Example = () => {
 Type: `string`
 
 Switch focus to the component with the given [`id`](#id).
-If there's no component with that ID, focus will be given to the next focusable component.
+If there's no component with that ID, focus is not changed.
 
 ```js
 import {useFocusManager, useInput} from 'ink';
@@ -2025,6 +2025,22 @@ const Example = () => {
 	});
 
 	return …
+};
+```
+
+#### activeId
+
+Type: `string | undefined`
+
+The ID of the currently focused component, or `undefined` if no component is focused.
+
+```js
+import {Text, useFocusManager} from 'ink';
+
+const Example = () => {
+	const {activeId} = useFocusManager();
+
+	return <Text>Focused: {activeId ?? 'none'}</Text>;
 };
 ```
 

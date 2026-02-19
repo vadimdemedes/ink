@@ -555,3 +555,183 @@ test('focus component with autoFocus renders in concurrent mode', async t => {
 		['First ✔', 'Second', 'Third'].join('\n'),
 	);
 });
+
+function ItemWithId({
+	label,
+	id,
+	autoFocus = false,
+}: {
+	readonly label: string;
+	readonly id: string;
+	readonly autoFocus?: boolean;
+}) {
+	const {isFocused} = useFocus({id, autoFocus});
+	return (
+		<Text>
+			{label} {isFocused && '✔'}
+		</Text>
+	);
+}
+
+function ActiveIdReader({
+	onActiveId,
+}: {
+	readonly onActiveId: (id: string | undefined) => void;
+}) {
+	const {activeId} = useFocusManager();
+	onActiveId(activeId);
+	return null;
+}
+
+test('activeId from useFocusManager reflects currently focused component', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	let capturedActiveId: string | undefined;
+
+	render(
+		<Box flexDirection="column">
+			<ActiveIdReader
+				onActiveId={id => {
+					capturedActiveId = id;
+				}}
+			/>
+			<ItemWithId label="First" id="first" />
+			<ItemWithId label="Second" id="second" />
+		</Box>,
+		{stdout, stdin, debug: true},
+	);
+
+	await delay(50);
+	t.is(capturedActiveId, undefined);
+
+	emitReadable(stdin, '\t');
+	await delay(50);
+	t.is(capturedActiveId, 'first');
+
+	emitReadable(stdin, '\t');
+	await delay(50);
+	t.is(capturedActiveId, 'second');
+});
+
+test('activeId resets to undefined on Esc', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	let capturedActiveId: string | undefined;
+
+	render(
+		<Box flexDirection="column">
+			<ActiveIdReader
+				onActiveId={id => {
+					capturedActiveId = id;
+				}}
+			/>
+			<ItemWithId label="First" id="first" />
+		</Box>,
+		{stdout, stdin, debug: true},
+	);
+
+	await delay(50);
+	emitReadable(stdin, '\t');
+	await delay(50);
+	t.is(capturedActiveId, 'first');
+
+	emitReadable(stdin, '\u001B');
+	await delay(50);
+	t.is(capturedActiveId, undefined);
+});
+
+test('activeId is set immediately when component uses autoFocus', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	let capturedActiveId: string | undefined;
+
+	render(
+		<Box flexDirection="column">
+			<ActiveIdReader
+				onActiveId={id => {
+					capturedActiveId = id;
+				}}
+			/>
+			<ItemWithId autoFocus label="First" id="first" />
+			<ItemWithId label="Second" id="second" />
+		</Box>,
+		{stdout, stdin, debug: true},
+	);
+
+	await delay(50);
+	t.is(capturedActiveId, 'first');
+});
+
+test('activeId updates when focus is changed programmatically', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	let capturedActiveId: string | undefined;
+	let capturedFocus: ((id: string) => void) | undefined;
+
+	function FocusCapture() {
+		const {focus} = useFocusManager();
+		capturedFocus = focus;
+		return null;
+	}
+
+	render(
+		<Box flexDirection="column">
+			<ActiveIdReader
+				onActiveId={id => {
+					capturedActiveId = id;
+				}}
+			/>
+			<FocusCapture />
+			<ItemWithId label="First" id="first" />
+			<ItemWithId label="Second" id="second" />
+		</Box>,
+		{stdout, stdin, debug: true},
+	);
+
+	await delay(50);
+	t.is(capturedActiveId, undefined);
+
+	capturedFocus!('second');
+	await delay(50);
+	t.is(capturedActiveId, 'second');
+
+	capturedFocus!('first');
+	await delay(50);
+	t.is(capturedActiveId, 'first');
+});
+
+test('activeId resets to undefined when focused component unmounts', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	let capturedActiveId: string | undefined;
+
+	const {rerender} = render(
+		<Box flexDirection="column">
+			<ActiveIdReader
+				onActiveId={id => {
+					capturedActiveId = id;
+				}}
+			/>
+			<ItemWithId autoFocus label="First" id="first" />
+			<ItemWithId label="Second" id="second" />
+		</Box>,
+		{stdout, stdin, debug: true},
+	);
+
+	await delay(50);
+	t.is(capturedActiveId, 'first');
+
+	rerender(
+		<Box flexDirection="column">
+			<ActiveIdReader
+				onActiveId={id => {
+					capturedActiveId = id;
+				}}
+			/>
+			<ItemWithId label="Second" id="second" />
+		</Box>,
+	);
+
+	await delay(50);
+	t.is(capturedActiveId, undefined);
+});
