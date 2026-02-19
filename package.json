@@ -23,7 +23,8 @@
 		"prepare": "npm run build",
 		"test": "tsc --noEmit && xo && FORCE_COLOR=true ava",
 		"example": "NODE_NO_WARNINGS=1 node --import=tsx",
-		"benchmark": "NODE_NO_WARNINGS=1 node --import=tsx"
+		"benchmark": "NODE_NO_WARNINGS=1 node --import=tsx",
+		"inspect": "react-devtools"
 	},
 	"files": [
 		"build"
@@ -95,6 +96,7 @@
 		"prettier": "^3.8.1",
 		"react": "^19.2.4",
 		"react-devtools-core": "^7.0.1",
+		"react-devtools": "^7.0.1",
 		"react-router": "^7.13.0",
 		"sinon": "^21.0.0",
 		"strip-ansi": "^7.1.0",
@@ -105,7 +107,7 @@
 	"peerDependencies": {
 		"@types/react": ">=19.0.0",
 		"react": ">=19.0.0",
-		"react-devtools-core": "^6.1.2"
+		"react-devtools-core": ">=6.1.2"
 	},
 	"peerDependenciesMeta": {
 		"@types/react": {

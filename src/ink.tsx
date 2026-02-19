@@ -11,6 +11,7 @@ import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import wrapAnsi from 'wrap-ansi';
 import terminalSize from 'terminal-size';
+import {isDev} from './utils.js';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
@@ -289,14 +290,9 @@ export default class Ink {
 		// Unmount when process exits
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 
-		if (process.env['DEV'] === 'true') {
-			reconciler.injectIntoDevTools({
-				bundleType: 0,
-				// Reporting React DOM's version, not Ink's
-				// See https://github.com/facebook/react/issues/16666#issuecomment-532639905
-				version: '16.13.1',
-				rendererPackageName: 'ink',
-			});
+		if (isDev()) {
+			// @ts-expect-error outdated types
+			reconciler.injectIntoDevTools();
 		}
 
 		if (options.patchConsole) {
