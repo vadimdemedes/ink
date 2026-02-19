@@ -1,6 +1,7 @@
 import EventEmitter from 'node:events';
 import test from 'ava';
 import chalk from 'chalk';
+import stripAnsi from 'strip-ansi';
 import React, {Component, useState} from 'react';
 import {spy} from 'sinon';
 import ansiEscapes from 'ansi-escapes';
@@ -117,6 +118,74 @@ test('truncate text in the beginning', t => {
 	);
 
 	t.is(output, '… World');
+});
+
+// See https://github.com/vadimdemedes/ink/issues/633
+test('do not wrap text with BEL-terminated OSC hyperlinks', t => {
+	// "Click here" is 10 chars, box is 20 wide - should not wrap
+	const hyperlink =
+		'\u001B]8;;https://example.com\u0007Click here\u001B]8;;\u0007';
+	const output = renderToString(
+		<Box width={20}>
+			<Text wrap="wrap">{hyperlink}</Text>
+		</Box>,
+	);
+
+	t.is(stripAnsi(output), 'Click here');
+});
+
+// See https://github.com/vadimdemedes/ink/issues/633
+test('do not wrap text with ST-terminated OSC hyperlinks', t => {
+	const hyperlink =
+		'\u001B]8;;https://example.com\u001B\\Click here\u001B]8;;\u001B\\';
+	const output = renderToString(
+		<Box width={20}>
+			<Text wrap="wrap">{hyperlink}</Text>
+		</Box>,
+	);
+
+	t.is(stripAnsi(output), 'Click here');
+});
+
+// See https://github.com/vadimdemedes/ink/issues/633
+test('do not wrap text with non-hyperlink OSC sequences', t => {
+	// Title-setting OSC followed by visible text
+	const text = '\u001B]0;My Title\u0007Some text';
+	const output = renderToString(
+		<Box width={20}>
+			<Text wrap="wrap">{text}</Text>
+		</Box>,
+	);
+
+	t.is(stripAnsi(output), 'Some text');
+});
+
+// See https://github.com/vadimdemedes/ink/issues/633
+test('hard-wrap single-word BEL-terminated OSC hyperlink', t => {
+	// "abcdefghij" is 10 chars, box is 5 wide - forces wrapWord codepath
+	const hyperlink =
+		'\u001B]8;;https://example.com\u0007abcdefghij\u001B]8;;\u0007';
+	const output = renderToString(
+		<Box width={5}>
+			<Text wrap="wrap">{hyperlink}</Text>
+		</Box>,
+	);
+
+	t.is(stripAnsi(output), 'abcde\nfghij');
+});
+
+// See https://github.com/vadimdemedes/ink/issues/633
+// Failing until @alcalzone/ansi-tokenize handles ST-terminated OSC sequences.
+test.failing('hard-wrap single-word ST-terminated OSC hyperlink', t => {
+	const hyperlink =
+		'\u001B]8;;https://example.com\u001B\\abcdefghij\u001B]8;;\u001B\\';
+	const output = renderToString(
+		<Box width={5}>
+			<Text wrap="wrap">{hyperlink}</Text>
+		</Box>,
+	);
+
+	t.is(stripAnsi(output), 'abcde\nfghij');
 });
 
 test('ignore empty text node', t => {
