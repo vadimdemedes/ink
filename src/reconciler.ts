@@ -109,7 +109,13 @@ async function loadPackageJson() {
 }
 
 const packageJson = isDev()
-	? await loadPackageJson()
+	? await (async () => {
+			try {
+				return await loadPackageJson();
+			} catch {
+				return {name: undefined, version: undefined};
+			}
+		})()
 	: {name: undefined, version: undefined};
 
 export default createReconciler<
