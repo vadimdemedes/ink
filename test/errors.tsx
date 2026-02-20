@@ -48,6 +48,38 @@ test('catch and display error', t => {
 	);
 });
 
+test.serial(
+	'does not emit unhandledRejection when render exits with an error and waitUntilExit is unused',
+	async t => {
+		const stdout = createStdout();
+		const unhandledRejectionReasons: unknown[] = [];
+		const onUnhandledRejection = (reason: unknown) => {
+			unhandledRejectionReasons.push(reason);
+		};
+
+		process.on('unhandledRejection', onUnhandledRejection);
+
+		try {
+			const Test = () => {
+				throw new Error('Oh no');
+			};
+
+			render(<Test />, {stdout});
+
+			await new Promise<void>(resolve => {
+				setImmediate(resolve);
+			});
+			await new Promise<void>(resolve => {
+				setImmediate(resolve);
+			});
+
+			t.is(unhandledRejectionReasons.length, 0);
+		} finally {
+			process.off('unhandledRejection', onUnhandledRejection);
+		}
+	},
+);
+
 test('ErrorBoundary catches and displays nested component errors', t => {
 	const stdout = createStdout();
 

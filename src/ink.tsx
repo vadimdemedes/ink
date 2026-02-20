@@ -308,6 +308,14 @@ export default class Ink {
 		}
 
 		this.initKittyKeyboard();
+
+		this.exitPromise = new Promise((resolve, reject) => {
+			this.resolveExitPromise = resolve;
+			this.rejectExitPromise = reject;
+		});
+		// Prevent global unhandled-rejection crashes when app code exits with an
+		// error but consumers never call waitUntilExit().
+		void this.exitPromise.catch(noop);
 	}
 
 	getTerminalWidth = () => {
@@ -760,11 +768,6 @@ export default class Ink {
 	}
 
 	async waitUntilExit(): Promise<unknown> {
-		this.exitPromise ||= new Promise((resolve, reject) => {
-			this.resolveExitPromise = resolve;
-			this.rejectExitPromise = reject;
-		});
-
 		if (!this.beforeExitHandler) {
 			this.beforeExitHandler = () => {
 				this.unmount();

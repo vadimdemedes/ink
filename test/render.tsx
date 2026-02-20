@@ -7,7 +7,7 @@ import {createRequire} from 'node:module';
 import FakeTimers from '@sinonjs/fake-timers';
 import {stub} from 'sinon';
 import test, {type ExecutionContext} from 'ava';
-import React, {type ReactNode, useEffect, useState} from 'react';
+import React, {type ReactNode, PureComponent, useEffect, useState} from 'react';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
@@ -82,6 +82,48 @@ const term = (fixture: string, args: string[] = []) => {
 	});
 
 	return result;
+};
+
+class SynchronousErrorBoundary extends PureComponent<{
+	onError: (error: Error) => void;
+}, {error?: Error}> {
+	static displayName = 'SynchronousErrorBoundary';
+
+	override state: {error?: Error} = {
+		error: undefined,
+	};
+
+	override static getDerivedStateFromError(error: Error) {
+		return {error};
+	}
+
+	override componentDidCatch(error: Error) {
+		this.props.onError(error);
+	}
+
+	override render() {
+		if (this.state.error) {
+			return null;
+		}
+
+		return this.props.children;
+	}
+}
+
+const SynchronousRenderErrorComponent = () => {
+	throw new Error('Synchronous render error');
+
+	return null;
+};
+
+const ThrowingComponentWithBoundary = () => {
+	const {exit} = useApp();
+
+	return (
+		<SynchronousErrorBoundary onError={exit}>
+			<SynchronousRenderErrorComponent />
+		</SynchronousErrorBoundary>
+	);
 };
 
 test.serial('do not erase screen', async t => {
@@ -453,6 +495,29 @@ test.serial('unmount forces pending throttled render', t => {
 		clock.uninstall();
 	}
 });
+
+test.serial(
+	'should reject waitUntilExit when app exits during synchronous render error handling',
+	async t => {
+		const stdout = createStdout();
+		const {waitUntilExit} = render(<ThrowingComponentWithBoundary />, {
+			stdout,
+			patchConsole: false,
+		});
+
+		await t.throwsAsync(
+			Promise.race([
+				waitUntilExit(),
+				delay(500).then(() => {
+					throw new Error('waitUntilExit did not settle');
+				}),
+			]),
+			{
+				message: 'Synchronous render error',
+			},
+		);
+	},
+);
 
 test.serial('waitUntilExit resolves after stdout write callback', async t => {
 	let writeCallbackFired = false;
