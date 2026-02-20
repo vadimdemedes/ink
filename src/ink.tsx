@@ -4,7 +4,7 @@ import {throttle, type DebouncedFunc} from 'es-toolkit/compat';
 import ansiEscapes from 'ansi-escapes';
 import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
-import {onExit} from 'signal-exit';
+import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
 import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/constants.js';
 import {type FiberRoot} from 'react-reconciler';
@@ -288,7 +288,7 @@ export default class Ink {
 		);
 
 		// Unmount when process exits
-		this.unsubscribeExit = onExit(this.unmount, {alwaysLast: false});
+		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 
 		if (isDev()) {
 			// @ts-expect-error outdated types
