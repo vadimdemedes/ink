@@ -217,6 +217,85 @@ test('plain text followed by incomplete escape holds escape as pending', t => {
 	t.is(parser.flushPendingEscape(), '\u001B');
 });
 
+const deleteAndBackspaceCases = [
+	{
+		title: 'splits batched delete characters into individual events',
+		chunks: ['\u007F\u007F\u007F'],
+		events: ['\u007F', '\u007F', '\u007F'],
+	},
+	{
+		title: 'splits batched backspace characters into individual events',
+		chunks: ['\u0008\u0008\u0008'],
+		events: ['\u0008', '\u0008', '\u0008'],
+	},
+	{
+		title: 'splits mixed delete and backspace characters',
+		chunks: ['\u007F\u0008\u007F'],
+		events: ['\u007F', '\u0008', '\u007F'],
+	},
+	{
+		title: 'splits mixed printable text and delete characters',
+		chunks: ['abc\u007F\u007F\u007F'],
+		events: ['abc', '\u007F', '\u007F', '\u007F'],
+	},
+	{
+		title: 'single delete character is preserved as individual event',
+		chunks: ['\u007F'],
+		events: ['\u007F'],
+	},
+	{
+		title: 'single backspace character is preserved as individual event',
+		chunks: ['\u0008'],
+		events: ['\u0008'],
+	},
+	{
+		title: 'splits trailing delete from text',
+		chunks: ['abc\u007F'],
+		events: ['abc', '\u007F'],
+	},
+	{
+		title: 'splits delete characters before escape sequences',
+		chunks: ['\u007F\u007F\u001B[A'],
+		events: ['\u007F', '\u007F', '\u001B[A'],
+	},
+	{
+		title: 'splits delete characters after escape sequences',
+		chunks: ['\u001B[A\u007F\u007F'],
+		events: ['\u001B[A', '\u007F', '\u007F'],
+	},
+	{
+		title: 'splits delete characters between escape sequences',
+		chunks: ['\u001B[A\u007F\u001B[B'],
+		events: ['\u001B[A', '\u007F', '\u001B[B'],
+	},
+	{
+		title: 'splits backspace characters around escape sequences',
+		chunks: ['\u0008\u001B[A\u0008'],
+		events: ['\u0008', '\u001B[A', '\u0008'],
+	},
+	{
+		title: 'splits interleaved text and delete characters',
+		chunks: ['ab\u007Fcd'],
+		events: ['ab', '\u007F', 'cd'],
+	},
+	{
+		title: 'does not split pasted carriage return from text',
+		chunks: ['\rtest'],
+		events: ['\rtest'],
+	},
+	{
+		title: 'does not split pasted tab from text',
+		chunks: ['\ttest'],
+		events: ['\ttest'],
+	},
+] as const;
+
+for (const testCase of deleteAndBackspaceCases) {
+	test(testCase.title, t => {
+		t.deepEqual(parseChunks(testCase.chunks), testCase.events);
+	});
+}
+
 test('assembles CSI sequence from single-byte chunks', t => {
 	const parser = createInputParser();
 

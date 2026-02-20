@@ -250,13 +250,18 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				key.shift = true;
 			}
 
-			// If app is not supposed to exit on Ctrl+C, then let input listener handle it
-			if (!(input === 'c' && key.ctrl) || !internal_exitOnCtrlC) {
-				// @ts-expect-error TypeScript types for `batchedUpdates` require an argument, but React's codebase doesn't provide it and it works without it as expected.
-				reconciler.batchedUpdates(() => {
-					inputHandler(input, key);
-				});
+			// If app is supposed to exit on Ctrl+C, skip input listeners.
+			if (input === 'c' && key.ctrl && internal_exitOnCtrlC) {
+				return;
 			}
+
+			// Use discreteUpdates to assign DiscreteEventPriority to state
+			// updates from keyboard input, ensuring they are processed at the
+			// highest priority in concurrent mode.
+			// @ts-expect-error Types require 5 arguments (fn, a, b, c, d) but only fn is needed at runtime.
+			reconciler.discreteUpdates(() => {
+				inputHandler(input, key);
+			});
 		};
 
 		internal_eventEmitter?.on('input', handleData);
