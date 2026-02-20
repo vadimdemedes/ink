@@ -175,8 +175,7 @@ test('hard-wrap single-word BEL-terminated OSC hyperlink', t => {
 });
 
 // See https://github.com/vadimdemedes/ink/issues/633
-// Failing until @alcalzone/ansi-tokenize handles ST-terminated OSC sequences.
-test.failing('hard-wrap single-word ST-terminated OSC hyperlink', t => {
+test('hard-wrap single-word ST-terminated OSC hyperlink', t => {
 	const hyperlink =
 		'\u001B]8;;https://example.com\u001B\\abcdefghij\u001B]8;;\u001B\\';
 	const output = renderToString(
