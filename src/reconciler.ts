@@ -5,7 +5,7 @@ import {
 } from 'react-reconciler/constants.js';
 import * as Scheduler from 'scheduler';
 import Yoga, {type Node as YogaNode} from 'yoga-layout';
-import {createContext} from 'react';
+import {createContext, version as ReactVersion} from 'react';
 import {
 	createTextNode,
 	appendChildNode,
@@ -105,7 +105,13 @@ async function loadPackageJson() {
 		new URL('../package.json', import.meta.url),
 		'utf8',
 	);
-	return JSON.parse(content) as {name: string; version: string};
+
+	const parsedContent = JSON.parse(content) as {
+		name: string;
+		version: string;
+	};
+
+	return {name: parsedContent.name, version: parsedContent.version};
 }
 
 const packageJson = isDev()
@@ -113,10 +119,16 @@ const packageJson = isDev()
 			try {
 				return await loadPackageJson();
 			} catch {
-				return {name: undefined, version: undefined};
+				return {
+					name: 'ink',
+					version: ReactVersion,
+				};
 			}
 		})()
-	: {name: undefined, version: undefined};
+	: {
+			name: 'ink',
+			version: ReactVersion,
+		};
 
 export default createReconciler<
 	ElementNames,
