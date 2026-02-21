@@ -132,6 +132,17 @@ test.serial('don’t exit while raw mode is active', async t => {
 	});
 });
 
+test.serial('exit when DEV is set', async t => {
+	const output = await run('exit-normally', {
+		env: {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			DEV: 'true',
+		},
+	});
+	// Warning output depends on whether a local React DevTools server is running.
+	t.true(output.includes('exited'));
+});
+
 test.serial('exit on exit() with error and static output', async t => {
 	const output = await run('exit-with-static');
 	// Error is propagated, not swallowed

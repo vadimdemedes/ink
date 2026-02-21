@@ -27,25 +27,18 @@ import {isDev} from './utils.js';
 // We need to conditionally perform devtools connection to avoid
 // accidentally breaking other third-party code.
 // See https://github.com/vadimdemedes/ink/issues/384
+// See https://github.com/vadimdemedes/ink/issues/648
 if (isDev()) {
+	// Intentionally no warning when the package is missing.
+	// DEV may be set for other reasons; devtools is opt-in via installing the package.
+	let isDevtoolsInstalled = false;
 	try {
+		import.meta.resolve('react-devtools-core');
+		isDevtoolsInstalled = true;
+	} catch {}
+
+	if (isDevtoolsInstalled) {
 		await import('./devtools.js');
-	} catch (error: any) {
-		if (error.code === 'ERR_MODULE_NOT_FOUND') {
-			console.warn(
-				`
-The environment variable DEV is set to true, so Ink tried to import \`react-devtools-core\`,
-but this failed as it was not installed. Debugging with React Devtools requires it.
-
-To install use this command:
-
-$ npm install --save-dev react-devtools-core
-				`.trim() + '\n',
-			);
-		} else {
-			// eslint-disable-next-line @typescript-eslint/only-throw-error
-			throw error;
-		}
 	}
 }
 
