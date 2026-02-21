@@ -5,7 +5,7 @@ import {
 } from 'react-reconciler/constants.js';
 import * as Scheduler from 'scheduler';
 import Yoga, {type Node as YogaNode} from 'yoga-layout';
-import {createContext} from 'react';
+import {createContext, version as ReactVersion} from 'react';
 import {
 	createTextNode,
 	appendChildNode,
@@ -105,12 +105,25 @@ async function loadPackageJson() {
 		new URL('../package.json', import.meta.url),
 		'utf8',
 	);
-	return JSON.parse(content) as {name: string; version: string};
+
+	const parsedContent = JSON.parse(content) as {
+		name: string;
+		version: string;
+	};
+
+	return {name: parsedContent.name, version: parsedContent.version};
 }
 
-const packageJson = isDev()
-	? await loadPackageJson()
-	: {name: undefined, version: undefined};
+let packageJson = {
+	name: 'ink',
+	version: ReactVersion,
+};
+
+if (isDev()) {
+	try {
+		packageJson = await loadPackageJson();
+	} catch {}
+}
 
 export default createReconciler<
 	ElementNames,
@@ -359,6 +372,6 @@ export default createReconciler<
 	waitForCommitToBeReady() {
 		return null;
 	},
-	rendererPackageName: packageJson.name,
-	rendererVersion: packageJson.version,
+	rendererPackageName: packageJson.name || 'ink',
+	rendererVersion: packageJson.version || ReactVersion,
 });
