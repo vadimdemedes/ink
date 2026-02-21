@@ -114,21 +114,16 @@ async function loadPackageJson() {
 	return {name: parsedContent.name, version: parsedContent.version};
 }
 
-const packageJson = isDev()
-	? await (async () => {
-			try {
-				return await loadPackageJson();
-			} catch {
-				return {
-					name: 'ink',
-					version: ReactVersion,
-				};
-			}
-		})()
-	: {
-			name: 'ink',
-			version: ReactVersion,
-		};
+let packageJson = {
+	name: 'ink',
+	version: ReactVersion,
+};
+
+if (isDev()) {
+	try {
+		packageJson = await loadPackageJson();
+	} catch {}
+}
 
 export default createReconciler<
 	ElementNames,
@@ -377,6 +372,6 @@ export default createReconciler<
 	waitForCommitToBeReady() {
 		return null;
 	},
-	rendererPackageName: packageJson.name,
-	rendererVersion: packageJson.version,
+	rendererPackageName: packageJson.name || 'ink',
+	rendererVersion: packageJson.version || ReactVersion,
 });
