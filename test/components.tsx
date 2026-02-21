@@ -3,7 +3,7 @@ import test from 'ava';
 import chalk from 'chalk';
 import stripAnsi from 'strip-ansi';
 import React, {Component, useState} from 'react';
-import {spy} from 'sinon';
+import {spy, stub} from 'sinon';
 import ansiEscapes from 'ansi-escapes';
 import {
 	Box,
@@ -13,9 +13,11 @@ import {
 	Static,
 	Text,
 	Transform,
+	useInput,
 	useStdin,
 } from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
+import {emitReadable} from './helpers/create-stdin.js';
 import {
 	renderToString,
 	renderToStringAsync,
@@ -582,6 +584,91 @@ test('disable raw mode when all input components are unmounted', t => {
 	t.true(stdin.setRawMode.calledTwice);
 	t.true(stdin.ref.calledOnce);
 	t.true(stdin.unref.calledOnce);
+	t.deepEqual(stdin.setRawMode.lastCall.args, [false]);
+});
+
+test('re-ref stdin when input is used after previous unmount', t => {
+	const stdin = new EventEmitter() as NodeJS.WriteStream;
+	stdin.setEncoding = () => {};
+	stdin.read = stub();
+	stdin.setRawMode = spy();
+	stdin.isTTY = true; // Without this, setRawMode will throw
+	stdin.ref = spy();
+	stdin.unref = spy();
+
+	const options = {
+		stdout: createStdout(),
+		stdin,
+		debug: true,
+	};
+
+	class Input extends React.Component<{setRawMode: (mode: boolean) => void}> {
+		override render() {
+			return <Text>Test</Text>;
+		}
+
+		override componentDidMount() {
+			this.props.setRawMode(true);
+		}
+
+		override componentWillUnmount() {
+			this.props.setRawMode(false);
+		}
+	}
+
+	function Test({onInput}: {readonly onInput: (input: string) => void}) {
+		const {setRawMode} = useStdin();
+		useInput(input => {
+			onInput(input);
+		});
+
+		return <Input setRawMode={setRawMode} />;
+	}
+
+	const onFirstMountInput = spy();
+	const onSecondMountInput = spy();
+
+	// First render
+	const {unmount} = render(
+		<Test onInput={onFirstMountInput} />,
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+		options as any,
+	);
+
+	t.true(stdin.ref.calledOnce);
+	t.true(stdin.setRawMode.calledOnce);
+	t.deepEqual(stdin.setRawMode.firstCall.args, [true]);
+	emitReadable(stdin, 'a');
+	t.is(onFirstMountInput.callCount, 1);
+	t.deepEqual(onFirstMountInput.firstCall.args, ['a']);
+
+	// Unmount first instance
+	unmount();
+
+	t.true(stdin.unref.calledOnce);
+	t.true(stdin.setRawMode.calledTwice);
+	t.deepEqual(stdin.setRawMode.lastCall.args, [false]);
+
+	// Second render with new Ink instance reusing the same stdin
+	const {unmount: unmount2} = render(
+		<Test onInput={onSecondMountInput} />,
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+		options as any,
+	);
+
+	t.true(stdin.ref.calledTwice);
+	t.true(stdin.setRawMode.calledThrice);
+	t.deepEqual(stdin.setRawMode.lastCall.args, [true]);
+	emitReadable(stdin, 'b');
+	t.is(onSecondMountInput.callCount, 1);
+	t.deepEqual(onSecondMountInput.firstCall.args, ['b']);
+	t.is(onFirstMountInput.callCount, 1);
+
+	// Unmount second instance
+	unmount2();
+
+	t.true(stdin.unref.calledTwice);
+	t.is(stdin.setRawMode.callCount, 4);
 	t.deepEqual(stdin.setRawMode.lastCall.args, [false]);
 });
 
