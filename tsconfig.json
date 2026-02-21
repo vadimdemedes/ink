@@ -11,11 +11,5 @@
 		"jsx": "react",
 		"isolatedModules": true
 	},
-	"include": ["src"],
-	"ts-node": {
-		"transpileOnly": true,
-		"files": true,
-		"experimentalResolver": true,
-		"experimentalSpecifierResolution": "node"
-	}
+	"include": ["src"]
 }
