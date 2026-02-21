@@ -2,7 +2,11 @@
 	"extends": "@sindresorhus/tsconfig",
 	"compilerOptions": {
 		"outDir": "build",
-		"lib": ["DOM", "DOM.Iterable", "ES2023"],
+		"lib": [
+			"DOM",
+			"DOM.Iterable",
+			"ES2023"
+		],
 		"sourceMap": true,
 		"jsx": "react",
 		"isolatedModules": true
