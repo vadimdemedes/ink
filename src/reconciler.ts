@@ -128,7 +128,9 @@ if (isDev) {
 	try {
 		const loaded = await loadPackageJson();
 		packageInfo = {
+			// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 			name: loaded.name || packageInfo.name,
+			// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 			version: loaded.version || packageInfo.version,
 		};
 	} catch {}
