@@ -167,13 +167,25 @@ export type Styles = {
 
 	/**
 	Sets a minimum width of the element.
+	Percentages aren't supported yet; see https://github.com/facebook/yoga/issues/872.
 	*/
 	readonly minWidth?: number | string;
 
 	/**
-	Sets a minimum height of the element.
+	Sets a minimum height of the element in lines (rows). You can also set it as a percentage, which will calculate the minimum height based on the height of the parent element.
 	*/
 	readonly minHeight?: number | string;
+
+	/**
+	Sets a maximum width of the element.
+	Percentages aren't supported yet; see https://github.com/facebook/yoga/issues/872.
+	*/
+	readonly maxWidth?: number | string;
+
+	/**
+	Sets a maximum height of the element in lines (rows). You can also set it as a percentage, which will calculate the maximum height based on the height of the parent element.
+	*/
+	readonly maxHeight?: number | string;
 
 	/**
 	Set this property to `none` to hide the element.
@@ -523,6 +535,22 @@ const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
 			node.setMinHeightPercent(Number.parseInt(style.minHeight, 10));
 		} else {
 			node.setMinHeight(style.minHeight ?? 0);
+		}
+	}
+
+	if ('maxWidth' in style) {
+		if (typeof style.maxWidth === 'string') {
+			node.setMaxWidthPercent(Number.parseInt(style.maxWidth, 10));
+		} else {
+			node.setMaxWidth(style.maxWidth);
+		}
+	}
+
+	if ('maxHeight' in style) {
+		if (typeof style.maxHeight === 'string') {
+			node.setMaxHeightPercent(Number.parseInt(style.maxHeight, 10));
+		} else {
+			node.setMaxHeight(style.maxHeight);
 		}
 	}
 };

@@ -465,10 +465,24 @@ Percentages aren't supported yet; see https://github.com/facebook/yoga/issues/87
 
 ##### minHeight
 
+Type: `number` `string`
+
+Sets a minimum height of the element in lines (rows).
+You can also set it as a percentage, which will calculate the minimum height based on the height of the parent element.
+
+##### maxWidth
+
 Type: `number`
 
-Sets a minimum height of the element.
+Sets a maximum width of the element.
 Percentages aren't supported yet; see https://github.com/facebook/yoga/issues/872.
+
+##### maxHeight
+
+Type: `number` `string`
+
+Sets a maximum height of the element in lines (rows).
+You can also set it as a percentage, which will calculate the maximum height based on the height of the parent element.
 
 #### Padding
 

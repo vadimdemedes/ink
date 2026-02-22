@@ -1,10 +1,11 @@
 import React from 'react';
 import test from 'ava';
-import {Box, Text} from '../src/index.js';
+import {Box, Text, render} from '../src/index.js';
 import {
 	renderToString,
 	renderToStringAsync,
 } from './helpers/render-to-string.js';
+import createStdout from './helpers/create-stdout.js';
 
 test('set width', t => {
 	const output = renderToString(
@@ -122,6 +123,141 @@ test('set min height', t => {
 	);
 
 	t.is(largerOutput, 'A\n\n\n');
+});
+
+test('set min height in percent', t => {
+	const output = renderToString(
+		<Box height={6} flexDirection="column">
+			<Box minHeight="50%">
+				<Text>A</Text>
+			</Box>
+			<Text>B</Text>
+		</Box>,
+	);
+
+	t.is(output, 'A\n\n\nB\n\n');
+});
+
+test('set max width', t => {
+	const constrainedOutput = renderToString(
+		<Box>
+			<Box maxWidth={3}>
+				<Text>AAAAA</Text>
+			</Box>
+			<Text>B</Text>
+		</Box>,
+		{columns: 10},
+	);
+
+	t.is(constrainedOutput, 'AAAB\nAA');
+
+	const unconstrainedOutput = renderToString(
+		<Box>
+			<Box maxWidth={10}>
+				<Text>AAA</Text>
+			</Box>
+			<Text>B</Text>
+		</Box>,
+	);
+
+	t.is(unconstrainedOutput, 'AAAB');
+});
+
+test('clears maxWidth on rerender', t => {
+	const stdout = createStdout();
+
+	function Test({maxWidth}: {readonly maxWidth?: number}) {
+		return (
+			<Box>
+				<Box maxWidth={maxWidth}>
+					<Text>AAAAA</Text>
+				</Box>
+				<Text>B</Text>
+			</Box>
+		);
+	}
+
+	const {rerender} = render(<Test maxWidth={3} />, {
+		stdout,
+		debug: true,
+	});
+
+	t.is(stdout.write.lastCall.args[0], 'AAAB\nAA');
+
+	rerender(<Test maxWidth={undefined} />);
+	t.is(stdout.write.lastCall.args[0], 'AAAAAB');
+});
+
+test('set max height', t => {
+	const constrainedOutput = renderToString(
+		<Box maxHeight={2}>
+			<Box height={4}>
+				<Text>A</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.is(constrainedOutput, 'A\n');
+
+	const unconstrainedOutput = renderToString(
+		<Box maxHeight={4}>
+			<Text>A</Text>
+		</Box>,
+	);
+
+	t.is(unconstrainedOutput, 'A');
+});
+
+test('clears maxHeight on rerender', t => {
+	const stdout = createStdout();
+
+	function Test({maxHeight}: {readonly maxHeight?: number}) {
+		return (
+			<Box maxHeight={maxHeight}>
+				<Box height={4}>
+					<Text>A</Text>
+				</Box>
+			</Box>
+		);
+	}
+
+	const {rerender} = render(<Test maxHeight={2} />, {
+		stdout,
+		debug: true,
+	});
+
+	t.is(stdout.write.lastCall.args[0], 'A\n');
+
+	rerender(<Test maxHeight={undefined} />);
+	t.is(stdout.write.lastCall.args[0], 'A\n\n\n');
+});
+
+test.failing('set max width in percent', t => {
+	const output = renderToString(
+		<Box width={10}>
+			<Box maxWidth="50%">
+				<Text>AAAAAAAAAA</Text>
+			</Box>
+			<Text>B</Text>
+		</Box>,
+	);
+
+	t.is(output, 'AAAAAB');
+});
+
+test('set max height in percent', t => {
+	const output = renderToString(
+		<Box height={6} flexDirection="column">
+			<Box maxHeight="50%">
+				<Box height={6}>
+					<Text>A</Text>
+				</Box>
+			</Box>
+			<Text>B</Text>
+		</Box>,
+	);
+
+	t.is(output, 'A\n\n\nB\n\n');
 });
 
 // Concurrent mode tests
