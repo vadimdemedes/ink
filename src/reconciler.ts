@@ -27,7 +27,7 @@ import {isDev} from './utils.js';
 // We need to conditionally perform devtools connection to avoid
 // accidentally breaking other third-party code.
 // See https://github.com/vadimdemedes/ink/issues/384
-if (isDev()) {
+if (isDev) {
 	try {
 		await import('./devtools.js');
 	} catch (error: any) {
@@ -124,7 +124,7 @@ let packageInfo = {
 	version: ReactVersion,
 };
 
-if (isDev()) {
+if (isDev) {
 	try {
 		const loaded = await loadPackageJson();
 		packageInfo = {

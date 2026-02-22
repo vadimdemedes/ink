@@ -290,7 +290,7 @@ export default class Ink {
 		// Unmount when process exits
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 
-		if (isDev()) {
+		if (isDev) {
 			// @ts-expect-error outdated types
 			reconciler.injectIntoDevTools();
 		}
