@@ -108,6 +108,42 @@ const stripKittyQueryResponsesAndTrailingPartial = (
 	return keptBytes;
 };
 
+const shouldClearTerminalForFrame = ({
+	isTty,
+	viewportRows,
+	previousOutputHeight,
+	nextOutputHeight,
+	isUnmounting,
+}: {
+	isTty: boolean;
+	viewportRows: number;
+	previousOutputHeight: number;
+	nextOutputHeight: number;
+	isUnmounting: boolean;
+}): boolean => {
+	if (!isTty) {
+		return false;
+	}
+
+	const hadPreviousFrame = previousOutputHeight > 0;
+	const wasFullscreen = previousOutputHeight >= viewportRows;
+	const wasOverflowing = previousOutputHeight > viewportRows;
+	const isOverflowing = nextOutputHeight > viewportRows;
+	const isLeavingFullscreen = wasFullscreen && nextOutputHeight < viewportRows;
+	const shouldClearOnUnmount = isUnmounting && wasFullscreen;
+
+	return (
+		// Overflowing frames still need full clear fallback.
+		wasOverflowing ||
+		(isOverflowing && hadPreviousFrame) ||
+		// Clear when shrinking from fullscreen to non-fullscreen output.
+		isLeavingFullscreen ||
+		// Preserve legacy unmount behavior for fullscreen frames: final teardown
+		// render should clear once to avoid leaving a scrolled viewport state.
+		shouldClearOnUnmount
+	);
+};
+
 const isErrorInput = (value: unknown): value is Error => {
 	return (
 		value instanceof Error ||
@@ -182,7 +218,7 @@ export default class Ink {
 	// This variable is used only in debug mode to store full static output
 	// so that it's rerendered every time, not just new static parts, like in non-debug mode
 	private fullStaticOutput: string;
-	private exitPromise?: Promise<unknown>;
+	private readonly exitPromise!: Promise<unknown>;
 	private exitResult: unknown;
 	private beforeExitHandler?: () => void;
 	private restoreConsole?: () => void;
@@ -307,6 +343,15 @@ export default class Ink {
 		}
 
 		this.initKittyKeyboard();
+
+		this.exitPromise = new Promise((resolve, reject) => {
+			this.resolveExitPromise = resolve;
+			this.rejectExitPromise = reject;
+		});
+		// Prevent global unhandled-rejection crashes when app code exits with an
+		// error but consumers never call waitUntilExit().
+		// eslint-disable-next-line promise/prefer-await-to-then
+		void this.exitPromise.catch(noop);
 	}
 
 	getTerminalWidth = () => {
@@ -481,7 +526,16 @@ export default class Ink {
 			this.options.stdout.isTTY && outputHeight >= this.options.stdout.rows;
 		const outputToRender = isFullscreen ? output : output + '\n';
 
-		if (this.lastOutputHeight >= this.options.stdout.rows) {
+		const viewportRows = this.options.stdout.rows;
+		const shouldClearTerminal = shouldClearTerminalForFrame({
+			isTty: this.options.stdout.isTTY,
+			viewportRows,
+			previousOutputHeight: this.lastOutputHeight,
+			nextOutputHeight: outputHeight,
+			isUnmounting: this.isUnmounting,
+		});
+
+		if (shouldClearTerminal) {
 			const sync = shouldSynchronize(this.options.stdout);
 			if (sync) {
 				this.options.stdout.write(bsu);
@@ -759,11 +813,6 @@ export default class Ink {
 	}
 
 	async waitUntilExit(): Promise<unknown> {
-		this.exitPromise ||= new Promise((resolve, reject) => {
-			this.resolveExitPromise = resolve;
-			this.rejectExitPromise = reject;
-		});
-
 		if (!this.beforeExitHandler) {
 			this.beforeExitHandler = () => {
 				this.unmount();

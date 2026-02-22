@@ -1,8 +1,9 @@
 import EventEmitter from 'node:events';
 import test from 'ava';
 import chalk from 'chalk';
+import stripAnsi from 'strip-ansi';
 import React, {Component, useState} from 'react';
-import {spy} from 'sinon';
+import {spy, stub} from 'sinon';
 import ansiEscapes from 'ansi-escapes';
 import {
 	Box,
@@ -12,9 +13,11 @@ import {
 	Static,
 	Text,
 	Transform,
+	useInput,
 	useStdin,
 } from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
+import {emitReadable} from './helpers/create-stdin.js';
 import {
 	renderToString,
 	renderToStringAsync,
@@ -117,6 +120,73 @@ test('truncate text in the beginning', t => {
 	);
 
 	t.is(output, '… World');
+});
+
+// See https://github.com/vadimdemedes/ink/issues/633
+test('do not wrap text with BEL-terminated OSC hyperlinks', t => {
+	// "Click here" is 10 chars, box is 20 wide - should not wrap
+	const hyperlink =
+		'\u001B]8;;https://example.com\u0007Click here\u001B]8;;\u0007';
+	const output = renderToString(
+		<Box width={20}>
+			<Text wrap="wrap">{hyperlink}</Text>
+		</Box>,
+	);
+
+	t.is(stripAnsi(output), 'Click here');
+});
+
+// See https://github.com/vadimdemedes/ink/issues/633
+test('do not wrap text with ST-terminated OSC hyperlinks', t => {
+	const hyperlink =
+		'\u001B]8;;https://example.com\u001B\\Click here\u001B]8;;\u001B\\';
+	const output = renderToString(
+		<Box width={20}>
+			<Text wrap="wrap">{hyperlink}</Text>
+		</Box>,
+	);
+
+	t.is(stripAnsi(output), 'Click here');
+});
+
+// See https://github.com/vadimdemedes/ink/issues/633
+test('do not wrap text with non-hyperlink OSC sequences', t => {
+	// Title-setting OSC followed by visible text
+	const text = '\u001B]0;My Title\u0007Some text';
+	const output = renderToString(
+		<Box width={20}>
+			<Text wrap="wrap">{text}</Text>
+		</Box>,
+	);
+
+	t.is(stripAnsi(output), 'Some text');
+});
+
+// See https://github.com/vadimdemedes/ink/issues/633
+test('hard-wrap single-word BEL-terminated OSC hyperlink', t => {
+	// "abcdefghij" is 10 chars, box is 5 wide - forces wrapWord codepath
+	const hyperlink =
+		'\u001B]8;;https://example.com\u0007abcdefghij\u001B]8;;\u0007';
+	const output = renderToString(
+		<Box width={5}>
+			<Text wrap="wrap">{hyperlink}</Text>
+		</Box>,
+	);
+
+	t.is(stripAnsi(output), 'abcde\nfghij');
+});
+
+// See https://github.com/vadimdemedes/ink/issues/633
+test('hard-wrap single-word ST-terminated OSC hyperlink', t => {
+	const hyperlink =
+		'\u001B]8;;https://example.com\u001B\\abcdefghij\u001B]8;;\u001B\\';
+	const output = renderToString(
+		<Box width={5}>
+			<Text wrap="wrap">{hyperlink}</Text>
+		</Box>,
+	);
+
+	t.is(stripAnsi(output), 'abcde\nfghij');
 });
 
 test('ignore empty text node', t => {
@@ -514,6 +584,91 @@ test('disable raw mode when all input components are unmounted', t => {
 	t.true(stdin.setRawMode.calledTwice);
 	t.true(stdin.ref.calledOnce);
 	t.true(stdin.unref.calledOnce);
+	t.deepEqual(stdin.setRawMode.lastCall.args, [false]);
+});
+
+test('re-ref stdin when input is used after previous unmount', t => {
+	const stdin = new EventEmitter() as NodeJS.WriteStream;
+	stdin.setEncoding = () => {};
+	stdin.read = stub();
+	stdin.setRawMode = spy();
+	stdin.isTTY = true; // Without this, setRawMode will throw
+	stdin.ref = spy();
+	stdin.unref = spy();
+
+	const options = {
+		stdout: createStdout(),
+		stdin,
+		debug: true,
+	};
+
+	class Input extends React.Component<{setRawMode: (mode: boolean) => void}> {
+		override render() {
+			return <Text>Test</Text>;
+		}
+
+		override componentDidMount() {
+			this.props.setRawMode(true);
+		}
+
+		override componentWillUnmount() {
+			this.props.setRawMode(false);
+		}
+	}
+
+	function Test({onInput}: {readonly onInput: (input: string) => void}) {
+		const {setRawMode} = useStdin();
+		useInput(input => {
+			onInput(input);
+		});
+
+		return <Input setRawMode={setRawMode} />;
+	}
+
+	const onFirstMountInput = spy();
+	const onSecondMountInput = spy();
+
+	// First render
+	const {unmount} = render(
+		<Test onInput={onFirstMountInput} />,
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+		options as any,
+	);
+
+	t.true(stdin.ref.calledOnce);
+	t.true(stdin.setRawMode.calledOnce);
+	t.deepEqual(stdin.setRawMode.firstCall.args, [true]);
+	emitReadable(stdin, 'a');
+	t.is(onFirstMountInput.callCount, 1);
+	t.deepEqual(onFirstMountInput.firstCall.args, ['a']);
+
+	// Unmount first instance
+	unmount();
+
+	t.true(stdin.unref.calledOnce);
+	t.true(stdin.setRawMode.calledTwice);
+	t.deepEqual(stdin.setRawMode.lastCall.args, [false]);
+
+	// Second render with new Ink instance reusing the same stdin
+	const {unmount: unmount2} = render(
+		<Test onInput={onSecondMountInput} />,
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+		options as any,
+	);
+
+	t.true(stdin.ref.calledTwice);
+	t.true(stdin.setRawMode.calledThrice);
+	t.deepEqual(stdin.setRawMode.lastCall.args, [true]);
+	emitReadable(stdin, 'b');
+	t.is(onSecondMountInput.callCount, 1);
+	t.deepEqual(onSecondMountInput.firstCall.args, ['b']);
+	t.is(onFirstMountInput.callCount, 1);
+
+	// Unmount second instance
+	unmount2();
+
+	t.true(stdin.unref.calledTwice);
+	t.is(stdin.setRawMode.callCount, 4);
 	t.deepEqual(stdin.setRawMode.lastCall.args, [false]);
 });
 

@@ -1,5 +1,6 @@
 import process from 'node:process';
 import vm from 'node:vm';
+import {spawn as spawnProcess} from 'node:child_process';
 import {PassThrough, Writable} from 'node:stream';
 import url from 'node:url';
 import * as path from 'node:path';
@@ -7,7 +8,7 @@ import {createRequire} from 'node:module';
 import FakeTimers from '@sinonjs/fake-timers';
 import {stub} from 'sinon';
 import test, {type ExecutionContext} from 'ava';
-import React, {type ReactNode, useEffect, useState} from 'react';
+import React, {type ReactNode, PureComponent, useEffect, useState} from 'react';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
@@ -83,6 +84,187 @@ const term = (fixture: string, args: string[] = []) => {
 
 	return result;
 };
+
+const countOccurrences = (text: string, searchValue: string): number => {
+	if (searchValue === '') {
+		return 0;
+	}
+
+	return text.split(searchValue).length - 1;
+};
+
+type Issue450Fixture =
+	| 'issue-450-full-height-rerender'
+	| 'issue-450-full-height-rerender-with-marker'
+	| 'issue-450-height-minus-one-rerender'
+	| 'issue-450-full-height-with-static-rerender'
+	| 'issue-450-initial-overflow'
+	| 'issue-450-initial-fullscreen'
+	| 'issue-450-grow-to-fullscreen-rerender'
+	| 'issue-450-shrink-from-fullscreen-rerender'
+	| 'issue-450-shrink-from-overflow-rerender'
+	| 'issue-450-static-shrink-from-fullscreen-rerender';
+
+const runIssue450Fixture = async (
+	fixture: Issue450Fixture,
+	rows = 6,
+): Promise<string> => {
+	const processResult = term(fixture, [String(rows)]);
+	await processResult.waitForExit();
+	return processResult.output;
+};
+
+const runNonTtyFixture = async (
+	fixture: string,
+	args: string[] = [],
+): Promise<string> => {
+	let output = '';
+	let errorOutput = '';
+	const env = {
+		...process.env,
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		NODE_NO_WARNINGS: '1',
+	};
+	// Force non-CI code path while still using a non-TTY stdout stream.
+	env.CI = 'false';
+
+	const fixtureProcess = spawnProcess(
+		'node',
+		[
+			'--import=tsx',
+			path.join(__dirname, `./fixtures/${fixture}.tsx`),
+			...args,
+		],
+		{
+			cwd: __dirname,
+			env,
+			stdio: ['ignore', 'pipe', 'pipe'],
+		},
+	);
+
+	fixtureProcess.stdout.on('data', (data: Uint8Array | string) => {
+		output += typeof data === 'string' ? data : data.toString();
+	});
+
+	fixtureProcess.stderr.on('data', (data: Uint8Array | string) => {
+		errorOutput += typeof data === 'string' ? data : data.toString();
+	});
+
+	const exitCode = await new Promise<number>((resolve, reject) => {
+		fixtureProcess.on('error', reject);
+		fixtureProcess.on('close', code => {
+			resolve(code ?? 0);
+		});
+	});
+
+	if (exitCode !== 0) {
+		throw new Error(
+			`Non-TTY fixture exited with code ${exitCode}: ${errorOutput}`,
+		);
+	}
+
+	return output;
+};
+
+type Issue450FixtureResult = {
+	output: string;
+	clearTerminalCount: number;
+	eraseLineCount: number;
+};
+
+const getIssue450ControlSequenceCounts = (output: string) => ({
+	clearTerminalCount: countOccurrences(output, ansiEscapes.clearTerminal),
+	eraseLineCount: countOccurrences(output, ansiEscapes.eraseLines(1)),
+});
+
+const runIssue450FixtureWithCounts = async (
+	fixture: Issue450Fixture,
+	rows = 6,
+): Promise<Issue450FixtureResult> => {
+	const output = await runIssue450Fixture(fixture, rows);
+	const {clearTerminalCount, eraseLineCount} =
+		getIssue450ControlSequenceCounts(output);
+
+	return {
+		output,
+		clearTerminalCount,
+		eraseLineCount,
+	};
+};
+
+const getOutputBeforeMarker = (
+	t: ExecutionContext,
+	output: string,
+	marker: string,
+): string => {
+	const markerIndex = output.indexOf(marker);
+	t.true(markerIndex >= 0, `Fixture marker "${marker}" should be present`);
+	return markerIndex >= 0 ? output.slice(0, markerIndex) : output;
+};
+
+const runIssue450FixtureBeforeMarker = async (
+	t: ExecutionContext,
+	fixture: Issue450Fixture,
+	marker: string,
+	rows = 6,
+): Promise<string> => {
+	const output = await runIssue450Fixture(fixture, rows);
+	return getOutputBeforeMarker(t, output, marker);
+};
+
+const assertIssue450DynamicFrameOutput = (
+	t: ExecutionContext,
+	output: string,
+): void => {
+	t.true(
+		output.includes('frame 8'),
+		'Fixture should render multiple dynamic frames',
+	);
+};
+
+class SynchronousErrorBoundary extends PureComponent<
+	{
+		onError: (error: Error) => void;
+		children?: ReactNode;
+	},
+	{error?: Error}
+> {
+	static displayName = 'SynchronousErrorBoundary';
+
+	static override getDerivedStateFromError(error: Error) {
+		return {error};
+	}
+
+	override state: {error?: Error} = {
+		error: undefined,
+	};
+
+	override componentDidCatch(error: Error) {
+		this.props.onError(error);
+	}
+
+	override render() {
+		if (this.state.error) {
+			return null;
+		}
+
+		return this.props.children;
+	}
+}
+
+function SynchronousRenderErrorComponent() {
+	throw new Error('Synchronous render error');
+}
+
+function ThrowingComponentWithBoundary() {
+	const {exit} = useApp();
+
+	return (
+		<SynchronousErrorBoundary onError={exit}>
+			<SynchronousRenderErrorComponent />
+		</SynchronousErrorBoundary>
+	);
+}
 
 test.serial('do not erase screen', async t => {
 	const ps = term('erase', ['4']);
@@ -219,6 +401,295 @@ test.serial(
 			'Should render exactly terminal row count without an extra line',
 		);
 		t.true(lines.at(-1)?.includes('#442 bottom') ?? false);
+	},
+);
+
+test.serial(
+	'#450: full-height rerenders should not repeatedly clear terminal',
+	async t => {
+		const {output, clearTerminalCount, eraseLineCount} =
+			await runIssue450FixtureWithCounts('issue-450-full-height-rerender');
+
+		assertIssue450DynamicFrameOutput(t, output);
+		t.true(
+			clearTerminalCount <= 1,
+			`Expected at most one clearTerminal sequence, received ${clearTerminalCount}`,
+		);
+		t.true(
+			eraseLineCount > 0,
+			'Expected incremental erase sequences for fullscreen rerenders',
+		);
+	},
+);
+
+test.serial(
+	'#450: initial overflowing frame should not clear terminal',
+	async t => {
+		const renderedMarker = '__INITIAL_OVERFLOW_FRAME_RENDERED__';
+		const outputBeforeMarker = await runIssue450FixtureBeforeMarker(
+			t,
+			'issue-450-initial-overflow',
+			renderedMarker,
+			3,
+		);
+
+		t.false(
+			outputBeforeMarker.includes(ansiEscapes.clearTerminal),
+			'Initial overflowing render should not clear terminal',
+		);
+	},
+);
+
+test.serial(
+	'#450: initial full-height frame should not clear terminal',
+	async t => {
+		const renderedMarker = '__INITIAL_FULLSCREEN_FRAME_RENDERED__';
+		const outputBeforeMarker = await runIssue450FixtureBeforeMarker(
+			t,
+			'issue-450-initial-fullscreen',
+			renderedMarker,
+			3,
+		);
+
+		t.false(
+			outputBeforeMarker.includes(ansiEscapes.clearTerminal),
+			'Initial full-height render should not clear terminal',
+		);
+	},
+);
+
+test.serial(
+	'#450 control: rows - 1 rerenders should avoid clearTerminal',
+	async t => {
+		const {output, clearTerminalCount, eraseLineCount} =
+			await runIssue450FixtureWithCounts('issue-450-height-minus-one-rerender');
+
+		assertIssue450DynamicFrameOutput(t, output);
+		t.is(clearTerminalCount, 0);
+		t.true(
+			eraseLineCount > 0,
+			'Expected incremental erase sequences for non-fullscreen rerenders',
+		);
+	},
+);
+
+test.serial(
+	'#450: full-height rerenders should not clear before unmount',
+	async t => {
+		const renderedMarker = '__FULL_HEIGHT_RERENDER_COMPLETED__';
+		const outputBeforeMarker = await runIssue450FixtureBeforeMarker(
+			t,
+			'issue-450-full-height-rerender-with-marker',
+			renderedMarker,
+		);
+		const {clearTerminalCount} =
+			getIssue450ControlSequenceCounts(outputBeforeMarker);
+
+		assertIssue450DynamicFrameOutput(t, outputBeforeMarker);
+		t.is(clearTerminalCount, 0);
+	},
+);
+
+test.serial(
+	'#450: grow from rows - 1 to full-height should not clear before unmount',
+	async t => {
+		const renderedMarker = '__GROW_TO_FULLSCREEN_RERENDER_COMPLETED__';
+		const outputBeforeMarker = await runIssue450FixtureBeforeMarker(
+			t,
+			'issue-450-grow-to-fullscreen-rerender',
+			renderedMarker,
+		);
+		const {clearTerminalCount} =
+			getIssue450ControlSequenceCounts(outputBeforeMarker);
+
+		assertIssue450DynamicFrameOutput(t, outputBeforeMarker);
+		t.is(clearTerminalCount, 0);
+	},
+);
+
+test.serial(
+	'#450: shrink from full-height to rows - 1 should clear exactly once',
+	async t => {
+		const {output, clearTerminalCount} = await runIssue450FixtureWithCounts(
+			'issue-450-shrink-from-fullscreen-rerender',
+		);
+
+		assertIssue450DynamicFrameOutput(t, output);
+		t.is(clearTerminalCount, 1);
+	},
+);
+
+test.serial(
+	'#450: shrink from overflow to rows - 1 should clear exactly once',
+	async t => {
+		const {output, clearTerminalCount} = await runIssue450FixtureWithCounts(
+			'issue-450-shrink-from-overflow-rerender',
+		);
+
+		assertIssue450DynamicFrameOutput(t, output);
+		t.is(clearTerminalCount, 1);
+	},
+);
+
+test.serial(
+	'#450: <Static> with shrink from full-height should clear exactly once',
+	async t => {
+		const {output, clearTerminalCount} = await runIssue450FixtureWithCounts(
+			'issue-450-static-shrink-from-fullscreen-rerender',
+		);
+
+		t.true(output.includes('#450 static line'));
+		assertIssue450DynamicFrameOutput(t, output);
+		t.is(clearTerminalCount, 1);
+	},
+);
+
+test.serial(
+	'#450: non-TTY full-height rerenders should never clear terminal',
+	t => {
+		const rows = 6;
+		const stdout = createStdout();
+		stdout.rows = rows;
+		const writes = captureWrites(stdout);
+
+		function NonTtyRerenderTestComponent({
+			frameCount,
+		}: {
+			readonly frameCount: number;
+		}) {
+			return (
+				<Box height={rows} flexDirection="column">
+					<Text>#450 top</Text>
+					<Box flexGrow={1}>
+						<Text>{`frame ${frameCount}`}</Text>
+					</Box>
+					<Text>#450 bottom</Text>
+				</Box>
+			);
+		}
+
+		const {rerender, unmount} = render(
+			<NonTtyRerenderTestComponent frameCount={0} />,
+			{stdout},
+		);
+
+		rerender(<NonTtyRerenderTestComponent frameCount={1} />);
+		rerender(<NonTtyRerenderTestComponent frameCount={2} />);
+
+		const {clearTerminalCount} = getIssue450ControlSequenceCounts(
+			writes.join(''),
+		);
+		t.is(clearTerminalCount, 0);
+
+		unmount();
+	},
+);
+
+test.serial(
+	'#450: non-TTY overflow transitions should never clear terminal',
+	t => {
+		const rows = 3;
+		const stdout = createStdout();
+		stdout.rows = rows;
+		const writes = captureWrites(stdout);
+
+		function NonTtyOverflowTransitionTestComponent({
+			lineCount,
+		}: {
+			readonly lineCount: number;
+		}) {
+			const lines = [];
+			for (let lineNumber = 1; lineNumber <= lineCount; lineNumber++) {
+				lines.push(<Text key={lineNumber}>{`line ${lineNumber}`}</Text>);
+			}
+
+			return <Box flexDirection="column">{lines}</Box>;
+		}
+
+		const {rerender, unmount} = render(
+			<NonTtyOverflowTransitionTestComponent lineCount={2} />,
+			{stdout},
+		);
+
+		rerender(<NonTtyOverflowTransitionTestComponent lineCount={4} />);
+
+		const {clearTerminalCount} = getIssue450ControlSequenceCounts(
+			writes.join(''),
+		);
+		t.is(clearTerminalCount, 0);
+
+		unmount();
+	},
+);
+
+test.serial(
+	'#450: viewport shrink into overflow should clear once',
+	async t => {
+		const rows = 6;
+		const stdout = createTtyStdout();
+		stdout.rows = rows;
+		const writes = captureWrites(stdout);
+
+		function ResizeBoundaryTestComponent() {
+			return (
+				<Box height={rows} flexDirection="column">
+					<Text>#450 top</Text>
+					<Box flexGrow={1}>
+						<Text>#450 middle</Text>
+					</Box>
+					<Text>#450 bottom</Text>
+				</Box>
+			);
+		}
+
+		const {unmount} = render(<ResizeBoundaryTestComponent />, {stdout});
+
+		writes.length = 0;
+		stdout.rows = rows - 1;
+		stdout.emit('resize');
+		await delay(0);
+
+		const {clearTerminalCount} = getIssue450ControlSequenceCounts(
+			writes.join(''),
+		);
+		t.is(clearTerminalCount, 1);
+
+		unmount();
+	},
+);
+
+test.serial(
+	'#450: non-TTY grow-to-overflow rerender should not clear terminal',
+	async t => {
+		const output = await runNonTtyFixture(
+			'issue-450-grow-to-overflow-rerender',
+			['3'],
+		);
+		t.false(output.includes(ansiEscapes.clearTerminal));
+	},
+);
+
+test.serial(
+	'#450: full-height rerenders with <Static> should not repeatedly clear terminal',
+	async t => {
+		const {output, clearTerminalCount, eraseLineCount} =
+			await runIssue450FixtureWithCounts(
+				'issue-450-full-height-with-static-rerender',
+			);
+
+		t.true(
+			output.includes('#450 static line'),
+			'Fixture should emit static output',
+		);
+		assertIssue450DynamicFrameOutput(t, output);
+		t.true(
+			clearTerminalCount <= 1,
+			`Expected at most one clearTerminal sequence, received ${clearTerminalCount}`,
+		);
+		t.true(
+			eraseLineCount > 0,
+			'Expected incremental erase sequences for fullscreen rerenders',
+		);
 	},
 );
 
@@ -453,6 +924,29 @@ test.serial('unmount forces pending throttled render', t => {
 		clock.uninstall();
 	}
 });
+
+test.serial(
+	'should reject waitUntilExit when app exits during synchronous render error handling',
+	async t => {
+		const stdout = createStdout();
+		const {waitUntilExit} = render(<ThrowingComponentWithBoundary />, {
+			stdout,
+			patchConsole: false,
+		});
+
+		await t.throwsAsync(
+			Promise.race([
+				waitUntilExit(),
+				delay(500).then(() => {
+					throw new Error('waitUntilExit did not settle');
+				}),
+			]),
+			{
+				message: 'Synchronous render error',
+			},
+		);
+	},
+);
 
 test.serial('waitUntilExit resolves after stdout write callback', async t => {
 	let writeCallbackFired = false;
