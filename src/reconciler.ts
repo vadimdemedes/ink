@@ -106,22 +106,31 @@ async function loadPackageJson() {
 		'utf8',
 	);
 
-	const parsedContent = JSON.parse(content) as {
-		name: string;
-		version: string;
-	};
+	const parsedContent = JSON.parse(content) as
+		| {
+				name?: string;
+				version?: string;
+		  }
+		| undefined;
 
-	return {name: parsedContent.name, version: parsedContent.version};
+	return {
+		name: parsedContent?.name,
+		version: parsedContent?.version,
+	};
 }
 
-let packageJson = {
+let packageInfo = {
 	name: 'ink',
 	version: ReactVersion,
 };
 
 if (isDev()) {
 	try {
-		packageJson = await loadPackageJson();
+		const loaded = await loadPackageJson();
+		packageInfo = {
+			name: loaded.name || packageInfo.name,
+			version: loaded.version || packageInfo.version,
+		};
 	} catch {}
 }
 
@@ -372,6 +381,6 @@ export default createReconciler<
 	waitForCommitToBeReady() {
 		return null;
 	},
-	rendererPackageName: packageJson.name || 'ink',
-	rendererVersion: packageJson.version || ReactVersion,
+	rendererPackageName: packageInfo.name,
+	rendererVersion: packageInfo.version,
 });
