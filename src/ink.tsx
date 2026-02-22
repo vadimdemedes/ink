@@ -11,7 +11,6 @@ import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import wrapAnsi from 'wrap-ansi';
 import terminalSize from 'terminal-size';
-import {isDev} from './utils.js';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
@@ -290,7 +289,7 @@ export default class Ink {
 		// Unmount when process exits
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 
-		if (isDev) {
+		if (process.env['DEV'] === 'true') {
 			// @ts-expect-error outdated types
 			reconciler.injectIntoDevTools();
 		}
