@@ -8,7 +8,13 @@ import {createRequire} from 'node:module';
 import FakeTimers from '@sinonjs/fake-timers';
 import {stub} from 'sinon';
 import test, {type ExecutionContext} from 'ava';
-import React, {type ReactNode, PureComponent, useEffect, useState} from 'react';
+import React, {
+	type ReactElement,
+	type ReactNode,
+	PureComponent,
+	useEffect,
+	useState,
+} from 'react';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
@@ -91,6 +97,49 @@ const countOccurrences = (text: string, searchValue: string): number => {
 	}
 
 	return text.split(searchValue).length - 1;
+};
+
+const isWriteBarrierChunk = (chunk: string | Uint8Array): boolean =>
+	(typeof chunk === 'string' && chunk === '') ||
+	(chunk instanceof Uint8Array && chunk.length === 0);
+
+const toRenderedChunk = (chunk: string | Uint8Array): string =>
+	stripAnsi(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString());
+
+const createDelayedWriteCallbackStdout = ({
+	shouldDelay,
+	onDelayElapsed,
+	delayMs = 150,
+}: {
+	readonly shouldDelay: (chunk: string | Uint8Array) => boolean;
+	readonly onDelayElapsed: () => void;
+	readonly delayMs?: number;
+}): NodeJS.WriteStream => {
+	let didDelayOnce = false;
+
+	const stdout = new Writable({
+		write(
+			chunk: string | Uint8Array,
+			_encoding: BufferEncoding,
+			callback: (error?: Error) => void,
+		) {
+			if (!didDelayOnce && shouldDelay(chunk)) {
+				didDelayOnce = true;
+
+				setTimeout(() => {
+					onDelayElapsed();
+					callback();
+				}, delayMs);
+
+				return;
+			}
+
+			callback();
+		},
+	}) as unknown as NodeJS.WriteStream;
+
+	stdout.columns = 100;
+	return stdout;
 };
 
 type Issue450Fixture =
@@ -225,7 +274,7 @@ const assertIssue450DynamicFrameOutput = (
 class SynchronousErrorBoundary extends PureComponent<
 	{
 		onError: (error: Error) => void;
-		children?: ReactNode;
+		children?: ReactElement;
 	},
 	{error?: Error}
 > {
@@ -972,16 +1021,528 @@ test.serial('waitUntilExit resolves after stdout write callback', async t => {
 });
 
 test.serial(
+	'createDelayedWriteCallbackStdout delays only the first matching chunk',
+	async t => {
+		let delayCount = 0;
+
+		const stdout = createDelayedWriteCallbackStdout({
+			shouldDelay(chunk) {
+				return !isWriteBarrierChunk(chunk);
+			},
+			onDelayElapsed() {
+				delayCount++;
+			},
+			delayMs: 80,
+		});
+
+		const writeChunk = async (chunk: string | Uint8Array): Promise<void> =>
+			new Promise<void>(resolve => {
+				stdout.write(chunk, () => {
+					resolve();
+				});
+			});
+
+		await writeChunk('');
+		t.is(delayCount, 0);
+
+		let didDelayedWriteResolve = false;
+		const delayedWritePromise = (async () => {
+			await writeChunk('Hello');
+			didDelayedWriteResolve = true;
+		})();
+
+		await delay(20);
+		t.false(didDelayedWriteResolve);
+		await delayedWritePromise;
+		t.is(delayCount, 1);
+
+		let didImmediateWriteResolve = false;
+		const immediateWritePromise = (async () => {
+			await writeChunk('World');
+			didImmediateWriteResolve = true;
+		})();
+
+		await delay(0);
+		t.true(didImmediateWriteResolve);
+		await immediateWritePromise;
+		t.is(delayCount, 1);
+	},
+);
+
+test.serial(
+	'waitUntilRenderFlush resolves after stdout write callback',
+	async t => {
+		let didInitialWriteCallbackFire = false;
+
+		const stdout = createDelayedWriteCallbackStdout({
+			shouldDelay(chunk) {
+				return !isWriteBarrierChunk(chunk);
+			},
+			onDelayElapsed() {
+				didInitialWriteCallbackFire = true;
+			},
+		});
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(
+			<Text>Hello</Text>,
+			{
+				stdout,
+			},
+		);
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+
+		t.true(didInitialWriteCallbackFire);
+	},
+);
+
+test.serial(
+	'waitUntilRenderFlush flushes pending throttled render',
+	async t => {
+		const stdout = createStdout();
+		const {unmount, rerender, waitUntilExit, waitUntilRenderFlush} = render(
+			<ThrottleTestComponent text="Hello" />,
+			{
+				stdout,
+				maxFps: 1,
+			},
+		);
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		t.is((stdout.write as any).callCount, 1);
+
+		rerender(<ThrottleTestComponent text="World" />);
+		t.is((stdout.write as any).callCount, 1);
+
+		await waitUntilRenderFlush();
+
+		t.is((stdout.write as any).callCount, 2);
+		t.is(
+			stripAnsi((stdout.write as any).lastCall.args[0] as string),
+			'World\n',
+		);
+	},
+);
+
+test.serial(
+	'waitUntilRenderFlush resolves when stdout is not writable',
+	async t => {
+		const stdout = createStdout();
+		const {unmount, rerender, waitUntilExit, waitUntilRenderFlush} = render(
+			<ThrottleTestComponent text="Hello" />,
+			{
+				stdout,
+				maxFps: 1,
+			},
+		);
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		t.is((stdout.write as any).callCount, 1);
+
+		rerender(<ThrottleTestComponent text="World" />);
+		t.is((stdout.write as any).callCount, 1);
+
+		(stdout as NodeJS.WriteStream & {writable?: boolean}).writable = false;
+		await waitUntilRenderFlush();
+
+		t.is((stdout.write as any).callCount, 1);
+	},
+);
+
+test.serial(
+	'waitUntilRenderFlush waits for rerender write callback',
+	async t => {
+		let didSecondWriteCallbackFire = false;
+
+		const stdout = createDelayedWriteCallbackStdout({
+			shouldDelay(chunk) {
+				return (
+					!isWriteBarrierChunk(chunk) &&
+					toRenderedChunk(chunk).includes('World')
+				);
+			},
+			onDelayElapsed() {
+				didSecondWriteCallbackFire = true;
+			},
+		});
+
+		const {unmount, rerender, waitUntilExit, waitUntilRenderFlush} = render(
+			<Text>Hello</Text>,
+			{stdout},
+		);
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+		rerender(<Text>World</Text>);
+		await waitUntilRenderFlush();
+
+		t.true(didSecondWriteCallbackFire);
+	},
+);
+
+test.serial(
+	'waitUntilRenderFlush waits for concurrent rerender commit',
+	async t => {
+		let renderedOutput = '';
+
+		const stdout = new Writable({
+			write(
+				chunk: string | Uint8Array,
+				_encoding: BufferEncoding,
+				callback: (error?: Error) => void,
+			) {
+				renderedOutput += toRenderedChunk(chunk);
+				callback();
+			},
+		}) as unknown as NodeJS.WriteStream;
+
+		stdout.columns = 100;
+
+		const {unmount, rerender, waitUntilExit, waitUntilRenderFlush} = render(
+			<Text>Hello</Text>,
+			{
+				stdout,
+				concurrent: true,
+			},
+		);
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+		rerender(<Text>World</Text>);
+		await waitUntilRenderFlush();
+
+		t.true(renderedOutput.includes('World'));
+	},
+);
+
+test.serial(
+	'waitUntilRenderFlush waits for all concurrent waiters on the same rerender',
+	async t => {
+		let didWorldWriteCallbackFire = false;
+		let didAnyWaiterResolveBeforeWorldWriteCallback = false;
+
+		const stdout = createDelayedWriteCallbackStdout({
+			shouldDelay(chunk) {
+				return (
+					!isWriteBarrierChunk(chunk) &&
+					toRenderedChunk(chunk).includes('World')
+				);
+			},
+			onDelayElapsed() {
+				didWorldWriteCallbackFire = true;
+			},
+		});
+
+		const {unmount, rerender, waitUntilExit, waitUntilRenderFlush} = render(
+			<Text>Hello</Text>,
+			{stdout},
+		);
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+		rerender(<Text>World</Text>);
+
+		const waitForFlush = async () => {
+			await waitUntilRenderFlush();
+
+			if (!didWorldWriteCallbackFire) {
+				didAnyWaiterResolveBeforeWorldWriteCallback = true;
+			}
+		};
+
+		await Promise.all([waitForFlush(), waitForFlush()]);
+
+		t.true(didWorldWriteCallbackFire);
+		t.false(didAnyWaiterResolveBeforeWorldWriteCallback);
+	},
+);
+
+test.serial(
+	'useApp waitUntilRenderFlush resolves after the first frame write callback',
+	async t => {
+		let didInitialWriteCallbackFire = false;
+		let didWaitUntilRenderFlushResolve = false;
+
+		const stdout = createDelayedWriteCallbackStdout({
+			shouldDelay(chunk) {
+				return !isWriteBarrierChunk(chunk);
+			},
+			onDelayElapsed() {
+				didInitialWriteCallbackFire = true;
+			},
+		});
+
+		function Test() {
+			const {exit, waitUntilRenderFlush} = useApp();
+
+			useEffect(() => {
+				void (async () => {
+					await waitUntilRenderFlush();
+					didWaitUntilRenderFlushResolve = true;
+					exit();
+				})();
+			}, [exit, waitUntilRenderFlush]);
+
+			return <Text>Hello</Text>;
+		}
+
+		const {waitUntilExit} = render(<Test />, {stdout});
+		await waitUntilExit();
+
+		t.true(didInitialWriteCallbackFire);
+		t.true(didWaitUntilRenderFlushResolve);
+	},
+);
+
+test.serial(
+	'useApp waitUntilRenderFlush waits for state update frame flush',
+	async t => {
+		let didWorldWriteCallbackFire = false;
+		let didWaitUntilRenderFlushResolve = false;
+
+		const stdout = createDelayedWriteCallbackStdout({
+			shouldDelay(chunk) {
+				return (
+					!isWriteBarrierChunk(chunk) &&
+					toRenderedChunk(chunk).includes('World')
+				);
+			},
+			onDelayElapsed() {
+				didWorldWriteCallbackFire = true;
+			},
+		});
+
+		function Test() {
+			const {exit, waitUntilRenderFlush} = useApp();
+			const [text, setText] = useState('Hello');
+
+			useEffect(() => {
+				setText('World');
+			}, []);
+
+			useEffect(() => {
+				if (text !== 'World') {
+					return;
+				}
+
+				void (async () => {
+					await waitUntilRenderFlush();
+					didWaitUntilRenderFlushResolve = true;
+					exit();
+				})();
+			}, [exit, text, waitUntilRenderFlush]);
+
+			return <Text>{text}</Text>;
+		}
+
+		const {waitUntilExit} = render(<Test />, {stdout});
+		await waitUntilExit();
+
+		t.true(didWorldWriteCallbackFire);
+		t.true(didWaitUntilRenderFlushResolve);
+	},
+);
+
+test.serial(
+	'useApp waitUntilRenderFlush waits for state update queued in same effect tick',
+	async t => {
+		let didWorldWriteCallbackFire = false;
+		let didWaitUntilRenderFlushResolveBeforeWorldWrite = false;
+
+		const stdout = createDelayedWriteCallbackStdout({
+			shouldDelay(chunk) {
+				return (
+					!isWriteBarrierChunk(chunk) &&
+					toRenderedChunk(chunk).includes('World')
+				);
+			},
+			onDelayElapsed() {
+				didWorldWriteCallbackFire = true;
+			},
+		});
+
+		function Test() {
+			const {exit, waitUntilRenderFlush} = useApp();
+			const [text, setText] = useState('Hello');
+
+			useEffect(() => {
+				void (async () => {
+					setText('World');
+					await waitUntilRenderFlush();
+
+					if (!didWorldWriteCallbackFire) {
+						didWaitUntilRenderFlushResolveBeforeWorldWrite = true;
+					}
+
+					exit();
+				})();
+			}, [exit, waitUntilRenderFlush]);
+
+			return <Text>{text}</Text>;
+		}
+
+		const {waitUntilExit} = render(<Test />, {
+			stdout,
+			concurrent: true,
+		});
+		await waitUntilExit();
+
+		t.true(didWorldWriteCallbackFire);
+		t.false(didWaitUntilRenderFlushResolveBeforeWorldWrite);
+	},
+);
+
+test.serial('waitUntilRenderFlush resolves after unmount', async t => {
+	const stdout = createStdout();
+	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(
+		<Text>Hello</Text>,
+		{
+			stdout,
+		},
+	);
+
+	unmount();
+	await waitUntilExit();
+	await waitUntilRenderFlush();
+	t.pass();
+});
+
+test.serial(
+	'waitUntilRenderFlush waits for unmount write callback',
+	async t => {
+		let didUnmountWriteCallbackFire = false;
+
+		const stdout = createDelayedWriteCallbackStdout({
+			shouldDelay(chunk) {
+				return isWriteBarrierChunk(chunk);
+			},
+			onDelayElapsed() {
+				didUnmountWriteCallbackFire = true;
+			},
+		});
+
+		const {unmount, waitUntilRenderFlush} = render(<Text>Hello</Text>, {
+			stdout,
+		});
+
+		unmount();
+		await waitUntilRenderFlush();
+
+		t.true(didUnmountWriteCallbackFire);
+	},
+);
+
+test.serial(
+	'waitUntilRenderFlush after unmount does not register beforeExit listener',
+	async t => {
+		const stdout = createStdout();
+		const {unmount, waitUntilRenderFlush} = render(<Text>Hello</Text>, {
+			stdout,
+		});
+		const beforeWaitListenerCount = process.listenerCount('beforeExit');
+
+		unmount();
+		await waitUntilRenderFlush();
+
+		t.is(process.listenerCount('beforeExit'), beforeWaitListenerCount);
+	},
+);
+
+test.serial('waitUntilRenderFlush resolves after exit with error', async t => {
+	const stdout = createStdout();
+
+	function Test() {
+		const {exit} = useApp();
+
+		useEffect(() => {
+			exit(new Error('boom'));
+		}, []);
+
+		return <Text>Hello</Text>;
+	}
+
+	const {waitUntilExit, waitUntilRenderFlush} = render(<Test />, {stdout});
+
+	// Verify exit rejects with the error.
+	await t.throwsAsync(waitUntilExit(), {message: 'boom'});
+
+	// Flush must resolve (not reject) even after an error exit.
+	await waitUntilRenderFlush();
+});
+
+test.serial(
+	'issue 596: useEffect can run before the first frame write callback',
+	async t => {
+		let didInitialWriteCallbackFire = false;
+		let didUseEffectRun = false;
+
+		const stdout = createDelayedWriteCallbackStdout({
+			shouldDelay(chunk) {
+				return !isWriteBarrierChunk(chunk);
+			},
+			onDelayElapsed() {
+				didInitialWriteCallbackFire = true;
+			},
+		});
+
+		function Test() {
+			useEffect(() => {
+				didUseEffectRun = true;
+			}, []);
+
+			return <Text>Hello</Text>;
+		}
+
+		const {unmount, waitUntilExit} = render(<Test />, {stdout});
+
+		await delay(20);
+		t.true(didUseEffectRun);
+		t.false(didInitialWriteCallbackFire);
+
+		unmount();
+		await waitUntilExit();
+
+		t.true(didInitialWriteCallbackFire);
+	},
+);
+
+test.serial(
 	'waitUntilExit resolves first exit value when duplicate exits happen during teardown',
 	async t => {
 		let barrierWriteCallback: (() => void) | undefined;
 
 		const stdout = new Writable({
-			write(chunk, _encoding, callback) {
-				if (
-					(typeof chunk === 'string' && chunk === '') ||
-					(chunk instanceof Uint8Array && chunk.length === 0)
-				) {
+			write(
+				chunk: string | Uint8Array,
+				_encoding: BufferEncoding,
+				callback: (error?: Error) => void,
+			) {
+				if (isWriteBarrierChunk(chunk)) {
 					barrierWriteCallback = callback;
 					return;
 				}
@@ -1180,14 +1741,11 @@ test.serial(
 		let barrierWriteCallbackFired = false;
 
 		const stdout = new Writable({
-			write(chunk, _encoding, callback) {
+			write(chunk: string | Uint8Array, _encoding, callback) {
 				setTimeout(() => {
 					writeCallbackFired = true;
 
-					if (
-						(typeof chunk === 'string' && chunk === '') ||
-						(chunk instanceof Uint8Array && chunk.length === 0)
-					) {
+					if (isWriteBarrierChunk(chunk)) {
 						barrierWriteCallbackFired = true;
 					}
 

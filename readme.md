@@ -1738,7 +1738,7 @@ Useful when there are multiple `useInput` hooks used at once to avoid handling t
 
 ### useApp()
 
-`useApp` is a React hook that exposes a method to manually exit the app (unmount).
+`useApp` is a React hook that exposes app lifecycle methods.
 
 #### exit(errorOrResult?)
 
@@ -1750,12 +1750,13 @@ Exit (unmount) the whole Ink app.
 
 Type: `Error | unknown`
 
-Optional value that controls how [`waitUntilExit`](waituntilexit) settles:
+Optional value that controls how [`waitUntilExit`](#waituntilexit) settles:
 - `exit()` resolves with `undefined`.
 - `exit(error)` rejects when `error` is an `Error`.
 - `exit(value)` resolves with `value`.
 
 ```js
+import {useEffect} from 'react';
 import {useApp} from 'ink';
 
 const Example = () => {
@@ -1766,9 +1767,33 @@ const Example = () => {
 		setTimeout(() => {
 			exit();
 		}, 5000);
-	}, []);
+	}, [exit]);
 
 	return …
+};
+```
+
+#### waitUntilRenderFlush()
+
+Type: `Function`
+
+Returns a promise that settles after pending render output is flushed to stdout.
+
+```js
+import {useEffect} from 'react';
+import {useApp} from 'ink';
+
+const Example = () => {
+	const {waitUntilRenderFlush} = useApp();
+
+	useEffect(() => {
+		void (async () => {
+			await waitUntilRenderFlush();
+			runNextCommand();
+		})();
+	}, [waitUntilRenderFlush]);
+
+	return …;
 };
 ```
 
@@ -2246,7 +2271,9 @@ This functionality is powered by [patch-console](https://github.com/vadimdemedes
 Type: `({renderTime: number}) => void`\
 Default: `undefined`
 
-Runs the given callback after each render and re-render with a metrics object.
+Runs the given callback after each render and re-render with render metrics.
+This callback runs after Ink commits a frame, but it does not wait for `stdout`/`stderr` stream callbacks.
+To run code after output is flushed, use [`waitUntilRenderFlush()`](#waituntilrenderflush).
 
 ###### isScreenReaderEnabled
 
@@ -2443,6 +2470,7 @@ unmount();
 Returns a promise that settles when the app is unmounted.
 
 It resolves with the value passed to `exit(value)` and rejects with the error passed to `exit(error)`.
+When `unmount()` is called manually, it settles after unmount-related stdout writes complete.
 
 ```jsx
 const {unmount, waitUntilExit} = render(<MyApp />);
@@ -2450,6 +2478,21 @@ const {unmount, waitUntilExit} = render(<MyApp />);
 setTimeout(unmount, 1000);
 
 await waitUntilExit(); // resolves after `unmount()` is called
+```
+
+##### waitUntilRenderFlush()
+
+Returns a promise that settles after pending render output is flushed to stdout.
+
+Useful when you need to run code only after a frame is written:
+
+```jsx
+const {rerender, waitUntilRenderFlush} = render(<MyApp step="loading" />);
+
+rerender(<MyApp step="ready" />);
+await waitUntilRenderFlush(); // output for "ready" is flushed
+
+runNextCommand();
 ```
 
 ##### cleanup()

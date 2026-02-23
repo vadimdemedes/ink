@@ -9,14 +9,39 @@ export type Props = {
 	- `exit(value)` — resolves `waitUntilExit()` with `value`.
 	*/
 	readonly exit: (errorOrResult?: Error | unknown) => void;
+
+	/**
+	Returns a promise that settles after pending render output is flushed to stdout.
+
+	@example
+	```jsx
+	import {useEffect} from 'react';
+	import {useApp} from 'ink';
+
+	const Example = () => {
+		const {waitUntilRenderFlush} = useApp();
+
+		useEffect(() => {
+			void (async () => {
+				await waitUntilRenderFlush();
+				runNextCommand();
+			})();
+		}, [waitUntilRenderFlush]);
+
+		return …;
+	};
+	```
+	*/
+	readonly waitUntilRenderFlush: () => Promise<void>;
 };
 
 /**
-`AppContext` is a React context that exposes a method to manually exit the app (unmount).
+`AppContext` is a React context that exposes lifecycle methods for the app.
 */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const AppContext = createContext<Props>({
 	exit() {},
+	async waitUntilRenderFlush() {},
 });
 
 AppContext.displayName = 'InternalAppContext';

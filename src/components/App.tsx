@@ -32,6 +32,7 @@ type Props = {
 	readonly writeToStderr: (data: string) => void;
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (errorOrResult?: unknown) => void;
+	readonly onWaitUntilRenderFlush: () => Promise<void>;
 	readonly setCursorPosition: (position: CursorPosition | undefined) => void;
 };
 
@@ -52,6 +53,7 @@ function App({
 	writeToStderr,
 	exitOnCtrlC,
 	onExit,
+	onWaitUntilRenderFlush,
 	setCursorPosition,
 }: Props): React.ReactNode {
 	const [isFocusEnabled, setIsFocusEnabled] = useState(true);
@@ -444,8 +446,9 @@ function App({
 	const appContextValue = useMemo(
 		() => ({
 			exit: handleExit,
+			waitUntilRenderFlush: onWaitUntilRenderFlush,
 		}),
-		[handleExit],
+		[handleExit, onWaitUntilRenderFlush],
 	);
 
 	const stdinContextValue = useMemo(

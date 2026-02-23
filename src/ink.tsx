@@ -28,6 +28,11 @@ import {
 
 const noop = () => {};
 
+const yieldImmediate = async () =>
+	new Promise<void>(resolve => {
+		setImmediate(resolve);
+	});
+
 const kittyQueryEscapeByte = 0x1b;
 const kittyQueryOpenBracketByte = 0x5b;
 const kittyQueryQuestionMarkByte = 0x3f;
@@ -152,6 +157,49 @@ const isErrorInput = (value: unknown): value is Error => {
 	);
 };
 
+type MaybeWritableStream = NodeJS.WriteStream & {
+	writable?: boolean;
+	writableEnded?: boolean;
+	destroyed?: boolean;
+	writableLength?: number;
+	_writableState?: unknown;
+};
+
+const getWritableStreamState = (stdout: MaybeWritableStream) => {
+	const canWriteToStdout =
+		!stdout.destroyed && !stdout.writableEnded && (stdout.writable ?? true);
+	const hasWritableState =
+		stdout._writableState !== undefined || stdout.writableLength !== undefined;
+
+	return {
+		canWriteToStdout,
+		hasWritableState,
+	};
+};
+
+const settleThrottle = (
+	throttled: unknown,
+	canWriteToStdout: boolean,
+): void => {
+	if (
+		!throttled ||
+		typeof (throttled as {flush?: unknown}).flush !== 'function'
+	) {
+		return;
+	}
+
+	const throttledValue = throttled as {
+		flush: () => void;
+		cancel?: () => void;
+	};
+
+	if (canWriteToStdout) {
+		throttledValue.flush();
+	} else if (typeof throttledValue.cancel === 'function') {
+		throttledValue.cancel();
+	}
+};
+
 /**
 Performance metrics for a render operation.
 */
@@ -228,6 +276,7 @@ export default class Ink {
 	private hasPendingThrottledRender = false;
 	private kittyProtocolEnabled = false;
 	private cancelKittyDetection?: () => void;
+	private nextRenderCommit?: {promise: Promise<void>; resolve: () => void};
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -431,6 +480,11 @@ export default class Ink {
 			return;
 		}
 
+		if (this.nextRenderCommit) {
+			this.nextRenderCommit.resolve();
+			this.nextRenderCommit = undefined;
+		}
+
 		const startTime = performance.now();
 		const {output, outputHeight, staticOutput} = render(
 			this.rootNode,
@@ -595,6 +649,7 @@ export default class Ink {
 					writeToStderr={this.writeToStderr}
 					setCursorPosition={this.setCursorPosition}
 					onExit={this.handleAppExit}
+					onWaitUntilRenderFlush={this.waitUntilRenderFlush}
 				>
 					{node}
 				</App>
@@ -683,32 +738,12 @@ export default class Ink {
 			this.beforeExitHandler = undefined;
 		}
 
-		const stdout = this.options.stdout as NodeJS.WriteStream & {
-			writable?: boolean;
-			writableEnded?: boolean;
-			destroyed?: boolean;
-			writableLength?: number;
-		};
-		const canWriteToStdout =
-			!stdout.destroyed && !stdout.writableEnded && (stdout.writable ?? true);
-		const settleThrottle = (throttled: {
-			flush?: () => void;
-			cancel?: () => void;
-		}): void => {
-			if (typeof throttled.flush !== 'function') {
-				return;
-			}
-
-			if (canWriteToStdout) {
-				throttled.flush();
-			} else if (typeof throttled.cancel === 'function') {
-				throttled.cancel();
-			}
-		};
+		const stdout = this.options.stdout as MaybeWritableStream;
+		const {canWriteToStdout, hasWritableState} = getWritableStreamState(stdout);
 
 		// Clear any pending throttled render timer on unmount. When stdout is writable,
 		// flush so the final frame is emitted; otherwise cancel to avoid delayed callbacks.
-		settleThrottle(this.throttledOnRender ?? {});
+		settleThrottle(this.throttledOnRender, canWriteToStdout);
 
 		if (canWriteToStdout) {
 			// If throttling is enabled and there is already a pending render, flushing above
@@ -745,10 +780,7 @@ export default class Ink {
 
 		// Flush any pending throttled log writes if possible, otherwise cancel to
 		// prevent delayed callbacks from writing to a closed stream.
-		const throttledLog = this.throttledLog as DebouncedFunc<
-			(output: string) => void
-		>;
-		settleThrottle(throttledLog);
+		settleThrottle(this.throttledLog, canWriteToStdout);
 
 		if (canWriteToStdout) {
 			if (this.kittyProtocolEnabled) {
@@ -800,9 +832,6 @@ export default class Ink {
 		};
 
 		const isProcessExiting = error !== undefined && !isErrorInput(error);
-		const hasWritableState =
-			(stdout as any)._writableState !== undefined ||
-			stdout.writableLength !== undefined;
 
 		if (isProcessExiting) {
 			resolveOrReject();
@@ -823,6 +852,54 @@ export default class Ink {
 		}
 
 		return this.exitPromise;
+	}
+
+	async waitUntilRenderFlush(): Promise<void> {
+		if (this.isUnmounted || this.isUnmounting) {
+			await this.awaitExit();
+			return;
+		}
+
+		// Yield to the macrotask queue so that React's scheduler has a chance to
+		// fire passive effects and process any work they enqueued.
+		await yieldImmediate();
+
+		if (this.isUnmounted || this.isUnmounting) {
+			await this.awaitExit();
+			return;
+		}
+
+		// In concurrent mode, React's scheduler may still be mid-render after
+		// the yield. Wait for the next render commit instead of polling.
+		if (this.isConcurrent && this.hasPendingConcurrentWork()) {
+			await Promise.race([this.awaitNextRender(), this.awaitExit()]);
+
+			if (this.isUnmounted || this.isUnmounting) {
+				this.nextRenderCommit = undefined;
+				await this.awaitExit();
+				return;
+			}
+		}
+
+		reconciler.flushSyncWork();
+
+		const stdout = this.options.stdout as MaybeWritableStream;
+		const {canWriteToStdout, hasWritableState} = getWritableStreamState(stdout);
+
+		// Flush pending throttled render/log timers so their output is included in this wait.
+		settleThrottle(this.throttledOnRender, canWriteToStdout);
+		settleThrottle(this.throttledLog, canWriteToStdout);
+
+		if (canWriteToStdout && hasWritableState) {
+			await new Promise<void>(resolve => {
+				this.options.stdout.write('', () => {
+					resolve();
+				});
+			});
+			return;
+		}
+
+		await yieldImmediate();
 	}
 
 	clear(): void {
@@ -852,6 +929,38 @@ export default class Ink {
 				}
 			}
 		});
+	}
+
+	// Waits for the exit promise to settle, suppressing any rejection.
+	// Errors are surfaced via waitUntilExit() instead.
+	private async awaitExit(): Promise<void> {
+		try {
+			await this.exitPromise;
+		} catch {}
+	}
+
+	private hasPendingConcurrentWork(): boolean {
+		const concurrentContainer = this.container as {
+			pendingLanes?: number;
+			callbackNode?: unknown;
+		};
+		return (
+			(concurrentContainer.pendingLanes ?? 0) !== 0 &&
+			concurrentContainer.callbackNode !== undefined &&
+			concurrentContainer.callbackNode !== null
+		);
+	}
+
+	private awaitNextRender(): Promise<void> {
+		if (!this.nextRenderCommit) {
+			let resolveRender!: () => void;
+			const promise = new Promise<void>(resolve => {
+				resolveRender = resolve;
+			});
+			this.nextRenderCommit = {promise, resolve: resolveRender};
+		}
+
+		return this.nextRenderCommit.promise;
 	}
 
 	private initKittyKeyboard(): void {
