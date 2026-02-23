@@ -301,7 +301,11 @@ export default createReconciler<
 		}
 
 		if (style && node.yogaNode) {
-			applyStyles(node.yogaNode, style);
+			applyStyles(
+				node.yogaNode,
+				style,
+				(newProps['style'] as Styles | undefined) ?? {},
+			);
 		}
 	},
 	commitTextUpdate(node, _oldText, newText) {

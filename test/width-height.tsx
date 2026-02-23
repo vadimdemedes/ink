@@ -232,6 +232,86 @@ test('clears maxHeight on rerender', t => {
 	t.is(stdout.write.lastCall.args[0], 'A\n\n\n');
 });
 
+test('set aspect ratio with width', t => {
+	const output = renderToString(
+		<Box flexDirection="column">
+			<Box width={8} aspectRatio={2} borderStyle="single">
+				<Text>X</Text>
+			</Box>
+			<Text>Y</Text>
+		</Box>,
+	);
+
+	t.is(output, '┌──────┐\n│X     │\n│      │\n└──────┘\nY');
+});
+
+test('set aspect ratio with height', t => {
+	const output = renderToString(
+		<Box flexDirection="column">
+			<Box height={3} aspectRatio={2} borderStyle="single">
+				<Text>X</Text>
+			</Box>
+			<Text>Y</Text>
+		</Box>,
+	);
+
+	t.is(output, '┌────┐\n│X   │\n└────┘\nY');
+});
+
+test('set aspect ratio with width and height', t => {
+	const output = renderToString(
+		<Box flexDirection="column">
+			<Box width={8} height={3} aspectRatio={2} borderStyle="single">
+				<Text>X</Text>
+			</Box>
+			<Text>Y</Text>
+		</Box>,
+	);
+
+	t.is(output, '┌────┐\n│X   │\n└────┘\nY');
+});
+
+test('set aspect ratio with maxHeight constraint', t => {
+	const output = renderToString(
+		<Box flexDirection="column">
+			<Box width={10} maxHeight={3} aspectRatio={2} borderStyle="single">
+				<Text>X</Text>
+			</Box>
+			<Text>Y</Text>
+		</Box>,
+	);
+
+	t.is(output, '┌────┐\n│X   │\n└────┘\nY');
+});
+
+test('clears aspectRatio on rerender', t => {
+	const stdout = createStdout();
+
+	function Test({aspectRatio}: {readonly aspectRatio?: number}) {
+		return (
+			<Box flexDirection="column">
+				<Box width={8} aspectRatio={aspectRatio} borderStyle="single">
+					<Text>X</Text>
+				</Box>
+				<Text>Y</Text>
+			</Box>
+		);
+	}
+
+	const {rerender} = render(<Test aspectRatio={2} />, {
+		stdout,
+		debug: true,
+	});
+
+	t.is(
+		stdout.write.lastCall.args[0],
+		'┌──────┐\n│X     │\n│      │\n└──────┘\nY',
+	);
+
+	rerender(<Test aspectRatio={undefined} />);
+	t.is(stdout.write.lastCall.args[0], '┌──────┐\n│X     │\n└──────┘\nY');
+});
+
 test.failing('set max width in percent', t => {
 	const output = renderToString(
 		<Box width={10}>

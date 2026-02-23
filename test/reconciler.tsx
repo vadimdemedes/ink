@@ -73,6 +73,28 @@ test('update text node', t => {
 	);
 });
 
+test('remove style prop from intrinsic node', t => {
+	function Test({withStyle}: {readonly withStyle: boolean}) {
+		return (
+			<ink-box style={withStyle ? {marginLeft: 1} : undefined}>
+				<ink-text>X</ink-text>
+			</ink-box>
+		);
+	}
+
+	const stdout = createStdout();
+
+	const {rerender} = render(<Test withStyle />, {
+		stdout,
+		debug: true,
+	});
+
+	t.is((stdout.write as any).lastCall.args[0], ' X');
+
+	rerender(<Test withStyle={false} />);
+	t.is((stdout.write as any).lastCall.args[0], 'X');
+});
+
 test('append child', t => {
 	function Test({append}: {readonly append?: boolean}) {
 		if (append) {

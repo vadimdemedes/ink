@@ -194,8 +194,9 @@ export const setAttribute = (
 	node.attributes[key] = value;
 };
 
-export const setStyle = (node: DOMNode, style: Styles): void => {
-	node.style = style;
+export const setStyle = (node: DOMNode, style?: Styles): void => {
+	// Rendering code assumes style is always an object.
+	node.style = style ?? {};
 };
 
 export const createTextNode = (text: string): TextNode => {

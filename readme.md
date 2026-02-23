@@ -484,6 +484,14 @@ Type: `number` `string`
 Sets a maximum height of the element in lines (rows).
 You can also set it as a percentage, which will calculate the maximum height based on the height of the parent element.
 
+##### aspectRatio
+
+Type: `number`
+
+Defines the aspect ratio (width/height) for the element.
+
+Use it with at least one size constraint (`width`, `height`, `minHeight`, or `maxHeight`) so Ink can derive the missing dimension.
+
 #### Padding
 
 ##### paddingTop
@@ -788,7 +796,7 @@ See [flex-wrap](https://css-tricks.com/almanac/properties/f/flex-wrap/).
 ##### alignItems
 
 Type: `string`\
-Allowed values: `flex-start` `center` `flex-end`
+Allowed values: `flex-start` `center` `flex-end` `stretch` `baseline`
 
 See [align-items](https://css-tricks.com/almanac/properties/a/align-items/).
 
@@ -846,7 +854,7 @@ See [align-items](https://css-tricks.com/almanac/properties/a/align-items/).
 
 Type: `string`\
 Default: `auto`\
-Allowed values: `auto` `flex-start` `center` `flex-end`
+Allowed values: `auto` `flex-start` `center` `flex-end` `stretch` `baseline`
 
 See [align-self](https://css-tricks.com/almanac/properties/a/align-self/).
 
@@ -878,6 +886,16 @@ See [align-self](https://css-tricks.com/almanac/properties/a/align-self/).
 //
 // X
 ```
+
+##### alignContent
+
+Type: `string`\
+Default: `flex-start`\
+Allowed values: `flex-start` `flex-end` `center` `stretch` `space-between` `space-around` `space-evenly`
+
+Defines alignment between flex lines on the cross axis when `flexWrap` creates multiple lines.
+See [align-content](https://css-tricks.com/almanac/properties/a/align-content/).
+Unlike CSS (`stretch`), Ink defaults to `flex-start` so wrapped lines stay compact and fixed-height boxes don't gain unexpected empty rows unless you opt in to stretching.
 
 ##### justifyContent
 
@@ -920,6 +938,46 @@ See [justify-content](https://css-tricks.com/almanac/properties/j/justify-conten
 </Box>
 // [   X   Y   ]
 ```
+
+#### Position
+
+##### position
+
+Type: `string`\
+Allowed values: `relative` `absolute` `static`\
+Default: `relative`
+
+Controls how the element is positioned.
+
+When `position` is `static`, `top`, `right`, `bottom`, and `left` are ignored.
+
+##### top
+
+Type: `number` `string`
+
+Top offset for positioned elements.
+You can also set it as a percentage of the parent size.
+
+##### right
+
+Type: `number` `string`
+
+Right offset for positioned elements.
+You can also set it as a percentage of the parent size.
+
+##### bottom
+
+Type: `number` `string`
+
+Bottom offset for positioned elements.
+You can also set it as a percentage of the parent size.
+
+##### left
+
+Type: `number` `string`
+
+Left offset for positioned elements.
+You can also set it as a percentage of the parent size.
 
 #### Visibility
 
