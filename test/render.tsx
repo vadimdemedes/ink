@@ -718,6 +718,14 @@ test.serial(
 	},
 );
 
+test.serial('#725: non-TTY child process output is flushed', async t => {
+	const output = await runNonTtyFixture('issue-725-child-process');
+	const plainOutput = stripAnsi(output);
+
+	t.true(plainOutput.includes('ready-stdin-not-tty'));
+	t.true(plainOutput.includes('exited'));
+});
+
 test.serial(
 	'#450: full-height rerenders with <Static> should not repeatedly clear terminal',
 	async t => {
