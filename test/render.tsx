@@ -13,13 +13,24 @@ import React, {
 	type ReactNode,
 	PureComponent,
 	useEffect,
+	useLayoutEffect,
 	useState,
 } from 'react';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
-import {render, Box, Text, useApp, useCursor, useInput} from '../src/index.js';
+import {
+	render,
+	Box,
+	Static,
+	Text,
+	useApp,
+	useCursor,
+	useInput,
+	useStderr,
+	useStdout,
+} from '../src/index.js';
 import {type RenderMetrics} from '../src/ink.js';
 import {bsu, esu} from '../src/write-synchronized.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
@@ -105,6 +116,9 @@ const isWriteBarrierChunk = (chunk: string | Uint8Array): boolean =>
 
 const toRenderedChunk = (chunk: string | Uint8Array): string =>
 	stripAnsi(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString());
+
+const toRenderedOutput = (chunks: Array<string | Uint8Array>): string =>
+	chunks.map(chunk => toRenderedChunk(chunk)).join('');
 
 const createDelayedWriteCallbackStdout = ({
 	shouldDelay,
@@ -1539,6 +1553,1388 @@ test.serial(
 	},
 );
 
+const assertMountUseEffectUpdateRendersInitialFrame = async (
+	t: ExecutionContext,
+	options: {
+		readonly stdout: NodeJS.WriteStream;
+		readonly writes: string[];
+		readonly concurrent?: boolean;
+	},
+) => {
+	function Test() {
+		const [text, setText] = useState('first frame');
+
+		useEffect(() => {
+			setText('after useEffect');
+		}, []);
+
+		return <Text>{text}</Text>;
+	}
+
+	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+		stdout: options.stdout,
+		concurrent: options.concurrent,
+	});
+
+	t.teardown(async () => {
+		unmount();
+		await waitUntilExit();
+	});
+
+	await waitUntilRenderFlush();
+	await waitUntilRenderFlush();
+
+	const renderedOutput = toRenderedOutput(options.writes);
+	const firstFrameIndex = renderedOutput.indexOf('first frame');
+	const afterUseEffectIndex = renderedOutput.indexOf('after useEffect');
+
+	t.true(firstFrameIndex !== -1);
+	t.true(afterUseEffectIndex !== -1);
+	t.true(firstFrameIndex < afterUseEffectIndex);
+};
+
+const assertMountLayoutAndUseEffectCoalesceToLatestOutput = async (
+	t: ExecutionContext,
+	options: {
+		readonly stdout: NodeJS.WriteStream;
+		readonly writes: string[];
+		readonly concurrent?: boolean;
+	},
+) => {
+	function Test() {
+		const [text, setText] = useState('initial');
+
+		useLayoutEffect(() => {
+			setText('after layout');
+		}, []);
+
+		useEffect(() => {
+			setText('after effect');
+		}, []);
+
+		return <Text>{text}</Text>;
+	}
+
+	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+		stdout: options.stdout,
+		concurrent: options.concurrent,
+	});
+
+	t.teardown(async () => {
+		unmount();
+		await waitUntilExit();
+	});
+
+	await waitUntilRenderFlush();
+
+	const renderedOutput = toRenderedOutput(options.writes);
+	t.false(renderedOutput.includes('initial'));
+	t.false(renderedOutput.includes('after layout'));
+	t.true(renderedOutput.includes('after effect'));
+};
+
+const assertMountUseEffectUpdateRendersInitialFrameWhenRenderingIsThrottled =
+	async (
+		t: ExecutionContext,
+		options: {
+			readonly stdout: NodeJS.WriteStream;
+			readonly writes: string[];
+			readonly concurrent?: boolean;
+		},
+	) => {
+		function Test() {
+			const [text, setText] = useState('first frame');
+
+			useEffect(() => {
+				setText('after useEffect');
+			}, []);
+
+			return <Text>{text}</Text>;
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout: options.stdout,
+			maxFps: 1,
+			concurrent: options.concurrent,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(options.writes);
+		const firstFrameIndex = renderedOutput.indexOf('first frame');
+		const afterUseEffectIndex = renderedOutput.indexOf('after useEffect');
+
+		t.true(firstFrameIndex !== -1);
+		t.true(afterUseEffectIndex !== -1);
+		t.true(firstFrameIndex < afterUseEffectIndex);
+	};
+
+const assertMountUseEffectStaticOutputIsNotDuplicated = async (
+	t: ExecutionContext,
+	options: {
+		readonly stdout: NodeJS.WriteStream;
+		readonly writes: string[];
+		readonly concurrent?: boolean;
+	},
+) => {
+	function Test() {
+		const [text, setText] = useState('first frame');
+
+		useEffect(() => {
+			setText('after useEffect');
+		}, []);
+
+		return (
+			<>
+				<Static items={['static once']}>
+					{item => <Text key={item}>{item}</Text>}
+				</Static>
+				<Text>{text}</Text>
+			</>
+		);
+	}
+
+	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+		stdout: options.stdout,
+		concurrent: options.concurrent,
+	});
+
+	t.teardown(async () => {
+		unmount();
+		await waitUntilExit();
+	});
+
+	await waitUntilRenderFlush();
+
+	const renderedOutput = toRenderedOutput(options.writes);
+	const afterUseEffectIndex = renderedOutput.indexOf('after useEffect');
+
+	t.is(countOccurrences(renderedOutput, 'static once'), 1);
+	t.true(afterUseEffectIndex !== -1);
+};
+
+const assertWaitUntilRenderFlushIncludesFirstFrameLayoutEffectUpdateWhenRenderingIsThrottled =
+	async (
+		t: ExecutionContext,
+		options: {
+			readonly stdout: NodeJS.WriteStream;
+			readonly writes: string[];
+			readonly concurrent?: boolean;
+		},
+	) => {
+		function Test() {
+			const [text, setText] = useState('before');
+
+			useLayoutEffect(() => {
+				setText('after');
+			}, []);
+
+			return <Text>{text}</Text>;
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout: options.stdout,
+			maxFps: 1,
+			concurrent: options.concurrent,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(options.writes);
+		t.false(renderedOutput.includes('before'));
+		t.true(renderedOutput.includes('after'));
+	};
+
+const assertThrottledMountLayoutAndUseEffectCoalescingPreservesStaticOutput =
+	async (
+		t: ExecutionContext,
+		options: {
+			readonly stdout: NodeJS.WriteStream;
+			readonly writes: string[];
+			readonly concurrent?: boolean;
+		},
+	) => {
+		function Test() {
+			const [text, setText] = useState('initial');
+
+			useLayoutEffect(() => {
+				setText('after layout');
+			}, []);
+
+			useEffect(() => {
+				setText('after effect');
+			}, []);
+
+			return (
+				<>
+					<Static items={['static once']}>
+						{item => <Text key={item}>{item}</Text>}
+					</Static>
+					<Text>{text}</Text>
+				</>
+			);
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout: options.stdout,
+			maxFps: 1,
+			concurrent: options.concurrent,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(options.writes);
+		t.is(countOccurrences(renderedOutput, 'static once'), 1);
+		t.false(renderedOutput.includes('initial'));
+		t.false(renderedOutput.includes('after layout'));
+		t.true(renderedOutput.includes('after effect'));
+	};
+
+const assertDeferredLayoutCoalescingStillWorksAfterLaterEmptyOutput = async (
+	t: ExecutionContext,
+	options: {
+		readonly stdout: NodeJS.WriteStream;
+		readonly writes: string[];
+		readonly concurrent?: boolean;
+	},
+) => {
+	function Test({
+		isVisible,
+		text,
+	}: {
+		readonly isVisible: boolean;
+		readonly text: string;
+	}) {
+		if (!isVisible) {
+			return null;
+		}
+
+		return <Text>{text}</Text>;
+	}
+
+	const {unmount, rerender, waitUntilExit, waitUntilRenderFlush} = render(
+		<Test isVisible text="first" />,
+		{
+			stdout: options.stdout,
+			maxFps: 0,
+			concurrent: options.concurrent,
+		},
+	);
+
+	t.teardown(async () => {
+		unmount();
+		await waitUntilExit();
+	});
+
+	await waitUntilRenderFlush();
+	options.writes.length = 0;
+
+	rerender(<Test isVisible={false} text="first" />);
+	await waitUntilRenderFlush();
+	options.writes.length = 0;
+
+	rerender(<Test isVisible text="second" />);
+	await waitUntilRenderFlush();
+
+	const renderedOutput = toRenderedOutput(options.writes);
+	t.true(renderedOutput.includes('second'));
+};
+
+const assertSubsequentMountLayoutEffectUpdatesDoNotRenderIntermediateFrames =
+	async (
+		t: ExecutionContext,
+		options: {
+			readonly stdout: NodeJS.WriteStream;
+			readonly writes: string[];
+			readonly concurrent?: boolean;
+		},
+	) => {
+		function Test({value}: {readonly value: number}) {
+			const [text, setText] = useState(`before ${value}`);
+
+			useLayoutEffect(() => {
+				setText(`after ${value}`);
+			}, []);
+
+			return <Text>{text}</Text>;
+		}
+
+		const {unmount, rerender, waitUntilExit, waitUntilRenderFlush} = render(
+			<Test key={1} value={1} />,
+			{
+				stdout: options.stdout,
+				maxFps: 0,
+				concurrent: options.concurrent,
+			},
+		);
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+		options.writes.length = 0;
+
+		rerender(<Test key={2} value={2} />);
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(options.writes);
+		t.false(renderedOutput.includes('before 2'));
+		t.true(renderedOutput.includes('after 2'));
+	};
+
+const assertStaticOutputFromEarlyDeferredPassSurvivesLaterPassesWithoutNewStaticOutput =
+	async (
+		t: ExecutionContext,
+		options: {
+			readonly stdout: NodeJS.WriteStream;
+			readonly writes: string[];
+			readonly concurrent?: boolean;
+		},
+	) => {
+		function Test() {
+			const [step, setStep] = useState(0);
+
+			useLayoutEffect(() => {
+				if (step < 2) {
+					setStep(previousStep => previousStep + 1);
+				}
+			}, [step]);
+
+			return (
+				<>
+					<Static items={['static once']}>
+						{item => <Text key={item}>{item}</Text>}
+					</Static>
+					<Text>{`step ${step}`}</Text>
+				</>
+			);
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout: options.stdout,
+			concurrent: options.concurrent,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(options.writes);
+		t.is(countOccurrences(renderedOutput, 'static once'), 1);
+		t.false(renderedOutput.includes('step 0'));
+		t.false(renderedOutput.includes('step 1'));
+		t.true(renderedOutput.includes('step 2'));
+	};
+
+const assertStaticOutputSurvivesWhenFirstPassHasNoInteractiveOutput = async (
+	t: ExecutionContext,
+	options: {
+		readonly stdout: NodeJS.WriteStream;
+		readonly writes: string[];
+		readonly concurrent?: boolean;
+	},
+) => {
+	function Test() {
+		const [isVisible, setIsVisible] = useState(false);
+
+		useLayoutEffect(() => {
+			setIsVisible(true);
+		}, []);
+
+		return (
+			<>
+				<Static items={['static first pass']}>
+					{item => <Text key={item}>{item}</Text>}
+				</Static>
+				{isVisible ? <Text>visible</Text> : null}
+			</>
+		);
+	}
+
+	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+		stdout: options.stdout,
+		concurrent: options.concurrent,
+	});
+
+	t.teardown(async () => {
+		unmount();
+		await waitUntilExit();
+	});
+
+	await waitUntilRenderFlush();
+
+	const renderedOutput = toRenderedOutput(options.writes);
+	t.is(countOccurrences(renderedOutput, 'static first pass'), 1);
+	t.true(renderedOutput.includes('visible'));
+};
+
+const assertMultipleWaitUntilRenderFlushWaitersResolveOnInitialDeferredLayoutCommitWhenThrottled =
+	async (
+		t: ExecutionContext,
+		options: {
+			readonly stdout: NodeJS.WriteStream;
+			readonly writes: string[];
+			readonly concurrent?: boolean;
+		},
+	) => {
+		function Test() {
+			const [text, setText] = useState('before');
+
+			useLayoutEffect(() => {
+				setText('after');
+			}, []);
+
+			return <Text>{text}</Text>;
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout: options.stdout,
+			maxFps: 1,
+			concurrent: options.concurrent,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await Promise.all([
+			waitUntilRenderFlush(),
+			waitUntilRenderFlush(),
+			waitUntilRenderFlush(),
+		]);
+
+		const renderedOutput = toRenderedOutput(options.writes);
+		t.false(renderedOutput.includes('before'));
+		t.true(renderedOutput.includes('after'));
+	};
+
+const assertThrottledMountUseEffectWithStaticAvoidsStaticDuplication = async (
+	t: ExecutionContext,
+	options: {
+		readonly stdout: NodeJS.WriteStream;
+		readonly writes: string[];
+		readonly concurrent?: boolean;
+	},
+) => {
+	function Test() {
+		const [text, setText] = useState('first frame');
+
+		useEffect(() => {
+			setText('after useEffect');
+		}, []);
+
+		return (
+			<>
+				<Static items={['static once']}>
+					{item => <Text key={item}>{item}</Text>}
+				</Static>
+				<Text>{text}</Text>
+			</>
+		);
+	}
+
+	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+		stdout: options.stdout,
+		maxFps: 1,
+		concurrent: options.concurrent,
+	});
+
+	t.teardown(async () => {
+		unmount();
+		await waitUntilExit();
+	});
+
+	await waitUntilRenderFlush();
+	await waitUntilRenderFlush();
+
+	const renderedOutput = toRenderedOutput(options.writes);
+
+	t.is(countOccurrences(renderedOutput, 'static once'), 1);
+	t.true(renderedOutput.includes('after useEffect'));
+};
+
+const assertThrottledMountUseEffectMultipleQueuedUpdatesKeepsFirstFrameAndFinalValue =
+	async (
+		t: ExecutionContext,
+		options: {
+			readonly stdout: NodeJS.WriteStream;
+			readonly writes: string[];
+			readonly concurrent?: boolean;
+		},
+	) => {
+		function Test() {
+			const [text, setText] = useState('first frame');
+
+			useEffect(() => {
+				setText('middle');
+				setText('after useEffect');
+			}, []);
+
+			return <Text>{text}</Text>;
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout: options.stdout,
+			maxFps: 1,
+			concurrent: options.concurrent,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(options.writes);
+		const firstFrameIndex = renderedOutput.indexOf('first frame');
+		const afterUseEffectIndex = renderedOutput.indexOf('after useEffect');
+
+		t.true(firstFrameIndex !== -1);
+		t.true(afterUseEffectIndex !== -1);
+		t.true(firstFrameIndex < afterUseEffectIndex);
+		t.false(renderedOutput.includes('middle'));
+	};
+
+const assertThrottledMountUseEffectQueuedStaticGrowthPreservesStaticOutputAndFinalValue =
+	async (
+		t: ExecutionContext,
+		options: {
+			readonly stdout: NodeJS.WriteStream;
+			readonly writes: string[];
+			readonly concurrent?: boolean;
+		},
+	) => {
+		function Test() {
+			const [step, setStep] = useState(0);
+
+			useEffect(() => {
+				setStep(1);
+				setStep(2);
+			}, []);
+
+			const items = Array.from(
+				{length: step + 1},
+				(_value, itemIndex) => `static ${itemIndex}`,
+			);
+
+			return (
+				<>
+					<Static items={items}>
+						{item => <Text key={item}>{item}</Text>}
+					</Static>
+					<Text>{`step ${step}`}</Text>
+				</>
+			);
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout: options.stdout,
+			maxFps: 1,
+			concurrent: options.concurrent,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(options.writes);
+		const firstFrameIndex = renderedOutput.indexOf('step 0');
+		const finalFrameIndex = renderedOutput.indexOf('step 2');
+
+		t.is(countOccurrences(renderedOutput, 'static 0'), 1);
+		t.is(countOccurrences(renderedOutput, 'static 1'), 1);
+		t.is(countOccurrences(renderedOutput, 'static 2'), 1);
+		t.true(finalFrameIndex !== -1);
+		if (firstFrameIndex !== -1) {
+			t.true(firstFrameIndex < finalFrameIndex);
+		}
+
+		t.false(renderedOutput.includes('step 1'));
+	};
+
+type Issue773RenderAssertionOptions = {
+	readonly stdout: NodeJS.WriteStream;
+	readonly writes: string[];
+	readonly concurrent?: boolean;
+};
+
+type Issue773RenderAssertion = (
+	t: ExecutionContext,
+	options: Issue773RenderAssertionOptions,
+) => Promise<void>;
+
+type Issue773StreamVariant = {
+	readonly titleSuffix: string;
+	readonly createCapturedWritable: () => {
+		readonly stdout: NodeJS.WriteStream;
+		readonly writes: string[];
+	};
+};
+
+type Issue773ConcurrentVariant = {
+	readonly titleSuffix: string;
+	readonly concurrent?: true;
+};
+
+const issue773StreamVariants: Issue773StreamVariant[] = [
+	{
+		titleSuffix: '',
+		createCapturedWritable: () => createCapturedWritableTtyStdout(),
+	},
+	{
+		titleSuffix: ' on non-TTY writable streams',
+		createCapturedWritable: () => createCapturedWritableStdout(),
+	},
+];
+
+const issue773ConcurrentVariants: Issue773ConcurrentVariant[] = [
+	{
+		titleSuffix: '',
+	},
+	{
+		titleSuffix: ' in concurrent mode',
+		concurrent: true,
+	},
+];
+
+const defineIssue773MatrixTests = ({
+	titleBase,
+	assertTest,
+}: {
+	readonly titleBase: string;
+	readonly assertTest: Issue773RenderAssertion;
+}): void => {
+	for (const streamVariant of issue773StreamVariants) {
+		for (const concurrentVariant of issue773ConcurrentVariants) {
+			test.serial(
+				`issue 773: ${titleBase}${streamVariant.titleSuffix}${concurrentVariant.titleSuffix}`,
+				async t => {
+					const {stdout, writes} = streamVariant.createCapturedWritable();
+					await assertTest(t, {
+						stdout,
+						writes,
+						concurrent: concurrentVariant.concurrent,
+					});
+				},
+			);
+		}
+	}
+};
+
+defineIssue773MatrixTests({
+	titleBase: 'mount useEffect update should not suppress the first frame',
+	assertTest: assertMountUseEffectUpdateRendersInitialFrame,
+});
+
+defineIssue773MatrixTests({
+	titleBase:
+		'mount useLayoutEffect and useEffect updates should coalesce to latest output',
+	assertTest: assertMountLayoutAndUseEffectCoalesceToLatestOutput,
+});
+
+defineIssue773MatrixTests({
+	titleBase:
+		'mount useEffect update should not suppress the first frame when rendering is throttled',
+	assertTest:
+		assertMountUseEffectUpdateRendersInitialFrameWhenRenderingIsThrottled,
+});
+
+defineIssue773MatrixTests({
+	titleBase:
+		'waitUntilRenderFlush should include first-frame layout effect update when rendering is throttled',
+	assertTest:
+		assertWaitUntilRenderFlushIncludesFirstFrameLayoutEffectUpdateWhenRenderingIsThrottled,
+});
+
+defineIssue773MatrixTests({
+	titleBase: 'mount useEffect updates should not duplicate Static output',
+	assertTest: assertMountUseEffectStaticOutputIsNotDuplicated,
+});
+
+defineIssue773MatrixTests({
+	titleBase:
+		'throttled layout and effect coalescing should preserve Static output and final value',
+	assertTest:
+		assertThrottledMountLayoutAndUseEffectCoalescingPreservesStaticOutput,
+});
+
+defineIssue773MatrixTests({
+	titleBase:
+		'deferred layout coalescing should still work after later empty output',
+	assertTest: assertDeferredLayoutCoalescingStillWorksAfterLaterEmptyOutput,
+});
+
+defineIssue773MatrixTests({
+	titleBase:
+		'subsequent mounted layout effects should not render intermediate frames',
+	assertTest:
+		assertSubsequentMountLayoutEffectUpdatesDoNotRenderIntermediateFrames,
+});
+
+defineIssue773MatrixTests({
+	titleBase:
+		'static output from early deferred pass should survive later passes without new static output',
+	assertTest:
+		assertStaticOutputFromEarlyDeferredPassSurvivesLaterPassesWithoutNewStaticOutput,
+});
+
+defineIssue773MatrixTests({
+	titleBase:
+		'static output should survive when first pass has no interactive output',
+	assertTest: assertStaticOutputSurvivesWhenFirstPassHasNoInteractiveOutput,
+});
+
+defineIssue773MatrixTests({
+	titleBase:
+		'multiple waitUntilRenderFlush waiters should resolve on the initial throttled deferred layout commit',
+	assertTest:
+		assertMultipleWaitUntilRenderFlushWaitersResolveOnInitialDeferredLayoutCommitWhenThrottled,
+});
+
+defineIssue773MatrixTests({
+	titleBase:
+		'throttled mount useEffect with Static should avoid Static duplication',
+	assertTest: assertThrottledMountUseEffectWithStaticAvoidsStaticDuplication,
+});
+
+defineIssue773MatrixTests({
+	titleBase:
+		'throttled mount useEffect with multiple queued updates should preserve first frame and only render final effect value',
+	assertTest:
+		assertThrottledMountUseEffectMultipleQueuedUpdatesKeepsFirstFrameAndFinalValue,
+});
+
+defineIssue773MatrixTests({
+	titleBase:
+		'throttled mount useEffect static growth with queued updates should preserve all Static output and final value',
+	assertTest:
+		assertThrottledMountUseEffectQueuedStaticGrowthPreservesStaticOutputAndFinalValue,
+});
+
+test.serial(
+	'issue 773: useLayoutEffect should not render an intermediate frame',
+	async t => {
+		const {stdout, writes} = createCapturedWritableTtyStdout();
+
+		function Test() {
+			const [text, setText] = useState('before');
+
+			useLayoutEffect(() => {
+				setText('after');
+			}, []);
+
+			return <Text>{text}</Text>;
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(writes);
+
+		t.false(renderedOutput.includes('before'));
+		t.true(renderedOutput.includes('after'));
+	},
+);
+
+test.serial(
+	'issue 773: useLayoutEffect should not render an intermediate frame in concurrent mode',
+	async t => {
+		const {stdout, writes} = createCapturedWritableTtyStdout();
+
+		function Test() {
+			const [text, setText] = useState('before');
+
+			useLayoutEffect(() => {
+				setText('after');
+			}, []);
+
+			return <Text>{text}</Text>;
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout,
+			concurrent: true,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(writes);
+
+		t.false(renderedOutput.includes('before'));
+		t.true(renderedOutput.includes('after'));
+	},
+);
+
+test.serial(
+	'issue 773: useLayoutEffect coalescing should preserve Static output',
+	async t => {
+		const {stdout, writes} = createCapturedWritableTtyStdout();
+
+		function Test() {
+			const [text, setText] = useState('before');
+
+			useLayoutEffect(() => {
+				setText('after');
+			}, []);
+
+			return (
+				<>
+					<Static items={['static line']}>
+						{item => <Text key={item}>{item}</Text>}
+					</Static>
+					<Text>{text}</Text>
+				</>
+			);
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout,
+			concurrent: true,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(writes);
+
+		t.is(countOccurrences(renderedOutput, 'static line'), 1);
+		t.false(renderedOutput.includes('before'));
+		t.true(renderedOutput.includes('after'));
+	},
+);
+
+test.serial(
+	'issue 773: useLayoutEffect should only render the final value when multiple updates are queued',
+	async t => {
+		const {stdout, writes} = createCapturedWritableTtyStdout();
+
+		function Test() {
+			const [text, setText] = useState('before');
+
+			useLayoutEffect(() => {
+				setText('middle');
+				setText('after');
+			}, []);
+
+			return <Text>{text}</Text>;
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(writes);
+
+		t.false(renderedOutput.includes('before'));
+		t.false(renderedOutput.includes('middle'));
+		t.true(renderedOutput.includes('after'));
+	},
+);
+
+test.serial(
+	'issue 773: useLayoutEffect coalescing should preserve all Static output across multiple passes',
+	async t => {
+		const {stdout, writes} = createCapturedWritableTtyStdout();
+
+		function Test() {
+			const [step, setStep] = useState(0);
+
+			useLayoutEffect(() => {
+				if (step < 2) {
+					setStep(previousStep => previousStep + 1);
+				}
+			}, [step]);
+
+			const items = Array.from(
+				{length: step + 1},
+				(_value, itemIndex) => `static ${itemIndex}`,
+			);
+
+			return (
+				<>
+					<Static items={items}>
+						{item => <Text key={item}>{item}</Text>}
+					</Static>
+					<Text>{`step ${step}`}</Text>
+				</>
+			);
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout,
+			concurrent: true,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(writes);
+
+		t.is(countOccurrences(renderedOutput, 'static 0'), 1);
+		t.is(countOccurrences(renderedOutput, 'static 1'), 1);
+		t.is(countOccurrences(renderedOutput, 'static 2'), 1);
+		t.false(renderedOutput.includes('step 0'));
+		t.false(renderedOutput.includes('step 1'));
+		t.true(renderedOutput.includes('step 2'));
+	},
+);
+
+test.serial(
+	'issue 773: useLayoutEffect coalescing should preserve all Static output across multiple passes in legacy mode',
+	async t => {
+		const {stdout, writes} = createCapturedWritableTtyStdout();
+
+		function Test() {
+			const [step, setStep] = useState(0);
+
+			useLayoutEffect(() => {
+				if (step < 2) {
+					setStep(previousStep => previousStep + 1);
+				}
+			}, [step]);
+
+			const items = Array.from(
+				{length: step + 1},
+				(_value, itemIndex) => `static ${itemIndex}`,
+			);
+
+			return (
+				<>
+					<Static items={items}>
+						{item => <Text key={item}>{item}</Text>}
+					</Static>
+					<Text>{`step ${step}`}</Text>
+				</>
+			);
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(writes);
+
+		t.is(countOccurrences(renderedOutput, 'static 0'), 1);
+		t.is(countOccurrences(renderedOutput, 'static 1'), 1);
+		t.is(countOccurrences(renderedOutput, 'static 2'), 1);
+		t.false(renderedOutput.includes('step 0'));
+		t.false(renderedOutput.includes('step 1'));
+		t.true(renderedOutput.includes('step 2'));
+	},
+);
+
+test.serial(
+	'issue 773: nested layout effect updates should not render intermediate frames',
+	async t => {
+		const {stdout, writes} = createCapturedWritableTtyStdout();
+
+		function Child() {
+			const [text, setText] = useState('child before');
+
+			useLayoutEffect(() => {
+				setText('child after');
+			}, []);
+
+			return <Text>{text}</Text>;
+		}
+
+		function Test() {
+			const [text, setText] = useState('parent before');
+
+			useLayoutEffect(() => {
+				setText('parent after');
+			}, []);
+
+			return (
+				<>
+					<Text>{text}</Text>
+					<Child />
+				</>
+			);
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(writes);
+
+		t.false(renderedOutput.includes('parent before'));
+		t.false(renderedOutput.includes('child before'));
+		t.true(renderedOutput.includes('parent after'));
+		t.true(renderedOutput.includes('child after'));
+	},
+);
+
+test.serial(
+	'issue 773: nested layout effect updates should not render intermediate frames in concurrent mode',
+	async t => {
+		const {stdout, writes} = createCapturedWritableTtyStdout();
+
+		function Child() {
+			const [text, setText] = useState('child before');
+
+			useLayoutEffect(() => {
+				setText('child after');
+			}, []);
+
+			return <Text>{text}</Text>;
+		}
+
+		function Test() {
+			const [text, setText] = useState('parent before');
+
+			useLayoutEffect(() => {
+				setText('parent after');
+			}, []);
+
+			return (
+				<>
+					<Text>{text}</Text>
+					<Child />
+				</>
+			);
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout,
+			concurrent: true,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(writes);
+
+		t.false(renderedOutput.includes('parent before'));
+		t.false(renderedOutput.includes('child before'));
+		t.true(renderedOutput.includes('parent after'));
+		t.true(renderedOutput.includes('child after'));
+	},
+);
+test.serial(
+	'issue 773: nested layout updates with static coalescing should preserve static output',
+	async t => {
+		const {stdout, writes} = createCapturedWritableTtyStdout();
+
+		function Child() {
+			const [text, setText] = useState('child before');
+
+			useLayoutEffect(() => {
+				setText('child after');
+			}, []);
+
+			return <Text>{text}</Text>;
+		}
+
+		function Test() {
+			const [step, setStep] = useState(0);
+
+			useLayoutEffect(() => {
+				if (step < 1) {
+					setStep(previousStep => previousStep + 1);
+				}
+			}, [step]);
+
+			const items = Array.from(
+				{length: step + 1},
+				(_value, itemIndex) => `static ${itemIndex}`,
+			);
+
+			return (
+				<>
+					<Static items={items}>
+						{item => <Text key={item}>{item}</Text>}
+					</Static>
+					<Text>{`step ${step}`}</Text>
+					<Child />
+				</>
+			);
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout,
+			concurrent: true,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(writes);
+
+		t.is(countOccurrences(renderedOutput, 'static 0'), 1);
+		t.is(countOccurrences(renderedOutput, 'static 1'), 1);
+		t.false(renderedOutput.includes('step 0'));
+		t.true(renderedOutput.includes('step 1'));
+		t.false(renderedOutput.includes('child before'));
+		t.true(renderedOutput.includes('child after'));
+	},
+);
+
+test.serial(
+	'issue 773: useStdout.write during mount should preserve static output and final layout effect output',
+	async t => {
+		const {stdout, writes} = createCapturedWritableTtyStdout();
+
+		function Test() {
+			const {write} = useStdout();
+			const [text, setText] = useState('before');
+
+			useLayoutEffect(() => {
+				setText('after');
+			}, []);
+
+			useEffect(() => {
+				write('external line\n');
+			}, [write]);
+
+			return (
+				<>
+					<Static items={['static line']}>
+						{item => <Text key={item}>{item}</Text>}
+					</Static>
+					<Text>{text}</Text>
+				</>
+			);
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(writes);
+
+		t.true(renderedOutput.includes('external line'));
+		t.is(countOccurrences(renderedOutput, 'static line'), 1);
+		t.true(renderedOutput.includes('after'));
+	},
+);
+
+test.serial(
+	'issue 773: useStderr.write during mount should preserve static output and final layout effect output',
+	async t => {
+		const {stdout, writes} = createCapturedWritableTtyStdout();
+		const stderrWrites: string[] = [];
+		const stderr = new Writable({
+			write(
+				chunk: string | Uint8Array,
+				_encoding: BufferEncoding,
+				callback: (error?: Error) => void,
+			) {
+				stderrWrites.push(typeof chunk === 'string' ? chunk : chunk.toString());
+				callback();
+			},
+		}) as unknown as NodeJS.WriteStream;
+
+		function Test() {
+			const {write} = useStderr();
+			const [text, setText] = useState('before');
+
+			useLayoutEffect(() => {
+				setText('after');
+			}, []);
+
+			useEffect(() => {
+				write('external error line\n');
+			}, [write]);
+
+			return (
+				<>
+					<Static items={['static line']}>
+						{item => <Text key={item}>{item}</Text>}
+					</Static>
+					<Text>{text}</Text>
+				</>
+			);
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout,
+			stderr,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await waitUntilRenderFlush();
+
+		const renderedStdoutOutput = toRenderedOutput(writes);
+		const renderedStderrOutput = toRenderedOutput(stderrWrites);
+
+		t.true(renderedStderrOutput.includes('external error line'));
+		t.false(renderedStdoutOutput.includes('external error line'));
+		t.is(countOccurrences(renderedStdoutOutput, 'static line'), 1);
+		t.true(renderedStdoutOutput.includes('after'));
+	},
+);
+
+test.serial(
+	'issue 773: throttled mount useEffect update should not suppress first frame when first write callback is delayed',
+	async t => {
+		let didInitialWriteCallbackFire = false;
+		let didUseEffectRun = false;
+		let releaseInitialWriteCallback: (() => void) | undefined;
+		const writes: Array<string | Uint8Array> = [];
+		const stdout = new Writable({
+			write(
+				chunk: string | Uint8Array,
+				_encoding: BufferEncoding,
+				callback: (error?: Error) => void,
+			) {
+				writes.push(chunk);
+
+				if (!releaseInitialWriteCallback && !isWriteBarrierChunk(chunk)) {
+					releaseInitialWriteCallback = () => {
+						didInitialWriteCallbackFire = true;
+						callback();
+					};
+
+					return;
+				}
+
+				callback();
+			},
+		}) as unknown as NodeJS.WriteStream;
+		stdout.rows = 24;
+		stdout.isTTY = true;
+		stdout.columns = 100;
+		let resolveUseEffectRun!: () => void;
+		const useEffectDidRun = new Promise<void>(resolve => {
+			resolveUseEffectRun = resolve;
+		});
+
+		function Test() {
+			const [text, setText] = useState('first frame');
+
+			useEffect(() => {
+				didUseEffectRun = true;
+				resolveUseEffectRun();
+				setText('after useEffect');
+			}, []);
+
+			return <Text>{text}</Text>;
+		}
+
+		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
+			stdout,
+			maxFps: 1,
+		});
+
+		t.teardown(async () => {
+			unmount();
+			await waitUntilExit();
+		});
+
+		await useEffectDidRun;
+		t.true(didUseEffectRun);
+		t.false(didInitialWriteCallbackFire);
+		if (!releaseInitialWriteCallback) {
+			t.fail('Expected initial write callback release to be available');
+			return;
+		}
+
+		releaseInitialWriteCallback();
+
+		await waitUntilRenderFlush();
+		await waitUntilRenderFlush();
+
+		const renderedOutput = toRenderedOutput(writes);
+		const firstFrameIndex = renderedOutput.indexOf('first frame');
+		const afterUseEffectIndex = renderedOutput.indexOf('after useEffect');
+
+		t.true(firstFrameIndex !== -1);
+		t.true(afterUseEffectIndex !== -1);
+		t.true(firstFrameIndex < afterUseEffectIndex);
+	},
+);
+
 test.serial(
 	'waitUntilExit resolves first exit value when duplicate exits happen during teardown',
 	async t => {
@@ -1895,6 +3291,52 @@ const createTtyStdout = (columns?: number) => {
 	const stdout = createStdout(columns);
 	(stdout as any).isTTY = true;
 	return stdout;
+};
+
+const createCapturedWritableTtyStdout = (): {
+	stdout: NodeJS.WriteStream;
+	writes: string[];
+} => {
+	const writes: string[] = [];
+	const stdout = new Writable({
+		write(
+			chunk: string | Uint8Array,
+			_encoding: BufferEncoding,
+			callback: (error?: Error) => void,
+		) {
+			writes.push(typeof chunk === 'string' ? chunk : chunk.toString());
+			callback();
+		},
+	}) as unknown as NodeJS.WriteStream;
+
+	stdout.columns = 100;
+	stdout.rows = 24;
+	stdout.isTTY = true;
+
+	return {stdout, writes};
+};
+
+const createCapturedWritableStdout = (): {
+	stdout: NodeJS.WriteStream;
+	writes: string[];
+} => {
+	const writes: string[] = [];
+	const stdout = new Writable({
+		write(
+			chunk: string | Uint8Array,
+			_encoding: BufferEncoding,
+			callback: (error?: Error) => void,
+		) {
+			writes.push(typeof chunk === 'string' ? chunk : chunk.toString());
+			callback();
+		},
+	}) as unknown as NodeJS.WriteStream;
+
+	stdout.columns = 100;
+	stdout.rows = 24;
+	stdout.isTTY = false;
+
+	return {stdout, writes};
 };
 
 const withFakeClock = (
