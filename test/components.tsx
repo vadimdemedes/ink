@@ -816,6 +816,30 @@ test('render all frames if CI environment variable equals false', async t => {
 	}
 });
 
+test('debug mode in CI does not replay final frame during unmount teardown', async t => {
+	const output = await run('ci-debug', {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		env: {CI: 'true'},
+		columns: 0,
+	});
+
+	const plainOutput = stripAnsi(output).replaceAll('\r', '');
+	const helloCount = plainOutput.match(/Hello/g)?.length ?? 0;
+
+	t.is(helloCount, 2);
+});
+
+test('debug mode in CI keeps final newline separation after waitUntilExit', async t => {
+	const output = await run('ci-debug-after-exit', {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		env: {CI: 'true'},
+		columns: 0,
+	});
+
+	const plainOutput = stripAnsi(output).replaceAll('\r', '');
+	t.is(plainOutput, 'HelloHello\nDONE');
+});
+
 test('reset prop when it’s removed from the element', t => {
 	const stdout = createStdout();
 

@@ -501,6 +501,9 @@ export default class Ink {
 				this.fullStaticOutput += staticOutput;
 			}
 
+			this.lastOutput = output;
+			this.lastOutputToRender = output;
+			this.lastOutputHeight = outputHeight;
 			this.options.stdout.write(this.fullStaticOutput + output);
 			return;
 		}
@@ -791,10 +794,13 @@ export default class Ink {
 				}
 			}
 
-			// CIs don't handle erasing ansi escapes well, so it's better to
-			// only render last frame of non-static output
+			// CIs don't handle erasing ansi escapes well.
+			// In debug mode, only terminate output with a newline.
+			// In non-debug mode, render only the last frame.
 			if (isInCi) {
-				this.options.stdout.write(this.lastOutput + '\n');
+				this.options.stdout.write(
+					this.options.debug ? '\n' : this.lastOutput + '\n',
+				);
 			} else if (!this.options.debug) {
 				this.log.done();
 			}
