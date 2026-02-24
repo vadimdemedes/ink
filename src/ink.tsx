@@ -578,64 +578,11 @@ export default class Ink {
 			this.fullStaticOutput += staticOutput;
 		}
 
-		// Detect fullscreen: output fills or exceeds terminal height.
-		// Only apply when writing to a real TTY — piped output always gets trailing newlines.
-		const isFullscreen =
-			this.options.stdout.isTTY && outputHeight >= this.options.stdout.rows;
-		const outputToRender = isFullscreen ? output : output + '\n';
-
-		const viewportRows = this.options.stdout.rows;
-		const shouldClearTerminal = shouldClearTerminalForFrame({
-			isTty: this.options.stdout.isTTY,
-			viewportRows,
-			previousOutputHeight: this.lastOutputHeight,
-			nextOutputHeight: outputHeight,
-			isUnmounting: this.isUnmounting,
-		});
-
-		if (shouldClearTerminal) {
-			const sync = shouldSynchronize(this.options.stdout);
-			if (sync) {
-				this.options.stdout.write(bsu);
-			}
-
-			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
-			);
-			this.lastOutput = output;
-			this.lastOutputToRender = outputToRender;
-			this.lastOutputHeight = outputHeight;
-			this.log.sync(outputToRender);
-
-			if (sync) {
-				this.options.stdout.write(esu);
-			}
-
-			return;
-		}
-
-		// To ensure static output is cleanly rendered before main output, clear main output first
-		if (hasStaticOutput) {
-			const sync = shouldSynchronize(this.options.stdout);
-			if (sync) {
-				this.options.stdout.write(bsu);
-			}
-
-			this.log.clear();
-			this.options.stdout.write(staticOutput);
-			this.log(outputToRender);
-
-			if (sync) {
-				this.options.stdout.write(esu);
-			}
-		} else if (output !== this.lastOutput || this.log.isCursorDirty()) {
-			// ThrottledLog manages its own bsu/esu at actual write time
-			this.throttledLog(outputToRender);
-		}
-
-		this.lastOutput = output;
-		this.lastOutputToRender = outputToRender;
-		this.lastOutputHeight = outputHeight;
+		this.renderInteractiveFrame(
+			output,
+			outputHeight,
+			hasStaticOutput ? staticOutput : '',
+		);
 	};
 
 	render(node: ReactNode): void {
@@ -967,6 +914,73 @@ export default class Ink {
 		}
 
 		return this.nextRenderCommit.promise;
+	}
+
+	private renderInteractiveFrame(
+		output: string,
+		outputHeight: number,
+		staticOutput: string,
+	): void {
+		const hasStaticOutput = staticOutput !== '';
+
+		// Detect fullscreen: output fills or exceeds terminal height.
+		// Only apply when writing to a real TTY — piped output always gets trailing newlines.
+		const isFullscreen =
+			this.options.stdout.isTTY && outputHeight >= this.options.stdout.rows;
+		const outputToRender = isFullscreen ? output : output + '\n';
+
+		const viewportRows = this.options.stdout.rows;
+		const shouldClearTerminal = shouldClearTerminalForFrame({
+			isTty: this.options.stdout.isTTY,
+			viewportRows,
+			previousOutputHeight: this.lastOutputHeight,
+			nextOutputHeight: outputHeight,
+			isUnmounting: this.isUnmounting,
+		});
+
+		if (shouldClearTerminal) {
+			const sync = shouldSynchronize(this.options.stdout);
+			if (sync) {
+				this.options.stdout.write(bsu);
+			}
+
+			this.options.stdout.write(
+				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
+			);
+			this.lastOutput = output;
+			this.lastOutputToRender = outputToRender;
+			this.lastOutputHeight = outputHeight;
+			this.log.sync(outputToRender);
+
+			if (sync) {
+				this.options.stdout.write(esu);
+			}
+
+			return;
+		}
+
+		// To ensure static output is cleanly rendered before main output, clear main output first
+		if (hasStaticOutput) {
+			const sync = shouldSynchronize(this.options.stdout);
+			if (sync) {
+				this.options.stdout.write(bsu);
+			}
+
+			this.log.clear();
+			this.options.stdout.write(staticOutput);
+			this.log(outputToRender);
+
+			if (sync) {
+				this.options.stdout.write(esu);
+			}
+		} else if (output !== this.lastOutput || this.log.isCursorDirty()) {
+			// ThrottledLog manages its own bsu/esu at actual write time
+			this.throttledLog(outputToRender);
+		}
+
+		this.lastOutput = output;
+		this.lastOutputToRender = outputToRender;
+		this.lastOutputHeight = outputHeight;
 	}
 
 	private initKittyKeyboard(): void {
