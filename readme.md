@@ -146,6 +146,7 @@ render(<Counter />);
   - [`useStdin`](#usestdin)
   - [`useStdout`](#usestdout)
   - [`useStderr`](#usestderr)
+  - [`useWindowSize`](#usewindowsize)
   - [`useFocus`](#usefocusoptions)
   - [`useFocusManager`](#usefocusmanager)
   - [`useCursor`](#usecursor)
@@ -1968,6 +1969,32 @@ const Example = () => {
 };
 ```
 
+### useWindowSize()
+
+Returns the current terminal dimensions and re-renders the component whenever the terminal is resized.
+
+```js
+import {Text, useWindowSize} from 'ink';
+
+const Example = () => {
+	const {columns, rows} = useWindowSize();
+
+	return <Text>{columns}x{rows}</Text>;
+};
+```
+
+#### columns
+
+Type: `number`
+
+Number of columns (horizontal character cells).
+
+#### rows
+
+Type: `number`
+
+Number of rows (vertical character cells).
+
 ### useFocus(options?)
 
 A component that uses the `useFocus` hook becomes "focusable" to Ink, so when the user presses <kbd>Tab</kbd>, Ink will switch focus to this component.
@@ -2406,7 +2433,7 @@ console.log(output);
 
 **Notes:**
 
-- Terminal-specific hooks (`useInput`, `useStdin`, `useStdout`, `useStderr`, `useApp`, `useFocus`, `useFocusManager`) return default no-op values since there is no terminal session. They will not throw, but they will not function as in a live terminal.
+- Terminal-specific hooks (`useInput`, `useStdin`, `useStdout`, `useStderr`, `useWindowSize`, `useApp`, `useFocus`, `useFocusManager`) return default no-op values since there is no terminal session. They will not throw, but they will not function as in a live terminal.
 - `useEffect` callbacks will execute during rendering (due to synchronous rendering mode), but state updates they trigger will not affect the returned output, which reflects the initial render.
 - `useLayoutEffect` callbacks fire synchronously during commit, so state updates they trigger **will** be reflected in the output.
 - The `<Static>` component is supported — its output is prepended to the dynamic output.

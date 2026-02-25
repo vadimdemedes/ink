@@ -10,8 +10,7 @@ import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/constants.js';
 import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import wrapAnsi from 'wrap-ansi';
-import terminalSize from 'terminal-size';
-import {isDev} from './utils.js';
+import {isDev, getWindowSize} from './utils.js';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
@@ -349,7 +348,7 @@ export default class Ink {
 		this.lastOutput = '';
 		this.lastOutputToRender = '';
 		this.lastOutputHeight = 0;
-		this.lastTerminalWidth = this.getTerminalWidth();
+		this.lastTerminalWidth = getWindowSize(this.options.stdout).columns;
 
 		// This variable is used only in debug mode to store full static output
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
@@ -404,19 +403,8 @@ export default class Ink {
 		void this.exitPromise.catch(noop);
 	}
 
-	getTerminalWidth = () => {
-		// The 'columns' property can be undefined or 0 when not using a TTY.
-		// Use terminal-size as a fallback for piped processes, then default to 80.
-		if (this.options.stdout.columns) {
-			return this.options.stdout.columns;
-		}
-
-		const size = terminalSize();
-		return size?.columns ?? 80;
-	};
-
 	resized = () => {
-		const currentWidth = this.getTerminalWidth();
+		const currentWidth = getWindowSize(this.options.stdout).columns;
 
 		if (currentWidth < this.lastTerminalWidth) {
 			// We clear the screen when decreasing terminal width to prevent duplicate overlapping re-renders.
@@ -462,7 +450,7 @@ export default class Ink {
 	};
 
 	calculateLayout = () => {
-		const terminalWidth = this.getTerminalWidth();
+		const terminalWidth = getWindowSize(this.options.stdout).columns;
 
 		this.rootNode.yogaNode!.setWidth(terminalWidth);
 
@@ -544,7 +532,7 @@ export default class Ink {
 				return;
 			}
 
-			const terminalWidth = this.getTerminalWidth();
+			const terminalWidth = getWindowSize(this.options.stdout).columns;
 
 			const wrappedOutput = wrapAnsi(output, terminalWidth, {
 				trim: false,
@@ -922,16 +910,16 @@ export default class Ink {
 		staticOutput: string,
 	): void {
 		const hasStaticOutput = staticOutput !== '';
+		const isTty = this.options.stdout.isTTY;
 
 		// Detect fullscreen: output fills or exceeds terminal height.
 		// Only apply when writing to a real TTY — piped output always gets trailing newlines.
-		const isFullscreen =
-			this.options.stdout.isTTY && outputHeight >= this.options.stdout.rows;
+		const viewportRows = isTty ? getWindowSize(this.options.stdout).rows : 24;
+		const isFullscreen = isTty && outputHeight >= viewportRows;
 		const outputToRender = isFullscreen ? output : output + '\n';
 
-		const viewportRows = this.options.stdout.rows;
 		const shouldClearTerminal = shouldClearTerminalForFrame({
-			isTty: this.options.stdout.isTTY,
+			isTty,
 			viewportRows,
 			previousOutputHeight: this.lastOutputHeight,
 			nextOutputHeight: outputHeight,
