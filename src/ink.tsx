@@ -165,6 +165,12 @@ type MaybeWritableStream = NodeJS.WriteStream & {
 	_writableState?: unknown;
 };
 
+type PendingInteractiveFrame = {
+	output: string;
+	outputHeight: number;
+	staticOutput: string;
+};
+
 const getWritableStreamState = (stdout: MaybeWritableStream) => {
 	const canWriteToStdout =
 		!stdout.destroyed && !stdout.writableEnded && (stdout.writable ?? true);
@@ -277,6 +283,8 @@ export default class Ink {
 	private kittyProtocolEnabled = false;
 	private cancelKittyDetection?: () => void;
 	private nextRenderCommit?: {promise: Promise<void>; resolve: () => void};
+	private pendingInteractiveFrame?: PendingInteractiveFrame;
+	private isInteractiveFrameFlushScheduled = false;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -293,7 +301,6 @@ export default class Ink {
 		const maxFps = options.maxFps ?? 30;
 		const renderThrottleMs =
 			maxFps > 0 ? Math.max(1, Math.ceil(1000 / maxFps)) : 0;
-
 		if (unthrottled) {
 			this.rootNode.onRender = this.onRender;
 			this.throttledOnRender = undefined;
@@ -578,64 +585,38 @@ export default class Ink {
 			this.fullStaticOutput += staticOutput;
 		}
 
-		// Detect fullscreen: output fills or exceeds terminal height.
-		// Only apply when writing to a real TTY — piped output always gets trailing newlines.
-		const isFullscreen =
-			this.options.stdout.isTTY && outputHeight >= this.options.stdout.rows;
-		const outputToRender = isFullscreen ? output : output + '\n';
+		const stdout = this.options.stdout as MaybeWritableStream;
+		const {hasWritableState} = getWritableStreamState(stdout);
 
-		const viewportRows = this.options.stdout.rows;
-		const shouldClearTerminal = shouldClearTerminalForFrame({
-			isTty: this.options.stdout.isTTY,
-			viewportRows,
-			previousOutputHeight: this.lastOutputHeight,
-			nextOutputHeight: outputHeight,
-			isUnmounting: this.isUnmounting,
-		});
+		/*
+		Interactive frame deferral algorithm:
+		1. Defer interactive writes on writable streams.
+		2. While deferred, always keep the latest interactive output and accumulate new <Static> output.
+		3. Flush in a microtask so commit-time useLayoutEffect updates can settle before paint.
+		4. Flush sync work immediately before writing the deferred frame.
+		*/
+		const shouldDeferInteractiveFrameFlush =
+			hasWritableState && !this.isUnmounting;
 
-		if (shouldClearTerminal) {
-			const sync = shouldSynchronize(this.options.stdout);
-			if (sync) {
-				this.options.stdout.write(bsu);
-			}
-
-			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
+		// Keep synchronous behavior for non-stream-like outputs used in tests.
+		if (!shouldDeferInteractiveFrameFlush) {
+			this.renderInteractiveFrame(
+				output,
+				outputHeight,
+				hasStaticOutput ? staticOutput : '',
 			);
-			this.lastOutput = output;
-			this.lastOutputToRender = outputToRender;
-			this.lastOutputHeight = outputHeight;
-			this.log.sync(outputToRender);
-
-			if (sync) {
-				this.options.stdout.write(esu);
-			}
-
 			return;
 		}
 
-		// To ensure static output is cleanly rendered before main output, clear main output first
-		if (hasStaticOutput) {
-			const sync = shouldSynchronize(this.options.stdout);
-			if (sync) {
-				this.options.stdout.write(bsu);
-			}
-
-			this.log.clear();
-			this.options.stdout.write(staticOutput);
-			this.log(outputToRender);
-
-			if (sync) {
-				this.options.stdout.write(esu);
-			}
-		} else if (output !== this.lastOutput || this.log.isCursorDirty()) {
-			// ThrottledLog manages its own bsu/esu at actual write time
-			this.throttledLog(outputToRender);
-		}
-
-		this.lastOutput = output;
-		this.lastOutputToRender = outputToRender;
-		this.lastOutputHeight = outputHeight;
+		const staticOutputForPendingFrame =
+			(this.pendingInteractiveFrame?.staticOutput ?? '') +
+			(hasStaticOutput ? staticOutput : '');
+		this.pendingInteractiveFrame = {
+			output,
+			outputHeight,
+			staticOutput: staticOutputForPendingFrame,
+		};
+		this.scheduleInteractiveFrameFlush();
 	};
 
 	render(node: ReactNode): void {
@@ -684,6 +665,8 @@ export default class Ink {
 			return;
 		}
 
+		this.flushPendingInteractiveFrame();
+
 		const sync = shouldSynchronize(this.options.stdout);
 		if (sync) {
 			this.options.stdout.write(bsu);
@@ -713,6 +696,8 @@ export default class Ink {
 			this.options.stderr.write(data);
 			return;
 		}
+
+		this.flushPendingInteractiveFrame();
 
 		const sync = shouldSynchronize(this.options.stdout);
 		if (sync) {
@@ -747,6 +732,7 @@ export default class Ink {
 		// Clear any pending throttled render timer on unmount. When stdout is writable,
 		// flush so the final frame is emitted; otherwise cancel to avoid delayed callbacks.
 		settleThrottle(this.throttledOnRender, canWriteToStdout);
+		this.flushPendingInteractiveFrame();
 
 		if (canWriteToStdout) {
 			// If throttling is enabled and there is already a pending render, flushing above
@@ -894,6 +880,12 @@ export default class Ink {
 
 		// Flush pending throttled render/log timers so their output is included in this wait.
 		settleThrottle(this.throttledOnRender, canWriteToStdout);
+
+		if (this.isInteractiveFrameFlushScheduled) {
+			await yieldImmediate();
+		}
+
+		this.flushPendingInteractiveFrame();
 		settleThrottle(this.throttledLog, canWriteToStdout);
 
 		if (canWriteToStdout && hasWritableState) {
@@ -910,6 +902,7 @@ export default class Ink {
 
 	clear(): void {
 		if (!isInCi && !this.options.debug) {
+			this.flushPendingInteractiveFrame();
 			this.log.clear();
 			// Sync lastOutput so that unmount's final onRender
 			// sees it as unchanged and log-update skips it
@@ -967,6 +960,113 @@ export default class Ink {
 		}
 
 		return this.nextRenderCommit.promise;
+	}
+
+	private scheduleInteractiveFrameFlush(): void {
+		if (this.isInteractiveFrameFlushScheduled) {
+			return;
+		}
+
+		this.isInteractiveFrameFlushScheduled = true;
+		queueMicrotask(() => {
+			this.isInteractiveFrameFlushScheduled = false;
+			this.flushPendingInteractiveFrame();
+		});
+	}
+
+	private flushPendingInteractiveFrame(): void {
+		this.isInteractiveFrameFlushScheduled = false;
+
+		if (this.pendingInteractiveFrame) {
+			// If a trailing throttled render is pending (for example from a
+			// mount-time useLayoutEffect update), flush it into the deferred
+			// first frame before writing.
+			settleThrottle(this.throttledOnRender, true);
+			reconciler.flushSyncWork();
+		}
+
+		const {pendingInteractiveFrame} = this;
+		if (!pendingInteractiveFrame) {
+			return;
+		}
+
+		this.pendingInteractiveFrame = undefined;
+		const {output, outputHeight, staticOutput} = pendingInteractiveFrame;
+
+		const stdout = this.options.stdout as MaybeWritableStream;
+		const {canWriteToStdout} = getWritableStreamState(stdout);
+		if (!canWriteToStdout) {
+			return;
+		}
+
+		this.renderInteractiveFrame(output, outputHeight, staticOutput);
+	}
+
+	private renderInteractiveFrame(
+		output: string,
+		outputHeight: number,
+		staticOutput: string,
+	): void {
+		const hasStaticOutput = staticOutput !== '';
+
+		// Detect fullscreen: output fills or exceeds terminal height.
+		// Only apply when writing to a real TTY — piped output always gets trailing newlines.
+		const isFullscreen =
+			this.options.stdout.isTTY && outputHeight >= this.options.stdout.rows;
+		const outputToRender = isFullscreen ? output : output + '\n';
+
+		const viewportRows = this.options.stdout.rows;
+		const shouldClearTerminal = shouldClearTerminalForFrame({
+			isTty: this.options.stdout.isTTY,
+			viewportRows,
+			previousOutputHeight: this.lastOutputHeight,
+			nextOutputHeight: outputHeight,
+			isUnmounting: this.isUnmounting,
+		});
+
+		if (shouldClearTerminal) {
+			const sync = shouldSynchronize(this.options.stdout);
+			if (sync) {
+				this.options.stdout.write(bsu);
+			}
+
+			this.options.stdout.write(
+				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
+			);
+			this.lastOutput = output;
+			this.lastOutputToRender = outputToRender;
+			this.lastOutputHeight = outputHeight;
+			this.log.sync(outputToRender);
+
+			if (sync) {
+				this.options.stdout.write(esu);
+			}
+
+			return;
+		}
+
+		// To ensure static output is cleanly rendered before main output, clear main output first
+		if (hasStaticOutput) {
+			const sync = shouldSynchronize(this.options.stdout);
+			if (sync) {
+				this.options.stdout.write(bsu);
+			}
+
+			this.log.clear();
+			this.options.stdout.write(staticOutput);
+			this.log(outputToRender);
+
+			if (sync) {
+				this.options.stdout.write(esu);
+			}
+		} else if (output !== this.lastOutput || this.log.isCursorDirty()) {
+			// ThrottledLog manages its own bsu/esu at actual write time
+			this.throttledLog(outputToRender);
+		}
+
+		this.lastOutput = output;
+		this.lastOutputToRender = outputToRender;
+		this.lastOutputHeight = outputHeight;
 	}
 
 	private initKittyKeyboard(): void {
