@@ -237,6 +237,12 @@ export type Options = {
 	*/
 	concurrent?: boolean;
 	kittyKeyboard?: KittyKeyboardOptions;
+	/**
+	Enable non-interactive output mode.
+	@see {@link RenderOptions.nonInteractive}
+	@default true if in CI or stdout.isTTY is falsy (when the property exists)
+	*/
+	nonInteractive?: boolean;
 };
 
 export default class Ink {
@@ -253,6 +259,7 @@ export default class Ink {
 		| DebouncedFunc<(output: string) => void>;
 
 	private readonly isScreenReaderEnabled: boolean;
+	private readonly nonInteractive: boolean;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
@@ -288,6 +295,13 @@ export default class Ink {
 			options.isScreenReaderEnabled ??
 			process.env['INK_SCREEN_READER'] === 'true';
 
+		// CI detection takes precedence: even a TTY stdout in CI defaults to non-interactive.
+		// The 'isTTY' in guard ensures streams without the property (e.g. test fakes)
+		// are not treated as non-interactive.
+		this.nonInteractive =
+			options.nonInteractive ??
+			(isInCi || ('isTTY' in options.stdout && !options.stdout.isTTY));
+
 		const unthrottled = options.debug || this.isScreenReaderEnabled;
 		const maxFps = options.maxFps ?? 30;
 		const renderThrottleMs =
@@ -319,7 +333,7 @@ export default class Ink {
 			: throttle(
 					(output: string) => {
 						const shouldWrite = this.log.willRender(output);
-						const sync = shouldSynchronize(this.options.stdout);
+						const sync = this.shouldSync();
 						if (sync && shouldWrite) {
 							this.options.stdout.write(bsu);
 						}
@@ -383,7 +397,7 @@ export default class Ink {
 			this.patchConsole();
 		}
 
-		if (!isInCi) {
+		if (!this.nonInteractive) {
 			options.stdout.on('resize', this.resized);
 
 			this.unsubscribeResize = () => {
@@ -443,6 +457,10 @@ export default class Ink {
 	};
 
 	restoreLastOutput = (): void => {
+		if (this.nonInteractive) {
+			return;
+		}
+
 		// Clear() resets log-update's cursor state, so replay the latest cursor intent
 		// before restoring output after external stdout/stderr writes.
 		this.log.setCursorPosition(this.cursorPosition);
@@ -496,7 +514,7 @@ export default class Ink {
 			return;
 		}
 
-		if (isInCi) {
+		if (this.nonInteractive) {
 			if (hasStaticOutput) {
 				this.options.stdout.write(staticOutput);
 			}
@@ -508,7 +526,7 @@ export default class Ink {
 		}
 
 		if (this.isScreenReaderEnabled) {
-			const sync = shouldSynchronize(this.options.stdout);
+			const sync = this.shouldSync();
 			if (sync) {
 				this.options.stdout.write(bsu);
 			}
@@ -583,6 +601,7 @@ export default class Ink {
 					stdout={this.options.stdout}
 					stderr={this.options.stderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
+					nonInteractive={this.nonInteractive}
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
 					setCursorPosition={this.setCursorPosition}
@@ -614,12 +633,12 @@ export default class Ink {
 			return;
 		}
 
-		if (isInCi) {
+		if (this.nonInteractive) {
 			this.options.stdout.write(data);
 			return;
 		}
 
-		const sync = shouldSynchronize(this.options.stdout);
+		const sync = this.shouldSync();
 		if (sync) {
 			this.options.stdout.write(bsu);
 		}
@@ -644,12 +663,12 @@ export default class Ink {
 			return;
 		}
 
-		if (isInCi) {
+		if (this.nonInteractive) {
 			this.options.stderr.write(data);
 			return;
 		}
 
-		const sync = shouldSynchronize(this.options.stdout);
+		const sync = this.shouldSync();
 		if (sync) {
 			this.options.stdout.write(bsu);
 		}
@@ -729,10 +748,11 @@ export default class Ink {
 				}
 			}
 
-			// CIs don't handle erasing ansi escapes well.
-			// In debug mode, only terminate output with a newline.
-			// In non-debug mode, render only the last frame.
-			if (isInCi) {
+			// Non-interactive environments don't handle erasing ansi escapes well.
+			// In debug mode, each render already writes to stdout, so only a trailing
+			// newline is needed. In non-debug mode, write the last frame now (it was
+			// deferred during rendering).
+			if (this.nonInteractive) {
 				this.options.stdout.write(
 					this.options.debug ? '\n' : this.lastOutput + '\n',
 				);
@@ -844,7 +864,7 @@ export default class Ink {
 	}
 
 	clear(): void {
-		if (!isInCi && !this.options.debug) {
+		if (!this.nonInteractive && !this.options.debug) {
 			this.log.clear();
 			// Sync lastOutput so that unmount's final onRender
 			// sees it as unchanged and log-update skips it
@@ -870,6 +890,10 @@ export default class Ink {
 				}
 			}
 		});
+	}
+
+	private shouldSync(): boolean {
+		return shouldSynchronize(this.options.stdout, this.nonInteractive);
 	}
 
 	// Waits for the exit promise to settle, suppressing any rejection.
@@ -927,7 +951,7 @@ export default class Ink {
 		});
 
 		if (shouldClearTerminal) {
-			const sync = shouldSynchronize(this.options.stdout);
+			const sync = this.shouldSync();
 			if (sync) {
 				this.options.stdout.write(bsu);
 			}
@@ -949,7 +973,7 @@ export default class Ink {
 
 		// To ensure static output is cleanly rendered before main output, clear main output first
 		if (hasStaticOutput) {
-			const sync = shouldSynchronize(this.options.stdout);
+			const sync = this.shouldSync();
 			if (sync) {
 				this.options.stdout.write(bsu);
 			}
@@ -982,6 +1006,7 @@ export default class Ink {
 
 		if (
 			mode === 'disabled' ||
+			this.nonInteractive ||
 			!this.options.stdin.isTTY ||
 			!this.options.stdout.isTTY
 		) {
@@ -1005,7 +1030,7 @@ export default class Ink {
 			termProgram === 'WezTerm' ||
 			termProgram === 'ghostty';
 
-		if (!isInCi && isKnownSupportingTerminal) {
+		if (isKnownSupportingTerminal) {
 			this.confirmKittySupport(flags);
 		}
 	}
