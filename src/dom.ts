@@ -12,6 +12,8 @@ type InkNode = {
 	style: Styles;
 };
 
+type LayoutListener = () => void;
+
 export type TextName = '#text';
 export type ElementNames =
 	| 'ink-root'
@@ -67,6 +69,7 @@ export type DOMElement = {
 	onComputeLayout?: () => void;
 	onRender?: () => void;
 	onImmediateRender?: () => void;
+	internal_layoutListeners?: Set<LayoutListener>;
 } & InkNode;
 
 export type TextNode = {
@@ -260,4 +263,30 @@ export const setTextNodeValue = (node: TextNode, text: string): void => {
 
 	node.nodeValue = text;
 	markNodeAsDirty(node);
+};
+
+export const addLayoutListener = (
+	rootNode: DOMElement,
+	listener: LayoutListener,
+): (() => void) => {
+	if (rootNode.nodeName !== 'ink-root') {
+		return () => {};
+	}
+
+	rootNode.internal_layoutListeners ??= new Set();
+	rootNode.internal_layoutListeners.add(listener);
+
+	return () => {
+		rootNode.internal_layoutListeners?.delete(listener);
+	};
+};
+
+export const emitLayoutListeners = (rootNode: DOMElement): void => {
+	if (rootNode.nodeName !== 'ink-root' || !rootNode.internal_layoutListeners) {
+		return;
+	}
+
+	for (const listener of rootNode.internal_layoutListeners) {
+		listener();
+	}
 };

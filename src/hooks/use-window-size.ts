@@ -18,7 +18,7 @@ export type WindowSize = {
 };
 
 /**
-Returns the current terminal window dimensions and re-renders the component whenever the terminal is resized.
+A React hook that returns the current terminal window dimensions and re-renders the component whenever the terminal is resized.
 */
 const useWindowSize = (): WindowSize => {
 	const {stdout} = useStdout();

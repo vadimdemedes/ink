@@ -11,6 +11,7 @@ import {
 	appendChildNode,
 	insertBeforeNode,
 	removeChildNode,
+	emitLayoutListeners,
 	setStyle,
 	setTextNodeValue,
 	createNode,
@@ -131,6 +132,8 @@ export default createReconciler<
 		if (typeof rootNode.onComputeLayout === 'function') {
 			rootNode.onComputeLayout();
 		}
+
+		emitLayoutListeners(rootNode);
 
 		// Since renders are throttled at the instance level and <Static> component children
 		// are rendered only once and then get deleted, we need an escape hatch to

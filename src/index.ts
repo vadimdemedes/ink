@@ -29,6 +29,8 @@ export {default as useIsScreenReaderEnabled} from './hooks/use-is-screen-reader-
 export {default as useCursor} from './hooks/use-cursor.js';
 export type {WindowSize} from './hooks/use-window-size.js';
 export {default as useWindowSize} from './hooks/use-window-size.js';
+export type {BoxMetrics, UseBoxMetricsResult} from './hooks/use-box-metrics.js';
+export {default as useBoxMetrics} from './hooks/use-box-metrics.js';
 export type {CursorPosition} from './log-update.js';
 export {default as measureElement} from './measure-element.js';
 export type {DOMElement} from './dom.js';
