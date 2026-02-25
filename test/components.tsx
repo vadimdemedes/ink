@@ -840,6 +840,169 @@ test('debug mode in CI keeps final newline separation after waitUntilExit', asyn
 	t.is(plainOutput, 'HelloHello\nDONE');
 });
 
+test('render only last frame when stdout is not a TTY', async t => {
+	const stdout = createStdout(100, false);
+
+	function Counter() {
+		const [count, setCount] = useState(0);
+
+		React.useEffect(() => {
+			if (count < 3) {
+				const timer = setTimeout(() => {
+					setCount(c => c + 1);
+				}, 10);
+
+				return () => {
+					clearTimeout(timer);
+				};
+			}
+		}, [count]);
+
+		return <Text>Count: {count}</Text>;
+	}
+
+	const {unmount, waitUntilExit} = render(<Counter />, {
+		stdout,
+		debug: false,
+	});
+
+	await new Promise(resolve => {
+		setTimeout(resolve, 200);
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+	const allWrites: string[] = (stdout.write as any).args.map(
+		(args: string[]) => args[0]!,
+	);
+	const lastWrite = allWrites.at(-1) ?? '';
+	t.true(lastWrite.includes('Count: 3'));
+});
+
+test('render all frames when nonInteractive is explicitly false', async t => {
+	const stdout = createStdout(100, false);
+
+	function Counter() {
+		const [count, setCount] = useState(0);
+
+		React.useEffect(() => {
+			if (count < 2) {
+				const timer = setTimeout(() => {
+					setCount(c => c + 1);
+				}, 10);
+
+				return () => {
+					clearTimeout(timer);
+				};
+			}
+		}, [count]);
+
+		return <Text>Count: {count}</Text>;
+	}
+
+	const {unmount, waitUntilExit} = render(<Counter />, {
+		stdout,
+		debug: false,
+		nonInteractive: false,
+	});
+
+	await new Promise(resolve => {
+		setTimeout(resolve, 200);
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+	const contentWrites: string[] = (stdout.write as any).args
+		.map((args: string[]) => args[0]!)
+		.filter((w: string) => w.length > 0);
+	t.true(contentWrites.length > 1);
+	const joined = contentWrites.join('');
+	t.true(joined.includes('Count: 0'));
+	t.true(joined.includes('Count: 2'));
+});
+
+test('nonInteractive option overrides TTY detection', async t => {
+	const stdout = createStdout(100, true);
+
+	function Hello() {
+		return <Text>Hello</Text>;
+	}
+
+	const {unmount, waitUntilExit} = render(<Hello />, {
+		stdout,
+		nonInteractive: true,
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+	const allWrites: string[] = (stdout.write as any).args.map(
+		(args: string[]) => args[0]!,
+	);
+
+	const hasEraseSequence = allWrites.some((w: string) =>
+		w.includes(ansiEscapes.eraseLines(1)),
+	);
+	t.false(hasEraseSequence);
+});
+
+test('static output is written immediately in non-interactive mode', async t => {
+	const stdout = createStdout(100, false);
+
+	function App() {
+		const [items, setItems] = useState(['A']);
+
+		React.useEffect(() => {
+			const timer = setTimeout(() => {
+				setItems(['A', 'B']);
+			}, 10);
+
+			return () => {
+				clearTimeout(timer);
+			};
+		}, []);
+
+		return (
+			<Box>
+				<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
+				<Text>Dynamic</Text>
+			</Box>
+		);
+	}
+
+	const {unmount, waitUntilExit} = render(<App />, {
+		stdout,
+		debug: false,
+	});
+
+	await new Promise(resolve => {
+		setTimeout(resolve, 200);
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+	const allWrites: string[] = (stdout.write as any).args.map(
+		(args: string[]) => args[0]!,
+	);
+
+	// Static output should have been written during rendering (before unmount)
+	const staticWrites = allWrites.filter(
+		(w: string) => w.includes('A') || w.includes('B'),
+	);
+	t.true(staticWrites.length > 0);
+
+	// The final write at unmount should contain the dynamic content
+	const lastWrite = allWrites.at(-1) ?? '';
+	t.true(lastWrite.includes('Dynamic'));
+});
+
 test('reset prop when it’s removed from the element', t => {
 	const stdout = createStdout();
 
