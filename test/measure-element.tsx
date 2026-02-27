@@ -197,8 +197,14 @@ test.serial('calculate layout while rendering is throttled', async t => {
 	rerender(<Test />);
 	await delay(50);
 
+	const writes: string[] = (stdout.write as any)
+		.getCalls()
+		.map((c: any) => c.args[0] as string)
+		.filter((w: string) => !w.startsWith('\u001B[?25') && !w.startsWith('\u001B[?2026'));
+	const lastContentWrite = writes[writes.length - 1]!;
+
 	t.is(
-		stripAnsi((stdout.write as any).lastCall.firstArg as string).trim(),
+		stripAnsi(lastContentWrite).trim(),
 		'Width: 100',
 	);
 });

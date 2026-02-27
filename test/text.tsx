@@ -33,6 +33,12 @@ test('text with standard color', t => {
 });
 
 test('text with dim+bold', t => {
+	const originalLevel = chalk.level;
+	chalk.level = 3;
+	t.teardown(() => {
+		chalk.level = originalLevel;
+	});
+
 	const output = renderToString(
 		<Text dimColor bold>
 			Test
@@ -442,6 +448,12 @@ test('text with standard color - concurrent', async t => {
 });
 
 test('text with dim+bold - concurrent', async t => {
+	const originalLevel = chalk.level;
+	chalk.level = 3;
+	t.teardown(() => {
+		chalk.level = originalLevel;
+	});
+
 	const output = await renderToStringAsync(
 		<Text dimColor bold>
 			Test

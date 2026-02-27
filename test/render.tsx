@@ -106,6 +106,22 @@ const isWriteBarrierChunk = (chunk: string | Uint8Array): boolean =>
 const toRenderedChunk = (chunk: string | Uint8Array): string =>
 	stripAnsi(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString());
 
+const isCursorOrSyncEscape = (chunk: string | Uint8Array): boolean => {
+	const str =
+		typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString();
+	return str.startsWith('\u001B[?25') || str === bsu || str === esu;
+};
+
+const isRenderContent = (chunk: string | Uint8Array): boolean =>
+	!isWriteBarrierChunk(chunk) && !isCursorOrSyncEscape(chunk);
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+const getContentWrites = (writeSpy: any): string[] =>
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+	(writeSpy.args as string[][])
+		.map((args: string[]) => args[0]!)
+		.filter((w: string) => isRenderContent(w));
+
 const createDelayedWriteCallbackStdout = ({
 	shouldDelay,
 	onDelayElapsed,
@@ -139,6 +155,7 @@ const createDelayedWriteCallbackStdout = ({
 	}) as unknown as NodeJS.WriteStream;
 
 	stdout.columns = 100;
+	stdout.isTTY = true;
 	return stdout;
 };
 
@@ -791,8 +808,9 @@ test.serial('rerender on resize', async t => {
 
 	const {unmount} = render(<Test />, {stdout});
 
+	const contentWrites = getContentWrites(stdout.write);
 	t.is(
-		stripAnsi((stdout.write as any).firstCall.args[0] as string),
+		stripAnsi(contentWrites[0]!),
 		boxen('Test'.padEnd(8), {borderStyle: 'round'}) + '\n',
 	);
 
@@ -802,8 +820,9 @@ test.serial('rerender on resize', async t => {
 	stdout.emit('resize');
 	await delay(100);
 
+	const contentWritesAfterResize = getContentWrites(stdout.write);
 	t.is(
-		stripAnsi((stdout.write as any).lastCall.args[0] as string),
+		stripAnsi(contentWritesAfterResize.at(-1)!),
 		boxen('Test'.padEnd(6), {borderStyle: 'round'}) + '\n',
 	);
 
@@ -832,27 +851,21 @@ test.serial('throttle renders to maxFps', t => {
 		});
 
 		// Initial render (leading call)
-		t.is((stdout.write as any).callCount, 1);
-		t.is(
-			stripAnsi((stdout.write as any).lastCall.args[0] as string),
-			'Hello\n',
-		);
+		t.is(getContentWrites(stdout.write).length, 1);
+		t.is(stripAnsi(getContentWrites(stdout.write)[0]!), 'Hello\n');
 
 		// Trigger another render inside the throttle window
 		rerender(<ThrottleTestComponent text="World" />);
-		t.is((stdout.write as any).callCount, 1);
+		t.is(getContentWrites(stdout.write).length, 1);
 
 		// Advance 999 ms: still within window, no trailing call yet
 		clock.tick(999);
-		t.is((stdout.write as any).callCount, 1);
+		t.is(getContentWrites(stdout.write).length, 1);
 
 		// Cross the boundary: trailing render fires once
 		clock.tick(1);
-		t.is((stdout.write as any).callCount, 2);
-		t.is(
-			stripAnsi((stdout.write as any).lastCall.args[0] as string),
-			'World\n',
-		);
+		t.is(getContentWrites(stdout.write).length, 2);
+		t.is(stripAnsi(getContentWrites(stdout.write)[1]!), 'World\n');
 
 		unmount();
 	} finally {
@@ -929,18 +942,17 @@ test.serial('no throttled renders after unmount', t => {
 			stdout,
 		});
 
-		t.is((stdout.write as any).callCount, 1);
+		t.is(getContentWrites(stdout.write).length, 1);
 
 		rerender(<ThrottleTestComponent text="Bar" />);
 		rerender(<ThrottleTestComponent text="Baz" />);
 		unmount();
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-		const callCountAfterUnmount = (stdout.write as any).callCount;
+		const contentCountAfterUnmount = getContentWrites(stdout.write).length;
 
 		// Regression test for https://github.com/vadimdemedes/ink/issues/692
 		clock.tick(1000);
-		t.is((stdout.write as any).callCount, callCountAfterUnmount);
+		t.is(getContentWrites(stdout.write).length, contentCountAfterUnmount);
 	} finally {
 		clock.uninstall();
 	}
@@ -957,26 +969,22 @@ test.serial('unmount forces pending throttled render', t => {
 		});
 
 		// Initial render (leading call)
-		t.is((stdout.write as any).callCount, 1);
-		t.is(
-			stripAnsi((stdout.write as any).lastCall.args[0] as string),
-			'Hello\n',
-		);
+		t.is(getContentWrites(stdout.write).length, 1);
+		t.is(stripAnsi(getContentWrites(stdout.write)[0]!), 'Hello\n');
 
 		// Trigger another render inside the throttle window
 		rerender(<ThrottleTestComponent text="Final" />);
 		// Not rendered yet due to throttling
-		t.is((stdout.write as any).callCount, 1);
+		t.is(getContentWrites(stdout.write).length, 1);
 
 		// Unmount should flush the pending render so the final frame is visible
 		unmount();
 
 		// The final frame should have been rendered
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-		const allCalls: string[] = (stdout.write as any).args.map(
-			(args: string[]) => stripAnsi(args[0]!),
+		const allContentWrites = getContentWrites(stdout.write).map(
+			(w: string) => stripAnsi(w),
 		);
-		t.true(allCalls.some((call: string) => call.includes('Final')));
+		t.true(allContentWrites.some((call: string) => call.includes('Final')));
 	} finally {
 		clock.uninstall();
 	}
@@ -1126,18 +1134,15 @@ test.serial(
 			await waitUntilExit();
 		});
 
-		t.is((stdout.write as any).callCount, 1);
+		t.is(getContentWrites(stdout.write).length, 1);
 
 		rerender(<ThrottleTestComponent text="World" />);
-		t.is((stdout.write as any).callCount, 1);
+		t.is(getContentWrites(stdout.write).length, 1);
 
 		await waitUntilRenderFlush();
 
-		t.is((stdout.write as any).callCount, 2);
-		t.is(
-			stripAnsi((stdout.write as any).lastCall.args[0] as string),
-			'World\n',
-		);
+		t.is(getContentWrites(stdout.write).length, 2);
+		t.is(stripAnsi(getContentWrites(stdout.write)[1]!), 'World\n');
 	},
 );
 
@@ -1158,15 +1163,15 @@ test.serial(
 			await waitUntilExit();
 		});
 
-		t.is((stdout.write as any).callCount, 1);
+		t.is(getContentWrites(stdout.write).length, 1);
 
 		rerender(<ThrottleTestComponent text="World" />);
-		t.is((stdout.write as any).callCount, 1);
+		t.is(getContentWrites(stdout.write).length, 1);
 
 		(stdout as NodeJS.WriteStream & {writable?: boolean}).writable = false;
 		await waitUntilRenderFlush();
 
-		t.is((stdout.write as any).callCount, 1);
+		t.is(getContentWrites(stdout.write).length, 1);
 	},
 );
 
@@ -1222,6 +1227,7 @@ test.serial(
 		}) as unknown as NodeJS.WriteStream;
 
 		stdout.columns = 100;
+		stdout.isTTY = true;
 
 		const {unmount, rerender, waitUntilExit, waitUntilRenderFlush} = render(
 			<Text>Hello</Text>,

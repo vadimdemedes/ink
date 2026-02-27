@@ -5,7 +5,7 @@ import createStdout from './helpers/create-stdout.js';
 
 test('standard rendering - renders and updates output', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {showCursor: true});
 
 	render('Hello\n');
 	t.is((stdout.write as any).callCount, 1);
@@ -20,7 +20,7 @@ test('standard rendering - renders and updates output', t => {
 
 test('standard rendering - skips identical output', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {showCursor: true});
 
 	render('Hello\n');
 	render('Hello\n');
@@ -30,7 +30,7 @@ test('standard rendering - skips identical output', t => {
 
 test('incremental rendering - renders and updates output', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render('Hello\n');
 	t.is((stdout.write as any).callCount, 1);
@@ -45,7 +45,7 @@ test('incremental rendering - renders and updates output', t => {
 
 test('incremental rendering - skips identical output', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render('Hello\n');
 	render('Hello\n');
@@ -55,7 +55,7 @@ test('incremental rendering - skips identical output', t => {
 
 test('incremental rendering - surgical updates', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render('Line 1\nLine 2\nLine 3\n');
 	render('Line 1\nUpdated\nLine 3\n');
@@ -69,7 +69,7 @@ test('incremental rendering - surgical updates', t => {
 
 test('incremental rendering - clears extra lines when output shrinks', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render('Line 1\nLine 2\nLine 3\n');
 	render('Line 1\n');
@@ -80,7 +80,7 @@ test('incremental rendering - clears extra lines when output shrinks', t => {
 
 test('incremental rendering - when output grows', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render('Line 1\n');
 	render('Line 1\nLine 2\nLine 3\n');
@@ -94,7 +94,7 @@ test('incremental rendering - when output grows', t => {
 
 test('incremental rendering - single write call with multiple surgical updates', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render(
 		'Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8\nLine 9\nLine 10\n',
@@ -108,7 +108,7 @@ test('incremental rendering - single write call with multiple surgical updates',
 
 test('incremental rendering - shrinking output keeps screen tight', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render('Line 1\nLine 2\nLine 3\n');
 	render('Line 1\nLine 2\n');
@@ -126,7 +126,7 @@ test('incremental rendering - shrinking output keeps screen tight', t => {
 
 test('incremental rendering - clear() fully resets incremental state', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render('Line 1\nLine 2\nLine 3\n');
 	render.clear();
@@ -139,7 +139,7 @@ test('incremental rendering - clear() fully resets incremental state', t => {
 
 test('incremental rendering - done() resets before next render', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render('Line 1\nLine 2\nLine 3\n');
 	render.done();
@@ -152,7 +152,7 @@ test('incremental rendering - done() resets before next render', t => {
 
 test('incremental rendering - multiple consecutive clear() calls (should be harmless no-ops)', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render('Line 1\nLine 2\nLine 3\n');
 	render.clear();
@@ -169,7 +169,7 @@ test('incremental rendering - multiple consecutive clear() calls (should be harm
 
 test('incremental rendering - sync() followed by update (assert incremental path is used)', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render.sync('Line 1\nLine 2\nLine 3\n');
 	t.is((stdout.write as any).callCount, 0); // The sync() call shouldn't write to stdout
@@ -197,14 +197,14 @@ const renderingModes = [
 const createRenderForMode = (incremental: boolean) => {
 	const stdout = createStdout();
 	const render = incremental
-		? logUpdate.create(stdout, {incremental: true})
-		: logUpdate.create(stdout);
+		? logUpdate.create(stdout, {showCursor: true, incremental: true})
+		: logUpdate.create(stdout, {showCursor: true});
 	return {stdout, render};
 };
 
 test('standard rendering - positions cursor after output when cursorPosition is set', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {showCursor: true});
 
 	render.setCursorPosition({x: 5, y: 1});
 	render('Line 1\nLine 2\nLine 3\n');
@@ -224,7 +224,7 @@ test('standard rendering - positions cursor after output when cursorPosition is 
 
 test('standard rendering - hides cursor before erase when cursor was previously shown', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {showCursor: true});
 
 	render.setCursorPosition({x: 0, y: 0});
 	render('Hello\n');
@@ -244,7 +244,7 @@ test('standard rendering - hides cursor before erase when cursor was previously 
 
 test('standard rendering - no cursor positioning when cursorPosition is undefined', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {showCursor: true});
 
 	render('Hello\n');
 
@@ -254,7 +254,7 @@ test('standard rendering - no cursor positioning when cursorPosition is undefine
 
 test('standard rendering - cursor position at second-to-last line emits cursorUp(1)', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {showCursor: true});
 
 	render.setCursorPosition({x: 3, y: 2});
 	render('Line 1\nLine 2\nLine 3\n');
@@ -289,7 +289,7 @@ for (const {name, incremental} of renderingModes) {
 
 test('standard rendering - clearing cursor position stops cursor positioning', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {showCursor: true});
 
 	render.setCursorPosition({x: 0, y: 0});
 	render('Hello\n');
@@ -303,7 +303,7 @@ test('standard rendering - clearing cursor position stops cursor positioning', t
 
 test('incremental rendering - positions cursor after surgical updates', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render.setCursorPosition({x: 5, y: 1});
 	render('Line 1\nLine 2\nLine 3\n');
@@ -320,7 +320,7 @@ test('incremental rendering - positions cursor after surgical updates', t => {
 
 test('incremental rendering - positions cursor after update', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render.setCursorPosition({x: 2, y: 0});
 	render('Line 1\nLine 2\nLine 3\n');
@@ -359,7 +359,7 @@ for (const {name, incremental} of renderingModes) {
 
 test('standard rendering - returns to bottom before erase when cursor was positioned', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {showCursor: true});
 
 	render.setCursorPosition({x: 0, y: 0});
 	render('Line 1\nLine 2\nLine 3\n');
@@ -444,7 +444,7 @@ for (const {name, incremental} of renderingModes) {
 
 test('standard rendering - sync() without cursor does not write to stream', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout);
+	const render = logUpdate.create(stdout, {showCursor: true});
 
 	render.sync('Line 1\nLine 2\nLine 3\n');
 
@@ -455,7 +455,7 @@ test('standard rendering - sync() without cursor does not write to stream', t =>
 
 test('incremental rendering - no trailing newline: trailing to no-trailing transition', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render('A\nB\n');
 	render('A\nB');
@@ -469,7 +469,7 @@ test('incremental rendering - no trailing newline: trailing to no-trailing trans
 
 test('incremental rendering - no trailing newline: no-trailing to no-trailing update', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render('A\nB');
 	render('A\nC');
@@ -482,7 +482,7 @@ test('incremental rendering - no trailing newline: no-trailing to no-trailing up
 
 test('incremental rendering - no trailing newline: shrink', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render('A\nB');
 	render('A');
@@ -496,7 +496,7 @@ test('incremental rendering - no trailing newline: shrink', t => {
 
 test('incremental rendering - no trailing newline: grow', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render('A');
 	render('A\nB\nC');
@@ -509,7 +509,7 @@ test('incremental rendering - no trailing newline: grow', t => {
 
 test('incremental rendering - no trailing newline: unchanged lines do not overshoot cursor', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render('A\nB');
 	render('A\nB'); // Identical - should be skipped entirely
@@ -532,7 +532,7 @@ test('incremental rendering - no trailing newline: unchanged lines do not oversh
 
 test('incremental rendering - render to empty string (full clear vs early exit)', t => {
 	const stdout = createStdout();
-	const render = logUpdate.create(stdout, {incremental: true});
+	const render = logUpdate.create(stdout, {showCursor: true, incremental: true});
 
 	render('Line 1\nLine 2\nLine 3\n');
 	render('\n');
