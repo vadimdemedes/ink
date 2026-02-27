@@ -2430,7 +2430,7 @@ render(<MyApp />, {concurrent: true});
 ###### nonInteractive
 
 Type: `boolean`\
-Default: `true` if in CI (detected via [`is-in-ci`](https://github.com/sindresorhus/is-in-ci)) or `stdout.isTTY` is explicitly `false`
+Default: `true` if in CI (detected via [`is-in-ci`](https://github.com/sindresorhus/is-in-ci)) or `stdout.isTTY` is falsy
 
 Enable non-interactive output mode.
 When enabled, Ink skips terminal-specific features like ANSI erase sequences, cursor manipulation, synchronized output, resize handling, and kitty keyboard auto-detection.
