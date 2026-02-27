@@ -1219,6 +1219,73 @@ Dim the right border color.
 </Box>
 ```
 
+##### borderBackgroundColor
+
+Type: `string`
+
+Change border background color.
+A shorthand for setting `borderTopBackgroundColor`, `borderRightBackgroundColor`, `borderBottomBackgroundColor`, and `borderLeftBackgroundColor`.
+
+```jsx
+<Box borderStyle="round" borderColor="white" borderBackgroundColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderTopBackgroundColor
+
+Type: `string`
+
+Change top border background color.
+Accepts the same values as [`backgroundColor`](#backgroundcolor) in `<Text>` component.
+Falls back to `borderBackgroundColor` if not specified.
+
+```jsx
+<Box borderStyle="round" borderColor="white" borderTopBackgroundColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderBottomBackgroundColor
+
+Type: `string`
+
+Change bottom border background color.
+Accepts the same values as [`backgroundColor`](#backgroundcolor) in `<Text>` component.
+Falls back to `borderBackgroundColor` if not specified.
+
+```jsx
+<Box borderStyle="round" borderColor="white" borderBottomBackgroundColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderRightBackgroundColor
+
+Type: `string`
+
+Change right border background color.
+Accepts the same values as [`backgroundColor`](#backgroundcolor) in `<Text>` component.
+Falls back to `borderBackgroundColor` if not specified.
+```jsx
+<Box borderStyle="round" borderColor="white" borderRightBackgroundColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderLeftBackgroundColor
+
+Type: `string`
+
+Change left border background color.
+Accepts the same values as [`backgroundColor`](#backgroundcolor) in `<Text>` component.
+Falls back to `borderBackgroundColor` if not specified.
+```jsx
+<Box borderStyle="round" borderColor="white" borderLeftBackgroundColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
 ##### borderTop
 
 Type: `boolean`\
