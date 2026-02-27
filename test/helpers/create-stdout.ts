@@ -2,7 +2,7 @@ import EventEmitter from 'node:events';
 import {spy} from 'sinon';
 
 // Fake process.stdout
-type FakeStdout = {
+export type FakeStdout = {
 	get: () => string;
 } & NodeJS.WriteStream;
 

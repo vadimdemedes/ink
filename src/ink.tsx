@@ -299,8 +299,7 @@ export default class Ink {
 		// Using !isTTY (rather than an 'in' guard) correctly handles piped streams
 		// where the property is absent (e.g. `node app.js | cat`).
 		this.nonInteractive =
-			options.nonInteractive ??
-			(isInCi || !options.stdout.isTTY);
+			options.nonInteractive ?? (isInCi || !options.stdout.isTTY);
 
 		const unthrottled = options.debug || this.isScreenReaderEnabled;
 		const maxFps = options.maxFps ?? 30;
@@ -916,7 +915,7 @@ export default class Ink {
 		);
 	}
 
-	private awaitNextRender(): Promise<void> {
+	private async awaitNextRender(): Promise<void> {
 		if (!this.nextRenderCommit) {
 			let resolveRender!: () => void;
 			const promise = new Promise<void>(resolve => {

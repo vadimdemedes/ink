@@ -107,17 +107,14 @@ const toRenderedChunk = (chunk: string | Uint8Array): string =>
 	stripAnsi(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString());
 
 const isCursorOrSyncEscape = (chunk: string | Uint8Array): boolean => {
-	const str =
-		typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString();
+	const str = typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString();
 	return str.startsWith('\u001B[?25') || str === bsu || str === esu;
 };
 
 const isRenderContent = (chunk: string | Uint8Array): boolean =>
 	!isWriteBarrierChunk(chunk) && !isCursorOrSyncEscape(chunk);
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 const getContentWrites = (writeSpy: any): string[] =>
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 	(writeSpy.args as string[][])
 		.map((args: string[]) => args[0]!)
 		.filter((w: string) => isRenderContent(w));
@@ -981,8 +978,8 @@ test.serial('unmount forces pending throttled render', t => {
 		unmount();
 
 		// The final frame should have been rendered
-		const allContentWrites = getContentWrites(stdout.write).map(
-			(w: string) => stripAnsi(w),
+		const allContentWrites = getContentWrites(stdout.write).map((w: string) =>
+			stripAnsi(w),
 		);
 		t.true(allContentWrites.some((call: string) => call.includes('Final')));
 	} finally {
