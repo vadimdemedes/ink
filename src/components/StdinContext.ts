@@ -2,7 +2,7 @@ import {EventEmitter} from 'node:events';
 import process from 'node:process';
 import {createContext} from 'react';
 
-export type Props = {
+export type PublicProps = {
 	/**
 	The stdin stream passed to `render()` in `options.stdin`, or `process.stdin` by default. Useful if your app needs to handle user input.
 	*/
@@ -17,6 +17,13 @@ export type Props = {
 	A boolean flag determining if the current `stdin` supports `setRawMode`. A component using `setRawMode` might want to use `isRawModeSupported` to nicely fall back in environments where raw mode is not supported.
 	*/
 	readonly isRawModeSupported: boolean;
+};
+
+export type Props = PublicProps & {
+	/**
+	Enable or disable bracketed paste mode on the terminal. When enabled, pasted text is wrapped in escape sequences that allow it to be distinguished from typed input.
+	*/
+	readonly setBracketedPasteMode: (value: boolean) => void;
 
 	readonly internal_exitOnCtrlC: boolean;
 
@@ -32,6 +39,7 @@ const StdinContext = createContext<Props>({
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	internal_eventEmitter: new EventEmitter(),
 	setRawMode() {},
+	setBracketedPasteMode() {},
 	isRawModeSupported: false,
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	internal_exitOnCtrlC: true,

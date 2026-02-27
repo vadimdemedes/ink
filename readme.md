@@ -42,6 +42,9 @@ Only Ink's methods are documented in this readme.
 npm install ink react
 ```
 
+> [!NOTE]
+> This readme documents the upcoming version of Ink. For the latest stable release, see [Ink on npm](https://www.npmjs.com/package/ink).
+
 ## Usage
 
 ```jsx
@@ -142,6 +145,7 @@ render(<Counter />);
   - [`<Transform>`](#transform)
 - [Hooks](#hooks)
   - [`useInput`](#useinputinputhandler-options)
+  - [`usePaste`](#usepastehandler-options)
   - [`useApp`](#useapp)
   - [`useStdin`](#usestdin)
   - [`useStdout`](#usestdout)
@@ -1740,6 +1744,55 @@ Default: `true`
 
 Enable or disable capturing of user input.
 Useful when there are multiple `useInput` hooks used at once to avoid handling the same input several times.
+
+### usePaste(handler, options?)
+
+A React hook that calls `handler` whenever the user pastes text. Bracketed paste mode (`\x1b[?2004h`) is automatically enabled while the hook is active, so pasted text arrives as a single string rather than being misinterpreted as individual key presses.
+
+`usePaste` and `useInput` can be used together in the same component. They operate on separate event channels, so paste content is never forwarded to `useInput` handlers when `usePaste` is active.
+
+```jsx
+import {useInput, usePaste} from 'ink';
+
+const MyInput = () => {
+	useInput((input, key) => {
+		// Only receives typed characters and key events, not pasted text.
+		if (key.return) {
+			// Submit
+		}
+	});
+
+	usePaste((text) => {
+		// Receives the full pasted string, including newlines.
+		console.log('Pasted:', text);
+	});
+
+	return …
+};
+```
+
+#### handler(text)
+
+Type: `Function`
+
+Called with the full pasted string whenever the user pastes text. The string is delivered verbatim — newlines, escape sequences, and other special characters are preserved exactly as pasted.
+
+##### text
+
+Type: `string`
+
+The pasted text.
+
+#### options
+
+Type: `object`
+
+##### isActive
+
+Type: `boolean`\
+Default: `true`
+
+Enable or disable the paste handler. Useful when multiple components use `usePaste` and only one should be active at a time.
 
 ### useApp()
 

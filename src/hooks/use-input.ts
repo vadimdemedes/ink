@@ -1,7 +1,7 @@
 import {useEffect} from 'react';
 import parseKeypress, {nonAlphanumericKeys} from '../parse-keypress.js';
 import reconciler from '../reconciler.js';
-import useStdin from './use-stdin.js';
+import {useStdinContext} from './use-stdin.js';
 
 /**
 Handy information about a key that was pressed.
@@ -159,7 +159,7 @@ const UserInput = () => {
 const useInput = (inputHandler: Handler, options: Options = {}) => {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const {stdin, setRawMode, internal_exitOnCtrlC, internal_eventEmitter} =
-		useStdin();
+		useStdinContext();
 
 	useEffect(() => {
 		if (options.isActive === false) {
@@ -265,10 +265,10 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			});
 		};
 
-		internal_eventEmitter?.on('input', handleData);
+		internal_eventEmitter.on('input', handleData);
 
 		return () => {
-			internal_eventEmitter?.removeListener('input', handleData);
+			internal_eventEmitter.removeListener('input', handleData);
 		};
 	}, [options.isActive, stdin, internal_exitOnCtrlC, inputHandler]);
 };

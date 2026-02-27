@@ -68,6 +68,11 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		if (test === 'bracketedPaste' && input === 'hello') {
+			exit();
+			return;
+		}
+
 		if (test === 'escape' && key.escape) {
 			exit();
 			return;

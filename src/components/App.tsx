@@ -69,6 +69,8 @@ function App({
 	// Count how many components enabled raw mode to avoid disabling
 	// raw mode until all components don't need it anymore
 	const rawModeEnabledCount = useRef(0);
+	// Count how many components enabled bracketed paste mode
+	const bracketedPasteModeEnabledCount = useRef(0);
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const internal_eventEmitter = useRef(new EventEmitter());
 	// Each useInput hook adds a listener, so the count can legitimately exceed the default limit of 10.
@@ -76,14 +78,16 @@ function App({
 	// Store the currently attached readable listener to avoid stale closure issues
 	const readableListenerRef = useRef<(() => void) | undefined>(undefined);
 	const inputParserRef = useRef(createInputParser());
-	const pendingInputFlushRef = useRef<NodeJS.Immediate | undefined>(undefined);
+	const pendingInputFlushRef = useRef<NodeJS.Timeout | undefined>(undefined);
+	// Small delay to let chunked escape sequences complete before flushing as literal input.
+	const pendingInputFlushDelayMilliseconds = 20;
 
 	const clearPendingInputFlush = useCallback((): void => {
 		if (!pendingInputFlushRef.current) {
 			return;
 		}
 
-		clearImmediate(pendingInputFlushRef.current);
+		clearTimeout(pendingInputFlushRef.current);
 		pendingInputFlushRef.current = undefined;
 	}, []);
 
@@ -152,7 +156,7 @@ function App({
 
 	const schedulePendingInputFlush = useCallback((): void => {
 		clearPendingInputFlush();
-		pendingInputFlushRef.current = setImmediate(() => {
+		pendingInputFlushRef.current = setTimeout(() => {
 			pendingInputFlushRef.current = undefined;
 			const pendingEscape = inputParserRef.current.flushPendingEscape();
 			if (!pendingEscape) {
@@ -160,7 +164,7 @@ function App({
 			}
 
 			emitInput(pendingEscape);
-		});
+		}, pendingInputFlushDelayMilliseconds);
 	}, [clearPendingInputFlush, emitInput]);
 
 	const handleReadable = useCallback((): void => {
@@ -169,8 +173,19 @@ function App({
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		while ((chunk = stdin.read() as string | null) !== null) {
 			const inputEvents = inputParserRef.current.push(chunk);
-			for (const input of inputEvents) {
-				emitInput(input);
+			for (const event of inputEvents) {
+				if (typeof event === 'string') {
+					emitInput(event);
+				} else {
+					// Keep paste on a separate channel from `useInput` so key handlers
+					// don't need to branch on mixed key-vs-paste event shapes.
+					if (internal_eventEmitter.current.listenerCount('paste') === 0) {
+						emitInput(event.paste);
+						continue;
+					}
+
+					internal_eventEmitter.current.emit('paste', event.paste);
+				}
 			}
 		}
 
@@ -219,6 +234,32 @@ function App({
 			}
 		},
 		[isRawModeSupported, stdin, handleReadable, disableRawMode],
+	);
+
+	const handleSetBracketedPasteMode = useCallback(
+		(isEnabled: boolean): void => {
+			if (!stdout.isTTY) {
+				return;
+			}
+
+			if (isEnabled) {
+				if (bracketedPasteModeEnabledCount.current === 0) {
+					stdout.write('\u001B[?2004h');
+				}
+
+				bracketedPasteModeEnabledCount.current++;
+				return;
+			}
+
+			if (bracketedPasteModeEnabledCount.current === 0) {
+				return;
+			}
+
+			if (--bracketedPasteModeEnabledCount.current === 0) {
+				stdout.write('\u001B[?2004l');
+			}
+		},
+		[stdout],
 	);
 
 	// Focus navigation helpers
@@ -432,12 +473,20 @@ function App({
 		);
 	}, []);
 
-	// Handle cursor visibility and raw mode cleanup on unmount
+	// Handle cursor visibility, raw mode, and bracketed paste mode cleanup on unmount
 	useEffect(() => {
 		return () => {
 			cliCursor.show(stdout);
 			if (isRawModeSupported && rawModeEnabledCount.current > 0) {
 				disableRawMode();
+			}
+
+			if (bracketedPasteModeEnabledCount.current > 0) {
+				if (stdout.isTTY) {
+					stdout.write('\u001B[?2004l');
+				}
+
+				bracketedPasteModeEnabledCount.current = 0;
 			}
 		};
 	}, [stdout, isRawModeSupported, disableRawMode]);
@@ -455,13 +504,20 @@ function App({
 		() => ({
 			stdin,
 			setRawMode: handleSetRawMode,
+			setBracketedPasteMode: handleSetBracketedPasteMode,
 			isRawModeSupported,
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			internal_exitOnCtrlC: exitOnCtrlC,
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			internal_eventEmitter: internal_eventEmitter.current,
 		}),
-		[stdin, handleSetRawMode, isRawModeSupported, exitOnCtrlC],
+		[
+			stdin,
+			handleSetRawMode,
+			handleSetBracketedPasteMode,
+			isRawModeSupported,
+			exitOnCtrlC,
+		],
 	);
 
 	const stdoutContextValue = useMemo(
