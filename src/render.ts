@@ -112,7 +112,7 @@ export type RenderOptions = {
 	This is useful for piped output, CI environments, or any context where ANSI
 	escape codes for cursor movement are not supported.
 
-	@default true if in CI or stdout.isTTY is explicitly false
+	@default true if in CI or stdout.isTTY is falsy
 	*/
 	nonInteractive?: boolean;
 };

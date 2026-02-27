@@ -240,7 +240,7 @@ export type Options = {
 	/**
 	Enable non-interactive output mode.
 	@see {@link RenderOptions.nonInteractive}
-	@default true if in CI or stdout.isTTY is falsy (when the property exists)
+	@default true if in CI or stdout.isTTY is falsy
 	*/
 	nonInteractive?: boolean;
 };
