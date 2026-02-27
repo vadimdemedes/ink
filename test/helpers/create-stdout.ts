@@ -9,10 +9,7 @@ type FakeStdout = {
 const createStdout = (columns?: number, isTTY?: boolean): FakeStdout => {
 	const stdout = new EventEmitter() as unknown as FakeStdout;
 	stdout.columns = columns ?? 100;
-
-	if (isTTY !== undefined) {
-		stdout.isTTY = isTTY;
-	}
+	stdout.isTTY = isTTY ?? true;
 
 	const write = spy();
 	stdout.write = write;

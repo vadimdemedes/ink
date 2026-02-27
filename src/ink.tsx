@@ -296,11 +296,11 @@ export default class Ink {
 			process.env['INK_SCREEN_READER'] === 'true';
 
 		// CI detection takes precedence: even a TTY stdout in CI defaults to non-interactive.
-		// The 'isTTY' in guard ensures streams without the property (e.g. test fakes)
-		// are not treated as non-interactive.
+		// Using !isTTY (rather than an 'in' guard) correctly handles piped streams
+		// where the property is absent (e.g. `node app.js | cat`).
 		this.nonInteractive =
 			options.nonInteractive ??
-			(isInCi || ('isTTY' in options.stdout && !options.stdout.isTTY));
+			(isInCi || !options.stdout.isTTY);
 
 		const unthrottled = options.debug || this.isScreenReaderEnabled;
 		const maxFps = options.maxFps ?? 30;

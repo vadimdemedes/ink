@@ -25,8 +25,14 @@ test('catch and display error', t => {
 
 	render(<Test />, {stdout});
 
+	const writes: string[] = (stdout.write as any)
+		.getCalls()
+		.map((c: any) => c.args[0] as string)
+		.filter((w: string) => !w.startsWith('\u001B[?25') && !w.startsWith('\u001B[?2026'));
+	const lastContentWrite = writes[writes.length - 1]!;
+
 	t.deepEqual(
-		stripAnsi((stdout.write as any).lastCall.args[0] as string)
+		stripAnsi(lastContentWrite)
 			.split('\n')
 			.slice(0, 14),
 		[
@@ -98,7 +104,12 @@ test('ErrorBoundary catches and displays nested component errors', t => {
 
 	render(<Parent />, {stdout});
 
-	const output = stripAnsi((stdout.write as any).lastCall.args[0] as string);
+	const writes: string[] = (stdout.write as any)
+		.getCalls()
+		.map((c: any) => c.args[0] as string)
+		.filter((w: string) => !w.startsWith('\u001B[?25') && !w.startsWith('\u001B[?2026'));
+	const lastContentWrite = writes[writes.length - 1]!;
+	const output = stripAnsi(lastContentWrite);
 	t.true(output.includes('ERROR'), 'Error label should be displayed');
 	t.true(
 		output.includes('Nested component error'),

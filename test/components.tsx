@@ -487,7 +487,17 @@ test('render only new items in static output on final render', t => {
 
 	rerender(<Dynamic items={['A', 'B']} />);
 	unmount();
-	t.is((stdout.write as any).lastCall.args[0], 'A\nB\n');
+
+	// Filter out cursor management escapes (show/hide) to check content writes.
+	// With isTTY=true, cli-cursor writes a show-cursor sequence on unmount.
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+	const allWrites: string[] = (stdout.write as any).args.map(
+		(args: string[]) => args[0]!,
+	);
+	const lastContentWrite = allWrites.findLast(
+		w => !w.startsWith('\u001B[?25'),
+	);
+	t.is(lastContentWrite, 'A\nB\n');
 });
 
 // See https://github.com/chalk/wrap-ansi/issues/27
@@ -877,6 +887,23 @@ test('render only last frame when stdout is not a TTY', async t => {
 	const allWrites: string[] = (stdout.write as any).args.map(
 		(args: string[]) => args[0]!,
 	);
+
+	// Verify no intermediate frames were written
+	const contentWrites = allWrites.map(w => stripAnsi(w));
+	for (const intermediate of ['Count: 0', 'Count: 1', 'Count: 2']) {
+		t.false(
+			contentWrites.some(w => w.includes(intermediate)),
+			`Intermediate frame "${intermediate}" should not be written in non-interactive mode`,
+		);
+	}
+
+	// Verify no erase/cursor ANSI sequences were emitted
+	const hasEraseSequence = allWrites.some(w =>
+		w.includes(ansiEscapes.eraseLines(1)),
+	);
+	t.false(hasEraseSequence);
+
+	// Verify the final frame is written
 	const lastWrite = allWrites.at(-1) ?? '';
 	t.true(lastWrite.includes('Count: 3'));
 });
