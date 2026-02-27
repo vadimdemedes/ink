@@ -217,6 +217,7 @@ test('fail when text nodes are not within <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
+		// eslint-disable-next-line @typescript-eslint/promise-function-async
 		override render() {
 			return this.props.children;
 		}
@@ -246,6 +247,7 @@ test('fail when text node is not within <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
+		// eslint-disable-next-line @typescript-eslint/promise-function-async
 		override render() {
 			return this.props.children;
 		}
@@ -272,6 +274,7 @@ test('fail when <Box> is inside <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
+		// eslint-disable-next-line @typescript-eslint/promise-function-async
 		override render() {
 			return this.props.children;
 		}
@@ -494,9 +497,7 @@ test('render only new items in static output on final render', t => {
 	const allWrites: string[] = (stdout.write as any).args.map(
 		(args: string[]) => args[0]!,
 	);
-	const lastContentWrite = allWrites.findLast(
-		w => !w.startsWith('\u001B[?25'),
-	);
+	const lastContentWrite = allWrites.findLast(w => !w.startsWith('\u001B[?25'));
 	t.is(lastContentWrite, 'A\nB\n');
 });
 
