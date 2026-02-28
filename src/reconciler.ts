@@ -1,3 +1,4 @@
+import process from 'node:process';
 import createReconciler, {type ReactContext} from 'react-reconciler';
 import {
 	DefaultEventPriority,
@@ -5,7 +6,7 @@ import {
 } from 'react-reconciler/constants.js';
 import * as Scheduler from 'scheduler';
 import Yoga, {type Node as YogaNode} from 'yoga-layout';
-import {createContext} from 'react';
+import {createContext, version as ReactVersion} from 'react';
 import {
 	createTextNode,
 	appendChildNode,
@@ -23,13 +24,12 @@ import {
 } from './dom.js';
 import applyStyles, {type Styles} from './styles.js';
 import {type OutputTransformer} from './render-node-to-output.js';
-import {isDev} from './utils.js';
 
 // We need to conditionally perform devtools connection to avoid
 // accidentally breaking other third-party code.
 // See https://github.com/vadimdemedes/ink/issues/384
 // See https://github.com/vadimdemedes/ink/issues/648
-if (isDev()) {
+if (process.env['DEV'] === 'true') {
 	// Intentionally no warning when the package is missing.
 	// DEV may be set for other reasons; devtools is opt-in via installing the package.
 	let isDevtoolsInstalled = false;
@@ -99,12 +99,41 @@ async function loadPackageJson() {
 		new URL('../package.json', import.meta.url),
 		'utf8',
 	);
-	return JSON.parse(content) as {name: string; version: string};
+
+	const parsedContent = JSON.parse(content) as
+		| {
+				name?: string;
+				version?: string;
+		  }
+		| undefined;
+
+	return {
+		name: parsedContent?.name,
+		version: parsedContent?.version,
+	};
 }
 
-const packageJson = isDev()
-	? await loadPackageJson()
-	: {name: undefined, version: undefined};
+let packageInfo = {
+	name: 'ink',
+	version: ReactVersion,
+};
+
+if (process.env['DEV'] === 'true') {
+	try {
+		const loaded = await loadPackageJson();
+		packageInfo = {
+			// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+			name: loaded.name || packageInfo.name,
+			// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+			version: loaded.version || packageInfo.version,
+		};
+	} catch (error) {
+		console.warn(
+			'Failed to load package.json in development mode. Falling back to default renderer metadata.',
+			error,
+		);
+	}
+}
 
 export default createReconciler<
 	ElementNames,
@@ -359,6 +388,6 @@ export default createReconciler<
 	waitForCommitToBeReady() {
 		return null;
 	},
-	rendererPackageName: packageJson.name,
-	rendererVersion: packageJson.version,
+	rendererPackageName: packageInfo.name,
+	rendererVersion: packageInfo.version,
 });
