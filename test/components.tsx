@@ -1046,30 +1046,38 @@ test('static output is written immediately in non-interactive mode', async t => 
 		setTimeout(resolve, 200);
 	});
 
+	// Capture writes BEFORE unmount — static items must already be here
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+	const writesBeforeUnmount: string[] = (stdout.write as any).args.map(
+		(args: string[]) => stripAnsi(args[0]!),
+	);
+	const preUnmountJoined = writesBeforeUnmount.join('');
+	t.true(
+		preUnmountJoined.includes('A'),
+		'Static item A was written before unmount',
+	);
+	t.true(
+		preUnmountJoined.includes('B'),
+		'Static item B was written before unmount',
+	);
+
 	unmount();
 	await waitUntilExit();
 
+	// Verify the dynamic content was deferred to unmount (not written before it)
+	t.false(
+		preUnmountJoined.includes('Dynamic'),
+		'Dynamic content was not written before unmount',
+	);
+
+	// Verify dynamic content was eventually written
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 	const allWrites: string[] = (stdout.write as any).args.map(
-		(args: string[]) => args[0]!,
-	);
-
-	// Verify write ordering: static items must appear before the final dynamic write
-	const writeContents = allWrites.map(w => stripAnsi(w));
-	const indexOfA = writeContents.findIndex(w => w.includes('A'));
-	const indexOfB = writeContents.findIndex(w => w.includes('B'));
-	const indexOfDynamic = writeContents.findIndex(w => w.includes('Dynamic'));
-
-	t.true(indexOfA >= 0, 'Static item A was written');
-	t.true(indexOfB >= 0, 'Static item B was written');
-	t.true(indexOfDynamic >= 0, 'Dynamic content was written');
-	t.true(
-		indexOfA < indexOfDynamic,
-		'Static A was written before final dynamic output',
+		(args: string[]) => stripAnsi(args[0]!),
 	);
 	t.true(
-		indexOfB < indexOfDynamic,
-		'Static B was written before final dynamic output',
+		allWrites.join('').includes('Dynamic'),
+		'Dynamic content was eventually written',
 	);
 });
 
