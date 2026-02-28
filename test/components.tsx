@@ -909,7 +909,7 @@ test('render only last frame when stdout is not a TTY', async t => {
 	t.true(lastWrite.includes('Count: 3'));
 });
 
-test('render all frames when nonInteractive is explicitly false', async t => {
+test('render all frames when interactive is explicitly true', async t => {
 	const stdout = createStdout(100, false);
 
 	function Counter() {
@@ -933,7 +933,7 @@ test('render all frames when nonInteractive is explicitly false', async t => {
 	const {unmount, waitUntilExit} = render(<Counter />, {
 		stdout,
 		debug: false,
-		nonInteractive: false,
+		interactive: true,
 	});
 
 	await new Promise(resolve => {
@@ -954,7 +954,7 @@ test('render all frames when nonInteractive is explicitly false', async t => {
 	t.true(joined.includes('Count: 2'));
 });
 
-test('nonInteractive option overrides TTY detection', async t => {
+test('interactive option overrides TTY detection', async t => {
 	const stdout = createStdout(100, true);
 
 	function Counter() {
@@ -978,7 +978,7 @@ test('nonInteractive option overrides TTY detection', async t => {
 	const {unmount, waitUntilExit} = render(<Counter />, {
 		stdout,
 		debug: false,
-		nonInteractive: true,
+		interactive: false,
 	});
 
 	await new Promise(resolve => {
@@ -998,7 +998,7 @@ test('nonInteractive option overrides TTY detection', async t => {
 	for (const intermediate of ['Count: 0', 'Count: 1', 'Count: 2']) {
 		t.false(
 			contentWrites.some(w => w.includes(intermediate)),
-			`Intermediate frame "${intermediate}" should not be written when nonInteractive overrides TTY`,
+			`Intermediate frame "${intermediate}" should not be written when interactive=false overrides TTY`,
 		);
 	}
 

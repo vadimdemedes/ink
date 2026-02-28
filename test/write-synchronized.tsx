@@ -22,15 +22,15 @@ for (const [sequenceName, sequence, expected] of [
 
 test('shouldSynchronize returns true for interactive TTY stream', t => {
 	const stream = createStream({tty: true});
-	t.true(shouldSynchronize(stream, false));
+	t.true(shouldSynchronize(stream, true));
 });
 
 test('shouldSynchronize returns false for non-interactive TTY stream', t => {
 	const stream = createStream({tty: true});
-	t.false(shouldSynchronize(stream, true));
+	t.false(shouldSynchronize(stream, false));
 });
 
 test('shouldSynchronize returns false for non-TTY stream', t => {
 	const stream = createStream({tty: false});
-	t.false(shouldSynchronize(stream, false));
+	t.false(shouldSynchronize(stream, true));
 });

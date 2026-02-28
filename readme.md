@@ -2427,23 +2427,23 @@ render(<MyApp />, {concurrent: true});
 > [!NOTE]
 > Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
 
-###### nonInteractive
+###### interactive
 
 Type: `boolean`\
-Default: `true` if in CI (detected via [`is-in-ci`](https://github.com/sindresorhus/is-in-ci)) or `stdout.isTTY` is falsy
+Default: `false` if in CI (detected via [`is-in-ci`](https://github.com/sindresorhus/is-in-ci)) or `stdout.isTTY` is falsy
 
-Enable non-interactive output mode.
-When enabled, Ink skips terminal-specific features like ANSI erase sequences, cursor manipulation, synchronized output, resize handling, and kitty keyboard auto-detection.
+Enable interactive output mode with full terminal features.
+When disabled, Ink skips terminal-specific features like ANSI erase sequences, cursor manipulation, synchronized output, resize handling, and kitty keyboard auto-detection.
 Only the final frame of non-static output is written at unmount.
 
-This is useful for piped output (`node app.js | cat`), CI environments, or any context where ANSI escape codes for cursor movement are not supported.
+Disable this for piped output (`node app.js | cat`), CI environments, or any context where ANSI escape codes for cursor movement are not supported.
 
 ```jsx
 // Force interactive mode even when piping
-render(<MyApp />, {nonInteractive: false});
+render(<MyApp />, {interactive: true});
 
 // Force non-interactive mode even in a TTY
-render(<MyApp />, {nonInteractive: true});
+render(<MyApp />, {interactive: false});
 ```
 
 ###### kittyKeyboard
