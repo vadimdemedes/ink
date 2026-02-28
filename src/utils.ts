@@ -1,7 +1,4 @@
-import process from 'node:process';
 import terminalSize from 'terminal-size';
-
-export const isDev = () => process.env['DEV'] === 'true';
 
 /**
 Get the effective terminal dimensions from the given stdout stream.
