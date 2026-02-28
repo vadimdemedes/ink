@@ -126,7 +126,12 @@ if (process.env['DEV'] === 'true') {
 			// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 			version: loaded.version || packageInfo.version,
 		};
-	} catch {}
+	} catch (error) {
+		console.warn(
+			'Failed to load package.json in development mode. Falling back to default renderer metadata.',
+			error,
+		);
+	}
 }
 
 export default createReconciler<
