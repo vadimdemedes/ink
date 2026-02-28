@@ -23,7 +23,7 @@ test('wide characters do not add extra space inside fixed-width Box', t => {
 	);
 
 	const lines = output.split('\n');
-	// Both lines should have the pipe directly after the 2-column box
+	t.is(lines.length, 2);
 	t.is(lines[0], '🍔|');
 	t.is(lines[1], '⏳|');
 });
@@ -60,6 +60,7 @@ test('mixed ASCII and wide characters align correctly', t => {
 	);
 
 	const lines = output.split('\n');
+	t.is(lines.length, 2);
 	t.is(lines[0], 'ab🍔cd|');
 	t.is(lines[1], 'abcdef|');
 });
