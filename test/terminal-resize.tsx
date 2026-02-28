@@ -1,9 +1,157 @@
+import process from 'node:process';
 import test from 'ava';
 import delay from 'delay';
 import stripAnsi from 'strip-ansi';
 import React from 'react';
-import {render, Box, Text} from '../src/index.js';
+import {render, Box, Text, useWindowSize} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
+
+test.serial(
+	'useWindowSize returns current terminal dimensions and updates on resize',
+	async t => {
+		const stdout = createStdout(100);
+		(stdout as any).rows = 40;
+
+		function Test() {
+			const {columns, rows} = useWindowSize();
+			return (
+				<Text>
+					{columns}x{rows}
+				</Text>
+			);
+		}
+
+		const {waitUntilRenderFlush} = render(<Test />, {stdout});
+		await waitUntilRenderFlush();
+
+		t.true(
+			stripAnsi((stdout.write as any).lastCall.args[0] as string).includes(
+				'100x40',
+			),
+		);
+
+		(stdout as any).columns = 60;
+		(stdout as any).rows = 20;
+		stdout.emit('resize');
+		await delay(100);
+
+		t.true(
+			stripAnsi((stdout.write as any).lastCall.args[0] as string).includes(
+				'60x20',
+			),
+		);
+	},
+);
+
+test.serial('useWindowSize removes resize listener on unmount', async t => {
+	const stdout = createStdout(100);
+	(stdout as any).rows = 24;
+
+	function Test() {
+		const {columns, rows} = useWindowSize();
+		return (
+			<Text>
+				{columns}x{rows}
+			</Text>
+		);
+	}
+
+	const initialListenerCount = stdout.listenerCount('resize');
+	const {unmount, waitUntilRenderFlush} = render(<Test />, {stdout});
+	await waitUntilRenderFlush();
+
+	t.true(stdout.listenerCount('resize') > initialListenerCount);
+	unmount();
+
+	t.is(stdout.listenerCount('resize'), initialListenerCount);
+});
+
+test.serial(
+	'useWindowSize does not crash when resize fires after unmount',
+	async t => {
+		const stdout = createStdout(100);
+		(stdout as any).rows = 24;
+
+		function Test() {
+			const {columns, rows} = useWindowSize();
+			return (
+				<Text>
+					{columns}x{rows}
+				</Text>
+			);
+		}
+
+		const {unmount, waitUntilRenderFlush} = render(<Test />, {stdout});
+		await waitUntilRenderFlush();
+		unmount();
+
+		stdout.emit('resize');
+		await delay(50);
+
+		t.pass();
+	},
+);
+
+test.serial(
+	'useWindowSize falls back to a positive column count when stdout.columns is 0',
+	async t => {
+		const stdout = createStdout(0);
+		let capturedColumns = -1;
+
+		function Test() {
+			const {columns} = useWindowSize();
+			capturedColumns = columns;
+			return <Text>{columns}</Text>;
+		}
+
+		const {waitUntilRenderFlush} = render(<Test />, {stdout});
+		await waitUntilRenderFlush();
+
+		t.true(capturedColumns > 0);
+	},
+);
+
+test.serial(
+	'useWindowSize falls back to terminal-size rows when stdout.rows is missing',
+	async t => {
+		const stdout = createStdout(0);
+		let capturedRows = -1;
+		const originalColumns = process.env.COLUMNS;
+		const originalLines = process.env.LINES;
+		const originalProcessStdoutColumns = process.stdout.columns;
+		const originalProcessStdoutRows = process.stdout.rows;
+		const originalProcessStderrColumns = process.stderr.columns;
+		const originalProcessStderrRows = process.stderr.rows;
+
+		t.teardown(() => {
+			process.env.COLUMNS = originalColumns;
+			process.env.LINES = originalLines;
+			process.stdout.columns = originalProcessStdoutColumns;
+			process.stdout.rows = originalProcessStdoutRows;
+			process.stderr.columns = originalProcessStderrColumns;
+			process.stderr.rows = originalProcessStderrRows;
+		});
+
+		process.env.COLUMNS = '123';
+		process.env.LINES = '45';
+		process.stdout.columns = 0;
+		process.stdout.rows = 0;
+		process.stderr.columns = 0;
+		process.stderr.rows = 0;
+		delete (stdout as any).rows;
+
+		function Test() {
+			const {rows} = useWindowSize();
+			capturedRows = rows;
+			return <Text>{rows}</Text>;
+		}
+
+		const {waitUntilRenderFlush} = render(<Test />, {stdout});
+		await waitUntilRenderFlush();
+
+		t.is(capturedRows, 45);
+	},
+);
 
 test.serial('clear screen when terminal width decreases', async t => {
 	const stdout = createStdout(100);

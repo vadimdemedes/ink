@@ -468,6 +468,47 @@ test('render border after update', t => {
 	);
 });
 
+test('render border edge changes after update when borderStyle is unchanged', t => {
+	const stdout = createStdout();
+
+	function Test({borderTop}: {readonly borderTop?: boolean}) {
+		return (
+			<Box borderStyle="round" borderTop={borderTop} alignSelf="flex-start">
+				<Text>Content</Text>
+			</Box>
+		);
+	}
+
+	const {rerender} = render(<Test />, {
+		stdout,
+		debug: true,
+	});
+
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		boxen('Content', {borderStyle: 'round'}),
+	);
+
+	rerender(<Test borderTop={false} />);
+
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		[
+			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
+			`${cliBoxes.round.bottomLeft}${cliBoxes.round.bottom.repeat(7)}${
+				cliBoxes.round.bottomRight
+			}`,
+		].join('\n'),
+	);
+
+	rerender(<Test />);
+
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		boxen('Content', {borderStyle: 'round'}),
+	);
+});
+
 test('hide top border', t => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">

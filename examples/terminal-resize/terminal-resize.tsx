@@ -1,40 +1,26 @@
-import React, {useState} from 'react';
-import {render, Box, Text, useInput} from '../../src/index.js';
+import React from 'react';
+import {render, Box, Text, useWindowSize} from '../../src/index.js';
 
-function TerminalResizeTest() {
-	const [value, setValue] = useState('');
-
-	useInput(input => {
-		if (input === '\r') {
-			// Enter key - clear input
-			setValue('');
-		} else if (input === '\u007F' || input === '\b') {
-			// Backspace
-			setValue(previous => previous.slice(0, -1));
-		} else {
-			// Regular character
-			setValue(previous => previous + input);
-		}
-	});
+function TerminalResizeExample() {
+	const {columns, rows} = useWindowSize();
 
 	return (
 		<Box flexDirection="column" padding={1}>
 			<Text bold color="cyan">
-				=== Terminal Resize Test ===
+				Terminal Size
 			</Text>
-			<Text>
-				Type something and then resize your terminal (drag the edge or press
-				Cmd/Ctrl -/+)
-			</Text>
-			<Text>Input: "{value}"</Text>
+			<Text>Columns: {columns}</Text>
+			<Text>Rows: {rows}</Text>
 			<Box marginTop={1}>
-				<Text dimColor>Press Ctrl+C to exit</Text>
+				<Text dimColor>
+					Resize your terminal to see the values update. Press Ctrl+C to exit.
+				</Text>
 			</Box>
 		</Box>
 	);
 }
 
-render(<TerminalResizeTest />, {
+render(<TerminalResizeExample />, {
 	patchConsole: true,
 	exitOnCtrlC: true,
 });

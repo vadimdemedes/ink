@@ -48,7 +48,10 @@ export type RenderOptions = {
 	patchConsole?: boolean;
 
 	/**
-	Runs the given callback after each render and re-render.
+	Runs the given callback after each render and re-render with render metrics.
+
+	Note: this callback runs after Ink commits a frame, but it does not wait for `stdout`/`stderr` stream callbacks.
+	To run code after output is flushed, use `waitUntilRenderFlush()`.
 	*/
 	onRender?: (metrics: RenderMetrics) => void;
 
@@ -115,6 +118,7 @@ export type Instance = {
 	Returns a promise that settles when the app is unmounted.
 
 	It resolves with the value passed to `exit(value)` and rejects with the error passed to `exit(error)`.
+	When `unmount()` is called manually, it settles after unmount-related stdout writes complete.
 
 	@example
 	```jsx
@@ -126,6 +130,23 @@ export type Instance = {
 	```
 	*/
 	waitUntilExit: Ink['waitUntilExit'];
+
+	/**
+	Returns a promise that settles after pending render output is flushed to stdout.
+
+	This can be used after `rerender()` when you need to run code only after the frame is written.
+
+	@example
+	```jsx
+	const {rerender, waitUntilRenderFlush} = render(<MyApp step="loading" />);
+
+	rerender(<MyApp step="ready" />);
+	await waitUntilRenderFlush(); // output for "ready" is flushed
+
+	runNextCommand();
+	```
+	*/
+	waitUntilRenderFlush: Ink['waitUntilRenderFlush'];
 
 	cleanup: () => void;
 
@@ -169,6 +190,7 @@ const render = (
 			instance.unmount();
 		},
 		waitUntilExit: instance.waitUntilExit,
+		waitUntilRenderFlush: instance.waitUntilRenderFlush,
 		cleanup: () => instances.delete(inkOptions.stdout),
 		clear: instance.clear,
 	};

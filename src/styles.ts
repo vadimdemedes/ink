@@ -14,7 +14,32 @@ export type Styles = {
 		| 'truncate-middle'
 		| 'truncate-start';
 
-	readonly position?: 'absolute' | 'relative';
+	/**
+	Controls how the element is positioned.
+
+	When `position` is `static`, `top`, `right`, `bottom`, and `left` are ignored.
+	*/
+	readonly position?: 'absolute' | 'relative' | 'static';
+
+	/**
+	Top offset for positioned elements.
+	*/
+	readonly top?: number | string;
+
+	/**
+	Right offset for positioned elements.
+	*/
+	readonly right?: number | string;
+
+	/**
+	Bottom offset for positioned elements.
+	*/
+	readonly bottom?: number | string;
+
+	/**
+	Left offset for positioned elements.
+	*/
+	readonly left?: number | string;
 
 	/**
 	Size of the gap between an element's columns.
@@ -135,13 +160,37 @@ export type Styles = {
 	The align-items property defines the default behavior for how items are laid out along the cross axis (perpendicular to the main axis).
 	See [align-items](https://css-tricks.com/almanac/properties/a/align-items/).
 	*/
-	readonly alignItems?: 'flex-start' | 'center' | 'flex-end' | 'stretch';
+	readonly alignItems?:
+		| 'flex-start'
+		| 'center'
+		| 'flex-end'
+		| 'stretch'
+		| 'baseline';
 
 	/**
 	It makes possible to override the align-items value for specific flex items.
 	See [align-self](https://css-tricks.com/almanac/properties/a/align-self/).
 	*/
-	readonly alignSelf?: 'flex-start' | 'center' | 'flex-end' | 'auto';
+	readonly alignSelf?:
+		| 'flex-start'
+		| 'center'
+		| 'flex-end'
+		| 'auto'
+		| 'stretch'
+		| 'baseline';
+
+	/**
+	It defines the alignment along the cross axis when there are multiple lines of flex items (when using flex-wrap).
+	See [align-content](https://css-tricks.com/almanac/properties/a/align-content/).
+	*/
+	readonly alignContent?:
+		| 'flex-start'
+		| 'flex-end'
+		| 'center'
+		| 'stretch'
+		| 'space-between'
+		| 'space-around'
+		| 'space-evenly';
 
 	/**
 	It defines the alignment along the main axis.
@@ -167,13 +216,32 @@ export type Styles = {
 
 	/**
 	Sets a minimum width of the element.
+	Percentages aren't supported yet; see https://github.com/facebook/yoga/issues/872.
 	*/
 	readonly minWidth?: number | string;
 
 	/**
-	Sets a minimum height of the element.
+	Sets a minimum height of the element in lines (rows). You can also set it as a percentage, which will calculate the minimum height based on the height of the parent element.
 	*/
 	readonly minHeight?: number | string;
+
+	/**
+	Sets a maximum width of the element.
+	Percentages aren't supported yet; see https://github.com/facebook/yoga/issues/872.
+	*/
+	readonly maxWidth?: number | string;
+
+	/**
+	Sets a maximum height of the element in lines (rows). You can also set it as a percentage, which will calculate the maximum height based on the height of the parent element.
+	*/
+	readonly maxHeight?: number | string;
+
+	/**
+	Defines the aspect ratio (width/height) for the element.
+
+	Use it with at least one size constraint (`width`, `height`, `minHeight`, or `maxHeight`) so Ink can derive the missing dimension.
+	*/
+	readonly aspectRatio?: number;
 
 	/**
 	Set this property to `none` to hide the element.
@@ -187,28 +255,28 @@ export type Styles = {
 
 	/**
 	Determines whether the top border is visible.
-	
+
 	@default true
 	*/
 	readonly borderTop?: boolean;
 
 	/**
 	Determines whether the bottom border is visible.
-	
+
 	@default true
 	*/
 	readonly borderBottom?: boolean;
 
 	/**
 	Determines whether the left border is visible.
-	
+
 	@default true
 	*/
 	readonly borderLeft?: boolean;
 
 	/**
 	Determines whether the right border is visible.
-	
+
 	@default true
 	*/
 	readonly borderRight?: boolean;
@@ -247,35 +315,35 @@ export type Styles = {
 
 	/**
 	Dim the top border color.
-	
+
 	@default false
 	*/
 	readonly borderTopDimColor?: boolean;
 
 	/**
 	Dim the bottom border color.
-	
+
 	@default false
 	*/
 	readonly borderBottomDimColor?: boolean;
 
 	/**
 	Dim the left border color.
-	
+
 	@default false
 	*/
 	readonly borderLeftDimColor?: boolean;
 
 	/**
 	Dim the right border color.
-	
+
 	@default false
 	*/
 	readonly borderRightDimColor?: boolean;
 
 	/**
 	Behavior for an element's overflow in both directions.
-	
+
 	@default 'visible'
 	*/
 	readonly overflow?: 'visible' | 'hidden';
@@ -296,19 +364,45 @@ export type Styles = {
 
 	/**
 	Background color for the element.
-	
+
 	Accepts the same values as `color` in the `<Text>` component.
 	*/
 	readonly backgroundColor?: LiteralUnion<ForegroundColorName, string>;
 };
 
+const positionEdges = [
+	['top', Yoga.EDGE_TOP],
+	['right', Yoga.EDGE_RIGHT],
+	['bottom', Yoga.EDGE_BOTTOM],
+	['left', Yoga.EDGE_LEFT],
+] as const;
+
 const applyPositionStyles = (node: YogaNode, style: Styles): void => {
 	if ('position' in style) {
-		node.setPositionType(
-			style.position === 'absolute'
-				? Yoga.POSITION_TYPE_ABSOLUTE
-				: Yoga.POSITION_TYPE_RELATIVE,
-		);
+		let positionType = Yoga.POSITION_TYPE_RELATIVE;
+
+		if (style.position === 'absolute') {
+			positionType = Yoga.POSITION_TYPE_ABSOLUTE;
+		} else if (style.position === 'static') {
+			positionType = Yoga.POSITION_TYPE_STATIC;
+		}
+
+		node.setPositionType(positionType);
+	}
+
+	for (const [property, edge] of positionEdges) {
+		if (!(property in style)) {
+			continue;
+		}
+
+		const value = style[property];
+
+		if (typeof value === 'string') {
+			node.setPositionPercent(edge, Number.parseFloat(value));
+			continue;
+		}
+
+		node.setPosition(edge, value);
 	}
 };
 
@@ -442,6 +536,10 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 		if (style.alignItems === 'flex-end') {
 			node.setAlignItems(Yoga.ALIGN_FLEX_END);
 		}
+
+		if (style.alignItems === 'baseline') {
+			node.setAlignItems(Yoga.ALIGN_BASELINE);
+		}
 	}
 
 	if ('alignSelf' in style) {
@@ -459,6 +557,45 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 
 		if (style.alignSelf === 'flex-end') {
 			node.setAlignSelf(Yoga.ALIGN_FLEX_END);
+		}
+
+		if (style.alignSelf === 'stretch') {
+			node.setAlignSelf(Yoga.ALIGN_STRETCH);
+		}
+
+		if (style.alignSelf === 'baseline') {
+			node.setAlignSelf(Yoga.ALIGN_BASELINE);
+		}
+	}
+
+	if ('alignContent' in style) {
+		// Keep wrapped lines top-packed by default; stretch can add surprising empty rows in fixed-height boxes.
+		if (style.alignContent === 'flex-start' || !style.alignContent) {
+			node.setAlignContent(Yoga.ALIGN_FLEX_START);
+		}
+
+		if (style.alignContent === 'center') {
+			node.setAlignContent(Yoga.ALIGN_CENTER);
+		}
+
+		if (style.alignContent === 'flex-end') {
+			node.setAlignContent(Yoga.ALIGN_FLEX_END);
+		}
+
+		if (style.alignContent === 'space-between') {
+			node.setAlignContent(Yoga.ALIGN_SPACE_BETWEEN);
+		}
+
+		if (style.alignContent === 'space-around') {
+			node.setAlignContent(Yoga.ALIGN_SPACE_AROUND);
+		}
+
+		if (style.alignContent === 'space-evenly') {
+			node.setAlignContent(Yoga.ALIGN_SPACE_EVENLY);
+		}
+
+		if (style.alignContent === 'stretch') {
+			node.setAlignContent(Yoga.ALIGN_STRETCH);
 		}
 	}
 
@@ -525,6 +662,26 @@ const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
 			node.setMinHeight(style.minHeight ?? 0);
 		}
 	}
+
+	if ('maxWidth' in style) {
+		if (typeof style.maxWidth === 'string') {
+			node.setMaxWidthPercent(Number.parseInt(style.maxWidth, 10));
+		} else {
+			node.setMaxWidth(style.maxWidth);
+		}
+	}
+
+	if ('maxHeight' in style) {
+		if (typeof style.maxHeight === 'string') {
+			node.setMaxHeightPercent(Number.parseInt(style.maxHeight, 10));
+		} else {
+			node.setMaxHeight(style.maxHeight);
+		}
+	}
+
+	if ('aspectRatio' in style) {
+		node.setAspectRatio(style.aspectRatio);
+	}
 };
 
 const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
@@ -535,26 +692,40 @@ const applyDisplayStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
-const applyBorderStyles = (node: YogaNode, style: Styles): void => {
-	if ('borderStyle' in style) {
-		const borderWidth = style.borderStyle ? 1 : 0;
+const applyBorderStyles = (
+	node: YogaNode,
+	style: Styles,
+	currentStyle: Styles,
+): void => {
+	const hasBorderChanges =
+		'borderStyle' in style ||
+		'borderTop' in style ||
+		'borderBottom' in style ||
+		'borderLeft' in style ||
+		'borderRight' in style;
 
-		if (style.borderTop !== false) {
-			node.setBorder(Yoga.EDGE_TOP, borderWidth);
-		}
-
-		if (style.borderBottom !== false) {
-			node.setBorder(Yoga.EDGE_BOTTOM, borderWidth);
-		}
-
-		if (style.borderLeft !== false) {
-			node.setBorder(Yoga.EDGE_LEFT, borderWidth);
-		}
-
-		if (style.borderRight !== false) {
-			node.setBorder(Yoga.EDGE_RIGHT, borderWidth);
-		}
+	if (!hasBorderChanges) {
+		return;
 	}
+
+	const borderWidth = currentStyle.borderStyle ? 1 : 0;
+
+	node.setBorder(
+		Yoga.EDGE_TOP,
+		currentStyle.borderTop === false ? 0 : borderWidth,
+	);
+	node.setBorder(
+		Yoga.EDGE_BOTTOM,
+		currentStyle.borderBottom === false ? 0 : borderWidth,
+	);
+	node.setBorder(
+		Yoga.EDGE_LEFT,
+		currentStyle.borderLeft === false ? 0 : borderWidth,
+	);
+	node.setBorder(
+		Yoga.EDGE_RIGHT,
+		currentStyle.borderRight === false ? 0 : borderWidth,
+	);
 };
 
 const applyGapStyles = (node: YogaNode, style: Styles): void => {
@@ -571,14 +742,18 @@ const applyGapStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
-const styles = (node: YogaNode, style: Styles = {}): void => {
+const styles = (
+	node: YogaNode,
+	style: Styles = {},
+	currentStyle: Styles = style,
+): void => {
 	applyPositionStyles(node, style);
 	applyMarginStyles(node, style);
 	applyPaddingStyles(node, style);
 	applyFlexStyles(node, style);
 	applyDimensionStyles(node, style);
 	applyDisplayStyles(node, style);
-	applyBorderStyles(node, style);
+	applyBorderStyles(node, style, currentStyle);
 	applyGapStyles(node, style);
 };
 

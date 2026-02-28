@@ -10,7 +10,7 @@ import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/constants.js';
 import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import wrapAnsi from 'wrap-ansi';
-import terminalSize from 'terminal-size';
+import {getWindowSize} from './utils.js';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
@@ -26,6 +26,11 @@ import {
 } from './kitty-keyboard.js';
 
 const noop = () => {};
+
+const yieldImmediate = async () =>
+	new Promise<void>(resolve => {
+		setImmediate(resolve);
+	});
 
 const kittyQueryEscapeByte = 0x1b;
 const kittyQueryOpenBracketByte = 0x5b;
@@ -151,6 +156,49 @@ const isErrorInput = (value: unknown): value is Error => {
 	);
 };
 
+type MaybeWritableStream = NodeJS.WriteStream & {
+	writable?: boolean;
+	writableEnded?: boolean;
+	destroyed?: boolean;
+	writableLength?: number;
+	_writableState?: unknown;
+};
+
+const getWritableStreamState = (stdout: MaybeWritableStream) => {
+	const canWriteToStdout =
+		!stdout.destroyed && !stdout.writableEnded && (stdout.writable ?? true);
+	const hasWritableState =
+		stdout._writableState !== undefined || stdout.writableLength !== undefined;
+
+	return {
+		canWriteToStdout,
+		hasWritableState,
+	};
+};
+
+const settleThrottle = (
+	throttled: unknown,
+	canWriteToStdout: boolean,
+): void => {
+	if (
+		!throttled ||
+		typeof (throttled as {flush?: unknown}).flush !== 'function'
+	) {
+		return;
+	}
+
+	const throttledValue = throttled as {
+		flush: () => void;
+		cancel?: () => void;
+	};
+
+	if (canWriteToStdout) {
+		throttledValue.flush();
+	} else if (typeof throttledValue.cancel === 'function') {
+		throttledValue.cancel();
+	}
+};
+
 /**
 Performance metrics for a render operation.
 */
@@ -227,6 +275,7 @@ export default class Ink {
 	private hasPendingThrottledRender = false;
 	private kittyProtocolEnabled = false;
 	private cancelKittyDetection?: () => void;
+	private nextRenderCommit?: {promise: Promise<void>; resolve: () => void};
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -299,7 +348,7 @@ export default class Ink {
 		this.lastOutput = '';
 		this.lastOutputToRender = '';
 		this.lastOutputHeight = 0;
-		this.lastTerminalWidth = this.getTerminalWidth();
+		this.lastTerminalWidth = getWindowSize(this.options.stdout).columns;
 
 		// This variable is used only in debug mode to store full static output
 		// so that it's rerendered every time, not just new static parts, like in non-debug mode
@@ -354,19 +403,8 @@ export default class Ink {
 		void this.exitPromise.catch(noop);
 	}
 
-	getTerminalWidth = () => {
-		// The 'columns' property can be undefined or 0 when not using a TTY.
-		// Use terminal-size as a fallback for piped processes, then default to 80.
-		if (this.options.stdout.columns) {
-			return this.options.stdout.columns;
-		}
-
-		const size = terminalSize();
-		return size?.columns ?? 80;
-	};
-
 	resized = () => {
-		const currentWidth = this.getTerminalWidth();
+		const currentWidth = getWindowSize(this.options.stdout).columns;
 
 		if (currentWidth < this.lastTerminalWidth) {
 			// We clear the screen when decreasing terminal width to prevent duplicate overlapping re-renders.
@@ -412,7 +450,7 @@ export default class Ink {
 	};
 
 	calculateLayout = () => {
-		const terminalWidth = this.getTerminalWidth();
+		const terminalWidth = getWindowSize(this.options.stdout).columns;
 
 		this.rootNode.yogaNode!.setWidth(terminalWidth);
 
@@ -428,6 +466,11 @@ export default class Ink {
 
 		if (this.isUnmounted) {
 			return;
+		}
+
+		if (this.nextRenderCommit) {
+			this.nextRenderCommit.resolve();
+			this.nextRenderCommit = undefined;
 		}
 
 		const startTime = performance.now();
@@ -446,6 +489,9 @@ export default class Ink {
 				this.fullStaticOutput += staticOutput;
 			}
 
+			this.lastOutput = output;
+			this.lastOutputToRender = output;
+			this.lastOutputHeight = outputHeight;
 			this.options.stdout.write(this.fullStaticOutput + output);
 			return;
 		}
@@ -486,7 +532,7 @@ export default class Ink {
 				return;
 			}
 
-			const terminalWidth = this.getTerminalWidth();
+			const terminalWidth = getWindowSize(this.options.stdout).columns;
 
 			const wrappedOutput = wrapAnsi(output, terminalWidth, {
 				trim: false,
@@ -520,64 +566,11 @@ export default class Ink {
 			this.fullStaticOutput += staticOutput;
 		}
 
-		// Detect fullscreen: output fills or exceeds terminal height.
-		// Only apply when writing to a real TTY — piped output always gets trailing newlines.
-		const isFullscreen =
-			this.options.stdout.isTTY && outputHeight >= this.options.stdout.rows;
-		const outputToRender = isFullscreen ? output : output + '\n';
-
-		const viewportRows = this.options.stdout.rows;
-		const shouldClearTerminal = shouldClearTerminalForFrame({
-			isTty: this.options.stdout.isTTY,
-			viewportRows,
-			previousOutputHeight: this.lastOutputHeight,
-			nextOutputHeight: outputHeight,
-			isUnmounting: this.isUnmounting,
-		});
-
-		if (shouldClearTerminal) {
-			const sync = shouldSynchronize(this.options.stdout);
-			if (sync) {
-				this.options.stdout.write(bsu);
-			}
-
-			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
-			);
-			this.lastOutput = output;
-			this.lastOutputToRender = outputToRender;
-			this.lastOutputHeight = outputHeight;
-			this.log.sync(outputToRender);
-
-			if (sync) {
-				this.options.stdout.write(esu);
-			}
-
-			return;
-		}
-
-		// To ensure static output is cleanly rendered before main output, clear main output first
-		if (hasStaticOutput) {
-			const sync = shouldSynchronize(this.options.stdout);
-			if (sync) {
-				this.options.stdout.write(bsu);
-			}
-
-			this.log.clear();
-			this.options.stdout.write(staticOutput);
-			this.log(outputToRender);
-
-			if (sync) {
-				this.options.stdout.write(esu);
-			}
-		} else if (output !== this.lastOutput || this.log.isCursorDirty()) {
-			// ThrottledLog manages its own bsu/esu at actual write time
-			this.throttledLog(outputToRender);
-		}
-
-		this.lastOutput = output;
-		this.lastOutputToRender = outputToRender;
-		this.lastOutputHeight = outputHeight;
+		this.renderInteractiveFrame(
+			output,
+			outputHeight,
+			hasStaticOutput ? staticOutput : '',
+		);
 	};
 
 	render(node: ReactNode): void {
@@ -594,6 +587,7 @@ export default class Ink {
 					writeToStderr={this.writeToStderr}
 					setCursorPosition={this.setCursorPosition}
 					onExit={this.handleAppExit}
+					onWaitUntilRenderFlush={this.waitUntilRenderFlush}
 				>
 					{node}
 				</App>
@@ -682,32 +676,12 @@ export default class Ink {
 			this.beforeExitHandler = undefined;
 		}
 
-		const stdout = this.options.stdout as NodeJS.WriteStream & {
-			writable?: boolean;
-			writableEnded?: boolean;
-			destroyed?: boolean;
-			writableLength?: number;
-		};
-		const canWriteToStdout =
-			!stdout.destroyed && !stdout.writableEnded && (stdout.writable ?? true);
-		const settleThrottle = (throttled: {
-			flush?: () => void;
-			cancel?: () => void;
-		}): void => {
-			if (typeof throttled.flush !== 'function') {
-				return;
-			}
-
-			if (canWriteToStdout) {
-				throttled.flush();
-			} else if (typeof throttled.cancel === 'function') {
-				throttled.cancel();
-			}
-		};
+		const stdout = this.options.stdout as MaybeWritableStream;
+		const {canWriteToStdout, hasWritableState} = getWritableStreamState(stdout);
 
 		// Clear any pending throttled render timer on unmount. When stdout is writable,
 		// flush so the final frame is emitted; otherwise cancel to avoid delayed callbacks.
-		settleThrottle(this.throttledOnRender ?? {});
+		settleThrottle(this.throttledOnRender, canWriteToStdout);
 
 		if (canWriteToStdout) {
 			// If throttling is enabled and there is already a pending render, flushing above
@@ -744,10 +718,7 @@ export default class Ink {
 
 		// Flush any pending throttled log writes if possible, otherwise cancel to
 		// prevent delayed callbacks from writing to a closed stream.
-		const throttledLog = this.throttledLog as DebouncedFunc<
-			(output: string) => void
-		>;
-		settleThrottle(throttledLog);
+		settleThrottle(this.throttledLog, canWriteToStdout);
 
 		if (canWriteToStdout) {
 			if (this.kittyProtocolEnabled) {
@@ -758,10 +729,13 @@ export default class Ink {
 				}
 			}
 
-			// CIs don't handle erasing ansi escapes well, so it's better to
-			// only render last frame of non-static output
+			// CIs don't handle erasing ansi escapes well.
+			// In debug mode, only terminate output with a newline.
+			// In non-debug mode, render only the last frame.
 			if (isInCi) {
-				this.options.stdout.write(this.lastOutput + '\n');
+				this.options.stdout.write(
+					this.options.debug ? '\n' : this.lastOutput + '\n',
+				);
 			} else if (!this.options.debug) {
 				this.log.done();
 			}
@@ -799,9 +773,6 @@ export default class Ink {
 		};
 
 		const isProcessExiting = error !== undefined && !isErrorInput(error);
-		const hasWritableState =
-			(stdout as any)._writableState !== undefined ||
-			stdout.writableLength !== undefined;
 
 		if (isProcessExiting) {
 			resolveOrReject();
@@ -822,6 +793,54 @@ export default class Ink {
 		}
 
 		return this.exitPromise;
+	}
+
+	async waitUntilRenderFlush(): Promise<void> {
+		if (this.isUnmounted || this.isUnmounting) {
+			await this.awaitExit();
+			return;
+		}
+
+		// Yield to the macrotask queue so that React's scheduler has a chance to
+		// fire passive effects and process any work they enqueued.
+		await yieldImmediate();
+
+		if (this.isUnmounted || this.isUnmounting) {
+			await this.awaitExit();
+			return;
+		}
+
+		// In concurrent mode, React's scheduler may still be mid-render after
+		// the yield. Wait for the next render commit instead of polling.
+		if (this.isConcurrent && this.hasPendingConcurrentWork()) {
+			await Promise.race([this.awaitNextRender(), this.awaitExit()]);
+
+			if (this.isUnmounted || this.isUnmounting) {
+				this.nextRenderCommit = undefined;
+				await this.awaitExit();
+				return;
+			}
+		}
+
+		reconciler.flushSyncWork();
+
+		const stdout = this.options.stdout as MaybeWritableStream;
+		const {canWriteToStdout, hasWritableState} = getWritableStreamState(stdout);
+
+		// Flush pending throttled render/log timers so their output is included in this wait.
+		settleThrottle(this.throttledOnRender, canWriteToStdout);
+		settleThrottle(this.throttledLog, canWriteToStdout);
+
+		if (canWriteToStdout && hasWritableState) {
+			await new Promise<void>(resolve => {
+				this.options.stdout.write('', () => {
+					resolve();
+				});
+			});
+			return;
+		}
+
+		await yieldImmediate();
 	}
 
 	clear(): void {
@@ -851,6 +870,105 @@ export default class Ink {
 				}
 			}
 		});
+	}
+
+	// Waits for the exit promise to settle, suppressing any rejection.
+	// Errors are surfaced via waitUntilExit() instead.
+	private async awaitExit(): Promise<void> {
+		try {
+			await this.exitPromise;
+		} catch {}
+	}
+
+	private hasPendingConcurrentWork(): boolean {
+		const concurrentContainer = this.container as {
+			pendingLanes?: number;
+			callbackNode?: unknown;
+		};
+		return (
+			(concurrentContainer.pendingLanes ?? 0) !== 0 &&
+			concurrentContainer.callbackNode !== undefined &&
+			concurrentContainer.callbackNode !== null
+		);
+	}
+
+	private awaitNextRender(): Promise<void> {
+		if (!this.nextRenderCommit) {
+			let resolveRender!: () => void;
+			const promise = new Promise<void>(resolve => {
+				resolveRender = resolve;
+			});
+			this.nextRenderCommit = {promise, resolve: resolveRender};
+		}
+
+		return this.nextRenderCommit.promise;
+	}
+
+	private renderInteractiveFrame(
+		output: string,
+		outputHeight: number,
+		staticOutput: string,
+	): void {
+		const hasStaticOutput = staticOutput !== '';
+		const isTty = this.options.stdout.isTTY;
+
+		// Detect fullscreen: output fills or exceeds terminal height.
+		// Only apply when writing to a real TTY — piped output always gets trailing newlines.
+		const viewportRows = isTty ? getWindowSize(this.options.stdout).rows : 24;
+		const isFullscreen = isTty && outputHeight >= viewportRows;
+		const outputToRender = isFullscreen ? output : output + '\n';
+
+		const shouldClearTerminal = shouldClearTerminalForFrame({
+			isTty,
+			viewportRows,
+			previousOutputHeight: this.lastOutputHeight,
+			nextOutputHeight: outputHeight,
+			isUnmounting: this.isUnmounting,
+		});
+
+		if (shouldClearTerminal) {
+			const sync = shouldSynchronize(this.options.stdout);
+			if (sync) {
+				this.options.stdout.write(bsu);
+			}
+
+			this.options.stdout.write(
+				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
+			);
+			this.lastOutput = output;
+			this.lastOutputToRender = outputToRender;
+			this.lastOutputHeight = outputHeight;
+			this.log.sync(outputToRender);
+
+			if (sync) {
+				this.options.stdout.write(esu);
+			}
+
+			return;
+		}
+
+		// To ensure static output is cleanly rendered before main output, clear main output first
+		if (hasStaticOutput) {
+			const sync = shouldSynchronize(this.options.stdout);
+			if (sync) {
+				this.options.stdout.write(bsu);
+			}
+
+			this.log.clear();
+			this.options.stdout.write(staticOutput);
+			this.log(outputToRender);
+
+			if (sync) {
+				this.options.stdout.write(esu);
+			}
+		} else if (output !== this.lastOutput || this.log.isCursorDirty()) {
+			// ThrottledLog manages its own bsu/esu at actual write time
+			this.throttledLog(outputToRender);
+		}
+
+		this.lastOutput = output;
+		this.lastOutputToRender = outputToRender;
+		this.lastOutputHeight = outputHeight;
 	}
 
 	private initKittyKeyboard(): void {

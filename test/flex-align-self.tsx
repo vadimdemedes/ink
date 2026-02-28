@@ -1,6 +1,6 @@
 import React from 'react';
 import test from 'ava';
-import {Box, Text} from '../src/index.js';
+import {Box, Text, Newline} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 
 test('row - align text to center', t => {
@@ -75,4 +75,44 @@ test('column - align text to right', t => {
 	);
 
 	t.is(output, '      Test');
+});
+
+test('column - align self stretch', t => {
+	const output = renderToString(
+		<Box flexDirection="column" width={7}>
+			<Box alignSelf="stretch" borderStyle="single">
+				<Text>X</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.is(output, '┌─────┐\n│X    │\n└─────┘');
+});
+
+test('row - align self stretch', t => {
+	const output = renderToString(
+		<Box height={5}>
+			<Box alignSelf="stretch" borderStyle="single">
+				<Text>X</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.is(output, '┌─┐\n│X│\n│ │\n│ │\n└─┘');
+});
+
+test('row - align self baseline', t => {
+	const output = renderToString(
+		<Box alignItems="flex-end" height={3}>
+			<Text>
+				A
+				<Newline />B
+			</Text>
+			<Box alignSelf="baseline">
+				<Text>X</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.is(output, 'AX\nB\n');
 });

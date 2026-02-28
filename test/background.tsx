@@ -431,3 +431,33 @@ test('Box background updates on rerender - concurrent', async t => {
 	await rerenderAsync(<Test />);
 	t.is(getOutput(), 'Hello');
 });
+
+test('Box backgroundColor fills full width on every line when text wraps', t => {
+	// "Hello World!!" is 13 chars, width=10 forces wrapping into 2 lines
+	const output = renderToString(
+		<Box backgroundColor="red" width={10} alignSelf="flex-start">
+			<Text>Hello World!!</Text>
+		</Box>,
+	);
+
+	// Both lines are padded to the full 10-char Box width with background color
+	t.is(
+		output,
+		`${ansi.bgRed}Hello     ${ansi.bgReset}\n${ansi.bgRed}World!!   ${ansi.bgReset}`,
+	);
+});
+
+test('Text-only backgroundColor colors text content but does not fill Box width', t => {
+	// Without a Box backgroundColor, only the text characters are colored
+	const output = renderToString(
+		<Box width={10} alignSelf="flex-start">
+			<Text backgroundColor="red">Hello World!!</Text>
+		</Box>,
+	);
+
+	// Text-only bg colors just the text, not the remaining space to fill Box width
+	t.is(
+		output,
+		`${ansi.bgRed}Hello ${ansi.bgReset}\n${ansi.bgRed}World!!${ansi.bgReset}`,
+	);
+});

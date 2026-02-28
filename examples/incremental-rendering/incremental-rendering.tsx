@@ -4,7 +4,7 @@ import {
 	Text,
 	Box,
 	useInput,
-	useStdout,
+	useWindowSize,
 	useApp,
 } from '../../src/index.js';
 
@@ -57,8 +57,7 @@ const generateLogLine = (index: number, value: number) => {
 
 function IncrementalRendering() {
 	const {exit} = useApp();
-	const {stdout} = useStdout();
-	const terminalHeight = stdout.rows || 24; // Default to 24 if not available
+	const {rows: terminalHeight} = useWindowSize();
 
 	// Calculate available space for dynamic content
 	// Header box: ~9 lines (border + content)

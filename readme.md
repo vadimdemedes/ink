@@ -145,7 +145,9 @@ render(<Counter />);
   - [`useApp`](#useapp)
   - [`useStdin`](#usestdin)
   - [`useStdout`](#usestdout)
+  - [`useBoxMetrics`](#useboxmetricsref)
   - [`useStderr`](#usestderr)
+  - [`useWindowSize`](#usewindowsize)
   - [`useFocus`](#usefocusoptions)
   - [`useFocusManager`](#usefocusmanager)
   - [`useCursor`](#usecursor)
@@ -267,7 +269,8 @@ const Example = () => (
 render(<Example />);
 ```
 
-**Note:** `<Text>` allows only text nodes and nested `<Text>` components inside of it. For example, `<Box>` component can't be used inside `<Text>`.
+> [!NOTE]
+> `<Text>` allows only text nodes and nested `<Text>` components inside of it. For example, `<Box>` component can't be used inside `<Text>`.
 
 #### color
 
@@ -465,10 +468,32 @@ Percentages aren't supported yet; see https://github.com/facebook/yoga/issues/87
 
 ##### minHeight
 
+Type: `number` `string`
+
+Sets a minimum height of the element in lines (rows).
+You can also set it as a percentage, which will calculate the minimum height based on the height of the parent element.
+
+##### maxWidth
+
 Type: `number`
 
-Sets a minimum height of the element.
+Sets a maximum width of the element.
 Percentages aren't supported yet; see https://github.com/facebook/yoga/issues/872.
+
+##### maxHeight
+
+Type: `number` `string`
+
+Sets a maximum height of the element in lines (rows).
+You can also set it as a percentage, which will calculate the maximum height based on the height of the parent element.
+
+##### aspectRatio
+
+Type: `number`
+
+Defines the aspect ratio (width/height) for the element.
+
+Use it with at least one size constraint (`width`, `height`, `minHeight`, or `maxHeight`) so Ink can derive the missing dimension.
 
 #### Padding
 
@@ -774,7 +799,7 @@ See [flex-wrap](https://css-tricks.com/almanac/properties/f/flex-wrap/).
 ##### alignItems
 
 Type: `string`\
-Allowed values: `flex-start` `center` `flex-end`
+Allowed values: `flex-start` `center` `flex-end` `stretch` `baseline`
 
 See [align-items](https://css-tricks.com/almanac/properties/a/align-items/).
 
@@ -832,7 +857,7 @@ See [align-items](https://css-tricks.com/almanac/properties/a/align-items/).
 
 Type: `string`\
 Default: `auto`\
-Allowed values: `auto` `flex-start` `center` `flex-end`
+Allowed values: `auto` `flex-start` `center` `flex-end` `stretch` `baseline`
 
 See [align-self](https://css-tricks.com/almanac/properties/a/align-self/).
 
@@ -864,6 +889,16 @@ See [align-self](https://css-tricks.com/almanac/properties/a/align-self/).
 //
 // X
 ```
+
+##### alignContent
+
+Type: `string`\
+Default: `flex-start`\
+Allowed values: `flex-start` `flex-end` `center` `stretch` `space-between` `space-around` `space-evenly`
+
+Defines alignment between flex lines on the cross axis when `flexWrap` creates multiple lines.
+See [align-content](https://css-tricks.com/almanac/properties/a/align-content/).
+Unlike CSS (`stretch`), Ink defaults to `flex-start` so wrapped lines stay compact and fixed-height boxes don't gain unexpected empty rows unless you opt in to stretching.
 
 ##### justifyContent
 
@@ -906,6 +941,46 @@ See [justify-content](https://css-tricks.com/almanac/properties/j/justify-conten
 </Box>
 // [   X   Y   ]
 ```
+
+#### Position
+
+##### position
+
+Type: `string`\
+Allowed values: `relative` `absolute` `static`\
+Default: `relative`
+
+Controls how the element is positioned.
+
+When `position` is `static`, `top`, `right`, `bottom`, and `left` are ignored.
+
+##### top
+
+Type: `number` `string`
+
+Top offset for positioned elements.
+You can also set it as a percentage of the parent size.
+
+##### right
+
+Type: `number` `string`
+
+Right offset for positioned elements.
+You can also set it as a percentage of the parent size.
+
+##### bottom
+
+Type: `number` `string`
+
+Bottom offset for positioned elements.
+You can also set it as a percentage of the parent size.
+
+##### left
+
+Type: `number` `string`
+
+Left offset for positioned elements.
+You can also set it as a percentage of the parent size.
 
 #### Visibility
 
@@ -1357,7 +1432,8 @@ const Example = () => {
 render(<Example />);
 ```
 
-**Note:** `<Static>` only renders new items in the `items` prop and ignores items
+> [!NOTE]
+> `<Static>` only renders new items in the `items` prop and ignores items
 that were previously rendered. This means that when you add new items to the `items`
 array, changes you make to previous items will not trigger a rerender.
 
@@ -1414,7 +1490,8 @@ For example, you might want to apply a [gradient to text](https://github.com/sin
 These use cases can't accept React nodes as input; they expect a string.
 That's what the `<Transform>` component does: it gives you an output string of its child components and lets you transform it in any way.
 
-**Note:** `<Transform>` must be applied only to `<Text>` children components and shouldn't change the dimensions of the output; otherwise, the layout will be incorrect.
+> [!NOTE]
+> `<Transform>` must be applied only to `<Text>` children components and shouldn't change the dimensions of the output; otherwise, the layout will be incorrect.
 
 ```jsx
 import {render, Transform} from 'ink';
@@ -1485,7 +1562,7 @@ The zero-indexed line number of the line that's currently being transformed.
 
 ### useInput(inputHandler, options?)
 
-This hook is used for handling user input.
+A React hook that returns `void` and handles user input.
 It's a more convenient alternative to using `useStdin` and listening for `data` events.
 The callback you pass to `useInput` is called for each character when the user enters any input.
 However, if the user pastes text and it's more than one character, the callback will be called only once, and the whole string will be passed as `input`.
@@ -1666,7 +1743,7 @@ Useful when there are multiple `useInput` hooks used at once to avoid handling t
 
 ### useApp()
 
-`useApp` is a React hook that exposes a method to manually exit the app (unmount).
+A React hook that returns app lifecycle methods.
 
 #### exit(errorOrResult?)
 
@@ -1678,12 +1755,13 @@ Exit (unmount) the whole Ink app.
 
 Type: `Error | unknown`
 
-Optional value that controls how [`waitUntilExit`](waituntilexit) settles:
+Optional value that controls how [`waitUntilExit`](#waituntilexit) settles:
 - `exit()` resolves with `undefined`.
 - `exit(error)` rejects when `error` is an `Error`.
 - `exit(value)` resolves with `value`.
 
 ```js
+import {useEffect} from 'react';
 import {useApp} from 'ink';
 
 const Example = () => {
@@ -1694,15 +1772,39 @@ const Example = () => {
 		setTimeout(() => {
 			exit();
 		}, 5000);
-	}, []);
+	}, [exit]);
 
 	return …
 };
 ```
 
+#### waitUntilRenderFlush()
+
+Type: `Function`
+
+Returns a promise that settles after pending render output is flushed to stdout.
+
+```js
+import {useEffect} from 'react';
+import {useApp} from 'ink';
+
+const Example = () => {
+	const {waitUntilRenderFlush} = useApp();
+
+	useEffect(() => {
+		void (async () => {
+			await waitUntilRenderFlush();
+			runNextCommand();
+		})();
+	}, [waitUntilRenderFlush]);
+
+	return …;
+};
+```
+
 ### useStdin()
 
-`useStdin` is a React hook that exposes the stdin stream.
+A React hook that returns the stdin stream and stdin-related utilities.
 
 #### stdin
 
@@ -1776,7 +1878,7 @@ const Example = () => {
 
 ### useStdout()
 
-`useStdout` is a React hook that exposes the stdout stream where Ink renders your app.
+A React hook that returns the stdout stream where Ink renders your app and stdout-related utilities.
 
 #### stdout
 
@@ -1822,9 +1924,73 @@ const Example = () => {
 
 See additional usage example in [examples/use-stdout](examples/use-stdout/use-stdout.tsx).
 
+### useBoxMetrics(ref)
+
+A React hook that returns the current layout metrics for a tracked box element.
+It updates when layout changes (for example terminal resize, sibling/content changes, or position changes).
+
+Use `hasMeasured` to detect when the currently tracked element has been measured.
+
+#### ref
+
+Type: `React.RefObject<DOMElement>`
+
+A ref to the `<Box>` element to track.
+
+```jsx
+import {useRef} from 'react';
+import {Box, Text, useBoxMetrics} from 'ink';
+
+const Example = () => {
+	const ref = useRef(null);
+	const {width, height, left, top, hasMeasured} = useBoxMetrics(ref);
+
+	return (
+		<Box ref={ref}>
+			<Text>
+				{hasMeasured ? `${width}x${height} at ${left},${top}` : 'Measuring...'}
+			</Text>
+		</Box>
+	);
+};
+```
+
+#### width
+
+Type: `number`
+
+Element width.
+
+#### height
+
+Type: `number`
+
+Element height.
+
+#### left
+
+Type: `number`
+
+Distance from the left edge of the parent.
+
+#### top
+
+Type: `number`
+
+Distance from the top edge of the parent.
+
+#### hasMeasured
+
+Type: `boolean`
+
+Whether the currently tracked element has been measured.
+
+> [!NOTE]
+> The hook returns `{width: 0, height: 0, left: 0, top: 0}` until the first layout pass completes. It also returns zeros when the tracked ref is detached.
+
 ### useStderr()
 
-`useStderr` is a React hook that exposes the stderr stream.
+A React hook that returns the stderr stream and stderr-related utilities.
 
 #### stderr
 
@@ -1871,8 +2037,35 @@ const Example = () => {
 };
 ```
 
+### useWindowSize()
+
+A React hook that returns the current terminal dimensions and re-renders the component whenever the terminal is resized.
+
+```js
+import {Text, useWindowSize} from 'ink';
+
+const Example = () => {
+	const {columns, rows} = useWindowSize();
+
+	return <Text>{columns}x{rows}</Text>;
+};
+```
+
+#### columns
+
+Type: `number`
+
+Number of columns (horizontal character cells).
+
+#### rows
+
+Type: `number`
+
+Number of rows (vertical character cells).
+
 ### useFocus(options?)
 
+A React hook that returns focus state and focus controls for the current component.
 A component that uses the `useFocus` hook becomes "focusable" to Ink, so when the user presses <kbd>Tab</kbd>, Ink will switch focus to this component.
 If there are multiple components that execute the `useFocus` hook, focus will be given to them in the order in which these components are rendered.
 This hook returns an object with an `isFocused` boolean property, which determines whether this component is focused.
@@ -1917,13 +2110,14 @@ See example in [examples/use-focus](examples/use-focus/use-focus.tsx) and [examp
 
 ### useFocusManager()
 
-This hook exposes methods to enable or disable focus management for all components or manually switch focus to the next or previous components.
+A React hook that returns methods to manage focus across focusable components.
 
 #### enableFocus()
 
 Enable focus management for all components.
 
-**Note:** You don't need to call this method manually unless you've disabled focus management. Focus management is enabled by default.
+> [!NOTE]
+> You don't need to call this method manually unless you've disabled focus management. Focus management is enabled by default.
 
 ```js
 import {useFocusManager} from 'ink';
@@ -1964,7 +2158,8 @@ Switch focus to the next focusable component.
 If there's no active component right now, focus will be given to the first focusable component.
 If the active component is the last in the list of focusable components, focus will be switched to the first focusable component.
 
-**Note:** Ink calls this method when user presses <kbd>Tab</kbd>.
+> [!NOTE]
+> Ink calls this method when user presses <kbd>Tab</kbd>.
 
 ```js
 import {useFocusManager} from 'ink';
@@ -1986,7 +2181,8 @@ Switch focus to the previous focusable component.
 If there's no active component right now, focus will be given to the first focusable component.
 If the active component is the first in the list of focusable components, focus will be switched to the last focusable component.
 
-**Note:** Ink calls this method when user presses <kbd>Shift</kbd>+<kbd>Tab</kbd>.
+> [!NOTE]
+> Ink calls this method when user presses <kbd>Shift</kbd>+<kbd>Tab</kbd>.
 
 ```js
 import {useFocusManager} from 'ink';
@@ -2046,7 +2242,8 @@ const Example = () => {
 
 ### useCursor()
 
-`useCursor` lets you control the terminal cursor position after each render. This is essential for IME (Input Method Editor) support, where the composing character is displayed at the cursor location.
+A React hook that returns methods to control the terminal cursor position after each render.
+This is essential for IME (Input Method Editor) support, where the composing character is displayed at the cursor location.
 
 ```jsx
 import {useState} from 'react';
@@ -2095,7 +2292,8 @@ Row position from the top of the Ink output (0 = first line).
 
 ### useIsScreenReaderEnabled()
 
-Returns whether a screen reader is enabled. This is useful when you want to render different output for screen readers.
+A React hook that returns whether a screen reader is enabled.
+This is useful when you want to render different output for screen readers.
 
 ```jsx
 import {useIsScreenReaderEnabled, Text} from 'ink';
@@ -2174,7 +2372,9 @@ This functionality is powered by [patch-console](https://github.com/vadimdemedes
 Type: `({renderTime: number}) => void`\
 Default: `undefined`
 
-Runs the given callback after each render and re-render with a metrics object.
+Runs the given callback after each render and re-render with render metrics.
+This callback runs after Ink commits a frame, but it does not wait for `stdout`/`stderr` stream callbacks.
+To run code after output is flushed, use [`waitUntilRenderFlush()`](#waituntilrenderflush).
 
 ###### isScreenReaderEnabled
 
@@ -2224,7 +2424,8 @@ When enabled:
 render(<MyApp />, {concurrent: true});
 ```
 
-**Note:** Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
+> [!NOTE]
+> Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
 
 ###### kittyKeyboard
 
@@ -2307,7 +2508,7 @@ console.log(output);
 
 **Notes:**
 
-- Terminal-specific hooks (`useInput`, `useStdin`, `useStdout`, `useStderr`, `useApp`, `useFocus`, `useFocusManager`) return default no-op values since there is no terminal session. They will not throw, but they will not function as in a live terminal.
+- Terminal-specific hooks (`useInput`, `useStdin`, `useStdout`, `useStderr`, `useWindowSize`, `useApp`, `useFocus`, `useFocusManager`) return default no-op values since there is no terminal session. They will not throw, but they will not function as in a live terminal.
 - `useEffect` callbacks will execute during rendering (due to synchronous rendering mode), but state updates they trigger will not affect the returned output, which reflects the initial render.
 - `useLayoutEffect` callbacks fire synchronously during commit, so state updates they trigger **will** be reflected in the output.
 - The `<Static>` component is supported — its output is prepended to the dynamic output.
@@ -2371,6 +2572,7 @@ unmount();
 Returns a promise that settles when the app is unmounted.
 
 It resolves with the value passed to `exit(value)` and rejects with the error passed to `exit(error)`.
+When `unmount()` is called manually, it settles after unmount-related stdout writes complete.
 
 ```jsx
 const {unmount, waitUntilExit} = render(<MyApp />);
@@ -2378,6 +2580,21 @@ const {unmount, waitUntilExit} = render(<MyApp />);
 setTimeout(unmount, 1000);
 
 await waitUntilExit(); // resolves after `unmount()` is called
+```
+
+##### waitUntilRenderFlush()
+
+Returns a promise that settles after pending render output is flushed to stdout.
+
+Useful when you need to run code only after a frame is written:
+
+```jsx
+const {rerender, waitUntilRenderFlush} = render(<MyApp step="loading" />);
+
+rerender(<MyApp step="ready" />);
+await waitUntilRenderFlush(); // output for "ready" is flushed
+
+runNextCommand();
 ```
 
 ##### cleanup()
@@ -2401,7 +2618,8 @@ Measure the dimensions of a particular `<Box>` element.
 Returns an object with `width` and `height` properties.
 This function is useful when your component needs to know the amount of available space it has. You can use it when you need to change the layout based on the length of its content.
 
-**Note:** `measureElement()` returns `{width: 0, height: 0}` when called during render (before layout is calculated). Call it from post-render code, such as `useEffect`, `useLayoutEffect`, input handlers, or timer callbacks. When content changes, pass the relevant dependency to your effect so it re-measures after each update.
+> [!NOTE]
+> `measureElement()` returns `{width: 0, height: 0}` when called during render (before layout is calculated). Call it from post-render code, such as `useEffect`, `useLayoutEffect`, input handlers, or timer callbacks. When content changes, pass the relevant dependency to your effect so it re-measures after each update.
 
 ##### ref
 
@@ -2470,7 +2688,8 @@ npx react-devtools
 After it starts, you should see the component tree of your CLI.
 You can even inspect and change the props of components, and see the results immediately in the CLI, without restarting it.
 
-**Note**: You must manually quit your CLI via <kbd>Ctrl</kbd>+<kbd>C</kbd> after you're done testing.
+> [!NOTE]
+> You must manually quit your CLI via <kbd>Ctrl</kbd>+<kbd>C</kbd> after you're done testing.
 
 ## Screen Reader Support
 
