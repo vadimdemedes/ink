@@ -1072,8 +1072,8 @@ test('static output is written immediately in non-interactive mode', async t => 
 
 	// Verify dynamic content was eventually written
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-	const allWrites: string[] = (stdout.write as any).args.map(
-		(args: string[]) => stripAnsi(args[0]!),
+	const allWrites: string[] = (stdout.write as any).args.map((args: string[]) =>
+		stripAnsi(args[0]!),
 	);
 	t.true(
 		allWrites.join('').includes('Dynamic'),
