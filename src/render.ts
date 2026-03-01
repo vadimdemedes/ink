@@ -105,14 +105,11 @@ export type RenderOptions = {
 	/**
 	Enable interactive output mode with full terminal features.
 
-	When disabled, Ink skips terminal-specific features like ANSI erase sequences,
-	cursor manipulation, synchronized output, resize handling, and kitty keyboard
-	auto-detection. Only the final frame of non-static output is written at unmount.
+	@default true (false if in CI or `stdout.isTTY` is falsy)
 
-	Disable this for piped output, CI environments, or any context where ANSI
-	escape codes for cursor movement are not supported.
+	When disabled, Ink skips terminal-specific features like ANSI erase sequences, cursor manipulation, synchronized output, resize handling, and kitty keyboard auto-detection. Only the final frame of non-static output is written at unmount.
 
-	@default false if in CI or stdout.isTTY is falsy
+	Disable this for piped output, CI environments, or any context where ANSI escape codes for cursor movement are not supported.
 	*/
 	interactive?: boolean;
 };
