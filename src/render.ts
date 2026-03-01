@@ -101,6 +101,17 @@ export type RenderOptions = {
 	@see https://sw.kovidgoyal.net/kitty/keyboard-protocol/
 	*/
 	kittyKeyboard?: KittyKeyboardOptions;
+
+	/**
+	Enable interactive output mode with full terminal features.
+
+	@default true (false if in CI or `stdout.isTTY` is falsy)
+
+	When disabled, Ink skips terminal-specific features like ANSI erase sequences, cursor manipulation, synchronized output, resize handling, and kitty keyboard auto-detection. Only the final frame of non-static output is written at unmount.
+
+	Disable this for piped output, CI environments, or any context where ANSI escape codes for cursor movement are not supported.
+	*/
+	interactive?: boolean;
 };
 
 export type Instance = {

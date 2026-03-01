@@ -197,8 +197,15 @@ test.serial('calculate layout while rendering is throttled', async t => {
 	rerender(<Test />);
 	await delay(50);
 
-	t.is(
-		stripAnsi((stdout.write as any).lastCall.firstArg as string).trim(),
-		'Width: 100',
-	);
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+	const writes: string[] = (stdout.write as any)
+		.getCalls()
+		.map((c: any) => c.args[0] as string)
+		.filter(
+			(w: string) =>
+				!w.startsWith('\u001B[?25') && !w.startsWith('\u001B[?2026'),
+		);
+	const lastContentWrite = writes.at(-1)!;
+
+	t.is(stripAnsi(lastContentWrite).trim(), 'Width: 100');
 });

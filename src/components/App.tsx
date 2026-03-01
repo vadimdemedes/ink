@@ -34,6 +34,7 @@ type Props = {
 	readonly onExit: (errorOrResult?: unknown) => void;
 	readonly onWaitUntilRenderFlush: () => Promise<void>;
 	readonly setCursorPosition: (position: CursorPosition | undefined) => void;
+	readonly interactive: boolean;
 };
 
 type Focusable = {
@@ -55,6 +56,7 @@ function App({
 	onExit,
 	onWaitUntilRenderFlush,
 	setCursorPosition,
+	interactive,
 }: Props): React.ReactNode {
 	const [isFocusEnabled, setIsFocusEnabled] = useState(true);
 	const [activeFocusId, setActiveFocusId] = useState<string | undefined>(
@@ -435,12 +437,15 @@ function App({
 	// Handle cursor visibility and raw mode cleanup on unmount
 	useEffect(() => {
 		return () => {
-			cliCursor.show(stdout);
+			if (interactive) {
+				cliCursor.show(stdout);
+			}
+
 			if (isRawModeSupported && rawModeEnabledCount.current > 0) {
 				disableRawMode();
 			}
 		};
-	}, [stdout, isRawModeSupported, disableRawMode]);
+	}, [stdout, isRawModeSupported, disableRawMode, interactive]);
 
 	// Memoize context values to prevent unnecessary re-renders
 	const appContextValue = useMemo(

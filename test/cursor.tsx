@@ -93,14 +93,17 @@ test.serial('cursor is shown at specified position after render', async t => {
 	const {unmount} = render(<InputApp />, {stdout, stdin});
 	await delay(50);
 
-	const firstWrite = (stdout.write as any).firstCall.args[0] as string;
+	// With isTTY=true, cli-cursor writes cursor escape sequences as separate
+	// stdout.write calls (synchronized output wrappers), so we check the
+	// combined output of the first render rather than a single firstCall.
+	const firstRenderOutput = getWriteCalls(stdout).join('');
 	// Cursor should be shown at x=2 (after "> ")
 	t.true(
-		firstWrite.includes(showCursorEscape),
+		firstRenderOutput.includes(showCursorEscape),
 		'cursor should be visible after first render',
 	);
 	t.true(
-		firstWrite.includes(ansiEscapes.cursorTo(2)),
+		firstRenderOutput.includes(ansiEscapes.cursorTo(2)),
 		'cursor should be at column 2',
 	);
 
@@ -140,11 +143,13 @@ test.serial('cursor follows text input', async t => {
 	emitReadable(stdin, 'a');
 	await delay(50);
 
-	const lastWrite = stdout.get();
+	// With isTTY=true, stdout.get() (lastCall) may be a synchronized output
+	// wrapper rather than the render content, so check all writes combined.
+	const allOutput = getWriteCalls(stdout).join('');
 	// After typing 'a', cursor should be at x=3 ("> a" = 3 chars)
-	t.true(lastWrite.includes(showCursorEscape));
+	t.true(allOutput.includes(showCursorEscape));
 	t.true(
-		lastWrite.includes(ansiEscapes.cursorTo(3)),
+		allOutput.includes(ansiEscapes.cursorTo(3)),
 		'cursor should move to column 3 after typing "a"',
 	);
 
@@ -174,10 +179,12 @@ test.serial(
 			'should write to stdout after space input',
 		);
 
-		const lastWrite = stdout.get();
+		// With isTTY=true, stdout.get() (lastCall) may be a synchronized output
+		// wrapper rather than the render content, so check all writes combined.
+		const allOutput = getWriteCalls(stdout).join('');
 		// After "a ", cursor should be at x=4
 		t.true(
-			lastWrite.includes(ansiEscapes.cursorTo(4)),
+			allOutput.includes(ansiEscapes.cursorTo(4)),
 			'cursor should be at column 4 after "a "',
 		);
 
@@ -212,19 +219,26 @@ test.serial(
 		const {unmount} = render(<Parent />, {stdout, stdin});
 		await delay(50);
 
-		// Cursor should be shown after first render
-		const firstWrite = (stdout.write as any).firstCall.args[0] as string;
+		// With isTTY=true, cli-cursor writes cursor escape sequences as separate
+		// stdout.write calls, so check the combined initial render output.
+		const initialRenderOutput = getWriteCalls(stdout).join('');
 		t.true(
-			firstWrite.includes(showCursorEscape),
+			initialRenderOutput.includes(showCursorEscape),
 			'cursor should be visible initially',
 		);
+
+		const writesBeforeEnter = (stdout.write as any).callCount as number;
 
 		// Unmount the child by pressing Enter
 		emitReadable(stdin, '\r');
 		await delay(50);
 
 		// After child unmounts, cursor position should be cleared.
-		const outputAfterChildUnmount = getWriteCalls(stdout).slice(1).join('');
+		// Only look at writes after the initial render to avoid counting
+		// the initial render's cursor sequences.
+		const outputAfterChildUnmount = getWriteCalls(stdout)
+			.slice(writesBeforeEnter)
+			.join('');
 		const lastShowIndex = outputAfterChildUnmount.lastIndexOf(showCursorEscape);
 		const lastHideIndex = outputAfterChildUnmount.lastIndexOf(hideCursorEscape);
 		t.true(
@@ -315,19 +329,29 @@ test.serial('screen does not scroll up on subsequent renders', async t => {
 	const {unmount} = render(<MultiLineApp />, {stdout, stdin});
 	await delay(50);
 
+	const writesBeforeInput = (stdout.write as any).callCount as number;
+
 	emitReadable(stdin, 'x');
 	await delay(50);
 
-	const secondWrite = stdout.get();
+	// With isTTY=true, stdout.get() (lastCall) may be a synchronized output
+	// wrapper rather than the render content, so check writes from the
+	// second render combined.
+	const secondRenderOutput = getWriteCalls(stdout)
+		.slice(writesBeforeInput)
+		.join('');
 	// When cursor was at y=1 (line 1), next render should first cursorDown to bottom,
 	// then erase. The write should contain cursorDown to return to bottom.
 	// It should NOT just erase from cursor position (which would scroll screen up).
 	t.true(
-		secondWrite.includes(hideCursorEscape),
+		secondRenderOutput.includes(hideCursorEscape),
 		'should hide cursor before erase',
 	);
 	// The write should include the new text
-	t.true(secondWrite.includes('x'), 'should contain the typed character');
+	t.true(
+		secondRenderOutput.includes('x'),
+		'should contain the typed character',
+	);
 
 	unmount();
 });

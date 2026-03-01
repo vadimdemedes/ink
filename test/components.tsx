@@ -217,6 +217,7 @@ test('fail when text nodes are not within <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
+		// eslint-disable-next-line @typescript-eslint/promise-function-async
 		override render() {
 			return this.props.children;
 		}
@@ -246,6 +247,7 @@ test('fail when text node is not within <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
+		// eslint-disable-next-line @typescript-eslint/promise-function-async
 		override render() {
 			return this.props.children;
 		}
@@ -272,6 +274,7 @@ test('fail when <Box> is inside <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
+		// eslint-disable-next-line @typescript-eslint/promise-function-async
 		override render() {
 			return this.props.children;
 		}
@@ -487,7 +490,15 @@ test('render only new items in static output on final render', t => {
 
 	rerender(<Dynamic items={['A', 'B']} />);
 	unmount();
-	t.is((stdout.write as any).lastCall.args[0], 'A\nB\n');
+
+	// Filter out cursor management escapes (show/hide) to check content writes.
+	// With isTTY=true, cli-cursor writes a show-cursor sequence on unmount.
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+	const allWrites: string[] = (stdout.write as any).args.map(
+		(args: string[]) => args[0]!,
+	);
+	const lastContentWrite = allWrites.findLast(w => !w.startsWith('\u001B[?25'));
+	t.is(lastContentWrite, 'A\nB\n');
 });
 
 // See https://github.com/chalk/wrap-ansi/issues/27
@@ -838,6 +849,236 @@ test('debug mode in CI keeps final newline separation after waitUntilExit', asyn
 
 	const plainOutput = stripAnsi(output).replaceAll('\r', '');
 	t.is(plainOutput, 'HelloHello\nDONE');
+});
+
+test('render only last frame when stdout is not a TTY', async t => {
+	const stdout = createStdout(100, false);
+
+	function Counter() {
+		const [count, setCount] = useState(0);
+
+		React.useEffect(() => {
+			if (count < 3) {
+				const timer = setTimeout(() => {
+					setCount(c => c + 1);
+				}, 10);
+
+				return () => {
+					clearTimeout(timer);
+				};
+			}
+		}, [count]);
+
+		return <Text>Count: {count}</Text>;
+	}
+
+	const {unmount, waitUntilExit} = render(<Counter />, {
+		stdout,
+		debug: false,
+	});
+
+	await new Promise(resolve => {
+		setTimeout(resolve, 200);
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+	const allWrites: string[] = (stdout.write as any).args.map(
+		(args: string[]) => args[0]!,
+	);
+
+	// Verify no intermediate frames were written
+	const contentWrites = allWrites.map(w => stripAnsi(w));
+	for (const intermediate of ['Count: 0', 'Count: 1', 'Count: 2']) {
+		t.false(
+			contentWrites.some(w => w.includes(intermediate)),
+			`Intermediate frame "${intermediate}" should not be written in non-interactive mode`,
+		);
+	}
+
+	// Verify no erase/cursor ANSI sequences were emitted
+	const hasEraseSequence = allWrites.some(w =>
+		w.includes(ansiEscapes.eraseLines(1)),
+	);
+	t.false(hasEraseSequence);
+
+	// Verify the final frame is written
+	const lastWrite = allWrites.at(-1) ?? '';
+	t.true(lastWrite.includes('Count: 3'));
+});
+
+test('render all frames when interactive is explicitly true', async t => {
+	const stdout = createStdout(100, false);
+
+	function Counter() {
+		const [count, setCount] = useState(0);
+
+		React.useEffect(() => {
+			if (count < 2) {
+				const timer = setTimeout(() => {
+					setCount(c => c + 1);
+				}, 50);
+
+				return () => {
+					clearTimeout(timer);
+				};
+			}
+		}, [count]);
+
+		return <Text>Count: {count}</Text>;
+	}
+
+	const {unmount, waitUntilExit} = render(<Counter />, {
+		stdout,
+		debug: false,
+		interactive: true,
+	});
+
+	await new Promise(resolve => {
+		setTimeout(resolve, 500);
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+	const contentWrites: string[] = (stdout.write as any).args
+		.map((args: string[]) => args[0]!)
+		.filter((w: string) => w.length > 0);
+	t.true(contentWrites.length > 1);
+	const joined = contentWrites.join('');
+	t.true(joined.includes('Count: 0'));
+	t.true(joined.includes('Count: 1'));
+	t.true(joined.includes('Count: 2'));
+});
+
+test('interactive option overrides TTY detection', async t => {
+	const stdout = createStdout(100, true);
+
+	function Counter() {
+		const [count, setCount] = useState(0);
+
+		React.useEffect(() => {
+			if (count < 3) {
+				const timer = setTimeout(() => {
+					setCount(c => c + 1);
+				}, 10);
+
+				return () => {
+					clearTimeout(timer);
+				};
+			}
+		}, [count]);
+
+		return <Text>Count: {count}</Text>;
+	}
+
+	const {unmount, waitUntilExit} = render(<Counter />, {
+		stdout,
+		debug: false,
+		interactive: false,
+	});
+
+	await new Promise(resolve => {
+		setTimeout(resolve, 200);
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+	const allWrites: string[] = (stdout.write as any).args.map(
+		(args: string[]) => args[0]!,
+	);
+
+	// Verify no intermediate frames were written
+	const contentWrites = allWrites.map(w => stripAnsi(w));
+	for (const intermediate of ['Count: 0', 'Count: 1', 'Count: 2']) {
+		t.false(
+			contentWrites.some(w => w.includes(intermediate)),
+			`Intermediate frame "${intermediate}" should not be written when interactive=false overrides TTY`,
+		);
+	}
+
+	// Verify no erase/cursor ANSI sequences were emitted
+	const hasEraseSequence = allWrites.some((w: string) =>
+		w.includes(ansiEscapes.eraseLines(1)),
+	);
+	t.false(hasEraseSequence);
+
+	// Verify only the final frame is written
+	const lastWrite = allWrites.at(-1) ?? '';
+	t.true(lastWrite.includes('Count: 3'));
+});
+
+test('static output is written immediately in non-interactive mode', async t => {
+	const stdout = createStdout(100, false);
+
+	function App() {
+		const [items, setItems] = useState(['A']);
+
+		React.useEffect(() => {
+			const timer = setTimeout(() => {
+				setItems(['A', 'B']);
+			}, 10);
+
+			return () => {
+				clearTimeout(timer);
+			};
+		}, []);
+
+		return (
+			<Box>
+				<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
+				<Text>Dynamic</Text>
+			</Box>
+		);
+	}
+
+	const {unmount, waitUntilExit} = render(<App />, {
+		stdout,
+		debug: false,
+	});
+
+	await new Promise(resolve => {
+		setTimeout(resolve, 200);
+	});
+
+	// Capture writes BEFORE unmount — static items must already be here
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+	const writesBeforeUnmount: string[] = (stdout.write as any).args.map(
+		(args: string[]) => stripAnsi(args[0]!),
+	);
+	const preUnmountJoined = writesBeforeUnmount.join('');
+	t.true(
+		preUnmountJoined.includes('A'),
+		'Static item A was written before unmount',
+	);
+	t.true(
+		preUnmountJoined.includes('B'),
+		'Static item B was written before unmount',
+	);
+
+	unmount();
+	await waitUntilExit();
+
+	// Verify the dynamic content was deferred to unmount (not written before it)
+	t.false(
+		preUnmountJoined.includes('Dynamic'),
+		'Dynamic content was not written before unmount',
+	);
+
+	// Verify dynamic content was eventually written
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+	const allWrites: string[] = (stdout.write as any).args.map((args: string[]) =>
+		stripAnsi(args[0]!),
+	);
+	t.true(
+		allWrites.join('').includes('Dynamic'),
+		'Dynamic content was eventually written',
+	);
 });
 
 test('reset prop when it’s removed from the element', t => {
