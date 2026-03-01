@@ -1,4 +1,4 @@
-import {type ReactNode, type Key, type LegacyRef} from 'react';
+import {type ReactNode, type Key, type Ref} from 'react';
 import {type Except} from 'type-fest';
 import {type DOMElement} from './dom.js';
 import {type Styles} from './styles.js';
@@ -18,7 +18,7 @@ declare namespace Ink {
 		internal_static?: boolean;
 		children?: ReactNode;
 		key?: Key;
-		ref?: LegacyRef<DOMElement>;
+		ref?: Ref<DOMElement>;
 		style?: Except<Styles, 'textWrap'>;
 		internal_accessibility?: DOMElement['internal_accessibility'];
 	};
