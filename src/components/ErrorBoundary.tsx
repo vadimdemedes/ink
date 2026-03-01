@@ -27,7 +27,7 @@ export default class ErrorBoundary extends PureComponent<Props, State> {
 		this.props.onError(error);
 	}
 
-	override async render() {
+	override render() {
 		if (this.state.error) {
 			return <ErrorOverview error={this.state.error} />;
 		}

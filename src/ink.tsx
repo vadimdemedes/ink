@@ -892,7 +892,7 @@ export default class Ink {
 		);
 	}
 
-	private async awaitNextRender(): Promise<void> {
+	private awaitNextRender(): Promise<void> {
 		if (!this.nextRenderCommit) {
 			let resolveRender!: () => void;
 			const promise = new Promise<void>(resolve => {
