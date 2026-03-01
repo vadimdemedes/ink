@@ -237,10 +237,13 @@ export type Options = {
 	*/
 	concurrent?: boolean;
 	kittyKeyboard?: KittyKeyboardOptions;
+
 	/**
 	Enable interactive output mode with full terminal features.
+
+	@default true (false if in CI or `stdout.isTTY` is falsy)
+
 	@see {@link RenderOptions.interactive}
-	@default false if in CI or stdout.isTTY is falsy
 	*/
 	interactive?: boolean;
 };
