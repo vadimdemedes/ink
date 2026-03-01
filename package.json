@@ -21,8 +21,9 @@
 		"dev": "tsc --watch",
 		"build": "tsc",
 		"prepare": "npm run build",
-		"test": "tsc --noEmit && xo && FORCE_COLOR=true ava",
-		"xo": "tsc --noEmit && xo",
+		"test": "npm run typecheck && npm run lint && FORCE_COLOR=true ava",
+		"lint": "xo",
+		"typecheck": "tsc --noEmit",
 		"example": "NODE_NO_WARNINGS=1 node --import=tsx",
 		"benchmark": "NODE_NO_WARNINGS=1 node --import=tsx",
 		"inspect": "react-devtools"
