@@ -103,7 +103,7 @@ function App() {
 				<DataItem name="slow" delay={1500} />
 			</Suspense>
 
-			{showMore && (
+			{showMore ? (
 				<>
 					<Box marginTop={1} />
 					<Text>Dynamically added (500ms):</Text>
@@ -111,7 +111,7 @@ function App() {
 						<DataItem name="dynamic" delay={500} />
 					</Suspense>
 				</>
-			)}
+			) : null}
 		</Box>
 	);
 }

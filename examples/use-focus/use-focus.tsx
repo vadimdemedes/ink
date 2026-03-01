@@ -21,7 +21,7 @@ function Item({label}) {
 	const {isFocused} = useFocus();
 	return (
 		<Text>
-			{label} {isFocused && <Text color="green">(focused)</Text>}
+			{label} {isFocused ? <Text color="green">(focused)</Text> : null}
 		</Text>
 	);
 }

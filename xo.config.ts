@@ -52,7 +52,6 @@ const xoConfig: FlatXoConfig = [
 			'@typescript-eslint/no-unsafe-return': 'off',
 			'@typescript-eslint/no-unsafe-argument': 'off',
 			'@typescript-eslint/restrict-plus-operands': 'off',
-			'react/jsx-no-leaked-render': 'off',
 			'n/prefer-global/buffer': 'off',
 		},
 	},
