@@ -14,7 +14,7 @@ function SubprocessOutput() {
 			'examples/jest',
 		]);
 
-		// eslint-disable-next-line @typescript-eslint/ban-types
+		// eslint-disable-next-line @typescript-eslint/no-restricted-types
 		subProcess.stdout.on('data', (newOutput: Buffer) => {
 			const lines = stripAnsi(newOutput.toString('utf8')).split('\n');
 			setOutput(lines.slice(-5).join('\n'));

@@ -16,7 +16,7 @@ test('tokenize ESC CSI SGR sequence', t => {
 	t.deepEqual(tokens[2], {type: 'text', value: 'B'});
 
 	const csiToken = tokens[1];
-	if (csiToken === undefined || csiToken.type !== 'csi') {
+	if (csiToken?.type !== 'csi') {
 		t.fail();
 		return;
 	}
@@ -31,7 +31,7 @@ test('tokenize C1 CSI sequence', t => {
 	const tokens = tokenizeAnsi('A\u009B2 qB');
 	const csiToken = tokens[1];
 
-	if (csiToken === undefined || csiToken.type !== 'csi') {
+	if (csiToken?.type !== 'csi') {
 		t.fail();
 		return;
 	}
@@ -50,7 +50,7 @@ test('tokenize OSC control string with ST terminator', t => {
 		tokens.map(token => token.type),
 		['text', 'osc', 'text'],
 	);
-	if (oscToken === undefined || oscToken.type !== 'osc') {
+	if (oscToken?.type !== 'osc') {
 		t.fail();
 		return;
 	}
@@ -68,7 +68,7 @@ test('tokenize tmux DCS passthrough as one control string token', t => {
 		tokens.map(token => token.type),
 		['text', 'dcs', 'text'],
 	);
-	if (dcsToken === undefined || dcsToken.type !== 'dcs') {
+	if (dcsToken?.type !== 'dcs') {
 		t.fail();
 		return;
 	}
@@ -112,7 +112,7 @@ test('tokenize ESC ST sequence as ESC token', t => {
 		tokens.map(token => token.type),
 		['text', 'esc', 'text'],
 	);
-	if (escToken === undefined || escToken.type !== 'esc') {
+	if (escToken?.type !== 'esc') {
 		t.fail();
 		return;
 	}
@@ -130,7 +130,7 @@ test('tokenize C1 OSC with C1 ST terminator', t => {
 		tokens.map(token => token.type),
 		['text', 'osc', 'text'],
 	);
-	if (oscToken === undefined || oscToken.type !== 'osc') {
+	if (oscToken?.type !== 'osc') {
 		t.fail();
 		return;
 	}
@@ -146,7 +146,7 @@ test('tokenize C1 OSC with ESC ST terminator', t => {
 		tokens.map(token => token.type),
 		['text', 'osc', 'text'],
 	);
-	if (oscToken === undefined || oscToken.type !== 'osc') {
+	if (oscToken?.type !== 'osc') {
 		t.fail();
 		return;
 	}
@@ -162,7 +162,7 @@ test('tokenize C1 SGR CSI sequence', t => {
 		tokens.map(token => token.type),
 		['text', 'csi', 'text'],
 	);
-	if (csiToken === undefined || csiToken.type !== 'csi') {
+	if (csiToken?.type !== 'csi') {
 		t.fail();
 		return;
 	}
@@ -199,7 +199,7 @@ test('tokenize DCS with BEL in payload until ST terminator', t => {
 		tokens.map(token => token.type),
 		['text', 'dcs', 'text'],
 	);
-	if (dcsToken === undefined || dcsToken.type !== 'dcs') {
+	if (dcsToken?.type !== 'dcs') {
 		t.fail();
 		return;
 	}
@@ -216,7 +216,7 @@ test('tokenize C1 OSC control string with BEL terminator', t => {
 		tokens.map(token => token.type),
 		['text', 'osc', 'text'],
 	);
-	if (oscToken === undefined || oscToken.type !== 'osc') {
+	if (oscToken?.type !== 'osc') {
 		t.fail();
 		return;
 	}
@@ -232,7 +232,7 @@ test('tokenize ESC SOS control string with ST terminator', t => {
 		tokens.map(token => token.type),
 		['text', 'sos', 'text'],
 	);
-	if (sosToken === undefined || sosToken.type !== 'sos') {
+	if (sosToken?.type !== 'sos') {
 		t.fail();
 		return;
 	}
@@ -248,7 +248,7 @@ test('tokenize ESC SOS control string with C1 ST terminator', t => {
 		tokens.map(token => token.type),
 		['text', 'sos', 'text'],
 	);
-	if (sosToken === undefined || sosToken.type !== 'sos') {
+	if (sosToken?.type !== 'sos') {
 		t.fail();
 		return;
 	}
@@ -264,7 +264,7 @@ test('tokenize C1 SOS control string with C1 ST terminator', t => {
 		tokens.map(token => token.type),
 		['text', 'sos', 'text'],
 	);
-	if (sosToken === undefined || sosToken.type !== 'sos') {
+	if (sosToken?.type !== 'sos') {
 		t.fail();
 		return;
 	}
@@ -280,7 +280,7 @@ test('tokenize C1 SOS control string with ESC ST terminator', t => {
 		tokens.map(token => token.type),
 		['text', 'sos', 'text'],
 	);
-	if (sosToken === undefined || sosToken.type !== 'sos') {
+	if (sosToken?.type !== 'sos') {
 		t.fail();
 		return;
 	}
@@ -332,7 +332,7 @@ test('tokenize SOS with escaped ESC in payload until final ST terminator', t => 
 		tokens.map(token => token.type),
 		['text', 'sos', 'text'],
 	);
-	if (sosToken === undefined || sosToken.type !== 'sos') {
+	if (sosToken?.type !== 'sos') {
 		t.fail();
 		return;
 	}
@@ -350,12 +350,12 @@ test('tokenize standalone C1 controls as c1 tokens', t => {
 		tokens.map(token => token.type),
 		['text', 'c1', 'text', 'c1', 'text'],
 	);
-	if (c1Token1 === undefined || c1Token1.type !== 'c1') {
+	if (c1Token1?.type !== 'c1') {
 		t.fail();
 		return;
 	}
 
-	if (c1Token2 === undefined || c1Token2.type !== 'c1') {
+	if (c1Token2?.type !== 'c1') {
 		t.fail();
 		return;
 	}

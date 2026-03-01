@@ -48,7 +48,7 @@ const term = (fixture: string, args: string[] = []) => {
 	const result = {
 		write(input: string) {
 			// Wait for the fixture to signal it's ready to accept input
-			// eslint-disable-next-line promise/prefer-await-to-then
+
 			void readyPromise.then(() => {
 				ps.write(input);
 			});

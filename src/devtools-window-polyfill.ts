@@ -2,16 +2,19 @@
 import ws from 'ws';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-const customGlobal = global as any;
+const customGlobal = globalThis as any;
 
 // These things must exist before importing `react-devtools-core`
+// Using ||= intentionally to set falsy values, not just null/undefined
 
-// eslint-disable-next-line n/no-unsupported-features/node-builtins
+// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 customGlobal.WebSocket ||= ws;
 
-customGlobal.window ||= global;
+// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+customGlobal.window ||= globalThis;
 
-customGlobal.self ||= global;
+// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+customGlobal.self ||= globalThis;
 
 // Filter out Ink's internal components from devtools for a cleaner view.
 // Also, ince `react-devtools-shared` package isn't published on npm, we can't
