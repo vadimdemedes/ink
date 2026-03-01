@@ -39,7 +39,6 @@ const xoConfig: FlatXoConfig = [
 			'unicorn/prefer-event-target': 'off',
 			'unicorn/consistent-existence-index-check': 'off',
 			'unicorn/prefer-string-raw': 'off',
-			'n/prefer-global/buffer': 'off',
 			'promise/prefer-await-to-then': 'off',
 		},
 	},
@@ -52,7 +51,6 @@ const xoConfig: FlatXoConfig = [
 			'@typescript-eslint/no-unsafe-return': 'off',
 			'@typescript-eslint/no-unsafe-argument': 'off',
 			'@typescript-eslint/restrict-plus-operands': 'off',
-			'n/prefer-global/buffer': 'off',
 		},
 	},
 ];

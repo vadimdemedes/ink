@@ -1,5 +1,5 @@
 import childProcess from 'node:child_process';
-import type Buffer from 'node:buffer';
+import type {Buffer} from 'node:buffer';
 import React from 'react';
 import stripAnsi from 'strip-ansi';
 import {render, Text, Box} from '../../src/index.js';
