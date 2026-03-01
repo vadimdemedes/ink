@@ -50,15 +50,15 @@ export default function ErrorOverview({error}: Props) {
 				<Text> {error.message}</Text>
 			</Box>
 
-			{origin && filePath && (
+			{origin && filePath ? (
 				<Box marginTop={1}>
 					<Text dimColor>
 						{filePath}:{origin.line}:{origin.column}
 					</Text>
 				</Box>
-			)}
+			) : null}
 
-			{origin && excerpt && (
+			{origin && excerpt ? (
 				<Box marginTop={1} flexDirection="column">
 					{excerpt.map(({line, value}) => (
 						<Box key={line}>
@@ -87,9 +87,9 @@ export default function ErrorOverview({error}: Props) {
 						</Box>
 					))}
 				</Box>
-			)}
+			) : null}
 
-			{error.stack && (
+			{error.stack ? (
 				<Box marginTop={1} flexDirection="column">
 					{error.stack
 						.split('\n')
@@ -131,7 +131,7 @@ export default function ErrorOverview({error}: Props) {
 							);
 						})}
 				</Box>
-			)}
+			) : null}
 		</Box>
 	);
 }

@@ -79,9 +79,9 @@ function Test({
 
 	return (
 		<Box flexDirection="column">
-			{showFirst && (
+			{showFirst ? (
 				<Item label="First" autoFocus={autoFocus} disabled={disableFirst} />
-			)}
+			) : null}
 			<Item label="Second" autoFocus={autoFocus} disabled={disableSecond} />
 			<Item label="Third" autoFocus={autoFocus} disabled={disableThird} />
 		</Box>
@@ -102,7 +102,7 @@ function Item({label, autoFocus, disabled = false}: ItemProps) {
 
 	return (
 		<Text>
-			{label} {isFocused && '✔'}
+			{label} {isFocused ? '✔' : null}
 		</Text>
 	);
 }
@@ -568,7 +568,7 @@ function ItemWithId({
 	const {isFocused} = useFocus({id, autoFocus});
 	return (
 		<Text>
-			{label} {isFocused && '✔'}
+			{label} {isFocused ? '✔' : null}
 		</Text>
 	);
 }

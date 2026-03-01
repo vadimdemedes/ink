@@ -217,7 +217,7 @@ test('fail when text nodes are not within <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		override render() {
+		override async render() {
 			return this.props.children;
 		}
 
@@ -246,7 +246,7 @@ test('fail when text node is not within <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		override render() {
+		override async render() {
 			return this.props.children;
 		}
 
@@ -272,7 +272,7 @@ test('fail when <Box> is inside <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		override render() {
+		override async render() {
 			return this.props.children;
 		}
 
@@ -557,8 +557,8 @@ test('disable raw mode when all input components are unmounted', t => {
 
 		return (
 			<>
-				{renderFirstInput && <Input setRawMode={setRawMode} />}
-				{renderSecondInput && <Input setRawMode={setRawMode} />}
+				{renderFirstInput ? <Input setRawMode={setRawMode} /> : null}
+				{renderSecondInput ? <Input setRawMode={setRawMode} /> : null}
 			</>
 		);
 	}
@@ -763,12 +763,12 @@ test('render different component based on whether stdin is a TTY or not', t => {
 
 		return (
 			<>
-				{isRawModeSupported && renderFirstInput && (
+				{isRawModeSupported && renderFirstInput ? (
 					<Input setRawMode={setRawMode} />
-				)}
-				{isRawModeSupported && renderSecondInput && (
+				) : null}
+				{isRawModeSupported && renderSecondInput ? (
 					<Input setRawMode={setRawMode} />
-				)}
+				) : null}
 			</>
 		);
 	}

@@ -40,7 +40,6 @@ const xoConfig: FlatXoConfig = [
 			'unicorn/consistent-existence-index-check': 'off',
 			'unicorn/prefer-string-raw': 'off',
 			'n/prefer-global/buffer': 'off',
-			'react/jsx-no-leaked-render': 'off',
 			'promise/prefer-await-to-then': 'off',
 		},
 	},
