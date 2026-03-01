@@ -1,5 +1,6 @@
-/** @type {import('xo').FlatXoConfig} */
-const xoConfig = [
+import {type FlatXoConfig} from 'xo';
+
+const xoConfig: FlatXoConfig = [
 	{
 		ignores: ['src/parse-keypress.ts'],
 	},
