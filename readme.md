@@ -2430,11 +2430,11 @@ render(<MyApp />, {concurrent: true});
 ###### interactive
 
 Type: `boolean`\
-Default: `false` if in CI (detected via [`is-in-ci`](https://github.com/sindresorhus/is-in-ci)) or `stdout.isTTY` is falsy
+Default: `true` (`false` if in CI (detected via [`is-in-ci`](https://github.com/sindresorhus/is-in-ci)) or `stdout.isTTY` is falsy)
 
 Enable interactive output mode with full terminal features.
-When disabled, Ink skips terminal-specific features like ANSI erase sequences, cursor manipulation, synchronized output, resize handling, and kitty keyboard auto-detection.
-Only the final frame of non-static output is written at unmount.
+
+When disabled, Ink skips terminal-specific features like ANSI erase sequences, cursor manipulation, synchronized output, resize handling, and kitty keyboard auto-detection. Only the final frame of non-static output is written at unmount.
 
 Disable this for piped output (`node app.js | cat`), CI environments, or any context where ANSI escape codes for cursor movement are not supported.
 
