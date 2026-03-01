@@ -22,6 +22,7 @@
 		"build": "tsc",
 		"prepare": "npm run build",
 		"test": "tsc --noEmit && xo && FORCE_COLOR=true ava",
+		"xo": "tsc --noEmit && xo",
 		"example": "NODE_NO_WARNINGS=1 node --import=tsx",
 		"benchmark": "NODE_NO_WARNINGS=1 node --import=tsx",
 		"inspect": "react-devtools"
@@ -87,9 +88,6 @@
 		"ava": "^5.1.1",
 		"boxen": "^8.0.1",
 		"delay": "^7.0.0",
-		"eslint-config-xo-react": "0.27.0",
-		"eslint-plugin-react": "^7.37.5",
-		"eslint-plugin-react-hooks": "^5.0.0",
 		"ms": "^2.1.3",
 		"node-pty": "^1.2.0-beta.10",
 		"p-queue": "^9.0.0",
@@ -102,7 +100,7 @@
 		"strip-ansi": "^7.1.0",
 		"tsx": "^4.21.0",
 		"typescript": "^5.8.3",
-		"xo": "^0.59.3"
+		"xo": "^1.2.3"
 	},
 	"peerDependencies": {
 		"@types/react": ">=19.0.0",
@@ -131,70 +129,6 @@
 		},
 		"nodeArguments": [
 			"--import=tsx"
-		]
-	},
-	"xo": {
-		"extends": [
-			"xo-react"
-		],
-		"plugins": [
-			"react"
-		],
-		"prettier": true,
-		"rules": {
-			"react/no-unescaped-entities": "off",
-			"react/state-in-constructor": "off",
-			"react/jsx-indent": "off",
-			"react/prop-types": "off",
-			"unicorn/import-index": "off",
-			"import/no-useless-path-segments": "off",
-			"react-hooks/exhaustive-deps": "off",
-			"complexity": "off"
-		},
-		"ignores": [
-			"src/parse-keypress.ts"
-		],
-		"overrides": [
-			{
-				"files": [
-					"src/**/*.{ts,tsx}",
-					"test/**/*.{ts,tsx}"
-				],
-				"rules": {
-					"no-unused-expressions": "off",
-					"camelcase": [
-						"error",
-						{
-							"allow": [
-								"^unstable__",
-								"^internal_"
-							]
-						}
-					],
-					"unicorn/filename-case": "off",
-					"react/default-props-match-prop-types": "off",
-					"unicorn/prevent-abbreviations": "off",
-					"react/require-default-props": "off",
-					"react/jsx-curly-brace-presence": "off",
-					"@typescript-eslint/no-empty-function": "off",
-					"@typescript-eslint/promise-function-async": "warn",
-					"@typescript-eslint/explicit-function-return": "off",
-					"@typescript-eslint/explicit-function-return-type": "off",
-					"dot-notation": "off",
-					"react/boolean-prop-naming": "off",
-					"unicorn/prefer-dom-node-remove": "off",
-					"unicorn/prefer-event-target": "off"
-				}
-			},
-			{
-				"files": [
-					"examples/**/*.{ts,tsx}",
-					"benchmark/**/*.{ts,tsx}"
-				],
-				"rules": {
-					"import/no-unassigned-import": "off"
-				}
-			}
 		]
 	},
 	"prettier": "@vdemedes/prettier-config"
