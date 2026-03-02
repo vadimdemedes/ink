@@ -34,3 +34,15 @@ test('shouldSynchronize returns false for non-TTY stream', t => {
 	const stream = createStream({tty: false});
 	t.false(shouldSynchronize(stream, true));
 });
+
+test('shouldSynchronize uses CI detection when interactive is not specified', t => {
+	const ttyStream = createStream({tty: true});
+	// When interactive is omitted, shouldSynchronize falls back to is-in-ci.
+	// In a non-CI environment with a TTY stream, this should return true.
+	t.true(shouldSynchronize(ttyStream));
+});
+
+test('shouldSynchronize returns false for non-TTY stream when interactive is not specified', t => {
+	const stream = createStream({tty: false});
+	t.false(shouldSynchronize(stream));
+});

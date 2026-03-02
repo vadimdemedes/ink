@@ -103,13 +103,15 @@ export type RenderOptions = {
 	kittyKeyboard?: KittyKeyboardOptions;
 
 	/**
-	Enable interactive output mode with full terminal features.
+	Override automatic interactive mode detection.
+
+	By default, Ink detects whether the environment is interactive based on CI detection (via [`is-in-ci`](https://github.com/sindresorhus/is-in-ci)) and `stdout.isTTY`. Most users should not need to set this.
+
+	When non-interactive, Ink disables ANSI erase sequences, cursor manipulation, synchronized output, resize handling, and kitty keyboard auto-detection, writing only the final frame at unmount.
+
+	Set to `false` to force non-interactive mode or `true` to force interactive mode when the automatic detection doesn't suit your use case.
 
 	@default true (false if in CI or `stdout.isTTY` is falsy)
-
-	When disabled, Ink skips terminal-specific features like ANSI erase sequences, cursor manipulation, synchronized output, resize handling, and kitty keyboard auto-detection. Only the final frame of non-static output is written at unmount.
-
-	Disable this for piped output, CI environments, or any context where ANSI escape codes for cursor movement are not supported.
 	*/
 	interactive?: boolean;
 };

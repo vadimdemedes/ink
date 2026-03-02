@@ -2485,18 +2485,16 @@ render(<MyApp />, {concurrent: true});
 Type: `boolean`\
 Default: `true` (`false` if in CI (detected via [`is-in-ci`](https://github.com/sindresorhus/is-in-ci)) or `stdout.isTTY` is falsy)
 
-Enable interactive output mode with full terminal features.
+Override automatic interactive mode detection.
 
-When disabled, Ink skips terminal-specific features like ANSI erase sequences, cursor manipulation, synchronized output, resize handling, and kitty keyboard auto-detection. Only the final frame of non-static output is written at unmount.
+By default, Ink detects whether the environment is interactive based on CI detection and `stdout.isTTY`. When non-interactive, Ink skips terminal-specific features like ANSI erase sequences, cursor manipulation, synchronized output, resize handling, and kitty keyboard auto-detection. Only the final frame of non-static output is written at unmount.
 
-Disable this for piped output (`node app.js | cat`), CI environments, or any context where ANSI escape codes for cursor movement are not supported.
+Most users should not need to set this option. Use it when you have your own "interactive" detection logic that differs from the built-in behavior.
 
 ```jsx
-// Force interactive mode even when piping
-render(<MyApp />, {interactive: true});
-
-// Force non-interactive mode even in a TTY
-render(<MyApp />, {interactive: false});
+// Use your own detection logic
+const isInteractive = myCustomDetection();
+render(<MyApp />, {interactive: isInteractive});
 ```
 
 ###### kittyKeyboard
