@@ -1012,19 +1012,28 @@ export default class Ink {
 		const opts = this.options.kittyKeyboard;
 		const mode = opts.mode ?? 'auto';
 
-		if (
-			mode === 'disabled' ||
-			!this.interactive ||
-			!this.options.stdin.isTTY ||
-			!this.options.stdout.isTTY
-		) {
+		if (mode === 'disabled') {
 			return;
 		}
 
 		const flags: KittyFlagName[] = opts.flags ?? ['disambiguateEscapeCodes'];
 
+		// 'enabled' force-enables the protocol as long as both streams are TTYs,
+		// regardless of the interactive setting (e.g. even in CI).
 		if (mode === 'enabled') {
-			this.enableKittyProtocol(flags);
+			if (this.options.stdin.isTTY && this.options.stdout.isTTY) {
+				this.enableKittyProtocol(flags);
+			}
+
+			return;
+		}
+
+		// Auto mode: require interactive + TTY
+		if (
+			!this.interactive ||
+			!this.options.stdin.isTTY ||
+			!this.options.stdout.isTTY
+		) {
 			return;
 		}
 

@@ -1,5 +1,6 @@
 import EventEmitter from 'node:events';
 import test from 'ava';
+import isInCi from 'is-in-ci';
 import {bsu, esu, shouldSynchronize} from '../src/write-synchronized.js';
 
 const createStream = ({tty = false} = {}) => {
@@ -38,8 +39,12 @@ test('shouldSynchronize returns false for non-TTY stream', t => {
 test('shouldSynchronize uses CI detection when interactive is not specified', t => {
 	const ttyStream = createStream({tty: true});
 	// When interactive is omitted, shouldSynchronize falls back to is-in-ci.
-	// In a non-CI environment with a TTY stream, this should return true.
-	t.true(shouldSynchronize(ttyStream));
+	// In CI the result is false (non-interactive by design); outside CI it's true.
+	if (isInCi) {
+		t.false(shouldSynchronize(ttyStream));
+	} else {
+		t.true(shouldSynchronize(ttyStream));
+	}
 });
 
 test('shouldSynchronize returns false for non-TTY stream when interactive is not specified', t => {
