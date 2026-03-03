@@ -2480,6 +2480,23 @@ render(<MyApp />, {concurrent: true});
 > [!NOTE]
 > Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
 
+###### interactive
+
+Type: `boolean`\
+Default: `true` (`false` if in CI (detected via [`is-in-ci`](https://github.com/sindresorhus/is-in-ci)) or `stdout.isTTY` is falsy)
+
+Override automatic interactive mode detection.
+
+By default, Ink detects whether the environment is interactive based on CI detection and `stdout.isTTY`. When non-interactive, Ink skips terminal-specific features like ANSI erase sequences, cursor manipulation, synchronized output, resize handling, and kitty keyboard auto-detection. Only the final frame of non-static output is written at unmount.
+
+Most users should not need to set this option. Use it when you have your own "interactive" detection logic that differs from the built-in behavior.
+
+```jsx
+// Use your own detection logic
+const isInteractive = myCustomDetection();
+render(<MyApp />, {interactive: isInteractive});
+```
+
 ###### kittyKeyboard
 
 Type: `object`\
