@@ -1497,6 +1497,9 @@ That's what the `<Transform>` component does: it gives you an output string of i
 > [!NOTE]
 > `<Transform>` must be applied only to `<Text>` children components and shouldn't change the dimensions of the output; otherwise, the layout will be incorrect.
 
+> [!IMPORTANT]
+> When children use `<Text>` styling props (e.g. `color`, `bold`), the string passed to `transform` will contain [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code). If your transform manipulates whitespace or does string operations like `.trim()`, you may need to use ANSI-aware methods (e.g. from [`slice-ansi`](https://github.com/chalk/slice-ansi) or [`strip-ansi`](https://github.com/chalk/strip-ansi)).
+
 ```jsx
 import {render, Transform} from 'ink';
 
