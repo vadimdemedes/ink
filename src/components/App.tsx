@@ -478,7 +478,9 @@ function App({
 	// Handle cursor visibility, raw mode, and bracketed paste mode cleanup on unmount
 	useEffect(() => {
 		return () => {
-			if (interactive) {
+			const canWriteToStdout = !stdout.destroyed && !stdout.writableEnded;
+
+			if (interactive && canWriteToStdout) {
 				cliCursor.show(stdout);
 			}
 
@@ -487,7 +489,7 @@ function App({
 			}
 
 			if (bracketedPasteModeEnabledCount.current > 0) {
-				if (stdout.isTTY) {
+				if (stdout.isTTY && canWriteToStdout) {
 					stdout.write('\u001B[?2004l');
 				}
 

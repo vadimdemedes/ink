@@ -2421,6 +2421,8 @@ Patch console methods to ensure console output doesn't mix with Ink's output.
 When any of the `console.*` methods are called (like `console.log()`), Ink intercepts their output, clears the main output, renders output from the console method, and then rerenders the main output again.
 That way, both are visible and don't overlap each other.
 
+Once unmount starts, Ink restores the native console before React cleanup runs. Teardown-time `console.*` output then follows the normal console behavior instead of being rerouted through Ink.
+
 This functionality is powered by [patch-console](https://github.com/vadimdemedes/patch-console), so if you need to disable Ink's interception of output but want to build something custom, you can use that.
 
 ###### onRender
@@ -2481,7 +2483,7 @@ render(<MyApp />, {concurrent: true});
 ```
 
 > [!NOTE]
-> Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
+> Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. Reusing the same stdout across multiple `render()` calls without unmounting is unsupported. Call `unmount()` first if you need to change the rendering mode or create a fresh instance.
 
 ###### interactive
 
@@ -2494,10 +2496,33 @@ By default, Ink detects whether the environment is interactive based on CI detec
 
 Most users should not need to set this option. Use it when you have your own "interactive" detection logic that differs from the built-in behavior.
 
+> [!NOTE]
+> Reusing the same stdout across multiple `render()` calls without unmounting is unsupported. Call `unmount()` first if you need to change this option or create a fresh instance.
+
 ```jsx
 // Use your own detection logic
 const isInteractive = myCustomDetection();
 render(<MyApp />, {interactive: isInteractive});
+```
+
+###### alternateScreen
+
+Type: `boolean`\
+Default: `false`
+
+Render the app in the terminal's alternate screen buffer. When enabled, the app renders on a separate screen, and the original terminal content is restored when the app exits. This is the same mechanism used by programs like vim, htop, and less.
+
+Note: The terminal's scrollback buffer is not available while in the alternate screen. This is standard terminal behavior; programs like vim use the alternate screen specifically to avoid polluting the user's scrollback history.
+
+Ink intentionally treats alternate-screen teardown output as disposable. It does not preserve or replay teardown-time frames, hook writes, or `console.*` output after restoring the primary screen.
+
+Only works in interactive mode. Ignored when `interactive` is `false` or in a non-interactive environment (CI, piped stdout).
+
+> [!NOTE]
+> Reusing the same stdout across multiple `render()` calls without unmounting is unsupported. Call `unmount()` first if you need to change this option or create a fresh instance.
+
+```jsx
+render(<MyApp />, {alternateScreen: true});
 ```
 
 ###### kittyKeyboard
@@ -2672,9 +2697,9 @@ runNextCommand();
 
 ##### cleanup()
 
-Delete the internal Ink instance associated with the current `stdout`.
+Unmount the current app and delete the internal Ink instance associated with the current `stdout`.
 This is mostly useful for advanced cases (for example, tests) where you need `render()` to create a fresh instance for the same stream.
-This does not unmount the current app.
+Unlike deleting the internal instance directly, this also tears down terminal state such as the alternate screen.
 
 ##### clear()
 

@@ -14,6 +14,7 @@ import {isDev, getWindowSize} from './utils.js';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
+import {hideCursorEscape, showCursorEscape} from './cursor-helpers.js';
 import logUpdate, {type LogUpdate, type CursorPosition} from './log-update.js';
 import {bsu, esu, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
@@ -230,7 +231,7 @@ export type Options = {
 	- `useTransition` and `useDeferredValue` are fully functional
 	- Updates can be interrupted for higher priority work
 
-	Note: Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
+	Note: Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. Reusing the same stdout across multiple `render()` calls without unmounting is unsupported. Call `unmount()` first if you need to change the rendering mode or create a fresh instance.
 
 	@default false
 	@experimental
@@ -247,11 +248,30 @@ export type Options = {
 
 	Set to `false` to force non-interactive mode or `true` to force interactive mode when the automatic detection doesn't suit your use case.
 
+	Note: Reusing the same stdout across multiple `render()` calls without unmounting is unsupported. Call `unmount()` first if you need to change this option or create a fresh instance.
+
 	@default true (false if in CI or `stdout.isTTY` is falsy)
 
 	@see {@link RenderOptions.interactive}
 	*/
 	interactive?: boolean;
+
+	/**
+	Render the app in the terminal's alternate screen buffer. When enabled, the app renders on a separate screen, and the original terminal content is restored when the app exits. This is the same mechanism used by programs like vim, htop, and less.
+
+	Note: The terminal's scrollback buffer is not available while in the alternate screen. This is standard terminal behavior; programs like vim use the alternate screen specifically to avoid polluting the user's scrollback history.
+
+	Note: Ink intentionally treats alternate-screen teardown output as disposable. It does not preserve or replay teardown-time frames, hook writes, or `console.*` output after restoring the primary screen.
+
+	Only works in interactive mode. Ignored when `interactive` is `false` or in a non-interactive environment (CI, piped stdout).
+
+	Note: Reusing the same stdout across multiple `render()` calls without unmounting is unsupported. Call `unmount()` first if you need to change this option or create a fresh instance.
+
+	@default false
+
+	@see {@link RenderOptions.alternateScreen}
+	*/
+	alternateScreen?: boolean;
 };
 
 export default class Ink {
@@ -269,6 +289,7 @@ export default class Ink {
 
 	private readonly isScreenReaderEnabled: boolean;
 	private readonly interactive: boolean;
+	private alternateScreen: boolean;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
 	private isUnmounted: boolean;
@@ -307,8 +328,9 @@ export default class Ink {
 		// CI detection takes precedence: even a TTY stdout in CI defaults to non-interactive.
 		// Using Boolean(isTTY) (rather than an 'in' guard) correctly handles piped streams
 		// where the property is absent (e.g. `node app.js | cat`).
-		this.interactive =
-			options.interactive ?? (!isInCi && Boolean(options.stdout.isTTY));
+		this.interactive = this.resolveInteractiveOption(options.interactive);
+
+		this.alternateScreen = false;
 
 		const unthrottled = options.debug || this.isScreenReaderEnabled;
 		const maxFps = options.maxFps ?? 30;
@@ -395,6 +417,8 @@ export default class Ink {
 
 		// Unmount when process exits
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
+
+		this.setAlternateScreen(Boolean(options.alternateScreen));
 
 		if (isDev()) {
 			// @ts-expect-error outdated types
@@ -730,84 +754,107 @@ export default class Ink {
 
 		this.unsubscribeExit();
 
-		if (typeof this.restoreConsole === 'function') {
-			this.restoreConsole();
-		}
-
-		if (typeof this.unsubscribeResize === 'function') {
-			this.unsubscribeResize();
-		}
-
-		// Cancel any in-progress auto-detection before checking protocol state
-		if (this.cancelKittyDetection) {
-			this.cancelKittyDetection();
-		}
-
 		// Flush any pending throttled log writes if possible, otherwise cancel to
 		// prevent delayed callbacks from writing to a closed stream.
 		settleThrottle(this.throttledLog, canWriteToStdout);
+		if (typeof this.restoreConsole === 'function') {
+			// Once unmount starts, Ink stops trying to manage teardown-time
+			// console output. Restoring the native console before React cleanup keeps
+			// unmount behavior simple and avoids special-case handling for custom
+			// streams, fullscreen frames, and alternate-screen teardown.
+			this.restoreConsole();
+		}
 
-		if (canWriteToStdout) {
-			if (this.kittyProtocolEnabled) {
-				try {
-					this.options.stdout.write('\u001B[<u');
-				} catch {
-					// Best-effort: stdout may already be destroyed during shutdown
+		const finishUnmount = (): void => {
+			if (typeof this.unsubscribeResize === 'function') {
+				this.unsubscribeResize();
+			}
+
+			// Cancel any in-progress auto-detection before checking protocol state
+			if (this.cancelKittyDetection) {
+				this.cancelKittyDetection();
+			}
+
+			if (canWriteToStdout) {
+				if (this.kittyProtocolEnabled) {
+					this.writeBestEffort(this.options.stdout, '\u001B[<u');
+				}
+
+				// Alternate-screen content is disposable by design. We intentionally
+				// leave it active until React cleanup finishes, then restore the
+				// primary buffer without replaying prior frames, hook writes, or
+				// diagnostics onto it. Trying to preserve teardown output across the
+				// buffer switch adds fragile lifecycle-specific behavior, so Ink keeps
+				// alternate-screen teardown intentionally simple and best-effort.
+				if (this.alternateScreen) {
+					this.writeBestEffort(
+						this.options.stdout,
+						ansiEscapes.exitAlternativeScreen,
+					);
+					this.writeBestEffort(this.options.stdout, showCursorEscape);
+					this.alternateScreen = false;
+				}
+
+				if (!this.interactive) {
+					// Non-interactive environments don't handle erasing ansi escapes well.
+					// In debug mode, each render already writes to stdout, so only a trailing
+					// newline is needed. In non-debug mode, write the last frame now (it was
+					// deferred during rendering).
+					this.options.stdout.write(
+						this.options.debug ? '\n' : this.lastOutput + '\n',
+					);
+				} else if (!this.options.debug) {
+					this.log.done();
 				}
 			}
 
-			// Non-interactive environments don't handle erasing ansi escapes well.
-			// In debug mode, each render already writes to stdout, so only a trailing
-			// newline is needed. In non-debug mode, write the last frame now (it was
-			// deferred during rendering).
-			if (!this.interactive) {
-				this.options.stdout.write(
-					this.options.debug ? '\n' : this.lastOutput + '\n',
-				);
-			} else if (!this.options.debug) {
-				this.log.done();
-			}
-		}
+			this.kittyProtocolEnabled = false;
 
-		this.kittyProtocolEnabled = false;
+			instances.delete(this.options.stdout);
+
+			// Ensure all queued writes have been processed before resolving the
+			// exit promise. For real writable streams, queue an empty write as a
+			// barrier — its callback fires only after all prior writes complete.
+			// For non-stream objects (e.g. test spies), resolve on next tick.
+			//
+			// When called from signal-exit during process shutdown (error is a
+			// number or null rather than undefined/Error), resolve synchronously
+			// because the event loop is draining and async callbacks won't fire.
+			const {exitResult} = this;
+
+			const resolveOrReject = () => {
+				if (isErrorInput(error)) {
+					this.rejectExitPromise(error);
+				} else {
+					this.resolveExitPromise(exitResult);
+				}
+			};
+
+			const isProcessExiting = error !== undefined && !isErrorInput(error);
+
+			if (isProcessExiting) {
+				resolveOrReject();
+			} else if (canWriteToStdout && hasWritableState) {
+				this.options.stdout.write('', resolveOrReject);
+			} else {
+				setImmediate(resolveOrReject);
+			}
+		};
+
+		const concurrentReconciler = reconciler as {
+			flushPassiveEffects?: () => boolean;
+		};
 
 		if (this.options.concurrent) {
-			// Concurrent mode: use updateContainer (async scheduling)
-			reconciler.updateContainer(null, this.container, null, noop);
+			reconciler.updateContainerSync(null, this.container, null, noop);
+			reconciler.flushSyncWork();
+			concurrentReconciler.flushPassiveEffects?.();
+			finishUnmount();
 		} else {
 			// Legacy mode: use updateContainerSync + flushSyncWork (sync)
 			reconciler.updateContainerSync(null, this.container, null, noop);
 			reconciler.flushSyncWork();
-		}
-
-		instances.delete(this.options.stdout);
-
-		// Ensure all queued writes have been processed before resolving the
-		// exit promise. For real writable streams, queue an empty write as a
-		// barrier — its callback fires only after all prior writes complete.
-		// For non-stream objects (e.g. test spies), resolve on next tick.
-		//
-		// When called from signal-exit during process shutdown (error is a
-		// number or null rather than undefined/Error), resolve synchronously
-		// because the event loop is draining and async callbacks won't fire.
-		const {exitResult} = this;
-
-		const resolveOrReject = () => {
-			if (isErrorInput(error)) {
-				this.rejectExitPromise(error);
-			} else {
-				this.resolveExitPromise(exitResult);
-			}
-		};
-
-		const isProcessExiting = error !== undefined && !isErrorInput(error);
-
-		if (isProcessExiting) {
-			resolveOrReject();
-		} else if (canWriteToStdout && hasWritableState) {
-			this.options.stdout.write('', resolveOrReject);
-		} else {
-			setImmediate(resolveOrReject);
+			finishUnmount();
 		}
 	}
 
@@ -900,8 +947,45 @@ export default class Ink {
 		});
 	}
 
+	private setAlternateScreen(enabled: boolean): void {
+		this.alternateScreen = this.resolveAlternateScreenOption(
+			enabled,
+			this.interactive,
+		);
+
+		if (this.alternateScreen) {
+			this.writeBestEffort(
+				this.options.stdout,
+				ansiEscapes.enterAlternativeScreen,
+			);
+			this.writeBestEffort(this.options.stdout, hideCursorEscape);
+		}
+	}
+
+	private resolveInteractiveOption(interactive: boolean | undefined): boolean {
+		return interactive ?? (!isInCi && Boolean(this.options.stdout.isTTY));
+	}
+
+	private resolveAlternateScreenOption(
+		alternateScreen: boolean | undefined,
+		interactive: boolean,
+	): boolean {
+		return (
+			Boolean(alternateScreen) &&
+			interactive &&
+			Boolean(this.options.stdout.isTTY)
+		);
+	}
+
 	private shouldSync(): boolean {
-		return shouldSynchronize(this.options.stdout, this.options.interactive);
+		return shouldSynchronize(this.options.stdout, this.interactive);
+	}
+
+	// Best-effort write: streams may already be destroyed during shutdown.
+	private writeBestEffort(stream: NodeJS.WriteStream, data: string): void {
+		try {
+			stream.write(data);
+		} catch {}
 	}
 
 	// Waits for the exit promise to settle, suppressing any rejection.

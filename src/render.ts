@@ -43,6 +43,8 @@ export type RenderOptions = {
 	/**
 	Patch console methods to ensure console output doesn't mix with Ink's output.
 
+	Note: Once unmount starts, Ink restores the native console before React cleanup runs. Teardown-time `console.*` output then follows the normal console behavior instead of being rerouted through Ink.
+
 	@default true
 	*/
 	patchConsole?: boolean;
@@ -87,7 +89,7 @@ export type RenderOptions = {
 	- `useTransition` and `useDeferredValue` are fully functional
 	- Updates can be interrupted for higher priority work
 
-	Note: Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
+	Note: Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. Reusing the same stdout across multiple `render()` calls without unmounting is unsupported. Call `unmount()` first if you need to change the rendering mode or create a fresh instance.
 
 	@default false
 	*/
@@ -111,9 +113,26 @@ export type RenderOptions = {
 
 	Set to `false` to force non-interactive mode or `true` to force interactive mode when the automatic detection doesn't suit your use case.
 
+	Note: Reusing the same stdout across multiple `render()` calls without unmounting is unsupported. Call `unmount()` first if you need to change this option or create a fresh instance.
+
 	@default true (false if in CI or `stdout.isTTY` is falsy)
 	*/
 	interactive?: boolean;
+
+	/**
+	Render the app in the terminal's alternate screen buffer. When enabled, the app renders on a separate screen, and the original terminal content is restored when the app exits. This is the same mechanism used by programs like vim, htop, and less.
+
+	Note: The terminal's scrollback buffer is not available while in the alternate screen. This is standard terminal behavior; programs like vim use the alternate screen specifically to avoid polluting the user's scrollback history.
+
+	Note: Ink intentionally treats alternate-screen teardown output as disposable. It does not preserve or replay teardown-time frames, hook writes, or `console.*` output after restoring the primary screen.
+
+	Only works in interactive mode. Ignored when `interactive` is `false` or in a non-interactive environment (CI, piped stdout).
+
+	Note: Reusing the same stdout across multiple `render()` calls without unmounting is unsupported. Call `unmount()` first if you need to change this option or create a fresh instance.
+
+	@default false
+	*/
+	alternateScreen?: boolean;
 };
 
 export type Instance = {
@@ -161,6 +180,11 @@ export type Instance = {
 	*/
 	waitUntilRenderFlush: Ink['waitUntilRenderFlush'];
 
+	/**
+	Unmount the current app and remove the internal Ink instance for this stdout.
+
+	This is mostly useful for advanced cases where you need `render()` to create a fresh instance for the same stream without leaving terminal state such as the alternate screen behind.
+	*/
 	cleanup: () => void;
 
 	/**
@@ -186,15 +210,14 @@ const render = (
 		maxFps: 30,
 		incrementalRendering: false,
 		concurrent: false,
+		alternateScreen: false,
 		...getOptions(options),
 	};
 
 	const instance: Ink = getInstance(
 		inkOptions.stdout,
 		() => new Ink(inkOptions),
-		inkOptions.concurrent ?? false,
 	);
-
 	instance.render(node);
 
 	return {
@@ -204,7 +227,9 @@ const render = (
 		},
 		waitUntilExit: instance.waitUntilExit,
 		waitUntilRenderFlush: instance.waitUntilRenderFlush,
-		cleanup: () => instances.delete(inkOptions.stdout),
+		cleanup() {
+			instance.unmount();
+		},
 		clear: instance.clear,
 	};
 };
@@ -227,19 +252,23 @@ const getOptions = (
 const getInstance = (
 	stdout: NodeJS.WriteStream,
 	createInstance: () => Ink,
-	concurrent: boolean,
 ): Ink => {
-	let instance = instances.get(stdout);
+	const instance = instances.get(stdout);
 
-	if (!instance) {
-		instance = createInstance();
-		instances.set(stdout, instance);
-	} else if (instance.isConcurrent !== concurrent) {
-		console.warn(
-			`Warning: render() was called with concurrent: ${concurrent}, but the existing instance for this stdout uses concurrent: ${instance.isConcurrent}. ` +
-				`The concurrent option only takes effect on the first render. Call unmount() first if you need to change the rendering mode.`,
-		);
+	if (instance === undefined) {
+		const newInstance = createInstance();
+		instances.set(stdout, newInstance);
+		return newInstance;
 	}
+
+	// Ink keeps one live renderer per stdout. Reusing the same stream without
+	// unmounting is unsupported, but return the existing instance so we don't
+	// create two renderers that compete for the same output. Write the warning
+	// directly to native stderr so an existing alternate-screen renderer cannot
+	// swallow it via patchConsole.
+	process.stderr.write(
+		'Warning: render() was called again for the same stdout before the previous Ink instance was unmounted. Reusing stdout across multiple render() calls is unsupported. Call unmount() first.\n',
+	);
 
 	return instance;
 };

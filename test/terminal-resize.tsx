@@ -6,16 +6,10 @@ import React from 'react';
 import {render, Box, Text, useWindowSize} from '../src/index.js';
 import createStdout, {type FakeStdout} from './helpers/create-stdout.js';
 
-const getWriteContents = (stdout: FakeStdout): string[] => {
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
-	return (stdout.write as any)
-		.getCalls()
-		.map((c: any) => c.args[0] as string)
-		.filter(
-			(w: string) =>
-				!w.startsWith('\u001B[?25') && !w.startsWith('\u001B[?2026'),
-		);
-};
+const getWriteContents = (stdout: FakeStdout): string[] =>
+	stdout
+		.getWrites()
+		.filter(w => !w.startsWith('\u001B[?25') && !w.startsWith('\u001B[?2026'));
 
 test.serial(
 	'useWindowSize returns current terminal dimensions and updates on resize',
