@@ -149,7 +149,7 @@ test('remeasure text when text nodes are changed', t => {
 			<Box>
 				<Text>
 					abc
-					{add && <Text>x</Text>}
+					{add ? <Text>x</Text> : null}
 				</Text>
 			</Box>
 		);
@@ -496,7 +496,7 @@ test('remeasure text when text nodes are changed - concurrent', async t => {
 			<Box>
 				<Text>
 					abc
-					{add && <Text>x</Text>}
+					{add ? <Text>x</Text> : null}
 				</Text>
 			</Box>
 		);

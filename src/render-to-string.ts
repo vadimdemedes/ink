@@ -124,7 +124,8 @@ const renderToString = (
 		if (uncaughtError !== undefined) {
 			throw uncaughtError instanceof Error
 				? uncaughtError
-				: new Error(String(uncaughtError));
+				: // eslint-disable-next-line @typescript-eslint/no-base-to-string
+					new Error(String(uncaughtError));
 		}
 
 		// The renderer appends a trailing newline to static output for terminal
