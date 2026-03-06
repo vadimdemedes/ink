@@ -959,7 +959,7 @@ export default class Ink {
 		});
 
 		if (shouldClearTerminal) {
-			// skip clearTerminal in incremental mode to avoid erase-then-redraw flicker
+			// Skip clearTerminal in incremental mode to avoid erase-then-redraw flicker
 			if (this.options.incrementalRendering) {
 				if (output !== this.lastOutput || this.log.isCursorDirty()) {
 					this.throttledLog(outputToRender);
