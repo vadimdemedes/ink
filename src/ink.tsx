@@ -959,6 +959,18 @@ export default class Ink {
 		});
 
 		if (shouldClearTerminal) {
+			// skip clearTerminal in incremental mode to avoid erase-then-redraw flicker
+			if (this.options.incrementalRendering) {
+				if (output !== this.lastOutput || this.log.isCursorDirty()) {
+					this.throttledLog(outputToRender);
+				}
+
+				this.lastOutput = output;
+				this.lastOutputToRender = outputToRender;
+				this.lastOutputHeight = outputHeight;
+				return;
+			}
+
 			const sync = this.shouldSync();
 			if (sync) {
 				this.options.stdout.write(bsu);
