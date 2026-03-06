@@ -543,16 +543,11 @@ test.serial(
 		const output = await runIssue450Fixture(
 			'issue-450-incremental-fullscreen-rerender',
 		);
-
+		
 		const {clearTerminalCount} =
 			getIssue450ControlSequenceCounts(output);
-
-		t.is(
-			clearTerminalCount,
-			0,
-			'incrementalRendering should skip clearTerminal for fullscreen frames',
-		);
-
+		t.is(clearTerminalCount, 0, 'incrementalRendering should skip clearTerminal for fullscreen frames');
+		
 		const stripped = stripAnsi(output);
 		t.true(stripped.includes('#450 top'));
 		t.true(stripped.includes('#450 bottom'));
