@@ -11,7 +11,7 @@ import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/constants.js';
 import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import wrapAnsi from 'wrap-ansi';
-import {isDev, getWindowSize} from './utils.js';
+import {getWindowSize} from './utils.js';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
@@ -421,7 +421,7 @@ export default class Ink {
 
 		this.setAlternateScreen(Boolean(options.alternateScreen));
 
-		if (isDev()) {
+		if (process.env['DEV'] === 'true') {
 			// @ts-expect-error outdated types
 			reconciler.injectIntoDevTools();
 		}
