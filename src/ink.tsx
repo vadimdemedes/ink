@@ -1,4 +1,5 @@
 import process from 'node:process';
+import {Buffer} from 'node:buffer';
 import React, {type ReactNode} from 'react';
 import {throttle, type DebouncedFunc} from 'es-toolkit/compat';
 import ansiEscapes from 'ansi-escapes';
@@ -445,7 +446,7 @@ export default class Ink {
 		});
 		// Prevent global unhandled-rejection crashes when app code exits with an
 		// error but consumers never call waitUntilExit().
-		// eslint-disable-next-line promise/prefer-await-to-then
+
 		void this.exitPromise.catch(noop);
 	}
 
@@ -714,7 +715,7 @@ export default class Ink {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/ban-types
+	// eslint-disable-next-line @typescript-eslint/no-restricted-types
 	unmount(error?: Error | number | null): void {
 		if (this.isUnmounted || this.isUnmounting) {
 			return;

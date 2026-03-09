@@ -172,7 +172,7 @@ function App({
 	const handleReadable = useCallback((): void => {
 		clearPendingInputFlush();
 		let chunk;
-		// eslint-disable-next-line @typescript-eslint/ban-types
+		// eslint-disable-next-line @typescript-eslint/no-restricted-types
 		while ((chunk = stdin.read() as string | null) !== null) {
 			const inputEvents = inputParserRef.current.push(chunk);
 			for (const event of inputEvents) {

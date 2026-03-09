@@ -36,11 +36,11 @@ function Summary({isFinished, passed, failed, time}: Properties) {
 				<Text>{time}</Text>
 			</Box>
 
-			{isFinished && (
+			{isFinished ? (
 				<Box>
 					<Text dimColor>Ran all test suites.</Text>
 				</Box>
-			)}
+			) : null}
 		</Box>
 	);
 }

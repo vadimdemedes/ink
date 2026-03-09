@@ -2,6 +2,7 @@ import process from 'node:process';
 import vm from 'node:vm';
 import {spawn as spawnProcess} from 'node:child_process';
 import {PassThrough, Writable} from 'node:stream';
+import {Buffer} from 'node:buffer';
 import url from 'node:url';
 import * as path from 'node:path';
 import {createRequire} from 'node:module';
