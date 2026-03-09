@@ -1039,8 +1039,8 @@ test.serial(
 		const stdout = createStdout(100, true);
 		const processStdoutWriteStub = stub(process.stdout, 'write').callsFake(((
 			_chunk: string | Uint8Array,
-			encoding?: BufferEncoding | ((error?: Error | undefined) => void),
-			callback?: (error?: Error | undefined) => void,
+			encoding?: BufferEncoding | ((error?: Error) => void),
+			callback?: (error?: Error) => void,
 		) => {
 			if (typeof encoding === 'function') {
 				encoding();
@@ -1178,8 +1178,8 @@ test.serial(
 		const stdout = createStdout(100, true);
 		const processStdoutWriteStub = stub(process.stdout, 'write').callsFake(((
 			_chunk: string | Uint8Array,
-			encoding?: BufferEncoding | ((error?: Error | undefined) => void),
-			callback?: (error?: Error | undefined) => void,
+			encoding?: BufferEncoding | ((error?: Error) => void),
+			callback?: (error?: Error) => void,
 		) => {
 			if (typeof encoding === 'function') {
 				encoding();
@@ -1285,8 +1285,8 @@ test('render warns when stdout is reused before unmount', async t => {
 	const stdout = createStdout(100, true);
 	const processStderrWriteStub = stub(process.stderr, 'write').callsFake(((
 		_chunk: string | Uint8Array,
-		encoding?: BufferEncoding | ((error?: Error | undefined) => void),
-		callback?: (error?: Error | undefined) => void,
+		encoding?: BufferEncoding | ((error?: Error) => void),
+		callback?: (error?: Error) => void,
 	) => {
 		if (typeof encoding === 'function') {
 			encoding();
