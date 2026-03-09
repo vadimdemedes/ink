@@ -6,7 +6,7 @@ import {
 } from 'react-reconciler/constants.js';
 import * as Scheduler from 'scheduler';
 import Yoga, {type Node as YogaNode} from 'yoga-layout';
-import {createContext, version as ReactVersion} from 'react';
+import {createContext, version as reactVersion} from 'react';
 import {
 	createTextNode,
 	appendChildNode,
@@ -115,7 +115,7 @@ async function loadPackageJson() {
 
 let packageInfo = {
 	name: 'ink',
-	version: ReactVersion,
+	version: reactVersion,
 };
 
 if (process.env['DEV'] === 'true') {
