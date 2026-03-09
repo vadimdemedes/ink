@@ -1,7 +1,11 @@
 const escape = '\u001B';
+const pasteStart = '\u001B[200~';
+const pasteEnd = '\u001B[201~';
+
+export type InputEvent = string | {readonly paste: string};
 
 type ParsedInput = {
-	readonly events: string[];
+	readonly events: InputEvent[];
 	readonly pending: string;
 };
 
@@ -173,7 +177,7 @@ Split a chunk of non-escape text so that delete (0x7F) and backspace (0x08) char
 
 Other control characters like `\r` and `\t` are NOT split because they can legitimately appear inside pasted text.
 */
-const splitDeleteAndBackspace = (text: string, events: string[]): void => {
+const splitDeleteAndBackspace = (text: string, events: InputEvent[]): void => {
 	let textSegmentStart = 0;
 
 	for (let index = 0; index < text.length; index++) {
@@ -194,7 +198,7 @@ const splitDeleteAndBackspace = (text: string, events: string[]): void => {
 };
 
 const parseKeypresses = (input: string): ParsedInput => {
-	const events: string[] = [];
+	const events: InputEvent[] = [];
 	let index = 0;
 	const pendingFrom = (pendingStartIndex: number): ParsedInput => ({
 		events,
@@ -220,6 +224,18 @@ const parseKeypresses = (input: string): ParsedInput => {
 			return pendingFrom(escapeIndex);
 		}
 
+		if (parsedEscapeSequence.sequence === pasteStart) {
+			const afterStart = parsedEscapeSequence.nextIndex;
+			const endIndex = input.indexOf(pasteEnd, afterStart);
+			if (endIndex === -1) {
+				return pendingFrom(escapeIndex);
+			}
+
+			events.push({paste: input.slice(afterStart, endIndex)});
+			index = endIndex + pasteEnd.length;
+			continue;
+		}
+
 		events.push(parsedEscapeSequence.sequence);
 		index = parsedEscapeSequence.nextIndex;
 	}
@@ -231,7 +247,7 @@ const parseKeypresses = (input: string): ParsedInput => {
 };
 
 export type InputParser = {
-	push: (chunk: string) => string[];
+	push: (chunk: string) => InputEvent[];
 	hasPendingEscape: () => boolean;
 	flushPendingEscape: () => string | undefined;
 	reset: () => void;
@@ -247,7 +263,13 @@ export const createInputParser = (): InputParser => {
 			return parsedInput.events;
 		},
 		hasPendingEscape() {
-			return pending.startsWith(escape);
+			// Don't trigger the escape flush timer while assembling a paste start
+			// marker (`\u001B[200` and then `~`) or while waiting for paste end.
+			return (
+				pending.startsWith(escape) &&
+				!pending.startsWith(pasteStart) &&
+				pending !== '\u001B[200'
+			);
 		},
 		flushPendingEscape() {
 			if (!pending.startsWith(escape)) {

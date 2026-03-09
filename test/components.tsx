@@ -1,8 +1,9 @@
 import EventEmitter from 'node:events';
+import process from 'node:process';
 import test from 'ava';
 import chalk from 'chalk';
 import stripAnsi from 'strip-ansi';
-import React, {Component, useState} from 'react';
+import React, {Component, useEffect, useState} from 'react';
 import {spy, stub} from 'sinon';
 import ansiEscapes from 'ansi-escapes';
 import {
@@ -13,6 +14,7 @@ import {
 	Static,
 	Text,
 	Transform,
+	useApp,
 	useInput,
 	useStdin,
 } from '../src/index.js';
@@ -217,6 +219,7 @@ test('fail when text nodes are not within <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
+		// eslint-disable-next-line @typescript-eslint/promise-function-async
 		override render() {
 			return this.props.children;
 		}
@@ -246,6 +249,7 @@ test('fail when text node is not within <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
+		// eslint-disable-next-line @typescript-eslint/promise-function-async
 		override render() {
 			return this.props.children;
 		}
@@ -272,6 +276,7 @@ test('fail when <Box> is inside <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
+		// eslint-disable-next-line @typescript-eslint/promise-function-async
 		override render() {
 			return this.props.children;
 		}
@@ -487,7 +492,12 @@ test('render only new items in static output on final render', t => {
 
 	rerender(<Dynamic items={['A', 'B']} />);
 	unmount();
-	t.is((stdout.write as any).lastCall.args[0], 'A\nB\n');
+
+	// Filter out cursor management escapes (show/hide) to check content writes.
+	// With isTTY=true, cli-cursor writes a show-cursor sequence on unmount.
+	const allWrites = stdout.getWrites();
+	const lastContentWrite = allWrites.findLast(w => !w.startsWith('\u001B[?25'));
+	t.is(lastContentWrite, 'A\nB\n');
 });
 
 // See https://github.com/chalk/wrap-ansi/issues/27
@@ -557,8 +567,8 @@ test('disable raw mode when all input components are unmounted', t => {
 
 		return (
 			<>
-				{renderFirstInput && <Input setRawMode={setRawMode} />}
-				{renderSecondInput && <Input setRawMode={setRawMode} />}
+				{renderFirstInput ? <Input setRawMode={setRawMode} /> : null}
+				{renderSecondInput ? <Input setRawMode={setRawMode} /> : null}
 			</>
 		);
 	}
@@ -763,12 +773,12 @@ test('render different component based on whether stdin is a TTY or not', t => {
 
 		return (
 			<>
-				{isRawModeSupported && renderFirstInput && (
+				{isRawModeSupported && renderFirstInput ? (
 					<Input setRawMode={setRawMode} />
-				)}
-				{isRawModeSupported && renderSecondInput && (
+				) : null}
+				{isRawModeSupported && renderSecondInput ? (
 					<Input setRawMode={setRawMode} />
-				)}
+				) : null}
 			</>
 		);
 	}
@@ -838,6 +848,669 @@ test('debug mode in CI keeps final newline separation after waitUntilExit', asyn
 
 	const plainOutput = stripAnsi(output).replaceAll('\r', '');
 	t.is(plainOutput, 'HelloHello\nDONE');
+});
+
+test('render only last frame when stdout is not a TTY', async t => {
+	const stdout = createStdout(100, false);
+
+	function Counter() {
+		const [count, setCount] = useState(0);
+
+		React.useEffect(() => {
+			if (count < 3) {
+				const timer = setTimeout(() => {
+					setCount(c => c + 1);
+				}, 10);
+
+				return () => {
+					clearTimeout(timer);
+				};
+			}
+		}, [count]);
+
+		return <Text>Count: {count}</Text>;
+	}
+
+	const {unmount, waitUntilExit} = render(<Counter />, {
+		stdout,
+		debug: false,
+	});
+
+	await new Promise(resolve => {
+		setTimeout(resolve, 200);
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	const allWrites = stdout.getWrites();
+
+	// Verify no intermediate frames were written
+	const contentWrites = allWrites.map(w => stripAnsi(w));
+	for (const intermediate of ['Count: 0', 'Count: 1', 'Count: 2']) {
+		t.false(
+			contentWrites.some(w => w.includes(intermediate)),
+			`Intermediate frame "${intermediate}" should not be written in non-interactive mode`,
+		);
+	}
+
+	// Verify no erase/cursor ANSI sequences were emitted
+	const hasEraseSequence = allWrites.some(w =>
+		w.includes(ansiEscapes.eraseLines(1)),
+	);
+	t.false(hasEraseSequence);
+
+	// Verify the final frame is written
+	const lastWrite = allWrites.at(-1) ?? '';
+	t.true(lastWrite.includes('Count: 3'));
+});
+
+test('render all frames when interactive is explicitly true', async t => {
+	const stdout = createStdout(100, false);
+
+	function Counter() {
+		const [count, setCount] = useState(0);
+
+		React.useEffect(() => {
+			if (count < 2) {
+				const timer = setTimeout(() => {
+					setCount(c => c + 1);
+				}, 50);
+
+				return () => {
+					clearTimeout(timer);
+				};
+			}
+		}, [count]);
+
+		return <Text>Count: {count}</Text>;
+	}
+
+	const {unmount, waitUntilExit} = render(<Counter />, {
+		stdout,
+		debug: false,
+		interactive: true,
+	});
+
+	await new Promise(resolve => {
+		setTimeout(resolve, 500);
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	const contentWrites = stdout.getWrites().filter(w => w.length > 0);
+	t.true(contentWrites.length > 1);
+	const joined = contentWrites.join('');
+	t.true(joined.includes('Count: 0'));
+	t.true(joined.includes('Count: 1'));
+	t.true(joined.includes('Count: 2'));
+});
+
+test('interactive option overrides TTY detection', async t => {
+	const stdout = createStdout(100, true);
+
+	function Counter() {
+		const [count, setCount] = useState(0);
+
+		React.useEffect(() => {
+			if (count < 3) {
+				const timer = setTimeout(() => {
+					setCount(c => c + 1);
+				}, 10);
+
+				return () => {
+					clearTimeout(timer);
+				};
+			}
+		}, [count]);
+
+		return <Text>Count: {count}</Text>;
+	}
+
+	const {unmount, waitUntilExit} = render(<Counter />, {
+		stdout,
+		debug: false,
+		interactive: false,
+	});
+
+	await new Promise(resolve => {
+		setTimeout(resolve, 200);
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	const allWrites = stdout.getWrites();
+
+	// Verify no intermediate frames were written
+	const contentWrites = allWrites.map(w => stripAnsi(w));
+	for (const intermediate of ['Count: 0', 'Count: 1', 'Count: 2']) {
+		t.false(
+			contentWrites.some(w => w.includes(intermediate)),
+			`Intermediate frame "${intermediate}" should not be written when interactive=false overrides TTY`,
+		);
+	}
+
+	// Verify no erase/cursor ANSI sequences were emitted
+	const hasEraseSequence = allWrites.some(w =>
+		w.includes(ansiEscapes.eraseLines(1)),
+	);
+	t.false(hasEraseSequence);
+
+	// Verify only the final frame is written
+	const lastWrite = allWrites.at(-1) ?? '';
+	t.true(lastWrite.includes('Count: 3'));
+});
+
+test('alternate screen - enters on mount and exits on unmount', async t => {
+	const stdout = createStdout(100, true);
+
+	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
+		stdout,
+		alternateScreen: true,
+		interactive: true,
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	const allWrites = stdout.getWrites();
+
+	const enterIndex = allWrites.findIndex(w =>
+		w.includes(ansiEscapes.enterAlternativeScreen),
+	);
+	const exitIndex = allWrites.findLastIndex(w =>
+		w.includes(ansiEscapes.exitAlternativeScreen),
+	);
+
+	t.not(enterIndex, -1, 'Should write enterAlternativeScreen on mount');
+	t.not(exitIndex, -1, 'Should write exitAlternativeScreen on unmount');
+	t.true(
+		enterIndex < exitIndex,
+		'enterAlternativeScreen must come before exitAlternativeScreen',
+	);
+	t.is(enterIndex, 0, 'enterAlternativeScreen should be the first write');
+});
+
+test.serial(
+	'primary screen - cleanup console output follows the native console during unmount',
+	async t => {
+		const stdout = createStdout(100, true);
+		const processStdoutWriteStub = stub(process.stdout, 'write').callsFake(((
+			_chunk: string | Uint8Array,
+			encoding?: BufferEncoding | ((error?: Error) => void),
+			callback?: (error?: Error) => void,
+		) => {
+			if (typeof encoding === 'function') {
+				encoding();
+			}
+
+			if (typeof callback === 'function') {
+				callback();
+			}
+
+			return true;
+		}) as typeof process.stdout.write);
+		t.teardown(() => {
+			processStdoutWriteStub.restore();
+		});
+
+		function Test() {
+			useEffect(() => {
+				return () => {
+					console.log('primary cleanup');
+				};
+			}, []);
+
+			return <Text>Hello</Text>;
+		}
+
+		const {unmount, waitUntilExit} = render(<Test />, {
+			stdout,
+			interactive: true,
+		});
+
+		unmount();
+		await waitUntilExit();
+
+		const output = stdout.getWrites().join('');
+		const nativeConsoleLog = processStdoutWriteStub
+			.getCalls()
+			.some(call => String(call.args[0]).includes('primary cleanup'));
+
+		t.false(
+			output.includes('primary cleanup'),
+			'Should keep cleanup console output out of Ink-managed stdout writes',
+		);
+		t.true(
+			nativeConsoleLog,
+			'Should restore the native console before React cleanup runs',
+		);
+	},
+);
+
+test.serial(
+	'alternate screen - does not replay exit(Error) output on the primary screen during unmount',
+	async t => {
+		const stdout = createStdout(100, true);
+
+		function Test() {
+			const {exit} = useApp();
+
+			useEffect(() => {
+				exit(new Error('Done'));
+			}, [exit]);
+
+			return <Text>Done</Text>;
+		}
+
+		const {waitUntilExit} = render(<Test />, {
+			stdout,
+			alternateScreen: true,
+			interactive: true,
+		});
+
+		await t.throwsAsync(waitUntilExit());
+
+		const allWrites = stdout.getWrites();
+		const exitIndex = allWrites.findLastIndex(write =>
+			write.includes(ansiEscapes.exitAlternativeScreen),
+		);
+		const replayedErrorOutput = allWrites.slice(exitIndex + 1).some(write => {
+			const plainWrite = stripAnsi(write);
+			return (
+				plainWrite.includes('Error: Done') ||
+				plainWrite.includes('Done\n    at')
+			);
+		});
+
+		t.not(exitIndex, -1, 'Should exit the alternate screen on unmount');
+		t.false(
+			replayedErrorOutput,
+			'Should not replay alternate-screen diagnostics onto the primary screen',
+		);
+	},
+);
+
+test.serial(
+	'alternate screen - does not replay teardown output on the primary screen during unmount',
+	async t => {
+		const stdout = createStdout(100, true);
+
+		function Test() {
+			const {exit} = useApp();
+
+			useEffect(() => {
+				exit(new Error('Done'));
+			}, [exit]);
+
+			return <Text>normal ERROR banner</Text>;
+		}
+
+		const {waitUntilExit} = render(<Test />, {
+			stdout,
+			alternateScreen: true,
+			interactive: true,
+		});
+
+		await t.throwsAsync(waitUntilExit());
+
+		const allWrites = stdout.getWrites();
+		const exitIndex = allWrites.findLastIndex(write =>
+			write.includes(ansiEscapes.exitAlternativeScreen),
+		);
+		const replayedOutput = stripAnsi(allWrites.slice(exitIndex + 1).join(''));
+
+		t.not(exitIndex, -1, 'Should exit the alternate screen on unmount');
+		t.false(
+			replayedOutput.includes('normal ERROR banner') ||
+				replayedOutput.includes('Error: Done') ||
+				replayedOutput.includes('Done\n    at'),
+			'Should not replay alternate-screen teardown output onto the primary screen',
+		);
+	},
+);
+
+test.serial(
+	'alternate screen - cleanup console output follows the native console during unmount',
+	async t => {
+		const stdout = createStdout(100, true);
+		const processStdoutWriteStub = stub(process.stdout, 'write').callsFake(((
+			_chunk: string | Uint8Array,
+			encoding?: BufferEncoding | ((error?: Error) => void),
+			callback?: (error?: Error) => void,
+		) => {
+			if (typeof encoding === 'function') {
+				encoding();
+			}
+
+			if (typeof callback === 'function') {
+				callback();
+			}
+
+			return true;
+		}) as typeof process.stdout.write);
+		t.teardown(() => {
+			processStdoutWriteStub.restore();
+		});
+
+		function Test() {
+			useEffect(() => {
+				return () => {
+					console.log('cleanup log');
+				};
+			}, []);
+
+			return <Text>Hello</Text>;
+		}
+
+		const {unmount, waitUntilExit} = render(<Test />, {
+			stdout,
+			alternateScreen: true,
+			interactive: true,
+		});
+
+		unmount();
+		await waitUntilExit();
+
+		const output = stdout.getWrites().join('');
+		const nativeConsoleLog = processStdoutWriteStub
+			.getCalls()
+			.some(call => String(call.args[0]).includes('cleanup log'));
+
+		t.false(
+			output.includes('cleanup log'),
+			'Should keep cleanup console output out of the alternate-screen stream',
+		);
+		t.true(
+			nativeConsoleLog,
+			'Should restore the native console before React cleanup runs',
+		);
+	},
+);
+
+test.serial(
+	'alternate screen - cleanup() exits the alternate screen',
+	async t => {
+		const stdout = createStdout(100, true);
+
+		const {cleanup, waitUntilExit} = render(<Text>Hello</Text>, {
+			stdout,
+			alternateScreen: true,
+			interactive: true,
+		});
+
+		cleanup();
+		await waitUntilExit();
+
+		const allWrites = stdout.getWrites();
+		const exitIndex = allWrites.findLastIndex(write =>
+			write.includes(ansiEscapes.exitAlternativeScreen),
+		);
+
+		t.not(exitIndex, -1, 'Should exit the alternate screen during cleanup()');
+	},
+);
+
+test.serial(
+	'alternate screen - debug concurrent teardown restores the cursor before the first commit',
+	async t => {
+		const stdout = createStdout(100, true);
+		const showCursorEscape = '\u001B[?25h';
+
+		const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
+			stdout,
+			alternateScreen: true,
+			concurrent: true,
+			debug: true,
+		});
+
+		unmount();
+		await waitUntilExit();
+
+		const output = stdout.getWrites().join('');
+		const exitIndex = output.lastIndexOf(ansiEscapes.exitAlternativeScreen);
+		const showCursorIndex = output.lastIndexOf(showCursorEscape);
+
+		t.not(exitIndex, -1, 'Should exit the alternate screen on unmount');
+		t.true(
+			showCursorIndex > exitIndex,
+			'Should restore the cursor after leaving the alternate screen',
+		);
+	},
+);
+
+test('render warns when stdout is reused before unmount', async t => {
+	const stdout = createStdout(100, true);
+	const processStderrWriteStub = stub(process.stderr, 'write').callsFake(((
+		_chunk: string | Uint8Array,
+		encoding?: BufferEncoding | ((error?: Error) => void),
+		callback?: (error?: Error) => void,
+	) => {
+		if (typeof encoding === 'function') {
+			encoding();
+		}
+
+		if (typeof callback === 'function') {
+			callback();
+		}
+
+		return true;
+	}) as typeof process.stderr.write);
+	t.teardown(() => {
+		processStderrWriteStub.restore();
+	});
+
+	render(<Text>Primary screen</Text>, {
+		stdout,
+		interactive: true,
+		alternateScreen: true,
+		patchConsole: false,
+	});
+
+	const {unmount, waitUntilExit} = render(<Text>Second render</Text>, {
+		stdout,
+	});
+
+	t.true(
+		processStderrWriteStub.calledOnceWithExactly(
+			'Warning: render() was called again for the same stdout before the previous Ink instance was unmounted. Reusing stdout across multiple render() calls is unsupported. Call unmount() first.\n',
+		),
+	);
+
+	unmount();
+	await waitUntilExit();
+});
+
+test('alternate screen - ignored when non-interactive', async t => {
+	const stdout = createStdout(100, true);
+
+	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
+		stdout,
+		alternateScreen: true,
+		interactive: false,
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	const allWrites = stdout.getWrites();
+
+	t.false(
+		allWrites.some(w => w.includes(ansiEscapes.enterAlternativeScreen)),
+		'Should not write enterAlternativeScreen in non-interactive mode',
+	);
+	t.false(
+		allWrites.some(w => w.includes(ansiEscapes.exitAlternativeScreen)),
+		'Should not write exitAlternativeScreen in non-interactive mode',
+	);
+});
+
+test('alternate screen - disabled by default', async t => {
+	const stdout = createStdout(100, true);
+
+	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
+		stdout,
+		interactive: true,
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	const allWrites = stdout.getWrites();
+
+	t.false(
+		allWrites.some(w => w.includes(ansiEscapes.enterAlternativeScreen)),
+		'Should not write enterAlternativeScreen by default',
+	);
+	t.false(
+		allWrites.some(w => w.includes(ansiEscapes.exitAlternativeScreen)),
+		'Should not write exitAlternativeScreen by default',
+	);
+});
+
+test('alternate screen - content is rendered between enter and exit', async t => {
+	const stdout = createStdout(100, true);
+
+	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
+		stdout,
+		alternateScreen: true,
+		interactive: true,
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	const allWrites = stdout.getWrites();
+
+	const enterIndex = allWrites.findIndex(w =>
+		w.includes(ansiEscapes.enterAlternativeScreen),
+	);
+	const exitIndex = allWrites.findLastIndex(w =>
+		w.includes(ansiEscapes.exitAlternativeScreen),
+	);
+
+	t.not(enterIndex, -1);
+	t.not(exitIndex, -1);
+	t.true(enterIndex < exitIndex);
+
+	const contentBetween = allWrites
+		.slice(enterIndex + 1, exitIndex)
+		.some(w => stripAnsi(w).includes('Hello'));
+	t.true(
+		contentBetween,
+		'Rendered content should appear between enter and exit',
+	);
+});
+
+test('alternate screen - ignored when isTTY is false', async t => {
+	const stdout = createStdout(100, false);
+
+	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
+		stdout,
+		alternateScreen: true,
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	const allWrites = stdout.getWrites();
+
+	t.false(
+		allWrites.some(w => w.includes(ansiEscapes.enterAlternativeScreen)),
+		'Should not write enterAlternativeScreen when isTTY is false',
+	);
+	t.false(
+		allWrites.some(w => w.includes(ansiEscapes.exitAlternativeScreen)),
+		'Should not write exitAlternativeScreen when isTTY is false',
+	);
+});
+
+test('alternate screen - ignored when isTTY is false even if interactive is true', async t => {
+	const stdout = createStdout(100, false);
+
+	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
+		stdout,
+		alternateScreen: true,
+		interactive: true,
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	const allWrites = stdout.getWrites();
+
+	t.false(
+		allWrites.some(w => w.includes(ansiEscapes.enterAlternativeScreen)),
+		'Should not write enterAlternativeScreen when isTTY is false, even with interactive=true',
+	);
+	t.false(
+		allWrites.some(w => w.includes(ansiEscapes.exitAlternativeScreen)),
+		'Should not write exitAlternativeScreen when isTTY is false, even with interactive=true',
+	);
+});
+
+test('static output is written immediately in non-interactive mode', async t => {
+	const stdout = createStdout(100, false);
+
+	function App() {
+		const [items, setItems] = useState(['A']);
+
+		React.useEffect(() => {
+			const timer = setTimeout(() => {
+				setItems(['A', 'B']);
+			}, 10);
+
+			return () => {
+				clearTimeout(timer);
+			};
+		}, []);
+
+		return (
+			<Box>
+				<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
+				<Text>Dynamic</Text>
+			</Box>
+		);
+	}
+
+	const {unmount, waitUntilExit} = render(<App />, {
+		stdout,
+		debug: false,
+	});
+
+	await new Promise(resolve => {
+		setTimeout(resolve, 200);
+	});
+
+	// Capture writes BEFORE unmount — static items must already be here
+	const writesBeforeUnmount = stdout.getWrites().map(w => stripAnsi(w));
+	const preUnmountJoined = writesBeforeUnmount.join('');
+	t.true(
+		preUnmountJoined.includes('A'),
+		'Static item A was written before unmount',
+	);
+	t.true(
+		preUnmountJoined.includes('B'),
+		'Static item B was written before unmount',
+	);
+
+	unmount();
+	await waitUntilExit();
+
+	// Verify the dynamic content was deferred to unmount (not written before it)
+	t.false(
+		preUnmountJoined.includes('Dynamic'),
+		'Dynamic content was not written before unmount',
+	);
+
+	// Verify dynamic content was eventually written
+	const allWrites = stdout.getWrites().map(w => stripAnsi(w));
+	t.true(
+		allWrites.join('').includes('Dynamic'),
+		'Dynamic content was eventually written',
+	);
 });
 
 test('reset prop when it’s removed from the element', t => {

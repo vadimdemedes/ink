@@ -1,9 +1,9 @@
 import test from 'ava';
-import {createInputParser} from '../src/input-parser.js';
+import {createInputParser, type InputEvent} from '../src/input-parser.js';
 
-const parseChunks = (chunks: string[]): string[] => {
+const parseChunks = (chunks: string[]): InputEvent[] => {
 	const parser = createInputParser();
-	const events: string[] = [];
+	const events: InputEvent[] = [];
 
 	for (const chunk of chunks) {
 		events.push(...parser.push(chunk));
@@ -305,4 +305,87 @@ test('assembles CSI sequence from single-byte chunks', t => {
 	t.deepEqual(parser.push(';'), []);
 	t.deepEqual(parser.push('5'), []);
 	t.deepEqual(parser.push('A'), ['\u001B[1;5A']);
+});
+
+test('emits paste event for bracketed paste sequence', t => {
+	t.deepEqual(parseChunks(['\u001B[200~hello world\u001B[201~']), [
+		{paste: 'hello world'},
+	]);
+});
+
+test('emits paste event for multiline bracketed paste', t => {
+	t.deepEqual(parseChunks(['\u001B[200~line1\nline2\u001B[201~']), [
+		{paste: 'line1\nline2'},
+	]);
+});
+
+test('paste content with escape sequences is delivered verbatim', t => {
+	t.deepEqual(parseChunks(['\u001B[200~hello\u001B[Aworld\u001B[201~']), [
+		{paste: 'hello\u001B[Aworld'},
+	]);
+});
+
+test('emits normal events before and after bracketed paste', t => {
+	t.deepEqual(parseChunks(['before\u001B[200~pasted\u001B[201~after']), [
+		'before',
+		{paste: 'pasted'},
+		'after',
+	]);
+});
+
+test('emits multiple paste events in one chunk', t => {
+	t.deepEqual(
+		parseChunks(['\u001B[200~first\u001B[201~mid\u001B[200~second\u001B[201~']),
+		[{paste: 'first'}, 'mid', {paste: 'second'}],
+	);
+});
+
+test('holds incomplete bracketed paste as pending', t => {
+	const parser = createInputParser();
+
+	t.deepEqual(parser.push('\u001B[200~hello'), []);
+	t.false(parser.hasPendingEscape());
+	t.deepEqual(parser.push(' world\u001B[201~'), [{paste: 'hello world'}]);
+});
+
+test('assembles bracketed paste from chunk-by-chunk delivery', t => {
+	const parser = createInputParser();
+
+	t.deepEqual(parser.push('\u001B[200~'), []);
+	t.deepEqual(parser.push('hello'), []);
+	t.deepEqual(parser.push('\u001B[201~'), [{paste: 'hello'}]);
+});
+
+test('emits empty paste for adjacent paste markers', t => {
+	t.deepEqual(parseChunks(['\u001B[200~\u001B[201~']), [{paste: ''}]);
+});
+
+test('handles pasteStart split before the tilde (\\u001B[200 without ~)', t => {
+	const parser = createInputParser();
+
+	// Chunk ends exactly at the 5th byte of the 6-byte pasteStart sequence.
+	// Keep waiting for the final `~` to avoid splitting bracketed paste input.
+	t.deepEqual(parser.push('\u001B[200'), []);
+	t.false(parser.hasPendingEscape());
+	t.deepEqual(parser.push('~hello\u001B[201~'), [{paste: 'hello'}]);
+});
+
+test('hasPendingEscape returns true for length-3 pasteStart prefix (\\u001B[2)', t => {
+	const parser = createInputParser();
+
+	t.deepEqual(parser.push('\u001B[2'), []);
+	t.true(parser.hasPendingEscape());
+});
+
+test('hasPendingEscape returns true for length-4 pasteStart prefix (\\u001B[20)', t => {
+	const parser = createInputParser();
+
+	t.deepEqual(parser.push('\u001B[20'), []);
+	t.true(parser.hasPendingEscape());
+});
+
+test('paste event delivers delete and backspace chars verbatim without splitting', t => {
+	t.deepEqual(parseChunks(['\u001B[200~\u007F\u0008\u007F\u001B[201~']), [
+		{paste: '\u007F\u0008\u007F'},
+	]);
 });

@@ -67,7 +67,7 @@ function SearchApp() {
 			<Box>
 				<Text>Search: </Text>
 				<Text color="cyan">{query || '(type something)'}</Text>
-				{isPending && <Text color="yellow"> (updating...)</Text>}
+				{isPending ? <Text color="yellow"> (updating...)</Text> : null}
 			</Box>
 
 			<Box marginTop={1} flexDirection="column">

@@ -53,11 +53,11 @@ function Issue450RerenderFixtureComponent({
 
 	return (
 		<>
-			{includeStaticLine && (
+			{includeStaticLine ? (
 				<Static items={['#450 static line']}>
 					{item => <Text key={item}>{item}</Text>}
 				</Static>
-			)}
+			) : null}
 			<Box height={targetHeight} flexDirection="column">
 				<Text>#450 top</Text>
 				<Box flexGrow={1}>

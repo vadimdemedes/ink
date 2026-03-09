@@ -42,6 +42,9 @@ Only Ink's methods are documented in this readme.
 npm install ink react
 ```
 
+> [!NOTE]
+> This readme documents the upcoming version of Ink. For the latest stable release, see [Ink on npm](https://www.npmjs.com/package/ink).
+
 ## Usage
 
 ```jsx
@@ -142,6 +145,7 @@ render(<Counter />);
   - [`<Transform>`](#transform)
 - [Hooks](#hooks)
   - [`useInput`](#useinputinputhandler-options)
+  - [`usePaste`](#usepastehandler-options)
   - [`useApp`](#useapp)
   - [`useStdin`](#usestdin)
   - [`useStdout`](#usestdout)
@@ -1493,6 +1497,9 @@ That's what the `<Transform>` component does: it gives you an output string of i
 > [!NOTE]
 > `<Transform>` must be applied only to `<Text>` children components and shouldn't change the dimensions of the output; otherwise, the layout will be incorrect.
 
+> [!IMPORTANT]
+> When children use `<Text>` styling props (e.g. `color`, `bold`), the string passed to `transform` will contain [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code). If your transform manipulates whitespace or does string operations like `.trim()`, you may need to use ANSI-aware methods (e.g. from [`slice-ansi`](https://github.com/chalk/slice-ansi) or [`strip-ansi`](https://github.com/chalk/strip-ansi)).
+
 ```jsx
 import {render, Transform} from 'ink';
 
@@ -1740,6 +1747,55 @@ Default: `true`
 
 Enable or disable capturing of user input.
 Useful when there are multiple `useInput` hooks used at once to avoid handling the same input several times.
+
+### usePaste(handler, options?)
+
+A React hook that calls `handler` whenever the user pastes text. Bracketed paste mode (`\x1b[?2004h`) is automatically enabled while the hook is active, so pasted text arrives as a single string rather than being misinterpreted as individual key presses.
+
+`usePaste` and `useInput` can be used together in the same component. They operate on separate event channels, so paste content is never forwarded to `useInput` handlers when `usePaste` is active.
+
+```jsx
+import {useInput, usePaste} from 'ink';
+
+const MyInput = () => {
+	useInput((input, key) => {
+		// Only receives typed characters and key events, not pasted text.
+		if (key.return) {
+			// Submit
+		}
+	});
+
+	usePaste((text) => {
+		// Receives the full pasted string, including newlines.
+		console.log('Pasted:', text);
+	});
+
+	return …
+};
+```
+
+#### handler(text)
+
+Type: `Function`
+
+Called with the full pasted string whenever the user pastes text. The string is delivered verbatim — newlines, escape sequences, and other special characters are preserved exactly as pasted.
+
+##### text
+
+Type: `string`
+
+The pasted text.
+
+#### options
+
+Type: `object`
+
+##### isActive
+
+Type: `boolean`\
+Default: `true`
+
+Enable or disable the paste handler. Useful when multiple components use `usePaste` and only one should be active at a time.
 
 ### useApp()
 
@@ -2365,6 +2421,8 @@ Patch console methods to ensure console output doesn't mix with Ink's output.
 When any of the `console.*` methods are called (like `console.log()`), Ink intercepts their output, clears the main output, renders output from the console method, and then rerenders the main output again.
 That way, both are visible and don't overlap each other.
 
+Once unmount starts, Ink restores the native console before React cleanup runs. Teardown-time `console.*` output then follows the normal console behavior instead of being rerouted through Ink.
+
 This functionality is powered by [patch-console](https://github.com/vadimdemedes/patch-console), so if you need to disable Ink's interception of output but want to build something custom, you can use that.
 
 ###### onRender
@@ -2425,7 +2483,47 @@ render(<MyApp />, {concurrent: true});
 ```
 
 > [!NOTE]
-> Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. The `concurrent` option only takes effect on the first render for a given stdout. If you need to change the rendering mode, call `unmount()` first.
+> Concurrent mode changes the timing of renders. Some tests may need to use `act()` to properly await updates. Reusing the same stdout across multiple `render()` calls without unmounting is unsupported. Call `unmount()` first if you need to change the rendering mode or create a fresh instance.
+
+###### interactive
+
+Type: `boolean`\
+Default: `true` (`false` if in CI (detected via [`is-in-ci`](https://github.com/sindresorhus/is-in-ci)) or `stdout.isTTY` is falsy)
+
+Override automatic interactive mode detection.
+
+By default, Ink detects whether the environment is interactive based on CI detection and `stdout.isTTY`. When non-interactive, Ink skips terminal-specific features like ANSI erase sequences, cursor manipulation, synchronized output, resize handling, and kitty keyboard auto-detection. Only the final frame of non-static output is written at unmount.
+
+Most users should not need to set this option. Use it when you have your own "interactive" detection logic that differs from the built-in behavior.
+
+> [!NOTE]
+> Reusing the same stdout across multiple `render()` calls without unmounting is unsupported. Call `unmount()` first if you need to change this option or create a fresh instance.
+
+```jsx
+// Use your own detection logic
+const isInteractive = myCustomDetection();
+render(<MyApp />, {interactive: isInteractive});
+```
+
+###### alternateScreen
+
+Type: `boolean`\
+Default: `false`
+
+Render the app in the terminal's alternate screen buffer. When enabled, the app renders on a separate screen, and the original terminal content is restored when the app exits. This is the same mechanism used by programs like vim, htop, and less.
+
+Note: The terminal's scrollback buffer is not available while in the alternate screen. This is standard terminal behavior; programs like vim use the alternate screen specifically to avoid polluting the user's scrollback history.
+
+Ink intentionally treats alternate-screen teardown output as disposable. It does not preserve or replay teardown-time frames, hook writes, or `console.*` output after restoring the primary screen.
+
+Only works in interactive mode. Ignored when `interactive` is `false` or in a non-interactive environment (CI, piped stdout).
+
+> [!NOTE]
+> Reusing the same stdout across multiple `render()` calls without unmounting is unsupported. Call `unmount()` first if you need to change this option or create a fresh instance.
+
+```jsx
+render(<MyApp />, {alternateScreen: true});
+```
 
 ###### kittyKeyboard
 
@@ -2599,9 +2697,9 @@ runNextCommand();
 
 ##### cleanup()
 
-Delete the internal Ink instance associated with the current `stdout`.
+Unmount the current app and delete the internal Ink instance associated with the current `stdout`.
 This is mostly useful for advanced cases (for example, tests) where you need `render()` to create a fresh instance for the same stream.
-This does not unmount the current app.
+Unlike deleting the internal instance directly, this also tears down terminal state such as the alternate screen.
 
 ##### clear()
 

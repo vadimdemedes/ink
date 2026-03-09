@@ -15,6 +15,7 @@ export type {CursorPosition} from './cursor-helpers.js';
 export type LogUpdate = {
 	clear: () => void;
 	done: () => void;
+	reset: () => void;
 	sync: (str: string) => void;
 	setCursorPosition: (position: CursorPosition | undefined) => void;
 	isCursorDirty: () => boolean;
@@ -128,6 +129,13 @@ const createStandard = (
 			cliCursor.show(stream);
 			hasHiddenCursor = false;
 		}
+	};
+
+	render.reset = () => {
+		previousOutput = '';
+		previousLineCount = 0;
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
 	};
 
 	render.sync = (str: string) => {
@@ -324,6 +332,13 @@ const createIncremental = (
 			cliCursor.show(stream);
 			hasHiddenCursor = false;
 		}
+	};
+
+	render.reset = () => {
+		previousOutput = '';
+		previousLines = [];
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
 	};
 
 	render.sync = (str: string) => {

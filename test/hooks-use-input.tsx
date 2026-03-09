@@ -73,6 +73,16 @@ test.serial('useInput - pasted tab', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial(
+	'useInput - receives bracketed paste when no usePaste handler is active',
+	async t => {
+		const ps = term('use-input', ['bracketedPaste']);
+		ps.write('\u001B[200~hello\u001B[201~');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
 test.serial('useInput - handle escape', async t => {
 	const ps = term('use-input', ['escape']);
 	ps.write('\u001B');
