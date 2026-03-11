@@ -37,7 +37,7 @@ export default function Static<T>(props: Props<T>) {
 		setIndex(items.length);
 	}, [items.length]);
 
-	const children = itemsToRender.map((item, itemIndex) => {
+	const children = itemsToRender.map((item, itemIndex): ReactNode => {
 		return render(item, index + itemIndex);
 	});
 
