@@ -167,7 +167,8 @@ type Issue450Fixture =
 	| 'issue-450-grow-to-fullscreen-rerender'
 	| 'issue-450-shrink-from-fullscreen-rerender'
 	| 'issue-450-shrink-from-overflow-rerender'
-	| 'issue-450-static-shrink-from-fullscreen-rerender';
+	| 'issue-450-static-shrink-from-fullscreen-rerender'
+	| 'issue-450-incremental-fullscreen-rerender';
 
 const runIssue450Fixture = async (
 	fixture: Issue450Fixture,
@@ -534,6 +535,23 @@ test.serial(
 			eraseLineCount > 0,
 			'Expected incremental erase sequences for non-fullscreen rerenders',
 		);
+	},
+);
+
+test.serial(
+	'#450: incremental rendering should not clearTerminal for fullscreen rerenders',
+	async t => {
+		const output = await runIssue450Fixture(
+			'issue-450-incremental-fullscreen-rerender',
+		);
+		
+		const {clearTerminalCount} =
+			getIssue450ControlSequenceCounts(output);
+		t.is(clearTerminalCount, 0, 'incrementalRendering should skip clearTerminal for fullscreen frames');
+		
+		const stripped = stripAnsi(output);
+		t.true(stripped.includes('#450 top'));
+		t.true(stripped.includes('#450 bottom'));
 	},
 );
 
