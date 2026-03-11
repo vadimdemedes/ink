@@ -219,12 +219,11 @@ test('fail when text nodes are not within <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		// eslint-disable-next-line @typescript-eslint/promise-function-async
-		override render() {
+		override render(): React.ReactNode {
 			return this.props.children;
 		}
 
-		override componentDidCatch(reactError: Error) {
+		override componentDidCatch(reactError: Error): void {
 			error = reactError;
 		}
 	}
@@ -249,12 +248,11 @@ test('fail when text node is not within <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		// eslint-disable-next-line @typescript-eslint/promise-function-async
-		override render() {
+		override render(): React.ReactNode {
 			return this.props.children;
 		}
 
-		override componentDidCatch(reactError: Error) {
+		override componentDidCatch(reactError: Error): void {
 			error = reactError;
 		}
 	}
@@ -276,12 +274,11 @@ test('fail when <Box> is inside <Text> component', t => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		// eslint-disable-next-line @typescript-eslint/promise-function-async
-		override render() {
+		override render(): React.ReactNode {
 			return this.props.children;
 		}
 
-		override componentDidCatch(reactError: Error) {
+		override componentDidCatch(reactError: Error): void {
 			error = reactError;
 		}
 	}

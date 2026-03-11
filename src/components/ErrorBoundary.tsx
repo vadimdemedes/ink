@@ -23,11 +23,11 @@ export default class ErrorBoundary extends PureComponent<Props, State> {
 		error: undefined,
 	};
 
-	override componentDidCatch(error: Error) {
+	override componentDidCatch(error: Error): void {
 		this.props.onError(error);
 	}
 
-	override render() {
+	override render(): ReactNode {
 		if (this.state.error) {
 			return <ErrorOverview error={this.state.error} />;
 		}
