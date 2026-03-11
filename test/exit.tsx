@@ -74,7 +74,7 @@ test.serial('exit with thrown error', async t => {
 });
 
 test.serial('don’t exit while raw mode is active', async t => {
-	await new Promise<void>((resolve, _reject) => {
+	await new Promise<void>((resolve, reject) => {
 		const env: Record<string, string> = {
 			...process.env,
 			// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -106,8 +106,7 @@ test.serial('don’t exit while raw mode is active', async t => {
 
 				setTimeout(() => {
 					term.kill();
-					t.fail();
-					resolve();
+					reject(new Error('Test timed out - process did not exit in time'));
 				}, 2000);
 			} else {
 				output += data;
@@ -126,8 +125,7 @@ test.serial('don’t exit while raw mode is active', async t => {
 				return;
 			}
 
-			t.fail();
-			resolve();
+			reject(new Error(`Process exited with code ${exitCode}`));
 		});
 	});
 });

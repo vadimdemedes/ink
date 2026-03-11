@@ -86,7 +86,7 @@
 		"@types/stack-utils": "^2.0.2",
 		"@types/ws": "^8.18.1",
 		"@vdemedes/prettier-config": "^2.0.1",
-		"ava": "^5.1.1",
+		"ava": "^7.0.0",
 		"boxen": "^8.0.1",
 		"delay": "^7.0.0",
 		"ms": "^2.1.3",
