@@ -208,6 +208,16 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		if (test === 'ctrlF1' && input === '' && key.ctrl) {
+			exit();
+			return;
+		}
+
+		if (test === 'unmappedCtrlSequence' && input === '' && key.ctrl) {
+			exit();
+			return;
+		}
+
 		throw new Error('Crash');
 	});
 
