@@ -13,6 +13,11 @@ const keyName: Record<string, string> = {
 	OQ: 'f2',
 	OR: 'f3',
 	OS: 'f4',
+	/* vt220-style ESC [ letter (e.g. Ctrl+F1 sends ESC [ 1 ; 5 P) */
+	'[P': 'f1',
+	'[Q': 'f2',
+	'[R': 'f3',
+	'[S': 'f4',
 	/* xterm/rxvt ESC [ number ~ */
 	'[11~': 'f1',
 	'[12~': 'f2',
@@ -541,7 +546,7 @@ const parseKeypress = (s: Buffer | string = ''): ParsedKey => {
 		key.shift = !!(modifier & 1);
 		key.code = code;
 
-		key.name = keyName[code]!;
+		key.name = keyName[code] ?? '';
 		key.shift = isShiftKey(code) || key.shift;
 		key.ctrl = isCtrlKey(code) || key.ctrl;
 	}
