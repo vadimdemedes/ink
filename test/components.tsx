@@ -467,6 +467,7 @@ test('skip previous output when rendering new static output', t => {
 	rerender(<Dynamic items={['A', 'B']} />);
 	t.is((stdout.write as any).lastCall.args[0], 'A\nB\n');
 });
+
 test('no crash after unmounting Static', t => {
 	const stdout = createStdout();
 	const items = ['A', 'B'];
@@ -492,8 +493,6 @@ test('no crash after unmounting Static', t => {
 	rerender(<Dynamic show={false} />);
 	t.true((stdout.write as any).lastCall.args[0].includes('Dynamic'));
 });
-
-
 
 test('render only new items in static output on final render', t => {
 	const stdout = createStdout();
