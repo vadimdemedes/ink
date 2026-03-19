@@ -475,11 +475,11 @@ test('no crash after unmounting Static', t => {
 	function Dynamic({show}: {readonly show: boolean}) {
 		return (
 			<Box>
-				{show && (
+				{show ? (
 					<Static items={items}>
 						{item => <Text key={item}>{item}</Text>}
 					</Static>
-				)}
+				) : null}
 				<Text>Dynamic</Text>
 			</Box>
 		);
@@ -491,7 +491,8 @@ test('no crash after unmounting Static', t => {
 	});
 
 	rerender(<Dynamic show={false} />);
-	t.true((stdout.write as any).lastCall.args[0].includes('Dynamic'));
+	const lastOutput = (stdout.write as any).lastCall.args[0] as string;
+	t.true(lastOutput.includes('Dynamic'));
 });
 
 test('render only new items in static output on final render', t => {
