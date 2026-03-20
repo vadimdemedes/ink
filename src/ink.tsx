@@ -27,6 +27,7 @@ import {
 } from './kitty-keyboard.js';
 
 const noop = () => {};
+const textEncoder = new TextEncoder();
 
 const yieldImmediate = async () =>
 	new Promise<void>(resolve => {
@@ -1151,7 +1152,7 @@ export default class Ink {
 
 		const onData = (data: Uint8Array | string): void => {
 			const chunk =
-				typeof data === 'string' ? new TextEncoder().encode(data) : data;
+				typeof data === 'string' ? textEncoder.encode(data) : data;
 			for (const byte of chunk) {
 				responseBuffer.push(byte);
 			}
