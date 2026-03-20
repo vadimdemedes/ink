@@ -1151,8 +1151,7 @@ export default class Ink {
 		};
 
 		const onData = (data: Uint8Array | string): void => {
-			const chunk =
-				typeof data === 'string' ? textEncoder.encode(data) : data;
+			const chunk = typeof data === 'string' ? textEncoder.encode(data) : data;
 			for (const byte of chunk) {
 				responseBuffer.push(byte);
 			}
