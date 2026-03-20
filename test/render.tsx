@@ -2,7 +2,6 @@ import process from 'node:process';
 import vm from 'node:vm';
 import {spawn as spawnProcess} from 'node:child_process';
 import {PassThrough, Writable} from 'node:stream';
-import {Buffer} from 'node:buffer';
 import url from 'node:url';
 import * as path from 'node:path';
 import {createRequire} from 'node:module';
@@ -105,10 +104,13 @@ const isWriteBarrierChunk = (chunk: string | Uint8Array): boolean =>
 	(chunk instanceof Uint8Array && chunk.length === 0);
 
 const toRenderedChunk = (chunk: string | Uint8Array): string =>
-	stripAnsi(typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString());
+	stripAnsi(
+		typeof chunk === 'string' ? chunk : new TextDecoder().decode(chunk),
+	);
 
 const isCursorOrSyncEscape = (chunk: string | Uint8Array): boolean => {
-	const str = typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString();
+	const str =
+		typeof chunk === 'string' ? chunk : new TextDecoder().decode(chunk);
 	return str.startsWith('\u001B[?25') || str === bsu || str === esu;
 };
 

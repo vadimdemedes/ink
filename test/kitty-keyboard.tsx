@@ -1,6 +1,5 @@
 import process from 'node:process';
 import EventEmitter from 'node:events';
-import {Buffer} from 'node:buffer';
 import React from 'react';
 import test from 'ava';
 import {stub, spy} from 'sinon';
@@ -746,8 +745,8 @@ test.serial(
 		});
 
 		// Respond with Uint8Array instead of string
-		const response = Buffer.from('\u001B[?1u');
-		stdin.emit('data', new Uint8Array(response));
+		const response = new TextEncoder().encode('\u001B[?1u');
+		stdin.emit('data', response);
 
 		// The enable sequence should have been written
 		const strings = getWrittenStrings(write);
