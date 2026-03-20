@@ -1,6 +1,8 @@
 // Copied from https://github.com/enquirer/enquirer/blob/36785f3399a41cd61e9d28d1eb9c2fcd73d69b4c/lib/keypress.js
 import {kittyModifiers} from './kitty-keyboard.js';
 
+const textDecoder = new TextDecoder();
+
 const metaKeyCodeRe = /^(?:\x1b)([a-zA-Z0-9])$/;
 
 const fnKeyRe =
@@ -427,9 +429,9 @@ const parseKeypress = (s: Uint8Array | string = ''): ParsedKey => {
 	if (s instanceof Uint8Array) {
 		if (s[0]! > 127 && s[1] === undefined) {
 			(s[0] as unknown as number) -= 128;
-			s = '\x1b' + new TextDecoder().decode(s);
+			s = '\x1b' + textDecoder.decode(s);
 		} else {
-			s = new TextDecoder().decode(s);
+			s = textDecoder.decode(s);
 		}
 	} else if (s !== undefined && typeof s !== 'string') {
 		s = String(s);

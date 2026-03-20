@@ -3,6 +3,8 @@ import React from 'react';
 import stripAnsi from 'strip-ansi';
 import {render, Text, Box} from '../../src/index.js';
 
+const textDecoder = new TextDecoder();
+
 function SubprocessOutput() {
 	const [output, setOutput] = React.useState('');
 
@@ -14,7 +16,7 @@ function SubprocessOutput() {
 		]);
 
 		subProcess.stdout.on('data', (newOutput: Uint8Array) => {
-			const lines = stripAnsi(new TextDecoder().decode(newOutput)).split('\n');
+			const lines = stripAnsi(textDecoder.decode(newOutput)).split('\n');
 			setOutput(lines.slice(-5).join('\n'));
 		});
 	}, [setOutput]);

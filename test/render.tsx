@@ -25,6 +25,8 @@ import {bsu, esu} from '../src/write-synchronized.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
 
+const textDecoder = new TextDecoder();
+
 const require = createRequire(import.meta.url);
 
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
@@ -104,13 +106,10 @@ const isWriteBarrierChunk = (chunk: string | Uint8Array): boolean =>
 	(chunk instanceof Uint8Array && chunk.length === 0);
 
 const toRenderedChunk = (chunk: string | Uint8Array): string =>
-	stripAnsi(
-		typeof chunk === 'string' ? chunk : new TextDecoder().decode(chunk),
-	);
+	stripAnsi(typeof chunk === 'string' ? chunk : textDecoder.decode(chunk));
 
 const isCursorOrSyncEscape = (chunk: string | Uint8Array): boolean => {
-	const str =
-		typeof chunk === 'string' ? chunk : new TextDecoder().decode(chunk);
+	const str = typeof chunk === 'string' ? chunk : textDecoder.decode(chunk);
 	return str.startsWith('\u001B[?25') || str === bsu || str === esu;
 };
 

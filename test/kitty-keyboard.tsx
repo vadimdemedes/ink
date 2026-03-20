@@ -6,6 +6,8 @@ import {stub, spy} from 'sinon';
 import parseKeypress from '../src/parse-keypress.js';
 import {render, Text} from '../src/index.js';
 
+const textEncoder = new TextEncoder();
+
 // Helper to create kitty protocol CSI u sequences
 const kittyKey = (
 	codepoint: number,
@@ -745,7 +747,7 @@ test.serial(
 		});
 
 		// Respond with Uint8Array instead of string
-		const response = new TextEncoder().encode('\u001B[?1u');
+		const response = textEncoder.encode('\u001B[?1u');
 		stdin.emit('data', response);
 
 		// The enable sequence should have been written
