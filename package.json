@@ -23,6 +23,7 @@
 		"prepare": "npm run build",
 		"test": "npm run typecheck && npm run lint && FORCE_COLOR=true ava",
 		"lint": "xo",
+		"format": "prettier --write .",
 		"typecheck": "tsc --noEmit",
 		"example": "NODE_NO_WARNINGS=1 node --import=tsx",
 		"benchmark": "NODE_NO_WARNINGS=1 node --import=tsx",
