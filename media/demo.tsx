@@ -1,6 +1,5 @@
-import process from 'node:process';
 import React, {useState, useEffect} from 'react';
-import {render, Box, Text, useApp} from 'ink';
+import {render, Box, Text, useApp} from '../src/index.js';
 
 function Counter() {
 	const [i, setI] = useState(0);
