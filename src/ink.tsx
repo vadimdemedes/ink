@@ -1,5 +1,4 @@
 import process from 'node:process';
-import {Buffer} from 'node:buffer';
 import React, {type ReactNode} from 'react';
 import {throttle, type DebouncedFunc} from 'es-toolkit/compat';
 import ansiEscapes from 'ansi-escapes';
@@ -28,6 +27,7 @@ import {
 } from './kitty-keyboard.js';
 
 const noop = () => {};
+const textEncoder = new TextEncoder();
 
 const yieldImmediate = async () =>
 	new Promise<void>(resolve => {
@@ -1146,12 +1146,12 @@ export default class Ink {
 				stripKittyQueryResponsesAndTrailingPartial(responseBuffer);
 			responseBuffer = [];
 			if (remaining.length > 0) {
-				stdin.unshift(Buffer.from(remaining));
+				stdin.unshift(Uint8Array.from(remaining));
 			}
 		};
 
 		const onData = (data: Uint8Array | string): void => {
-			const chunk = typeof data === 'string' ? Buffer.from(data) : data;
+			const chunk = typeof data === 'string' ? textEncoder.encode(data) : data;
 			for (const byte of chunk) {
 				responseBuffer.push(byte);
 			}
