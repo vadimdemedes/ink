@@ -1,51 +1,38 @@
-import React from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {render, Static, Text} from '../../src/index.js';
 
-type TestState = {
-	counter: number;
-	items: string[];
-};
+function Test() {
+	const [items, setItems] = useState<string[]>([]);
+	const [counter, setCounter] = useState(0);
+	const timerRef = useRef<NodeJS.Timeout>(undefined);
 
-class Test extends React.Component<Record<string, unknown>, TestState> {
-	timer?: NodeJS.Timeout;
-
-	override state: TestState = {
-		items: [],
-		counter: 0,
-	};
-
-	override render() {
-		return (
-			<>
-				<Static items={this.state.items}>
-					{item => <Text key={item}>{item}</Text>}
-				</Static>
-
-				<Text>Counter: {this.state.counter}</Text>
-			</>
-		);
-	}
-
-	override componentDidMount() {
+	useEffect(() => {
 		const onTimeout = () => {
-			if (this.state.counter > 4) {
-				return;
-			}
+			setCounter(previous => {
+				if (previous > 4) {
+					return previous;
+				}
 
-			this.setState(prevState => ({
-				counter: prevState.counter + 1,
-				items: [...prevState.items, `#${prevState.counter + 1}`],
-			}));
-
-			this.timer = setTimeout(onTimeout, 20);
+				setItems(prevItems => [...prevItems, `#${previous + 1}`]);
+				timerRef.current = setTimeout(onTimeout, 20);
+				return previous + 1;
+			});
 		};
 
-		this.timer = setTimeout(onTimeout, 20);
-	}
+		timerRef.current = setTimeout(onTimeout, 20);
 
-	override componentWillUnmount() {
-		clearTimeout(this.timer);
-	}
+		return () => {
+			clearTimeout(timerRef.current);
+		};
+	}, []);
+
+	return (
+		<>
+			<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
+
+			<Text>Counter: {counter}</Text>
+		</>
+	);
 }
 
 render(<Test />);

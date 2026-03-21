@@ -1,36 +1,30 @@
-import React from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {render, Text} from '../../src/index.js';
 
-class Test extends React.Component<Record<string, unknown>, {counter: number}> {
-	timer?: NodeJS.Timeout;
+function Test() {
+	const [counter, setCounter] = useState(0);
+	const timerRef = useRef<NodeJS.Timeout>(undefined);
 
-	override state = {
-		counter: 0,
-	};
-
-	override render() {
-		return <Text>Counter: {this.state.counter}</Text>;
-	}
-
-	override componentDidMount() {
+	useEffect(() => {
 		const onTimeout = () => {
-			if (this.state.counter > 4) {
-				return;
-			}
+			setCounter(previous => {
+				if (previous > 4) {
+					return previous;
+				}
 
-			this.setState(prevState => ({
-				counter: prevState.counter + 1,
-			}));
-
-			this.timer = setTimeout(onTimeout, 20);
+				timerRef.current = setTimeout(onTimeout, 20);
+				return previous + 1;
+			});
 		};
 
-		this.timer = setTimeout(onTimeout, 20);
-	}
+		timerRef.current = setTimeout(onTimeout, 20);
 
-	override componentWillUnmount() {
-		clearTimeout(this.timer);
-	}
+		return () => {
+			clearTimeout(timerRef.current);
+		};
+	}, []);
+
+	return <Text>Counter: {counter}</Text>;
 }
 
 render(<Test />);

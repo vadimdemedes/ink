@@ -539,18 +539,16 @@ test('disable raw mode when all input components are unmounted', t => {
 		debug: true,
 	};
 
-	class Input extends React.Component<{setRawMode: (mode: boolean) => void}> {
-		override render() {
-			return <Text>Test</Text>;
-		}
+	function Input({setRawMode}: {readonly setRawMode: (mode: boolean) => void}) {
+		useEffect(() => {
+			setRawMode(true);
 
-		override componentDidMount() {
-			this.props.setRawMode(true);
-		}
+			return () => {
+				setRawMode(false);
+			};
+		}, [setRawMode]);
 
-		override componentWillUnmount() {
-			this.props.setRawMode(false);
-		}
+		return <Text>Test</Text>;
 	}
 
 	function Test({
@@ -609,18 +607,16 @@ test('re-ref stdin when input is used after previous unmount', t => {
 		debug: true,
 	};
 
-	class Input extends React.Component<{setRawMode: (mode: boolean) => void}> {
-		override render() {
-			return <Text>Test</Text>;
-		}
+	function Input({setRawMode}: {readonly setRawMode: (mode: boolean) => void}) {
+		useEffect(() => {
+			setRawMode(true);
 
-		override componentDidMount() {
-			this.props.setRawMode(true);
-		}
+			return () => {
+				setRawMode(false);
+			};
+		}, [setRawMode]);
 
-		override componentWillUnmount() {
-			this.props.setRawMode(false);
-		}
+		return <Text>Test</Text>;
 	}
 
 	function Test({onInput}: {readonly onInput: (input: string) => void}) {
@@ -696,26 +692,24 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 		debug: true,
 	};
 
-	class Input extends React.Component<{setRawMode: (mode: boolean) => void}> {
-		override render() {
-			return <Text>Test</Text>;
-		}
-
-		override componentDidMount() {
+	function Input({setRawMode}: {readonly setRawMode: (mode: boolean) => void}) {
+		useEffect(() => {
 			try {
-				this.props.setRawMode(true);
+				setRawMode(true);
 			} catch (error: unknown) {
 				didCatchInMount(error);
 			}
-		}
 
-		override componentWillUnmount() {
-			try {
-				this.props.setRawMode(false);
-			} catch (error: unknown) {
-				didCatchInUnmount(error);
-			}
-		}
+			return () => {
+				try {
+					setRawMode(false);
+				} catch (error: unknown) {
+					didCatchInUnmount(error);
+				}
+			};
+		}, [setRawMode]);
+
+		return <Text>Test</Text>;
 	}
 
 	function Test() {
@@ -745,18 +739,16 @@ test('render different component based on whether stdin is a TTY or not', t => {
 		debug: true,
 	};
 
-	class Input extends React.Component<{setRawMode: (mode: boolean) => void}> {
-		override render() {
-			return <Text>Test</Text>;
-		}
+	function Input({setRawMode}: {readonly setRawMode: (mode: boolean) => void}) {
+		useEffect(() => {
+			setRawMode(true);
 
-		override componentDidMount() {
-			this.props.setRawMode(true);
-		}
+			return () => {
+				setRawMode(false);
+			};
+		}, [setRawMode]);
 
-		override componentWillUnmount() {
-			this.props.setRawMode(false);
-		}
+		return <Text>Test</Text>;
 	}
 
 	function Test({
