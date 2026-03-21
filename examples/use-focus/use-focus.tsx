@@ -17,7 +17,7 @@ function Focus() {
 	);
 }
 
-function Item({label}: {readonly label: string}) {
+function Item({label}) {
 	const {isFocused} = useFocus();
 	return (
 		<Text>
