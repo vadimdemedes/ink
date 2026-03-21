@@ -225,7 +225,10 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 					input = '';
 				}
 			} else if (keypress.ctrl) {
-				input = keypress.name;
+				// Keypress.name is guaranteed non-undefined by parseKeypress,
+				// but guard defensively since a TypeError here would crash the
+				// entire Ink app (see https://github.com/vadimdemedes/ink/issues/901).
+				input = keypress.name ?? '';
 			} else {
 				input = keypress.sequence;
 			}

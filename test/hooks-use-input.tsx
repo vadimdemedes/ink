@@ -159,3 +159,21 @@ test.serial('useInput - handle option + return (macOS)', async t => {
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
+
+test.serial('useInput - handle Ctrl+F1 without crashing', async t => {
+	const ps = term('use-input', ['ctrlF1']);
+	ps.write('\u001B[1;5P');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial(
+	'useInput - handle unmapped ctrl escape sequence without crashing',
+	async t => {
+		const ps = term('use-input', ['unmappedCtrlSequence']);
+		// ESC [ 1 ; 5 I — focus-in with ctrl modifier, not in keyName map
+		ps.write('\u001B[1;5I');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
