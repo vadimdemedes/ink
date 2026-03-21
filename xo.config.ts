@@ -12,7 +12,6 @@ const xoConfig: FlatXoConfig = [
 			'react/no-unescaped-entities': 'off',
 			'react/state-in-constructor': 'off',
 			'react/jsx-indent': 'off',
-			'react/prop-types': 'off',
 			'unicorn/import-index': 'off',
 			'import-x/no-useless-path-segments': 'off',
 			complexity: 'off',
