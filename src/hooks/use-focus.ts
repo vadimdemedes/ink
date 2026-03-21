@@ -54,7 +54,7 @@ const useFocus = ({
 		return () => {
 			remove(id);
 		};
-	}, [id, autoFocus]);
+	}, [id, autoFocus, add, remove]);
 
 	useEffect(() => {
 		if (isActive) {
@@ -62,7 +62,7 @@ const useFocus = ({
 		} else {
 			deactivate(id);
 		}
-	}, [isActive, id]);
+	}, [isActive, id, activate, deactivate]);
 
 	useEffect(() => {
 		if (!isRawModeSupported || !isActive) {
@@ -74,7 +74,7 @@ const useFocus = ({
 		return () => {
 			setRawMode(false);
 		};
-	}, [isActive]);
+	}, [isActive, isRawModeSupported, setRawMode]);
 
 	return {
 		isFocused: Boolean(id) && activeId === id,

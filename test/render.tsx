@@ -1494,7 +1494,7 @@ test.serial('waitUntilRenderFlush resolves after exit with error', async t => {
 
 		useEffect(() => {
 			exit(new Error('boom'));
-		}, []);
+		}, [exit]);
 
 		return <Text>Hello</Text>;
 	}
@@ -1574,7 +1574,7 @@ test.serial(
 				setTimeout(() => {
 					exit('second');
 				}, 0);
-			}, []);
+			}, [exit]);
 
 			return <Text>Hello</Text>;
 		}
@@ -1623,7 +1623,7 @@ test.serial(
 				exit = appExit;
 				shouldReenterExit = true;
 				appExit('first');
-			}, []);
+			}, [appExit]);
 
 			return <Text>Hello</Text>;
 		}
@@ -1664,7 +1664,7 @@ test.serial(
 				exit = appExit;
 				shouldReenterExit = true;
 				appExit('first');
-			}, []);
+			}, [appExit]);
 
 			return <Text>Hello</Text>;
 		}
@@ -1705,7 +1705,7 @@ test.serial(
 				exit = appExit;
 				shouldReenterExit = true;
 				appExit('first');
-			}, []);
+			}, [appExit]);
 
 			return <Text>Hello</Text>;
 		}
@@ -1735,7 +1735,7 @@ test.serial('exit rejects on cross-realm Error', async t => {
 			setTimeout(() => {
 				exit(foreignError);
 			}, 0);
-		}, []);
+		}, [exit]);
 
 		return <Text>Hello</Text>;
 	}
@@ -1778,7 +1778,7 @@ test.serial(
 				setTimeout(() => {
 					exit(foreignError);
 				}, 0);
-			}, []);
+			}, [exit]);
 
 			return <Text>Hello</Text>;
 		}

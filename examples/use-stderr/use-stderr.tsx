@@ -12,7 +12,7 @@ function Example() {
 		return () => {
 			clearInterval(timer);
 		};
-	}, []);
+	}, [write]);
 
 	return <Text>Hello World</Text>;
 }

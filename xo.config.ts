@@ -15,7 +15,6 @@ const xoConfig: FlatXoConfig = [
 			'react/prop-types': 'off',
 			'unicorn/import-index': 'off',
 			'import-x/no-useless-path-segments': 'off',
-			'react-hooks/exhaustive-deps': 'off',
 			complexity: 'off',
 		},
 	},
