@@ -468,11 +468,11 @@ test('skip previous output when rendering new static output', t => {
 	t.is((stdout.write as any).lastCall.args[0], 'A\nB\n');
 });
 
-test('no crash after unmounting Static', t => {
+test('static output stops accumulating after Static unmounts (#904)', t => {
 	const stdout = createStdout();
 	const items = ['A', 'B'];
 
-	function Dynamic({show}: {readonly show: boolean}) {
+	function App({show}: {readonly show: boolean}) {
 		return (
 			<Box>
 				{show ? (
@@ -485,14 +485,31 @@ test('no crash after unmounting Static', t => {
 		);
 	}
 
-	const {rerender} = render(<Dynamic show />, {
+	const {rerender} = render(<App show />, {
 		stdout,
 		debug: true,
 	});
 
-	rerender(<Dynamic show={false} />);
-	const lastOutput = (stdout.write as any).lastCall.args[0] as string;
-	t.true(lastOutput.includes('Dynamic'));
+	// Unmount Static — this frees the Yoga WASM node via cleanupYogaNode.
+	// The fix clears rootNode.staticNode so the renderer stops accessing it.
+	rerender(<App show={false} />);
+	const outputAfterUnmount = (stdout.write as any).lastCall.args[0] as string;
+
+	// Do several more rerenders — these should NOT produce additional static output.
+	// Without the fix, the stale staticNode reference causes the renderer to
+	// re-render freed static content on every cycle, growing fullStaticOutput.
+	for (let i = 0; i < 10; i++) {
+		rerender(<App show={false} />);
+	}
+
+	const outputAfterChurn = (stdout.write as any).lastCall.args[0] as string;
+
+	// In debug mode, each stdout.write is fullStaticOutput + dynamicOutput.
+	// If staticNode is properly cleared, fullStaticOutput stops growing and
+	// outputs stay the same length. If not, each render appends duplicate
+	// static content, making outputs progressively longer.
+	t.is(outputAfterChurn.length, outputAfterUnmount.length);
+	t.true(outputAfterChurn.includes('Dynamic'));
 });
 
 test('render only new items in static output on final render', t => {
