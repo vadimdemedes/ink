@@ -1,40 +1,25 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {render, Text, useApp} from '../../src/index.js';
 
-class Exit extends React.Component<
-	{onExit: (error: Error) => void},
-	{counter: number}
-> {
-	timer?: NodeJS.Timeout;
+function Test() {
+	const [counter, setCounter] = useState(0);
+	const {exit} = useApp();
 
-	override state = {
-		counter: 0,
-	};
-
-	override render() {
-		return <Text>Counter: {this.state.counter}</Text>;
-	}
-
-	override componentDidMount() {
+	useEffect(() => {
 		setTimeout(() => {
-			this.props.onExit(new Error('errored'));
+			exit(new Error('errored'));
 		}, 500);
 
-		this.timer = setInterval(() => {
-			this.setState(prevState => ({
-				counter: prevState.counter + 1,
-			}));
+		const timer = setInterval(() => {
+			setCounter(previous => previous + 1);
 		}, 100);
-	}
 
-	override componentWillUnmount() {
-		clearInterval(this.timer);
-	}
-}
+		return () => {
+			clearInterval(timer);
+		};
+	}, [exit]);
 
-function Test() {
-	const {exit} = useApp();
-	return <Exit onExit={exit} />;
+	return <Text>Counter: {counter}</Text>;
 }
 
 const app = render(<Test />);

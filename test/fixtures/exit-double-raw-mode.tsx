@@ -1,17 +1,11 @@
 import process from 'node:process';
-import React from 'react';
+import React, {useEffect} from 'react';
 import {Text, render, useStdin} from '../../src/index.js';
 
-class ExitDoubleRawMode extends React.Component<{
-	setRawMode: (value: boolean) => void;
-}> {
-	override render() {
-		return <Text>Hello World</Text>;
-	}
+function Test() {
+	const {setRawMode} = useStdin();
 
-	override componentDidMount() {
-		const {setRawMode} = this.props;
-
+	useEffect(() => {
 		setRawMode(true);
 
 		setTimeout(() => {
@@ -21,13 +15,9 @@ class ExitDoubleRawMode extends React.Component<{
 			// Start the test
 			process.stdout.write('s');
 		}, 500);
-	}
-}
+	}, [setRawMode]);
 
-function Test() {
-	const {setRawMode} = useStdin();
-
-	return <ExitDoubleRawMode setRawMode={setRawMode} />;
+	return <Text>Hello World</Text>;
 }
 
 const {unmount, waitUntilExit} = render(<Test />);
