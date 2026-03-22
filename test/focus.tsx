@@ -51,27 +51,32 @@ function Test({
 	focusPrevious = false,
 	unmountChildren = false,
 }: TestProps) {
-	const focusManager = useFocusManager();
+	const {
+		enableFocus,
+		disableFocus,
+		focusNext: doFocusNext,
+		focusPrevious: doFocusPrevious,
+	} = useFocusManager();
 
 	useEffect(() => {
 		if (disabled) {
-			focusManager.disableFocus();
+			disableFocus();
 		} else {
-			focusManager.enableFocus();
+			enableFocus();
 		}
-	}, [disabled]);
+	}, [disabled, disableFocus, enableFocus]);
 
 	useEffect(() => {
 		if (focusNext) {
-			focusManager.focusNext();
+			doFocusNext();
 		}
-	}, [focusNext]);
+	}, [focusNext, doFocusNext]);
 
 	useEffect(() => {
 		if (focusPrevious) {
-			focusManager.focusPrevious();
+			doFocusPrevious();
 		}
-	}, [focusPrevious]);
+	}, [focusPrevious, doFocusPrevious]);
 
 	if (unmountChildren) {
 		return null;

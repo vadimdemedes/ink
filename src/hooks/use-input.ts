@@ -273,7 +273,13 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 		return () => {
 			internal_eventEmitter.removeListener('input', handleData);
 		};
-	}, [options.isActive, stdin, internal_exitOnCtrlC, inputHandler]);
+	}, [
+		options.isActive,
+		stdin,
+		internal_exitOnCtrlC,
+		inputHandler,
+		internal_eventEmitter,
+	]);
 };
 
 export default useInput;

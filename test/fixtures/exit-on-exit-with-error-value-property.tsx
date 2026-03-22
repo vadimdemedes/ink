@@ -10,7 +10,7 @@ function Test() {
 			(error as Error & {value: string}).value = 'hello from error';
 			exit(error);
 		}, 500);
-	}, []);
+	}, [exit]);
 
 	return <Text>Testing</Text>;
 }
