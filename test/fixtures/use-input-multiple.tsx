@@ -19,7 +19,7 @@ function App() {
 
 	useEffect(() => {
 		setTimeout(exit, 100);
-	}, []);
+	}, [exit]);
 
 	return <Text>{input}</Text>;
 }

@@ -12,7 +12,7 @@ function Example() {
 		return () => {
 			clearInterval(timer);
 		};
-	}, []);
+	}, [write]);
 
 	return (
 		<Box flexDirection="column" paddingX={2} paddingY={1}>

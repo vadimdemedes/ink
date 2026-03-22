@@ -6,7 +6,7 @@ function WriteToStdout() {
 
 	useEffect(() => {
 		write('Hello from Ink to stdout\n');
-	}, []);
+	}, [write]);
 
 	return <Text>Hello World</Text>;
 }

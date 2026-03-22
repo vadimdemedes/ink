@@ -6,7 +6,7 @@ function Test() {
 
 	useEffect(() => {
 		exit(new Error('errored'));
-	}, []);
+	}, [exit]);
 
 	return (
 		<>
