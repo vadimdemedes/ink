@@ -32,15 +32,11 @@ type State = {
 };
 
 class Jest extends React.Component<Record<string, unknown>, State> {
-	constructor(properties: Record<string, unknown>) {
-		super(properties);
-
-		this.state = {
-			startTime: Date.now(),
-			completedTests: [],
-			runningTests: [],
-		};
-	}
+	state: State = {
+		startTime: Date.now(),
+		completedTests: [],
+		runningTests: [],
+	};
 
 	render() {
 		const {startTime, completedTests, runningTests} = this.state;
