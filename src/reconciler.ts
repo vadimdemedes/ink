@@ -294,6 +294,10 @@ export default createReconciler<
 	removeChildFromContainer(node, removeNode) {
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
+
+		if (removeNode.internal_static && currentRootNode) {
+			currentRootNode.staticNode = undefined;
+		}
 	},
 	commitUpdate(node, _type, oldProps, newProps) {
 		if (currentRootNode && node.internal_static) {
@@ -346,6 +350,10 @@ export default createReconciler<
 	removeChild(node, removeNode) {
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
+
+		if (removeNode.internal_static && currentRootNode) {
+			currentRootNode.staticNode = undefined;
+		}
 	},
 	setCurrentUpdatePriority(newPriority: number) {
 		currentUpdatePriority = newPriority;
