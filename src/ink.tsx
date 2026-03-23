@@ -686,7 +686,7 @@ export default class Ink {
 			this.options.stdout.write(bsu);
 		}
 
-		this.log.clear();
+		this.log.clearWithWrapping();
 		this.options.stdout.write(data);
 		this.restoreLastOutput();
 
@@ -716,7 +716,7 @@ export default class Ink {
 			this.options.stdout.write(bsu);
 		}
 
-		this.log.clear();
+		this.log.clearWithWrapping();
 		this.options.stderr.write(data);
 		this.restoreLastOutput();
 
@@ -931,7 +931,7 @@ export default class Ink {
 
 	clear(): void {
 		if (this.interactive && !this.options.debug) {
-			this.log.clear();
+			this.log.clearWithWrapping();
 			// Sync lastOutput so that unmount's final onRender
 			// sees it as unchanged and log-update skips it
 			this.log.sync(this.lastOutputToRender || this.lastOutput + '\n');
@@ -1081,7 +1081,7 @@ export default class Ink {
 				this.options.stdout.write(bsu);
 			}
 
-			this.log.clear();
+			this.log.clearWithWrapping();
 			this.options.stdout.write(staticOutput);
 			this.log(outputToRender);
 

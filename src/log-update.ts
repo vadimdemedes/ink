@@ -119,9 +119,12 @@ const createStandard = (
 					? visualRowCount(previousOutput.split('\n'), columns)
 					: previousLineCount;
 			previousOutput = str;
+			// Pass logical previousLineCount (not visual rowsToErase) because
+			// the return-to-bottom calculation does arithmetic with
+			// previousCursorPosition.y, which is a logical line index.
 			const returnPrefix = buildReturnToBottomPrefix(
 				cursorWasShown,
-				rowsToErase,
+				previousLineCount,
 				previousCursorPosition,
 			);
 			stream.write(
@@ -156,7 +159,7 @@ const createStandard = (
 				: previousLineCount;
 		const prefix = buildReturnToBottomPrefix(
 			cursorWasShown,
-			rowsToErase,
+			previousLineCount,
 			previousCursorPosition,
 		);
 		stream.write(prefix + ansiEscapes.eraseLines(rowsToErase));
@@ -285,9 +288,12 @@ const createIncremental = (
 			columns > 0 && previousLines.length > 0
 				? visualRowCount(previousLines, columns)
 				: previousLines.length;
+		// Pass logical previousLines.length (not visual previousRowCount)
+		// because the return-to-bottom calculation does arithmetic with
+		// previousCursorPosition.y, which is a logical line index.
 		const returnPrefix = buildReturnToBottomPrefix(
 			cursorWasShown,
-			previousRowCount,
+			previousLines.length,
 			previousCursorPosition,
 		);
 
@@ -382,7 +388,7 @@ const createIncremental = (
 				: previousLines.length;
 		const prefix = buildReturnToBottomPrefix(
 			cursorWasShown,
-			rowsToErase,
+			previousLines.length,
 			previousCursorPosition,
 		);
 		stream.write(prefix + ansiEscapes.eraseLines(rowsToErase));
