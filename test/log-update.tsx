@@ -76,6 +76,25 @@ test('incremental rendering - surgical updates', t => {
 	t.false(secondCall.includes('Line 3')); // Doesn't rewrite unchanged
 });
 
+test('incremental rendering - same-height update rewinds cursor to top with trailing newline', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {
+		showCursor: true,
+		incremental: true,
+	});
+
+	render('Line 1\nLine 2\nLine 3\n');
+	render('Line 1\nUpdated\nLine 3\n');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	// Output ends with '\n', so split('\n') gives ["Line 1","Line 2","Line 3",""]
+	// (length 4). After writing, cursor is on row 3 (the empty row past last
+	// visible line). cursorUp must be 3 (= 4 - 1) to reach row 0.
+	// Using visibleLineCount - 1 (= 2) would only reach row 1, leaving row 0
+	// as a ghost line.
+	t.true(secondCall.startsWith(ansiEscapes.cursorUp(3)));
+});
+
 test('incremental rendering - clears extra lines when output shrinks', t => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout, {
