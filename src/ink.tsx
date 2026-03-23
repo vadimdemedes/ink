@@ -454,8 +454,18 @@ export default class Ink {
 		const currentWidth = getWindowSize(this.options.stdout).columns;
 
 		if (currentWidth < this.lastTerminalWidth) {
-			// We clear the screen when decreasing terminal width to prevent duplicate overlapping re-renders.
-			this.log.clear();
+			// Flush any pending throttled writes so the log's previousOutput
+			// reflects what's actually on screen before we clear.
+			if ('flush' in this.throttledLog) {
+				(this.throttledLog as DebouncedFunc<(output: string) => void>).flush();
+			}
+
+			// Use clearWithWrapping to account for terminal soft-wrapping:
+			// lines rendered at the old width now occupy more visual rows at the
+			// new narrower width. The log instance uses its own previousOutput
+			// (which reflects what was actually written to the stream) to
+			// calculate the correct number of rows to erase.
+			this.log.clearWithWrapping();
 			this.lastOutput = '';
 			this.lastOutputToRender = '';
 		}

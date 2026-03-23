@@ -1,6 +1,7 @@
 import {type Writable} from 'node:stream';
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
+import stringWidth from 'string-width';
 import {
 	type CursorPosition,
 	cursorPositionChanged,
@@ -14,6 +15,7 @@ export type {CursorPosition} from './cursor-helpers.js';
 
 export type LogUpdate = {
 	clear: () => void;
+	clearWithWrapping: () => void;
 	done: () => void;
 	reset: () => void;
 	sync: (str: string) => void;
@@ -27,6 +29,31 @@ export type LogUpdate = {
 // that `split('\n')` produces when the string ends with '\n'.
 const visibleLineCount = (lines: string[], str: string): number =>
 	str.endsWith('\n') ? lines.length - 1 : lines.length;
+
+// Count the visual rows a set of lines occupies in the terminal,
+// accounting for soft-wrapping when a line's visible width exceeds
+// the terminal's column count.
+const visualRowCount = (lines: string[], columns: number): number => {
+	if (columns <= 0) {
+		return lines.length;
+	}
+
+	let rows = 0;
+
+	for (const line of lines) {
+		const width = stringWidth(line);
+		rows += Math.max(1, Math.ceil(width / columns));
+	}
+
+	return rows;
+};
+
+// Safely read terminal column count from the stream.
+const getColumns = (stream: Writable): number =>
+	'columns' in stream &&
+	typeof (stream as NodeJS.WriteStream).columns === 'number'
+		? (stream as NodeJS.WriteStream).columns
+		: 0;
 
 const createStandard = (
 	stream: Writable,
@@ -86,17 +113,19 @@ const createStandard = (
 				}),
 			);
 		} else {
+			const columns = getColumns(stream);
+			const rowsToErase =
+				columns > 0 && previousLineCount > 0
+					? visualRowCount(previousOutput.split('\n'), columns)
+					: previousLineCount;
 			previousOutput = str;
 			const returnPrefix = buildReturnToBottomPrefix(
 				cursorWasShown,
-				previousLineCount,
+				rowsToErase,
 				previousCursorPosition,
 			);
 			stream.write(
-				returnPrefix +
-					ansiEscapes.eraseLines(previousLineCount) +
-					str +
-					cursorSuffix,
+				returnPrefix + ansiEscapes.eraseLines(rowsToErase) + str + cursorSuffix,
 			);
 			previousLineCount = lines.length;
 		}
@@ -113,6 +142,24 @@ const createStandard = (
 			previousCursorPosition,
 		);
 		stream.write(prefix + ansiEscapes.eraseLines(previousLineCount));
+		previousOutput = '';
+		previousLineCount = 0;
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
+	};
+
+	render.clearWithWrapping = () => {
+		const columns = getColumns(stream);
+		const rowsToErase =
+			columns > 0 && previousLineCount > 0
+				? visualRowCount(previousOutput.split('\n'), columns)
+				: previousLineCount;
+		const prefix = buildReturnToBottomPrefix(
+			cursorWasShown,
+			rowsToErase,
+			previousCursorPosition,
+		);
+		stream.write(prefix + ansiEscapes.eraseLines(rowsToErase));
 		previousOutput = '';
 		previousLineCount = 0;
 		previousCursorPosition = undefined;
@@ -233,9 +280,14 @@ const createIncremental = (
 			return true;
 		}
 
+		const columns = getColumns(stream);
+		const previousRowCount =
+			columns > 0 && previousLines.length > 0
+				? visualRowCount(previousLines, columns)
+				: previousLines.length;
 		const returnPrefix = buildReturnToBottomPrefix(
 			cursorWasShown,
-			previousLines.length,
+			previousRowCount,
 			previousCursorPosition,
 		);
 
@@ -243,7 +295,7 @@ const createIncremental = (
 			const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
 			stream.write(
 				returnPrefix +
-					ansiEscapes.eraseLines(previousLines.length) +
+					ansiEscapes.eraseLines(previousRowCount) +
 					str +
 					cursorSuffix,
 			);
@@ -316,6 +368,24 @@ const createIncremental = (
 			previousCursorPosition,
 		);
 		stream.write(prefix + ansiEscapes.eraseLines(previousLines.length));
+		previousOutput = '';
+		previousLines = [];
+		previousCursorPosition = undefined;
+		cursorWasShown = false;
+	};
+
+	render.clearWithWrapping = () => {
+		const columns = getColumns(stream);
+		const rowsToErase =
+			columns > 0 && previousLines.length > 0
+				? visualRowCount(previousLines, columns)
+				: previousLines.length;
+		const prefix = buildReturnToBottomPrefix(
+			cursorWasShown,
+			rowsToErase,
+			previousCursorPosition,
+		);
+		stream.write(prefix + ansiEscapes.eraseLines(rowsToErase));
 		previousOutput = '';
 		previousLines = [];
 		previousCursorPosition = undefined;
