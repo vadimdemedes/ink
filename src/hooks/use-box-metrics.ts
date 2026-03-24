@@ -83,7 +83,7 @@ const Example = () => {
 ```
 */
 const useBoxMetrics = (ref: RefObject<DOMElement>): UseBoxMetricsResult => {
-	const [metrics, setMetrics] = useState<BoxMetrics>(emptyMetrics);
+	const [metrics, setMetrics] = useState(emptyMetrics);
 	const [hasMeasured, setHasMeasured] = useState(false);
 	const {stdout} = useStdout();
 
