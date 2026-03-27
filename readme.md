@@ -2944,6 +2944,7 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-stepper](https://github.com/archcorsair/ink-stepper) - Step-by-step wizard.
 - [ink-virtual-list](https://github.com/archcorsair/ink-virtual-list) - Virtualized list that renders only visible items for performance.
 - [ink-color-picker](https://github.com/sina-byn/ink-color-picker) - Color picker.
+- [ink-uplot](https://github.com/planadecu/ink-uplot) - Render high fidelity uPlot charts in real-time.
 
 ## Useful Hooks
 
