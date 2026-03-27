@@ -2135,6 +2135,9 @@ Type: `number`
 
 Number of rows (vertical character cells).
 
+> [!NOTE]
+> When the terminal is resized narrower, ghost lines may briefly appear depending on the terminal emulator's reflow behavior.
+
 ### useFocus(options?)
 
 A React hook that returns focus state and focus controls for the current component.
@@ -2985,9 +2988,6 @@ If your CI environment supports full terminal rendering and you want to opt out 
 ```sh
 CI=false node my-cli.js
 ```
-
-> [!NOTE]
-> When the terminal is resized narrower, ghost lines may briefly appear depending on the terminal emulator's reflow behavior.
 
 ## Maintainers
 
