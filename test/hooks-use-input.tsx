@@ -74,12 +74,17 @@ test.serial('useInput - pasted tab', async t => {
 });
 
 test.serial(
-	'useInput - receives bracketed paste when no usePaste handler is active',
+	'useInput - receives bracketed paste with deprecation warning when no usePaste handler is active',
 	async t => {
 		const ps = term('use-input', ['bracketedPaste']);
 		ps.write('\u001B[200~hello\u001B[201~');
 		await ps.waitForExit();
 		t.true(ps.output.includes('exited'));
+		t.true(
+			ps.output.includes(
+				'Warning: useInput() received bracketed paste because no usePaste() handler is active.',
+			),
+		);
 	},
 );
 

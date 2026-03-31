@@ -12,9 +12,19 @@ type Options = {
 };
 
 /**
-A React hook that calls `handler` whenever the user pastes text in the terminal. Bracketed paste mode (`\x1b[?2004h`) is automatically enabled while the hook is active, so pasted text arrives as a single string rather than being misinterpreted as individual key presses.
+A React hook that calls `handler` whenever the user pastes text in the
+terminal. Bracketed paste mode (`\x1b[?2004h`) is automatically enabled while
+the hook is active, so pasted text arrives as a single string rather than being
+misinterpreted as individual key presses.
 
-`usePaste` and `useInput` can be used together in the same component. They operate on separate event channels, so paste content is never forwarded to `useInput` handlers when `usePaste` is active.
+`usePaste` is the dedicated API for paste blobs. `usePaste` and `useInput` can
+be used together in the same component; they operate on separate event
+channels, so paste content is never forwarded to `useInput` handlers while a
+`usePaste` handler is active.
+
+If no `usePaste` handler is active, Ink still forwards bracketed paste text to
+`useInput` for backward compatibility. That fallback is deprecated and will be
+removed in the next major version.
 
 ```
 import {useInput, usePaste} from 'ink';

@@ -136,7 +136,14 @@ type Options = {
 
 /**
 A React hook that returns `void` and handles user input.
-It's a more convenient alternative to using `StdinContext` and listening for `data` events. The callback you pass to `useInput` is called for each character when the user enters any input. However, if the user pastes text and it's more than one character, the callback will be called only once, and the whole string will be passed as `input`.
+It's a more convenient alternative to using `StdinContext` and listening for
+`data` events. The callback you pass to `useInput` is called for typed
+characters and key events.
+
+Bracketed paste payloads belong to `usePaste`. If no `usePaste` handler is
+active, Ink still forwards bracketed paste text to `useInput` for backward
+compatibility, but that fallback is deprecated and will be removed in the next
+major version.
 
 ```
 import {useInput} from 'ink';

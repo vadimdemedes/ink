@@ -81,6 +81,7 @@ function App({
 	const readableListenerRef = useRef<(() => void) | undefined>(undefined);
 	const inputParserRef = useRef(createInputParser());
 	const pendingInputFlushRef = useRef<NodeJS.Timeout | undefined>(undefined);
+	const didWarnAboutDeprecatedPasteFallbackRef = useRef(false);
 	// Small delay to let chunked escape sequences complete before flushing as literal input.
 	const pendingInputFlushDelayMilliseconds = 20;
 
@@ -182,6 +183,15 @@ function App({
 					// Keep paste on a separate channel from `useInput` so key handlers
 					// don't need to branch on mixed key-vs-paste event shapes.
 					if (internal_eventEmitter.current.listenerCount('paste') === 0) {
+						if (!didWarnAboutDeprecatedPasteFallbackRef.current) {
+							didWarnAboutDeprecatedPasteFallbackRef.current = true;
+							writeToStderr(
+								'Warning: useInput() received bracketed paste because no usePaste() handler is active. ' +
+									'This fallback is deprecated and will be removed in the next major version. ' +
+									'Migrate paste handling to usePaste().\n',
+							);
+						}
+
 						emitInput(event.paste);
 						continue;
 					}
@@ -194,7 +204,13 @@ function App({
 		if (inputParserRef.current.hasPendingEscape()) {
 			schedulePendingInputFlush();
 		}
-	}, [stdin, emitInput, clearPendingInputFlush, schedulePendingInputFlush]);
+	}, [
+		stdin,
+		emitInput,
+		clearPendingInputFlush,
+		schedulePendingInputFlush,
+		writeToStderr,
+	]);
 
 	const handleSetRawMode = useCallback(
 		(isEnabled: boolean): void => {

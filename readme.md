@@ -1582,8 +1582,9 @@ The zero-indexed line number of the line that's currently being transformed.
 
 A React hook that returns `void` and handles user input.
 It's a more convenient alternative to using `useStdin` and listening for `data` events.
-The callback you pass to `useInput` is called for each character when the user enters any input.
-However, if the user pastes text and it's more than one character, the callback will be called only once, and the whole string will be passed as `input`.
+The callback you pass to `useInput` is called for typed characters and key events.
+Bracketed paste payloads belong to [`usePaste`](#usepastehandler-options).
+If no `usePaste` handler is active, Ink still forwards bracketed paste text to `useInput` for backward compatibility, but that fallback is deprecated and will be removed in the next major version.
 You can find a full example of using `useInput` at [examples/use-input](examples/use-input/use-input.tsx).
 
 ```jsx
@@ -1763,7 +1764,9 @@ Useful when there are multiple `useInput` hooks used at once to avoid handling t
 
 A React hook that calls `handler` whenever the user pastes text. Bracketed paste mode (`\x1b[?2004h`) is automatically enabled while the hook is active, so pasted text arrives as a single string rather than being misinterpreted as individual key presses.
 
-`usePaste` and `useInput` can be used together in the same component. They operate on separate event channels, so paste content is never forwarded to `useInput` handlers when `usePaste` is active.
+`usePaste` is the dedicated API for paste blobs. `usePaste` and `useInput` can be used together in the same component; they operate on separate event channels, so paste content is never forwarded to `useInput` handlers while a `usePaste` handler is active.
+
+If no `usePaste` handler is active, Ink still forwards bracketed paste text to `useInput` for backward compatibility. That fallback is deprecated and will be removed in the next major version.
 
 ```jsx
 import {useInput, usePaste} from 'ink';
