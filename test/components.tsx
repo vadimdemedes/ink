@@ -94,6 +94,37 @@ test('don’t wrap text if there is enough space', t => {
 	t.is(output, 'Hello World');
 });
 
+test('wrap text anywhere', t => {
+	const output = renderToString(
+		<Box width={7}>
+			<Text wrap="wrap-anywhere">Hello World</Text>
+		</Box>,
+	);
+
+	t.is(output, 'Hello W\norld');
+});
+
+test('wrap-anywhere with long word', t => {
+	const output = renderToString(
+		<Box width={5}>
+			<Text wrap="wrap-anywhere">aaaaaaaaaa</Text>
+		</Box>,
+	);
+
+	t.is(output, 'aaaaa\naaaaa');
+});
+
+test('don’t wrap-anywhere text if there is enough space', t => {
+	const output = renderToString(
+		<Box width={20}>
+			<Text wrap="wrap-anywhere">Hello World</Text>
+		</Box>,
+	);
+
+	t.is(output, 'Hello World');
+});
+
+
 test('truncate text in the end', t => {
 	const output = renderToString(
 		<Box width={7}>
