@@ -1,5 +1,6 @@
 import wrapAnsi from 'wrap-ansi';
 import cliTruncate from 'cli-truncate';
+import stringWidth from 'string-width';
 import {type Styles} from './styles.js';
 
 const cache: Record<string, string> = {};
@@ -37,6 +38,16 @@ const wrapText = (
 		}
 
 		wrappedText = cliTruncate(text, maxWidth, {position});
+
+		// Workaround: cli-truncate may produce output wider than maxWidth when wide
+		// characters (e.g. CJK) fall on the slice boundary, because slice-ansi
+		// rounds up to include the full character. Reduce maxWidth and retry until
+		// it fits. See https://github.com/sindresorhus/cli-truncate/issues/28
+		let adjustedMaxWidth = maxWidth;
+		while (stringWidth(wrappedText) > maxWidth && adjustedMaxWidth > 1) {
+			adjustedMaxWidth--;
+			wrappedText = cliTruncate(text, adjustedMaxWidth, {position});
+		}
 	}
 
 	cache[cacheKey] = wrappedText;
