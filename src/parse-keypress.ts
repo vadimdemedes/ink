@@ -207,7 +207,7 @@ const kittyCodepointNames: Record<number, string> = {
 	// 13 (return) and 32 (space) are handled before this lookup
 	// in parseKittyKeypress so they can be marked as printable.
 	9: 'tab',
-	127: 'delete',
+	127: 'backspace',
 	8: 'backspace',
 	57358: 'capslock',
 	57359: 'scrolllock',
@@ -496,9 +496,8 @@ const parseKeypress = (s: Uint8Array | string = ''): ParsedKey => {
 		key.name = 'backspace';
 		key.meta = s.charAt(0) === '\x1b';
 	} else if (s === '\x7f' || s === '\x1b\x7f') {
-		// TODO(vadimdemedes): `enquirer` detects delete key as backspace, but I had to split them up to avoid breaking changes in Ink. Merge them back together in the next major version.
-		// delete
-		key.name = 'delete';
+		// backspace
+		key.name = 'backspace';
 		key.meta = s.charAt(0) === '\x1b';
 	} else if (s === '\x1b' || s === '\x1b\x1b') {
 		// escape key

@@ -139,9 +139,16 @@ test.serial('useInput - handle backspace', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - handle backspace (0x7F)', async t => {
+	const ps = term('use-input', ['backspace']);
+	ps.write('\u007F');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - handle delete', async t => {
 	const ps = term('use-input', ['delete']);
-	ps.write('\u007F');
+	ps.write('\u001B[3~');
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
