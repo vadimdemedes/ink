@@ -5,10 +5,11 @@ import {type ForegroundColorName} from 'ansi-styles'; // Note: We import directl
 import Yoga, {type Node as YogaNode} from 'yoga-layout';
 
 export type Styles = {
+	/*
+	We keep this as a single enum so overflow is one complete choice and invalid combinations like wrap + truncate-middle are unrepresentable. In hindsight, `normal` would have been a clearer default value than `wrap`, since it describes the standard behavior instead of repeating the prop name.
+	*/
 	readonly textWrap?:
 		| 'wrap'
-		| 'end'
-		| 'middle'
 		| 'truncate-end'
 		| 'truncate'
 		| 'truncate-middle'
