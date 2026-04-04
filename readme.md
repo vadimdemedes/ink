@@ -2869,7 +2869,7 @@ Default: `false`
 
 Hide the element from screen readers.
 
-##### aria-role
+### `aria-role`
 
 Type: `string`
 
@@ -2879,20 +2879,24 @@ Supported values:
 
 - `button`
 - `checkbox`
-- `radio`
-- `radiogroup`
+- `combobox`
 - `list`
+- `listbox`
 - `listitem`
 - `menu`
 - `menuitem`
+- `option`
 - `progressbar`
+- `radio`
+- `radiogroup`
 - `tab`
 - `tablist`
+- `table`
+- `textbox`
 - `timer`
 - `toolbar`
-- `table`
 
-##### aria-state
+### `aria-state`
 
 Type: `object`
 
@@ -2900,9 +2904,14 @@ The state of the element.
 
 Supported values:
 
+- `busy` (boolean)
 - `checked` (boolean)
 - `disabled` (boolean)
 - `expanded` (boolean)
+- `multiline` (boolean)
+- `multiselectable` (boolean)
+- `readonly` (boolean)
+- `required` (boolean)
 - `selected` (boolean)
 
 ## Creating Components

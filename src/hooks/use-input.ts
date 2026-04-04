@@ -246,11 +246,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				input = input.slice(1);
 			}
 
-			if (
-				input.length === 1 &&
-				typeof input[0] === 'string' &&
-				/[A-Z]/.test(input[0])
-			) {
+			if (input.length === 1 && /[A-Z]/.test(input)) {
 				key.shift = true;
 			}
 

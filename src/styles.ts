@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import {type Boxes, type BoxStyle} from 'cli-boxes';
 import {type LiteralUnion} from 'type-fest';
 import {type ForegroundColorName} from 'ansi-styles'; // Note: We import directly from `ansi-styles` to avoid a bug in TypeScript.
@@ -421,19 +420,19 @@ const applyMarginStyles = (node: YogaNode, style: Styles): void => {
 	}
 
 	if ('marginLeft' in style) {
-		node.setMargin(Yoga.EDGE_START, style.marginLeft || 0);
+		node.setMargin(Yoga.EDGE_START, style.marginLeft ?? 0);
 	}
 
 	if ('marginRight' in style) {
-		node.setMargin(Yoga.EDGE_END, style.marginRight || 0);
+		node.setMargin(Yoga.EDGE_END, style.marginRight ?? 0);
 	}
 
 	if ('marginTop' in style) {
-		node.setMargin(Yoga.EDGE_TOP, style.marginTop || 0);
+		node.setMargin(Yoga.EDGE_TOP, style.marginTop ?? 0);
 	}
 
 	if ('marginBottom' in style) {
-		node.setMargin(Yoga.EDGE_BOTTOM, style.marginBottom || 0);
+		node.setMargin(Yoga.EDGE_BOTTOM, style.marginBottom ?? 0);
 	}
 };
 
@@ -451,19 +450,19 @@ const applyPaddingStyles = (node: YogaNode, style: Styles): void => {
 	}
 
 	if ('paddingLeft' in style) {
-		node.setPadding(Yoga.EDGE_LEFT, style.paddingLeft || 0);
+		node.setPadding(Yoga.EDGE_LEFT, style.paddingLeft ?? 0);
 	}
 
 	if ('paddingRight' in style) {
-		node.setPadding(Yoga.EDGE_RIGHT, style.paddingRight || 0);
+		node.setPadding(Yoga.EDGE_RIGHT, style.paddingRight ?? 0);
 	}
 
 	if ('paddingTop' in style) {
-		node.setPadding(Yoga.EDGE_TOP, style.paddingTop || 0);
+		node.setPadding(Yoga.EDGE_TOP, style.paddingTop ?? 0);
 	}
 
 	if ('paddingBottom' in style) {
-		node.setPadding(Yoga.EDGE_BOTTOM, style.paddingBottom || 0);
+		node.setPadding(Yoga.EDGE_BOTTOM, style.paddingBottom ?? 0);
 	}
 };
 
@@ -516,8 +515,7 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 		} else if (typeof style.flexBasis === 'string') {
 			node.setFlexBasisPercent(Number.parseInt(style.flexBasis, 10));
 		} else {
-			// This should be replaced with node.setFlexBasisAuto() when new Yoga release is out
-			node.setFlexBasis(Number.NaN);
+			node.setFlexBasisAuto();
 		}
 	}
 

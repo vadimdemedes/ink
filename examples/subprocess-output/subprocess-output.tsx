@@ -23,7 +23,7 @@ function SubprocessOutput() {
 
 	return (
 		<Box flexDirection="column" padding={1}>
-			<Text>Сommand output:</Text>
+			<Text>Command output:</Text>
 			<Box marginTop={1}>
 				<Text>{output}</Text>
 			</Box>
