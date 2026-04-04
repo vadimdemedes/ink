@@ -24,6 +24,8 @@ Since Ink is a React renderer, all features of React are supported.
 Head over to the [React](https://reactjs.org) website for documentation on how to use it.
 Only Ink's methods are documented in this readme.
 
+**Fully AI-generated pull requests are not accepted. You can use AI, but should be verified and cleaned up by a human. Only Opus 4.6+ (high-effort) and Codex 5.4+ (extra high) are accepted models. Preferably created with Opus and verified by Codex.**
+
 ---
 
 <div align="center">
