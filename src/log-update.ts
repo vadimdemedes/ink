@@ -9,15 +9,15 @@ import {
 	buildReturnToBottomPrefix,
 	hideCursorEscape,
 } from './cursor-helpers.js';
-import {CURSOR_MARKER, replaceCursorMarker} from './cursor-marker.js';
+import {cursorMarker, replaceCursorMarker} from './cursor-marker.js';
 
 export type {CursorPosition} from './cursor-helpers.js';
 
 // Synchronized Update Mode — bracket the frame so terminal multiplexers
 // (tmux, screen) treat the whole write as one atomic repaint.
-const SUM_BEGIN = '\u001B[?2026h';
-const SUM_END = '\u001B[?2026l';
-const RESTORE_AND_SHOW_CURSOR = '\u001B[u\u001B[?25h';
+const sumBegin = '\u001B[?2026h';
+const sumEnd = '\u001B[?2026l';
+const restoreAndShowCursor = '\u001B[u\u001B[?25h';
 
 export type LogUpdateOptions = {
 	showCursor?: boolean;
@@ -92,7 +92,7 @@ const createStandard = (
 			frameContent = result.output;
 			hasImeCursor = result.hasCursor;
 		} else {
-			frameContent = frameContent.replaceAll(CURSOR_MARKER, '');
+			frameContent = frameContent.replaceAll(cursorMarker, '');
 		}
 
 		const lines = frameContent.split('\n');
@@ -100,7 +100,7 @@ const createStandard = (
 		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
 
 		if (enableImeCursor) {
-			stream.write(SUM_BEGIN);
+			stream.write(sumBegin);
 		}
 
 		if (str === previousOutput && cursorChanged && !hasImeCursor) {
@@ -129,12 +129,12 @@ const createStandard = (
 			previousLineCount = lines.length;
 
 			if (hasImeCursor) {
-				stream.write(RESTORE_AND_SHOW_CURSOR);
+				stream.write(restoreAndShowCursor);
 			}
 		}
 
 		if (enableImeCursor) {
-			stream.write(SUM_END);
+			stream.write(sumEnd);
 		}
 
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
@@ -258,7 +258,7 @@ const createIncremental = (
 			frameContent = result.output;
 			hasImeCursor = result.hasCursor;
 		} else {
-			frameContent = frameContent.replaceAll(CURSOR_MARKER, '');
+			frameContent = frameContent.replaceAll(cursorMarker, '');
 		}
 
 		const nextLines = frameContent.split('\n');
@@ -266,7 +266,7 @@ const createIncremental = (
 		const previousVisible = visibleLineCount(previousLines, previousOutput);
 
 		if (enableImeCursor) {
-			stream.write(SUM_BEGIN);
+			stream.write(sumBegin);
 		}
 
 		if (str === previousOutput && cursorChanged && !hasImeCursor) {
@@ -281,9 +281,11 @@ const createIncremental = (
 			);
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
 			cursorWasShown = activeCursor !== undefined;
+
 			if (enableImeCursor) {
-				stream.write(SUM_END);
+				stream.write(sumEnd);
 			}
+
 			return true;
 		}
 
@@ -302,15 +304,18 @@ const createIncremental = (
 					(hasImeCursor ? '' : cursorSuffix),
 			);
 			if (hasImeCursor) {
-				stream.write(RESTORE_AND_SHOW_CURSOR);
+				stream.write(restoreAndShowCursor);
 			}
+
 			cursorWasShown = activeCursor !== undefined || hasImeCursor;
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
 			previousOutput = str;
 			previousLines = nextLines;
+
 			if (enableImeCursor) {
-				stream.write(SUM_END);
+				stream.write(sumEnd);
 			}
+
 			return true;
 		}
 
@@ -365,11 +370,11 @@ const createIncremental = (
 		stream.write(buffer.join(''));
 
 		if (hasImeCursor) {
-			stream.write(RESTORE_AND_SHOW_CURSOR);
+			stream.write(restoreAndShowCursor);
 		}
 
 		if (enableImeCursor) {
-			stream.write(SUM_END);
+			stream.write(sumEnd);
 		}
 
 		cursorWasShown = activeCursor !== undefined || hasImeCursor;
@@ -446,7 +451,11 @@ const createIncremental = (
 
 const create = (
 	stream: Writable,
-	{showCursor = false, incremental = false, enableImeCursor = false}: LogUpdateOptions = {},
+	{
+		showCursor = false,
+		incremental = false,
+		enableImeCursor = false,
+	}: LogUpdateOptions = {},
 ): LogUpdate => {
 	if (incremental) {
 		return createIncremental(stream, {showCursor, enableImeCursor});

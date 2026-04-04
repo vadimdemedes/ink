@@ -3,9 +3,9 @@
  * (no color or style change). Used as an inline marker during rendering
  * that gets replaced with real cursor positioning before stdout write.
  */
-export const CURSOR_MARKER = '\u001B[999m';
+export const cursorMarker = '\u001B[999m';
 
-const SAVE_CURSOR = '\u001B[s';
+const saveCursor = '\u001B[s';
 
 type ReplacementResult = {
 	output: string;
@@ -13,11 +13,11 @@ type ReplacementResult = {
 };
 
 /**
- * Replaces the first occurrence of CURSOR_MARKER with ESC[s (Save Cursor Position),
+ * Replaces the first occurrence of cursorMarker with ESC[s (Save Cursor Position),
  * and strips any subsequent occurrences.
  */
 export function replaceCursorMarker(input: string): ReplacementResult {
-	const firstIndex = input.indexOf(CURSOR_MARKER);
+	const firstIndex = input.indexOf(cursorMarker);
 
 	if (firstIndex === -1) {
 		return {output: input, hasCursor: false};
@@ -25,11 +25,9 @@ export function replaceCursorMarker(input: string): ReplacementResult {
 
 	// Replace first occurrence with save-cursor, strip the rest
 	const output =
-		input.substring(0, firstIndex) +
-		SAVE_CURSOR +
-		input
-			.substring(firstIndex + CURSOR_MARKER.length)
-			.replaceAll(CURSOR_MARKER, '');
+		input.slice(0, firstIndex) +
+		saveCursor +
+		input.slice(firstIndex + cursorMarker.length).replaceAll(cursorMarker, '');
 
 	return {output, hasCursor: true};
 }
