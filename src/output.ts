@@ -242,6 +242,33 @@ export default class Output {
 					const characters = this.caches.getStyledChars(line);
 					let offsetX = x;
 
+					// Nothing to write (e.g. line was clipped away).
+					if (characters.length === 0) {
+						offsetY++;
+						continue;
+					}
+
+					const spaceCell: StyledChar = {
+						type: 'char',
+						value: ' ',
+						fullWidth: false,
+						styles: [],
+					};
+
+					// Wide characters (e.g. CJK) occupy two cells: a leading
+					// cell with the character and a trailing placeholder with
+					// value ''. When an overlapping write lands in the middle
+					// of a wide character, the boundary cells need cleanup so
+					// the terminal never renders a half-visible wide character.
+					if (
+						currentLine[offsetX]?.value === '' &&
+						offsetX > 0 &&
+						this.caches.getStringWidth(currentLine[offsetX - 1]?.value ?? '') >
+							1
+					) {
+						currentLine[offsetX - 1] = spaceCell;
+					}
+
 					for (const character of characters) {
 						currentLine[offsetX] = character;
 
@@ -264,6 +291,10 @@ export default class Output {
 						}
 
 						offsetX += characterWidth;
+					}
+
+					if (currentLine[offsetX]?.value === '') {
+						currentLine[offsetX] = spaceCell;
 					}
 
 					offsetY++;
