@@ -74,6 +74,23 @@ test.serial('useInput - handle kitty protocol escape key', async t => {
 });
 
 test.serial(
+	'useInput - handle kitty protocol backspace (codepoint 127)',
+	async t => {
+		const ps = term('use-input-kitty', ['backspace']);
+		ps.write('\u001B[127u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial('useInput - handle kitty protocol delete', async t => {
+	const ps = term('use-input-kitty', ['delete']);
+	ps.write('\u001B[3;1:1~');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial(
 	'useInput - non-printable kitty key (capslock) produces empty input',
 	async t => {
 		const ps = term('use-input-kitty', ['nonPrintable']);

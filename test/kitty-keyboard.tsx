@@ -164,11 +164,17 @@ test('kitty protocol - backspace key', t => {
 	t.is(result.eventType, 'press');
 });
 
-test('kitty protocol - delete key', t => {
-	// Delete key
+test('kitty protocol - backspace key (codepoint 127)', t => {
+	// Backspace key (0x7F)
 	const result = parseKeypress(kittyKey(127));
-	t.is(result.name, 'delete');
+	t.is(result.name, 'backspace');
 	t.is(result.eventType, 'press');
+});
+
+test('legacy parser - meta + backspace (0x7F)', t => {
+	const result = parseKeypress('\u001B\u007F');
+	t.is(result.name, 'backspace');
+	t.true(result.meta);
 });
 
 test('kitty protocol - space key', t => {

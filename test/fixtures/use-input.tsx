@@ -88,6 +88,11 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		if (test === 'metaBackspace' && input === '' && key.meta && key.backspace) {
+			exit();
+			return;
+		}
+
 		if (test === 'escapeBracketPrefix' && input === '[' && !key.meta) {
 			exit();
 			return;

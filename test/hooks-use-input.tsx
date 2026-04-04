@@ -104,6 +104,13 @@ test.serial('useInput - handle meta', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - handle meta + backspace (0x7F)', async t => {
+	const ps = term('use-input', ['metaBackspace']);
+	ps.write('\u001B\u007F');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - flushes ESC[ prefix as literal input', async t => {
 	const ps = term('use-input', ['escapeBracketPrefix']);
 	ps.write('\u001B[');
@@ -141,7 +148,7 @@ test.serial('useInput - handle backspace', async t => {
 
 test.serial('useInput - handle delete', async t => {
 	const ps = term('use-input', ['delete']);
-	ps.write('\u007F');
+	ps.write('\u001B[3~');
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
