@@ -197,11 +197,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				tab: keypress.name === 'tab',
 				backspace: keypress.name === 'backspace',
 				delete: keypress.name === 'delete',
-				// `parseKeypress` parses \u001B\u001B[A (meta + up arrow) as meta = false
-				// but with option = true, so we need to take this into account here
-				// to avoid breaking changes in Ink.
-				// TODO(vadimdemedes): consider removing this in the next major version.
-				meta: keypress.meta || keypress.name === 'escape' || keypress.option,
+				meta: keypress.meta || keypress.name === 'escape',
 				// Kitty keyboard protocol modifiers
 				super: keypress.super ?? false,
 				hyper: keypress.hyper ?? false,
@@ -240,8 +236,8 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				input = '';
 			}
 
-			// Strip meta if it's still remaining after `parseKeypress`
-			// TODO(vadimdemedes): remove this in the next major version.
+			// Strip escape prefix from broken/incomplete sequences that
+			// parseKeypress did not fully resolve (e.g. a flushed "\u001B[").
 			if (input.startsWith('\u001B')) {
 				input = input.slice(1);
 			}

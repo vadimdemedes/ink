@@ -69,7 +69,7 @@ test('kitty protocol - alt/option modifier', t => {
 	// 'a' with alt (modifier 3 = alt(2) + 1)
 	const result = parseKeypress(kittyKey(97, 3));
 	t.is(result.name, 'a');
-	t.true(result.option);
+	t.true(result.meta);
 	t.false(result.ctrl);
 	t.is(result.eventType, 'press');
 });
@@ -385,7 +385,7 @@ test('kitty protocol - malformed modifier 0 does not set all flags', t => {
 	t.is(result.name, 'a');
 	t.false(result.ctrl);
 	t.false(result.shift);
-	t.false(result.option);
+	t.false(result.meta);
 	t.false(result.super ?? false);
 	t.true(result.isKittyProtocol);
 });

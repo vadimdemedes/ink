@@ -138,7 +138,6 @@ type ParsedKey = {
 	ctrl: boolean;
 	meta: boolean;
 	shift: boolean;
-	option: boolean;
 	sequence: string;
 	raw: string | undefined;
 	code?: string;
@@ -315,20 +314,12 @@ function parseKittyModifiers(
 	modifiers: number,
 ): Pick<
 	ParsedKey,
-	| 'ctrl'
-	| 'shift'
-	| 'meta'
-	| 'option'
-	| 'super'
-	| 'hyper'
-	| 'capsLock'
-	| 'numLock'
+	'ctrl' | 'shift' | 'meta' | 'super' | 'hyper' | 'capsLock' | 'numLock'
 > {
 	return {
 		ctrl: !!(modifiers & kittyModifiers.ctrl),
 		shift: !!(modifiers & kittyModifiers.shift),
-		meta: !!(modifiers & kittyModifiers.meta),
-		option: !!(modifiers & kittyModifiers.alt),
+		meta: !!(modifiers & (kittyModifiers.meta | kittyModifiers.alt)),
 		super: !!(modifiers & kittyModifiers.super),
 		hyper: !!(modifiers & kittyModifiers.hyper),
 		capsLock: !!(modifiers & kittyModifiers.capsLock),
@@ -460,7 +451,6 @@ const parseKeypress = (s: Uint8Array | string = ''): ParsedKey => {
 			ctrl: false,
 			meta: false,
 			shift: false,
-			option: false,
 			sequence: s,
 			raw: s,
 			isKittyProtocol: true,
@@ -473,7 +463,6 @@ const parseKeypress = (s: Uint8Array | string = ''): ParsedKey => {
 		ctrl: false,
 		meta: false,
 		shift: false,
-		option: false,
 		sequence: s,
 		raw: s,
 	};
@@ -481,10 +470,10 @@ const parseKeypress = (s: Uint8Array | string = ''): ParsedKey => {
 	key.sequence = key.sequence || s || key.name;
 
 	if (s === '\r' || s === '\x1b\r') {
-		// carriage return (or option+return on macOS)
+		// carriage return (or meta+return on macOS)
 		key.raw = undefined;
 		key.name = 'return';
-		key.option = s.length === 2;
+		key.meta = s.length === 2;
 	} else if (s === '\n') {
 		// enter, should have been called linefeed
 		key.name = 'enter';
@@ -522,13 +511,14 @@ const parseKeypress = (s: Uint8Array | string = ''): ParsedKey => {
 		key.shift = true;
 	} else if ((parts = metaKeyCodeRe.exec(s))) {
 		// meta+character key
+		key.name = parts[1]!.toLowerCase();
 		key.meta = true;
 		key.shift = /^[A-Z]$/.test(parts[1]!);
 	} else if ((parts = fnKeyRe.exec(s))) {
 		const segs = [...s];
 
 		if (segs[0] === '\u001b' && segs[1] === '\u001b') {
-			key.option = true;
+			key.meta = true;
 		}
 
 		// ansi escape sequence
@@ -542,7 +532,7 @@ const parseKeypress = (s: Uint8Array | string = ''): ParsedKey => {
 
 		// Parse the key modifier
 		key.ctrl = !!(modifier & 4);
-		key.meta = !!(modifier & 10);
+		key.meta = key.meta || !!(modifier & 10);
 		key.shift = !!(modifier & 1);
 		key.code = code;
 
