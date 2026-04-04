@@ -120,6 +120,15 @@ export type RenderOptions = {
 	interactive?: boolean;
 
 	/**
+	Enable IME cursor positioning for CJK input. When enabled, CURSOR_MARKER
+	in rendered output is replaced with terminal save/restore cursor sequences,
+	so that the IME candidate window appears at the correct position.
+
+	@default false
+	*/
+	enableImeCursor?: boolean;
+
+	/**
 	Render the app in the terminal's alternate screen buffer. When enabled, the app renders on a separate screen, and the original terminal content is restored when the app exits. This is the same mechanism used by programs like vim, htop, and less.
 
 	Note: The terminal's scrollback buffer is not available while in the alternate screen. This is standard terminal behavior; programs like vim use the alternate screen specifically to avoid polluting the user's scrollback history.
@@ -211,6 +220,7 @@ const render = (
 		incrementalRendering: false,
 		concurrent: false,
 		alternateScreen: false,
+		enableImeCursor: false,
 		...getOptions(options),
 	};
 

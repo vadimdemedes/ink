@@ -9,8 +9,21 @@ import {
 	buildReturnToBottomPrefix,
 	hideCursorEscape,
 } from './cursor-helpers.js';
+import {CURSOR_MARKER, replaceCursorMarker} from './cursor-marker.js';
 
 export type {CursorPosition} from './cursor-helpers.js';
+
+// Synchronized Update Mode — bracket the frame so terminal multiplexers
+// (tmux, screen) treat the whole write as one atomic repaint.
+const SUM_BEGIN = '\u001B[?2026h';
+const SUM_END = '\u001B[?2026l';
+const RESTORE_AND_SHOW_CURSOR = '\u001B[u\u001B[?25h';
+
+export type LogUpdateOptions = {
+	showCursor?: boolean;
+	incremental?: boolean;
+	enableImeCursor?: boolean;
+};
 
 export type LogUpdate = {
 	clear: () => void;
@@ -30,7 +43,7 @@ const visibleLineCount = (lines: string[], str: string): number =>
 
 const createStandard = (
 	stream: Writable,
-	{showCursor = false} = {},
+	{showCursor = false, enableImeCursor = false}: LogUpdateOptions = {},
 ): LogUpdate => {
 	let previousLineCount = 0;
 	let previousOutput = '';
@@ -71,11 +84,26 @@ const createStandard = (
 			return false;
 		}
 
-		const lines = str.split('\n');
-		const visibleCount = visibleLineCount(lines, str);
+		let frameContent = str;
+		let hasImeCursor = false;
+
+		if (enableImeCursor) {
+			const result = replaceCursorMarker(frameContent);
+			frameContent = result.output;
+			hasImeCursor = result.hasCursor;
+		} else {
+			frameContent = frameContent.replaceAll(CURSOR_MARKER, '');
+		}
+
+		const lines = frameContent.split('\n');
+		const visibleCount = visibleLineCount(lines, frameContent);
 		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
 
-		if (str === previousOutput && cursorChanged) {
+		if (enableImeCursor) {
+			stream.write(SUM_BEGIN);
+		}
+
+		if (str === previousOutput && cursorChanged && !hasImeCursor) {
 			stream.write(
 				buildCursorOnlySequence({
 					cursorWasShown,
@@ -95,14 +123,22 @@ const createStandard = (
 			stream.write(
 				returnPrefix +
 					ansiEscapes.eraseLines(previousLineCount) +
-					str +
-					cursorSuffix,
+					frameContent +
+					(hasImeCursor ? '' : cursorSuffix),
 			);
 			previousLineCount = lines.length;
+
+			if (hasImeCursor) {
+				stream.write(RESTORE_AND_SHOW_CURSOR);
+			}
+		}
+
+		if (enableImeCursor) {
+			stream.write(SUM_END);
 		}
 
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
-		cursorWasShown = activeCursor !== undefined;
+		cursorWasShown = activeCursor !== undefined || hasImeCursor;
 		return true;
 	};
 
@@ -173,7 +209,7 @@ const createStandard = (
 
 const createIncremental = (
 	stream: Writable,
-	{showCursor = false} = {},
+	{showCursor = false, enableImeCursor = false}: LogUpdateOptions = {},
 ): LogUpdate => {
 	let previousLines: string[] = [];
 	let previousOutput = '';
@@ -214,11 +250,26 @@ const createIncremental = (
 			return false;
 		}
 
-		const nextLines = str.split('\n');
-		const visibleCount = visibleLineCount(nextLines, str);
+		let frameContent = str;
+		let hasImeCursor = false;
+
+		if (enableImeCursor) {
+			const result = replaceCursorMarker(frameContent);
+			frameContent = result.output;
+			hasImeCursor = result.hasCursor;
+		} else {
+			frameContent = frameContent.replaceAll(CURSOR_MARKER, '');
+		}
+
+		const nextLines = frameContent.split('\n');
+		const visibleCount = visibleLineCount(nextLines, frameContent);
 		const previousVisible = visibleLineCount(previousLines, previousOutput);
 
-		if (str === previousOutput && cursorChanged) {
+		if (enableImeCursor) {
+			stream.write(SUM_BEGIN);
+		}
+
+		if (str === previousOutput && cursorChanged && !hasImeCursor) {
 			stream.write(
 				buildCursorOnlySequence({
 					cursorWasShown,
@@ -230,6 +281,9 @@ const createIncremental = (
 			);
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
 			cursorWasShown = activeCursor !== undefined;
+			if (enableImeCursor) {
+				stream.write(SUM_END);
+			}
 			return true;
 		}
 
@@ -239,22 +293,28 @@ const createIncremental = (
 			previousCursorPosition,
 		);
 
-		if (str === '\n' || previousOutput.length === 0) {
+		if (frameContent === '\n' || previousOutput.length === 0) {
 			const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
 			stream.write(
 				returnPrefix +
 					ansiEscapes.eraseLines(previousLines.length) +
-					str +
-					cursorSuffix,
+					frameContent +
+					(hasImeCursor ? '' : cursorSuffix),
 			);
-			cursorWasShown = activeCursor !== undefined;
+			if (hasImeCursor) {
+				stream.write(RESTORE_AND_SHOW_CURSOR);
+			}
+			cursorWasShown = activeCursor !== undefined || hasImeCursor;
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
 			previousOutput = str;
 			previousLines = nextLines;
+			if (enableImeCursor) {
+				stream.write(SUM_END);
+			}
 			return true;
 		}
 
-		const hasTrailingNewline = str.endsWith('\n');
+		const hasTrailingNewline = frameContent.endsWith('\n');
 
 		// We aggregate all chunks for incremental rendering into a buffer, and then write them to stdout at the end.
 		const buffer: string[] = [];
@@ -297,12 +357,22 @@ const createIncremental = (
 			);
 		}
 
-		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
-		buffer.push(cursorSuffix);
+		if (!hasImeCursor) {
+			const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+			buffer.push(cursorSuffix);
+		}
 
 		stream.write(buffer.join(''));
 
-		cursorWasShown = activeCursor !== undefined;
+		if (hasImeCursor) {
+			stream.write(RESTORE_AND_SHOW_CURSOR);
+		}
+
+		if (enableImeCursor) {
+			stream.write(SUM_END);
+		}
+
+		cursorWasShown = activeCursor !== undefined || hasImeCursor;
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
 		previousOutput = str;
 		previousLines = nextLines;
@@ -376,13 +446,13 @@ const createIncremental = (
 
 const create = (
 	stream: Writable,
-	{showCursor = false, incremental = false} = {},
+	{showCursor = false, incremental = false, enableImeCursor = false}: LogUpdateOptions = {},
 ): LogUpdate => {
 	if (incremental) {
-		return createIncremental(stream, {showCursor});
+		return createIncremental(stream, {showCursor, enableImeCursor});
 	}
 
-	return createStandard(stream, {showCursor});
+	return createStandard(stream, {showCursor, enableImeCursor});
 };
 
 const logUpdate = {create};
