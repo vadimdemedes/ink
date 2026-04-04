@@ -1,6 +1,7 @@
 import React from 'react';
 import test from 'ava';
 import stripAnsi from 'strip-ansi';
+import stringWidth from 'string-width';
 import {Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 
@@ -88,4 +89,54 @@ test('empty Text does not affect sibling layout', t => {
 	);
 
 	t.is(output, 'hello');
+});
+
+test('truncate CJK text at end', t => {
+	const output = renderToString(
+		<Box width={20}>
+			<Text wrap="truncate">あいうえおかきくけこ|end</Text>
+		</Box>,
+	);
+
+	const stripped = stripAnsi(output);
+	t.true(stringWidth(stripped) <= 20);
+});
+
+test('truncate CJK text in the middle', t => {
+	const output = renderToString(
+		<Box width={20}>
+			<Text wrap="truncate-middle">あいうえおかきくけこ|end</Text>
+		</Box>,
+	);
+
+	const stripped = stripAnsi(output);
+	t.true(stringWidth(stripped) <= 20);
+});
+
+test('truncate CJK text at start', t => {
+	const output = renderToString(
+		<Box width={20}>
+			<Text wrap="truncate-start">あいうえおかきくけこ|end</Text>
+		</Box>,
+	);
+
+	const stripped = stripAnsi(output);
+	t.true(stringWidth(stripped) <= 20);
+});
+
+test('truncate CJK text does not exceed Box width', t => {
+	const output = renderToString(
+		<Box>
+			<Box width={20}>
+				<Text wrap="truncate">あいうえおかきくけこ|end</Text>
+			</Box>
+			<Text>|</Text>
+		</Box>,
+	);
+
+	const lines = output.split('\n');
+	t.is(lines.length, 1);
+
+	const stripped = stripAnsi(lines[0]!);
+	t.true(stripped.endsWith('|'));
 });
