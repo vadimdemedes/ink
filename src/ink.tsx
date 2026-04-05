@@ -290,6 +290,7 @@ export default class Ink {
 
 	private readonly isScreenReaderEnabled: boolean;
 	private readonly interactive: boolean;
+	private readonly renderThrottleMs: number;
 	private alternateScreen: boolean;
 
 	// Ignore last render after unmounting a tree to prevent empty output before exit
@@ -335,8 +336,12 @@ export default class Ink {
 
 		const unthrottled = options.debug || this.isScreenReaderEnabled;
 		const maxFps = options.maxFps ?? 30;
+		// Treat non-positive maxFps as an internal fallback case, not a supported
+		// "disable throttling" mode. Keep animation scheduling on a normal cadence
+		// so future changes don't accidentally reintroduce zero-delay loops.
 		const renderThrottleMs =
 			maxFps > 0 ? Math.max(1, Math.ceil(1000 / maxFps)) : 0;
+		this.renderThrottleMs = unthrottled ? 0 : renderThrottleMs;
 
 		if (unthrottled) {
 			this.rootNode.onRender = this.onRender;
@@ -635,6 +640,7 @@ export default class Ink {
 					stderr={this.options.stderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
 					interactive={this.interactive}
+					renderThrottleMs={this.renderThrottleMs}
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
 					setCursorPosition={this.setCursorPosition}

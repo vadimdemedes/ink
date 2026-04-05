@@ -157,6 +157,7 @@ _(PRs welcome. Append new entries at the end. Repos must have 100+ stars and sho
   - [`useFocus`](#usefocusoptions)
   - [`useFocusManager`](#usefocusmanager)
   - [`useCursor`](#usecursor)
+  - [`useAnimation`](#useanimationoptions)
 - [API](#api)
 - [Testing](#testing)
 - [Using React Devtools](#using-react-devtools)
@@ -2390,6 +2391,65 @@ const Example = () => {
 	);
 };
 ```
+
+### useAnimation(options?)
+
+A React hook that drives animations. Returns a frame counter, elapsed time, frame delta, and a reset function. All animations share a single timer internally, so multiple animated components consolidate into one render cycle.
+
+```jsx
+import {Text, useAnimation} from 'ink';
+
+const Spinner = () => {
+	const {frame} = useAnimation({interval: 80});
+	const characters = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+
+	return <Text>{characters[frame % characters.length]}</Text>;
+};
+```
+
+#### options
+
+Type: `object`
+
+##### interval
+
+Type: `number`\
+Default: `100`
+
+Time between ticks in milliseconds.
+
+##### isActive
+
+Type: `boolean`\
+Default: `true`
+
+Whether the animation is running. When set to `false`, the animation stops. When toggled back to `true`, all values reset to `0`.
+
+#### Return value
+
+##### frame
+
+Type: `number`
+
+Discrete counter that increments by 1 each interval. Useful for indexed sequences like spinner frames.
+
+##### time
+
+Type: `number`
+
+Total elapsed time in milliseconds since the animation started or was last reset. Useful for continuous math-based animations like sine waves: `Math.sin(time / 1000 * Math.PI * 2)`.
+
+##### delta
+
+Type: `number`
+
+Time in milliseconds since the previous rendered tick. Accounts for throttled renders. Useful for physics-based or velocity-driven motion: `position += speed * delta`.
+
+##### reset
+
+Type: `() => void`
+
+Resets `frame`, `time`, and `delta` to `0` and restarts timing from the current moment. Useful for one-shot animations triggered by events.
 
 ## API
 

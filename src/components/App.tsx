@@ -16,12 +16,20 @@ import StdinContext from './StdinContext.js';
 import StdoutContext from './StdoutContext.js';
 import StderrContext from './StderrContext.js';
 import FocusContext from './FocusContext.js';
+import AnimationContext from './AnimationContext.js';
 import CursorContext from './CursorContext.js';
 import ErrorBoundary from './ErrorBoundary.js';
 
 const tab = '\t';
 const shiftTab = '\u001B[Z';
 const escape = '\u001B';
+
+type AnimationSubscriber = {
+	readonly callback: (currentTime: number) => void;
+	readonly interval: number;
+	readonly startTime: number;
+	nextDueTime: number;
+};
 
 type Props = {
 	readonly children: ReactNode;
@@ -35,6 +43,7 @@ type Props = {
 	readonly onWaitUntilRenderFlush: () => Promise<void>;
 	readonly setCursorPosition: (position: CursorPosition | undefined) => void;
 	readonly interactive: boolean;
+	readonly renderThrottleMs: number;
 };
 
 type Focusable = {
@@ -57,6 +66,7 @@ function App({
 	onWaitUntilRenderFlush,
 	setCursorPosition,
 	interactive,
+	renderThrottleMs,
 }: Props): React.ReactNode {
 	const [isFocusEnabled, setIsFocusEnabled] = useState(true);
 	const [activeFocusId, setActiveFocusId] = useState<string | undefined>(
@@ -67,7 +77,12 @@ function App({
 	const [, setFocusables] = useState<Focusable[]>([]);
 	// Track focusables count for tab navigation check (avoids stale closure)
 	const focusablesCountRef = useRef(0);
-
+	const animationSubscribersRef = useRef(
+		new Map<(currentTime: number) => void, AnimationSubscriber>(),
+	);
+	const animationTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+		undefined,
+	);
 	// Count how many components enabled raw mode to avoid disabling
 	// raw mode until all components don't need it anymore
 	const rawModeEnabledCount = useRef(0);
@@ -92,6 +107,94 @@ function App({
 		clearTimeout(pendingInputFlushRef.current);
 		pendingInputFlushRef.current = undefined;
 	}, []);
+
+	const clearAnimationTimer = useCallback((): void => {
+		if (!animationTimerRef.current) {
+			return;
+		}
+
+		clearTimeout(animationTimerRef.current);
+		animationTimerRef.current = undefined;
+	}, []);
+
+	const scheduleAnimationTick = useCallback((): void => {
+		clearAnimationTimer();
+
+		if (animationSubscribersRef.current.size === 0) {
+			return;
+		}
+
+		let nextDueTime = Number.POSITIVE_INFINITY;
+
+		for (const subscriber of animationSubscribersRef.current.values()) {
+			// One shared timer is enough as long as it wakes at the earliest
+			// subscriber deadline and lets slower animations skip that tick.
+			nextDueTime = Math.min(nextDueTime, subscriber.nextDueTime);
+		}
+
+		const delay = Math.max(0, nextDueTime - performance.now());
+		animationTimerRef.current = setTimeout(() => {
+			animationTimerRef.current = undefined;
+			const currentTime = performance.now();
+
+			for (const subscriber of animationSubscribersRef.current.values()) {
+				if (currentTime < subscriber.nextDueTime) {
+					continue;
+				}
+
+				subscriber.callback(currentTime);
+				const elapsedTime = currentTime - subscriber.startTime;
+				const elapsedFrames = Math.floor(elapsedTime / subscriber.interval) + 1;
+				// Advance from elapsed time rather than callback count so delayed
+				// ticks catch up instead of stretching the animation timeline.
+				subscriber.nextDueTime =
+					subscriber.startTime + elapsedFrames * subscriber.interval;
+			}
+
+			scheduleAnimationTick();
+		}, delay);
+		// Keep the timer ref'd while animations are active so `useAnimation()`
+		// can drive process lifetime in both interactive and non-interactive apps.
+	}, [clearAnimationTimer]);
+
+	const animationSubscribe = useCallback(
+		(
+			callback: (currentTime: number) => void,
+			interval: number,
+		): {readonly startTime: number; readonly unsubscribe: () => void} => {
+			const startTime = performance.now();
+			// The scheduler owns the start timestamp so hooks can derive frames from
+			// the exact same origin that determines each subscriber's due time.
+			animationSubscribersRef.current.set(callback, {
+				callback,
+				interval,
+				startTime,
+				nextDueTime: startTime + interval,
+			});
+			scheduleAnimationTick();
+
+			return {
+				startTime,
+				unsubscribe() {
+					animationSubscribersRef.current.delete(callback);
+
+					if (animationSubscribersRef.current.size === 0) {
+						clearAnimationTimer();
+						return;
+					}
+
+					scheduleAnimationTick();
+				},
+			};
+		},
+		[clearAnimationTimer, scheduleAnimationTick],
+	);
+
+	useEffect(() => {
+		return () => {
+			clearAnimationTimer();
+		};
+	}, [clearAnimationTimer]);
 
 	// Determines if TTY is supported on the provided stdin
 	const isRawModeSupported = stdin.isTTY;
@@ -571,15 +674,25 @@ function App({
 		],
 	);
 
+	const animationContextValue = useMemo(
+		() => ({
+			renderThrottleMs,
+			subscribe: animationSubscribe,
+		}),
+		[animationSubscribe, renderThrottleMs],
+	);
+
 	return (
 		<AppContext.Provider value={appContextValue}>
 			<StdinContext.Provider value={stdinContextValue}>
 				<StdoutContext.Provider value={stdoutContextValue}>
 					<StderrContext.Provider value={stderrContextValue}>
 						<FocusContext.Provider value={focusContextValue}>
-							<CursorContext.Provider value={cursorContextValue}>
-								<ErrorBoundary onError={handleExit}>{children}</ErrorBoundary>
-							</CursorContext.Provider>
+							<AnimationContext.Provider value={animationContextValue}>
+								<CursorContext.Provider value={cursorContextValue}>
+									<ErrorBoundary onError={handleExit}>{children}</ErrorBoundary>
+								</CursorContext.Provider>
+							</AnimationContext.Provider>
 						</FocusContext.Provider>
 					</StderrContext.Provider>
 				</StdoutContext.Provider>

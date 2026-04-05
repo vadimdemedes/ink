@@ -742,6 +742,23 @@ test.serial('#725: non-TTY child process output is flushed', async t => {
 	t.true(plainOutput.includes('exited'));
 });
 
+test.serial('useAnimation can drive non-interactive process exit', async t => {
+	const output = await runNonTtyFixture('use-animation-non-interactive-exit');
+
+	t.true(stripAnsi(output).includes('exited'));
+});
+
+test.serial(
+	'useAnimation can drive explicitly non-interactive process exit',
+	async t => {
+		const output = await runNonTtyFixture(
+			'use-animation-interactive-false-exit',
+		);
+
+		t.true(stripAnsi(output).includes('exited'));
+	},
+);
+
 test.serial(
 	'#450: full-height rerenders with <Static> should not repeatedly clear terminal',
 	async t => {
