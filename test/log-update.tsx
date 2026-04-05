@@ -621,3 +621,102 @@ test('incremental rendering - render to empty string (full clear vs early exit)'
 	render('\n');
 	t.is((stdout.write as any).callCount, 2); // No additional write
 });
+
+// Viewport clamping tests — cursor-up must never exceed stream.rows
+
+test('standard rendering - clamps eraseLines to viewport height', t => {
+	const stdout = createStdout(100, true, 5);
+	const render = logUpdate.create(stdout, {showCursor: true});
+
+	// Render 20 lines (far exceeds viewport of 5)
+	const lines = Array.from({length: 20}, (_, i) => `Line ${i + 1}`).join('\n') + '\n';
+	render(lines);
+
+	// Update to different content
+	render('New content\n');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	// eraseLines should be clamped to 5 (viewport), not 21 (actual line count)
+	t.true(secondCall.includes(ansiEscapes.eraseLines(5)));
+	t.false(secondCall.includes(ansiEscapes.eraseLines(21)));
+});
+
+test('standard rendering - clear() clamps eraseLines to viewport height', t => {
+	const stdout = createStdout(100, true, 5);
+	const render = logUpdate.create(stdout, {showCursor: true});
+
+	const lines = Array.from({length: 20}, (_, i) => `Line ${i + 1}`).join('\n') + '\n';
+	render(lines);
+	render.clear();
+
+	const clearCall = (stdout.write as any).secondCall.args[0] as string;
+	t.true(clearCall.includes(ansiEscapes.eraseLines(5)));
+	t.false(clearCall.includes(ansiEscapes.eraseLines(21)));
+});
+
+test('incremental rendering - clamps cursorUp to viewport height', t => {
+	const stdout = createStdout(100, true, 5);
+	const render = logUpdate.create(stdout, {
+		showCursor: true,
+		incremental: true,
+	});
+
+	// Render 20 lines
+	const lines = Array.from({length: 20}, (_, i) => `Line ${i + 1}`).join('\n') + '\n';
+	render(lines);
+
+	// Update one line — triggers incremental path with cursorUp
+	const updatedLines = Array.from({length: 20}, (_, i) =>
+		i === 10 ? 'Updated' : `Line ${i + 1}`,
+	).join('\n') + '\n';
+	render(updatedLines);
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	// cursorUp should be clamped to viewport - 1 = 4, not 20 (lines.length - 1)
+	t.true(secondCall.includes(ansiEscapes.cursorUp(4)));
+	t.false(secondCall.includes(ansiEscapes.cursorUp(20)));
+});
+
+test('incremental rendering - clear() clamps eraseLines to viewport height', t => {
+	const stdout = createStdout(100, true, 5);
+	const render = logUpdate.create(stdout, {
+		showCursor: true,
+		incremental: true,
+	});
+
+	const lines = Array.from({length: 20}, (_, i) => `Line ${i + 1}`).join('\n') + '\n';
+	render(lines);
+	render.clear();
+
+	const clearCall = (stdout.write as any).secondCall.args[0] as string;
+	t.true(clearCall.includes(ansiEscapes.eraseLines(5)));
+	t.false(clearCall.includes(ansiEscapes.eraseLines(21)));
+});
+
+test('standard rendering - no clamping when content fits viewport', t => {
+	const stdout = createStdout(100, true, 30);
+	const render = logUpdate.create(stdout, {showCursor: true});
+
+	// 3 lines fits easily in 30-row viewport
+	render('Line 1\nLine 2\nLine 3\n');
+	render('Updated\n');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	// eraseLines(4) is fine — under viewport limit of 30
+	t.true(secondCall.includes(ansiEscapes.eraseLines(4)));
+});
+
+test('incremental rendering - no clamping when content fits viewport', t => {
+	const stdout = createStdout(100, true, 30);
+	const render = logUpdate.create(stdout, {
+		showCursor: true,
+		incremental: true,
+	});
+
+	render('Line 1\nLine 2\nLine 3\n');
+	render('Line 1\nUpdated\nLine 3\n');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	// cursorUp(3) is fine — under viewport limit of 30
+	t.true(secondCall.includes(ansiEscapes.cursorUp(3)));
+});
