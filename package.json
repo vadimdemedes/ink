@@ -105,8 +105,8 @@
 		"xo": "^1.2.3"
 	},
 	"peerDependencies": {
-		"@types/react": ">=19.0.0",
-		"react": ">=19.0.0",
+		"@types/react": ">=19.2.0",
+		"react": ">=19.2.0",
 		"react-devtools-core": ">=6.1.2"
 	},
 	"peerDependenciesMeta": {
