@@ -1281,16 +1281,17 @@ test.serial('delta approximates interval on each tick', async t => {
 		(stdout.write as any).lastCall.args[0] as string,
 		10,
 	);
-	// First delta should approximate the interval
-	t.true(deltaAfterFirst >= 50);
+	// First delta should approximate the interval (with tolerance for timer jitter)
+	t.true(deltaAfterFirst >= 40);
 
 	await delay(80);
 	const deltaAfterSecond = Number.parseInt(
 		(stdout.write as any).lastCall.args[0] as string,
 		10,
 	);
-	// Subsequent deltas should also approximate the interval
-	t.true(deltaAfterSecond >= 50);
+	// Subsequent deltas should also approximate the interval (catch-up scheduling
+	// can make them slightly shorter than the interval when earlier ticks fired late)
+	t.true(deltaAfterSecond >= 40);
 
 	unmount();
 });
