@@ -15,6 +15,7 @@ const packageJson = JSON.parse(
 };
 
 test.before(() => {
+	fs.rmSync(buildDir, {recursive: true, force: true});
 	execSync('npm run build', {cwd: rootDir, stdio: 'pipe'});
 });
 
