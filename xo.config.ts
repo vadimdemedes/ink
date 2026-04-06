@@ -39,7 +39,11 @@ const xoConfig: FlatXoConfig = [
 		},
 	},
 	{
-		files: ['examples/**/*.{ts,tsx}', 'benchmark/**/*.{ts,tsx}'],
+		files: [
+			'examples/**/*.{ts,tsx}',
+			'benchmark/**/*.{ts,tsx}',
+			'media/**/*.{ts,tsx}',
+		],
 		rules: {
 			'import-x/no-unassigned-import': 'off',
 			'@typescript-eslint/no-unsafe-call': 'off',

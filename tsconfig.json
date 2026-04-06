@@ -11,5 +11,5 @@
 		"jsx": "react",
 		"isolatedModules": true
 	},
-	"include": ["src", "media"]
+	"include": ["src"]
 }
