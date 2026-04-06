@@ -25,7 +25,7 @@ const wrapText = (
 		});
 	}
 
-	if (wrapType === 'wrap-anywhere') {
+	if (wrapType === 'hard') {
 		wrappedText = wrapAnsi(text, maxWidth, {
 			trim: false,
 			hard: true,

@@ -94,30 +94,30 @@ test('don’t wrap text if there is enough space', t => {
 	t.is(output, 'Hello World');
 });
 
-test('wrap text anywhere', t => {
+test('hard wrap text', t => {
 	const output = renderToString(
 		<Box width={7}>
-			<Text wrap="wrap-anywhere">Hello World</Text>
+			<Text wrap="hard">Hello World</Text>
 		</Box>,
 	);
 
 	t.is(output, 'Hello W\norld');
 });
 
-test('wrap-anywhere with long word', t => {
+test('hard wrap with long word', t => {
 	const output = renderToString(
 		<Box width={5}>
-			<Text wrap="wrap-anywhere">aaaaaaaaaa</Text>
+			<Text wrap="hard">aaaaaaaaaa</Text>
 		</Box>,
 	);
 
 	t.is(output, 'aaaaa\naaaaa');
 });
 
-test('don’t wrap-anywhere text if there is enough space', t => {
+test('don’t hard wrap text if there is enough space', t => {
 	const output = renderToString(
 		<Box width={20}>
-			<Text wrap="wrap-anywhere">Hello World</Text>
+			<Text wrap="hard">Hello World</Text>
 		</Box>,
 	);
 
