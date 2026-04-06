@@ -90,6 +90,13 @@ test.serial('useInput - handle escape', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - escape does not set meta', async t => {
+	const ps = term('use-input', ['escapeNoMeta']);
+	ps.write('\u001B');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - handle ctrl', async t => {
 	const ps = term('use-input', ['ctrl']);
 	ps.write('\u0006');

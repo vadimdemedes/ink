@@ -197,7 +197,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 				tab: keypress.name === 'tab',
 				backspace: keypress.name === 'backspace',
 				delete: keypress.name === 'delete',
-				meta: keypress.meta || keypress.name === 'escape',
+				meta: keypress.meta,
 				// Kitty keyboard protocol modifiers
 				super: keypress.super ?? false,
 				hyper: keypress.hyper ?? false,
