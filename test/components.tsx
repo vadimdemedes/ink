@@ -124,7 +124,6 @@ test('don’t hard wrap text if there is enough space', t => {
 	t.is(output, 'Hello World');
 });
 
-
 test('truncate text in the end', t => {
 	const output = renderToString(
 		<Box width={7}>
