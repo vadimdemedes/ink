@@ -9,6 +9,7 @@ export type Styles = {
 	*/
 	readonly textWrap?:
 		| 'wrap'
+		| 'hard'
 		| 'truncate-end'
 		| 'truncate'
 		| 'truncate-middle'

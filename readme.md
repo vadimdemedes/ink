@@ -369,11 +369,12 @@ Invert background and foreground colors.
 #### wrap
 
 Type: `string`\
-Allowed values: `wrap` `truncate` `truncate-start` `truncate-middle` `truncate-end`\
+Allowed values: `wrap` `hard` `truncate` `truncate-start` `truncate-middle` `truncate-end`\
 Default: `wrap`
 
 This property tells Ink to wrap or truncate text if its width is larger than the container.
 If `wrap` is passed (the default), Ink will wrap text and split it into multiple lines.
+If `hard` is passed, Ink will fill each line to the full column width, breaking words as necessary.
 If `truncate-*` is passed, Ink will truncate text instead, resulting in one line of text with the rest cut off.
 
 ```jsx
@@ -381,6 +382,11 @@ If `truncate-*` is passed, Ink will truncate text instead, resulting in one line
 	<Text>Hello World</Text>
 </Box>
 //=> 'Hello\nWorld'
+
+<Box width={7}>
+	<Text wrap="hard">Hello World</Text>
+</Box>
+//=> 'Hello W\norld'
 
 // `truncate` is an alias to `truncate-end`
 <Box width={7}>
