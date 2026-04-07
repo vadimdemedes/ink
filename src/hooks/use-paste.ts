@@ -1,4 +1,4 @@
-import {useEffect} from 'react';
+import {useEffect, useEffectEvent} from 'react';
 import reconciler from '../reconciler.js';
 import {useStdinContext} from './use-stdin.js';
 
@@ -58,26 +58,26 @@ const usePaste = (
 		};
 	}, [options.isActive, setRawMode, setBracketedPasteMode]);
 
+	const handlePaste = useEffectEvent((text: string) => {
+		// Use discreteUpdates to assign DiscreteEventPriority to state
+		// updates triggered by paste, matching the priority of useInput.
+		// @ts-expect-error Types require 5 arguments (fn, a, b, c, d) but only fn is needed at runtime.
+		reconciler.discreteUpdates(() => {
+			handler(text);
+		});
+	});
+
 	useEffect(() => {
 		if (options.isActive === false) {
 			return;
 		}
-
-		const handlePaste = (text: string) => {
-			// Use discreteUpdates to assign DiscreteEventPriority to state
-			// updates triggered by paste, matching the priority of useInput.
-			// @ts-expect-error Types require 5 arguments (fn, a, b, c, d) but only fn is needed at runtime.
-			reconciler.discreteUpdates(() => {
-				handler(text);
-			});
-		};
 
 		internal_eventEmitter.on('paste', handlePaste);
 
 		return () => {
 			internal_eventEmitter.removeListener('paste', handlePaste);
 		};
-	}, [options.isActive, internal_eventEmitter, handler]);
+	}, [options.isActive, internal_eventEmitter]);
 };
 
 export default usePaste;

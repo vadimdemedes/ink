@@ -173,11 +173,11 @@ const parseEscapeSequence = (
 };
 
 /**
-Split a chunk of non-escape text so that delete (0x7F) and backspace (0x08) characters become individual events. When a user holds the delete or backspace key, the terminal sends repeated bytes in a single stdin chunk. Without splitting, `parseKeypress` receives the multi-byte string and fails to recognize it as a key event, corrupting the input state.
+Split a chunk of non-escape text so that backspace bytes (`0x7F` and `0x08`) become individual events. When a user holds the backspace key, the terminal sends repeated bytes in a single stdin chunk. Without splitting, `parseKeypress` receives the multi-byte string and fails to recognize it as a key event, corrupting the input state.
 
 Other control characters like `\r` and `\t` are NOT split because they can legitimately appear inside pasted text.
 */
-const splitDeleteAndBackspace = (text: string, events: InputEvent[]): void => {
+const splitBackspaceBytes = (text: string, events: InputEvent[]): void => {
 	let textSegmentStart = 0;
 
 	for (let index = 0; index < text.length; index++) {
@@ -208,7 +208,7 @@ const parseKeypresses = (input: string): ParsedInput => {
 	while (index < input.length) {
 		const escapeIndex = input.indexOf(escape, index);
 		if (escapeIndex === -1) {
-			splitDeleteAndBackspace(input.slice(index), events);
+			splitBackspaceBytes(input.slice(index), events);
 			return {
 				events,
 				pending: '',
@@ -216,7 +216,7 @@ const parseKeypresses = (input: string): ParsedInput => {
 		}
 
 		if (escapeIndex > index) {
-			splitDeleteAndBackspace(input.slice(index, escapeIndex), events);
+			splitBackspaceBytes(input.slice(index, escapeIndex), events);
 		}
 
 		const parsedEscapeSequence = parseEscapeSequence(input, escapeIndex);

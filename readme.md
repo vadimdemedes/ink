@@ -24,6 +24,8 @@ Since Ink is a React renderer, all features of React are supported.
 Head over to the [React](https://reactjs.org) website for documentation on how to use it.
 Only Ink's methods are documented in this readme.
 
+**Fully AI-generated pull requests are not accepted. You can use AI, but should be verified and cleaned up by a human. Only Opus 4.6+ (high-effort) and Codex 5.4+ (extra high) are accepted models. Preferably created with Opus and verified by Codex.**
+
 ---
 
 <div align="center">
@@ -155,6 +157,7 @@ _(PRs welcome. Append new entries at the end. Repos must have 100+ stars and sho
   - [`useFocus`](#usefocusoptions)
   - [`useFocusManager`](#usefocusmanager)
   - [`useCursor`](#usecursor)
+  - [`useAnimation`](#useanimationoptions)
 - [API](#api)
 - [Testing](#testing)
 - [Using React Devtools](#using-react-devtools)
@@ -1225,6 +1228,76 @@ Dim the right border color.
 
 ```jsx
 <Box borderStyle="round" borderRightDimColor>
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderBackgroundColor
+
+Type: `string`
+
+Change border background color.
+Accepts the same values as [`backgroundColor`](#backgroundcolor) in `<Text>` component.
+A shorthand for setting `borderTopBackgroundColor`, `borderRightBackgroundColor`, `borderBottomBackgroundColor`, and `borderLeftBackgroundColor`.
+
+```jsx
+<Box borderStyle="round" borderColor="white" borderBackgroundColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderTopBackgroundColor
+
+Type: `string`
+
+Change top border background color.
+Accepts the same values as [`backgroundColor`](#backgroundcolor) in `<Text>` component.
+Falls back to `borderBackgroundColor` if not specified.
+
+```jsx
+<Box borderStyle="round" borderColor="white" borderTopBackgroundColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderBottomBackgroundColor
+
+Type: `string`
+
+Change bottom border background color.
+Accepts the same values as [`backgroundColor`](#backgroundcolor) in `<Text>` component.
+Falls back to `borderBackgroundColor` if not specified.
+
+```jsx
+<Box borderStyle="round" borderColor="white" borderBottomBackgroundColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderRightBackgroundColor
+
+Type: `string`
+
+Change right border background color.
+Accepts the same values as [`backgroundColor`](#backgroundcolor) in `<Text>` component.
+Falls back to `borderBackgroundColor` if not specified.
+
+```jsx
+<Box borderStyle="round" borderColor="white" borderRightBackgroundColor="green">
+	<Text>Hello world</Text>
+</Box>
+```
+
+##### borderLeftBackgroundColor
+
+Type: `string`
+
+Change left border background color.
+Accepts the same values as [`backgroundColor`](#backgroundcolor) in `<Text>` component.
+Falls back to `borderBackgroundColor` if not specified.
+
+```jsx
+<Box borderStyle="round" borderColor="white" borderLeftBackgroundColor="green">
 	<Text>Hello world</Text>
 </Box>
 ```
@@ -2395,6 +2468,65 @@ const Example = () => {
 };
 ```
 
+### useAnimation(options?)
+
+A React hook that drives animations. Returns a frame counter, elapsed time, frame delta, and a reset function. All animations share a single timer internally, so multiple animated components consolidate into one render cycle.
+
+```jsx
+import {Text, useAnimation} from 'ink';
+
+const Spinner = () => {
+	const {frame} = useAnimation({interval: 80});
+	const characters = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+
+	return <Text>{characters[frame % characters.length]}</Text>;
+};
+```
+
+#### options
+
+Type: `object`
+
+##### interval
+
+Type: `number`\
+Default: `100`
+
+Time between ticks in milliseconds.
+
+##### isActive
+
+Type: `boolean`\
+Default: `true`
+
+Whether the animation is running. When set to `false`, the animation stops. When toggled back to `true`, all values reset to `0`.
+
+#### Return value
+
+##### frame
+
+Type: `number`
+
+Discrete counter that increments by 1 each interval. Useful for indexed sequences like spinner frames.
+
+##### time
+
+Type: `number`
+
+Total elapsed time in milliseconds since the animation started or was last reset. Useful for continuous math-based animations like sine waves: `Math.sin(time / 1000 * Math.PI * 2)`.
+
+##### delta
+
+Type: `number`
+
+Time in milliseconds since the previous rendered tick. Accounts for throttled renders. Useful for physics-based or velocity-driven motion: `position += speed * delta`.
+
+##### reset
+
+Type: `() => void`
+
+Resets `frame`, `time`, and `delta` to `0` and restarts timing from the current moment. Useful for one-shot animations triggered by events.
+
 ## API
 
 #### render(tree, options?)
@@ -2873,7 +3005,7 @@ Default: `false`
 
 Hide the element from screen readers.
 
-##### aria-role
+### `aria-role`
 
 Type: `string`
 
@@ -2883,20 +3015,24 @@ Supported values:
 
 - `button`
 - `checkbox`
-- `radio`
-- `radiogroup`
+- `combobox`
 - `list`
+- `listbox`
 - `listitem`
 - `menu`
 - `menuitem`
+- `option`
 - `progressbar`
+- `radio`
+- `radiogroup`
 - `tab`
 - `tablist`
+- `table`
+- `textbox`
 - `timer`
 - `toolbar`
-- `table`
 
-##### aria-state
+### `aria-state`
 
 Type: `object`
 
@@ -2904,9 +3040,14 @@ The state of the element.
 
 Supported values:
 
+- `busy` (boolean)
 - `checked` (boolean)
 - `disabled` (boolean)
 - `expanded` (boolean)
+- `multiline` (boolean)
+- `multiselectable` (boolean)
+- `readonly` (boolean)
+- `required` (boolean)
 - `selected` (boolean)
 
 ## Creating Components

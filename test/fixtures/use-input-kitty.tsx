@@ -60,6 +60,16 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		if (test === 'backspace' && input === '' && key.backspace) {
+			exit();
+			return;
+		}
+
+		if (test === 'delete' && input === '' && key.delete) {
+			exit();
+			return;
+		}
+
 		// Test non-printable keys produce empty input
 		if (test === 'nonPrintable' && input === '') {
 			exit();

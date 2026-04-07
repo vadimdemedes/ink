@@ -219,7 +219,7 @@ test('plain text followed by incomplete escape holds escape as pending', t => {
 
 const deleteAndBackspaceCases = [
 	{
-		title: 'splits batched delete characters into individual events',
+		title: 'splits batched 0x7F backspace characters into individual events',
 		chunks: ['\u007F\u007F\u007F'],
 		events: ['\u007F', '\u007F', '\u007F'],
 	},
@@ -229,17 +229,17 @@ const deleteAndBackspaceCases = [
 		events: ['\u0008', '\u0008', '\u0008'],
 	},
 	{
-		title: 'splits mixed delete and backspace characters',
+		title: 'splits mixed 0x7F and 0x08 backspace characters',
 		chunks: ['\u007F\u0008\u007F'],
 		events: ['\u007F', '\u0008', '\u007F'],
 	},
 	{
-		title: 'splits mixed printable text and delete characters',
+		title: 'splits mixed printable text and 0x7F backspace characters',
 		chunks: ['abc\u007F\u007F\u007F'],
 		events: ['abc', '\u007F', '\u007F', '\u007F'],
 	},
 	{
-		title: 'single delete character is preserved as individual event',
+		title: 'single 0x7F backspace character is preserved as individual event',
 		chunks: ['\u007F'],
 		events: ['\u007F'],
 	},
@@ -249,22 +249,22 @@ const deleteAndBackspaceCases = [
 		events: ['\u0008'],
 	},
 	{
-		title: 'splits trailing delete from text',
+		title: 'splits trailing 0x7F backspace from text',
 		chunks: ['abc\u007F'],
 		events: ['abc', '\u007F'],
 	},
 	{
-		title: 'splits delete characters before escape sequences',
+		title: 'splits 0x7F backspace characters before escape sequences',
 		chunks: ['\u007F\u007F\u001B[A'],
 		events: ['\u007F', '\u007F', '\u001B[A'],
 	},
 	{
-		title: 'splits delete characters after escape sequences',
+		title: 'splits 0x7F backspace characters after escape sequences',
 		chunks: ['\u001B[A\u007F\u007F'],
 		events: ['\u001B[A', '\u007F', '\u007F'],
 	},
 	{
-		title: 'splits delete characters between escape sequences',
+		title: 'splits 0x7F backspace characters between escape sequences',
 		chunks: ['\u001B[A\u007F\u001B[B'],
 		events: ['\u001B[A', '\u007F', '\u001B[B'],
 	},
@@ -274,7 +274,7 @@ const deleteAndBackspaceCases = [
 		events: ['\u0008', '\u001B[A', '\u0008'],
 	},
 	{
-		title: 'splits interleaved text and delete characters',
+		title: 'splits interleaved text and 0x7F backspace characters',
 		chunks: ['ab\u007Fcd'],
 		events: ['ab', '\u007F', 'cd'],
 	},
@@ -384,7 +384,7 @@ test('hasPendingEscape returns true for length-4 pasteStart prefix (\\u001B[20)'
 	t.true(parser.hasPendingEscape());
 });
 
-test('paste event delivers delete and backspace chars verbatim without splitting', t => {
+test('paste event delivers backspace chars verbatim without splitting', t => {
 	t.deepEqual(parseChunks(['\u001B[200~\u007F\u0008\u007F\u001B[201~']), [
 		{paste: '\u007F\u0008\u007F'},
 	]);

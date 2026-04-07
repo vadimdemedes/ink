@@ -78,12 +78,22 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		if (test === 'escapeNoMeta' && key.escape && !key.meta) {
+			exit();
+			return;
+		}
+
 		if (test === 'ctrl' && input === 'f' && key.ctrl) {
 			exit();
 			return;
 		}
 
 		if (test === 'meta' && input === 'm' && key.meta) {
+			exit();
+			return;
+		}
+
+		if (test === 'metaBackspace' && input === '' && key.meta && key.backspace) {
 			exit();
 			return;
 		}

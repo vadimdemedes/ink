@@ -90,6 +90,13 @@ test.serial('useInput - handle escape', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - escape does not set meta', async t => {
+	const ps = term('use-input', ['escapeNoMeta']);
+	ps.write('\u001B');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - handle ctrl', async t => {
 	const ps = term('use-input', ['ctrl']);
 	ps.write('\u0006');
@@ -100,6 +107,13 @@ test.serial('useInput - handle ctrl', async t => {
 test.serial('useInput - handle meta', async t => {
 	const ps = term('use-input', ['meta']);
 	ps.write('\u001Bm');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle meta + backspace (0x7F)', async t => {
+	const ps = term('use-input', ['metaBackspace']);
+	ps.write('\u001B\u007F');
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
@@ -141,7 +155,7 @@ test.serial('useInput - handle backspace', async t => {
 
 test.serial('useInput - handle delete', async t => {
 	const ps = term('use-input', ['delete']);
-	ps.write('\u007F');
+	ps.write('\u001B[3~');
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });

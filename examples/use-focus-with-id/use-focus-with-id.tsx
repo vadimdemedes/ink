@@ -41,7 +41,7 @@ function Focus() {
 }
 
 type ItemProperties = {
-	readonly id: number;
+	readonly id: string;
 	readonly label: string;
 };
 

@@ -3,7 +3,7 @@ import PQueue from 'p-queue';
 import delay from 'delay';
 import ms from 'ms';
 import {Static, Box, render} from '../../src/index.js';
-import Summary from './summary.jsx';
+import Summary from './summary.js';
 import Test from './test.js';
 
 const paths = [

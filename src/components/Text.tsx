@@ -139,7 +139,7 @@ export default function Text({
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap}}
 			internal_transform={transform}
 		>
-			{isScreenReaderEnabled && ariaLabel ? ariaLabel : children}
+			{childrenOrAriaLabel}
 		</ink-text>
 	);
 }
