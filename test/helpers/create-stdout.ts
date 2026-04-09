@@ -7,7 +7,11 @@ export type FakeStdout = {
 	getWrites: () => string[];
 } & NodeJS.WriteStream;
 
-const createStdout = (columns?: number, isTTY?: boolean, rows?: number): FakeStdout => {
+const createStdout = (
+	columns?: number,
+	isTTY?: boolean,
+	rows?: number,
+): FakeStdout => {
 	const stdout = new EventEmitter() as unknown as FakeStdout;
 	stdout.columns = columns ?? 100;
 	stdout.isTTY = isTTY ?? true;

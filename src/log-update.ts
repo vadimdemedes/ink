@@ -84,7 +84,12 @@ const createStandard = (
 
 		const lines = str.split('\n');
 		const visibleCount = visibleLineCount(lines, str);
-		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+		const viewportRows = getViewportRows(stream);
+		const cursorSuffix = buildCursorSuffix(
+			visibleCount,
+			activeCursor,
+			viewportRows,
+		);
 
 		if (str === previousOutput && cursorChanged) {
 			stream.write(
@@ -94,6 +99,7 @@ const createStandard = (
 					previousCursorPosition,
 					visibleLineCount: visibleCount,
 					cursorPosition: activeCursor,
+					viewportRows,
 				}),
 			);
 		} else {
@@ -123,7 +129,10 @@ const createStandard = (
 			previousLineCount,
 			previousCursorPosition,
 		);
-		stream.write(prefix + ansiEscapes.eraseLines(clampToViewport(previousLineCount, stream)));
+		stream.write(
+			prefix +
+				ansiEscapes.eraseLines(clampToViewport(previousLineCount, stream)),
+		);
 		previousOutput = '';
 		previousLineCount = 0;
 		previousCursorPosition = undefined;
@@ -163,7 +172,11 @@ const createStandard = (
 
 		if (activeCursor) {
 			stream.write(
-				buildCursorSuffix(visibleLineCount(lines, str), activeCursor),
+				buildCursorSuffix(
+					visibleLineCount(lines, str),
+					activeCursor,
+					getViewportRows(stream),
+				),
 			);
 		}
 
@@ -228,6 +241,7 @@ const createIncremental = (
 		const nextLines = str.split('\n');
 		const visibleCount = visibleLineCount(nextLines, str);
 		const previousVisible = visibleLineCount(previousLines, previousOutput);
+		const viewportRows = getViewportRows(stream);
 
 		if (str === previousOutput && cursorChanged) {
 			stream.write(
@@ -237,6 +251,7 @@ const createIncremental = (
 					previousCursorPosition,
 					visibleLineCount: visibleCount,
 					cursorPosition: activeCursor,
+					viewportRows,
 				}),
 			);
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
@@ -251,10 +266,14 @@ const createIncremental = (
 		);
 
 		if (str === '\n' || previousOutput.length === 0) {
-			const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+			const cursorSuffix = buildCursorSuffix(
+				visibleCount,
+				activeCursor,
+				viewportRows,
+			);
 			stream.write(
 				returnPrefix +
-					ansiEscapes.eraseLines(clampToViewport(previousLines.length, stream)) +
+					ansiEscapes.eraseLines(Math.min(previousLines.length, viewportRows)) +
 					str +
 					cursorSuffix,
 			);
@@ -273,16 +292,21 @@ const createIncremental = (
 		buffer.push(returnPrefix);
 
 		// Clear extra lines if the current content's line count is lower than the previous.
-		const viewportRows = getViewportRows(stream);
 		if (visibleCount < previousVisible) {
 			const previousHadTrailingNewline = previousOutput.endsWith('\n');
 			const extraSlot = previousHadTrailingNewline ? 1 : 0;
 			buffer.push(
-				ansiEscapes.eraseLines(Math.min(previousVisible - visibleCount + extraSlot, viewportRows)),
+				ansiEscapes.eraseLines(
+					Math.min(previousVisible - visibleCount + extraSlot, viewportRows),
+				),
 				ansiEscapes.cursorUp(Math.min(visibleCount, viewportRows - 1)),
 			);
 		} else {
-			buffer.push(ansiEscapes.cursorUp(Math.min(previousLines.length - 1, viewportRows - 1)));
+			buffer.push(
+				ansiEscapes.cursorUp(
+					Math.min(previousLines.length - 1, viewportRows - 1),
+				),
+			);
 		}
 
 		for (let i = 0; i < visibleCount; i++) {
@@ -309,7 +333,11 @@ const createIncremental = (
 			);
 		}
 
-		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+		const cursorSuffix = buildCursorSuffix(
+			visibleCount,
+			activeCursor,
+			viewportRows,
+		);
 		buffer.push(cursorSuffix);
 
 		stream.write(buffer.join(''));
@@ -327,7 +355,10 @@ const createIncremental = (
 			previousLines.length,
 			previousCursorPosition,
 		);
-		stream.write(prefix + ansiEscapes.eraseLines(clampToViewport(previousLines.length, stream)));
+		stream.write(
+			prefix +
+				ansiEscapes.eraseLines(clampToViewport(previousLines.length, stream)),
+		);
 		previousOutput = '';
 		previousLines = [];
 		previousCursorPosition = undefined;
@@ -367,7 +398,11 @@ const createIncremental = (
 
 		if (activeCursor) {
 			stream.write(
-				buildCursorSuffix(visibleLineCount(lines, str), activeCursor),
+				buildCursorSuffix(
+					visibleLineCount(lines, str),
+					activeCursor,
+					getViewportRows(stream),
+				),
 			);
 		}
 
