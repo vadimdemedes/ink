@@ -17,10 +17,6 @@ import React, {
 } from 'react';
 import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
-
-// Ink clears the screen without wiping scrollback (eraseScreen + cursorHome instead of clearTerminal)
-const eraseScreenSequence =
-	ansiEscapes.eraseScreen + ansiEscapes.cursorTo(0, 0);
 import boxen from 'boxen';
 import delay from 'delay';
 import {render, Box, Text, useApp, useCursor, useInput} from '../src/index.js';
@@ -28,6 +24,10 @@ import {type RenderMetrics} from '../src/ink.js';
 import {bsu, esu} from '../src/write-synchronized.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
+
+// Ink clears the screen without wiping scrollback (eraseScreen + cursorHome instead of clearTerminal)
+const eraseScreenSequence =
+	ansiEscapes.eraseScreen + ansiEscapes.cursorTo(0, 0);
 
 const textDecoder = new TextDecoder();
 
