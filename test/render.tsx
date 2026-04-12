@@ -29,6 +29,9 @@ import createStdout from './helpers/create-stdout.js';
 const eraseScreenSequence =
 	ansiEscapes.eraseScreen + ansiEscapes.cursorTo(0, 0);
 
+// The scrollback-wiping escape sequence that should never appear in output (#935)
+const scrollbackWipeSequence = '\u001B[3J';
+
 const textDecoder = new TextDecoder();
 
 const require = createRequire(import.meta.url);
@@ -363,6 +366,10 @@ test.serial('erase screen', async t => {
 	const ps = term('erase', ['3']);
 	await ps.waitForExit();
 	t.true(ps.output.includes(eraseScreenSequence));
+	t.false(
+		ps.output.includes(scrollbackWipeSequence),
+		'Erase screen must not emit \\e[3J (scrollback wipe)',
+	);
 
 	for (const letter of ['A', 'B', 'C']) {
 		t.true(ps.output.includes(letter));
@@ -375,6 +382,10 @@ test.serial(
 		const ps = term('erase', ['3']);
 		await ps.waitForExit();
 		t.true(ps.output.includes(eraseScreenSequence));
+		t.false(
+			ps.output.includes(scrollbackWipeSequence),
+			'Erase screen must not emit \\e[3J (scrollback wipe)',
+		);
 
 		for (const letter of ['A', 'B', 'C']) {
 			t.true(ps.output.includes(letter));
@@ -597,6 +608,39 @@ test.serial(
 
 		assertIssue450DynamicFrameOutput(t, output);
 		t.is(eraseScreenCount, 1);
+	},
+);
+
+test.serial(
+	'#935: fullscreen rerender does not emit scrollback-wiping escape',
+	async t => {
+		const output = await runIssue450Fixture('issue-450-full-height-rerender');
+
+		assertIssue450DynamicFrameOutput(t, output);
+		t.false(
+			output.includes(scrollbackWipeSequence),
+			'Fullscreen rerenders must not emit \\e[3J (scrollback wipe)',
+		);
+	},
+);
+
+test.serial(
+	'#935: shrink from overflow clears stale content without emitting scrollback-wiping escape',
+	async t => {
+		const output = await runIssue450Fixture(
+			'issue-450-shrink-from-overflow-rerender',
+		);
+
+		assertIssue450DynamicFrameOutput(t, output);
+
+		// The shrink transition uses eraseScreen exactly once to clear stale
+		// content from the tall frame — verified by the existing eraseScreenCount
+		// test above. Here we only need to confirm the clear doesn't use the
+		// scrollback-wiping sequence.
+		t.false(
+			output.includes(scrollbackWipeSequence),
+			'Shrink-from-overflow must not emit \\e[3J (scrollback wipe)',
+		);
 	},
 );
 
