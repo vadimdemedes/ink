@@ -84,7 +84,8 @@ const createStandard = (
 
 		const lines = str.split('\n');
 		const visibleCount = visibleLineCount(lines, str);
-		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+		const viewportRows = getViewportRows(stream);
+		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor, viewportRows);
 
 		if (str === previousOutput && cursorChanged) {
 			stream.write(
@@ -94,6 +95,7 @@ const createStandard = (
 					previousCursorPosition,
 					visibleLineCount: visibleCount,
 					cursorPosition: activeCursor,
+					viewportHeight: viewportRows,
 				}),
 			);
 		} else {
@@ -163,7 +165,7 @@ const createStandard = (
 
 		if (activeCursor) {
 			stream.write(
-				buildCursorSuffix(visibleLineCount(lines, str), activeCursor),
+				buildCursorSuffix(visibleLineCount(lines, str), activeCursor, getViewportRows(stream)),
 			);
 		}
 
@@ -229,6 +231,8 @@ const createIncremental = (
 		const visibleCount = visibleLineCount(nextLines, str);
 		const previousVisible = visibleLineCount(previousLines, previousOutput);
 
+		const viewportRows = getViewportRows(stream);
+
 		if (str === previousOutput && cursorChanged) {
 			stream.write(
 				buildCursorOnlySequence({
@@ -237,6 +241,7 @@ const createIncremental = (
 					previousCursorPosition,
 					visibleLineCount: visibleCount,
 					cursorPosition: activeCursor,
+					viewportHeight: viewportRows,
 				}),
 			);
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
@@ -251,7 +256,7 @@ const createIncremental = (
 		);
 
 		if (str === '\n' || previousOutput.length === 0) {
-			const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+			const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor, viewportRows);
 			stream.write(
 				returnPrefix +
 					ansiEscapes.eraseLines(clampToViewport(previousLines.length, stream)) +
@@ -273,7 +278,6 @@ const createIncremental = (
 		buffer.push(returnPrefix);
 
 		// Clear extra lines if the current content's line count is lower than the previous.
-		const viewportRows = getViewportRows(stream);
 		if (visibleCount < previousVisible) {
 			const previousHadTrailingNewline = previousOutput.endsWith('\n');
 			const extraSlot = previousHadTrailingNewline ? 1 : 0;
@@ -309,7 +313,7 @@ const createIncremental = (
 			);
 		}
 
-		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor, viewportRows);
 		buffer.push(cursorSuffix);
 
 		stream.write(buffer.join(''));
@@ -367,7 +371,7 @@ const createIncremental = (
 
 		if (activeCursor) {
 			stream.write(
-				buildCursorSuffix(visibleLineCount(lines, str), activeCursor),
+				buildCursorSuffix(visibleLineCount(lines, str), activeCursor, getViewportRows(stream)),
 			);
 		}
 

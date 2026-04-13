@@ -720,3 +720,37 @@ test('incremental rendering - no clamping when content fits viewport', t => {
 	// cursorUp(3) is fine — under viewport limit of 30
 	t.true(secondCall.includes(ansiEscapes.cursorUp(3)));
 });
+
+test('standard rendering - clamps cursorUp in buildCursorSuffix to viewport height', t => {
+	const stdout = createStdout(100, true, 5);
+	const render = logUpdate.create(stdout, {showCursor: true});
+
+	// Position cursor at line 0 with 20 visible lines → moveUp = 20
+	// Should be clamped to viewport height (5)
+	render.setCursorPosition({x: 0, y: 0});
+
+	const lines = Array.from({length: 20}, (_, i) => `Line ${i + 1}`).join('\n') + '\n';
+	render(lines);
+
+	const firstCall = (stdout.write as any).firstCall.args[0] as string;
+	// cursorUp should be clamped to 5 (viewport), not 20 (visibleLineCount - y)
+	t.true(firstCall.includes(ansiEscapes.cursorUp(5)));
+	t.false(firstCall.includes(ansiEscapes.cursorUp(20)));
+});
+
+test('incremental rendering - clamps cursorUp in buildCursorSuffix to viewport height', t => {
+	const stdout = createStdout(100, true, 5);
+	const render = logUpdate.create(stdout, {
+		showCursor: true,
+		incremental: true,
+	});
+
+	render.setCursorPosition({x: 0, y: 0});
+
+	const lines = Array.from({length: 20}, (_, i) => `Line ${i + 1}`).join('\n') + '\n';
+	render(lines);
+
+	const firstCall = (stdout.write as any).firstCall.args[0] as string;
+	t.true(firstCall.includes(ansiEscapes.cursorUp(5)));
+	t.false(firstCall.includes(ansiEscapes.cursorUp(20)));
+});
