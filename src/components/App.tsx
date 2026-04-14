@@ -238,11 +238,11 @@ function App({
 			}
 
 			// Reset focus when there's an active focused component on Esc
-			if (input === escape) {
+			if (input === escape && isFocusEnabled) {
 				setActiveFocusId(undefined);
 			}
 		},
-		[exitOnCtrlC, handleExit],
+		[exitOnCtrlC, handleExit, isFocusEnabled],
 	);
 
 	const emitInput = useCallback(
