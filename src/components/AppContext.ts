@@ -38,11 +38,14 @@ export type Props = {
 /**
 `AppContext` is a React context that exposes lifecycle methods for the app.
 */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const AppContext = createContext({
-	exit() {},
+// Keep the default value typed so `useApp()` preserves the public `exit(errorOrResult?)` signature.
+const defaultValue: Props = {
+	exit(_errorOrResult?: Error | unknown) {},
 	async waitUntilRenderFlush() {},
-});
+};
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const AppContext = createContext(defaultValue);
 
 AppContext.displayName = 'InternalAppContext';
 
