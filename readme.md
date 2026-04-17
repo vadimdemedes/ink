@@ -3091,6 +3091,11 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-stepper](https://github.com/archcorsair/ink-stepper) - Step-by-step wizard.
 - [ink-virtual-list](https://github.com/archcorsair/ink-virtual-list) - Virtualized list that renders only visible items for performance.
 - [ink-color-picker](https://github.com/sina-byn/ink-color-picker) - Color picker.
+- [ink-timer](https://github.com/costajohnt/ink-timer) - Timer, countdown, and stopwatch.
+- [ink-tree-view](https://github.com/costajohnt/ink-tree-view) - Tree view with expand/collapse and selection.
+- [ink-combobox](https://github.com/costajohnt/ink-autocomplete) - Combobox with fuzzy search.
+- [ink-file-picker](https://github.com/costajohnt/ink-file-picker) - File picker with directory navigation.
+- [ink-json-viewer](https://github.com/costajohnt/ink-json-viewer) - Interactive JSON tree viewer.
 
 ## Useful Hooks
 
