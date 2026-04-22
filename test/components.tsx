@@ -27,6 +27,24 @@ import {
 import {run} from './helpers/run.js';
 import {renderAsync} from './helpers/test-renderer.js';
 
+async function waitForWriteMatching(
+	stdout: ReturnType<typeof createStdout>,
+	predicate: (writes: string[]) => boolean,
+	timeout = 5000,
+): Promise<void> {
+	const deadline = Date.now() + timeout;
+	while (Date.now() < deadline) {
+		if (predicate(stdout.getWrites().map(w => stripAnsi(w)))) {
+			return;
+		}
+
+		// eslint-disable-next-line no-await-in-loop
+		await new Promise(resolve => {
+			setTimeout(resolve, 50);
+		});
+	}
+}
+
 test('text', t => {
 	const output = renderToString(<Text>Hello World</Text>);
 
@@ -939,9 +957,10 @@ test('render only last frame when stdout is not a TTY', async t => {
 		debug: false,
 	});
 
-	await new Promise(resolve => {
-		setTimeout(resolve, 200);
-	});
+	// Poll until the final state is reached instead of using a fixed delay
+	await waitForWriteMatching(stdout, writes =>
+		writes.some(w => w.includes('Count: 3')),
+	);
 
 	unmount();
 	await waitUntilExit();
@@ -995,9 +1014,10 @@ test('render all frames when interactive is explicitly true', async t => {
 		interactive: true,
 	});
 
-	await new Promise(resolve => {
-		setTimeout(resolve, 500);
-	});
+	// Poll until the final state is reached instead of using a fixed delay
+	await waitForWriteMatching(stdout, writes =>
+		writes.some(w => w.includes('Count: 2')),
+	);
 
 	unmount();
 	await waitUntilExit();
@@ -1037,9 +1057,10 @@ test('interactive option overrides TTY detection', async t => {
 		interactive: false,
 	});
 
-	await new Promise(resolve => {
-		setTimeout(resolve, 200);
-	});
+	// Poll until the final state is reached instead of using a fixed delay
+	await waitForWriteMatching(stdout, writes =>
+		writes.some(w => w.includes('Count: 3')),
+	);
 
 	unmount();
 	await waitUntilExit();
@@ -1543,9 +1564,8 @@ test('static output is written immediately in non-interactive mode', async t => 
 		debug: false,
 	});
 
-	await new Promise(resolve => {
-		setTimeout(resolve, 200);
-	});
+	// Poll until static item B is written instead of using a fixed delay
+	await waitForWriteMatching(stdout, writes => writes.join('').includes('B'));
 
 	// Capture writes BEFORE unmount — static items must already be here
 	const writesBeforeUnmount = stdout.getWrites().map(w => stripAnsi(w));
