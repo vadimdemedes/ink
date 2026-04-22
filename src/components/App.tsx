@@ -9,7 +9,6 @@ import React, {
 	useEffect,
 } from 'react';
 import cliCursor from 'cli-cursor';
-import {type CursorPosition} from '../log-update.js';
 import {createInputParser} from '../input-parser.js';
 import AppContext from './AppContext.js';
 import StdinContext from './StdinContext.js';
@@ -17,7 +16,8 @@ import StdoutContext from './StdoutContext.js';
 import StderrContext from './StderrContext.js';
 import FocusContext from './FocusContext.js';
 import AnimationContext from './AnimationContext.js';
-import CursorContext from './CursorContext.js';
+import CursorContextProvider from './internal/CursorContextProvider.js';
+import {type CursorContextValue} from './CursorContext.js';
 import ErrorBoundary from './ErrorBoundary.js';
 
 const tab = '\t';
@@ -41,7 +41,7 @@ type Props = {
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (errorOrResult?: unknown) => void;
 	readonly onWaitUntilRenderFlush: () => Promise<void>;
-	readonly setCursorPosition: (position: CursorPosition | undefined) => void;
+	readonly setCursorPosition: CursorContextValue['setCursorPosition'];
 	readonly interactive: boolean;
 	readonly renderThrottleMs: number;
 };
@@ -640,13 +640,6 @@ function App({
 		[stderr, writeToStderr],
 	);
 
-	const cursorContextValue = useMemo(
-		() => ({
-			setCursorPosition,
-		}),
-		[setCursorPosition],
-	);
-
 	const focusContextValue = useMemo(
 		() => ({
 			activeId: activeFocusId,
@@ -689,9 +682,9 @@ function App({
 					<StderrContext.Provider value={stderrContextValue}>
 						<FocusContext.Provider value={focusContextValue}>
 							<AnimationContext.Provider value={animationContextValue}>
-								<CursorContext.Provider value={cursorContextValue}>
+								<CursorContextProvider setCursorPosition={setCursorPosition}>
 									<ErrorBoundary onError={handleExit}>{children}</ErrorBoundary>
-								</CursorContext.Provider>
+								</CursorContextProvider>
 							</AnimationContext.Provider>
 						</FocusContext.Provider>
 					</StderrContext.Provider>
