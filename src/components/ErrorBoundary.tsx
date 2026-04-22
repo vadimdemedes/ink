@@ -1,8 +1,12 @@
 import React, {PureComponent, type ReactNode} from 'react';
+import {useAppInternal} from '../hooks/use-app.js';
 import ErrorOverview from './ErrorOverview.js';
 
 type Props = {
 	readonly children: ReactNode;
+};
+
+type ClassProps = Props & {
 	readonly onError: (error: Error) => void;
 };
 
@@ -12,7 +16,7 @@ type State = {
 
 // Error boundary must be a class component since getDerivedStateFromError
 // and componentDidCatch are not available as hooks
-export default class ErrorBoundary extends PureComponent<Props, State> {
+class ErrorBoundaryClass extends PureComponent<ClassProps, State> {
 	static displayName = 'InternalErrorBoundary';
 
 	static getDerivedStateFromError(error: Error) {
@@ -34,4 +38,9 @@ export default class ErrorBoundary extends PureComponent<Props, State> {
 
 		return this.props.children;
 	}
+}
+
+export default function ErrorBoundary({children}: Props): ReactNode {
+	const {exit} = useAppInternal();
+	return <ErrorBoundaryClass onError={exit}>{children}</ErrorBoundaryClass>;
 }
