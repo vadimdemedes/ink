@@ -12,7 +12,8 @@ import {createInputParser} from '../input-parser.js';
 import AppContext from './AppContext.js';
 import StdinContext from './StdinContext.js';
 import StdoutContext from './StdoutContext.js';
-import StderrContext from './StderrContext.js';
+import StderrContextProvider from './internal/StderrContextProvider.js';
+import {type Props as StderrContextProps} from './StderrContext.js';
 import FocusContextProvider from './internal/FocusContextProvider.js';
 import AnimationContextProvider from './internal/AnimationContextProvider.js';
 import {type AnimationContextValue} from './AnimationContext.js';
@@ -24,9 +25,9 @@ type Props = {
 	readonly children: ReactNode;
 	readonly stdin: NodeJS.ReadStream;
 	readonly stdout: NodeJS.WriteStream;
-	readonly stderr: NodeJS.WriteStream;
+	readonly stderr: StderrContextProps['stderr'];
 	readonly writeToStdout: (data: string) => void;
-	readonly writeToStderr: (data: string) => void;
+	readonly writeToStderr: StderrContextProps['write'];
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (errorOrResult?: unknown) => void;
 	readonly onWaitUntilRenderFlush: () => Promise<void>;
@@ -296,19 +297,11 @@ function App({
 		[stdout, writeToStdout],
 	);
 
-	const stderrContextValue = useMemo(
-		() => ({
-			stderr,
-			write: writeToStderr,
-		}),
-		[stderr, writeToStderr],
-	);
-
 	return (
 		<AppContext.Provider value={appContextValue}>
 			<StdinContext.Provider value={stdinContextValue}>
 				<StdoutContext.Provider value={stdoutContextValue}>
-					<StderrContext.Provider value={stderrContextValue}>
+					<StderrContextProvider stderr={stderr} writeToStderr={writeToStderr}>
 						<FocusContextProvider eventEmitter={internal_eventEmitter.current}>
 							<AnimationContextProvider renderThrottleMs={renderThrottleMs}>
 								<CursorContextProvider setCursorPosition={setCursorPosition}>
@@ -316,7 +309,7 @@ function App({
 								</CursorContextProvider>
 							</AnimationContextProvider>
 						</FocusContextProvider>
-					</StderrContext.Provider>
+					</StderrContextProvider>
 				</StdoutContext.Provider>
 			</StdinContext.Provider>
 		</AppContext.Provider>
