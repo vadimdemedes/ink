@@ -7,9 +7,9 @@ import React, {
 	useMemo,
 	useEffect,
 } from 'react';
-import cliCursor from 'cli-cursor';
 import {createInputParser} from '../../input-parser.js';
 import AppContext from '../AppContext.js';
+import StdoutHelper from './StdoutHelper.js';
 
 type Props = {
 	readonly children: ReactNode;
@@ -35,8 +35,9 @@ function AppContextProvider({
 	// Count how many components enabled raw mode to avoid disabling
 	// raw mode until all components don't need it anymore
 	const rawModeEnabledCount = useRef(0);
-	// Count how many components enabled bracketed paste mode
-	const bracketedPasteModeEnabledCount = useRef(0);
+
+	const stdoutHelper = useRef(new StdoutHelper(stdout, interactive));
+
 	// Each useInput hook adds a listener, so the count can legitimately exceed the default limit of 10.
 	eventEmitter.setMaxListeners(Infinity);
 	// Store the currently attached readable listener to avoid stale closure issues
@@ -195,53 +196,23 @@ function AppContextProvider({
 	);
 
 	const handleSetBracketedPasteMode = useCallback(
-		(isEnabled: boolean): void => {
-			if (!stdout.isTTY) {
-				return;
-			}
-
-			if (isEnabled) {
-				if (bracketedPasteModeEnabledCount.current === 0) {
-					stdout.write('\u001B[?2004h');
-				}
-
-				bracketedPasteModeEnabledCount.current++;
-				return;
-			}
-
-			if (bracketedPasteModeEnabledCount.current === 0) {
-				return;
-			}
-
-			if (--bracketedPasteModeEnabledCount.current === 0) {
-				stdout.write('\u001B[?2004l');
-			}
+		(isEnabled: boolean) => {
+			stdoutHelper.current.handleSetBracketedPasteMode(isEnabled);
 		},
-		[stdout],
+		[stdoutHelper],
 	);
 
 	// Handle cursor visibility, raw mode, and bracketed paste mode cleanup on unmount
 	useEffect(() => {
+		const currentStdoutHelper = stdoutHelper.current;
 		return () => {
-			const canWriteToStdout = !stdout.destroyed && !stdout.writableEnded;
-
-			if (interactive && canWriteToStdout) {
-				cliCursor.show(stdout);
-			}
-
 			if (isRawModeSupported && rawModeEnabledCount.current > 0) {
 				disableRawMode();
 			}
 
-			if (bracketedPasteModeEnabledCount.current > 0) {
-				if (stdout.isTTY && canWriteToStdout) {
-					stdout.write('\u001B[?2004l');
-				}
-
-				bracketedPasteModeEnabledCount.current = 0;
-			}
+			currentStdoutHelper.handleUnmount();
 		};
-	}, [stdout, isRawModeSupported, disableRawMode, interactive]);
+	}, [isRawModeSupported, disableRawMode, stdoutHelper]);
 
 	// Memoize context values to prevent unnecessary re-renders
 	const appContextValue = useMemo(
@@ -261,8 +232,8 @@ function AppContextProvider({
 			handleExit,
 			onWaitUntilRenderFlush,
 			exitOnCtrlC,
-			handleSetBracketedPasteMode,
 			handleSetRawMode,
+			handleSetBracketedPasteMode,
 			isRawModeSupported,
 			stdin,
 			eventEmitter,
