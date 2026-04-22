@@ -2,7 +2,6 @@ import {EventEmitter} from 'node:events';
 import process from 'node:process';
 import React, {
 	type ReactNode,
-	useState,
 	useRef,
 	useCallback,
 	useMemo,
@@ -14,16 +13,12 @@ import AppContext from './AppContext.js';
 import StdinContext from './StdinContext.js';
 import StdoutContext from './StdoutContext.js';
 import StderrContext from './StderrContext.js';
-import FocusContext from './FocusContext.js';
+import FocusContextProvider from './internal/FocusContextProvider.js';
 import AnimationContextProvider from './internal/AnimationContextProvider.js';
 import {type AnimationContextValue} from './AnimationContext.js';
 import CursorContextProvider from './internal/CursorContextProvider.js';
 import {type CursorContextValue} from './CursorContext.js';
 import ErrorBoundary from './ErrorBoundary.js';
-
-const tab = '\t';
-const shiftTab = '\u001B[Z';
-const escape = '\u001B';
 
 type Props = {
 	readonly children: ReactNode;
@@ -38,11 +33,6 @@ type Props = {
 	readonly setCursorPosition: CursorContextValue['setCursorPosition'];
 	readonly interactive: boolean;
 	readonly renderThrottleMs: AnimationContextValue['renderThrottleMs'];
-};
-
-type Focusable = {
-	readonly id: string;
-	readonly isActive: boolean;
 };
 
 // Root component for all Ink apps
@@ -62,15 +52,6 @@ function App({
 	interactive,
 	renderThrottleMs,
 }: Props): React.ReactNode {
-	const [isFocusEnabled, setIsFocusEnabled] = useState(true);
-	const [activeFocusId, setActiveFocusId] = useState<string | undefined>(
-		undefined,
-	);
-	// Focusables array is managed internally via setFocusables callback pattern
-	// eslint-disable-next-line react/hook-use-state
-	const [, setFocusables] = useState<Focusable[]>([]);
-	// Track focusables count for tab navigation check (avoids stale closure)
-	const focusablesCountRef = useRef(0);
 	// Count how many components enabled raw mode to avoid disabling
 	// raw mode until all components don't need it anymore
 	const rawModeEnabledCount = useRef(0);
@@ -134,15 +115,9 @@ function App({
 			// eslint-disable-next-line unicorn/no-hex-escape
 			if (input === '\x03' && exitOnCtrlC) {
 				handleExit();
-				return;
-			}
-
-			// Reset focus when there's an active focused component on Esc
-			if (input === escape && isFocusEnabled) {
-				setActiveFocusId(undefined);
 			}
 		},
-		[exitOnCtrlC, handleExit, isFocusEnabled],
+		[exitOnCtrlC, handleExit],
 	);
 
 	const emitInput = useCallback(
@@ -261,217 +236,6 @@ function App({
 		[stdout],
 	);
 
-	// Focus navigation helpers
-	const findNextFocusable = useCallback(
-		(
-			currentFocusables: Focusable[],
-			currentActiveFocusId: string | undefined,
-		): string | undefined => {
-			const activeIndex = currentFocusables.findIndex(focusable => {
-				return focusable.id === currentActiveFocusId;
-			});
-
-			for (
-				let index = activeIndex + 1;
-				index < currentFocusables.length;
-				index++
-			) {
-				const focusable = currentFocusables[index];
-
-				if (focusable?.isActive) {
-					return focusable.id;
-				}
-			}
-
-			return undefined;
-		},
-		[],
-	);
-
-	const findPreviousFocusable = useCallback(
-		(
-			currentFocusables: Focusable[],
-			currentActiveFocusId: string | undefined,
-		): string | undefined => {
-			const activeIndex = currentFocusables.findIndex(focusable => {
-				return focusable.id === currentActiveFocusId;
-			});
-
-			for (let index = activeIndex - 1; index >= 0; index--) {
-				const focusable = currentFocusables[index];
-
-				if (focusable?.isActive) {
-					return focusable.id;
-				}
-			}
-
-			return undefined;
-		},
-		[],
-	);
-
-	const focusNext = useCallback((): void => {
-		setFocusables(currentFocusables => {
-			setActiveFocusId(currentActiveFocusId => {
-				const firstFocusableId = currentFocusables.find(
-					focusable => focusable.isActive,
-				)?.id;
-				const nextFocusableId = findNextFocusable(
-					currentFocusables,
-					currentActiveFocusId,
-				);
-
-				return nextFocusableId ?? firstFocusableId;
-			});
-			return currentFocusables;
-		});
-	}, [findNextFocusable]);
-
-	const focusPrevious = useCallback((): void => {
-		setFocusables(currentFocusables => {
-			setActiveFocusId(currentActiveFocusId => {
-				const lastFocusableId = currentFocusables.findLast(
-					focusable => focusable.isActive,
-				)?.id;
-				const previousFocusableId = findPreviousFocusable(
-					currentFocusables,
-					currentActiveFocusId,
-				);
-
-				return previousFocusableId ?? lastFocusableId;
-			});
-			return currentFocusables;
-		});
-	}, [findPreviousFocusable]);
-
-	// Handle tab navigation via effect that subscribes to input events
-	useEffect(() => {
-		const handleTabNavigation = (input: string): void => {
-			if (!isFocusEnabled || focusablesCountRef.current === 0) return;
-
-			if (input === tab) {
-				focusNext();
-			}
-
-			if (input === shiftTab) {
-				focusPrevious();
-			}
-		};
-
-		internal_eventEmitter.current.on('input', handleTabNavigation);
-		const emitter = internal_eventEmitter.current;
-
-		return () => {
-			emitter.off('input', handleTabNavigation);
-		};
-	}, [isFocusEnabled, focusNext, focusPrevious]);
-
-	const enableFocus = useCallback((): void => {
-		setIsFocusEnabled(true);
-	}, []);
-
-	const disableFocus = useCallback((): void => {
-		setIsFocusEnabled(false);
-	}, []);
-
-	const focus = useCallback((id: string): void => {
-		setFocusables(currentFocusables => {
-			const hasFocusableId = currentFocusables.some(
-				focusable => focusable?.id === id,
-			);
-
-			if (hasFocusableId) {
-				setActiveFocusId(id);
-			}
-
-			return currentFocusables;
-		});
-	}, []);
-
-	const addFocusable = useCallback(
-		(id: string, {autoFocus}: {autoFocus: boolean}): void => {
-			setFocusables(currentFocusables => {
-				focusablesCountRef.current = currentFocusables.length + 1;
-
-				return [
-					...currentFocusables,
-					{
-						id,
-						isActive: true,
-					},
-				];
-			});
-
-			if (autoFocus) {
-				setActiveFocusId(currentActiveFocusId => {
-					if (!currentActiveFocusId) {
-						return id;
-					}
-
-					return currentActiveFocusId;
-				});
-			}
-		},
-		[],
-	);
-
-	const removeFocusable = useCallback((id: string): void => {
-		setActiveFocusId(currentActiveFocusId => {
-			if (currentActiveFocusId === id) {
-				return undefined;
-			}
-
-			return currentActiveFocusId;
-		});
-
-		setFocusables(currentFocusables => {
-			const filtered = currentFocusables.filter(focusable => {
-				return focusable.id !== id;
-			});
-			focusablesCountRef.current = filtered.length;
-
-			return filtered;
-		});
-	}, []);
-
-	const activateFocusable = useCallback((id: string): void => {
-		setFocusables(currentFocusables =>
-			currentFocusables.map(focusable => {
-				if (focusable.id !== id) {
-					return focusable;
-				}
-
-				return {
-					id,
-					isActive: true,
-				};
-			}),
-		);
-	}, []);
-
-	const deactivateFocusable = useCallback((id: string): void => {
-		setActiveFocusId(currentActiveFocusId => {
-			if (currentActiveFocusId === id) {
-				return undefined;
-			}
-
-			return currentActiveFocusId;
-		});
-
-		setFocusables(currentFocusables =>
-			currentFocusables.map(focusable => {
-				if (focusable.id !== id) {
-					return focusable;
-				}
-
-				return {
-					id,
-					isActive: false,
-				};
-			}),
-		);
-	}, []);
-
 	// Handle cursor visibility, raw mode, and bracketed paste mode cleanup on unmount
 	useEffect(() => {
 		return () => {
@@ -540,45 +304,18 @@ function App({
 		[stderr, writeToStderr],
 	);
 
-	const focusContextValue = useMemo(
-		() => ({
-			activeId: activeFocusId,
-			add: addFocusable,
-			remove: removeFocusable,
-			activate: activateFocusable,
-			deactivate: deactivateFocusable,
-			enableFocus,
-			disableFocus,
-			focusNext,
-			focusPrevious,
-			focus,
-		}),
-		[
-			activeFocusId,
-			addFocusable,
-			removeFocusable,
-			activateFocusable,
-			deactivateFocusable,
-			enableFocus,
-			disableFocus,
-			focusNext,
-			focusPrevious,
-			focus,
-		],
-	);
-
 	return (
 		<AppContext.Provider value={appContextValue}>
 			<StdinContext.Provider value={stdinContextValue}>
 				<StdoutContext.Provider value={stdoutContextValue}>
 					<StderrContext.Provider value={stderrContextValue}>
-						<FocusContext.Provider value={focusContextValue}>
+						<FocusContextProvider eventEmitter={internal_eventEmitter.current}>
 							<AnimationContextProvider renderThrottleMs={renderThrottleMs}>
 								<CursorContextProvider setCursorPosition={setCursorPosition}>
 									<ErrorBoundary onError={handleExit}>{children}</ErrorBoundary>
 								</CursorContextProvider>
 							</AnimationContextProvider>
-						</FocusContext.Provider>
+						</FocusContextProvider>
 					</StderrContext.Provider>
 				</StdoutContext.Provider>
 			</StdinContext.Provider>
