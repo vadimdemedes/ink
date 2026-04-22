@@ -11,7 +11,8 @@ import cliCursor from 'cli-cursor';
 import {createInputParser} from '../input-parser.js';
 import AppContext from './AppContext.js';
 import StdinContext from './StdinContext.js';
-import StdoutContext from './StdoutContext.js';
+import StdoutContextProvider from './internal/StdoutContextProvider.js';
+import {type Props as StdoutContextProps} from './StdoutContext.js';
 import StderrContextProvider from './internal/StderrContextProvider.js';
 import {type Props as StderrContextProps} from './StderrContext.js';
 import FocusContextProvider from './internal/FocusContextProvider.js';
@@ -24,9 +25,9 @@ import ErrorBoundary from './ErrorBoundary.js';
 type Props = {
 	readonly children: ReactNode;
 	readonly stdin: NodeJS.ReadStream;
-	readonly stdout: NodeJS.WriteStream;
+	readonly stdout: StdoutContextProps['stdout'];
 	readonly stderr: StderrContextProps['stderr'];
-	readonly writeToStdout: (data: string) => void;
+	readonly writeToStdout: StdoutContextProps['write'];
 	readonly writeToStderr: StderrContextProps['write'];
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (errorOrResult?: unknown) => void;
@@ -289,18 +290,10 @@ function App({
 		],
 	);
 
-	const stdoutContextValue = useMemo(
-		() => ({
-			stdout,
-			write: writeToStdout,
-		}),
-		[stdout, writeToStdout],
-	);
-
 	return (
 		<AppContext.Provider value={appContextValue}>
 			<StdinContext.Provider value={stdinContextValue}>
-				<StdoutContext.Provider value={stdoutContextValue}>
+				<StdoutContextProvider stdout={stdout} writeToStdout={writeToStdout}>
 					<StderrContextProvider stderr={stderr} writeToStderr={writeToStderr}>
 						<FocusContextProvider eventEmitter={internal_eventEmitter.current}>
 							<AnimationContextProvider renderThrottleMs={renderThrottleMs}>
@@ -310,7 +303,7 @@ function App({
 							</AnimationContextProvider>
 						</FocusContextProvider>
 					</StderrContextProvider>
-				</StdoutContext.Provider>
+				</StdoutContextProvider>
 			</StdinContext.Provider>
 		</AppContext.Provider>
 	);
