@@ -10,7 +10,7 @@ import React, {
 import cliCursor from 'cli-cursor';
 import {createInputParser} from '../input-parser.js';
 import AppContext from './AppContext.js';
-import StdinContext from './StdinContext.js';
+import StdinContextProvider from './internal/StdinContextProvider.js';
 import StdoutContextProvider from './internal/StdoutContextProvider.js';
 import {type Props as StdoutContextProps} from './StdoutContext.js';
 import StderrContextProvider from './internal/StderrContextProvider.js';
@@ -266,15 +266,9 @@ function App({
 		() => ({
 			exit: handleExit,
 			waitUntilRenderFlush: onWaitUntilRenderFlush,
-		}),
-		[handleExit, onWaitUntilRenderFlush],
-	);
-
-	const stdinContextValue = useMemo(
-		() => ({
 			stdin,
-			setRawMode: handleSetRawMode,
-			setBracketedPasteMode: handleSetBracketedPasteMode,
+			handleSetRawMode,
+			handleSetBracketedPasteMode,
 			isRawModeSupported,
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			internal_exitOnCtrlC: exitOnCtrlC,
@@ -282,17 +276,19 @@ function App({
 			internal_eventEmitter: internal_eventEmitter.current,
 		}),
 		[
-			stdin,
-			handleSetRawMode,
-			handleSetBracketedPasteMode,
-			isRawModeSupported,
+			handleExit,
+			onWaitUntilRenderFlush,
 			exitOnCtrlC,
+			handleSetBracketedPasteMode,
+			handleSetRawMode,
+			isRawModeSupported,
+			stdin,
 		],
 	);
 
 	return (
 		<AppContext.Provider value={appContextValue}>
-			<StdinContext.Provider value={stdinContextValue}>
+			<StdinContextProvider>
 				<StdoutContextProvider stdout={stdout} writeToStdout={writeToStdout}>
 					<StderrContextProvider stderr={stderr} writeToStderr={writeToStderr}>
 						<FocusContextProvider eventEmitter={internal_eventEmitter.current}>
@@ -304,7 +300,7 @@ function App({
 						</FocusContextProvider>
 					</StderrContextProvider>
 				</StdoutContextProvider>
-			</StdinContext.Provider>
+			</StdinContextProvider>
 		</AppContext.Provider>
 	);
 }

@@ -1,3 +1,5 @@
+import {EventEmitter} from 'node:events';
+import process from 'node:process';
 import {createContext} from 'react';
 
 export type Props = {
@@ -35,17 +37,35 @@ export type Props = {
 	readonly waitUntilRenderFlush: () => Promise<void>;
 };
 
+export type InternalProps = Props & {
+	stdin: NodeJS.ReadStream;
+	handleSetRawMode: (value: boolean) => void;
+	handleSetBracketedPasteMode: (value: boolean) => void;
+	isRawModeSupported: boolean;
+	internal_exitOnCtrlC: boolean;
+	internal_eventEmitter: EventEmitter;
+};
+
 /**
-`AppContext` is a React context that exposes lifecycle methods for the app.
+`AppContext` is a React context that exposes lifecycle methods for the app externally,
+and internal helpers for other internal context providers.
 */
 // Keep the default value typed so `useApp()` preserves the public `exit(errorOrResult?)` signature.
-const defaultValue: Props = {
+const defaultValue: InternalProps = {
 	exit(_errorOrResult?: Error | unknown) {},
 	async waitUntilRenderFlush() {},
+	stdin: process.stdin,
+	handleSetRawMode() {},
+	handleSetBracketedPasteMode() {},
+	isRawModeSupported: false,
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	internal_exitOnCtrlC: true,
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	internal_eventEmitter: new EventEmitter(),
 };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const AppContext = createContext(defaultValue);
+const AppContext = createContext<InternalProps>(defaultValue);
 
 AppContext.displayName = 'InternalAppContext';
 
