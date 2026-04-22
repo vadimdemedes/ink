@@ -1,6 +1,6 @@
 import {createContext} from 'react';
 
-type AnimationContextValue = {
+export type AnimationContextValue = {
 	readonly renderThrottleMs: number;
 	readonly subscribe: (
 		callback: (currentTime: number) => void,
