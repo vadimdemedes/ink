@@ -77,7 +77,7 @@ const usePaste = (
 		return () => {
 			internal_eventEmitter.removeListener('paste', handlePaste);
 		};
-	}, [options.isActive, internal_eventEmitter]);
+	}, [options.isActive, internal_eventEmitter, handlePaste]);
 };
 
 export default usePaste;
