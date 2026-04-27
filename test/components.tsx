@@ -1100,21 +1100,23 @@ test.serial(
 	'primary screen - cleanup console output follows the native console during unmount',
 	async t => {
 		const stdout = createStdout(100, true);
-		const processStdoutWriteStub = stub(process.stdout, 'write').callsFake(((
-			_chunk: string | Uint8Array,
-			encoding?: BufferEncoding | ((error?: Error) => void),
-			callback?: (error?: Error) => void,
-		) => {
-			if (typeof encoding === 'function') {
-				encoding();
-			}
+		const processStdoutWriteStub = stub(process.stdout, 'write').callsFake(
+			(
+				_chunk: string | Uint8Array,
+				encoding?: BufferEncoding | ((error?: Error) => void),
+				callback?: (error?: Error) => void,
+			) => {
+				if (typeof encoding === 'function') {
+					encoding();
+				}
 
-			if (typeof callback === 'function') {
-				callback();
-			}
+				if (typeof callback === 'function') {
+					callback();
+				}
 
-			return true;
-		}) as typeof process.stdout.write);
+				return true;
+			},
+		);
 		t.teardown(() => {
 			processStdoutWriteStub.restore();
 		});
@@ -1239,21 +1241,23 @@ test.serial(
 	'alternate screen - cleanup console output follows the native console during unmount',
 	async t => {
 		const stdout = createStdout(100, true);
-		const processStdoutWriteStub = stub(process.stdout, 'write').callsFake(((
-			_chunk: string | Uint8Array,
-			encoding?: BufferEncoding | ((error?: Error) => void),
-			callback?: (error?: Error) => void,
-		) => {
-			if (typeof encoding === 'function') {
-				encoding();
-			}
+		const processStdoutWriteStub = stub(process.stdout, 'write').callsFake(
+			(
+				_chunk: string | Uint8Array,
+				encoding?: BufferEncoding | ((error?: Error) => void),
+				callback?: (error?: Error) => void,
+			) => {
+				if (typeof encoding === 'function') {
+					encoding();
+				}
 
-			if (typeof callback === 'function') {
-				callback();
-			}
+				if (typeof callback === 'function') {
+					callback();
+				}
 
-			return true;
-		}) as typeof process.stdout.write);
+				return true;
+			},
+		);
 		t.teardown(() => {
 			processStdoutWriteStub.restore();
 		});
@@ -1346,21 +1350,23 @@ test.serial(
 
 test('render warns when stdout is reused before unmount', async t => {
 	const stdout = createStdout(100, true);
-	const processStderrWriteStub = stub(process.stderr, 'write').callsFake(((
-		_chunk: string | Uint8Array,
-		encoding?: BufferEncoding | ((error?: Error) => void),
-		callback?: (error?: Error) => void,
-	) => {
-		if (typeof encoding === 'function') {
-			encoding();
-		}
+	const processStderrWriteStub = stub(process.stderr, 'write').callsFake(
+		(
+			_chunk: string | Uint8Array,
+			encoding?: BufferEncoding | ((error?: Error) => void),
+			callback?: (error?: Error) => void,
+		) => {
+			if (typeof encoding === 'function') {
+				encoding();
+			}
 
-		if (typeof callback === 'function') {
-			callback();
-		}
+			if (typeof callback === 'function') {
+				callback();
+			}
 
-		return true;
-	}) as typeof process.stderr.write);
+			return true;
+		},
+	);
 	t.teardown(() => {
 		processStderrWriteStub.restore();
 	});

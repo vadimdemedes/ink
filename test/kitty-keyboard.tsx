@@ -698,14 +698,14 @@ test.serial(
 
 		// Override stdout.write to synchronously emit the response on stdin
 		// when the query sequence is written, simulating a fast terminal
-		stdout.write = ((data: string) => {
+		stdout.write = (data: string) => {
 			writtenStrings.push(data);
 			if (data === '\u001B[?u') {
 				stdin.emit('data', '\u001B[?1u');
 			}
 
 			return true;
-		}) as typeof stdout.write;
+		};
 
 		const origKittyId = process.env['KITTY_WINDOW_ID'];
 		process.env['KITTY_WINDOW_ID'] = '1';
