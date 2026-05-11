@@ -2080,7 +2080,7 @@ Use `hasMeasured` to detect when the currently tracked element has been measured
 
 #### ref
 
-Type: `React.RefObject<DOMElement>`
+Type: `React.RefObject<DOMElement | null>`
 
 A ref to the `<Box>` element to track.
 
