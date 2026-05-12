@@ -555,25 +555,31 @@ test('static output stops accumulating after Static unmounts (#904)', t => {
 	t.true(outputAfterChurn.includes('Dynamic'));
 });
 
-test('remounting <Static> via key change emits the new items', t => {
-	// Regression test for the post-#904 follow-up.
+test('remounting <Static> via key change emits the new items (nested under <Box>)', t => {
+	// Regression test for the post-#904 follow-up — `removeChild` path.
 	//
-	// React processes insertions before deletions within a commit. When a
-	// `<Static>` is remounted via a `key` prop change in the same commit:
+	// `createInstance` registers the new internal_static node on the root
+	// during the render phase, BEFORE any commit-phase mutations. When
+	// `<Static>` is then remounted via a `key` change, the OLD node is
+	// removed in the commit phase via:
 	//
-	//   1. createInstance fires for the new internal_static node, which sets
-	//      `rootNode.staticNode = newNode` and marks `isStaticDirty = true`.
-	//   2. appendChildToContainer attaches the new node.
-	//   3. removeChildFromContainer fires for the OLD internal_static node.
+	//   - `removeChildFromContainer` if Static is a direct child of the
+	//     container (`ink-root`), OR
+	//   - `removeChild` if Static is nested under any host element (e.g.
+	//     wrapped in a `<Box>`).
 	//
-	// Before this fix, step 3 unconditionally set
-	// `currentRootNode.staticNode = undefined`, clobbering the just-registered
-	// new staticNode pointer. The renderer then saw `staticNode === undefined`,
-	// emitted no static output, and the new Static's items were silently
-	// dropped from stdout. Real-world impact: TUIs that drive a Static
-	// "history replay" via key bumping (gemini-cli / qwen-code's
-	// `historyRemountKey` pattern) saw the history go blank after /clear,
-	// model switches, or any other `refreshStatic()`-equivalent trigger.
+	// Before the fix, BOTH paths unconditionally set
+	// `currentRootNode.staticNode = undefined` whenever the removed node
+	// carried `internal_static`, clobbering the pointer the just-mounted
+	// new node had registered. The renderer then saw `staticNode === undefined`
+	// and emitted nothing for the new Static. Real-world impact: TUIs that
+	// drive a Static "history replay" via key bumping (gemini-cli /
+	// qwen-code's `historyRemountKey` pattern) saw the history go blank
+	// after /clear, model switches, or any other `refreshStatic()`-equivalent
+	// trigger.
+	//
+	// This case wraps Static in a <Box>, so removal goes through
+	// `removeChild(parentBox, oldStaticNode)`.
 	const stdout = createStdout();
 
 	function App({session}: {readonly session: number}) {
@@ -597,7 +603,8 @@ test('remounting <Static> via key change emits the new items', t => {
 	);
 
 	// Key change → React unmounts the old Static and mounts a new one in the
-	// same commit phase. Insertion runs before deletion.
+	// same commit phase. createInstance for the new node ran in render phase,
+	// so by the time removeChild fires the root pointer already points at it.
 	rerender(<App session={2} />);
 
 	const afterRemount = (stdout.write as any).lastCall.args[0] as string;
@@ -608,6 +615,46 @@ test('remounting <Static> via key change emits the new items', t => {
 	t.true(
 		afterRemount.includes('new-D'),
 		'remounted Static must emit its second new item ("new-D") to stdout',
+	);
+});
+
+test('remounting <Static> via key change emits the new items (root-level — removeChildFromContainer)', t => {
+	// Companion to the nested case above. When `<Static>` is the direct
+	// host child of the root container (no wrapping <Box>), removal goes
+	// through `removeChildFromContainer(rootNode, oldStaticNode)` instead
+	// of `removeChild`. The fix has to hold on both paths — this exercises
+	// the container path specifically.
+	const stdout = createStdout();
+
+	function App({session}: {readonly session: number}) {
+		const items = session === 1 ? ['old-A', 'old-B'] : ['new-C', 'new-D'];
+		// No wrapping <Box>: Static is a direct child of `ink-root`, so the
+		// reconciler dispatches to `removeChildFromContainer` on remount.
+		return (
+			<Static key={session} items={items}>
+				{item => <Text key={item}>{item}</Text>}
+			</Static>
+		);
+	}
+
+	const {rerender} = render(<App session={1} />, {stdout, debug: true});
+
+	const afterFirstMount = (stdout.write as any).lastCall.args[0] as string;
+	t.true(
+		afterFirstMount.includes('old-A') && afterFirstMount.includes('old-B'),
+		'first mount must emit its Static items',
+	);
+
+	rerender(<App session={2} />);
+
+	const afterRemount = (stdout.write as any).lastCall.args[0] as string;
+	t.true(
+		afterRemount.includes('new-C'),
+		'remounted Static must emit "new-C" via removeChildFromContainer path',
+	);
+	t.true(
+		afterRemount.includes('new-D'),
+		'remounted Static must emit "new-D" via removeChildFromContainer path',
 	);
 });
 
