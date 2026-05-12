@@ -555,6 +555,62 @@ test('static output stops accumulating after Static unmounts (#904)', t => {
 	t.true(outputAfterChurn.includes('Dynamic'));
 });
 
+test('remounting <Static> via key change emits the new items', t => {
+	// Regression test for the post-#904 follow-up.
+	//
+	// React processes insertions before deletions within a commit. When a
+	// `<Static>` is remounted via a `key` prop change in the same commit:
+	//
+	//   1. createInstance fires for the new internal_static node, which sets
+	//      `rootNode.staticNode = newNode` and marks `isStaticDirty = true`.
+	//   2. appendChildToContainer attaches the new node.
+	//   3. removeChildFromContainer fires for the OLD internal_static node.
+	//
+	// Before this fix, step 3 unconditionally set
+	// `currentRootNode.staticNode = undefined`, clobbering the just-registered
+	// new staticNode pointer. The renderer then saw `staticNode === undefined`,
+	// emitted no static output, and the new Static's items were silently
+	// dropped from stdout. Real-world impact: TUIs that drive a Static
+	// "history replay" via key bumping (gemini-cli / qwen-code's
+	// `historyRemountKey` pattern) saw the history go blank after /clear,
+	// model switches, or any other `refreshStatic()`-equivalent trigger.
+	const stdout = createStdout();
+
+	function App({session}: {readonly session: number}) {
+		const items = session === 1 ? ['old-A', 'old-B'] : ['new-C', 'new-D'];
+		return (
+			<Box>
+				<Static key={session} items={items}>
+					{item => <Text key={item}>{item}</Text>}
+				</Static>
+				<Text>dynamic</Text>
+			</Box>
+		);
+	}
+
+	const {rerender} = render(<App session={1} />, {stdout, debug: true});
+
+	const afterFirstMount = (stdout.write as any).lastCall.args[0] as string;
+	t.true(
+		afterFirstMount.includes('old-A') && afterFirstMount.includes('old-B'),
+		'first mount must emit its Static items',
+	);
+
+	// Key change → React unmounts the old Static and mounts a new one in the
+	// same commit phase. Insertion runs before deletion.
+	rerender(<App session={2} />);
+
+	const afterRemount = (stdout.write as any).lastCall.args[0] as string;
+	t.true(
+		afterRemount.includes('new-C'),
+		'remounted Static must emit its first new item ("new-C") to stdout',
+	);
+	t.true(
+		afterRemount.includes('new-D'),
+		'remounted Static must emit its second new item ("new-D") to stdout',
+	);
+});
+
 test('render only new items in static output on final render', t => {
 	const stdout = createStdout();
 
