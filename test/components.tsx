@@ -565,7 +565,10 @@ test('fullStaticOutput is reset when <Static> unmounts so stale items are not re
 	// stream.
 	const stdout = createStdout();
 
-	function App({show, dynamicLabel}: {
+	function App({
+		show,
+		dynamicLabel,
+	}: {
 		readonly show: boolean;
 		readonly dynamicLabel: string;
 	}) {
@@ -603,10 +606,7 @@ test('fullStaticOutput is reset when <Static> unmounts so stale items are not re
 		afterUnmount.includes('HISTORY-B'),
 		'fullStaticOutput must NOT replay HISTORY-B after Static unmount',
 	);
-	t.true(
-		afterUnmount.includes('d2'),
-		'new dynamic output must still render',
-	);
+	t.true(afterUnmount.includes('d2'), 'new dynamic output must still render');
 });
 
 test('render only new items in static output on final render', t => {
