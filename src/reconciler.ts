@@ -295,7 +295,17 @@ export default createReconciler<
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
 
-		if (removeNode.internal_static && currentRootNode) {
+		// Only clear staticNode if the node being removed is the one the root
+		// currently points at. React processes insertions before deletions in
+		// a single commit, so when <Static> is remounted via a `key` change the
+		// new staticNode is registered by createInstance BEFORE this removal
+		// fires for the old node. Clearing unconditionally would clobber the
+		// fresh pointer and the renderer would emit no static output for the
+		// new Static instance.
+		if (
+			removeNode.internal_static &&
+			currentRootNode?.staticNode === removeNode
+		) {
 			currentRootNode.staticNode = undefined;
 		}
 	},
@@ -351,7 +361,12 @@ export default createReconciler<
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
 
-		if (removeNode.internal_static && currentRootNode) {
+		// See removeChildFromContainer above for the rationale on the
+		// `currentRootNode.staticNode === removeNode` guard.
+		if (
+			removeNode.internal_static &&
+			currentRootNode?.staticNode === removeNode
+		) {
 			currentRootNode.staticNode = undefined;
 		}
 	},
