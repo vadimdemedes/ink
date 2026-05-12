@@ -555,6 +555,60 @@ test('static output stops accumulating after Static unmounts (#904)', t => {
 	t.true(outputAfterChurn.includes('Dynamic'));
 });
 
+test('fullStaticOutput is reset when <Static> unmounts so stale items are not replayed', t => {
+	// In debug mode each stdout.write is `fullStaticOutput + dynamicOutput`.
+	// Before the fix, the items emitted by a Static that has since been
+	// unmounted stayed in `fullStaticOutput` forever and reappeared on every
+	// subsequent write (and on any `shouldClearTerminalForFrame` rewrite at
+	// runtime). After the fix, dropping the <Static> resets the
+	// accumulator so its items leave both the React tree and the output
+	// stream.
+	const stdout = createStdout();
+
+	function App({show, dynamicLabel}: {
+		readonly show: boolean;
+		readonly dynamicLabel: string;
+	}) {
+		return (
+			<Box>
+				{show ? (
+					<Static items={['HISTORY-A', 'HISTORY-B']}>
+						{item => <Text key={item}>{item}</Text>}
+					</Static>
+				) : null}
+				<Text>{dynamicLabel}</Text>
+			</Box>
+		);
+	}
+
+	const {rerender} = render(<App show dynamicLabel="d1" />, {
+		stdout,
+		debug: true,
+	});
+
+	const afterMount = (stdout.write as any).lastCall.args[0] as string;
+	t.true(
+		afterMount.includes('HISTORY-A') && afterMount.includes('HISTORY-B'),
+		'Static items must be emitted on first mount',
+	);
+
+	rerender(<App show={false} dynamicLabel="d2" />);
+
+	const afterUnmount = (stdout.write as any).lastCall.args[0] as string;
+	t.false(
+		afterUnmount.includes('HISTORY-A'),
+		'fullStaticOutput must NOT replay HISTORY-A after Static unmount',
+	);
+	t.false(
+		afterUnmount.includes('HISTORY-B'),
+		'fullStaticOutput must NOT replay HISTORY-B after Static unmount',
+	);
+	t.true(
+		afterUnmount.includes('d2'),
+		'new dynamic output must still render',
+	);
+});
+
 test('render only new items in static output on final render', t => {
 	const stdout = createStdout();
 

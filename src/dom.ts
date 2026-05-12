@@ -66,9 +66,17 @@ export type DOMElement = {
 	// Internal properties
 	isStaticDirty?: boolean;
 	staticNode?: DOMElement;
+	// Identity of `staticNode` at the end of the previous commit. Used by the
+	// reconciler to detect when the live <Static> instance has been replaced
+	// (key-driven remount), removed (no longer in the React tree) or added
+	// (first <Static> mount). On any identity change, ink resets its
+	// accumulated `fullStaticOutput` so future clearTerminal rewrites don't
+	// replay items that are no longer owned by the current React tree.
+	previousStaticNode?: DOMElement;
 	onComputeLayout?: () => void;
 	onRender?: () => void;
 	onImmediateRender?: () => void;
+	onStaticChange?: () => void;
 	internal_layoutListeners?: Set<LayoutListener>;
 } & InkNode;
 
