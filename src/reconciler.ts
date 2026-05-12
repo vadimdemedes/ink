@@ -304,8 +304,7 @@ export default createReconciler<
 		// new Static instance.
 		if (
 			removeNode.internal_static &&
-			currentRootNode &&
-			currentRootNode.staticNode === removeNode
+			currentRootNode?.staticNode === removeNode
 		) {
 			currentRootNode.staticNode = undefined;
 		}
@@ -366,8 +365,7 @@ export default createReconciler<
 		// `currentRootNode.staticNode === removeNode` guard.
 		if (
 			removeNode.internal_static &&
-			currentRootNode &&
-			currentRootNode.staticNode === removeNode
+			currentRootNode?.staticNode === removeNode
 		) {
 			currentRootNode.staticNode = undefined;
 		}
