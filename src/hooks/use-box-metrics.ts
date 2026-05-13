@@ -44,7 +44,8 @@ const emptyMetrics: BoxMetrics = {
 	top: 0,
 };
 
-const findRootNode = (node?: DOMElement): DOMElement | undefined => {
+// eslint-disable-next-line @typescript-eslint/no-restricted-types
+const findRootNode = (node: DOMElement | null): DOMElement | undefined => {
 	if (!node) {
 		return undefined;
 	}
@@ -82,7 +83,12 @@ const Example = () => {
 };
 ```
 */
-const useBoxMetrics = (ref: RefObject<DOMElement>): UseBoxMetricsResult => {
+const useBoxMetrics = (
+	/* eslint-disable-next-line @typescript-eslint/no-restricted-types --
+		Creating a ref object with an initial null, especially when the ref object
+		will be passed to a DOM node's ref attribute, is common in React. */
+	ref: RefObject<DOMElement | null>,
+): UseBoxMetricsResult => {
 	const [metrics, setMetrics] = useState(emptyMetrics);
 	const [hasMeasured, setHasMeasured] = useState(false);
 	const {stdout} = useStdout();
