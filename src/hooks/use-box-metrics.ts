@@ -1,6 +1,5 @@
 import {type RefObject, useState, useEffect, useCallback, useMemo} from 'react';
 import {type DOMElement, addLayoutListener} from '../dom.js';
-import useStdout from './use-stdout.js';
 
 // Yoga's `right`/`bottom` are omitted: always `0` for flow layout and unintuitive for absolute positioning.
 /**
@@ -91,7 +90,6 @@ const useBoxMetrics = (
 ): UseBoxMetricsResult => {
 	const [metrics, setMetrics] = useState(emptyMetrics);
 	const [hasMeasured, setHasMeasured] = useState(false);
-	const {stdout} = useStdout();
 
 	const updateMetrics = useCallback(() => {
 		const layout = ref.current?.yogaNode?.getComputedLayout() ?? emptyMetrics;
@@ -124,18 +122,6 @@ const useBoxMetrics = (
 
 		return addLayoutListener(rootNode, updateMetrics);
 	});
-
-	// Terminal resize events do not go through React's render cycle. Ink
-	// recalculates Yoga layout in its own resize handler — registered in the
-	// Ink constructor, before this hook mounts — so by the time the resize
-	// callback runs, Yoga has already computed the post-resize metrics.
-	useEffect(() => {
-		stdout.on('resize', updateMetrics);
-
-		return () => {
-			stdout.off('resize', updateMetrics);
-		};
-	}, [stdout, updateMetrics]);
 
 	return useMemo(
 		() => ({

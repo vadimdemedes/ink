@@ -467,6 +467,7 @@ export default class Ink {
 		}
 
 		this.calculateLayout();
+		dom.emitLayoutListeners(this.rootNode);
 		this.onRender();
 
 		this.lastTerminalWidth = currentWidth;
