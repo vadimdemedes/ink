@@ -518,13 +518,7 @@ export default class Ink {
 		);
 	};
 
-	// Called from the reconciler when the live <Static> identity changes
-	// (first mount, last unmount, or key-driven remount). The previously
-	// accumulated `fullStaticOutput` belongs to a Static instance that is no
-	// longer in the React tree, so future `shouldClearTerminalForFrame`
-	// rewrites must not replay it. The new instance (if any) will re-emit
-	// its items into a fresh `fullStaticOutput` on the immediate render that
-	// follows this callback.
+	// Resets `fullStaticOutput` when the <Static> identity changes so stale items from a previous instance are not replayed on future rewrites.
 	handleStaticChange = (): void => {
 		this.fullStaticOutput = '';
 	};

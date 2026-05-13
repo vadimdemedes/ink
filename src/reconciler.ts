@@ -164,15 +164,9 @@ export default createReconciler<
 
 		emitLayoutListeners(rootNode);
 
-		// Detect <Static> identity change for this commit: first mount,
-		// last unmount, or key-driven remount. Fire `onStaticChange` BEFORE
-		// `onImmediateRender` so ink can drop any accumulated static output
-		// from the previous Static instance before the new instance emits.
-		// Without this, items belonging to the unmounted/replaced Static
-		// stay in `fullStaticOutput` forever and get replayed on the next
-		// `shouldClearTerminalForFrame` rewrite (overflow / leaving
-		// fullscreen / unmount), surfacing as "cleared history reappears"
-		// for apps that drive Static via key bumps.
+		/*
+		Fire `onStaticChange` BEFORE `onImmediateRender` so ink resets accumulated static output before the new instance emits. Without this, items from a replaced/removed <Static> stay in `fullStaticOutput` and get replayed on rewrites.
+		*/
 		if (rootNode.staticNode !== rootNode.previousStaticNode) {
 			rootNode.previousStaticNode = rootNode.staticNode;
 			if (typeof rootNode.onStaticChange === 'function') {
@@ -311,13 +305,7 @@ export default createReconciler<
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
 
-		// Only clear staticNode if the node being removed is the one the root
-		// currently points at. React processes insertions before deletions in
-		// a single commit, so when <Static> is remounted via a `key` change the
-		// new staticNode is registered by createInstance BEFORE this removal
-		// fires for the old node. Clearing unconditionally would clobber the
-		// fresh pointer and the renderer would emit no static output for the
-		// new Static instance.
+		// Only clear staticNode if it still points at the removed node. On key-driven remounts, `createInstance` already registered the new node before this removal fires.
 		if (
 			removeNode.internal_static &&
 			currentRootNode?.staticNode === removeNode
@@ -377,8 +365,7 @@ export default createReconciler<
 		removeChildNode(node, removeNode);
 		cleanupYogaNode(removeNode.yogaNode);
 
-		// See removeChildFromContainer above for the rationale on the
-		// `currentRootNode.staticNode === removeNode` guard.
+		// Same guard as removeChildFromContainer: only clear if this is still the active static node.
 		if (
 			removeNode.internal_static &&
 			currentRootNode?.staticNode === removeNode
