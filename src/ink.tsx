@@ -360,6 +360,7 @@ export default class Ink {
 		}
 
 		this.rootNode.onImmediateRender = this.onRender;
+		this.rootNode.onStaticChange = this.handleStaticChange;
 		this.log = logUpdate.create(options.stdout, {
 			incremental: options.incrementalRendering,
 		});
@@ -515,6 +516,17 @@ export default class Ink {
 			undefined,
 			Yoga.DIRECTION_LTR,
 		);
+	};
+
+	// Called from the reconciler when the live <Static> identity changes
+	// (first mount, last unmount, or key-driven remount). The previously
+	// accumulated `fullStaticOutput` belongs to a Static instance that is no
+	// longer in the React tree, so future `shouldClearTerminalForFrame`
+	// rewrites must not replay it. The new instance (if any) will re-emit
+	// its items into a fresh `fullStaticOutput` on the immediate render that
+	// follows this callback.
+	handleStaticChange = (): void => {
+		this.fullStaticOutput = '';
 	};
 
 	onRender: () => void = () => {
