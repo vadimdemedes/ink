@@ -110,31 +110,36 @@ function OnClickDemo() {
 						position="absolute"
 						left={0}
 						top={0}
-						borderStyle="round"
-						borderColor="red"
-						paddingX={2}
+						width={18}
+						height={3}
+						backgroundColor="red"
+						paddingLeft={2}
+						paddingTop={1}
 						onClick={event => {
 							setBottomOverlayClicks(count => count + 1);
 							describeClick('Bottom overlay', event);
 						}}
 					>
-						<Text color="red">Bottom overlay</Text>
+						<Text color="white">Bottom overlay</Text>
 					</Box>
 
 					<Box
 						position="absolute"
 						left={4}
 						top={0}
+						width={18}
+						height={3}
 						backgroundColor="green"
-						borderStyle="round"
-						borderColor="green"
-						paddingX={2}
+						paddingLeft={2}
+						paddingTop={1}
 						onClick={event => {
 							setTopOverlayClicks(count => count + 1);
 							describeClick('Top overlay', event);
 						}}
 					>
-						<Text color="black">Top overlay</Text>
+						<Text bold color="black">
+							Top overlay
+						</Text>
 					</Box>
 				</Box>
 			</Box>
