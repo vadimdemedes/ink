@@ -8,6 +8,8 @@ function OnClickDemo() {
 	const [textClicks, setTextClicks] = React.useState(0);
 	const [panelClicks, setPanelClicks] = React.useState(0);
 	const [childClicks, setChildClicks] = React.useState(0);
+	const [bottomOverlayClicks, setBottomOverlayClicks] = React.useState(0);
+	const [topOverlayClicks, setTopOverlayClicks] = React.useState(0);
 	const [lastClick, setLastClick] = React.useState('None yet');
 
 	useInput(input => {
@@ -59,6 +61,8 @@ function OnClickDemo() {
 						setTextClicks(0);
 						setPanelClicks(0);
 						setChildClicks(0);
+						setBottomOverlayClicks(0);
+						setTopOverlayClicks(0);
 						describeClick('Reset button', event);
 					}}
 				>
@@ -99,11 +103,48 @@ function OnClickDemo() {
 				</Text>
 			</Box>
 
+			<Box flexDirection="column">
+				<Text>Overlapping boxes: only the top box should receive clicks.</Text>
+				<Box width={28} height={3}>
+					<Box
+						position="absolute"
+						left={0}
+						top={0}
+						borderStyle="round"
+						borderColor="red"
+						paddingX={2}
+						onClick={event => {
+							setBottomOverlayClicks(count => count + 1);
+							describeClick('Bottom overlay', event);
+						}}
+					>
+						<Text color="red">Bottom overlay</Text>
+					</Box>
+
+					<Box
+						position="absolute"
+						left={4}
+						top={0}
+						borderStyle="round"
+						borderColor="green"
+						paddingX={2}
+						onClick={event => {
+							setTopOverlayClicks(count => count + 1);
+							describeClick('Top overlay', event);
+						}}
+					>
+						<Text color="green">Top overlay</Text>
+					</Box>
+				</Box>
+			</Box>
+
 			<Text>Primary clicks: {primaryClicks}</Text>
 			<Text>Secondary clicks: {secondaryClicks}</Text>
 			<Text>Text clicks: {textClicks}</Text>
 			<Text>Panel clicks: {panelClicks}</Text>
 			<Text>Child clicks: {childClicks}</Text>
+			<Text>Bottom overlay clicks: {bottomOverlayClicks}</Text>
+			<Text>Top overlay clicks: {topOverlayClicks}</Text>
 			<Text>Last click: {lastClick}</Text>
 		</Box>
 	);

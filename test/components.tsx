@@ -1987,6 +1987,36 @@ test('stopPropagation prevents parent onClick handlers', t => {
 	t.true(onParentClick.notCalled);
 });
 
+test('dispatches onClick to topmost overlapping element only', t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	const onBottomClick = spy();
+	const onTopClick = spy();
+
+	render(
+		<Box width={10} height={2}>
+			<Box position="absolute" left={0} top={0} onClick={onBottomClick}>
+				<Text>Bottom</Text>
+			</Box>
+
+			<Box position="absolute" left={0} top={0} onClick={onTopClick}>
+				<Text>Top</Text>
+			</Box>
+		</Box>,
+		{
+			stdout,
+			stdin,
+			debug: true,
+			interactive: true,
+		},
+	);
+
+	emitReadable(stdin, '\u001B[<0;1;1M');
+
+	t.true(onBottomClick.notCalled);
+	t.is(onTopClick.callCount, 1);
+});
+
 test('disables mouse tracking when no onClick handlers remain', t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
