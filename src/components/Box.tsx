@@ -1,7 +1,7 @@
 import React, {forwardRef, useContext, type PropsWithChildren} from 'react';
 import {type Except} from 'type-fest';
 import {type Styles} from '../styles.js';
-import {type DOMElement} from '../dom.js';
+import {type ClickHandler, type DOMElement} from '../dom.js';
 import {accessibilityContext} from './AccessibilityContext.js';
 import {backgroundContext} from './BackgroundContext.js';
 
@@ -53,6 +53,11 @@ export type Props = Except<Styles, 'textWrap'> & {
 		readonly required?: boolean;
 		readonly selected?: boolean;
 	};
+
+	/**
+	Function to call when the element is clicked.
+	*/
+	readonly onClick?: ClickHandler;
 };
 
 /**
@@ -67,6 +72,7 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 			'aria-hidden': ariaHidden,
 			'aria-role': role,
 			'aria-state': ariaState,
+			onClick,
 			...style
 		},
 		ref,
@@ -94,6 +100,7 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 					role,
 					state: ariaState,
 				}}
+				onClick={onClick}
 			>
 				{isScreenReaderEnabled && label ? label : children}
 			</ink-box>

@@ -1,0 +1,1 @@
+import './on-click.js';

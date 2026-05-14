@@ -18,9 +18,10 @@ import {
 	useApp,
 	useInput,
 	useStdin,
+	type ClickEvent,
 } from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
-import {emitReadable} from './helpers/create-stdin.js';
+import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import {
 	renderToString,
 	renderToStringAsync,
@@ -1896,6 +1897,113 @@ test('link ansi escapes are closed properly', t => {
 	);
 
 	t.is(output, ']8;;https://example.comExample]8;;');
+});
+
+test('calls onClick when element receives a mouse click', t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	const onClick = spy();
+
+	render(<Text onClick={onClick}>Click</Text>, {
+		stdout,
+		stdin,
+		debug: true,
+		interactive: true,
+	});
+
+	emitReadable(stdin, '\u001B[<0;1;1M');
+
+	t.is(onClick.callCount, 1);
+	t.like(onClick.firstCall.args[0], {
+		x: 0,
+		y: 0,
+		button: 'left',
+	});
+});
+
+test('bubbles onClick through parent elements', t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	const childCurrentTargets: unknown[] = [];
+	const parentCurrentTargets: unknown[] = [];
+	const onParentClick = spy((event: ClickEvent) => {
+		parentCurrentTargets.push(event.currentTarget);
+	});
+
+	const onChildClick = spy((event: ClickEvent) => {
+		childCurrentTargets.push(event.currentTarget);
+	});
+
+	render(
+		<Box onClick={onParentClick}>
+			<Text onClick={onChildClick}>Click</Text>
+		</Box>,
+		{
+			stdout,
+			stdin,
+			debug: true,
+			interactive: true,
+		},
+	);
+
+	emitReadable(stdin, '\u001B[<0;1;1M');
+
+	t.is(onChildClick.callCount, 1);
+	t.is(onParentClick.callCount, 1);
+	t.is(
+		onChildClick.firstCall.args[0].target,
+		onParentClick.firstCall.args[0].target,
+	);
+	t.is(childCurrentTargets[0], onChildClick.firstCall.args[0].target);
+	t.is(
+		parentCurrentTargets[0],
+		onChildClick.firstCall.args[0].target.parentNode,
+	);
+});
+
+test('stopPropagation prevents parent onClick handlers', t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	const onParentClick = spy();
+	const onChildClick = spy((event: ClickEvent) => {
+		event.stopPropagation();
+	});
+
+	render(
+		<Box onClick={onParentClick}>
+			<Text onClick={onChildClick}>Click</Text>
+		</Box>,
+		{
+			stdout,
+			stdin,
+			debug: true,
+			interactive: true,
+		},
+	);
+
+	emitReadable(stdin, '\u001B[<0;1;1M');
+
+	t.is(onChildClick.callCount, 1);
+	t.true(onParentClick.notCalled);
+});
+
+test('disables mouse tracking when no onClick handlers remain', t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+
+	const {rerender} = render(<Text onClick={() => {}}>Click</Text>, {
+		stdout,
+		stdin,
+		debug: true,
+		interactive: true,
+	});
+
+	rerender(<Text>Click</Text>);
+
+	const writes = stdout.getWrites().join('');
+
+	t.true(writes.includes('\u001B[?1000h\u001B[?1006h'));
+	t.true(writes.includes('\u001B[?1000l\u001B[?1006l'));
 });
 
 // Concurrent mode tests

@@ -2,6 +2,7 @@ import React, {useContext, type ReactNode} from 'react';
 import chalk, {type ForegroundColorName} from 'chalk';
 import {type LiteralUnion} from 'type-fest';
 import colorize from '../colorize.js';
+import {type ClickHandler} from '../dom.js';
 import {type Styles} from '../styles.js';
 import {accessibilityContext} from './AccessibilityContext.js';
 import {backgroundContext} from './BackgroundContext.js';
@@ -62,6 +63,11 @@ export type Props = {
 	*/
 	readonly wrap?: Styles['textWrap'];
 
+	/**
+	Function to call when the element is clicked.
+	*/
+	readonly onClick?: ClickHandler;
+
 	readonly children?: ReactNode;
 };
 
@@ -78,6 +84,7 @@ export default function Text({
 	strikethrough = false,
 	inverse = false,
 	wrap = 'wrap',
+	onClick,
 	children,
 	'aria-label': ariaLabel,
 	'aria-hidden': ariaHidden = false,
@@ -138,6 +145,7 @@ export default function Text({
 		<ink-text
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap}}
 			internal_transform={transform}
+			onClick={onClick}
 		>
 			{childrenOrAriaLabel}
 		</ink-text>

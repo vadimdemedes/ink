@@ -11,6 +11,15 @@ import React, {
 import cliCursor from 'cli-cursor';
 import {type CursorPosition} from '../log-update.js';
 import {createInputParser} from '../input-parser.js';
+import {type DOMElement} from '../dom.js';
+import {
+	disableMouseTracking,
+	dispatchClick,
+	enableMouseTracking,
+	hasClickHandler,
+	isMouseInput,
+	parseMouseInput,
+} from '../mouse.js';
 import AppContext from './AppContext.js';
 import StdinContext from './StdinContext.js';
 import StdoutContext from './StdoutContext.js';
@@ -33,6 +42,7 @@ type AnimationSubscriber = {
 
 type Props = {
 	readonly children: ReactNode;
+	readonly rootNode: DOMElement;
 	readonly stdin: NodeJS.ReadStream;
 	readonly stdout: NodeJS.WriteStream;
 	readonly stderr: NodeJS.WriteStream;
@@ -56,6 +66,7 @@ type Focusable = {
 // It also handles Ctrl+C exiting and cursor visibility
 function App({
 	children,
+	rootNode,
 	stdin,
 	stdout,
 	stderr,
@@ -97,6 +108,7 @@ function App({
 	const readableListenerRef = useRef<(() => void) | undefined>(undefined);
 	const inputParserRef = useRef(createInputParser());
 	const pendingInputFlushRef = useRef<NodeJS.Timeout | undefined>(undefined);
+	const isMouseTrackingEnabledRef = useRef(false);
 	// Small delay to let chunked escape sequences complete before flushing as literal input.
 	const pendingInputFlushDelayMilliseconds = 20;
 
@@ -256,10 +268,21 @@ function App({
 
 	const emitInput = useCallback(
 		(input: string): void => {
+			const mouseInput = parseMouseInput(input);
+
+			if (mouseInput) {
+				dispatchClick(rootNode, mouseInput);
+				return;
+			}
+
+			if (isMouseInput(input)) {
+				return;
+			}
+
 			handleInput(input);
 			internal_eventEmitter.current.emit('input', input);
 		},
-		[handleInput],
+		[handleInput, rootNode],
 	);
 
 	const schedulePendingInputFlush = useCallback((): void => {
@@ -402,6 +425,34 @@ function App({
 		},
 		[stdout],
 	);
+
+	const disableMouseMode = useCallback((): void => {
+		if (!isMouseTrackingEnabledRef.current) {
+			return;
+		}
+
+		isMouseTrackingEnabledRef.current = false;
+		stdout.write(disableMouseTracking);
+		handleSetRawMode(false);
+	}, [stdout, handleSetRawMode]);
+
+	useEffect(() => {
+		const shouldEnableMouseMode =
+			interactive && stdout.isTTY && hasClickHandler(rootNode);
+
+		if (shouldEnableMouseMode && !isMouseTrackingEnabledRef.current) {
+			isMouseTrackingEnabledRef.current = true;
+			stdout.write(enableMouseTracking);
+			handleSetRawMode(true);
+			return;
+		}
+
+		if (!shouldEnableMouseMode) {
+			disableMouseMode();
+		}
+	});
+
+	useEffect(() => disableMouseMode, [disableMouseMode]);
 
 	// Focus navigation helpers
 	const findNextFocusable = useCallback(

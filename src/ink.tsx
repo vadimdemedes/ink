@@ -641,6 +641,7 @@ export default class Ink {
 				value={{isScreenReaderEnabled: this.isScreenReaderEnabled}}
 			>
 				<App
+					rootNode={this.rootNode}
 					stdin={this.options.stdin}
 					stdout={this.options.stdout}
 					stderr={this.options.stderr}
