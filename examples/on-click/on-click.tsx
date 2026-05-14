@@ -125,6 +125,7 @@ function OnClickDemo() {
 						position="absolute"
 						left={4}
 						top={0}
+						backgroundColor="green"
 						borderStyle="round"
 						borderColor="green"
 						paddingX={2}
@@ -133,7 +134,7 @@ function OnClickDemo() {
 							describeClick('Top overlay', event);
 						}}
 					>
-						<Text color="green">Top overlay</Text>
+						<Text color="black">Top overlay</Text>
 					</Box>
 				</Box>
 			</Box>
