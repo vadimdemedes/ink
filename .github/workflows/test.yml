@@ -7,6 +7,7 @@ jobs:
     strategy:
       matrix:
         node_version:
+          - 26
           - 24
           - 22
     steps:
