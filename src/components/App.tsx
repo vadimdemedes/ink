@@ -53,6 +53,7 @@ type Props = {
 	readonly onWaitUntilRenderFlush: () => Promise<void>;
 	readonly setCursorPosition: (position: CursorPosition | undefined) => void;
 	readonly interactive: boolean;
+	readonly alternateScreen: boolean;
 	readonly renderThrottleMs: number;
 };
 
@@ -77,6 +78,7 @@ function App({
 	onWaitUntilRenderFlush,
 	setCursorPosition,
 	interactive,
+	alternateScreen,
 	renderThrottleMs,
 }: Props): React.ReactNode {
 	const [isFocusEnabled, setIsFocusEnabled] = useState(true);
@@ -268,6 +270,12 @@ function App({
 
 	const emitInput = useCallback(
 		(input: string): void => {
+			if (!isMouseTrackingEnabledRef.current) {
+				handleInput(input);
+				internal_eventEmitter.current.emit('input', input);
+				return;
+			}
+
 			const mouseInput = parseMouseInput(input);
 
 			if (mouseInput) {
@@ -438,7 +446,10 @@ function App({
 
 	useEffect(() => {
 		const shouldEnableMouseMode =
-			interactive && stdout.isTTY && hasClickHandler(rootNode);
+			alternateScreen &&
+			interactive &&
+			stdout.isTTY &&
+			hasClickHandler(rootNode);
 
 		if (shouldEnableMouseMode && !isMouseTrackingEnabledRef.current) {
 			isMouseTrackingEnabledRef.current = true;

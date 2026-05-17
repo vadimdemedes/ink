@@ -65,6 +65,7 @@ export type Props = {
 
 	/**
 	Function to call when the element is clicked.
+	Only supported when rendering in the alternate screen.
 	*/
 	readonly onClick?: ClickHandler;
 

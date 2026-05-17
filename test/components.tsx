@@ -1909,6 +1909,7 @@ test('calls onClick when element receives a mouse click', t => {
 		stdin,
 		debug: true,
 		interactive: true,
+		alternateScreen: true,
 	});
 
 	emitReadable(stdin, '\u001B[<0;1;1M');
@@ -1943,6 +1944,7 @@ test('bubbles onClick through parent elements', t => {
 			stdin,
 			debug: true,
 			interactive: true,
+			alternateScreen: true,
 		},
 	);
 
@@ -1978,6 +1980,7 @@ test('stopPropagation prevents parent onClick handlers', t => {
 			stdin,
 			debug: true,
 			interactive: true,
+			alternateScreen: true,
 		},
 	);
 
@@ -2008,6 +2011,7 @@ test('dispatches onClick to topmost overlapping element only', t => {
 			stdin,
 			debug: true,
 			interactive: true,
+			alternateScreen: true,
 		},
 	);
 
@@ -2015,6 +2019,42 @@ test('dispatches onClick to topmost overlapping element only', t => {
 
 	t.true(onBottomClick.notCalled);
 	t.is(onTopClick.callCount, 1);
+});
+
+test('does not enable onClick mouse tracking outside alternate screen', t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	const onClick = spy();
+
+	render(<Text onClick={onClick}>Click</Text>, {
+		stdout,
+		stdin,
+		debug: true,
+		interactive: true,
+	});
+
+	emitReadable(stdin, '\u001B[<0;1;1M');
+
+	t.true(onClick.notCalled);
+	t.false(stdout.getWrites().join('').includes('\u001B[?1000h\u001B[?1006h'));
+});
+
+test('does not treat SGR wheel events as onClick', t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	const onClick = spy();
+
+	render(<Text onClick={onClick}>Click</Text>, {
+		stdout,
+		stdin,
+		debug: true,
+		interactive: true,
+		alternateScreen: true,
+	});
+
+	emitReadable(stdin, '\u001B[<64;1;1M');
+
+	t.true(onClick.notCalled);
 });
 
 test('disables mouse tracking when no onClick handlers remain', t => {
@@ -2026,6 +2066,7 @@ test('disables mouse tracking when no onClick handlers remain', t => {
 		stdin,
 		debug: true,
 		interactive: true,
+		alternateScreen: true,
 	});
 
 	rerender(<Text>Click</Text>);

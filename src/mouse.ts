@@ -42,14 +42,19 @@ export const parseMouseInput = (input: string): MouseInput | undefined => {
 	const isPress = input.endsWith('M');
 	const button = buttonCode % 4;
 	const isMotion = Math.floor(buttonCode / 32) % 2 === 1;
+	const isWheel = Math.floor(buttonCode / 64) % 2 === 1;
 
 	if (
 		!Number.isInteger(buttonCode) ||
 		!Number.isInteger(x) ||
 		!Number.isInteger(y) ||
+		buttonCode < 0 ||
+		x < 1 ||
+		y < 1 ||
 		!isPress ||
 		button !== 0 ||
-		isMotion
+		isMotion ||
+		isWheel
 	) {
 		return undefined;
 	}

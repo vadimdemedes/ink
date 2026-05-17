@@ -56,6 +56,7 @@ export type Props = Except<Styles, 'textWrap'> & {
 
 	/**
 	Function to call when the element is clicked.
+	Only supported when rendering in the alternate screen.
 	*/
 	readonly onClick?: ClickHandler;
 };

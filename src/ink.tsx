@@ -647,6 +647,7 @@ export default class Ink {
 					stderr={this.options.stderr}
 					exitOnCtrlC={this.options.exitOnCtrlC}
 					interactive={this.interactive}
+					alternateScreen={this.alternateScreen}
 					renderThrottleMs={this.renderThrottleMs}
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
