@@ -14,7 +14,17 @@ const sanitizeAnsi = (text: string): string => {
 	let output = '';
 
 	for (const token of tokenizeAnsi(text)) {
-		if (token.type === 'text' || token.type === 'osc') {
+		if (token.type === 'text') {
+			output += token.value;
+			continue;
+		}
+
+		// Allow only OSC 8 (hyperlinks); strip all other OSC sequences
+		// to prevent title-hijacking (OSC 0/2) and other terminal attacks
+		if (
+			token.type === 'osc' &&
+			(token.value.startsWith('\x1b]8') || token.value.startsWith('\x9d8'))
+		) {
 			output += token.value;
 			continue;
 		}
