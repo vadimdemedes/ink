@@ -10,6 +10,27 @@ const hideCursorEscape = '\u001B[?25l';
 
 export {showCursorEscape, hideCursorEscape};
 
+export type CursorShape =
+	| 'default'
+	| 'block'
+	| 'bar'
+	| 'underline'
+	| 'blinking-block'
+	| 'blinking-bar'
+	| 'blinking-underline';
+
+const cursorShapeCodes: Record<CursorShape, number> = {
+	default: 0,
+	'blinking-block': 1,
+	block: 2,
+	'blinking-underline': 3,
+	underline: 4,
+	'blinking-bar': 5,
+	bar: 6,
+};
+
+export const resetCursorShapeEscape = '\u001B[0 q';
+
 /**
 Compare two cursor positions. Returns true if they differ.
 */
@@ -17,6 +38,28 @@ export const cursorPositionChanged = (
 	a: CursorPosition | undefined,
 	b: CursorPosition | undefined,
 ): boolean => a?.x !== b?.x || a?.y !== b?.y;
+
+/**
+Compare two cursor shapes. Returns true if they differ.
+*/
+export const cursorShapeChanged = (
+	a: CursorShape | undefined,
+	b: CursorShape | undefined,
+): boolean => a !== b;
+
+/**
+Build DECSCUSR escape sequence to set cursor shape.
+Returns empty string when shape is `undefined`.
+*/
+export const buildCursorShapeEscape = (
+	shape: CursorShape | undefined,
+): string => {
+	if (shape === undefined) {
+		return '';
+	}
+
+	return `\u001B[${cursorShapeCodes[shape]} q`;
+};
 
 /**
 Build escape sequence to move cursor from bottom of output to the target position and show it.

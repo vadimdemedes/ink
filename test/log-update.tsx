@@ -621,3 +621,274 @@ test('incremental rendering - render to empty string (full clear vs early exit)'
 	render('\n');
 	t.is((stdout.write as any).callCount, 2); // No additional write
 });
+
+// Cursor shape tests
+
+const cursorShapeEscapes = [
+	{shape: 'blinking-block', escape: '\u001B[1 q'},
+	{shape: 'block', escape: '\u001B[2 q'},
+	{shape: 'blinking-underline', escape: '\u001B[3 q'},
+	{shape: 'underline', escape: '\u001B[4 q'},
+	{shape: 'blinking-bar', escape: '\u001B[5 q'},
+	{shape: 'bar', escape: '\u001B[6 q'},
+] as const;
+
+for (const {name, incremental} of renderingModes) {
+	for (const {shape, escape} of cursorShapeEscapes) {
+		test(`${name} - emits ${escape.slice(2)} for shape "${shape}"`, t => {
+			const {stdout, render} = createRenderForMode(incremental);
+
+			render.setCursorShape(shape);
+			render('Hello\n');
+
+			const written = (stdout.write as any).firstCall.args[0] as string;
+			t.true(
+				written.startsWith(escape),
+				`expected output to start with ${JSON.stringify(escape)}, got ${JSON.stringify(written.slice(0, 16))}`,
+			);
+		});
+	}
+}
+
+for (const {name, incremental} of renderingModes) {
+	test(`${name} - does not re-emit shape when unchanged between renders`, t => {
+		const {stdout, render} = createRenderForMode(incremental);
+
+		render.setCursorShape('bar');
+		render('Hello\n');
+
+		render.setCursorShape('bar');
+		render('World\n');
+
+		const secondCall = (stdout.write as any).secondCall.args[0] as string;
+		t.false(
+			secondCall.includes('\u001B[6 q'),
+			'shape escape should not be re-emitted when shape is unchanged',
+		);
+	});
+}
+
+for (const {name, incremental} of renderingModes) {
+	test(`${name} - shape change forces a write even when output is unchanged`, t => {
+		const {stdout, render} = createRenderForMode(incremental);
+
+		render.setCursorShape('block');
+		render('Hello\n');
+		t.is((stdout.write as any).callCount, 1);
+
+		// Same output, but shape changed.
+		render.setCursorShape('bar');
+		render('Hello\n');
+
+		t.is((stdout.write as any).callCount, 2);
+		const secondCall = (stdout.write as any).secondCall.args[0] as string;
+		t.is(secondCall, '\u001B[6 q');
+	});
+}
+
+for (const {name, incremental} of renderingModes) {
+	test(`${name} - isCursorDirty is true after setCursorShape`, t => {
+		const {render} = createRenderForMode(incremental);
+
+		t.false(render.isCursorDirty());
+		render.setCursorShape('bar');
+		t.true(render.isCursorDirty());
+	});
+}
+
+for (const {name, incremental} of renderingModes) {
+	test(`${name} - clear() resets shape state so next render re-emits`, t => {
+		const {stdout, render} = createRenderForMode(incremental);
+
+		render.setCursorShape('bar');
+		render('Hello\n');
+
+		render.clear();
+
+		render.setCursorShape('bar');
+		render('Hello\n');
+
+		const lastCall = stdout.get();
+		t.true(
+			lastCall.startsWith('\u001B[6 q'),
+			'shape should be re-emitted after clear()',
+		);
+	});
+}
+
+for (const {name, incremental} of renderingModes) {
+	test(`${name} - done() resets shape state so next render re-emits`, t => {
+		const {stdout, render} = createRenderForMode(incremental);
+
+		render.setCursorShape('underline');
+		render('Hello\n');
+
+		render.done();
+
+		render.setCursorShape('underline');
+		render('Hello\n');
+
+		const lastCall = stdout.get();
+		t.true(
+			lastCall.startsWith('\u001B[4 q'),
+			'shape should be re-emitted after done()',
+		);
+	});
+}
+
+test('standard rendering - shape prefix combines with cursor-only update', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {showCursor: true});
+
+	render.setCursorShape('bar');
+	render.setCursorPosition({x: 0, y: 0});
+	render('Hello\n');
+
+	// Same output, both shape and position change.
+	render.setCursorShape('block');
+	render.setCursorPosition({x: 2, y: 0});
+	render('Hello\n');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	t.true(secondCall.startsWith('\u001B[2 q'));
+	t.true(secondCall.includes(ansiEscapes.cursorTo(2)));
+});
+
+// Done() / sync() / restore-on-exit coverage
+
+const decscusrReset = '\u001B[0 q';
+const decscusrBar = '\u001B[6 q';
+const decscusrUnderline = '\u001B[4 q';
+const decscusrBlinkingBlock = '\u001B[1 q';
+
+const joinedWrites = (stdout: any): string =>
+	(stdout.write.args as string[][]).map(args => args[0]!).join('');
+
+const writesAfter = (stdout: any, before: number): string =>
+	(stdout.write.args as string[][])
+		.slice(before)
+		.map(args => args[0]!)
+		.join('');
+
+for (const {name, incremental} of renderingModes) {
+	test(`${name} - done() emits reset-shape escape when a shape was emitted`, t => {
+		const {stdout, render} = createRenderForMode(incremental);
+
+		render.setCursorShape('bar');
+		render('Hello\n');
+
+		const before = (stdout.write as any).callCount as number;
+		render.done();
+
+		const after = writesAfter(stdout, before);
+		t.true(
+			after.includes(decscusrReset),
+			`done() should write the DECSCUSR reset escape, got ${JSON.stringify(after)}`,
+		);
+	});
+}
+
+for (const {name, incremental} of renderingModes) {
+	test(`${name} - done() does not emit reset-shape escape when no shape was ever set`, t => {
+		const {stdout, render} = createRenderForMode(incremental);
+
+		render('Hello\n');
+
+		const before = (stdout.write as any).callCount as number;
+		render.done();
+
+		const after = writesAfter(stdout, before);
+		t.false(
+			after.includes(decscusrReset),
+			'done() should not emit reset escape when setCursorShape was never called',
+		);
+	});
+}
+
+for (const {name, incremental} of renderingModes) {
+	test(`${name} - done() emits the reset escape exactly once per session`, t => {
+		const {stdout, render} = createRenderForMode(incremental);
+
+		render.setCursorShape('bar');
+		render('Hello\n');
+
+		render.done();
+		render.done();
+
+		const all = joinedWrites(stdout);
+		const occurrences = all.split(decscusrReset).length - 1;
+		t.is(occurrences, 1);
+	});
+}
+
+for (const {name, incremental} of renderingModes) {
+	test(`${name} - sync() emits the shape escape on the fullscreen path`, t => {
+		const {stdout, render} = createRenderForMode(incremental);
+
+		render.setCursorShape('underline');
+		render.sync('Hello\n');
+
+		const all = joinedWrites(stdout);
+		t.true(
+			all.includes(decscusrUnderline),
+			`sync() should emit the underline DECSCUSR escape, got ${JSON.stringify(all)}`,
+		);
+	});
+}
+
+for (const {name, incremental} of renderingModes) {
+	test(`${name} - sync() does not re-emit the shape when unchanged`, t => {
+		const {stdout, render} = createRenderForMode(incremental);
+
+		render.setCursorShape('bar');
+		render('Hello\n');
+
+		const before = (stdout.write as any).callCount as number;
+		render.setCursorShape('bar');
+		render.sync('Updated\n');
+
+		const after = writesAfter(stdout, before);
+		t.false(
+			after.includes(decscusrBar),
+			'sync() should skip the shape escape when shape is unchanged',
+		);
+	});
+}
+
+for (const {name, incremental} of renderingModes) {
+	test(`${name} - shape first emitted via sync() still restores on done()`, t => {
+		const {stdout, render} = createRenderForMode(incremental);
+
+		render.setCursorShape('bar');
+		render.sync('Hello\n');
+
+		const before = (stdout.write as any).callCount as number;
+		render.done();
+
+		const after = writesAfter(stdout, before);
+		t.true(
+			after.includes(decscusrReset),
+			'done() should restore even when shape was first emitted via sync()',
+		);
+	});
+}
+
+test('reset escape is the DECSCUSR default-shape sequence, not a hardcoded shape', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {showCursor: true});
+
+	render.setCursorShape('bar');
+	render('Hello\n');
+	render.done();
+
+	const all = joinedWrites(stdout);
+
+	t.true(all.includes(decscusrReset));
+
+	const resetIndex = all.lastIndexOf(decscusrReset);
+	const tail = all.slice(resetIndex + decscusrReset.length);
+	t.false(
+		tail.includes(decscusrBlinkingBlock),
+		'no blinking-block hardcode should follow the reset',
+	);
+});
