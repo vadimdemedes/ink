@@ -15,7 +15,11 @@ import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
 import {hideCursorEscape, showCursorEscape} from './cursor-helpers.js';
-import logUpdate, { type LogUpdate, type CursorPosition, type CursorShape } from './log-update.js';
+import logUpdate, {
+	type LogUpdate,
+	type CursorPosition,
+	type CursorShape,
+} from './log-update.js';
 import {bsu, esu, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
 import App from './components/App.js';

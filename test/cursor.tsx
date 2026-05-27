@@ -64,7 +64,6 @@ const waitForCondition = async (condition: () => boolean): Promise<void> => {
 
 function InputApp() {
 	const [text, setText] = useState('');
-	const {setCursorPosition} = useCursor();
 
 	useInput((input, key) => {
 		if (key.backspace || key.delete) {
@@ -77,7 +76,7 @@ function InputApp() {
 		}
 	});
 
-	setCursorPosition({x: 2 + text.length, y: 0});
+	useCursor({position: {x: 2 + text.length, y: 0}});
 
 	return (
 		<Box>
@@ -199,8 +198,7 @@ test.serial(
 		const stdin = createStdin();
 
 		function CursorChild() {
-			const {setCursorPosition} = useCursor();
-			setCursorPosition({x: 5, y: 0});
+			useCursor({position: {x: 5, y: 0}});
 			return <Text>child</Text>;
 		}
 
@@ -264,8 +262,7 @@ test.serial(
 		let suspended = true;
 
 		function CursorChild() {
-			const {setCursorPosition} = useCursor();
-			setCursorPosition({x: 5, y: 0}); // Render-phase side effect
+			useCursor({position: {x: 5, y: 0}}); // Declared during render
 			if (suspended) {
 				// eslint-disable-next-line @typescript-eslint/only-throw-error
 				throw promise;
@@ -308,7 +305,6 @@ test.serial('screen does not scroll up on subsequent renders', async t => {
 
 	function MultiLineApp() {
 		const [text, setText] = useState('');
-		const {setCursorPosition} = useCursor();
 
 		useInput((input, key) => {
 			if (!key.ctrl && !key.meta && input) {
@@ -316,7 +312,7 @@ test.serial('screen does not scroll up on subsequent renders', async t => {
 			}
 		});
 
-		setCursorPosition({x: 2 + text.length, y: 1});
+		useCursor({position: {x: 2 + text.length, y: 1}});
 
 		return (
 			<Box flexDirection="column">
@@ -357,10 +353,9 @@ test.serial('screen does not scroll up on subsequent renders', async t => {
 });
 
 function StdoutWriteApp() {
-	const {setCursorPosition} = useCursor();
 	const {write} = useStdout();
 
-	setCursorPosition({x: 2, y: 0});
+	useCursor({position: {x: 2, y: 0}});
 
 	useEffect(() => {
 		write('from stdout hook\n');
@@ -370,10 +365,9 @@ function StdoutWriteApp() {
 }
 
 function StderrWriteApp() {
-	const {setCursorPosition} = useCursor();
 	const {write} = useStderr();
 
-	setCursorPosition({x: 2, y: 0});
+	useCursor({position: {x: 2, y: 0}});
 
 	useEffect(() => {
 		write('from stderr hook\n');
@@ -601,13 +595,12 @@ test.serial(
 	},
 );
 
-test.serial('useCursor: setCursorShape emits DECSCUSR escape', async t => {
+test.serial('useCursor: shape option emits DECSCUSR escape', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 
 	function ShapeApp() {
-		const {setCursorShape} = useCursor();
-		setCursorShape('bar');
+		useCursor({shape: 'bar'});
 		return <Text>Hello</Text>;
 	}
 
@@ -621,14 +614,13 @@ test.serial('useCursor: setCursorShape emits DECSCUSR escape', async t => {
 });
 
 test.serial(
-	'useCursor: setCursorShape does not re-emit on re-render with same shape',
+	'useCursor: shape option does not re-emit on re-render with same shape',
 	async t => {
 		const stdout = createStdout();
 		const stdin = createStdin();
 
 		function ShapeInputApp() {
 			const [count, setCount] = useState(0);
-			const {setCursorShape} = useCursor();
 
 			useInput((_input, key) => {
 				if (key.return) {
@@ -636,7 +628,7 @@ test.serial(
 				}
 			});
 
-			setCursorShape('bar');
+			useCursor({shape: 'bar'});
 			return <Text>{`count: ${count}`}</Text>;
 		}
 
@@ -663,14 +655,13 @@ test.serial(
 );
 
 test.serial(
-	'useCursor: setCursorShape emits no escape in non-interactive mode',
+	'useCursor: shape option emits no escape in non-interactive mode',
 	async t => {
 		const stdout = createStdout();
 		const stdin = createStdin();
 
 		function ShapeApp() {
-			const {setCursorShape} = useCursor();
-			setCursorShape('bar');
+			useCursor({shape: 'bar'});
 			return <Text>Hello</Text>;
 		}
 
@@ -702,8 +693,7 @@ test.serial(
 		const stdin = createStdin();
 
 		function ShapeChild() {
-			const {setCursorShape} = useCursor();
-			setCursorShape('underline');
+			useCursor({shape: 'underline'});
 			return <Text>child</Text>;
 		}
 

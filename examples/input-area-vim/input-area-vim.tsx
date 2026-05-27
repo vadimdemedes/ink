@@ -15,7 +15,6 @@ function InputArea() {
 	const {exit} = useApp();
 	const [mode, setMode] = useState<Mode>('normal');
 	const [text, setText] = useState('');
-	const {setCursorPosition, setCursorShape} = useCursor();
 
 	useInput((input, key) => {
 		if (mode === 'normal') {
@@ -51,8 +50,10 @@ function InputArea() {
 		mode === 'insert' ? text.length : Math.max(0, text.length - 1);
 	const cursorX = stringWidth(prompt + text.slice(0, cursorIndex));
 
-	setCursorShape(mode === 'insert' ? 'bar' : 'block');
-	setCursorPosition({x: cursorX, y: 2});
+	useCursor({
+		position: {x: cursorX, y: 2},
+		shape: mode === 'insert' ? 'bar' : 'block',
+	});
 
 	return (
 		<Box flexDirection="column">

@@ -2,8 +2,7 @@ import React from 'react';
 import {render, Text, useCursor} from '../../src/index.js';
 
 function App() {
-	const {setCursorShape} = useCursor();
-	setCursorShape('bar');
+	useCursor({shape: 'bar'});
 	return <Text>waiting</Text>;
 }
 
