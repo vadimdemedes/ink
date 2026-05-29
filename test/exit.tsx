@@ -176,19 +176,20 @@ test.serial('cursor shape is restored on SIGINT', async t => {
 		);
 
 		let output = '';
+		let sigintSent = false;
 
 		term.onData(data => {
 			output += data;
+			if (!sigintSent && output.includes('waiting')) {
+				sigintSent = true;
+				term.kill('SIGINT');
+			}
 		});
-
-		setTimeout(() => {
-			term.kill('SIGINT');
-		}, 500);
 
 		setTimeout(() => {
 			term.kill();
 			reject(new Error('Test timed out - process did not exit in time'));
-		}, 2000);
+		}, 5000);
 
 		term.onExit(() => {
 			t.true(output.includes(decscusrReset));
