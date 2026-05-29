@@ -27,6 +27,7 @@ export default function ErrorOverview({error}: Props) {
 	const filePath = cleanupPath(origin?.file);
 	let excerpt: CodeExcerpt[] | undefined;
 	let lineWidth = 0;
+	const stackLineCounts = new Map<string, number>();
 
 	if (filePath && origin?.line && fs.existsSync(filePath)) {
 		const sourceCode = fs.readFileSync(filePath, 'utf8');
@@ -96,11 +97,16 @@ export default function ErrorOverview({error}: Props) {
 						.slice(1)
 						.map(line => {
 							const parsedLine = stackUtils.parseLine(line);
+							const lineCount = stackLineCounts.get(line) ?? 0;
+							stackLineCounts.set(line, lineCount + 1);
+							const key = `${line}-${lineCount}`;
 
-							// If the line from the stack cannot be parsed, we print out the unparsed line.
-							if (!parsedLine) {
+							// If the line from the stack cannot be parsed, or parsed into an incomplete
+							// frame without source location data (for example, "at native"), we print
+							// out the unparsed line.
+							if (!parsedLine?.file || !parsedLine.line || !parsedLine.column) {
 								return (
-									<Box key={line}>
+									<Box key={key}>
 										<Text dimColor>- </Text>
 										<Text dimColor bold>
 											{line}
@@ -111,7 +117,7 @@ export default function ErrorOverview({error}: Props) {
 							}
 
 							return (
-								<Box key={line}>
+								<Box key={key}>
 									<Text dimColor>- </Text>
 									<Text dimColor bold>
 										{parsedLine.function}
