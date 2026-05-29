@@ -24,6 +24,20 @@ test('renders native stack frames as raw lines', t => {
 	t.false(output.includes('undefined'));
 });
 
+test('renders named native stack frames as raw lines', t => {
+	const output = stripAnsi(
+		renderToString(
+			<ErrorOverview
+				error={createErrorWithStack('Error: Oh no\n    at foo (native)')}
+			/>,
+		),
+	);
+
+	t.true(output.includes(' -     at foo (native)'));
+	t.false(output.includes('foo (::)'));
+	t.false(output.includes('undefined'));
+});
+
 test('does not emit duplicate key warnings for repeated stack lines', t => {
 	const consoleErrors: string[] = [];
 	const originalConsoleError = console.error;

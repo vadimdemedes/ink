@@ -102,8 +102,9 @@ export default function ErrorOverview({error}: Props) {
 							const key = `${line}-${lineCount}`;
 
 							// If the line from the stack cannot be parsed, or parsed into an incomplete
-							// frame (for example, "at native"), we print out the unparsed line.
-							if (!parsedLine || (!parsedLine.file && !parsedLine.function)) {
+							// frame without source location data (for example, "at native"), we print
+							// out the unparsed line.
+							if (!parsedLine?.file || !parsedLine.line || !parsedLine.column) {
 								return (
 									<Box key={key}>
 										<Text dimColor>- </Text>
