@@ -147,6 +147,81 @@ test('returns dimensions matching measureElement', async t => {
 	t.true(lastWrite.includes('Size: 20,3'));
 });
 
+test('accounts for margin offset', async t => {
+	const stdout = createStdout();
+
+	function Test() {
+		const [result, setResult] = useState('');
+		const ref = useRef<DOMElement>(null);
+
+		useEffect(() => {
+			if (!ref.current) {
+				return;
+			}
+
+			const box = getBoundingBox(ref.current);
+
+			if (box) {
+				setResult(`${box.x},${box.y}`);
+			}
+		}, []);
+
+		return (
+			<Box flexDirection="column">
+				<Box marginLeft={5} marginTop={2}>
+					<Box ref={ref}>
+						<Text>Margin: {result}</Text>
+					</Box>
+				</Box>
+			</Box>
+		);
+	}
+
+	render(<Test />, {stdout, debug: true});
+	await delay(100);
+
+	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
+	t.true(lastWrite.includes('Margin: 5,2'));
+});
+
+test('sibling offset — second child has correct y', async t => {
+	const stdout = createStdout();
+
+	function Test() {
+		const [result, setResult] = useState('');
+		const ref = useRef<DOMElement>(null);
+
+		useEffect(() => {
+			if (!ref.current) {
+				return;
+			}
+
+			const box = getBoundingBox(ref.current);
+
+			if (box) {
+				setResult(`${box.x},${box.y}`);
+			}
+		}, []);
+
+		return (
+			<Box flexDirection="column">
+				<Text>Line 1</Text>
+				<Text>Line 2</Text>
+				<Box ref={ref}>
+					<Text>Third: {result}</Text>
+				</Box>
+			</Box>
+		);
+	}
+
+	render(<Test />, {stdout, debug: true});
+	await delay(100);
+
+	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
+	// Third element is at y=2 (after two text lines)
+	t.true(lastWrite.includes('Third: 0,2'));
+});
+
 test('returns undefined for element without yoga node', t => {
 	const node = {yogaNode: undefined, parentNode: undefined} as DOMElement;
 	const result = getBoundingBox(node);
