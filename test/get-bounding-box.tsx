@@ -1,7 +1,13 @@
 import React, {useState, useRef, useEffect} from 'react';
 import test from 'ava';
 import delay from 'delay';
-import {Box, Text, render, getBoundingBox, type DOMElement} from '../src/index.js';
+import {
+	Box,
+	Text,
+	render,
+	getBoundingBox,
+	type DOMElement,
+} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
 test('get bounding box of root-level element', async t => {
@@ -108,7 +114,7 @@ test('get bounding box of deeply nested element accumulates offsets', async t =>
 	await delay(100);
 
 	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
-	// paddingLeft: 2 + 3 = 5, paddingTop: 1 + 2 = 3
+	// Accumulated padding: left 2+3=5, top 1+2=3
 	t.true(lastWrite.includes('Deep: 5,3'));
 });
 
@@ -218,12 +224,20 @@ test('sibling offset — second child has correct y', async t => {
 	await delay(100);
 
 	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
-	// Third element is at y=2 (after two text lines)
+	// Y=2 because two text siblings precede the measured element
 	t.true(lastWrite.includes('Third: 0,2'));
 });
 
 test('returns undefined for element without yoga node', t => {
-	const node = {yogaNode: undefined, parentNode: undefined} as DOMElement;
+	const node: DOMElement = {
+		yogaNode: undefined,
+		parentNode: undefined,
+		nodeName: 'ink-box',
+		attributes: {},
+		childNodes: [],
+		style: {},
+	};
+
 	const result = getBoundingBox(node);
 	t.is(result, undefined);
 });
