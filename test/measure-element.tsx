@@ -171,6 +171,157 @@ test('measure element in useLayoutEffect after state update', async t => {
 	);
 });
 
+test('measure position of nested element with padding offset', async t => {
+	const stdout = createStdout();
+
+	function Test() {
+		const [result, setResult] = useState('');
+		const ref = useRef<DOMElement>(null);
+
+		useEffect(() => {
+			if (!ref.current) {
+				return;
+			}
+
+			const metrics = measureElement(ref.current);
+			setResult(`${metrics.x},${metrics.y}`);
+		}, []);
+
+		return (
+			<Box flexDirection="column">
+				<Text>Header</Text>
+				<Box paddingLeft={4}>
+					<Box ref={ref}>
+						<Text>Nested: {result}</Text>
+					</Box>
+				</Box>
+			</Box>
+		);
+	}
+
+	render(<Test />, {stdout, debug: true});
+	await delay(100);
+
+	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
+	t.true(lastWrite.includes('Nested: 4,1'));
+});
+
+test('measure position of deeply nested element accumulates offsets', async t => {
+	const stdout = createStdout();
+
+	function Test() {
+		const [result, setResult] = useState('');
+		const ref = useRef<DOMElement>(null);
+
+		useEffect(() => {
+			if (!ref.current) {
+				return;
+			}
+
+			const metrics = measureElement(ref.current);
+			setResult(`${metrics.x},${metrics.y}`);
+		}, []);
+
+		return (
+			<Box paddingLeft={2} paddingTop={1}>
+				<Box paddingLeft={3} paddingTop={2}>
+					<Box ref={ref}>
+						<Text>Deep: {result}</Text>
+					</Box>
+				</Box>
+			</Box>
+		);
+	}
+
+	render(<Test />, {stdout, debug: true});
+	await delay(100);
+
+	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
+	t.true(lastWrite.includes('Deep: 5,3'));
+});
+
+test('measure position accounts for margin offset', async t => {
+	const stdout = createStdout();
+
+	function Test() {
+		const [result, setResult] = useState('');
+		const ref = useRef<DOMElement>(null);
+
+		useEffect(() => {
+			if (!ref.current) {
+				return;
+			}
+
+			const metrics = measureElement(ref.current);
+			setResult(`${metrics.x},${metrics.y}`);
+		}, []);
+
+		return (
+			<Box flexDirection="column">
+				<Box marginLeft={5} marginTop={2}>
+					<Box ref={ref}>
+						<Text>Margin: {result}</Text>
+					</Box>
+				</Box>
+			</Box>
+		);
+	}
+
+	render(<Test />, {stdout, debug: true});
+	await delay(100);
+
+	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
+	t.true(lastWrite.includes('Margin: 5,2'));
+});
+
+test('measure position — sibling offset gives correct y', async t => {
+	const stdout = createStdout();
+
+	function Test() {
+		const [result, setResult] = useState('');
+		const ref = useRef<DOMElement>(null);
+
+		useEffect(() => {
+			if (!ref.current) {
+				return;
+			}
+
+			const metrics = measureElement(ref.current);
+			setResult(`${metrics.x},${metrics.y}`);
+		}, []);
+
+		return (
+			<Box flexDirection="column">
+				<Text>Line 1</Text>
+				<Text>Line 2</Text>
+				<Box ref={ref}>
+					<Text>Third: {result}</Text>
+				</Box>
+			</Box>
+		);
+	}
+
+	render(<Test />, {stdout, debug: true});
+	await delay(100);
+
+	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
+	t.true(lastWrite.includes('Third: 0,2'));
+});
+
+test('measure element returns zeros for node without yoga', t => {
+	const node = {
+		yogaNode: undefined,
+		parentNode: undefined,
+		nodeName: 'ink-box',
+		attributes: {},
+		childNodes: [],
+		style: {},
+	} as unknown as DOMElement;
+
+	const metrics = measureElement(node);
+	t.deepEqual(metrics, {x: 0, y: 0, width: 0, height: 0});
+});
+
 test.serial('calculate layout while rendering is throttled', async t => {
 	const stdout = createStdout();
 
