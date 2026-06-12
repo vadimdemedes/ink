@@ -115,6 +115,13 @@ const stripKittyQueryResponsesAndTrailingPartial = (
 	return keptBytes;
 };
 
+// Windows consoles scroll the buffer when the bottom-right cell is written,
+// unlike xterm-like terminals which defer the wrap. That extra scroll
+// desynchronizes the incremental erase used for frames that exactly fill the
+// viewport, leaving stale copies of previous frames behind (#969). Keep the
+// pre-7.0 behavior of fully clearing between fullscreen frames there.
+const isWindowsConsole = process.platform === 'win32';
+
 const shouldClearTerminalForFrame = ({
 	isTty,
 	viewportRows,
@@ -136,8 +143,13 @@ const shouldClearTerminalForFrame = ({
 	const wasFullscreen = previousOutputHeight >= viewportRows;
 	const wasOverflowing = previousOutputHeight > viewportRows;
 	const isOverflowing = nextOutputHeight > viewportRows;
+	const isFullscreen = nextOutputHeight >= viewportRows;
 	const isLeavingFullscreen = wasFullscreen && nextOutputHeight < viewportRows;
 	const shouldClearOnUnmount = isUnmounting && wasFullscreen;
+
+	if (isWindowsConsole && (wasFullscreen || isFullscreen)) {
+		return true;
+	}
 
 	return (
 		// Overflowing frames still need full clear fallback.
