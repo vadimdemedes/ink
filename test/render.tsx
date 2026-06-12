@@ -490,17 +490,21 @@ test.serial(
 test.serial(
 	'#969: full-height rerenders on Windows should clear terminal between frames',
 	async t => {
-		const {output, clearTerminalCount} = await runIssue450FixtureWithCounts(
+		const output = await runIssue450Fixture(
 			'issue-969-windows-full-height-rerender',
 		);
 
 		assertIssue450DynamicFrameOutput(t, output);
 		// Windows consoles scroll when the bottom-right cell is written, which
 		// breaks incremental erase for fullscreen frames. Each rerender must fall
-		// back to a full clear there.
+		// back to a full clear there. The fixture process believes it is on
+		// Windows, so ansi-escapes may emit its legacy clearTerminal variant
+		// there (the host's os.release() decides), while this process resolves
+		// the modern one. Count the eraseScreen prefix shared by both variants.
+		const fullClearCount = countOccurrences(output, ansiEscapes.eraseScreen);
 		t.true(
-			clearTerminalCount >= 2,
-			`Expected a clearTerminal sequence per fullscreen rerender, received ${clearTerminalCount}`,
+			fullClearCount >= 2,
+			`Expected a full clear per fullscreen rerender, received ${fullClearCount}`,
 		);
 	},
 );
