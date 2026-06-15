@@ -4,6 +4,7 @@ import delay from 'delay';
 import stripAnsi from 'strip-ansi';
 import {
 	Box,
+	Static,
 	Text,
 	render,
 	measureElement,
@@ -306,6 +307,42 @@ test('measure position — sibling offset gives correct y', async t => {
 
 	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
 	t.true(lastWrite.includes('Third: 0,2'));
+});
+
+test('y includes Static output lines above live region', async t => {
+	const stdout = createStdout();
+
+	function Test() {
+		const [result, setResult] = useState('');
+		const ref = useRef<DOMElement>(null);
+
+		useEffect(() => {
+			if (!ref.current) {
+				return;
+			}
+
+			const metrics = measureElement(ref.current);
+			setResult(`${metrics.x},${metrics.y}`);
+		}, []);
+
+		return (
+			<Box flexDirection="column">
+				<Static items={['Static A', 'Static B']}>
+					{item => <Text key={item}>{item}</Text>}
+				</Static>
+				<Box ref={ref}>
+					<Text>Live: {result}</Text>
+				</Box>
+			</Box>
+		);
+	}
+
+	render(<Test />, {stdout, debug: true});
+	await delay(100);
+
+	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
+	// Two static lines above → y should be 2, not 0
+	t.true(lastWrite.includes('Live: 0,2'));
 });
 
 test('measure element returns zeros for node without yoga', t => {

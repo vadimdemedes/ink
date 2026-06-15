@@ -2,12 +2,12 @@ import {type DOMElement} from './dom.js';
 
 type Output = {
 	/**
-	Horizontal position (0-based column) within the ink layout tree.
+	Horizontal position (0-based column) in the rendered frame.
 	*/
 	x: number;
 
 	/**
-	Vertical position (0-based row) within the ink layout tree.
+	Vertical position (0-based row) in the rendered frame, including any `<Static>` output above the live region.
 	*/
 	y: number;
 
@@ -41,6 +41,7 @@ const measureElement = (node: DOMElement): Output => {
 	let y = yogaNode.getComputedTop();
 
 	let current = node.parentNode;
+	let root: DOMElement | undefined;
 
 	while (current) {
 		if (current.yogaNode) {
@@ -48,8 +49,14 @@ const measureElement = (node: DOMElement): Output => {
 			y += current.yogaNode.getComputedTop();
 		}
 
+		if (!current.parentNode) {
+			root = current;
+		}
+
 		current = current.parentNode;
 	}
+
+	y += root?.internal_staticOutputHeight ?? 0;
 
 	return {
 		x,

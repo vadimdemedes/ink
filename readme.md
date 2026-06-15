@@ -2875,12 +2875,13 @@ clear();
 
 #### measureElement(ref)
 
-Measure the dimensions of a particular `<Box>` element.
-Returns an object with `width` and `height` properties.
-This function is useful when your component needs to know the amount of available space it has. You can use it when you need to change the layout based on the length of its content.
+Measure the layout metrics of a particular `<Box>` element.
+Returns an object with `x`, `y`, `width`, and `height` properties.
+
+`x` and `y` are the element's position in the rendered frame. The `y` coordinate includes any `<Static>` output above the live region, making these values suitable for mouse hit-testing with terminal mouse input (SGR protocol).
 
 > [!NOTE]
-> `measureElement()` returns `{width: 0, height: 0}` when called during render (before layout is calculated). Call it from post-render code, such as `useEffect`, `useLayoutEffect`, input handlers, or timer callbacks. When content changes, pass the relevant dependency to your effect so it re-measures after each update.
+> `measureElement()` returns `{x: 0, y: 0, width: 0, height: 0}` when called during render (before layout is calculated). Call it from post-render code, such as `useEffect`, `useLayoutEffect`, input handlers, or timer callbacks. When content changes, pass the relevant dependency to your effect so it re-measures after each update.
 
 ##### ref
 
@@ -2896,8 +2897,8 @@ const Example = () => {
 	const ref = useRef();
 
 	useEffect(() => {
-		const {width, height} = measureElement(ref.current);
-		// width = 100, height = 1
+		const {x, y, width, height} = measureElement(ref.current);
+		// x = 0, y = 0, width = 100, height = 1
 	}, []);
 
 	return (
