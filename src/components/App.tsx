@@ -7,11 +7,12 @@ import React, {
 	useCallback,
 	useMemo,
 	useEffect,
+	useInsertionEffect,
 } from 'react';
 import cliCursor from 'cli-cursor';
 import {type CursorPosition} from '../log-update.js';
 import {createInputParser} from '../input-parser.js';
-import AppContext from './AppContext.js';
+import AppContext, {type SuspendTerminal} from './AppContext.js';
 import StdinContext from './StdinContext.js';
 import StdoutContext from './StdoutContext.js';
 import StderrContext from './StderrContext.js';
@@ -41,6 +42,11 @@ type Props = {
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (errorOrResult?: unknown) => void;
 	readonly onWaitUntilRenderFlush: () => Promise<void>;
+	readonly onSuspendTerminal: SuspendTerminal;
+	readonly onRegisterInputControl: (
+		pauseInput: () => void,
+		resumeInput: () => void,
+	) => void;
 	readonly setCursorPosition: (position: CursorPosition | undefined) => void;
 	readonly interactive: boolean;
 	readonly renderThrottleMs: number;
@@ -64,6 +70,8 @@ function App({
 	exitOnCtrlC,
 	onExit,
 	onWaitUntilRenderFlush,
+	onSuspendTerminal,
+	onRegisterInputControl,
 	setCursorPosition,
 	interactive,
 	renderThrottleMs,
@@ -403,6 +411,60 @@ function App({
 		[stdout],
 	);
 
+	// Remembers which input modes were active so resumeInput can reinstate exactly
+	// those after a terminal suspension, without touching the ref counts (the React
+	// components still "own" raw mode/bracketed paste across the suspension).
+	const suspendedInputStateRef = useRef({
+		rawMode: false,
+		bracketedPaste: false,
+	});
+
+	const pauseInput = useCallback((): void => {
+		const wasRawMode = isRawModeSupported && rawModeEnabledCount.current > 0;
+		const wasBracketedPaste = bracketedPasteModeEnabledCount.current > 0;
+		suspendedInputStateRef.current = {
+			rawMode: wasRawMode,
+			bracketedPaste: wasBracketedPaste,
+		};
+
+		if (wasBracketedPaste && stdout.isTTY) {
+			try {
+				stdout.write('\u001B[?2004l');
+			} catch {}
+		}
+
+		if (wasRawMode) {
+			stdin.setRawMode(false);
+			stdin.unref();
+			clearInputState();
+		}
+	}, [isRawModeSupported, stdin, stdout, clearInputState]);
+
+	const resumeInput = useCallback((): void => {
+		const {rawMode, bracketedPaste} = suspendedInputStateRef.current;
+
+		if (rawMode) {
+			stdin.setEncoding('utf8');
+			stdin.ref();
+			stdin.setRawMode(true);
+			attachReadableListener();
+		}
+
+		if (bracketedPaste && stdout.isTTY) {
+			try {
+				stdout.write('\u001B[?2004h');
+			} catch {}
+		}
+	}, [stdin, stdout, attachReadableListener]);
+
+	// Register input pause/resume in an insertion effect: it runs before every
+	// passive effect (parent and child), so a child that calls suspendTerminal()
+	// from its own effect always finds the input control already registered. A
+	// normal effect would run too late (child effects fire before the parent's).
+	useInsertionEffect(() => {
+		onRegisterInputControl(pauseInput, resumeInput);
+	}, [onRegisterInputControl, pauseInput, resumeInput]);
+
 	// Focus navigation helpers
 	const findNextFocusable = useCallback(
 		(
@@ -645,8 +707,9 @@ function App({
 		() => ({
 			exit: handleExit,
 			waitUntilRenderFlush: onWaitUntilRenderFlush,
+			suspendTerminal: onSuspendTerminal,
 		}),
-		[handleExit, onWaitUntilRenderFlush],
+		[handleExit, onWaitUntilRenderFlush, onSuspendTerminal],
 	);
 
 	const stdinContextValue = useMemo(
