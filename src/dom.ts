@@ -73,8 +73,6 @@ export type DOMElement = {
 	onImmediateRender?: () => void;
 	onStaticChange?: () => void;
 	internal_layoutListeners?: Set<LayoutListener>;
-	// Number of static output lines above the live region, set by the Ink renderer on the root node.
-	internal_staticOutputHeight?: number;
 } & InkNode;
 
 export type TextNode = {

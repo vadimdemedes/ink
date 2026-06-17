@@ -522,7 +522,6 @@ export default class Ink {
 	// Resets `fullStaticOutput` when the <Static> identity changes so stale items from a previous instance are not replayed on future rewrites.
 	handleStaticChange = (): void => {
 		this.fullStaticOutput = '';
-		this.rootNode.internal_staticOutputHeight = 0;
 	};
 
 	onRender: () => void = () => {
@@ -551,7 +550,6 @@ export default class Ink {
 		if (this.options.debug) {
 			if (hasStaticOutput) {
 				this.fullStaticOutput += staticOutput;
-				this.updateStaticOutputHeight();
 			}
 
 			this.lastOutput = output;
@@ -629,7 +627,6 @@ export default class Ink {
 
 		if (hasStaticOutput) {
 			this.fullStaticOutput += staticOutput;
-			this.updateStaticOutputHeight();
 		}
 
 		this.renderInteractiveFrame(
@@ -962,13 +959,6 @@ export default class Ink {
 				}
 			}
 		});
-	}
-
-	private updateStaticOutputHeight(): void {
-		this.rootNode.internal_staticOutputHeight =
-			this.fullStaticOutput === ''
-				? 0
-				: this.fullStaticOutput.split('\n').length - 1;
 	}
 
 	private setAlternateScreen(enabled: boolean): void {

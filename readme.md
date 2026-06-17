@@ -2878,7 +2878,7 @@ clear();
 Measure the layout metrics of a particular `<Box>` element.
 Returns an object with `x`, `y`, `width`, and `height` properties.
 
-`x` and `y` are the element's position in the rendered frame. The `y` coordinate includes any `<Static>` output above the live region, making these values suitable for mouse hit-testing with terminal mouse input (SGR protocol).
+`x` and `y` are the element's position within the live layout region, computed by walking up the layout tree. These are layout-tree coordinates — in alternate-screen mode they correspond directly to viewport rows; in inline mode, subtract the live region's viewport offset from the mouse event's row to convert between coordinate spaces.
 
 > [!NOTE]
 > `measureElement()` returns `{x: 0, y: 0, width: 0, height: 0}` when called during render (before layout is calculated). Call it from post-render code, such as `useEffect`, `useLayoutEffect`, input handlers, or timer callbacks. When content changes, pass the relevant dependency to your effect so it re-measures after each update.

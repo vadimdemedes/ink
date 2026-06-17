@@ -309,7 +309,7 @@ test('measure position — sibling offset gives correct y', async t => {
 	t.true(lastWrite.includes('Third: 0,2'));
 });
 
-test('y includes Static output lines above live region', async t => {
+test('Static does not affect layout-tree coordinates', async t => {
 	const stdout = createStdout();
 
 	function Test() {
@@ -341,8 +341,8 @@ test('y includes Static output lines above live region', async t => {
 	await delay(100);
 
 	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
-	// Two static lines above → y should be 2, not 0
-	t.true(lastWrite.includes('Live: 0,2'));
+	// Static uses position:absolute so it doesn't affect live layout coordinates
+	t.true(lastWrite.includes('Live: 0,0'));
 });
 
 test('measure element returns zeros for node without yoga', t => {
