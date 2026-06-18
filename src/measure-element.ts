@@ -2,6 +2,16 @@ import {type DOMElement} from './dom.js';
 
 type Output = {
 	/**
+	Horizontal position (0-based column) within the live layout region.
+	*/
+	x: number;
+
+	/**
+	Vertical position (0-based row) within the live layout region.
+	*/
+	y: number;
+
+	/**
 	Element width.
 	*/
 	width: number;
@@ -13,15 +23,41 @@ type Output = {
 };
 
 /**
-Measure the dimensions of a particular `<Box>` element.
-Returns an object with `width` and `height` properties.
-This function is useful when your component needs to know the amount of available space it has. You can use it when you need to change the layout based on the length of its content.
+Measure the layout metrics of a particular `<Box>` element.
+Returns an object with `x`, `y`, `width`, and `height` properties.
 
-Note: `measureElement()` returns `{width: 0, height: 0}` when called during render (before layout is calculated). Call it from post-render code, such as `useEffect`, `useLayoutEffect`, input handlers, or timer callbacks. When content changes, pass the relevant dependency to your effect so it re-measures after each update.
+`x` and `y` are the element's position within the live layout region, computed by walking up the layout tree and accumulating each ancestor's offset. These are layout-tree coordinates, not terminal viewport coordinates — to map them to viewport rows for mouse hit-testing, subtract the live region's viewport anchor from the mouse event's row.
+
+Note: `measureElement()` returns `{x: 0, y: 0, width: 0, height: 0}` when called during render (before layout is calculated). Call it from post-render code, such as `useEffect`, `useLayoutEffect`, input handlers, or timer callbacks. When content changes, pass the relevant dependency to your effect so it re-measures after each update.
 */
-const measureElement = (node: DOMElement): Output => ({
-	width: node.yogaNode?.getComputedWidth() ?? 0,
-	height: node.yogaNode?.getComputedHeight() ?? 0,
-});
+const measureElement = (node: DOMElement): Output => {
+	const {yogaNode} = node;
+
+	if (!yogaNode) {
+		return {x: 0, y: 0, width: 0, height: 0};
+	}
+
+	let x = yogaNode.getComputedLeft();
+	let y = yogaNode.getComputedTop();
+
+	let current = node.parentNode;
+
+	while (current) {
+		if (current.yogaNode) {
+			x += current.yogaNode.getComputedLeft();
+			y += current.yogaNode.getComputedTop();
+		}
+
+		current = current.parentNode;
+	}
+
+	return {
+		x,
+		y,
+		width: yogaNode.getComputedWidth(),
+		height: yogaNode.getComputedHeight(),
+	};
+};
 
 export default measureElement;
+export type {Output as ElementMetrics};
