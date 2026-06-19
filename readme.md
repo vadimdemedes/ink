@@ -3141,6 +3141,7 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-stepper](https://github.com/archcorsair/ink-stepper) - Step-by-step wizard.
 - [ink-virtual-list](https://github.com/archcorsair/ink-virtual-list) - Virtualized list that renders only visible items for performance.
 - [ink-color-picker](https://github.com/sina-byn/ink-color-picker) - Color picker.
+- [ink-mermaid](https://github.com/mk668a/ink-mermaid) - Render Mermaid diagrams as ASCII/Unicode in the terminal.
 
 ## Useful Hooks
 
