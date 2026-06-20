@@ -25,12 +25,16 @@ Assumes cursor is at (col 0, line visibleLineCount) — i.e. just after the last
 export const buildCursorSuffix = (
 	visibleLineCount: number,
 	cursorPosition: CursorPosition | undefined,
+	viewportHeight = Infinity,
 ): string => {
 	if (!cursorPosition) {
 		return '';
 	}
 
-	const moveUp = visibleLineCount - cursorPosition.y;
+	const moveUp = Math.min(
+		visibleLineCount - cursorPosition.y,
+		viewportHeight,
+	);
 	return (
 		(moveUp > 0 ? ansiEscapes.cursorUp(moveUp) : '') +
 		ansiEscapes.cursorTo(cursorPosition.x) +
@@ -64,6 +68,7 @@ export type CursorOnlyInput = {
 	previousCursorPosition: CursorPosition | undefined;
 	visibleLineCount: number;
 	cursorPosition: CursorPosition | undefined;
+	viewportHeight?: number;
 };
 
 /**
@@ -79,6 +84,7 @@ export const buildCursorOnlySequence = (input: CursorOnlyInput): string => {
 	const cursorSuffix = buildCursorSuffix(
 		input.visibleLineCount,
 		input.cursorPosition,
+		input.viewportHeight,
 	);
 	return hidePrefix + returnToBottom + cursorSuffix;
 };

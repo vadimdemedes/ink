@@ -28,6 +28,17 @@ export type LogUpdate = {
 const visibleLineCount = (lines: string[], str: string): number =>
 	str.endsWith('\n') ? lines.length - 1 : lines.length;
 
+// Get the viewport height from a stream. TTY streams expose `.rows`;
+// non-TTY streams don't, so we fall back to Infinity (no clamping).
+const getViewportRows = (stream: Writable): number =>
+	(stream as NodeJS.WriteStream).rows || Infinity;
+
+// Clamp a line count so that eraseLines / cursorUp never move the cursor
+// above the visible viewport. Lines beyond the viewport have already
+// scrolled into terminal scrollback and cannot be erased.
+const clampToViewport = (lineCount: number, stream: Writable): number =>
+	Math.min(lineCount, getViewportRows(stream));
+
 const createStandard = (
 	stream: Writable,
 	{showCursor = false} = {},
@@ -73,7 +84,8 @@ const createStandard = (
 
 		const lines = str.split('\n');
 		const visibleCount = visibleLineCount(lines, str);
-		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+		const viewportRows = getViewportRows(stream);
+		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor, viewportRows);
 
 		if (str === previousOutput && cursorChanged) {
 			stream.write(
@@ -83,6 +95,7 @@ const createStandard = (
 					previousCursorPosition,
 					visibleLineCount: visibleCount,
 					cursorPosition: activeCursor,
+					viewportHeight: viewportRows,
 				}),
 			);
 		} else {
@@ -94,7 +107,7 @@ const createStandard = (
 			);
 			stream.write(
 				returnPrefix +
-					ansiEscapes.eraseLines(previousLineCount) +
+					ansiEscapes.eraseLines(clampToViewport(previousLineCount, stream)) +
 					str +
 					cursorSuffix,
 			);
@@ -112,7 +125,7 @@ const createStandard = (
 			previousLineCount,
 			previousCursorPosition,
 		);
-		stream.write(prefix + ansiEscapes.eraseLines(previousLineCount));
+		stream.write(prefix + ansiEscapes.eraseLines(clampToViewport(previousLineCount, stream)));
 		previousOutput = '';
 		previousLineCount = 0;
 		previousCursorPosition = undefined;
@@ -152,7 +165,7 @@ const createStandard = (
 
 		if (activeCursor) {
 			stream.write(
-				buildCursorSuffix(visibleLineCount(lines, str), activeCursor),
+				buildCursorSuffix(visibleLineCount(lines, str), activeCursor, getViewportRows(stream)),
 			);
 		}
 
@@ -218,6 +231,8 @@ const createIncremental = (
 		const visibleCount = visibleLineCount(nextLines, str);
 		const previousVisible = visibleLineCount(previousLines, previousOutput);
 
+		const viewportRows = getViewportRows(stream);
+
 		if (str === previousOutput && cursorChanged) {
 			stream.write(
 				buildCursorOnlySequence({
@@ -226,6 +241,7 @@ const createIncremental = (
 					previousCursorPosition,
 					visibleLineCount: visibleCount,
 					cursorPosition: activeCursor,
+					viewportHeight: viewportRows,
 				}),
 			);
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
@@ -240,10 +256,10 @@ const createIncremental = (
 		);
 
 		if (str === '\n' || previousOutput.length === 0) {
-			const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+			const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor, viewportRows);
 			stream.write(
 				returnPrefix +
-					ansiEscapes.eraseLines(previousLines.length) +
+					ansiEscapes.eraseLines(clampToViewport(previousLines.length, stream)) +
 					str +
 					cursorSuffix,
 			);
@@ -266,11 +282,11 @@ const createIncremental = (
 			const previousHadTrailingNewline = previousOutput.endsWith('\n');
 			const extraSlot = previousHadTrailingNewline ? 1 : 0;
 			buffer.push(
-				ansiEscapes.eraseLines(previousVisible - visibleCount + extraSlot),
-				ansiEscapes.cursorUp(visibleCount),
+				ansiEscapes.eraseLines(Math.min(previousVisible - visibleCount + extraSlot, viewportRows)),
+				ansiEscapes.cursorUp(Math.min(visibleCount, viewportRows - 1)),
 			);
 		} else {
-			buffer.push(ansiEscapes.cursorUp(previousLines.length - 1));
+			buffer.push(ansiEscapes.cursorUp(Math.min(previousLines.length - 1, viewportRows - 1)));
 		}
 
 		for (let i = 0; i < visibleCount; i++) {
@@ -297,7 +313,7 @@ const createIncremental = (
 			);
 		}
 
-		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor, viewportRows);
 		buffer.push(cursorSuffix);
 
 		stream.write(buffer.join(''));
@@ -315,7 +331,7 @@ const createIncremental = (
 			previousLines.length,
 			previousCursorPosition,
 		);
-		stream.write(prefix + ansiEscapes.eraseLines(previousLines.length));
+		stream.write(prefix + ansiEscapes.eraseLines(clampToViewport(previousLines.length, stream)));
 		previousOutput = '';
 		previousLines = [];
 		previousCursorPosition = undefined;
@@ -355,7 +371,7 @@ const createIncremental = (
 
 		if (activeCursor) {
 			stream.write(
-				buildCursorSuffix(visibleLineCount(lines, str), activeCursor),
+				buildCursorSuffix(visibleLineCount(lines, str), activeCursor, getViewportRows(stream)),
 			);
 		}
 
