@@ -23,6 +23,7 @@ import logUpdate, {
 import {bsu, esu, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
 import App from './components/App.js';
+import {type TerminalSuspension} from './components/AppContext.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
 import {
 	type KittyKeyboardOptions,
@@ -119,6 +120,13 @@ const stripKittyQueryResponsesAndTrailingPartial = (
 	return keptBytes;
 };
 
+// Windows consoles scroll the buffer when the bottom-right cell is written,
+// unlike xterm-like terminals which defer the wrap. That extra scroll
+// desynchronizes the incremental erase used for frames that exactly fill the
+// viewport, leaving stale copies of previous frames behind (#969). Keep the
+// pre-7.0 behavior of fully clearing between fullscreen frames there.
+const isWindowsConsole = process.platform === 'win32';
+
 const shouldClearTerminalForFrame = ({
 	isTty,
 	viewportRows,
@@ -140,8 +148,13 @@ const shouldClearTerminalForFrame = ({
 	const wasFullscreen = previousOutputHeight >= viewportRows;
 	const wasOverflowing = previousOutputHeight > viewportRows;
 	const isOverflowing = nextOutputHeight > viewportRows;
+	const isFullscreen = nextOutputHeight >= viewportRows;
 	const isLeavingFullscreen = wasFullscreen && nextOutputHeight < viewportRows;
 	const shouldClearOnUnmount = isUnmounting && wasFullscreen;
+
+	if (isWindowsConsole && (wasFullscreen || isFullscreen)) {
+		return true;
+	}
 
 	return (
 		// Overflowing frames still need full clear fallback.
@@ -318,8 +331,15 @@ export default class Ink {
 	private readonly throttledOnRender?: DebouncedFunc<() => void>;
 	private hasPendingThrottledRender = false;
 	private kittyProtocolEnabled = false;
+	private kittyFlags: KittyFlagName[] | undefined;
 	private cancelKittyDetection?: () => void;
 	private nextRenderCommit?: {promise: Promise<void>; resolve: () => void};
+	// Set while suspendTerminal() has handed the terminal to a child process.
+	private isSuspended = false;
+	// Input pause/resume hooks registered by the App component, which owns raw
+	// mode and bracketed paste state.
+	private pauseInput?: () => void;
+	private resumeInput?: () => void;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -543,6 +563,18 @@ export default class Ink {
 			return;
 		}
 
+		// While suspended, the terminal belongs to a child process. Discard queued
+		// renders; resume() forces a full redraw once Ink reclaims the terminal.
+		// Resolve any awaited render commit so callers don't hang during suspension.
+		if (this.isSuspended) {
+			if (this.nextRenderCommit) {
+				this.nextRenderCommit.resolve();
+				this.nextRenderCommit = undefined;
+			}
+
+			return;
+		}
+
 		if (this.nextRenderCommit) {
 			this.nextRenderCommit.resolve();
 			this.nextRenderCommit = undefined;
@@ -666,6 +698,8 @@ export default class Ink {
 					setCursorShape={this.setCursorShape}
 					onExit={this.handleAppExit}
 					onWaitUntilRenderFlush={this.waitUntilRenderFlush}
+					onSuspendTerminal={this.suspendTerminal}
+					onRegisterInputControl={this.registerInputControl}
 				>
 					{node}
 				</App>
@@ -684,6 +718,13 @@ export default class Ink {
 
 	writeToStdout(data: string): void {
 		if (this.isUnmounted) {
+			return;
+		}
+
+		// While suspended, the terminal belongs to a child process. Don't erase or
+		// repaint Ink's frame around console output; the forced redraw on resume
+		// restores the screen.
+		if (this.isSuspended) {
 			return;
 		}
 
@@ -713,6 +754,11 @@ export default class Ink {
 
 	writeToStderr(data: string): void {
 		if (this.isUnmounted) {
+			return;
+		}
+
+		// See writeToStdout: stay off the terminal while suspended.
+		if (this.isSuspended) {
 			return;
 		}
 
@@ -974,6 +1020,35 @@ export default class Ink {
 		});
 	}
 
+	registerInputControl(pauseInput: () => void, resumeInput: () => void): void {
+		this.pauseInput = pauseInput;
+		this.resumeInput = resumeInput;
+	}
+
+	async suspendTerminal(callback: () => void | Promise<void>): Promise<void>;
+	async suspendTerminal(): Promise<TerminalSuspension>;
+	async suspendTerminal(
+		callback?: () => void | Promise<void>,
+	): Promise<void | TerminalSuspension> {
+		this.beginSuspend();
+
+		if (callback) {
+			try {
+				await callback();
+			} finally {
+				await this.endSuspend();
+			}
+
+			return undefined;
+		}
+
+		const resume = async (): Promise<void> => {
+			await this.endSuspend();
+		};
+
+		return {resume, [Symbol.asyncDispose]: resume};
+	}
+
 	private setAlternateScreen(enabled: boolean): void {
 		this.alternateScreen = this.resolveAlternateScreenOption(
 			enabled,
@@ -1202,5 +1277,113 @@ export default class Ink {
 	private enableKittyProtocol(flags: KittyFlagName[]): void {
 		this.options.stdout.write(`\u001B[>${resolveFlags(flags)}u`);
 		this.kittyProtocolEnabled = true;
+		// Remember the flags so suspendTerminal() can re-enable the same protocol
+		// after a child process has had the terminal.
+		this.kittyFlags = flags;
+	}
+
+	private beginSuspend(): void {
+		if (this.isSuspended) {
+			throw new Error(
+				'The terminal is already suspended. Resume the current suspension before suspending again.',
+			);
+		}
+
+		this.isSuspended = true;
+
+		if (!this.interactive || this.isUnmounted || this.isUnmounting) {
+			return;
+		}
+
+		try {
+			const stdout = this.options.stdout as MaybeWritableStream;
+			const {canWriteToStdout} = getWritableStreamState(stdout);
+
+			// Flush any pending render/log so the child starts from a settled screen.
+			settleThrottle(this.throttledOnRender, canWriteToStdout);
+			settleThrottle(this.throttledLog, canWriteToStdout);
+
+			if (canWriteToStdout) {
+				// Erase Ink's current frame, then show the cursor and re-arm the hide.
+				// The forced redraw on resume hides the cursor again.
+				this.log.clear();
+				this.log.done();
+
+				if (this.kittyProtocolEnabled) {
+					this.writeBestEffort(this.options.stdout, '\u001B[<u');
+				}
+
+				if (this.alternateScreen) {
+					this.writeBestEffort(
+						this.options.stdout,
+						ansiEscapes.exitAlternativeScreen,
+					);
+				}
+			}
+
+			// Hand input back to the terminal (raw mode off, bracketed paste off).
+			this.pauseInput?.();
+		} catch (error) {
+			// If handing over the terminal fails partway, don't strand the app in a
+			// suspended state with no way back. Best-effort reclaim input, clear the
+			// flag, and rethrow so the caller sees the failure.
+			this.isSuspended = false;
+
+			try {
+				this.resumeInput?.();
+			} catch {}
+
+			throw error;
+		}
+	}
+
+	private async endSuspend(): Promise<void> {
+		if (!this.isSuspended) {
+			return;
+		}
+
+		this.isSuspended = false;
+
+		// Reclaim input even mid-unmount: pauseInput already ran in beginSuspend, so
+		// restoring it is symmetric regardless of any state change during suspension.
+		this.resumeInput?.();
+
+		if (!this.interactive || this.isUnmounted || this.isUnmounting) {
+			return;
+		}
+
+		const stdout = this.options.stdout as MaybeWritableStream;
+		const {canWriteToStdout} = getWritableStreamState(stdout);
+
+		if (canWriteToStdout) {
+			if (this.alternateScreen) {
+				this.writeBestEffort(
+					this.options.stdout,
+					ansiEscapes.enterAlternativeScreen,
+				);
+			}
+
+			if (this.kittyProtocolEnabled && this.kittyFlags) {
+				this.writeBestEffort(
+					this.options.stdout,
+					`\u001B[>${resolveFlags(this.kittyFlags)}u`,
+				);
+			}
+		}
+
+		// Force a full redraw instead of diffing against the stale pre-suspension
+		// frame, which the child process may have overwritten. A redraw failure here
+		// is best-effort: it must not mask a callback error propagating through the
+		// caller's finally block.
+		this.lastOutput = '';
+		this.lastOutputToRender = '';
+		this.lastOutputHeight = 0;
+		this.log.reset();
+
+		try {
+			this.calculateLayout();
+			this.onRender();
+			await this.waitUntilRenderFlush();
+		} catch {}
 	}
 }

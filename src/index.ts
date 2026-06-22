@@ -20,6 +20,10 @@ export {default as Spacer} from './components/Spacer.js';
 export type {Key} from './hooks/use-input.js';
 export {default as useInput} from './hooks/use-input.js';
 export {default as usePaste} from './hooks/use-paste.js';
+export type {
+	SuspendTerminal,
+	TerminalSuspension,
+} from './components/AppContext.js';
 export {default as useApp} from './hooks/use-app.js';
 export {default as useStdin} from './hooks/use-stdin.js';
 export {default as useStdout} from './hooks/use-stdout.js';

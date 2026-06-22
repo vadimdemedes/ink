@@ -1,6 +1,6 @@
 {
 	"name": "ink",
-	"version": "7.0.4",
+	"version": "7.1.0",
 	"description": "React for CLI",
 	"license": "MIT",
 	"repository": "vadimdemedes/ink",
@@ -102,7 +102,7 @@
 		"strip-ansi": "^7.2.0",
 		"tsx": "^4.21.0",
 		"typescript": "^5.8.3",
-		"xo": "^1.2.3"
+		"xo": "^2.0.2"
 	},
 	"peerDependencies": {
 		"@types/react": ">=19.2.0",
