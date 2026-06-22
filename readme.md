@@ -2444,10 +2444,11 @@ const Example = () => {
 };
 ```
 
-### useCursor()
+### useCursor(options?)
 
-A React hook that returns methods to control the terminal cursor position after each render.
-This is essential for IME (Input Method Editor) support, where the composing character is displayed at the cursor location.
+A React hook that declaratively controls the terminal cursor. Each render redeclares the cursor state for that frame; when the component unmounts, the cursor state is released so the terminal returns to its previous appearance.
+
+This is essential for IME (Input Method Editor) support, where the composing character is displayed at the cursor location, and useful for vim-style editors that switch the cursor shape between modes.
 
 ```jsx
 import {useState} from 'react';
@@ -2456,10 +2457,9 @@ import stringWidth from 'string-width';
 
 const TextInput = () => {
 	const [text, setText] = useState('');
-	const {setCursorPosition} = useCursor();
 
 	const prompt = '> ';
-	setCursorPosition({x: stringWidth(prompt + text), y: 1});
+	useCursor({position: {x: stringWidth(prompt + text), y: 1}});
 
 	return (
 		<Box flexDirection="column">
@@ -2473,17 +2473,19 @@ const TextInput = () => {
 };
 ```
 
-#### setCursorPosition(position)
+#### options
 
-Set the cursor position relative to the Ink output. Pass `undefined` to hide the cursor.
+Type: `object | undefined`
+
+See full examples at [examples/cursor-ime](examples/cursor-ime/cursor-ime.tsx) and [examples/input-area-vim](examples/input-area-vim/input-area-vim.tsx).
 
 ##### position
 
 Type: `object | undefined`
 
-Use [`string-width`](https://github.com/sindresorhus/string-width) to calculate `x` for strings containing wide characters (CJK, emoji).
+Cursor position relative to the Ink output. Omit (or pass `undefined`) to hide the cursor.
 
-See a full example at [examples/cursor-ime](examples/cursor-ime/cursor-ime.tsx).
+Use [`string-width`](https://github.com/sindresorhus/string-width) to calculate `x` for strings containing wide characters (CJK, emoji).
 
 ###### x
 
@@ -2496,6 +2498,13 @@ Column position (0-based).
 Type: `number`
 
 Row position from the top of the Ink output (0 = first line).
+
+##### shape
+
+Type: `string | undefined`\
+Values: `'block'`, `'bar'`, `'underline'`, `'blinking-block'`, `'blinking-bar'`, `'blinking-underline'`, `'default'`
+
+Cursor shape, set via DECSCUSR (`CSI Ps SP q`). Pass `'default'` to actively restore the terminal's user-configured shape, or omit (or pass `undefined`) to leave the current shape unchanged.
 
 ### useIsScreenReaderEnabled()
 

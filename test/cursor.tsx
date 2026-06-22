@@ -64,7 +64,6 @@ const waitForCondition = async (condition: () => boolean): Promise<void> => {
 
 function InputApp() {
 	const [text, setText] = useState('');
-	const {setCursorPosition} = useCursor();
 
 	useInput((input, key) => {
 		if (key.backspace || key.delete) {
@@ -77,7 +76,7 @@ function InputApp() {
 		}
 	});
 
-	setCursorPosition({x: 2 + text.length, y: 0});
+	useCursor({position: {x: 2 + text.length, y: 0}});
 
 	return (
 		<Box>
@@ -199,8 +198,7 @@ test.serial(
 		const stdin = createStdin();
 
 		function CursorChild() {
-			const {setCursorPosition} = useCursor();
-			setCursorPosition({x: 5, y: 0});
+			useCursor({position: {x: 5, y: 0}});
 			return <Text>child</Text>;
 		}
 
@@ -264,8 +262,7 @@ test.serial(
 		let suspended = true;
 
 		function CursorChild() {
-			const {setCursorPosition} = useCursor();
-			setCursorPosition({x: 5, y: 0}); // Render-phase side effect
+			useCursor({position: {x: 5, y: 0}}); // Declared during render
 			if (suspended) {
 				// eslint-disable-next-line @typescript-eslint/only-throw-error
 				throw promise;
@@ -308,7 +305,6 @@ test.serial('screen does not scroll up on subsequent renders', async t => {
 
 	function MultiLineApp() {
 		const [text, setText] = useState('');
-		const {setCursorPosition} = useCursor();
 
 		useInput((input, key) => {
 			if (!key.ctrl && !key.meta && input) {
@@ -316,7 +312,7 @@ test.serial('screen does not scroll up on subsequent renders', async t => {
 			}
 		});
 
-		setCursorPosition({x: 2 + text.length, y: 1});
+		useCursor({position: {x: 2 + text.length, y: 1}});
 
 		return (
 			<Box flexDirection="column">
@@ -357,10 +353,9 @@ test.serial('screen does not scroll up on subsequent renders', async t => {
 });
 
 function StdoutWriteApp() {
-	const {setCursorPosition} = useCursor();
 	const {write} = useStdout();
 
-	setCursorPosition({x: 2, y: 0});
+	useCursor({position: {x: 2, y: 0}});
 
 	useEffect(() => {
 		write('from stdout hook\n');
@@ -370,10 +365,9 @@ function StdoutWriteApp() {
 }
 
 function StderrWriteApp() {
-	const {setCursorPosition} = useCursor();
 	const {write} = useStderr();
 
-	setCursorPosition({x: 2, y: 0});
+	useCursor({position: {x: 2, y: 0}});
 
 	useEffect(() => {
 		write('from stderr hook\n');
@@ -596,6 +590,152 @@ test.serial(
 			stdoutWrites.some(write => write.includes('from stdout hook\nInitial')),
 		);
 		t.false(stdoutWrites.includes(''));
+
+		unmount();
+	},
+);
+
+test.serial('useCursor: shape option emits DECSCUSR escape', async t => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+
+	function ShapeApp() {
+		useCursor({shape: 'bar'});
+		return <Text>Hello</Text>;
+	}
+
+	const {unmount} = render(<ShapeApp />, {stdout, stdin});
+	await delay(50);
+
+	const output = getWriteCalls(stdout).join('');
+	t.true(output.includes('\u001B[6 q'), 'expected bar shape escape in output');
+
+	unmount();
+});
+
+test.serial(
+	'useCursor: shape option does not re-emit on re-render with same shape',
+	async t => {
+		const stdout = createStdout();
+		const stdin = createStdin();
+
+		function ShapeInputApp() {
+			const [count, setCount] = useState(0);
+
+			useInput((_input, key) => {
+				if (key.return) {
+					setCount(c => c + 1);
+				}
+			});
+
+			useCursor({shape: 'bar'});
+			return <Text>{`count: ${count}`}</Text>;
+		}
+
+		const {unmount} = render(<ShapeInputApp />, {stdout, stdin});
+		await delay(50);
+
+		const writesBeforeUpdate = (stdout.write as any).callCount as number;
+
+		// Trigger a re-render that keeps the same shape.
+		emitReadable(stdin, '\r');
+		await delay(50);
+
+		const writesAfterUpdate = getWriteCalls(stdout)
+			.slice(writesBeforeUpdate)
+			.join('');
+
+		t.false(
+			writesAfterUpdate.includes('\u001B[6 q'),
+			'shape escape should not be re-emitted when shape is unchanged',
+		);
+
+		unmount();
+	},
+);
+
+test.serial(
+	'useCursor: shape option emits no escape in non-interactive mode',
+	async t => {
+		const stdout = createStdout();
+		const stdin = createStdin();
+
+		function ShapeApp() {
+			useCursor({shape: 'bar'});
+			return <Text>Hello</Text>;
+		}
+
+		const {unmount} = render(<ShapeApp />, {
+			stdout,
+			stdin,
+			interactive: false,
+		});
+		await delay(50);
+
+		const output = getWriteCalls(stdout).join('');
+		t.false(
+			output.includes('\u001B[6 q'),
+			'no shape escape should be emitted when interactive is false',
+		);
+		t.false(
+			output.includes('\u001B[2 q'),
+			'no shape escape should be emitted when interactive is false',
+		);
+
+		unmount();
+	},
+);
+
+test.serial(
+	'useCursor: shape state resets on unmount and re-mounts re-emit',
+	async t => {
+		const stdout = createStdout();
+		const stdin = createStdin();
+
+		function ShapeChild() {
+			useCursor({shape: 'underline'});
+			return <Text>child</Text>;
+		}
+
+		function Parent() {
+			const [showChild, setShowChild] = useState(true);
+
+			useInput((_input, key) => {
+				if (key.return) {
+					setShowChild(prev => !prev);
+				}
+			});
+
+			return <Box>{showChild ? <ShapeChild /> : <Text>no shape</Text>}</Box>;
+		}
+
+		const {unmount} = render(<Parent />, {stdout, stdin});
+		await delay(50);
+
+		t.true(
+			getWriteCalls(stdout).join('').includes('\u001B[4 q'),
+			'shape should be emitted on initial mount',
+		);
+
+		// Unmount the child.
+		const writesBeforeUnmount = (stdout.write as any).callCount as number;
+		emitReadable(stdin, '\r');
+		await delay(50);
+
+		// Re-mount the child. If shape state didn't reset on unmount, the
+		// second mount would skip the re-emit because previousShape would
+		// still be 'underline'.
+		emitReadable(stdin, '\r');
+		await delay(50);
+
+		const writesAfterRemount = getWriteCalls(stdout)
+			.slice(writesBeforeUnmount)
+			.join('');
+
+		t.true(
+			writesAfterRemount.includes('\u001B[4 q'),
+			'shape should be re-emitted after child remounts',
+		);
 
 		unmount();
 	},

@@ -4,7 +4,6 @@ import {render, Box, Text, useInput, useCursor} from '../../src/index.js';
 
 function App() {
 	const [text, setText] = useState('');
-	const {setCursorPosition} = useCursor();
 
 	useInput((input, key) => {
 		if (key.backspace || key.delete) {
@@ -19,7 +18,7 @@ function App() {
 
 	// Use stringWidth for correct cursor position with wide characters (Korean, CJK, emoji)
 	const prompt = '> ';
-	setCursorPosition({x: stringWidth(prompt + text), y: 1});
+	useCursor({position: {x: stringWidth(prompt + text), y: 1}});
 
 	return (
 		<Box flexDirection="column">

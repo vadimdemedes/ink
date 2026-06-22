@@ -10,7 +10,7 @@ import React, {
 	useInsertionEffect,
 } from 'react';
 import cliCursor from 'cli-cursor';
-import {type CursorPosition} from '../log-update.js';
+import {type CursorPosition, type CursorShape} from '../log-update.js';
 import {createInputParser} from '../input-parser.js';
 import AppContext, {type SuspendTerminal} from './AppContext.js';
 import StdinContext from './StdinContext.js';
@@ -48,6 +48,7 @@ type Props = {
 		resumeInput: () => void,
 	) => void;
 	readonly setCursorPosition: (position: CursorPosition | undefined) => void;
+	readonly setCursorShape: (shape: CursorShape | undefined) => void;
 	readonly interactive: boolean;
 	readonly renderThrottleMs: number;
 };
@@ -73,6 +74,7 @@ function App({
 	onSuspendTerminal,
 	onRegisterInputControl,
 	setCursorPosition,
+	setCursorShape,
 	interactive,
 	renderThrottleMs,
 }: Props): React.ReactNode {
@@ -751,8 +753,9 @@ function App({
 	const cursorContextValue = useMemo(
 		() => ({
 			setCursorPosition,
+			setCursorShape,
 		}),
-		[setCursorPosition],
+		[setCursorPosition, setCursorShape],
 	);
 
 	const focusContextValue = useMemo(

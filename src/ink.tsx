@@ -15,7 +15,11 @@ import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
 import {hideCursorEscape, showCursorEscape} from './cursor-helpers.js';
-import logUpdate, {type LogUpdate, type CursorPosition} from './log-update.js';
+import logUpdate, {
+	type LogUpdate,
+	type CursorPosition,
+	type CursorShape,
+} from './log-update.js';
 import {bsu, esu, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
 import App from './components/App.js';
@@ -297,6 +301,7 @@ export default class Ink {
 	private readonly options: Options;
 	private readonly log: LogUpdate;
 	private cursorPosition: CursorPosition | undefined;
+	private cursorShape: CursorShape | undefined;
 	private readonly throttledLog:
 		| LogUpdate
 		| DebouncedFunc<(output: string) => void>;
@@ -385,6 +390,7 @@ export default class Ink {
 			incremental: options.incrementalRendering,
 		});
 		this.cursorPosition = undefined;
+		this.cursorShape = undefined;
 		this.throttledLog = unthrottled
 			? this.log
 			: throttle(
@@ -516,6 +522,11 @@ export default class Ink {
 		this.log.setCursorPosition(position);
 	};
 
+	setCursorShape = (shape: CursorShape | undefined): void => {
+		this.cursorShape = shape;
+		this.log.setCursorShape(shape);
+	};
+
 	restoreLastOutput = (): void => {
 		if (!this.interactive) {
 			return;
@@ -524,6 +535,7 @@ export default class Ink {
 		// Clear() resets log-update's cursor state, so replay the latest cursor intent
 		// before restoring output after external stdout/stderr writes.
 		this.log.setCursorPosition(this.cursorPosition);
+		this.log.setCursorShape(this.cursorShape);
 		this.log(this.lastOutputToRender || this.lastOutput + '\n');
 	};
 
@@ -683,6 +695,7 @@ export default class Ink {
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
 					setCursorPosition={this.setCursorPosition}
+					setCursorShape={this.setCursorShape}
 					onExit={this.handleAppExit}
 					onWaitUntilRenderFlush={this.waitUntilRenderFlush}
 					onSuspendTerminal={this.suspendTerminal}
