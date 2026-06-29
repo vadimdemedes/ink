@@ -329,7 +329,7 @@ export const tokenizeAnsi = (text: string): AnsiToken[] => {
 	const tokens: AnsiToken[] = [];
 	let textStartIndex = 0;
 
-	for (let index = 0; index < text.length; ) {
+	for (let index = 0; index < text.length;) {
 		const character = text[index];
 
 		if (character === undefined) {
