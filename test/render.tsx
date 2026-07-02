@@ -388,6 +388,32 @@ test.serial(
 			)}`,
 		);
 
+		// Distinct-frame guards: if the three phases coalesced into fewer renders,
+		// the off-by-one would never be planted and the assertions here would pass
+		// without exercising the bug. Only the inflate frame renders "live-4", and
+		// its overflow is what first routes a frame through the full clear.
+		t.true(
+			ps.output.includes('live-4'),
+			'Expected the inflate phase to have rendered as its own frame',
+		);
+		t.true(
+			ps.output.includes(ansiEscapes.clearTerminal),
+			'Expected the overflow to have routed a frame through the full-clear path',
+		);
+
+		// The shrink frame's full clear is the last one; the lowercase "live-0"
+		// after it proves shrink and nudge rendered as separate frames.
+		const lastClearIndex = ps.output.lastIndexOf(ansiEscapes.clearTerminal);
+		t.false(
+			ps.output.includes('live-4', lastClearIndex),
+			'Expected the last full clear to be the shrink frame, not the inflate frame',
+		);
+		t.true(
+			ps.output.includes('live-0', lastClearIndex) &&
+				ps.output.includes('LIVE-0', lastClearIndex),
+			'Expected the shrink and nudge phases to have rendered as separate frames',
+		);
+
 		t.true(
 			visibleLines.includes('F'),
 			`Last static line (F) must remain visible after a live-region update, got ${JSON.stringify(
