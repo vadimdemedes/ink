@@ -24,6 +24,7 @@ import {type RenderMetrics} from '../src/ink.js';
 import {bsu, esu} from '../src/write-synchronized.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
+import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 
 const textDecoder = new TextDecoder();
 
@@ -34,7 +35,11 @@ const {spawn} = require('node-pty') as typeof import('node-pty');
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
-const term = (fixture: string, args: string[] = []) => {
+const term = (
+	fixture: string,
+	args: string[] = [],
+	options: {rows?: number} = {},
+) => {
 	let resolve: (value?: unknown) => void;
 	let reject: (error: Error) => void;
 
@@ -61,6 +66,7 @@ const term = (fixture: string, args: string[] = []) => {
 			cols: 100,
 			cwd: __dirname,
 			env,
+			...(options.rows === undefined ? {} : {rows: options.rows}),
 		},
 	);
 
@@ -352,6 +358,68 @@ test.serial(
 		for (const letter of ['A', 'B', 'C', 'D', 'E', 'F']) {
 			t.true(ps.output.includes(letter));
 		}
+	},
+);
+
+test.serial(
+	'last line of <Static> taller than viewport survives a later live update (#973)',
+	async t => {
+		const rows = 4;
+		const ps = term('issue-973-static-taller-than-viewport', [String(rows)], {
+			rows,
+		});
+		await ps.waitForExit();
+
+		// The raw stream still contains "F" even when it has been erased on screen,
+		// so reconstruct the visible buffer (scrollback + viewport) and assert the
+		// last committed <Static> line is actually still there.
+		const visibleLines = reconstructTerminalLines(ps.output, rows).filter(
+			line => line.length > 0,
+		);
+
+		// Positive control: "LIVE-0" only renders on the final live-region update —
+		// the frame that performs the off-by-one erase. Without this guard, an early
+		// exit (before that frame) would leave "F" trivially present and the test
+		// would pass without ever exercising the bug.
+		t.true(
+			visibleLines.includes('LIVE-0'),
+			`Expected the bug-triggering live-region update to have rendered, got ${JSON.stringify(
+				visibleLines,
+			)}`,
+		);
+
+		// Distinct-frame guards: if the three phases coalesced into fewer renders,
+		// the off-by-one would never be planted and the assertions here would pass
+		// without exercising the bug. Only the inflate frame renders "live-4", and
+		// its overflow is what first routes a frame through the full clear.
+		t.true(
+			ps.output.includes('live-4'),
+			'Expected the inflate phase to have rendered as its own frame',
+		);
+		t.true(
+			ps.output.includes(ansiEscapes.clearTerminal),
+			'Expected the overflow to have routed a frame through the full-clear path',
+		);
+
+		// The shrink frame's full clear is the last one; the lowercase "live-0"
+		// after it proves shrink and nudge rendered as separate frames.
+		const lastClearIndex = ps.output.lastIndexOf(ansiEscapes.clearTerminal);
+		t.false(
+			ps.output.includes('live-4', lastClearIndex),
+			'Expected the last full clear to be the shrink frame, not the inflate frame',
+		);
+		t.true(
+			ps.output.includes('live-0', lastClearIndex) &&
+				ps.output.includes('LIVE-0', lastClearIndex),
+			'Expected the shrink and nudge phases to have rendered as separate frames',
+		);
+
+		t.true(
+			visibleLines.includes('F'),
+			`Last static line (F) must remain visible after a live-region update, got ${JSON.stringify(
+				visibleLines,
+			)}`,
+		);
 	},
 );
 

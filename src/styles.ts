@@ -162,23 +162,14 @@ export type Styles = {
 	See [align-items](https://css-tricks.com/almanac/properties/a/align-items/).
 	*/
 	readonly alignItems?:
-		| 'flex-start'
-		| 'center'
-		| 'flex-end'
-		| 'stretch'
-		| 'baseline';
+		'flex-start' | 'center' | 'flex-end' | 'stretch' | 'baseline';
 
 	/**
 	It makes possible to override the align-items value for specific flex items.
 	See [align-self](https://css-tricks.com/almanac/properties/a/align-self/).
 	*/
 	readonly alignSelf?:
-		| 'flex-start'
-		| 'center'
-		| 'flex-end'
-		| 'auto'
-		| 'stretch'
-		| 'baseline';
+		'flex-start' | 'center' | 'flex-end' | 'auto' | 'stretch' | 'baseline';
 
 	/**
 	It defines the alignment along the cross axis when there are multiple lines of flex items (when using flex-wrap).

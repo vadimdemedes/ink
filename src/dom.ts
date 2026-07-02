@@ -16,10 +16,7 @@ type LayoutListener = () => void;
 
 export type TextName = '#text';
 export type ElementNames =
-	| 'ink-root'
-	| 'ink-box'
-	| 'ink-text'
-	| 'ink-virtual-text';
+	'ink-root' | 'ink-box' | 'ink-text' | 'ink-virtual-text';
 
 export type NodeNames = ElementNames | TextName;
 
