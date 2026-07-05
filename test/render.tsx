@@ -362,10 +362,10 @@ test.serial(
 );
 
 test.serial(
-	'last line of <Static> taller than viewport survives a later live update (#973)',
+	'last line of <Static> survives a full-clear accounting frame (related to #973)',
 	async t => {
 		const rows = 4;
-		const ps = term('issue-973-static-taller-than-viewport', [String(rows)], {
+		const ps = term('full-clear-static-accounting', [String(rows)], {
 			rows,
 		});
 		await ps.waitForExit();
