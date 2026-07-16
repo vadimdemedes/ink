@@ -873,8 +873,7 @@ function ThrottleTestComponent({text}: {readonly text: string}) {
 }
 
 function ThrottleCursorTestComponent({text}: {readonly text: string}) {
-	const {setCursorPosition} = useCursor();
-	setCursorPosition({x: 0, y: 0});
+	useCursor({position: {x: 0, y: 0}});
 	return <Text>{text}</Text>;
 }
 

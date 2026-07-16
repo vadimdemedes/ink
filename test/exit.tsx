@@ -153,3 +153,85 @@ test.serial('exit on exit() with error and static output', async t => {
 	const cleaned = stripAnsi(output);
 	t.is(cleaned.split('A').length - 1, 1);
 });
+
+const decscusrReset = '\u001B[0 q';
+
+test.serial('cursor shape is restored on SIGINT', async t => {
+	await new Promise<void>((resolve, reject) => {
+		const env: Record<string, string> = {
+			...process.env,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			NODE_NO_WARNINGS: '1',
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			CI: 'false',
+		};
+
+		const term = spawn(
+			'node',
+			[
+				'--import=tsx',
+				path.join(__dirname, './fixtures/cursor-shape-sigint.tsx'),
+			],
+			{name: 'xterm-color', cols: 100, cwd: __dirname, env},
+		);
+
+		let output = '';
+		let sigintSent = false;
+
+		term.onData(data => {
+			output += data;
+			if (!sigintSent && output.includes('waiting')) {
+				sigintSent = true;
+				term.kill('SIGINT');
+			}
+		});
+
+		setTimeout(() => {
+			term.kill();
+			reject(new Error('Test timed out - process did not exit in time'));
+		}, 5000);
+
+		term.onExit(() => {
+			t.true(output.includes(decscusrReset));
+			resolve();
+		});
+	});
+});
+
+test.serial('cursor shape is restored when the React tree throws', async t => {
+	await new Promise<void>((resolve, reject) => {
+		const env: Record<string, string> = {
+			...process.env,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			NODE_NO_WARNINGS: '1',
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			CI: 'false',
+		};
+
+		const term = spawn(
+			'node',
+			[
+				'--import=tsx',
+				path.join(__dirname, './fixtures/cursor-shape-throw.tsx'),
+			],
+			{name: 'xterm-color', cols: 100, cwd: __dirname, env},
+		);
+
+		let output = '';
+
+		term.onData(data => {
+			output += data;
+		});
+
+		setTimeout(() => {
+			term.kill();
+			reject(new Error('Test timed out - process did not exit in time'));
+		}, 2000);
+
+		term.onExit(({exitCode}) => {
+			t.not(exitCode, 0);
+			t.true(output.includes(decscusrReset));
+			resolve();
+		});
+	});
+});

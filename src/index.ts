@@ -38,7 +38,7 @@ export type {WindowSize} from './hooks/use-window-size.js';
 export {default as useWindowSize} from './hooks/use-window-size.js';
 export type {BoxMetrics, UseBoxMetricsResult} from './hooks/use-box-metrics.js';
 export {default as useBoxMetrics} from './hooks/use-box-metrics.js';
-export type {CursorPosition} from './log-update.js';
+export type {CursorPosition, CursorShape} from './log-update.js';
 export {default as measureElement} from './measure-element.js';
 export type {ElementMetrics} from './measure-element.js';
 export type {DOMElement} from './dom.js';
