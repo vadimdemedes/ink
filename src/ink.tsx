@@ -43,8 +43,7 @@ const zeroByte = 0x30;
 const nineByte = 0x39;
 
 type KittyQueryResponseMatch =
-	| {state: 'complete'; endIndex: number}
-	| {state: 'partial'};
+	{state: 'complete'; endIndex: number} | {state: 'partial'};
 
 const isDigitByte = (byte: number): boolean =>
 	byte >= zeroByte && byte <= nineByte;
@@ -298,8 +297,7 @@ export default class Ink {
 	private readonly log: LogUpdate;
 	private cursorPosition: CursorPosition | undefined;
 	private readonly throttledLog:
-		| LogUpdate
-		| DebouncedFunc<(output: string) => void>;
+		LogUpdate | DebouncedFunc<(output: string) => void>;
 
 	private readonly isScreenReaderEnabled: boolean;
 	private readonly interactive: boolean;
@@ -1138,7 +1136,7 @@ export default class Ink {
 			}
 
 			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput + output,
+				ansiEscapes.clearTerminal + this.fullStaticOutput + outputToRender,
 			);
 			this.lastOutput = output;
 			this.lastOutputToRender = outputToRender;
