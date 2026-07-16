@@ -26,7 +26,7 @@ type Output = {
 Measure the layout metrics of a particular `<Box>` element.
 Returns an object with `x`, `y`, `width`, and `height` properties.
 
-`x` and `y` are the element's position within the live layout region, computed by walking up the layout tree and accumulating each ancestor's offset. These are layout-tree coordinates, not terminal viewport coordinates — to map them to viewport rows for mouse hit-testing, subtract the live region's viewport anchor from the mouse event's row.
+`x` and `y` are the element's position within the live layout region, computed by walking up the layout tree and accumulating each ancestor's offset. These are layout-tree coordinates, not terminal viewport coordinates. To compare them with mouse events, convert the event coordinates using the live region's viewport position. This is necessary even in alternate-screen mode when output, such as `<Static>` content, appears above the live region.
 
 Note: `measureElement()` returns `{x: 0, y: 0, width: 0, height: 0}` when called during render (before layout is calculated). Call it from post-render code, such as `useEffect`, `useLayoutEffect`, input handlers, or timer callbacks. When content changes, pass the relevant dependency to your effect so it re-measures after each update.
 */
