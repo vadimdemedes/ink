@@ -70,6 +70,8 @@ export type DOMElement = {
 	onImmediateRender?: () => void;
 	onStaticChange?: () => void;
 	internal_layoutListeners?: Set<LayoutListener>;
+	internal_pendingLayoutListeners?: Set<LayoutListener>;
+	internal_layoutListenerFlushScheduled?: boolean;
 } & InkNode;
 
 export type TextNode = {
@@ -286,7 +288,34 @@ export const emitLayoutListeners = (rootNode: DOMElement): void => {
 		return;
 	}
 
+	rootNode.internal_pendingLayoutListeners ??= new Set();
 	for (const listener of rootNode.internal_layoutListeners) {
-		listener();
+		rootNode.internal_pendingLayoutListeners.add(listener);
 	}
+
+	if (rootNode.internal_layoutListenerFlushScheduled) {
+		return;
+	}
+
+	rootNode.internal_layoutListenerFlushScheduled = true;
+
+	// This runs from React's resetAfterCommit host callback. Calling listeners
+	// synchronously lets hooks schedule React state while React is still
+	// committing, which can recurse until React trips its nested update guard.
+	queueMicrotask(() => {
+		rootNode.internal_layoutListenerFlushScheduled = false;
+
+		const pendingListeners = rootNode.internal_pendingLayoutListeners;
+		rootNode.internal_pendingLayoutListeners = undefined;
+
+		if (!pendingListeners) {
+			return;
+		}
+
+		for (const listener of pendingListeners) {
+			if (rootNode.internal_layoutListeners?.has(listener)) {
+				listener();
+			}
+		}
+	});
 };
