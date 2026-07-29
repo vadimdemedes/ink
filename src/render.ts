@@ -1,30 +1,69 @@
-import {Stream} from 'node:stream';
+import {Stream, type Writable} from 'node:stream';
 import process from 'node:process';
 import type {ReactNode} from 'react';
 import Ink, {type Options as InkOptions, type RenderMetrics} from './ink.js';
 import instances from './instances.js';
 import {type KittyKeyboardOptions} from './kitty-keyboard.js';
 
-export type RenderOptions = {
+/**
+Output stream that Ink can render to, like `process.stdout` or a stream that captures output in memory.
+
+Only `write()` is always used. Interactive rendering and `useWindowSize()` also call `on()` and `off()`, and a stream that reports `writableLength` is expected to call the callback that Ink passes to `write()`, otherwise `waitUntilExit()` and `waitUntilRenderFlush()` never settle.
+*/
+export type InkOutputStream = {
+	columns?: number;
+	rows?: number;
+	isTTY?: boolean;
+	destroyed?: boolean;
+	writable?: boolean;
+	writableEnded?: boolean;
+	writableLength?: number;
+	write(data: string, ...rest: unknown[]): unknown;
+	on?(event: unknown, listener: unknown): unknown;
+	off?(event: unknown, listener: unknown): unknown;
+};
+
+/**
+Input stream that Ink can listen for input on, like `process.stdin`.
+
+Every member is optional, because Ink only touches stdin when `isTTY` is set. Raw mode input then calls `addListener()`, `read()`, `setRawMode()`, `setEncoding()`, `ref()` and `unref()`, and kitty keyboard detection also uses `on()`, `removeListener()` and `unshift()`.
+*/
+export type InkInputStream = {
+	isTTY?: boolean;
+	on?(event: unknown, listener: unknown): unknown;
+	read?(...args: unknown[]): unknown;
+	setRawMode?(mode: boolean): unknown;
+	setEncoding?(...args: unknown[]): unknown;
+	unshift?(...args: unknown[]): unknown;
+	addListener?(event: unknown, listener: unknown): unknown;
+	removeListener?(event: unknown, listener: unknown): unknown;
+	ref?(): unknown;
+	unref?(): unknown;
+};
+
+export type RenderOptions<
+	OutputStream extends InkOutputStream = NodeJS.WriteStream,
+	InputStream extends InkInputStream = NodeJS.ReadStream,
+> = {
 	/**
 	Output stream where the app will be rendered.
 
 	@default process.stdout
 	*/
-	stdout?: NodeJS.WriteStream;
+	stdout?: OutputStream;
 
 	/**
 	Input stream where app will listen for input.
 
 	@default process.stdin
 	*/
-	stdin?: NodeJS.ReadStream;
+	stdin?: InputStream;
 
 	/**
 	Error stream.
 	@default process.stderr
 	*/
-	stderr?: NodeJS.WriteStream;
+	stderr?: OutputStream;
 
 	/**
 	If true, each update will be rendered as separate output, without replacing the previous one.
@@ -198,12 +237,11 @@ Mount a component and render the output.
 */
 const render = (
 	node: ReactNode,
-	options?: NodeJS.WriteStream | RenderOptions,
+	options?: Writable | RenderOptions<InkOutputStream, InkInputStream>,
 ): Instance => {
+	const {stdout, stdin, stderr, ...restOptions} = {...getOptions(options)};
+
 	const inkOptions: InkOptions = {
-		stdout: process.stdout,
-		stdin: process.stdin,
-		stderr: process.stderr,
 		debug: false,
 		exitOnCtrlC: true,
 		patchConsole: true,
@@ -211,7 +249,10 @@ const render = (
 		incrementalRendering: false,
 		concurrent: false,
 		alternateScreen: false,
-		...getOptions(options),
+		...restOptions,
+		stdout: (stdout ?? process.stdout) as NodeJS.WriteStream,
+		stdin: (stdin ?? process.stdin) as NodeJS.ReadStream,
+		stderr: (stderr ?? process.stderr) as NodeJS.WriteStream,
 	};
 
 	const instance: Ink = getInstance(
@@ -237,16 +278,17 @@ const render = (
 export default render;
 
 const getOptions = (
-	stdout: NodeJS.WriteStream | RenderOptions | undefined = {},
-): RenderOptions => {
-	if (stdout instanceof Stream) {
+	options:
+		Writable | RenderOptions<InkOutputStream, InkInputStream> | undefined = {},
+): RenderOptions<InkOutputStream, InkInputStream> => {
+	if (options instanceof Stream) {
 		return {
-			stdout,
+			stdout: options,
 			stdin: process.stdin,
 		};
 	}
 
-	return stdout;
+	return options ?? {};
 };
 
 const getInstance = (

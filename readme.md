@@ -2593,23 +2593,27 @@ Type: `ReactNode`
 
 Type: `object`
 
+The streams don't have to be terminal streams. `stdout` and `stderr` only need a `write()` method, so a stream that captures output in memory works, and the exported `InkOutputStream` and `InkInputStream` types describe those shapes. Interactive rendering and [`useWindowSize()`](#usewindowsize) also call `on()` and `off()` on `stdout`, and handling input needs the raw mode methods on `stdin`, so see those types for the full contract.
+
+`RenderOptions` itself defaults to Node's stream types, which is what [`useStdout()`](#usestdout), [`useStdin()`](#usestdin) and [`useStderr()`](#usestderr) keep returning. Annotate with `RenderOptions<InkOutputStream, InkInputStream>` when you store these options or wrap `render()` yourself.
+
 ###### stdout
 
-Type: `stream.Writable`\
+Type: `InkOutputStream`\
 Default: `process.stdout`
 
 Output stream where the app will be rendered.
 
 ###### stdin
 
-Type: `stream.Readable`\
+Type: `InkInputStream`\
 Default: `process.stdin`
 
 Input stream where app will listen for input.
 
 ###### stderr
 
-Type: `stream.Writable`\
+Type: `InkOutputStream`\
 Default: `process.stderr`
 
 Error stream.

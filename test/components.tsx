@@ -773,8 +773,7 @@ test('disable raw mode when all input components are unmounted', async t => {
 
 	const {rerender} = render(
 		<Test renderFirstInput renderSecondInput />,
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-		options as any,
+		options,
 	);
 
 	t.true(stdin.setRawMode.calledOnce);
@@ -829,11 +828,7 @@ test('do not disable raw mode when swapping components that use useInput', async
 		return step === 1 ? <StepA /> : <StepB />;
 	}
 
-	const {rerender} = render(
-		<Test step={1} />,
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-		options as any,
-	);
+	const {rerender} = render(<Test step={1} />, options);
 
 	t.true(stdin.setRawMode.calledOnce);
 	t.true(stdin.ref.calledOnce);
@@ -887,11 +882,7 @@ test('clear pending input parser state when swapping components that use useInpu
 			return step === 1 ? <StepA /> : <StepB />;
 		}
 
-		const {rerender} = render(
-			<Test step={1} />,
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-			options as any,
-		);
+		const {rerender} = render(<Test step={1} />, options);
 
 		emitReadable(stdin, '\u001B[');
 		rerender(<Test step={2} />);
@@ -942,11 +933,7 @@ test('re-ref stdin when input is used after previous unmount', t => {
 	const onSecondMountInput = spy();
 
 	// First render
-	const {unmount} = render(
-		<Test onInput={onFirstMountInput} />,
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-		options as any,
-	);
+	const {unmount} = render(<Test onInput={onFirstMountInput} />, options);
 
 	t.true(stdin.ref.calledOnce);
 	t.true(stdin.setRawMode.calledOnce);
@@ -965,8 +952,7 @@ test('re-ref stdin when input is used after previous unmount', t => {
 	// Second render with new Ink instance reusing the same stdin
 	const {unmount: unmount2} = render(
 		<Test onInput={onSecondMountInput} />,
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-		options as any,
+		options,
 	);
 
 	t.true(stdin.ref.calledTwice);
@@ -1084,8 +1070,7 @@ test('render different component based on whether stdin is a TTY or not', t => {
 
 	const {rerender} = render(
 		<Test renderFirstInput renderSecondInput />,
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-		options as any,
+		options,
 	);
 
 	t.false(stdin.setRawMode.called);

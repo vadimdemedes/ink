@@ -19,7 +19,17 @@ import ansiEscapes from 'ansi-escapes';
 import stripAnsi from 'strip-ansi';
 import boxen from 'boxen';
 import delay from 'delay';
-import {render, Box, Text, useApp, useCursor, useInput} from '../src/index.js';
+import {
+	render,
+	Box,
+	Text,
+	useApp,
+	useCursor,
+	useInput,
+	type RenderOptions,
+	type InkOutputStream,
+	type InkInputStream,
+} from '../src/index.js';
 import {type RenderMetrics} from '../src/ink.js';
 import {bsu, esu} from '../src/write-synchronized.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
@@ -2111,3 +2121,87 @@ test.serial('bsu/esu wraps throttledLog trailing call', t => {
 		}
 	});
 });
+
+const createCaptureStream = () => {
+	const writes: string[] = [];
+
+	return {
+		columns: 100,
+		rows: 10,
+		write(data: string) {
+			writes.push(data);
+		},
+		output: () => writes.join(''),
+	};
+};
+
+test.serial('accept Node streams in render options', t => {
+	const options: RenderOptions = {
+		stdout: process.stdout,
+		stdin: process.stdin,
+		stderr: process.stderr,
+	};
+
+	t.is(options.stdout, process.stdout);
+	t.is(options.stdin, process.stdin);
+	t.is(options.stderr, process.stderr);
+});
+
+test.serial('render to a stream that only implements what Ink uses', t => {
+	const stdout = createCaptureStream();
+	const stderr = createCaptureStream();
+	const options: RenderOptions<InkOutputStream, InkInputStream> = {
+		stdout,
+		stderr,
+		stdin: {},
+	};
+
+	const {unmount} = render(<Text>Hello</Text>, options);
+	unmount();
+
+	t.true(stdout.output().includes('Hello'));
+});
+
+test.serial('render to a stream in debug mode', t => {
+	const stdout = createCaptureStream();
+
+	const {unmount} = render(<Text>Hello</Text>, {stdout, debug: true});
+	t.true(stdout.output().includes('Hello'));
+
+	unmount();
+});
+
+test.serial('treat an options object with a write method as options', t => {
+	const stdout = createCaptureStream();
+	const optionsWrites: string[] = [];
+	const options = {
+		stdout,
+		write(data: string) {
+			optionsWrites.push(data);
+		},
+	} as unknown as RenderOptions<InkOutputStream, InkInputStream>;
+
+	const {unmount} = render(<Text>Hello</Text>, options);
+	unmount();
+
+	t.true(stdout.output().includes('Hello'));
+	t.deepEqual(optionsWrites, []);
+});
+
+test.serial(
+	'render to a Node stream passed as the second argument',
+	async t => {
+		const stdout = new PassThrough();
+		let output = '';
+
+		stdout.on('data', (chunk: Uint8Array) => {
+			output += textDecoder.decode(chunk);
+		});
+
+		const {unmount} = render(<Text>Hello</Text>, stdout);
+		unmount();
+		await delay(0);
+
+		t.true(output.includes('Hello'));
+	},
+);
