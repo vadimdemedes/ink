@@ -20,17 +20,25 @@ export const cursorPositionChanged = (
 
 /**
 Build escape sequence to move cursor from bottom of output to the target position and show it.
-Assumes cursor is at (col 0, line visibleLineCount) — i.e. just after the last output line.
+Assumes cursor is where the renderer left it after writing the output:
+
+- Output ends with a newline: at (col 0, line visibleLineCount), i.e. just past the last output line.
+- Output has no trailing newline (fullscreen mode): on the last output line, i.e. line visibleLineCount - 1.
+  The renderer deliberately stops there instead of moving past it.
 */
 export const buildCursorSuffix = (
 	visibleLineCount: number,
 	cursorPosition: CursorPosition | undefined,
+	hasTrailingNewline = true,
 ): string => {
 	if (!cursorPosition) {
 		return '';
 	}
 
-	const moveUp = visibleLineCount - cursorPosition.y;
+	const bottomLine = hasTrailingNewline
+		? visibleLineCount
+		: visibleLineCount - 1;
+	const moveUp = bottomLine - cursorPosition.y;
 	return (
 		(moveUp > 0 ? ansiEscapes.cursorUp(moveUp) : '') +
 		ansiEscapes.cursorTo(cursorPosition.x) +
@@ -64,6 +72,7 @@ export type CursorOnlyInput = {
 	previousCursorPosition: CursorPosition | undefined;
 	visibleLineCount: number;
 	cursorPosition: CursorPosition | undefined;
+	hasTrailingNewline: boolean;
 };
 
 /**
@@ -79,6 +88,7 @@ export const buildCursorOnlySequence = (input: CursorOnlyInput): string => {
 	const cursorSuffix = buildCursorSuffix(
 		input.visibleLineCount,
 		input.cursorPosition,
+		input.hasTrailingNewline,
 	);
 	return hidePrefix + returnToBottom + cursorSuffix;
 };

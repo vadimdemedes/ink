@@ -603,6 +603,64 @@ test('incremental rendering - no trailing newline: unchanged lines do not oversh
 	t.is(lastCursorNextLine, -1); // No cursorNextLine at all since A is changed (written) not skipped
 });
 
+test('incremental rendering - no trailing newline: cursor lands on the target line', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {
+		showCursor: true,
+		incremental: true,
+	});
+
+	render.setCursorPosition({x: 7, y: 1});
+	render('Line 1\nLine 2\nLine 3\nLine 4');
+	render.setCursorPosition({x: 7, y: 1});
+	render('Line 1\nLine 2!\nLine 3\nLine 4');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	// 4 visible lines without a trailing newline, so the renderer leaves the
+	// cursor on line 3. To reach y=1: cursorUp(3 - 1) = cursorUp(2).
+	t.true(
+		secondCall.endsWith(
+			ansiEscapes.cursorUp(2) + ansiEscapes.cursorTo(7) + showCursorEscape,
+		),
+	);
+});
+
+test('standard rendering - no trailing newline: cursor lands on the target line', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {showCursor: true});
+
+	render.setCursorPosition({x: 7, y: 1});
+	render('Line 1\nLine 2\nLine 3\nLine 4');
+
+	const written = (stdout.write as any).firstCall.args[0] as string;
+	t.true(
+		written.endsWith(
+			ansiEscapes.cursorUp(2) + ansiEscapes.cursorTo(7) + showCursorEscape,
+		),
+	);
+});
+
+test('cursor-only update - no trailing newline: cursor lands on the target line', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {
+		showCursor: true,
+		incremental: true,
+	});
+
+	render.setCursorPosition({x: 0, y: 3});
+	render('Line 1\nLine 2\nLine 3\nLine 4');
+	// Same output, cursor moves only: takes the buildCursorOnlySequence path.
+	render.setCursorPosition({x: 5, y: 0});
+	render('Line 1\nLine 2\nLine 3\nLine 4');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	t.true(
+		secondCall.endsWith(
+			ansiEscapes.cursorUp(3) + ansiEscapes.cursorTo(5) + showCursorEscape,
+		),
+	);
+});
+
 test('incremental rendering - render to empty string (full clear vs early exit)', t => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout, {

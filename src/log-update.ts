@@ -73,7 +73,12 @@ const createStandard = (
 
 		const lines = str.split('\n');
 		const visibleCount = visibleLineCount(lines, str);
-		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+		const hasTrailingNewline = str.endsWith('\n');
+		const cursorSuffix = buildCursorSuffix(
+			visibleCount,
+			activeCursor,
+			hasTrailingNewline,
+		);
 
 		if (str === previousOutput && cursorChanged) {
 			stream.write(
@@ -83,6 +88,7 @@ const createStandard = (
 					previousCursorPosition,
 					visibleLineCount: visibleCount,
 					cursorPosition: activeCursor,
+					hasTrailingNewline,
 				}),
 			);
 		} else {
@@ -152,7 +158,11 @@ const createStandard = (
 
 		if (activeCursor) {
 			stream.write(
-				buildCursorSuffix(visibleLineCount(lines, str), activeCursor),
+				buildCursorSuffix(
+					visibleLineCount(lines, str),
+					activeCursor,
+					str.endsWith('\n'),
+				),
 			);
 		}
 
@@ -217,6 +227,7 @@ const createIncremental = (
 		const nextLines = str.split('\n');
 		const visibleCount = visibleLineCount(nextLines, str);
 		const previousVisible = visibleLineCount(previousLines, previousOutput);
+		const hasTrailingNewline = str.endsWith('\n');
 
 		if (str === previousOutput && cursorChanged) {
 			stream.write(
@@ -226,6 +237,7 @@ const createIncremental = (
 					previousCursorPosition,
 					visibleLineCount: visibleCount,
 					cursorPosition: activeCursor,
+					hasTrailingNewline,
 				}),
 			);
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
@@ -240,7 +252,11 @@ const createIncremental = (
 		);
 
 		if (str === '\n' || previousOutput.length === 0) {
-			const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+			const cursorSuffix = buildCursorSuffix(
+				visibleCount,
+				activeCursor,
+				hasTrailingNewline,
+			);
 			stream.write(
 				returnPrefix +
 					ansiEscapes.eraseLines(previousLines.length) +
@@ -253,8 +269,6 @@ const createIncremental = (
 			previousLines = nextLines;
 			return true;
 		}
-
-		const hasTrailingNewline = str.endsWith('\n');
 
 		// We aggregate all chunks for incremental rendering into a buffer, and then write them to stdout at the end.
 		const buffer: string[] = [];
@@ -297,7 +311,11 @@ const createIncremental = (
 			);
 		}
 
-		const cursorSuffix = buildCursorSuffix(visibleCount, activeCursor);
+		const cursorSuffix = buildCursorSuffix(
+			visibleCount,
+			activeCursor,
+			hasTrailingNewline,
+		);
 		buffer.push(cursorSuffix);
 
 		stream.write(buffer.join(''));
@@ -355,7 +373,11 @@ const createIncremental = (
 
 		if (activeCursor) {
 			stream.write(
-				buildCursorSuffix(visibleLineCount(lines, str), activeCursor),
+				buildCursorSuffix(
+					visibleLineCount(lines, str),
+					activeCursor,
+					str.endsWith('\n'),
+				),
 			);
 		}
 

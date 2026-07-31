@@ -53,6 +53,28 @@ test('buildCursorSuffix - no cursorUp when cursor is at last visible line', t =>
 	t.is(result, ansiEscapes.cursorTo(0) + showCursorEscape);
 });
 
+test('buildCursorSuffix - no trailing newline: cursor rests on the last output line', t => {
+	// Without a trailing newline the renderer stops on the last line instead of
+	// moving past it, so the cursor starts at line visibleLineCount - 1.
+	const result = buildCursorSuffix(4, {x: 7, y: 1}, false);
+	t.is(
+		result,
+		ansiEscapes.cursorUp(2) + ansiEscapes.cursorTo(7) + showCursorEscape,
+	);
+});
+
+test('buildCursorSuffix - no trailing newline: no cursorUp when target is the last line', t => {
+	const result = buildCursorSuffix(4, {x: 2, y: 3}, false);
+	t.is(result, ansiEscapes.cursorTo(2) + showCursorEscape);
+});
+
+test('buildCursorSuffix - assumes a trailing newline by default', t => {
+	t.is(
+		buildCursorSuffix(4, {x: 7, y: 1}),
+		buildCursorSuffix(4, {x: 7, y: 1}, true),
+	);
+});
+
 test('buildCursorSuffix - cursor at first line of single-line output', t => {
 	const result = buildCursorSuffix(1, {x: 4, y: 0});
 	t.is(
@@ -86,6 +108,7 @@ test('buildCursorOnlySequence - builds full sequence with hide prefix when curso
 		previousCursorPosition: {x: 0, y: 0},
 		visibleLineCount: 1,
 		cursorPosition: {x: 3, y: 0},
+		hasTrailingNewline: true,
 	});
 	const expected =
 		hideCursorEscape +
@@ -101,6 +124,7 @@ test('buildCursorOnlySequence - no hide prefix when cursor was not shown', t => 
 		previousCursorPosition: undefined,
 		visibleLineCount: 1,
 		cursorPosition: {x: 3, y: 0},
+		hasTrailingNewline: true,
 	});
 	t.false(result.startsWith(hideCursorEscape));
 	t.true(result.includes(showCursorEscape));
