@@ -471,6 +471,24 @@ for (const {name, incremental} of renderingModes) {
 }
 
 for (const {name, incremental} of renderingModes) {
+	test(`${name} - sync() with no trailing newline positions cursor from the last line`, t => {
+		const {stdout, render} = createRenderForMode(incremental);
+
+		render.setCursorPosition({x: 5, y: 1});
+		render.sync('Line 1\nLine 2\nLine 3');
+
+		// 3 visible lines without a trailing newline, so the cursor is on line 2.
+		// To reach y=1: cursorUp(2 - 1) = cursorUp(1).
+		t.is((stdout.write as any).callCount, 1);
+		const written = (stdout.write as any).firstCall.args[0] as string;
+		t.is(
+			written,
+			ansiEscapes.cursorUp(1) + ansiEscapes.cursorTo(5) + showCursorEscape,
+		);
+	});
+}
+
+for (const {name, incremental} of renderingModes) {
 	test(`${name} - sync() with cursor sets cursorWasShown for next render`, t => {
 		const {stdout, render} = createRenderForMode(incremental);
 

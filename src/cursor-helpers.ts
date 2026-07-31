@@ -58,8 +58,11 @@ export const buildReturnToBottom = (
 		return '';
 	}
 
-	// PreviousLineCount includes trailing newline, so visible lines = previousLineCount - 1
-	// cursor is at previousCursorPosition.y, need to go to line (previousLineCount - 1)
+	// PreviousLineCount is the raw `split('\n')` length, so `previousLineCount - 1`
+	// is the row the cursor was left on in both cases: with a trailing newline the
+	// split produces one extra empty element and the cursor sits just past the last
+	// visible line, without one the split has no extra element and the cursor sits
+	// on the last visible line. No trailing-newline flag is needed here.
 	const down = previousLineCount - 1 - previousCursorPosition.y;
 	return (
 		(down > 0 ? ansiEscapes.cursorDown(down) : '') + ansiEscapes.cursorTo(0)
