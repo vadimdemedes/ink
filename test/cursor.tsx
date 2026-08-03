@@ -644,3 +644,160 @@ test.serial(
 		unmount();
 	},
 );
+
+// Fullscreen frames are the only ones Ink renders without a trailing newline,
+// which is what makes the cursor suffix measure from the last visible line
+// rather than from one row past it. These drive that through the real
+// `render()` wiring — `outputToRender = isFullscreen ? output : output + '\n'`
+// — instead of handing log-update a hand-built string.
+
+const fullscreenLines = (count: number, marker: string): string[] =>
+	Array.from({length: count}, (_, index) =>
+		index === 1 ? `Line ${index}${marker}` : `Line ${index}`,
+	);
+
+function FullscreenCursorApp({
+	lineCount,
+	cursorY,
+	marker,
+}: {
+	readonly lineCount: number;
+	readonly cursorY: number;
+	readonly marker: string;
+}) {
+	const {setCursorPosition} = useCursor();
+	setCursorPosition({x: 3, y: cursorY});
+
+	return (
+		<Box flexDirection="column">
+			{fullscreenLines(lineCount, marker).map(line => (
+				<Text key={line}>{line}</Text>
+			))}
+		</Box>
+	);
+}
+
+// Both renderers need covering here. The trailing newline is omitted for
+// fullscreen in either mode, but only the incremental renderer skips the final
+// cursorNextLine to keep the cursor on the last line, so it is the one where
+// the row basis is easiest to get wrong.
+const inkRenderingModes = [
+	{name: 'standard rendering', incremental: false},
+	{name: 'incremental rendering', incremental: true},
+] as const;
+
+for (const {name, incremental} of inkRenderingModes) {
+	test.serial(
+		`${name} - fullscreen: cursor lands on the requested row across rerender and cursor-only update`,
+		async t => {
+			const stdout = createStdout();
+			// Output that exactly fills the viewport is fullscreen, so Ink omits
+			// the trailing newline and the renderer stops on the last visible line.
+			(stdout as any).rows = 5;
+
+			const {rerender, unmount, waitUntilRenderFlush} = render(
+				<FullscreenCursorApp lineCount={5} cursorY={2} marker="" />,
+				{stdout, incrementalRendering: incremental},
+			);
+			await waitUntilRenderFlush();
+
+			// 5 lines with no trailing newline: the cursor is left on row 4, so
+			// reaching y=2 is cursorUp(2). Measuring from the visible-line count
+			// instead would emit cursorUp(3) and land a row too high.
+			const expected =
+				ansiEscapes.cursorUp(2) + ansiEscapes.cursorTo(3) + showCursorEscape;
+			const overshoot =
+				ansiEscapes.cursorUp(3) + ansiEscapes.cursorTo(3) + showCursorEscape;
+
+			const firstRender = getWriteCalls(stdout).join('');
+			t.true(firstRender.includes(expected), 'first frame');
+			t.false(
+				firstRender.includes(overshoot),
+				'first frame does not overshoot',
+			);
+
+			const writesBeforeRerender = (stdout.write as any).callCount as number;
+			rerender(<FullscreenCursorApp lineCount={5} cursorY={2} marker="!" />);
+			await waitUntilRenderFlush();
+
+			const changedRerender = getWriteCalls(stdout)
+				.slice(writesBeforeRerender)
+				.join('');
+			t.true(changedRerender.includes('Line 1!'), 'content actually changed');
+			t.true(changedRerender.includes(expected), 'changed rerender');
+			t.false(
+				changedRerender.includes(overshoot),
+				'changed rerender does not overshoot',
+			);
+
+			const writesBeforeCursorMove = (stdout.write as any).callCount as number;
+			rerender(<FullscreenCursorApp lineCount={5} cursorY={0} marker="!" />);
+			await waitUntilRenderFlush();
+
+			// Output is unchanged, so this takes the cursor-only path, which derives
+			// the bottom row from previousLineCount (5) rather than from the output.
+			// Not on Windows: fullscreen frames there always take the clearing
+			// path instead, so the expected sequence comes from sync(). It works
+			// out to the same bytes, because both measure from lines.length - 1.
+			const cursorOnly = getWriteCalls(stdout)
+				.slice(writesBeforeCursorMove)
+				.join('');
+			t.true(
+				cursorOnly.includes(
+					ansiEscapes.cursorUp(4) + ansiEscapes.cursorTo(3) + showCursorEscape,
+				),
+				'cursor-only update',
+			);
+			t.false(
+				cursorOnly.includes(
+					ansiEscapes.cursorUp(5) + ansiEscapes.cursorTo(3) + showCursorEscape,
+				),
+				'cursor-only update does not overshoot',
+			);
+
+			unmount();
+		},
+	);
+}
+
+// Both renderers again: `sync()` is a separate implementation in each, so
+// identical behaviour today is not a reason to leave one of them untested.
+for (const {name, incremental} of inkRenderingModes) {
+	test.serial(
+		`${name} - fullscreen: cursor lands on the requested row on the sync path`,
+		async t => {
+			const stdout = createStdout();
+			(stdout as any).rows = 5;
+
+			// Output taller than the viewport is still fullscreen, and the second
+			// such frame clears the terminal and repositions through log.sync()
+			// rather than through the renderer's normal write path.
+			const {rerender, unmount, waitUntilRenderFlush} = render(
+				<FullscreenCursorApp lineCount={6} cursorY={2} marker="" />,
+				{stdout, incrementalRendering: incremental},
+			);
+			await waitUntilRenderFlush();
+
+			const writesBeforeRerender = (stdout.write as any).callCount as number;
+			rerender(<FullscreenCursorApp lineCount={6} cursorY={2} marker="!" />);
+			await waitUntilRenderFlush();
+
+			const synced = getWriteCalls(stdout).slice(writesBeforeRerender).join('');
+			t.true(synced.includes(ansiEscapes.clearTerminal), 'took the sync path');
+			// 6 lines with no trailing newline: the cursor is left on row 5, so y=2
+			// is cursorUp(3), not the cursorUp(4) a visible-line-count basis gives.
+			t.true(
+				synced.includes(
+					ansiEscapes.cursorUp(3) + ansiEscapes.cursorTo(3) + showCursorEscape,
+				),
+			);
+			t.false(
+				synced.includes(
+					ansiEscapes.cursorUp(4) + ansiEscapes.cursorTo(3) + showCursorEscape,
+				),
+			);
+
+			unmount();
+		},
+	);
+}

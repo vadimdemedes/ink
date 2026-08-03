@@ -579,6 +579,35 @@ test('incremental rendering - no trailing newline: shrink', t => {
 	t.false(secondCall.endsWith('\n')); // No trailing newline
 });
 
+test('incremental rendering - no trailing newline: cursor after shrink', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {
+		showCursor: true,
+		incremental: true,
+	});
+
+	render.setCursorPosition({x: 2, y: 0});
+	render('Line 1\nLine 2\nLine 3');
+	render.setCursorPosition({x: 2, y: 0});
+	render('Line 1\nLine 2');
+
+	// The shrink branch reaches the cursor suffix through different arithmetic
+	// than the grow/equal branch: eraseLines() + cursorUp(visibleCount) rather
+	// than cursorUp(previousLines.length - 1). Both must leave the cursor on
+	// the same row the suffix measures from.
+	//
+	// eraseLines(1) removes "Line 3" without moving off its row, cursorUp(2)
+	// lands on row 0, and the loop emits one cursorNextLine for the unchanged
+	// "Line 1" and nothing for the unchanged last line, so the cursor ends on
+	// row 1 — which is nextLines.length - 1. To reach y=0: cursorUp(1).
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	t.true(
+		secondCall.endsWith(
+			ansiEscapes.cursorUp(1) + ansiEscapes.cursorTo(2) + showCursorEscape,
+		),
+	);
+});
+
 test('incremental rendering - no trailing newline: grow', t => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout, {
