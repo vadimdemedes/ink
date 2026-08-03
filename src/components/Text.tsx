@@ -62,6 +62,26 @@ export type Props = {
 	*/
 	readonly wrap?: Styles['textWrap'];
 
+	/**
+	Whether the text is selectable through the [frame controller](#getframecontrollerstdout). Defaults to `true`. Nested `<Text>` nodes override the value inherited from their parent.
+	*/
+	readonly selectable?: boolean;
+
+	/**
+	Selection flow key. Text nodes sharing the same flow key are reported as one selection unit: cells of a flow share the same `flowId` in the composited frame. Defaults to each top-level `<Text>` being its own flow.
+	*/
+	readonly selectionFlow?: unknown;
+
+	/**
+	Insert a boundary after this text node, telling consumers how the following text joins when copied. `'soft'` joins with the surrounding text, `'hard'` starts a new line.
+	*/
+	readonly selectionBreakAfter?: 'soft' | 'hard';
+
+	/**
+	Custom joiner string used when `selectionBreakAfter` is `'soft'`.
+	*/
+	readonly selectionJoiner?: string;
+
 	readonly children?: ReactNode;
 };
 
@@ -78,6 +98,10 @@ export default function Text({
 	strikethrough = false,
 	inverse = false,
 	wrap = 'wrap',
+	selectable = true,
+	selectionFlow,
+	selectionBreakAfter,
+	selectionJoiner,
 	children,
 	'aria-label': ariaLabel,
 	'aria-hidden': ariaHidden = false,
@@ -138,6 +162,10 @@ export default function Text({
 		<ink-text
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap}}
 			internal_transform={transform}
+			selectable={selectable}
+			selectionFlow={selectionFlow}
+			selectionBreakAfter={selectionBreakAfter}
+			selectionJoiner={selectionJoiner}
 		>
 			{childrenOrAriaLabel}
 		</ink-text>

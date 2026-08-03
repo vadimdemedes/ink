@@ -18,6 +18,10 @@ import {hideCursorEscape, showCursorEscape} from './cursor-helpers.js';
 import logUpdate, {type LogUpdate, type CursorPosition} from './log-update.js';
 import {bsu, esu, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
+import {
+	createFrameController,
+	type InternalFrameController,
+} from './frame-controller.js';
 import App from './components/App.js';
 import {type TerminalSuspension} from './components/AppContext.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
@@ -293,6 +297,11 @@ export default class Ink {
 	*/
 	readonly isConcurrent: boolean;
 
+	/**
+	Bridge for application-owned text selection. See `getFrameController`.
+	*/
+	readonly frameController: InternalFrameController;
+
 	private readonly options: Options;
 	private readonly log: LogUpdate;
 	private cursorPosition: CursorPosition | undefined;
@@ -378,6 +387,15 @@ export default class Ink {
 		}
 
 		this.rootNode.onImmediateRender = this.onRender;
+
+		// Bridge for application-owned text selection: apps subscribe to composited
+		// frames and push a selection, which is highlighted before serialization
+		// (see onRender). Repaints scheduled by the controller go through the same
+		// (throttled) render path as regular updates.
+		this.frameController = createFrameController(() => {
+			this.rootNode.onRender?.();
+		});
+
 		this.rootNode.onStaticChange = this.handleStaticChange;
 		this.log = logUpdate.create(options.stdout, {
 			incremental: options.incrementalRendering,
@@ -567,10 +585,20 @@ export default class Ink {
 		}
 
 		const startTime = performance.now();
-		const {output, outputHeight, staticOutput} = render(
+		const {output, outputHeight, staticOutput, cells, boundaries} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
+			{
+				selection: this.frameController.getSelection(),
+				// Cells are only projected when a frame consumer subscribed, so
+				// apps that never use the frame controller pay no overhead.
+				captureCells: this.frameController.hasSubscribers(),
+			},
 		);
+
+		if (cells) {
+			this.frameController.publishFrame(cells, boundaries ?? []);
+		}
 
 		this.options.onRender?.({renderTime: performance.now() - startTime});
 
@@ -1112,6 +1140,12 @@ export default class Ink {
 		outputHeight: number,
 		staticOutput: string,
 	): void {
+		// Re-assert the app's cursor intent on every interactive render: log-update
+		// only applies a cursor position set since the previous render, so without
+		// this a repaint triggered by setSelection() would leave the cursor at the
+		// end of the output instead of where useCursor() placed it.
+		this.log.setCursorPosition(this.cursorPosition);
+
 		const hasStaticOutput = staticOutput !== '';
 		const isTty = this.options.stdout.isTTY;
 

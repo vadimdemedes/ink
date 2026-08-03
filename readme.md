@@ -406,6 +406,52 @@ If `truncate-*` is passed, Ink will truncate text instead, resulting in one line
 //=> '…World'
 ```
 
+#### selectable
+
+Type: `boolean`\
+Default: `true`
+
+Whether the text is selectable through the [frame controller](#getframecontrollerstdout). Nested `<Text>` nodes override the value inherited from their parent, so a non-selectable region inside selectable text (and vice versa) is reported per cell. Non-selectable cells are skipped by the selection highlight and should be excluded when extracting copied text.
+
+```jsx
+<Text>
+	Copy this, <Text selectable={false}>but not this</Text>, and this.
+</Text>
+```
+
+#### selectionFlow
+
+Type: `unknown`
+
+Groups text nodes into one selection unit: cells of text nodes sharing the same flow key carry the same `flowId` in the composited frame. By default every top-level `<Text>` is its own flow.
+
+```jsx
+<Text selectionFlow="message">First part </Text>
+<Text selectionFlow="message">second part</Text>
+```
+
+#### selectionBreakAfter
+
+Type: `string`\
+Allowed values: `soft` `hard`
+
+Inserts a boundary after the text node, recorded in the frame's `boundaries` grid so consumers know how adjacent text joins when copied. `'soft'` joins with the surrounding text (with `selectionJoiner` as the joiner), `'hard'` starts a new line.
+
+#### selectionJoiner
+
+Type: `string`\
+Default: `''` for `soft`, `'\n'` for `hard`
+
+Custom joiner string used when `selectionBreakAfter` is set.
+
+```jsx
+<Box flexDirection="column">
+	<Text selectionBreakAfter="soft" selectionJoiner=" | ">Row one</Text>
+	<Text>Row two</Text>
+</Box>
+// Copying both rows yields 'Row one | Row two'
+```
+
 ### `<Box>`
 
 `<Box>` is an essential Ink component to build your layout.
@@ -2961,6 +3007,64 @@ const Example = () => {
 
 render(<Example />);
 ```
+
+#### getFrameController(stdout)
+
+Returns the `FrameController` of the Ink instance rendering to `stdout`, or `undefined` when there is none.
+
+The frame controller is a bridge for applications that own their input and implement text selection themselves, for example alternate-screen apps that handle mouse events. The app subscribes to composited frames to read what is on screen, and pushes a selection, which Ink highlights before serialization.
+
+```jsx
+import {render, Text, getFrameController} from 'ink';
+
+const {unmount} = render(<Text>Hello World</Text>);
+
+const controller = getFrameController(process.stdout);
+
+const unsubscribe = controller.subscribe(frame => {
+	// frame.cells[y][x] is the cell at column x of row y
+});
+
+controller.setSelection({sx: 0, sy: 0, ex: 4, ey: 0});
+```
+
+Frames are only generated while at least one subscriber is registered, so apps that never use the frame controller pay no overhead. Listeners are notified outside of the render pass and notifications are coalesced, so a listener can safely call `setSelection()` without re-entering rendering or observing frames out of order.
+
+##### stdout
+
+Type: `NodeJS.WriteStream`
+
+The output stream an Ink instance renders to, usually `process.stdout`.
+
+##### controller.getFrame()
+
+Returns the latest composited frame, or `undefined` when no frame has been published yet.
+
+A frame is a read-only grid of cells: `frame.cells[y][x]` is the cell at column `x` of row `y`, with `(0, 0)` at the top-left of Ink's output region and `frame.width`/`frame.height` the grid dimensions. Each cell exposes:
+
+- `value` — the character, or `''` for the trailing half of a wide character. To extract the text of a region, concatenate cell values and skip the ones with an empty `value`.
+- `fullWidth` — `true` for wide characters such as CJK, which occupy two cells.
+- `selectable` — `false` for text rendered with `selectable={false}` and for non-text content such as box backgrounds; `true` otherwise. Selections (and text extraction) should skip non-selectable cells.
+- `flowId` — identifies the selection flow the cell belongs to (see [`selectionFlow`](#selectionflow)). Cells sharing a `flowId` form one selection unit. Flow ids are stable within a frame but may change between renders.
+
+`frame.boundaries[y][x]` is the boundary immediately after that cell, if any. A boundary tells consumers how the text after it joins when copied: `'soft'` boundaries join with their `joiner` (the whitespace consumed by wrapping, or the `selectionJoiner` of a [`selectionBreakAfter="soft"`](#selectionbreakafter) node), `'hard'` boundaries start a new line.
+
+> [!NOTE]
+> Cell coordinates are positions in Ink's output region, not terminal viewport coordinates. To map a mouse event to a cell, convert the event coordinates by the viewport position of the output region, like with [`measureElement()`](#measureelementref).
+
+##### controller.getSelection()
+
+Returns the current selection in reading order, or `undefined` when there is none.
+
+##### controller.setSelection(selection)
+
+Highlights `selection` and schedules a repaint through Ink's regular render throttle. Setting an identical selection is a no-op, and passing `undefined` clears the highlight.
+
+Selections are stored in reading order: `(sx, sy)` is the first selected cell and `(ex, ey)` the last one. Reverse selections (right-to-left or bottom-to-top drags) are normalized, so they select the same region as forward drags. The region covers whole rows between the first and last row, and is partial on the first and last row.
+
+##### controller.subscribe(listener)
+
+Subscribes to composited frames. `listener` receives the frame after each render. Subscribing schedules a render, so the listener receives the current frame even when nothing else triggers one. Returns an unsubscribe function.
 
 ## Testing
 

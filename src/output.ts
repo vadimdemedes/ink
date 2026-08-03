@@ -1,12 +1,57 @@
 import sliceAnsi from 'slice-ansi';
 import stringWidth from 'string-width';
+import stripAnsi from 'strip-ansi';
 import {
+	type AnsiCode,
 	type StyledChar,
 	styledCharsFromTokens,
 	styledCharsToString,
 	tokenize,
 } from '@alcalzone/ansi-tokenize';
-import {type OutputTransformer} from './render-node-to-output.js';
+import {
+	type LineSemantics,
+	type OutputTransformer,
+} from './render-node-to-output.js';
+import {
+	type FrameBoundary,
+	type FrameCell,
+	type ScreenSelection,
+} from './frame-controller.js';
+
+// Background applied to selected cells. Appended after a cell's existing styles
+// so the foreground is preserved and this background wins at the terminal.
+const selectionBackground: AnsiCode = {
+	type: 'ansi',
+	code: '\u001B[48;5;240m',
+	endCode: '\u001B[49m',
+};
+
+// Linear reading-order selection: whole rows between the first and last, partial
+// on the first/last row. Coordinates are screen cells in the composited frame;
+// the frame controller normalizes selections to reading order before they get here.
+const isCellSelected = (
+	x: number,
+	y: number,
+	selection: ScreenSelection,
+): boolean => {
+	if (y < selection.sy || y > selection.ey) {
+		return false;
+	}
+
+	if (selection.sy === selection.ey) {
+		return x >= selection.sx && x <= selection.ex;
+	}
+
+	if (y === selection.sy) {
+		return x >= selection.sx;
+	}
+
+	if (y === selection.ey) {
+		return x <= selection.ex;
+	}
+
+	return true;
+};
 
 /**
 "Virtual" output class
@@ -29,6 +74,8 @@ type WriteOperation = {
 	y: number;
 	text: string;
 	transformers: OutputTransformer[];
+	selectable?: boolean;
+	semantics?: LineSemantics[];
 };
 
 type ClipOperation = {
@@ -106,9 +153,13 @@ export default class Output {
 		x: number,
 		y: number,
 		text: string,
-		options: {transformers: OutputTransformer[]},
+		options: {
+			transformers: OutputTransformer[];
+			selectable?: boolean;
+			semantics?: LineSemantics[];
+		},
 	): void {
-		const {transformers} = options;
+		const {transformers, selectable, semantics} = options;
 
 		if (!text) {
 			return;
@@ -120,6 +171,8 @@ export default class Output {
 			y,
 			text,
 			transformers,
+			selectable,
+			semantics,
 		});
 	}
 
@@ -136,7 +189,27 @@ export default class Output {
 		});
 	}
 
-	get(): {output: string; height: number} {
+	get(
+		selection?: ScreenSelection,
+		captureCells = false,
+	): {
+		output: string;
+		height: number;
+		cells?: FrameCell[][];
+		boundaries?: Array<Array<FrameBoundary | undefined>>;
+	} {
+		// Cells are selectable unless a write marked them otherwise (e.g.
+		// `selectable={false}` text or box backgrounds). Tracked only when a
+		// selection is applied or cells are captured.
+		const trackSemantics = captureCells || selection !== undefined;
+		const nonSelectable = trackSemantics ? new Set<string>() : undefined;
+		const flowGrid: Array<Array<number | undefined>> | undefined = captureCells
+			? []
+			: undefined;
+		const boundaryStamps = captureCells
+			? new Map<string, FrameBoundary>()
+			: undefined;
+
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
 		const output: StyledChar[][] = [];
 
@@ -167,9 +240,13 @@ export default class Output {
 			}
 
 			if (operation.type === 'write') {
-				const {text, transformers} = operation;
+				const {text, transformers, selectable, semantics} = operation;
 				let {x, y} = operation;
 				let lines = text.split('\n');
+				let firstLineIndex = 0;
+				// Visible columns removed from the front by horizontal clipping,
+				// expressed in source code units for semantics lookups.
+				let codeUnitsShift = 0;
 
 				const clip = clips.at(-1);
 
@@ -199,8 +276,15 @@ export default class Output {
 					}
 
 					if (clipHorizontally) {
+						const from = x < clip.x1! ? clip.x1! - x : 0;
+
+						if (from > 0 && semantics) {
+							codeUnitsShift = stripAnsi(
+								sliceAnsi(lines[0] ?? '', 0, from),
+							).length;
+						}
+
 						lines = lines.map(line => {
-							const from = x < clip.x1! ? clip.x1! - x : 0;
 							const width = this.caches.getStringWidth(line);
 							const to = x + width > clip.x2! ? clip.x2! - x : width;
 
@@ -218,6 +302,7 @@ export default class Output {
 						const to = y + height > clip.y2! ? clip.y2! - y : height;
 
 						lines = lines.slice(from, to);
+						firstLineIndex = from;
 
 						if (y < clip.y1!) {
 							y = clip.y1!;
@@ -247,6 +332,10 @@ export default class Output {
 						offsetY++;
 						continue;
 					}
+
+					const lineSemantics = semantics?.[firstLineIndex + index];
+					const rowIndex = y + offsetY;
+					let codeIndex = codeUnitsShift;
 
 					const spaceCell: StyledChar = {
 						type: 'char',
@@ -290,6 +379,48 @@ export default class Output {
 							}
 						}
 
+						if (trackSemantics) {
+							// Semantic lookups are indexed by source code units, while
+							// grid positions are terminal columns (wide characters
+							// occupy several columns for one code unit).
+							let cellSelectable = selectable ?? true;
+							let flowId: number | undefined;
+							let boundary: FrameBoundary | undefined;
+
+							if (lineSemantics) {
+								cellSelectable = lineSemantics.selectable[codeIndex] ?? true;
+								flowId = lineSemantics.flowIds[codeIndex];
+								boundary = lineSemantics.boundariesAfter[codeIndex];
+							}
+
+							for (
+								let cellColumn = offsetX;
+								cellColumn < offsetX + characterWidth;
+								cellColumn++
+							) {
+								if (!cellSelectable) {
+									nonSelectable?.add(`${rowIndex},${cellColumn}`);
+								}
+
+								if (flowGrid && flowId !== undefined) {
+									const existingRow = flowGrid[rowIndex];
+									const gridRow = existingRow ?? [];
+
+									if (!existingRow) {
+										flowGrid[rowIndex] = gridRow;
+									}
+
+									gridRow[cellColumn] = flowId;
+								}
+
+								if (boundaryStamps && boundary) {
+									boundaryStamps.set(`${rowIndex},${cellColumn}`, boundary);
+								}
+							}
+
+							codeIndex += character.value.length;
+						}
+
 						offsetX += characterWidth;
 					}
 
@@ -301,6 +432,68 @@ export default class Output {
 				}
 			}
 		}
+
+		// Apply the selection highlight before serialization. Selected slots are
+		// replaced with new cell objects (never mutated in place) because cells
+		// reference StyledChar objects cached and shared across identical lines,
+		// so mutating one would leak the highlight onto other on-screen text.
+		if (selection) {
+			for (const [y, row] of output.entries()) {
+				for (let x = 0; x < row.length; x++) {
+					if (!isCellSelected(x, y, selection)) {
+						continue;
+					}
+
+					// Non-selectable cells (e.g. `selectable={false}` text or box
+					// backgrounds) are excluded from what a selection copies, so
+					// they are not highlighted either.
+					if (nonSelectable?.has(`${y},${x}`)) {
+						continue;
+					}
+
+					const cell = row[x];
+
+					if (cell) {
+						row[x] = {
+							...cell,
+							styles: [...cell.styles, selectionBackground],
+						};
+					}
+				}
+			}
+		}
+
+		// Project the composited cells for frame consumers, stripping internal
+		// style data. Only runs when a consumer opted in via subscribe(), so the
+		// default render path pays no extra cost.
+		const cells = captureCells
+			? output.map((row, rowIndex) => {
+					const frameRow: FrameCell[] = [];
+
+					for (const [column, cell] of row.entries()) {
+						frameRow.push({
+							value: cell?.value ?? ' ',
+							fullWidth: cell?.fullWidth ?? false,
+							selectable: !nonSelectable!.has(`${rowIndex},${column}`),
+							flowId: flowGrid?.[rowIndex]?.[column],
+						});
+					}
+
+					return frameRow;
+				})
+			: undefined;
+
+		const boundaries = captureCells
+			? output.map((row, rowIndex) => {
+					const boundaryRow: Array<FrameBoundary | undefined> = [];
+
+					for (let column = 0; column < row.length; column++) {
+						boundaryRow.push(boundaryStamps!.get(`${rowIndex},${column}`));
+					}
+
+					return boundaryRow;
+				})
+			: undefined;
 
 		const generatedOutput = output
 			.map(line => {
@@ -314,6 +507,8 @@ export default class Output {
 		return {
 			output: generatedOutput,
 			height: output.length,
+			cells,
+			boundaries,
 		};
 	}
 }

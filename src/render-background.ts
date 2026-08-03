@@ -44,7 +44,7 @@ const renderBackground = (
 			x + leftBorderWidth,
 			y + topBorderHeight + row,
 			backgroundLine,
-			{transformers: []},
+			{transformers: [], selectable: false},
 		);
 	}
 };

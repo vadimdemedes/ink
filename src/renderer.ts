@@ -1,17 +1,52 @@
 import renderNodeToOutput, {
 	renderNodeToScreenReaderOutput,
+	type FlowState,
 } from './render-node-to-output.js';
 import Output from './output.js';
 import {type DOMElement} from './dom.js';
+import {
+	type FrameBoundary,
+	type FrameCell,
+	type ScreenSelection,
+} from './frame-controller.js';
 
 type Result = {
 	output: string;
 	outputHeight: number;
 	staticOutput: string;
+	cells?: FrameCell[][];
+	boundaries?: Array<Array<FrameBoundary | undefined>>;
 };
 
-const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
+type Options = {
+	/**
+	Selection region to highlight before serialization.
+	*/
+	selection?: ScreenSelection;
+
+	/**
+	Whether to expose the composited cells in the result. Only enabled when a
+	frame consumer subscribed to the frame controller.
+	*/
+	captureCells?: boolean;
+};
+
+const renderer = (
+	node: DOMElement,
+	isScreenReaderEnabled: boolean,
+	options: Options = {},
+): Result => {
+	const {selection, captureCells} = options;
+
 	if (node.yogaNode) {
+		// Selection metadata (per-cell `selectable`, flows, boundaries) is
+		// resolved whenever it can be observed: when cells are captured or a
+		// selection highlight is applied.
+		const flows: FlowState | undefined =
+			captureCells === true || selection !== undefined
+				? {ids: new Map<unknown, number>(), next: 1}
+				: undefined;
+
 		if (isScreenReaderEnabled) {
 			const output = renderNodeToScreenReaderOutput(node, {
 				skipStaticElements: true,
@@ -41,6 +76,7 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 
 		renderNodeToOutput(node, output, {
 			skipStaticElements: true,
+			flows,
 		});
 
 		let staticOutput;
@@ -56,7 +92,12 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			});
 		}
 
-		const {output: generatedOutput, height: outputHeight} = output.get();
+		const {
+			output: generatedOutput,
+			height: outputHeight,
+			cells,
+			boundaries,
+		} = output.get(selection, captureCells);
 
 		return {
 			output: generatedOutput,
@@ -64,6 +105,8 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			// Newline at the end is needed, because static output doesn't have one, so
 			// interactive output will override last line of static output
 			staticOutput: staticOutput ? `${staticOutput.get().output}\n` : '',
+			cells,
+			boundaries,
 		};
 	}
 
