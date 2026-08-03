@@ -19,18 +19,28 @@ export const cursorPositionChanged = (
 ): boolean => a?.x !== b?.x || a?.y !== b?.y;
 
 /**
-Build escape sequence to move cursor from bottom of output to the target position and show it.
-Assumes cursor is at (col 0, line visibleLineCount) — i.e. just after the last output line.
+Build escape sequence to move cursor from the bottom of the output to the target position and show it.
+
+`bottomLine` is the row the renderer left the cursor on, counted from the top of the output.
+That is always `lines.length - 1` for `lines = str.split('\n')`, whether or not the output ends
+with a newline:
+
+- With a trailing newline, `split` yields one extra empty element and the renderer stops just
+  past the last visible line — which is `lines.length - 1`.
+- Without one, there is no extra element and the renderer deliberately stops on the last visible
+  line instead of moving past it — which is also `lines.length - 1`.
+
+This is the same row basis `buildReturnToBottom` measures from, so the two stay in step.
 */
 export const buildCursorSuffix = (
-	visibleLineCount: number,
+	bottomLine: number,
 	cursorPosition: CursorPosition | undefined,
 ): string => {
 	if (!cursorPosition) {
 		return '';
 	}
 
-	const moveUp = visibleLineCount - cursorPosition.y;
+	const moveUp = bottomLine - cursorPosition.y;
 	return (
 		(moveUp > 0 ? ansiEscapes.cursorUp(moveUp) : '') +
 		ansiEscapes.cursorTo(cursorPosition.x) +
@@ -50,8 +60,9 @@ export const buildReturnToBottom = (
 		return '';
 	}
 
-	// PreviousLineCount includes trailing newline, so visible lines = previousLineCount - 1
-	// cursor is at previousCursorPosition.y, need to go to line (previousLineCount - 1)
+	// PreviousLineCount is the raw `split('\n')` length, so `previousLineCount - 1`
+	// is the row the cursor was left on regardless of a trailing newline — the same
+	// basis `buildCursorSuffix` takes as its `bottomLine`.
 	const down = previousLineCount - 1 - previousCursorPosition.y;
 	return (
 		(down > 0 ? ansiEscapes.cursorDown(down) : '') + ansiEscapes.cursorTo(0)
@@ -62,13 +73,15 @@ export type CursorOnlyInput = {
 	cursorWasShown: boolean;
 	previousLineCount: number;
 	previousCursorPosition: CursorPosition | undefined;
-	visibleLineCount: number;
 	cursorPosition: CursorPosition | undefined;
 };
 
 /**
 Build the escape sequence for cursor-only updates (output unchanged, cursor moved).
 Hides cursor if it was previously shown, returns to bottom, then repositions.
+
+`buildReturnToBottom` has just placed the cursor on row `previousLineCount - 1`, so the
+suffix measures from there rather than recomputing the row from the output.
 */
 export const buildCursorOnlySequence = (input: CursorOnlyInput): string => {
 	const hidePrefix = input.cursorWasShown ? hideCursorEscape : '';
@@ -77,7 +90,7 @@ export const buildCursorOnlySequence = (input: CursorOnlyInput): string => {
 		input.previousCursorPosition,
 	);
 	const cursorSuffix = buildCursorSuffix(
-		input.visibleLineCount,
+		input.previousLineCount - 1,
 		input.cursorPosition,
 	);
 	return hidePrefix + returnToBottom + cursorSuffix;

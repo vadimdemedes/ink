@@ -5,13 +5,14 @@ import {
 	NoEventPriority,
 } from 'react-reconciler/constants.js';
 import * as Scheduler from 'scheduler';
-import Yoga, {type Node as YogaNode} from 'yoga-layout';
+import Yoga from 'yoga-layout';
 import {createContext, version as reactVersion} from 'react';
 import {
 	createTextNode,
 	appendChildNode,
 	insertBeforeNode,
 	removeChildNode,
+	freeYogaSubtree,
 	emitLayoutListeners,
 	setStyle,
 	setTextNodeValue,
@@ -78,9 +79,56 @@ const diff = (before: AnyObject, after: AnyObject): AnyObject | undefined => {
 	return isChanged ? changed : undefined;
 };
 
-const cleanupYogaNode = (node?: YogaNode): void => {
-	node?.unsetMeasureFunc();
-	node?.freeRecursive();
+const findRootNode = (node: DOMElement): DOMElement | undefined => {
+	let current: DOMElement | undefined = node;
+
+	while (current) {
+		if (current.nodeName === 'ink-root') {
+			return current;
+		}
+
+		current = current.parentNode;
+	}
+
+	return undefined;
+};
+
+/**
+ * Clear the root's cached `staticNode` when the node it points at is being
+ * removed as part of a larger subtree.
+ *
+ * The previous identity check (`staticNode === removeNode`) only caught direct
+ * removal of the `<Static>` element. When an *ancestor* of `<Static>` is
+ * removed, the stale `staticNode` reference survives and the next render would
+ * replay stale static output (and, before `freeYogaSubtree`, trap on freed
+ * WASM memory — see QwenLM/qwen-code#6820).
+ *
+ * The owning root is derived from the host parent passed to the removal hook,
+ * not a module-level global, so instances with separate stdout streams don't
+ * clobber each other's pointers.
+ */
+const clearStaticNodeIfContained = (
+	rootNode: DOMElement | undefined,
+	removeNode: DOMElement | TextNode,
+): void => {
+	if (!rootNode?.staticNode) {
+		return;
+	}
+
+	// Walk up from staticNode to see if removeNode is an ancestor.
+	let current: DOMElement | undefined = rootNode.staticNode;
+
+	while (current) {
+		if (current === removeNode) {
+			// Only clear staticNode, not previousStaticNode. The inequality
+			// (undefined !== previousStaticNode) triggers onStaticChange in
+			// resetAfterCommit, which resets fullStaticOutput.
+			rootNode.staticNode = undefined;
+			return;
+		}
+
+		current = current.parentNode;
+	}
 };
 
 type Props = Record<string, unknown>;
@@ -90,8 +138,6 @@ type HostContext = {
 };
 
 let currentUpdatePriority = NoEventPriority;
-
-let currentRootNode: DOMElement | undefined;
 
 async function loadPackageJson() {
 	const fs = await import('node:fs');
@@ -234,7 +280,6 @@ export default createReconciler<
 			}
 
 			if (key === 'internal_static') {
-				currentRootNode = rootNode;
 				node.internal_static = true;
 				rootNode.isStaticDirty = true;
 
@@ -302,20 +347,20 @@ export default createReconciler<
 	appendChildToContainer: appendChildNode,
 	insertInContainerBefore: insertBeforeNode,
 	removeChildFromContainer(node, removeNode) {
-		removeChildNode(node, removeNode);
-		cleanupYogaNode(removeNode.yogaNode);
+		// `node` is the container, i.e. the root itself. Clear before
+		// removeChildNode breaks the parent chain.
+		clearStaticNodeIfContained(findRootNode(node), removeNode);
 
-		// Only clear staticNode if it still points at the removed node. On key-driven remounts, `createInstance` already registered the new node before this removal fires.
-		if (
-			removeNode.internal_static &&
-			currentRootNode?.staticNode === removeNode
-		) {
-			currentRootNode.staticNode = undefined;
-		}
+		removeChildNode(node, removeNode);
+		freeYogaSubtree(removeNode);
 	},
 	commitUpdate(node, _type, oldProps, newProps) {
-		if (currentRootNode && node.internal_static) {
-			currentRootNode.isStaticDirty = true;
+		if (node.internal_static) {
+			const rootNode = findRootNode(node);
+
+			if (rootNode) {
+				rootNode.isStaticDirty = true;
+			}
 		}
 
 		const props = diff(oldProps, newProps);
@@ -362,16 +407,12 @@ export default createReconciler<
 		setTextNodeValue(node, newText);
 	},
 	removeChild(node, removeNode) {
-		removeChildNode(node, removeNode);
-		cleanupYogaNode(removeNode.yogaNode);
+		// `node` is the host parent; its chain up to the root is still intact
+		// here, so derive the owning root from it rather than a global.
+		clearStaticNodeIfContained(findRootNode(node), removeNode);
 
-		// Same guard as removeChildFromContainer: only clear if this is still the active static node.
-		if (
-			removeNode.internal_static &&
-			currentRootNode?.staticNode === removeNode
-		) {
-			currentRootNode.staticNode = undefined;
-		}
+		removeChildNode(node, removeNode);
+		freeYogaSubtree(removeNode);
 	},
 	setCurrentUpdatePriority(newPriority: number) {
 		currentUpdatePriority = newPriority;

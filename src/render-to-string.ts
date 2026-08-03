@@ -112,7 +112,7 @@ const renderToString = (
 
 		// Tear down: unmount the tree so the reconciler cleans up child nodes
 		// and runs effect cleanup functions. Child Yoga nodes are freed by the
-		// reconciler's removeChildFromContainer → cleanupYogaNode → freeRecursive.
+		// reconciler's removeChildFromContainer → freeYogaSubtree → freeRecursive.
 		reconciler.updateContainerSync(null, container, null, () => {});
 		reconciler.flushSyncWork();
 		teardownSucceeded = true;

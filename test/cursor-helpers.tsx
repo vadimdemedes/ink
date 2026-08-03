@@ -84,7 +84,6 @@ test('buildCursorOnlySequence - builds full sequence with hide prefix when curso
 		cursorWasShown: true,
 		previousLineCount: 2,
 		previousCursorPosition: {x: 0, y: 0},
-		visibleLineCount: 1,
 		cursorPosition: {x: 3, y: 0},
 	});
 	const expected =
@@ -99,7 +98,6 @@ test('buildCursorOnlySequence - no hide prefix when cursor was not shown', t => 
 		cursorWasShown: false,
 		previousLineCount: 0,
 		previousCursorPosition: undefined,
-		visibleLineCount: 1,
 		cursorPosition: {x: 3, y: 0},
 	});
 	t.false(result.startsWith(hideCursorEscape));

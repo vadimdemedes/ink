@@ -2,6 +2,7 @@ import EventEmitter from 'node:events';
 import process from 'node:process';
 import test from 'ava';
 import FakeTimers from '@sinonjs/fake-timers';
+import delay from 'delay';
 import chalk from 'chalk';
 import stripAnsi from 'strip-ansi';
 import React, {Component, useEffect, useState} from 'react';
@@ -601,6 +602,334 @@ test('fullStaticOutput is reset when <Static> unmounts so stale items are not re
 		'fullStaticOutput must NOT replay HISTORY-B after Static unmount',
 	);
 	t.true(afterUnmount.includes('d2'), 'new dynamic output must still render');
+});
+
+test('unmounting an ancestor of <Static> clears staticNode and does not crash the renderer', t => {
+	// When a component that *contains* <Static> is unmounted, the reconciler
+	// removes the ancestor and freeRecursive() frees the static node's Yoga
+	// WASM memory. If staticNode is not cleared, the next render calls
+	// getComputedWidth() on freed memory → RuntimeError: memory access out
+	// of bounds (QwenLM/qwen-code#6820).
+	const stdout = createStdout();
+
+	function Wrapper({children}: {readonly children: React.ReactNode}) {
+		return <Box>{children}</Box>;
+	}
+
+	function App({
+		showWrapper,
+		label,
+	}: {
+		readonly showWrapper: boolean;
+		readonly label: string;
+	}) {
+		return (
+			<Box>
+				{showWrapper ? (
+					<Wrapper>
+						<Static items={['HISTORY-X']}>
+							{item => <Text key={item}>{item}</Text>}
+						</Static>
+					</Wrapper>
+				) : null}
+				<Text>{label}</Text>
+			</Box>
+		);
+	}
+
+	const {rerender} = render(<App showWrapper label="live-1" />, {
+		stdout,
+		debug: true,
+	});
+
+	const afterMount = (stdout.write as any).lastCall.args[0] as string;
+	t.true(afterMount.includes('HISTORY-X'), 'Static item emitted on mount');
+
+	// Unmount the Wrapper (ancestor of <Static>), not <Static> directly.
+	// Before the fix this left a dangling staticNode pointing at freed WASM
+	// memory, and the rerender below would crash.
+	rerender(<App showWrapper={false} label="live-2" />);
+
+	const afterUnmount = (stdout.write as any).lastCall.args[0] as string;
+	t.true(
+		afterUnmount.includes('live-2'),
+		'dynamic content renders after unmount',
+	);
+	t.false(
+		afterUnmount.includes('HISTORY-X'),
+		'stale static output must not replay',
+	);
+
+	// A second rerender confirms the renderer is still functional.
+	rerender(<App showWrapper={false} label="live-3" />);
+	t.is(
+		(stdout.write as any).lastCall.args[0],
+		'live-3',
+		'renderer remains functional after indirect Static removal',
+	);
+});
+
+test('removing a <Static> ancestor that is a direct child of the root does not crash', t => {
+	// Exercises the removeChildFromContainer path: the wrapper holding <Static>
+	// is a direct child of the root container (via a top-level fragment), so its
+	// removal fires removeChildFromContainer rather than removeChild.
+	const stdout = createStdout();
+
+	function App({
+		showWrapper,
+		label,
+	}: {
+		readonly showWrapper: boolean;
+		readonly label: string;
+	}) {
+		return (
+			<>
+				{showWrapper ? (
+					<Box>
+						<Static items={['ROOT-HISTORY']}>
+							{item => <Text key={item}>{item}</Text>}
+						</Static>
+					</Box>
+				) : null}
+				<Text>{label}</Text>
+			</>
+		);
+	}
+
+	const {rerender} = render(<App showWrapper label="root-1" />, {
+		stdout,
+		debug: true,
+	});
+
+	const afterMount = (stdout.write as any).lastCall.args[0] as string;
+	t.true(afterMount.includes('ROOT-HISTORY'), 'Static item emitted on mount');
+
+	rerender(<App showWrapper={false} label="root-2" />);
+
+	const afterUnmount = (stdout.write as any).lastCall.args[0] as string;
+	t.true(
+		afterUnmount.includes('root-2'),
+		'dynamic content renders after unmount',
+	);
+	t.false(
+		afterUnmount.includes('ROOT-HISTORY'),
+		'stale static output must not replay',
+	);
+});
+
+test('separate Ink instances do not clobber each other’s staticNode', t => {
+	// The owning root must be derived from the removal hook’s host parent, not a
+	// module-level global. Rendering <Static> in the second instance moves the
+	// global pointer to the second root; removing <Static>’s ancestor from the
+	// first instance must still clear the FIRST root’s staticNode.
+	const stdout1 = createStdout();
+	const stdout2 = createStdout();
+
+	function App({
+		show,
+		label,
+	}: {
+		readonly show: boolean;
+		readonly label: string;
+	}) {
+		return (
+			<Box>
+				{show ? (
+					<Box>
+						<Static items={[`${label}-history`]}>
+							{item => <Text key={item}>{item}</Text>}
+						</Static>
+					</Box>
+				) : null}
+				<Text>{label}</Text>
+			</Box>
+		);
+	}
+
+	const first = render(<App show label="first" />, {
+		stdout: stdout1,
+		debug: true,
+	});
+
+	// Rendering <Static> here points the module-global root at the second root.
+	const second = render(<App show label="second" />, {
+		stdout: stdout2,
+		debug: true,
+	});
+
+	// Remove <Static>’s ancestor from the FIRST instance. With a global-based
+	// lookup this consulted the second root and left the first root’s pointer
+	// dangling, replaying stale static output.
+	first.rerender(<App show={false} label="first-2" />);
+
+	const firstOut = (stdout1.write as any).lastCall.args[0] as string;
+	t.true(firstOut.includes('first-2'), 'first instance renders new output');
+	t.false(
+		firstOut.includes('first-history'),
+		'first instance must not replay stale static output',
+	);
+
+	// The second instance stays functional and independent.
+	second.rerender(<App show={false} label="second-2" />);
+	const secondOut = (stdout2.write as any).lastCall.args[0] as string;
+	t.true(secondOut.includes('second-2'), 'second instance renders new output');
+
+	first.unmount();
+	second.unmount();
+});
+
+test('updating <Static> in one instance after another instance mounted <Static> sets the dirty flag on the correct root', t => {
+	// CommitUpdate must derive the owning root from the updated node, not a
+	// module-level global. Rendering <Static> in the second instance used to
+	// move the global pointer; appending to the first instance's <Static> then
+	// set isStaticDirty on the second root, so the first root missed its
+	// immediate render and the new item was lost.
+	const stdout1 = createStdout();
+	const stdout2 = createStdout();
+
+	function App({
+		items,
+		label,
+	}: {
+		readonly items: string[];
+		readonly label: string;
+	}) {
+		return (
+			<Box>
+				<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
+				<Text>{label}</Text>
+			</Box>
+		);
+	}
+
+	const first = render(<App items={['A']} label="first" />, {
+		stdout: stdout1,
+		debug: true,
+	});
+
+	// Mounting <Static> in the second instance used to overwrite the global
+	// root pointer.
+	const second = render(<App items={['X']} label="second" />, {
+		stdout: stdout2,
+		debug: true,
+	});
+
+	// Append to the FIRST instance's <Static>. This triggers commitUpdate on
+	// the first root's static node. The dirty flag must land on the first root
+	// so the immediate render fires before useLayoutEffect clears the children.
+	first.rerender(<App items={['A', 'B']} label="first" />);
+
+	const firstOut = (stdout1.write as any).lastCall.args[0] as string;
+	t.true(firstOut.includes('B'), 'appended static item must reach stdout');
+
+	// The second instance stays functional and independent.
+	second.rerender(<App items={['X', 'Y']} label="second" />);
+	const secondOut = (stdout2.write as any).lastCall.args[0] as string;
+	t.true(secondOut.includes('Y'), 'second instance static update works');
+
+	first.unmount();
+	second.unmount();
+});
+
+test('unmounting a <Static> ancestor in screen-reader mode does not replay stale output', t => {
+	// The screen-reader render path reads node.staticNode without a yogaNode
+	// guard, so a dangling staticNode would replay the stale static subtree.
+	const stdout = createStdout();
+
+	function App({
+		showWrapper,
+		label,
+	}: {
+		readonly showWrapper: boolean;
+		readonly label: string;
+	}) {
+		return (
+			<Box>
+				{showWrapper ? (
+					<Box>
+						<Static items={['SR-HISTORY']}>
+							{item => <Text key={item}>{item}</Text>}
+						</Static>
+					</Box>
+				) : null}
+				<Text>{label}</Text>
+			</Box>
+		);
+	}
+
+	const {rerender} = render(<App showWrapper label="sr-1" />, {
+		stdout,
+		debug: true,
+		isScreenReaderEnabled: true,
+	});
+
+	rerender(<App showWrapper={false} label="sr-2" />);
+
+	const afterUnmount = (stdout.write as any).lastCall.args[0] as string;
+	t.true(
+		afterUnmount.includes('sr-2'),
+		'dynamic content renders after unmount',
+	);
+	t.false(
+		afterUnmount.includes('SR-HISTORY'),
+		'stale static output must not replay in screen-reader mode',
+	);
+});
+
+test('unmounting a <Static> ancestor in concurrent mode does not crash', async t => {
+	const stdout = createStdout();
+	const {act} = await import('react');
+
+	function App({
+		showWrapper,
+		label,
+	}: {
+		readonly showWrapper: boolean;
+		readonly label: string;
+	}) {
+		return (
+			<Box>
+				{showWrapper ? (
+					<Box>
+						<Static items={['CC-HISTORY']}>
+							{item => <Text key={item}>{item}</Text>}
+						</Static>
+					</Box>
+				) : null}
+				<Text>{label}</Text>
+			</Box>
+		);
+	}
+
+	let instance!: ReturnType<typeof render>;
+
+	await act(async () => {
+		instance = render(<App showWrapper label="cc-1" />, {
+			stdout,
+			debug: true,
+			concurrent: true,
+		});
+	});
+
+	await delay(50);
+
+	await act(async () => {
+		instance.rerender(<App showWrapper={false} label="cc-2" />);
+	});
+
+	await delay(50);
+
+	const afterUnmount = (stdout.write as any).lastCall.args[0] as string;
+	t.true(
+		afterUnmount.includes('cc-2'),
+		'dynamic content renders after unmount',
+	);
+	t.false(
+		afterUnmount.includes('CC-HISTORY'),
+		'stale static output must not replay',
+	);
+
+	instance.unmount();
 });
 
 test('remounting <Static> via key change emits the new items (nested under <Box>)', t => {

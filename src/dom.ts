@@ -184,6 +184,32 @@ export const removeChildNode = (
 	}
 };
 
+const nullifyYogaNodes = (node: DOMNode): void => {
+	node.yogaNode = undefined;
+
+	if (node.nodeName !== '#text') {
+		for (const childNode of node.childNodes) {
+			nullifyYogaNodes(childNode);
+		}
+	}
+};
+
+/**
+Free the Yoga (WASM) memory of a removed subtree, then drop the `yogaNode`
+reference on every DOM node within it.
+
+`freeRecursive()` releases the WASM memory but leaves each JS wrapper object
+truthy, so every `?.yogaNode` guard in the codebase would still pass and then
+trap on a use-after-free when the wrapper is dereferenced (see
+QwenLM/qwen-code#6820). Nulling the references makes those guards effective and
+turns any lingering access into a safe no-op.
+*/
+export const freeYogaSubtree = (removeNode: DOMNode): void => {
+	removeNode.yogaNode?.unsetMeasureFunc();
+	removeNode.yogaNode?.freeRecursive();
+	nullifyYogaNodes(removeNode);
+};
+
 export const setAttribute = (
 	node: DOMElement,
 	key: string,

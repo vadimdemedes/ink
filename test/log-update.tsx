@@ -471,6 +471,24 @@ for (const {name, incremental} of renderingModes) {
 }
 
 for (const {name, incremental} of renderingModes) {
+	test(`${name} - sync() with no trailing newline positions cursor from the last line`, t => {
+		const {stdout, render} = createRenderForMode(incremental);
+
+		render.setCursorPosition({x: 5, y: 1});
+		render.sync('Line 1\nLine 2\nLine 3');
+
+		// 3 visible lines without a trailing newline, so the cursor is on line 2.
+		// To reach y=1: cursorUp(2 - 1) = cursorUp(1).
+		t.is((stdout.write as any).callCount, 1);
+		const written = (stdout.write as any).firstCall.args[0] as string;
+		t.is(
+			written,
+			ansiEscapes.cursorUp(1) + ansiEscapes.cursorTo(5) + showCursorEscape,
+		);
+	});
+}
+
+for (const {name, incremental} of renderingModes) {
 	test(`${name} - sync() with cursor sets cursorWasShown for next render`, t => {
 		const {stdout, render} = createRenderForMode(incremental);
 
@@ -561,6 +579,35 @@ test('incremental rendering - no trailing newline: shrink', t => {
 	t.false(secondCall.endsWith('\n')); // No trailing newline
 });
 
+test('incremental rendering - no trailing newline: cursor after shrink', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {
+		showCursor: true,
+		incremental: true,
+	});
+
+	render.setCursorPosition({x: 2, y: 0});
+	render('Line 1\nLine 2\nLine 3');
+	render.setCursorPosition({x: 2, y: 0});
+	render('Line 1\nLine 2');
+
+	// The shrink branch reaches the cursor suffix through different arithmetic
+	// than the grow/equal branch: eraseLines() + cursorUp(visibleCount) rather
+	// than cursorUp(previousLines.length - 1). Both must leave the cursor on
+	// the same row the suffix measures from.
+	//
+	// eraseLines(1) removes "Line 3" without moving off its row, cursorUp(2)
+	// lands on row 0, and the loop emits one cursorNextLine for the unchanged
+	// "Line 1" and nothing for the unchanged last line, so the cursor ends on
+	// row 1 — which is nextLines.length - 1. To reach y=0: cursorUp(1).
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	t.true(
+		secondCall.endsWith(
+			ansiEscapes.cursorUp(1) + ansiEscapes.cursorTo(2) + showCursorEscape,
+		),
+	);
+});
+
 test('incremental rendering - no trailing newline: grow', t => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout, {
@@ -602,6 +649,72 @@ test('incremental rendering - no trailing newline: unchanged lines do not oversh
 	const lastCursorNextLine = thirdCall.lastIndexOf(ansiEscapes.cursorNextLine);
 	t.is(lastCursorNextLine, -1); // No cursorNextLine at all since A is changed (written) not skipped
 });
+
+test('incremental rendering - no trailing newline: cursor lands on the target line', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {
+		showCursor: true,
+		incremental: true,
+	});
+
+	render.setCursorPosition({x: 7, y: 1});
+	render('Line 1\nLine 2\nLine 3\nLine 4');
+
+	// The first render takes the `previousOutput.length === 0` branch, which
+	// Ink reaches whenever useStdout().write() clears and restores the frame.
+	const firstCall = (stdout.write as any).firstCall.args[0] as string;
+	t.true(
+		firstCall.endsWith(
+			ansiEscapes.cursorUp(2) + ansiEscapes.cursorTo(7) + showCursorEscape,
+		),
+	);
+
+	render.setCursorPosition({x: 7, y: 1});
+	render('Line 1\nLine 2!\nLine 3\nLine 4');
+
+	const secondCall = (stdout.write as any).secondCall.args[0] as string;
+	// 4 visible lines without a trailing newline, so the renderer leaves the
+	// cursor on line 3. To reach y=1: cursorUp(3 - 1) = cursorUp(2).
+	t.true(
+		secondCall.endsWith(
+			ansiEscapes.cursorUp(2) + ansiEscapes.cursorTo(7) + showCursorEscape,
+		),
+	);
+});
+
+test('standard rendering - no trailing newline: cursor lands on the target line', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {showCursor: true});
+
+	render.setCursorPosition({x: 7, y: 1});
+	render('Line 1\nLine 2\nLine 3\nLine 4');
+
+	const written = (stdout.write as any).firstCall.args[0] as string;
+	t.true(
+		written.endsWith(
+			ansiEscapes.cursorUp(2) + ansiEscapes.cursorTo(7) + showCursorEscape,
+		),
+	);
+});
+
+for (const {name, incremental} of renderingModes) {
+	test(`${name} - cursor-only update with no trailing newline lands on the target line`, t => {
+		const {stdout, render} = createRenderForMode(incremental);
+
+		render.setCursorPosition({x: 0, y: 3});
+		render('Line 1\nLine 2\nLine 3\nLine 4');
+		// Same output, cursor moves only: takes the buildCursorOnlySequence path.
+		render.setCursorPosition({x: 5, y: 0});
+		render('Line 1\nLine 2\nLine 3\nLine 4');
+
+		const secondCall = (stdout.write as any).secondCall.args[0] as string;
+		t.true(
+			secondCall.endsWith(
+				ansiEscapes.cursorUp(3) + ansiEscapes.cursorTo(5) + showCursorEscape,
+			),
+		);
+	});
+}
 
 test('incremental rendering - render to empty string (full clear vs early exit)', t => {
 	const stdout = createStdout();
