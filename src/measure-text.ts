@@ -1,6 +1,7 @@
 import widestLine from 'widest-line';
+import {LruCache} from './lru-cache.js';
 
-const cache = new Map<string, Output>();
+const cache = new LruCache<string, Output>(1000);
 
 type Output = {
 	width: number;

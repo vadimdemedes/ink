@@ -1,8 +1,9 @@
 import wrapAnsi from 'wrap-ansi';
 import cliTruncate from 'cli-truncate';
 import {type Styles} from './styles.js';
+import {LruCache} from './lru-cache.js';
 
-const cache: Record<string, string> = {};
+const cache = new LruCache<string, string>(1000);
 
 const wrapText = (
 	text: string,
@@ -10,7 +11,7 @@ const wrapText = (
 	wrapType: Styles['textWrap'],
 ): string => {
 	const cacheKey = text + String(maxWidth) + String(wrapType);
-	const cachedText = cache[cacheKey];
+	const cachedText = cache.get(cacheKey);
 
 	if (cachedText) {
 		return cachedText;
@@ -47,7 +48,7 @@ const wrapText = (
 		wrappedText = cliTruncate(text, maxWidth, {position});
 	}
 
-	cache[cacheKey] = wrappedText;
+	cache.set(cacheKey, wrappedText);
 
 	return wrappedText;
 };
