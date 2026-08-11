@@ -46,6 +46,7 @@ type Props = {
 	readonly onRegisterInputControl: (
 		pauseInput: () => void,
 		resumeInput: () => void,
+		restoreInputState: () => void,
 	) => void;
 	readonly setCursorPosition: (position: CursorPosition | undefined) => void;
 	readonly interactive: boolean;
@@ -457,13 +458,41 @@ function App({
 		}
 	}, [stdin, stdout, attachReadableListener]);
 
+	// Reinstates the input modes the app still owns after the kernel-side
+	// terminal state changed behind Ink's back — e.g. the process was stopped
+	// (SIGSTOP/SIGTSTP), the shell reset the tty to cooked mode, and the process
+	// was continued (SIGCONT). Unlike pauseInput/resumeInput this works off the
+	// live ref counts: nothing was torn down, the terminal was simply taken away.
+	const restoreInputState = useCallback((): void => {
+		if (
+			isRawModeSupported &&
+			rawModeEnabledCount.current > 0 &&
+			!pendingDisableRawModeRef.current
+		) {
+			// Node (libuv) caches the tty mode and treats a repeated
+			// setRawMode(true) as a no-op, so toggle to force the ioctl through.
+			// Guarded because this runs from a signal handler: a tty fd gone bad
+			// (e.g. hangup while stopped) must not crash the process on resume.
+			try {
+				stdin.setRawMode(false);
+				stdin.setRawMode(true);
+			} catch {}
+		}
+
+		if (bracketedPasteModeEnabledCount.current > 0 && stdout.isTTY) {
+			try {
+				stdout.write('\u001B[?2004h');
+			} catch {}
+		}
+	}, [isRawModeSupported, stdin, stdout]);
+
 	// Register input pause/resume in an insertion effect: it runs before every
 	// passive effect (parent and child), so a child that calls suspendTerminal()
 	// from its own effect always finds the input control already registered. A
 	// normal effect would run too late (child effects fire before the parent's).
 	useInsertionEffect(() => {
-		onRegisterInputControl(pauseInput, resumeInput);
-	}, [onRegisterInputControl, pauseInput, resumeInput]);
+		onRegisterInputControl(pauseInput, resumeInput, restoreInputState);
+	}, [onRegisterInputControl, pauseInput, resumeInput, restoreInputState]);
 
 	// Focus navigation helpers
 	const findNextFocusable = useCallback(

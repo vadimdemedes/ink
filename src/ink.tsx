@@ -30,6 +30,33 @@ import {
 const noop = () => {};
 const textEncoder = new TextEncoder();
 
+// A single process-level SIGCONT listener shared by all interactive instances,
+// so that instance count never scales `process` listeners (mirroring how
+// signal-exit multiplexes exit handling through one handler).
+const continueListeners = new Set<() => void>();
+
+const onProcessContinue = () => {
+	for (const listener of continueListeners) {
+		listener();
+	}
+};
+
+const addContinueListener = (listener: () => void): void => {
+	if (continueListeners.size === 0) {
+		process.on('SIGCONT', onProcessContinue);
+	}
+
+	continueListeners.add(listener);
+};
+
+const removeContinueListener = (listener: () => void): void => {
+	continueListeners.delete(listener);
+
+	if (continueListeners.size === 0) {
+		process.off('SIGCONT', onProcessContinue);
+	}
+};
+
 const yieldImmediate = async () =>
 	new Promise<void>(resolve => {
 		setImmediate(resolve);
@@ -333,6 +360,8 @@ export default class Ink {
 	// mode and bracketed paste state.
 	private pauseInput?: () => void;
 	private resumeInput?: () => void;
+	private restoreInputState?: () => void;
+	private readonly unsubscribeContinue?: () => void;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -460,6 +489,19 @@ export default class Ink {
 			this.unsubscribeResize = () => {
 				options.stdout.off('resize', this.resized);
 			};
+
+			// When the process is stopped (SIGSTOP/SIGTSTP) while a job-control
+			// shell is attached, the shell reclaims the terminal and resets it to
+			// cooked mode. Once the process is continued, reinstate the input modes
+			// the app still owns and repaint over whatever the shell drew.
+			// SIGCONT does not exist on Windows.
+			if (process.platform !== 'win32') {
+				addContinueListener(this.handleContinue);
+
+				this.unsubscribeContinue = () => {
+					removeContinueListener(this.handleContinue);
+				};
+			}
 		}
 
 		this.initKittyKeyboard();
@@ -828,6 +870,8 @@ export default class Ink {
 				this.unsubscribeResize();
 			}
 
+			this.unsubscribeContinue?.();
+
 			// Cancel any in-progress auto-detection before checking protocol state
 			if (this.cancelKittyDetection) {
 				this.cancelKittyDetection();
@@ -1005,10 +1049,59 @@ export default class Ink {
 		});
 	}
 
-	registerInputControl(pauseInput: () => void, resumeInput: () => void): void {
+	registerInputControl(
+		pauseInput: () => void,
+		resumeInput: () => void,
+		restoreInputState: () => void,
+	): void {
 		this.pauseInput = pauseInput;
 		this.resumeInput = resumeInput;
+		this.restoreInputState = restoreInputState;
 	}
+
+	handleContinue = (): void => {
+		if (this.isUnmounted || this.isUnmounting || this.isSuspended) {
+			return;
+		}
+
+		// Reinstate raw mode and bracketed paste if the app still owns them. If
+		// the process was continued in a background process group, the tcsetattr
+		// raises SIGTTOU and stops the process again — running this handler once
+		// more when the job is eventually foregrounded with `fg`.
+		this.restoreInputState?.();
+
+		const stdout = this.options.stdout as MaybeWritableStream;
+		const {canWriteToStdout} = getWritableStreamState(stdout);
+
+		// Settle pending throttled writes so a trailing pre-stop frame can't land
+		// after the reset below (same pattern as beginSuspend).
+		settleThrottle(this.throttledOnRender, canWriteToStdout);
+		settleThrottle(this.throttledLog, canWriteToStdout);
+
+		if (canWriteToStdout && this.kittyProtocolEnabled && this.kittyFlags) {
+			// Pop before re-pushing: unlike the suspendTerminal() path, no pop ran
+			// when the process was stopped, so a bare push would grow the terminal's
+			// kitty stack on every stop/continue cycle while unmount pops only one
+			// entry. Popping an empty stack is a no-op.
+			this.writeBestEffort(this.options.stdout, '\u001B[<u');
+			this.writeBestEffort(
+				this.options.stdout,
+				`\u001B[>${resolveFlags(this.kittyFlags)}u`,
+			);
+		}
+
+		// Force a full redraw instead of diffing against the pre-stop frame,
+		// which the shell has drawn over (job status lines, prompt, echoed input).
+		this.lastOutput = '';
+		this.lastOutputToRender = '';
+		this.lastOutputHeight = 0;
+		this.log.reset();
+
+		try {
+			this.calculateLayout();
+			this.onRender();
+		} catch {}
+	};
 
 	async suspendTerminal(callback: () => void | Promise<void>): Promise<void>;
 	async suspendTerminal(): Promise<TerminalSuspension>;

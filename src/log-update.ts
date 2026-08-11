@@ -134,6 +134,10 @@ const createStandard = (
 		previousLineCount = 0;
 		previousCursorPosition = undefined;
 		cursorWasShown = false;
+		// Reset means "assume nothing about the terminal": something else (a
+		// shell prompt after SIGSTOP/SIGCONT, a child process) may have shown
+		// the cursor, so let the next render hide it again.
+		hasHiddenCursor = false;
 	};
 
 	render.sync = (str: string) => {
@@ -337,6 +341,10 @@ const createIncremental = (
 		previousLines = [];
 		previousCursorPosition = undefined;
 		cursorWasShown = false;
+		// Reset means "assume nothing about the terminal": something else (a
+		// shell prompt after SIGSTOP/SIGCONT, a child process) may have shown
+		// the cursor, so let the next render hide it again.
+		hasHiddenCursor = false;
 	};
 
 	render.sync = (str: string) => {
