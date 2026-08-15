@@ -3142,6 +3142,7 @@ For a practical example of building an accessible component, see the [ARIA examp
 - [ink-stepper](https://github.com/archcorsair/ink-stepper) - Step-by-step wizard.
 - [ink-virtual-list](https://github.com/archcorsair/ink-virtual-list) - Virtualized list that renders only visible items for performance.
 - [ink-color-picker](https://github.com/sina-byn/ink-color-picker) - Color picker.
+- [ink-frame](https://github.com/oliveryasuna/ink-frame) - Grids of bordered boxes for Ink, where the borders join where they meet.
 
 ## Useful Hooks
 
