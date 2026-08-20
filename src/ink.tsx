@@ -1125,7 +1125,10 @@ export default class Ink {
 			}
 
 			this.options.stdout.write(
-				ansiEscapes.clearTerminal + this.fullStaticOutput + outputToRender,
+				ansiEscapes.cursorTo(0, 0) +
+					ansiEscapes.eraseDown +
+					this.fullStaticOutput +
+					outputToRender,
 			);
 			this.lastOutput = output;
 			this.lastOutputToRender = outputToRender;
