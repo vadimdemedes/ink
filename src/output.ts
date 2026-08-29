@@ -1,12 +1,49 @@
 import sliceAnsi from 'slice-ansi';
 import stringWidth from 'string-width';
 import {
+	type AnsiCode,
 	type StyledChar,
 	styledCharsFromTokens,
 	styledCharsToString,
 	tokenize,
 } from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
+import {type FrameCell, type ScreenSelection} from './frame-controller.js';
+
+// Background applied to selected cells. Appended after a cell's existing styles
+// so the foreground is preserved and this background wins at the terminal.
+const selectionBackground: AnsiCode = {
+	type: 'ansi',
+	code: '\u001B[48;5;240m',
+	endCode: '\u001B[49m',
+};
+
+// Linear reading-order selection: whole rows between the first and last, partial
+// on the first/last row. Coordinates are screen cells in the composited frame;
+// the frame controller normalizes selections to reading order before they get here.
+const isCellSelected = (
+	x: number,
+	y: number,
+	selection: ScreenSelection,
+): boolean => {
+	if (y < selection.sy || y > selection.ey) {
+		return false;
+	}
+
+	if (selection.sy === selection.ey) {
+		return x >= selection.sx && x <= selection.ex;
+	}
+
+	if (y === selection.sy) {
+		return x >= selection.sx;
+	}
+
+	if (y === selection.ey) {
+		return x <= selection.ex;
+	}
+
+	return true;
+};
 
 /**
 "Virtual" output class
@@ -136,7 +173,10 @@ export default class Output {
 		});
 	}
 
-	get(): {output: string; height: number} {
+	get(
+		selection?: ScreenSelection,
+		captureCells = false,
+	): {output: string; height: number; cells?: FrameCell[][]} {
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
 		const output: StyledChar[][] = [];
 
@@ -302,6 +342,47 @@ export default class Output {
 			}
 		}
 
+		// Apply the selection highlight before serialization. Selected slots are
+		// replaced with new cell objects (never mutated in place) because cells
+		// reference StyledChar objects cached and shared across identical lines,
+		// so mutating one would leak the highlight onto other on-screen text.
+		if (selection) {
+			for (const [y, row] of output.entries()) {
+				for (let x = 0; x < row.length; x++) {
+					if (!isCellSelected(x, y, selection)) {
+						continue;
+					}
+
+					const cell = row[x];
+
+					if (cell) {
+						row[x] = {
+							...cell,
+							styles: [...cell.styles, selectionBackground],
+						};
+					}
+				}
+			}
+		}
+
+		// Project the composited cells for frame consumers, stripping internal
+		// style data. Only runs when a consumer opted in via subscribe(), so the
+		// default render path pays no extra cost.
+		const cells = captureCells
+			? output.map(row => {
+					const frameRow: FrameCell[] = [];
+
+					for (const cell of row) {
+						frameRow.push({
+							value: cell?.value ?? ' ',
+							fullWidth: cell?.fullWidth ?? false,
+						});
+					}
+
+					return frameRow;
+				})
+			: undefined;
+
 		const generatedOutput = output
 			.map(line => {
 				// See https://github.com/vadimdemedes/ink/pull/564#issuecomment-1637022742
@@ -314,6 +395,7 @@ export default class Output {
 		return {
 			output: generatedOutput,
 			height: output.length,
+			cells,
 		};
 	}
 }

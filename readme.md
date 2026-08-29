@@ -2962,6 +2962,57 @@ const Example = () => {
 render(<Example />);
 ```
 
+#### getFrameController(stdout)
+
+Returns the `FrameController` of the Ink instance rendering to `stdout`, or `undefined` when there is none.
+
+The frame controller is a bridge for applications that own their input and implement text selection themselves, for example alternate-screen apps that handle mouse events. The app subscribes to composited frames to read what is on screen, and pushes a selection, which Ink highlights before serialization.
+
+```jsx
+import {render, Text, getFrameController} from 'ink';
+
+const {unmount} = render(<Text>Hello World</Text>);
+
+const controller = getFrameController(process.stdout);
+
+const unsubscribe = controller.subscribe(frame => {
+	// frame.cells[y][x] is the cell at column x of row y
+});
+
+controller.setSelection({sx: 0, sy: 0, ex: 4, ey: 0});
+```
+
+Frames are only generated while at least one subscriber is registered, so apps that never use the frame controller pay no overhead. Listeners are notified outside of the render pass and notifications are coalesced, so a listener can safely call `setSelection()` without re-entering rendering or observing frames out of order.
+
+##### stdout
+
+Type: `NodeJS.WriteStream`
+
+The output stream an Ink instance renders to, usually `process.stdout`.
+
+##### controller.getFrame()
+
+Returns the latest composited frame, or `undefined` when no frame has been published yet.
+
+A frame is a read-only grid of cells: `frame.cells[y][x]` is the cell at column `x` of row `y`, with `(0, 0)` at the top-left of Ink's output region and `frame.width`/`frame.height` the grid dimensions. Each cell exposes `value` (the character, or `''` for the trailing half of a wide character) and `fullWidth` (`true` for wide characters such as CJK, which occupy two cells). To extract the text of a region, concatenate cell values and skip the ones with an empty `value`.
+
+> [!NOTE]
+> Cell coordinates are positions in Ink's output region, not terminal viewport coordinates. To map a mouse event to a cell, convert the event coordinates by the viewport position of the output region, like with [`measureElement()`](#measureelementref).
+
+##### controller.getSelection()
+
+Returns the current selection in reading order, or `undefined` when there is none.
+
+##### controller.setSelection(selection)
+
+Highlights `selection` and schedules a repaint through Ink's regular render throttle. Setting an identical selection is a no-op, and passing `undefined` clears the highlight.
+
+Selections are stored in reading order: `(sx, sy)` is the first selected cell and `(ex, ey)` the last one. Reverse selections (right-to-left or bottom-to-top drags) are normalized, so they select the same region as forward drags. The region covers whole rows between the first and last row, and is partial on the first and last row.
+
+##### controller.subscribe(listener)
+
+Subscribes to composited frames. `listener` receives the frame after each render. Subscribing schedules a render, so the listener receives the current frame even when nothing else triggers one. Returns an unsubscribe function.
+
 ## Testing
 
 Ink components are simple to test with [ink-testing-library](https://github.com/vadimdemedes/ink-testing-library).

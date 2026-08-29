@@ -3,14 +3,35 @@ import renderNodeToOutput, {
 } from './render-node-to-output.js';
 import Output from './output.js';
 import {type DOMElement} from './dom.js';
+import {type FrameCell, type ScreenSelection} from './frame-controller.js';
 
 type Result = {
 	output: string;
 	outputHeight: number;
 	staticOutput: string;
+	cells?: FrameCell[][];
 };
 
-const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
+type Options = {
+	/**
+	Selection region to highlight before serialization.
+	*/
+	selection?: ScreenSelection;
+
+	/**
+	Whether to expose the composited cells in the result. Only enabled when a
+	frame consumer subscribed to the frame controller.
+	*/
+	captureCells?: boolean;
+};
+
+const renderer = (
+	node: DOMElement,
+	isScreenReaderEnabled: boolean,
+	options: Options = {},
+): Result => {
+	const {selection, captureCells} = options;
+
 	if (node.yogaNode) {
 		if (isScreenReaderEnabled) {
 			const output = renderNodeToScreenReaderOutput(node, {
@@ -56,7 +77,11 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			});
 		}
 
-		const {output: generatedOutput, height: outputHeight} = output.get();
+		const {
+			output: generatedOutput,
+			height: outputHeight,
+			cells,
+		} = output.get(selection, captureCells);
 
 		return {
 			output: generatedOutput,
@@ -64,6 +89,7 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			// Newline at the end is needed, because static output doesn't have one, so
 			// interactive output will override last line of static output
 			staticOutput: staticOutput ? `${staticOutput.get().output}\n` : '',
+			cells,
 		};
 	}
 
