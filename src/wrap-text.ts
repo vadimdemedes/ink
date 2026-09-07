@@ -10,7 +10,10 @@ const wrapText = (
 	maxWidth: number,
 	wrapType: Styles['textWrap'],
 ): string => {
-	const cacheKey = text + String(maxWidth) + String(wrapType);
+	// `text` goes last because it's the only part of the key that can contain
+	// arbitrary characters. With it first, ('ab', 12, 'wrap') and
+	// ('ab1', 2, 'wrap') both produce the key `ab12wrap` and share a result.
+	const cacheKey = `${maxWidth}\u0000${String(wrapType)}\u0000${text}`;
 	const cachedText = wrapTextCache.get(cacheKey);
 
 	if (cachedText !== undefined) {
