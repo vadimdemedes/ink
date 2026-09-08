@@ -173,6 +173,10 @@ export default class Output {
 
 	// `sliceAnsi` works in terminal columns, but it drops a wide character (e.g. CJK) outright when the slice edge falls between its two halves. The visible half still owns a cell, so without padding it back the rest of the line shifts by a column and one column of content disappears.
 	sliceLineToColumns(line: string, from: number, to: number): string {
+		if (from >= to) {
+			return '';
+		}
+
 		const slice = sliceAnsi(line, from, to);
 		const lostLeading =
 			from > 0
@@ -227,7 +231,7 @@ export default class Output {
 				const clip = clips.at(-1);
 
 				if (clip) {
-					// Two nested clips can intersect to nothing. Nothing is visible, so bail out before slicing: a `from` past `to` reaches the wide-character padding below, which would manufacture a space and write it at the clip edge, outside both clips.
+					// Two nested clips can intersect to nothing. Nothing is visible, so bail out before slicing.
 					if (isClipEmpty(clip)) {
 						continue;
 					}

@@ -421,3 +421,21 @@ test('clipping blanks the cell of a wide character split by the right edge', t =
 	// from the rendered line, so this reads as 'A'.
 	t.is(output, 'A');
 });
+
+test('horizontal scrolling preserves borders beside fully clipped rows', t => {
+	const output = renderToString(
+		<Box
+			width={4}
+			height={4}
+			borderStyle="single"
+			overflow="hidden"
+			contentOffsetX={6}
+		>
+			<Box width={10} flexShrink={0}>
+				<Text>{'A\nABCDEFGHIJ'}</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.is(output, ['┌──┐', '│  │', '│GH│', '└──┘'].join('\n'));
+});
