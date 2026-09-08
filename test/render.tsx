@@ -7,7 +7,7 @@ import url from 'node:url';
 import * as path from 'node:path';
 import {createRequire} from 'node:module';
 import FakeTimers from '@sinonjs/fake-timers';
-import {stub} from 'sinon';
+import {stub, spy} from 'sinon';
 import test, {type ExecutionContext} from 'ava';
 import React, {
 	type ReactElement,
@@ -31,6 +31,8 @@ import {
 } from '../src/index.js';
 import {type RenderMetrics, homeAndEraseDown} from '../src/ink.js';
 import {bsu, esu} from '../src/write-synchronized.js';
+import instances from '../src/instances.js';
+import {type DOMElement} from '../src/dom.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
 import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
@@ -2309,4 +2311,17 @@ test.serial('bsu/esu wraps throttledLog trailing call', t => {
 			unmount();
 		}
 	});
+});
+
+test.serial('unmount frees the root Yoga node', t => {
+	const stdout = createStdout();
+	const {unmount} = render(<Text>Hello</Text>, {stdout, debug: true});
+
+	const instance = instances.get(stdout) as unknown as {rootNode: DOMElement};
+	const free = spy(instance.rootNode.yogaNode!, 'free');
+
+	unmount();
+
+	t.true(free.calledOnce);
+	t.is(instance.rootNode.yogaNode, undefined);
 });

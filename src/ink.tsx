@@ -525,15 +525,18 @@ export default class Ink {
 	};
 
 	calculateLayout = () => {
+		const {yogaNode} = this.rootNode;
+
+		// Calling exit() from an effect unmounts synchronously, so React's teardown commit can land after the root Yoga node is freed. There is nothing left to lay out.
+		if (!yogaNode) {
+			return;
+		}
+
 		const terminalWidth = getWindowSize(this.options.stdout).columns;
 
-		this.rootNode.yogaNode!.setWidth(terminalWidth);
+		yogaNode.setWidth(terminalWidth);
 
-		this.rootNode.yogaNode!.calculateLayout(
-			undefined,
-			undefined,
-			Yoga.DIRECTION_LTR,
-		);
+		yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
 	};
 
 	// Resets `fullStaticOutput` when the <Static> identity changes so stale items from a previous instance are not replayed on future rewrites.
@@ -868,6 +871,10 @@ export default class Ink {
 			this.kittyProtocolEnabled = false;
 
 			instances.delete(this.options.stdout);
+
+			// By the time this runs, React has torn down the tree and freed the child Yoga nodes, but the root node is Ink's own. Free it and drop the reference so any late access is a no-op rather than a use-after-free, as `freeYogaSubtree` does.
+			this.rootNode.yogaNode?.free();
+			this.rootNode.yogaNode = undefined;
 
 			// Ensure all queued writes have been processed before resolving the
 			// exit promise. Queue an empty write as a barrier — its callback fires
