@@ -71,7 +71,6 @@
 		"type-fest": "^5.5.0",
 		"widest-line": "^6.0.0",
 		"wrap-ansi": "^10.0.0",
-		"ws": "^8.20.0",
 		"yoga-layout": "~3.2.1"
 	},
 	"devDependencies": {
@@ -103,6 +102,7 @@
 		"strip-ansi": "^7.2.0",
 		"tsx": "^4.21.0",
 		"typescript": "^5.8.3",
+		"ws": "^8.21.3",
 		"xo": "^2.0.2"
 	},
 	"peerDependencies": {

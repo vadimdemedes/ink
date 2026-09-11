@@ -1,14 +1,8 @@
-// Ignoring missing types error to avoid adding another dependency for this hack to work
-import ws from 'ws';
-
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const customGlobal = globalThis as any;
 
 // These things must exist before importing `react-devtools-core`
 // Using ||= intentionally to set falsy values, not just null/undefined
-
-// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-customGlobal.WebSocket ||= ws;
 
 // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 customGlobal.window ||= globalThis;
