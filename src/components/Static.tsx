@@ -57,8 +57,9 @@ export default function Static<T>(props: Props<T>) {
 			position: 'absolute',
 			flexDirection: 'column',
 			...customStyle,
+			display: itemsToRender.length > 0 ? customStyle?.display : 'none',
 		}),
-		[customStyle],
+		[customStyle, itemsToRender.length],
 	);
 
 	return (

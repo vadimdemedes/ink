@@ -20,6 +20,25 @@ test('render simple text', t => {
 	t.is(output, 'Hello World');
 });
 
+test('skip Static content inside a hidden ancestor', t => {
+	const output = renderToString(
+		<>
+			<Box display="none">
+				<Static items={['Hidden']}>
+					{item => (
+						<Box key={item} borderStyle="single">
+							<Text>{item}</Text>
+						</Box>
+					)}
+				</Static>
+			</Box>
+			<Text>Visible</Text>
+		</>,
+	);
+
+	t.is(output, 'Visible');
+});
+
 test('render text with variable', t => {
 	const output = renderToString(<Text>Count: {42}</Text>);
 	t.is(output, 'Count: 42');
@@ -234,6 +253,19 @@ test('render Static component with items', t => {
 	);
 
 	t.is(output, 'A\nB\nC\nDynamic');
+});
+
+test('Static preserves its margins and all items', t => {
+	const output = renderToString(
+		<Static
+			items={['A', 'B']}
+			style={{marginTop: 1, marginBottom: 1, marginLeft: 2}}
+		>
+			{item => <Text key={item}>{item}</Text>}
+		</Static>,
+	);
+
+	t.is(output, '\n  A\n  B\n');
 });
 
 test('render static-only output has no trailing newline', t => {

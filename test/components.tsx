@@ -492,6 +492,35 @@ test('static output', t => {
 	t.is(output, 'A\nB\nC\n\n\nX');
 });
 
+test('static padding is not emitted again when there are no new items', t => {
+	const stdout = createStdout();
+	const initialItems = ['A'];
+	function Test({
+		status,
+		items = initialItems,
+	}: {
+		readonly status: string;
+		readonly items?: string[];
+	}) {
+		return (
+			<>
+				<Static items={items} style={{padding: 1}}>
+					{item => <Text key={item}>{item}</Text>}
+				</Static>
+				<Text>{status}</Text>
+			</>
+		);
+	}
+
+	const app = render(<Test status="Waiting" />, {stdout, debug: true});
+	t.teardown(app.unmount);
+	t.is(stdout.get(), '\n A\n\nWaiting');
+	app.rerender(<Test status="Ready" />);
+	t.is(stdout.get(), '\n A\n\nReady');
+	app.rerender(<Test status="Done" items={['A', 'B']} />);
+	t.is(stdout.get(), '\n A\n\n\n B\n\nDone');
+});
+
 test('skip previous output when rendering new static output', t => {
 	const stdout = createStdout();
 

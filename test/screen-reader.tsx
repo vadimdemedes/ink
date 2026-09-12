@@ -1,8 +1,26 @@
 import test from 'ava';
 import React from 'react';
 import chalk from 'chalk';
-import {Box, Text, Transform} from '../src/index.js';
+import {Box, Text, Transform, Static} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
+
+test('omit Static content inside a hidden ancestor from screen-reader output', t => {
+	const output = renderToString(
+		<>
+			<Box display="none">
+				<Box>
+					<Static items={['Hidden']}>
+						{item => <Text key={item}>{item}</Text>}
+					</Static>
+				</Box>
+			</Box>
+			<Text>Visible</Text>
+		</>,
+		{isScreenReaderEnabled: true},
+	);
+
+	t.is(output, 'Visible');
+});
 
 test('omit nested Text styling from screen-reader output', t => {
 	const previousColorLevel = chalk.level;

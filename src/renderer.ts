@@ -1,3 +1,4 @@
+import Yoga from 'yoga-layout';
 import renderNodeToOutput, {
 	renderNodeToScreenReaderOutput,
 } from './render-node-to-output.js';
@@ -10,8 +11,23 @@ type Result = {
 	staticOutput: string;
 };
 
+const getVisibleStaticNode = (
+	node: DOMElement | undefined,
+): DOMElement | undefined => {
+	// Static output is rendered separately, so ancestor visibility must be checked explicitly.
+	for (let ancestor = node; ancestor; ancestor = ancestor.parentNode) {
+		if (ancestor.yogaNode?.getDisplay() === Yoga.DISPLAY_NONE) {
+			return undefined;
+		}
+	}
+
+	return node;
+};
+
 const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 	if (node.yogaNode) {
+		const staticNode = getVisibleStaticNode(node.staticNode);
+
 		if (isScreenReaderEnabled) {
 			const output = renderNodeToScreenReaderOutput(node, {
 				skipStaticElements: true,
@@ -21,8 +37,8 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 
 			let staticOutput = '';
 
-			if (node.staticNode) {
-				staticOutput = renderNodeToScreenReaderOutput(node.staticNode, {
+			if (staticNode) {
+				staticOutput = renderNodeToScreenReaderOutput(staticNode, {
 					skipStaticElements: false,
 				});
 			}
@@ -45,13 +61,20 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 
 		let staticOutput;
 
-		if (node.staticNode?.yogaNode) {
+		if (staticNode?.yogaNode) {
+			const {yogaNode} = staticNode;
 			staticOutput = new Output({
-				width: node.staticNode.yogaNode.getComputedWidth(),
-				height: node.staticNode.yogaNode.getComputedHeight(),
+				width:
+					yogaNode.getComputedLeft() +
+					yogaNode.getComputedWidth() +
+					yogaNode.getComputedMargin(Yoga.EDGE_RIGHT),
+				height:
+					yogaNode.getComputedTop() +
+					yogaNode.getComputedHeight() +
+					yogaNode.getComputedMargin(Yoga.EDGE_BOTTOM),
 			});
 
-			renderNodeToOutput(node.staticNode, staticOutput, {
+			renderNodeToOutput(staticNode, staticOutput, {
 				skipStaticElements: false,
 			});
 		}
