@@ -87,6 +87,19 @@ function IncrementalRendering() {
 		Array.from({length: logLineCount}, (_, i) => generateLogLine(i, 0)),
 	);
 
+	if (selectedIndex >= serviceCount) {
+		setSelectedIndex(serviceCount - 1);
+	}
+
+	if (logLines.length !== logLineCount) {
+		setLogLines(
+			Array.from(
+				{length: logLineCount},
+				(_, index) => logLines[index] ?? generateLogLine(index, 0),
+			),
+		);
+	}
+
 	// Update timestamp and counter every second to show live updates
 	useEffect(() => {
 		const timer = setInterval(() => {

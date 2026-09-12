@@ -1,8 +1,9 @@
 import React from 'react';
-import {render, Box, Text, useStdout} from '../../src/index.js';
+import {render, Box, Text, useStdout, useWindowSize} from '../../src/index.js';
 
 function Example() {
-	const {stdout, write} = useStdout();
+	const {write} = useStdout();
+	const {columns, rows} = useWindowSize();
 
 	React.useEffect(() => {
 		const timer = setInterval(() => {
@@ -22,12 +23,12 @@ function Example() {
 
 			<Box marginTop={1}>
 				<Text>
-					Width: <Text bold>{stdout.columns}</Text>
+					Width: <Text bold>{columns}</Text>
 				</Text>
 			</Box>
 			<Box>
 				<Text>
-					Height: <Text bold>{stdout.rows}</Text>
+					Height: <Text bold>{rows}</Text>
 				</Text>
 			</Box>
 		</Box>

@@ -6,7 +6,7 @@ function AriaExample() {
 
 	useInput(key => {
 		if (key === ' ') {
-			setChecked(!checked);
+			setChecked(previousChecked => !previousChecked);
 		}
 	});
 

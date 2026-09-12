@@ -1,35 +1,46 @@
 import React, {useState} from 'react';
 import {render, Text, Box, useInput} from '../../src/index.js';
 
-let messageId = 0;
+const segmenter = new Intl.Segmenter(undefined, {granularity: 'grapheme'});
 
 function ChatApp() {
-	const [input, setInput] = useState('');
-
-	const [messages, setMessages] = useState<
-		Array<{
+	const [{input, messages}, setChat] = useState<{
+		input: string;
+		messages: Array<{
 			id: number;
 			text: string;
-		}>
-	>([]);
+		}>;
+	}>({input: '', messages: []});
 
 	useInput((character, key) => {
-		if (key.return) {
-			if (input) {
-				setMessages(previousMessages => [
-					...previousMessages,
-					{
-						id: messageId++,
-						text: `User: ${input}`,
-					},
-				]);
-				setInput('');
+		setChat(previousChat => {
+			if (key.return) {
+				if (previousChat.input) {
+					return {
+						input: '',
+						messages: [
+							...previousChat.messages,
+							{
+								id: previousChat.messages.length,
+								text: `User: ${previousChat.input}`,
+							},
+						],
+					};
+				}
+			} else if (key.backspace || key.delete) {
+				const lastGrapheme = segmenter
+					.segment(previousChat.input)
+					.containing(previousChat.input.length - 1);
+				return {
+					...previousChat,
+					input: previousChat.input.slice(0, lastGrapheme?.index ?? 0),
+				};
+			} else if (!key.ctrl && !key.meta) {
+				return {...previousChat, input: previousChat.input + character};
 			}
-		} else if (key.backspace || key.delete) {
-			setInput(currentInput => currentInput.slice(0, -1));
-		} else {
-			setInput(currentInput => currentInput + character);
-		}
+
+			return previousChat;
+		});
 	});
 
 	return (

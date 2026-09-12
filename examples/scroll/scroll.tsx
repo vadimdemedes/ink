@@ -32,19 +32,23 @@ function ScrollView({
 
 	useInput((_input, key) => {
 		if (key.upArrow) {
-			setRequestedScrollTop(Math.max(0, scrollTop - 1));
+			setRequestedScrollTop(current =>
+				Math.max(0, Math.min(current, maxScrollTop) - 1),
+			);
 		}
 
 		if (key.downArrow) {
-			setRequestedScrollTop(Math.min(maxScrollTop, scrollTop + 1));
+			setRequestedScrollTop(current => Math.min(maxScrollTop, current + 1));
 		}
 
 		if (key.leftArrow) {
-			setRequestedScrollLeft(Math.max(0, scrollLeft - 2));
+			setRequestedScrollLeft(current =>
+				Math.max(0, Math.min(current, maxScrollLeft) - 2),
+			);
 		}
 
 		if (key.rightArrow) {
-			setRequestedScrollLeft(Math.min(maxScrollLeft, scrollLeft + 2));
+			setRequestedScrollLeft(current => Math.min(maxScrollLeft, current + 2));
 		}
 	});
 

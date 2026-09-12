@@ -1,6 +1,13 @@
 import React, {useState, useMemo, useTransition} from 'react';
 import {render, Box, Text, useInput} from '../../src/index.js';
 
+const segmenter = new Intl.Segmenter(undefined, {granularity: 'grapheme'});
+
+function deleteLastGrapheme(text: string): string {
+	const lastGrapheme = segmenter.segment(text).containing(text.length - 1);
+	return text.slice(0, lastGrapheme?.index ?? 0);
+}
+
 // Generate a large list of items for demonstration
 function generateItems(filter: string): string[] {
 	const allItems: string[] = [];
@@ -41,11 +48,11 @@ function SearchApp() {
 	// Handle keyboard input
 	useInput((input, key) => {
 		if (key.backspace || key.delete) {
-			setQuery(previousQuery => previousQuery.slice(0, -1));
+			setQuery(deleteLastGrapheme);
 			startTransition(() => {
-				setDeferredQuery(previousQuery => previousQuery.slice(0, -1));
+				setDeferredQuery(deleteLastGrapheme);
 			});
-		} else if (input && !key.ctrl && !key.meta) {
+		} else if (input && !key.ctrl && !key.meta && !key.return) {
 			setQuery(previousQuery => previousQuery + input);
 			// Wrap the expensive update in a transition
 			startTransition(() => {

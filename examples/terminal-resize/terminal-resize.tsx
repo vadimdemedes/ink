@@ -1,8 +1,11 @@
 import React from 'react';
-import {render, Box, Text, useWindowSize} from '../../src/index.js';
+import {render, Box, Text, useWindowSize, useInput} from '../../src/index.js';
 
 function TerminalResizeExample() {
 	const {columns, rows} = useWindowSize();
+	useInput(() => {
+		// Keep the demo running until Ctrl+C while waiting for resize events.
+	});
 
 	return (
 		<Box flexDirection="column" padding={1}>

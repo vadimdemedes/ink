@@ -231,14 +231,15 @@ function SnakeGame() {
 			return;
 		}
 
-		const {current} = directionReference;
-		if (key.upArrow && current !== 'down') {
+		const head = game.snake[0]!;
+		const neck = game.snake[1]!;
+		if (key.upArrow && head.y <= neck.y) {
 			directionReference.current = 'up';
-		} else if (key.downArrow && current !== 'up') {
+		} else if (key.downArrow && head.y >= neck.y) {
 			directionReference.current = 'down';
-		} else if (key.leftArrow && current !== 'right') {
+		} else if (key.leftArrow && head.x <= neck.x) {
 			directionReference.current = 'left';
-		} else if (key.rightArrow && current !== 'left') {
+		} else if (key.rightArrow && head.x >= neck.x) {
 			directionReference.current = 'right';
 		}
 	});

@@ -176,7 +176,7 @@ test.serial('handles input without requiring process ref methods', async t => {
 const term = (
 	fixture: string,
 	args: string[] = [],
-	options: {rows?: number} = {},
+	options: {columns?: number; rows?: number; env?: NodeJS.ProcessEnv} = {},
 ) => {
 	let resolve: (value?: unknown) => void;
 	let reject: (error: Error) => void;
@@ -188,6 +188,7 @@ const term = (
 
 	const env = {
 		...process.env,
+		...options.env,
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		NODE_NO_WARNINGS: '1',
 	};
@@ -201,7 +202,7 @@ const term = (
 		],
 		{
 			name: 'xterm-color',
-			cols: 100,
+			cols: options.columns ?? 100,
 			cwd: __dirname,
 			env,
 			...(options.rows === undefined ? {} : {rows: options.rows}),
@@ -212,8 +213,23 @@ const term = (
 		write(input: string) {
 			ps.write(input);
 		},
+		resize(columns: number, rows: number) {
+			ps.resize(columns, rows);
+		},
 		output: '',
 		waitForExit: async () => exitPromise,
+		async waitForOutput(text: string) {
+			for (let attempt = 0; attempt < 100; attempt++) {
+				if (result.output.includes(text)) {
+					return;
+				}
+
+				// eslint-disable-next-line no-await-in-loop -- Wait for the terminal to process input before checking again.
+				await delay(20);
+			}
+
+			throw new Error(`Timed out waiting for ${JSON.stringify(text)}`);
+		},
 	};
 
 	ps.onData(data => {
@@ -244,6 +260,22 @@ const countOccurrences = (text: string, searchValue: string): number => {
 	return text.split(searchValue).length - 1;
 };
 
+test.serial(
+	'Jest example announces completion only after all results',
+	async t => {
+		const ps = term('../../examples/jest/jest', [], {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			env: {CI: 'false', FORCE_COLOR: '0'},
+		});
+		await ps.waitForExit();
+
+		const output = stripAnsi(ps.output);
+		const allResultsIndex = output.indexOf('10 total');
+		t.true(allResultsIndex >= 0);
+		t.true(output.indexOf('Ran all test suites.') > allResultsIndex);
+	},
+);
+
 test.serial('undefined stream options use the default streams', async t => {
 	const ps = term('undefined-render-streams', [], {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -253,6 +285,518 @@ test.serial('undefined stream options use the default streams', async t => {
 	t.true(ps.output.includes('Default streams: true'));
 });
 
+test.serial('IME example deletes whole graphemes with backspace', async t => {
+	/* eslint-disable no-await-in-loop -- Terminal input and output must be processed sequentially. */
+	const ps = term('../../examples/cursor-ime/cursor-ime', [], {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		env: {CI: 'false'},
+	});
+	t.teardown(async () => {
+		ps.write('\u0003');
+		await ps.waitForExit();
+	});
+
+	await ps.waitForOutput('Type Korean');
+	ps.write('A');
+	await ps.waitForOutput('> A');
+	for (const character of ['😀', '👩‍💻', 'e\u0301']) {
+		ps.write(character);
+		await ps.waitForOutput(character);
+		ps.output = '';
+		ps.write('\u007F');
+		await ps.waitForOutput(ansiEscapes.eraseLines(3));
+
+		t.false(ps.output.includes('�'));
+		t.true(ps.output.includes('> A'));
+		t.true(ps.output.includes(ansiEscapes.cursorTo(3)));
+	}
+	/* eslint-enable no-await-in-loop */
+});
+
+test.serial('IME example ignores Enter when editing text', async t => {
+	const ps = term('../../examples/cursor-ime/cursor-ime', [], {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		env: {CI: 'false'},
+	});
+	t.teardown(async () => {
+		ps.write('\u0003');
+		await ps.waitForExit();
+	});
+
+	await ps.waitForOutput('Type Korean');
+	ps.write('한글');
+	await ps.waitForOutput('> 한글');
+	ps.output = '';
+	// Use an encoded Backspace so both key events remain distinct in one input chunk.
+	ps.write('\r\u001B[127u');
+	await ps.waitForOutput('> 한\r\n');
+	t.false(ps.output.includes('> 한글'));
+	t.true(ps.output.includes(ansiEscapes.cursorTo(4)));
+});
+
+test.serial('IME example places the cursor after wrapped input', async t => {
+	const ps = term('../../examples/cursor-ime/cursor-ime', [], {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		env: {CI: 'false'},
+	});
+	t.teardown(async () => {
+		ps.write('\u0003');
+		await ps.waitForExit();
+	});
+
+	await ps.waitForOutput('Type Korean');
+	ps.output = '';
+	ps.write('한'.repeat(52));
+	await ps.waitForOutput('한한한\r\n');
+	t.true(ps.output.includes(ansiEscapes.cursorUp(1) + ansiEscapes.cursorTo(6)));
+
+	ps.output = '';
+	ps.write('\u007F\u007F\u007F');
+	await ps.waitForOutput('한'.repeat(49));
+	t.true(ps.output.includes(ansiEscapes.cursorTo(0) + '\u001B[?25h'));
+});
+
+test.serial(
+	'table example keeps all columns visible in narrow terminals',
+	async t => {
+		const ps = term('../../examples/table/table', [], {
+			columns: 40,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			env: {CI: 'true', FORCE_COLOR: '0'},
+		});
+		await ps.waitForExit();
+		t.regex(stripAnsi(ps.output), /^ID\s+Name\s+Email\r?\n/);
+		t.true(stripAnsi(ps.output).split(/\r?\n/)[0]!.length <= 40);
+	},
+);
+
+test.serial(
+	'subprocess example retains recent lines across chunks',
+	async t => {
+		const ps = term('subprocess-output-example', [], {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			env: {CI: 'true', FORCE_COLOR: '0'},
+		});
+		await ps.waitForExit();
+		t.deepEqual(
+			stripAnsi(ps.output)
+				.split(/\r?\n/)
+				.map(line => line.trim())
+				.filter(Boolean),
+			['Command output:', 'two', 'three', 'four', 'five', 'six'],
+		);
+	},
+);
+
+test.serial(
+	'terminal resize example stays open to report resized dimensions',
+	async t => {
+		const ps = term('../../examples/terminal-resize/terminal-resize', [], {
+			rows: 24,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			env: {CI: 'false', FORCE_COLOR: '0'},
+		});
+		t.teardown(async () => {
+			ps.write('\u0003');
+			await ps.waitForExit();
+		});
+
+		await ps.waitForOutput('Columns: 100');
+		await ps.waitForOutput('Rows: 24');
+		// Give the process time to exit if nothing is keeping the example alive.
+		await delay(100);
+		ps.output = '';
+		ps.resize(60, 20);
+		await ps.waitForOutput('Columns: 60');
+		await ps.waitForOutput('Rows: 20');
+		t.true(ps.output.includes('Rows: 20'));
+	},
+);
+
+test.serial(
+	'stdout example updates displayed dimensions after resize',
+	async t => {
+		const ps = term('../../examples/use-stdout/use-stdout', [], {
+			rows: 24,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			env: {CI: 'false', FORCE_COLOR: '0'},
+		});
+		t.teardown(async () => {
+			ps.write('\u0003');
+			await ps.waitForExit();
+		});
+
+		await ps.waitForOutput('Width: 100');
+		await ps.waitForOutput('Height: 24');
+		ps.output = '';
+		ps.resize(60, 20);
+		await ps.waitForOutput('Width: 60');
+		await ps.waitForOutput('Height: 20');
+		t.true(ps.output.includes('Height: 20'));
+	},
+);
+
+test.serial(
+	'transition example deletes a whole grapheme from both queries',
+	async t => {
+		const ps = term('../../examples/use-transition/use-transition', [], {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			env: {CI: 'false', FORCE_COLOR: '0'},
+		});
+		t.teardown(async () => {
+			ps.write('\u0003');
+			await ps.waitForExit();
+		});
+
+		await ps.waitForOutput('Search: (type something)');
+		ps.write('Apple👩‍💻');
+		await ps.waitForOutput('Results for "Apple👩‍💻":');
+		ps.output = '';
+		ps.write('\u007F');
+		await ps.waitForOutput('Results for "Apple":');
+		t.regex(ps.output, /Search: Apple(?: \(updating\.\.\.\))?\r?\n/);
+		t.true(ps.output.includes('Item 1: Apple'));
+	},
+);
+
+test.serial('transition example ignores Enter in the search query', async t => {
+	const ps = term('../../examples/use-transition/use-transition', [], {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		env: {CI: 'false', FORCE_COLOR: '0'},
+	});
+	t.teardown(async () => {
+		ps.write('\u0003');
+		await ps.waitForExit();
+	});
+
+	await ps.waitForOutput('Search: (type something)');
+	ps.write('Apple');
+	await ps.waitForOutput('Results for "Apple":');
+	ps.output = '';
+	// Use an encoded Backspace so both key events remain distinct in one input chunk.
+	ps.write('\r\u001B[127u');
+	await ps.waitForOutput('Results for "Appl":');
+	t.regex(ps.output, /Search: Appl(?: \(updating\.\.\.\))?\r?\n/);
+	t.true(ps.output.includes('Item 1: Apple'));
+});
+
+for (const [editor, status] of [
+	['false', 'child failed:'],
+	['true', 'resumed'],
+	['printf editor-command-ran', 'resumed'],
+] as const) {
+	test.serial(`suspend example reports the result of ${editor}`, async t => {
+		const ps = term('../../examples/suspend-terminal/suspend-terminal', [], {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			env: {CI: 'false', FORCE_COLOR: '0', EDITOR: editor},
+		});
+		t.teardown(async () => {
+			ps.write('q');
+			await ps.waitForExit();
+		});
+
+		await ps.waitForOutput('ready');
+		ps.output = '';
+		ps.write('e');
+		await ps.waitForOutput(status);
+		if (editor.startsWith('printf ')) {
+			t.true(ps.output.includes('editor-command-ran'));
+		}
+
+		ps.write('+');
+		await ps.waitForOutput('Counter: 1');
+		t.true(ps.output.includes(status));
+	});
+}
+
+test.serial(
+	'subprocess example strips ANSI sequences across chunks',
+	async t => {
+		const ps = term('subprocess-output-example', ['ansi'], {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			env: {CI: 'true', FORCE_COLOR: '0'},
+		});
+		await ps.waitForExit();
+		t.deepEqual(
+			stripAnsi(ps.output)
+				.split(/\r?\n/)
+				.map(line => line.trim())
+				.filter(Boolean),
+			['Command output:', 'Red text'],
+		);
+	},
+);
+
+for (const count of [1, 2, 3]) {
+	test.serial(
+		`aria example applies ${count} consecutive checkbox toggles`,
+		async t => {
+			const ps = term('aria-example', [String(count)], {
+				// eslint-disable-next-line @typescript-eslint/naming-convention
+				env: {CI: 'true', FORCE_COLOR: '0'},
+			});
+			await ps.waitForExit();
+			t.true(stripAnsi(ps.output).includes(count % 2 === 0 ? '[ ]' : '[x]'));
+		},
+	);
+}
+
+test.serial('subprocess example displays command launch errors', async t => {
+	const ps = term('subprocess-output-example', ['error'], {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		env: {CI: 'true', FORCE_COLOR: '0'},
+	});
+	await ps.waitForExit();
+	t.deepEqual(
+		stripAnsi(ps.output)
+			.split(/\r?\n/)
+			.map(line => line.trim())
+			.filter(Boolean),
+		['Command output:', 'spawn npm ENOENT'],
+	);
+});
+
+test.serial('subprocess example decodes UTF-8 across chunks', async t => {
+	const ps = term('subprocess-output-example', ['unicode'], {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		env: {CI: 'true', FORCE_COLOR: '0'},
+	});
+	await ps.waitForExit();
+	t.deepEqual(
+		stripAnsi(ps.output)
+			.split(/\r?\n/)
+			.map(line => line.trim())
+			.filter(Boolean),
+		['Command output:', '한🙂'],
+	);
+});
+
+test.serial(
+	'chat example submits intact text after deleting an emoji',
+	async t => {
+		const ps = term('../../examples/chat/chat', [], {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			env: {CI: 'false'},
+		});
+		t.teardown(async () => {
+			ps.write('\u0003');
+			await ps.waitForExit();
+		});
+
+		await ps.waitForOutput('Enter your message:');
+		ps.write('Hi 👩‍💻');
+		await ps.waitForOutput('Hi 👩‍💻');
+		ps.output = '';
+		ps.write('\u007F');
+		await ps.waitForOutput('Enter your message: Hi');
+		ps.output = '';
+		ps.write('\r');
+		await ps.waitForOutput('User: Hi');
+
+		t.regex(stripAnsi(ps.output), /User: Hi\r?\n/);
+	},
+);
+
+test.serial(
+	'chat example submits pending edits from the same input chunk',
+	async t => {
+		const ps = term('../../examples/chat/chat', [], {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			env: {CI: 'false'},
+		});
+		t.teardown(async () => {
+			ps.write('\u0003');
+			await ps.waitForExit();
+		});
+
+		await ps.waitForOutput('Enter your message:');
+		ps.write('Hello');
+		await ps.waitForOutput('Enter your message: Hello');
+		ps.write('\u007F\r');
+		await ps.waitForOutput('User: Hell');
+		t.regex(stripAnsi(ps.output), /User: Hell\r?\n/);
+
+		ps.write('A');
+		await ps.waitForOutput('Enter your message: A');
+		ps.output = '';
+		ps.write('\u007F\r');
+		await ps.waitForOutput('Enter your message:');
+		t.notRegex(stripAnsi(ps.output), /User: A/);
+	},
+);
+
+test.serial(
+	'chat example does not insert modified shortcuts into messages',
+	async t => {
+		const ps = term('../../examples/chat/chat', [], {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			env: {CI: 'false'},
+		});
+		t.teardown(async () => {
+			ps.write('\u0003');
+			await ps.waitForExit();
+		});
+
+		await ps.waitForOutput('Enter your message:');
+		ps.write('Hello');
+		await ps.waitForOutput('Enter your message: Hello');
+		ps.write('\u0001\u001Bb!');
+		await ps.waitForOutput('!');
+		ps.write('\r');
+		await ps.waitForOutput('User: Hello');
+		t.regex(stripAnsi(ps.output), /User: Hello!\r?\n/);
+	},
+);
+
+test.serial(
+	'scroll example handles consecutive arrow keys in one input chunk',
+	async t => {
+		const ps = term('../../examples/scroll/scroll', [], {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			env: {CI: 'false'},
+		});
+		t.teardown(async () => {
+			ps.write('q');
+			await ps.waitForExit();
+		});
+
+		await ps.waitForOutput('scrollTop=0/32');
+		ps.output = '';
+		ps.write('\u001B[B\u001B[B');
+		await ps.waitForOutput('scrollTop=');
+		t.regex(stripAnsi(ps.output), /scrollTop=2\/32/);
+
+		ps.output = '';
+		ps.write('\u001B[C\u001B[C');
+		await ps.waitForOutput('scrollTop=');
+		t.regex(stripAnsi(ps.output), /scrollLeft=4\/42/);
+
+		ps.output = '';
+		ps.write('\u001B[A\u001B[A');
+		await ps.waitForOutput('scrollTop=');
+		t.regex(stripAnsi(ps.output), /scrollTop=0\/32/);
+
+		ps.output = '';
+		ps.write('\u001B[D\u001B[D');
+		await ps.waitForOutput('scrollTop=');
+		t.regex(stripAnsi(ps.output), /scrollLeft=0\/42/);
+	},
+);
+
+test.serial('input example handles consecutive movement keys', async t => {
+	const ps = term('../../examples/use-input/use-input', [], {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		env: {CI: 'false'},
+	});
+	t.teardown(async () => {
+		ps.write('q');
+		await ps.waitForExit();
+	});
+
+	await ps.waitForOutput('^_^');
+	ps.output = '';
+	ps.write('\u001B[C\u001B[C\u001B[B\u001B[B');
+	await ps.waitForOutput('^_^');
+	t.regex(stripAnsi(ps.output), /\n {3}\^_\^\r?\n/);
+	t.is(
+		stripAnsi(ps.output)
+			.split('\n')
+			.findIndex(line => line.includes('^_^')),
+		4,
+	);
+
+	ps.output = '';
+	ps.write('\u001B[D\u001B[D\u001B[A\u001B[A');
+	await ps.waitForOutput('^_^');
+	t.regex(stripAnsi(ps.output), /\n \^_\^\r?\n/);
+	t.is(
+		stripAnsi(ps.output)
+			.split('\n')
+			.findIndex(line => line.includes('^_^')),
+		2,
+	);
+});
+
+test.serial(
+	'incremental example keeps its selection visible after resize',
+	async t => {
+		const ps = term(
+			'../../examples/incremental-rendering/incremental-rendering',
+			[],
+			{
+				rows: 80,
+				// eslint-disable-next-line @typescript-eslint/naming-convention
+				env: {CI: 'false', FORCE_COLOR: '0'},
+			},
+		);
+		t.teardown(async () => {
+			ps.write('q');
+			await ps.waitForExit();
+		});
+
+		await ps.waitForOutput('Selected: Server Authentication');
+		ps.write('\u001B[A');
+		await ps.waitForOutput('Selected: Recommendation Engine');
+		ps.output = '';
+		ps.resize(100, 30);
+		await ps.waitForOutput('System Services Monitor (10 of 30 services)');
+		t.true(
+			stripAnsi(ps.output).includes('Selected: WebSocket Connection Manager'),
+		);
+
+		ps.output = '';
+		ps.write('\u001B[B');
+		await ps.waitForOutput('Selected: Server Authentication');
+		t.true(stripAnsi(ps.output).includes('> Server Authentication'));
+	},
+);
+
+test.serial(
+	'incremental example grows its logs after terminal resize',
+	async t => {
+		const ps = term(
+			'../../examples/incremental-rendering/incremental-rendering',
+			[],
+			{
+				rows: 30,
+				// eslint-disable-next-line @typescript-eslint/naming-convention
+				env: {CI: 'false', FORCE_COLOR: '0'},
+			},
+		);
+		t.teardown(async () => {
+			ps.write('q');
+			await ps.waitForExit();
+		});
+
+		await ps.waitForOutput('Worker-3');
+		t.false(stripAnsi(ps.output).includes('Worker-12'));
+		ps.output = '';
+		ps.resize(100, 60);
+		await ps.waitForOutput('System Services Monitor (30 of 30 services)');
+		await ps.waitForOutput('Worker-12');
+		t.true(stripAnsi(ps.output).includes('Worker-12'));
+	},
+);
+
+test.serial('snake ignores a reversal queued between ticks', async t => {
+	const ps = term('alternate-screen-example', [], {
+		rows: 30,
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		env: {CI: 'false'},
+	});
+	t.teardown(async () => {
+		ps.write('q');
+		await ps.waitForExit();
+	});
+
+	await ps.waitForOutput('Arrow keys: move');
+	ps.output = '';
+	ps.write('\u001B[A\u001B[D');
+	await ps.waitForOutput('Score:');
+
+	t.false(ps.output.includes('Game Over!'));
+	t.true(ps.output.includes('Arrow keys: move'));
+});
 
 const isWriteBarrierChunk = (chunk: string | Uint8Array): boolean =>
 	(typeof chunk === 'string' && chunk === '') ||

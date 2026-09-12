@@ -73,7 +73,7 @@ function Jest() {
 			)}
 
 			<Summary
-				isFinished={runningTests.length === 0}
+				isFinished={completedTests.length === paths.length}
 				passed={completedTests.filter(test => test.status === 'pass').length}
 				failed={completedTests.filter(test => test.status === 'fail').length}
 				time={ms(Date.now() - startTime)}

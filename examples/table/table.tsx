@@ -12,7 +12,7 @@ const users = Array.from({length: 10})
 
 function Table() {
 	return (
-		<Box flexDirection="column" width={80}>
+		<Box flexDirection="column" width="100%" maxWidth={80}>
 			<Box>
 				<Box width="10%">
 					<Text>ID</Text>

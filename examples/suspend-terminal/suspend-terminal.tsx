@@ -8,8 +8,18 @@ const runChild = async (command: string, args: string[]): Promise<void> =>
 		// With stdio: 'inherit' the child takes full ownership of the terminal, which
 		// is exactly why Ink must release it via suspendTerminal first.
 		const child = spawn(command, args, {stdio: 'inherit'});
-		child.on('exit', () => {
-			resolve();
+		child.on('exit', (code, signal) => {
+			if (code === 0) {
+				resolve();
+			} else {
+				reject(
+					new Error(
+						signal
+							? `Child process terminated by signal ${signal}`
+							: `Child process exited with code ${code}`,
+					),
+				);
+			}
 		});
 		child.on('error', reject);
 	});
@@ -38,7 +48,7 @@ function Example() {
 					await suspendTerminal(async () => {
 						if (input === 'e') {
 							const editor = process.env.EDITOR ?? 'vi';
-							await runChild(editor, []);
+							await runChild('sh', ['-c', editor]);
 						} else {
 							await runChild('sh', [
 								'-c',
