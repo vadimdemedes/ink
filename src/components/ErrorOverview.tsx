@@ -1,5 +1,7 @@
 import * as fs from 'node:fs';
+import {relative} from 'node:path';
 import {cwd} from 'node:process';
+import {fileURLToPath} from 'node:url';
 import React from 'react';
 import StackUtils from 'stack-utils';
 import codeExcerpt, {type CodeExcerpt} from 'code-excerpt';
@@ -7,9 +9,11 @@ import Box from './Box.js';
 import Text from './Text.js';
 
 // Error's source file is reported as file:///home/user/file.js
-// This function removes the file://[cwd] part
+// This function converts file URLs to paths relative to the current directory
 const cleanupPath = (path: string | undefined): string | undefined => {
-	return path?.replace(`file://${cwd()}/`, '');
+	return path?.startsWith('file://')
+		? relative(cwd(), fileURLToPath(path))
+		: path;
 };
 
 const stackUtils = new StackUtils({
@@ -22,16 +26,22 @@ type Props = {
 };
 
 export default function ErrorOverview({error}: Props) {
-	const stack = error.stack ? error.stack.split('\n').slice(1) : undefined;
+	const stack = error.stack
+		?.split('\n')
+		.slice(error.message.split('\n').length);
 	const origin = stack ? stackUtils.parseLine(stack[0]!) : undefined;
 	const filePath = cleanupPath(origin?.file);
 	let excerpt: CodeExcerpt[] | undefined;
 	let lineWidth = 0;
 	const stackLineCounts = new Map<string, number>();
 
-	if (filePath && origin?.line && fs.existsSync(filePath)) {
-		const sourceCode = fs.readFileSync(filePath, 'utf8');
-		excerpt = codeExcerpt(sourceCode, origin.line);
+	if (filePath && origin?.line) {
+		try {
+			const sourceCode = fs.readFileSync(filePath, 'utf8');
+			excerpt = codeExcerpt(sourceCode, origin.line);
+		} catch {
+			// Source excerpts are best-effort and must not hide the original error.
+		}
 
 		if (excerpt) {
 			for (const {line} of excerpt) {
@@ -90,52 +100,49 @@ export default function ErrorOverview({error}: Props) {
 				</Box>
 			) : null}
 
-			{error.stack ? (
+			{stack ? (
 				<Box marginTop={1} flexDirection="column">
-					{error.stack
-						.split('\n')
-						.slice(1)
-						.map(line => {
-							const parsedLine = stackUtils.parseLine(line);
-							const lineCount = stackLineCounts.get(line) ?? 0;
-							stackLineCounts.set(line, lineCount + 1);
-							const key = `${line}-${lineCount}`;
+					{stack.map(line => {
+						const parsedLine = stackUtils.parseLine(line);
+						const lineCount = stackLineCounts.get(line) ?? 0;
+						stackLineCounts.set(line, lineCount + 1);
+						const key = `${line}-${lineCount}`;
 
-							// If the line from the stack cannot be parsed, or parsed into an incomplete
-							// frame without source location data (for example, "at native"), we print
-							// out the unparsed line.
-							if (!parsedLine?.file || !parsedLine.line || !parsedLine.column) {
-								return (
-									<Box key={key}>
-										<Text dimColor>- </Text>
-										<Text dimColor bold>
-											{line}
-											\t{' '}
-										</Text>
-									</Box>
-								);
-							}
-
+						// If the line from the stack cannot be parsed, or parsed into an incomplete
+						// frame without source location data (for example, "at native"), we print
+						// out the unparsed line.
+						if (!parsedLine?.file || !parsedLine.line || !parsedLine.column) {
 							return (
 								<Box key={key}>
 									<Text dimColor>- </Text>
 									<Text dimColor bold>
-										{parsedLine.function}
-									</Text>
-									<Text
-										dimColor
-										color="gray"
-										aria-label={`at ${
-											cleanupPath(parsedLine.file) ?? ''
-										} line ${parsedLine.line} column ${parsedLine.column}`}
-									>
-										{' '}
-										({cleanupPath(parsedLine.file) ?? ''}:{parsedLine.line}:
-										{parsedLine.column})
+										{line}
+										\t{' '}
 									</Text>
 								</Box>
 							);
-						})}
+						}
+
+						return (
+							<Box key={key}>
+								<Text dimColor>- </Text>
+								<Text dimColor bold>
+									{parsedLine.function}
+								</Text>
+								<Text
+									dimColor
+									color="gray"
+									aria-label={`at ${
+										cleanupPath(parsedLine.file) ?? ''
+									} line ${parsedLine.line} column ${parsedLine.column}`}
+								>
+									{' '}
+									({cleanupPath(parsedLine.file) ?? ''}:{parsedLine.line}:
+									{parsedLine.column})
+								</Text>
+							</Box>
+						);
+					})}
 				</Box>
 			) : null}
 		</Box>

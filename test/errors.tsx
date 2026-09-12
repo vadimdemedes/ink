@@ -171,3 +171,71 @@ test('clean up raw mode when error is thrown', async t => {
 		'Raw mode should have been disabled on cleanup',
 	);
 });
+
+test('display thrown strings and reject waitUntilExit with the original message', async t => {
+	t.timeout(5000);
+	const stdout = createStdout();
+
+	function Test(): React.JSX.Element {
+		// eslint-disable-next-line @typescript-eslint/only-throw-error
+		throw 'Unable to load configuration';
+	}
+
+	const app = render(<Test />, {stdout});
+	t.teardown(app.unmount);
+	await t.throwsAsync(app.waitUntilExit(), {
+		message: 'Unable to load configuration',
+	});
+
+	const output = stripAnsi(stdout.getWrites().join(''));
+	t.true(output.includes('ERROR'));
+	t.true(output.includes('Unable to load configuration'));
+});
+
+test('display thrown undefined and reject waitUntilExit', async t => {
+	t.timeout(5000);
+	const stdout = createStdout();
+
+	function Test(): React.JSX.Element {
+		// eslint-disable-next-line @typescript-eslint/only-throw-error
+		throw undefined;
+	}
+
+	const app = render(<Test />, {stdout});
+	t.teardown(app.unmount);
+	await t.throwsAsync(app.waitUntilExit(), {message: 'undefined'});
+
+	const output = stripAnsi(stdout.getWrites().join(''));
+	t.true(output.includes('ERROR  undefined'));
+});
+
+test('waitUntilExit preserves the original component error', async t => {
+	const stdout = createStdout();
+	const error = new Error('Original component error');
+
+	function Test(): React.JSX.Element {
+		throw error;
+	}
+
+	const app = render(<Test />, {stdout});
+	t.teardown(app.unmount);
+	const caughtError = await t.throwsAsync(app.waitUntilExit());
+	t.is(caughtError, error);
+});
+
+test('waitUntilExit preserves a component error from another realm', async t => {
+	const {default: vm} = await import('node:vm');
+	const stdout = createStdout();
+	const error = vm.runInNewContext(
+		'new Error("Cross-realm component error")',
+	) as Error;
+
+	function Test(): React.JSX.Element {
+		throw error;
+	}
+
+	const app = render(<Test />, {stdout});
+	t.teardown(app.unmount);
+	const caughtError = await t.throwsAsync(app.waitUntilExit());
+	t.is(caughtError, error);
+});

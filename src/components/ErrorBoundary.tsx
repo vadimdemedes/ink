@@ -1,3 +1,4 @@
+import {types} from 'node:util';
 import React, {PureComponent, type ReactNode} from 'react';
 import ErrorOverview from './ErrorOverview.js';
 
@@ -15,16 +16,19 @@ type State = {
 export default class ErrorBoundary extends PureComponent<Props, State> {
 	static displayName = 'InternalErrorBoundary';
 
-	static getDerivedStateFromError(error: Error) {
-		return {error};
+	static getDerivedStateFromError(error: unknown) {
+		return {
+			// eslint-disable-next-line @typescript-eslint/no-deprecated -- Error.isError is not available in Node.js 22.
+			error: types.isNativeError(error) ? error : new Error(String(error)),
+		};
 	}
 
 	override state: State = {
 		error: undefined,
 	};
 
-	override componentDidCatch(error: Error): void {
-		this.props.onError(error);
+	override componentDidCatch(): void {
+		this.props.onError(this.state.error!);
 	}
 
 	override render(): ReactNode {
