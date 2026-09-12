@@ -1378,7 +1378,7 @@ test('reset is a stable function reference', t => {
 });
 
 test.serial(
-	'reset() while paused takes effect when animation is resumed',
+	'reset() clears paused animation values without resuming',
 	async t => {
 		const clock = FakeTimers.install();
 
@@ -1386,9 +1386,12 @@ test.serial(
 			let resetAnimation!: () => void;
 
 			function PausableAnimation({isActive}: {readonly isActive: boolean}) {
-				const {frame, reset} = useAnimation({interval: 50, isActive});
+				const {frame, time, delta, reset} = useAnimation({
+					interval: 50,
+					isActive,
+				});
 				resetAnimation = reset;
-				return <Text>{String(frame)}</Text>;
+				return <Text>{[frame, time, delta].join(',')}</Text>;
 			}
 
 			const stdout = createStdout();
@@ -1401,28 +1404,35 @@ test.serial(
 			// Let a few frames accumulate
 			await clock.tickAsync(200);
 			t.true(
-				Number.parseInt((stdout.write as any).lastCall.args[0] as string, 10) >=
-					1,
+				stdout
+					.get()
+					.split(',')
+					.map(Number)
+					.every(value => value > 0),
 			);
 
 			// Pause the animation
 			rerender(<PausableAnimation isActive={false} />);
 
-			// Call reset while paused — frame should remain at current value
-			// (the effect hasn't rerun yet because isActive is false)
+			// Reset all values while paused without restarting the animation.
 			resetAnimation();
 			await clock.tickAsync(1);
-			t.not((stdout.write as any).lastCall.args[0], '-1');
+			t.is(stdout.get(), '0,0,0');
+			await clock.tickAsync(100);
+			t.is(stdout.get(), '0,0,0');
 
-			// Resume — the pending reset should now take effect and frame should be 0
+			// Resume with all values still at zero.
 			rerender(<PausableAnimation isActive />);
-			t.is((stdout.write as any).lastCall.args[0], '0');
+			t.is(stdout.get(), '0,0,0');
 
 			// And then advance again to confirm animation restarts cleanly
 			await clock.tickAsync(100);
 			t.true(
-				Number.parseInt((stdout.write as any).lastCall.args[0] as string, 10) >=
-					1,
+				stdout
+					.get()
+					.split(',')
+					.map(Number)
+					.every(value => value > 0),
 			);
 
 			unmount();
