@@ -1041,6 +1041,9 @@ export default class Ink {
 		outputHeight: number,
 		staticOutput: string,
 	): void {
+		// Keep the committed cursor position when its component skips rendering.
+		this.log.setCursorPosition(this.cursorPosition);
+
 		const hasStaticOutput = staticOutput !== '';
 		const isTty = Boolean(this.options.stdout.isTTY);
 
