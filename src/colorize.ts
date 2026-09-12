@@ -1,12 +1,16 @@
-import chalk, {type ForegroundColorName, type BackgroundColorName} from 'chalk';
+import chalk, {
+	foregroundColorNames,
+	type ForegroundColorName,
+	type BackgroundColorName,
+} from 'chalk';
 
 type ColorType = 'foreground' | 'background';
 
-const rgbRegex = /^rgb\(\s?(\d+),\s?(\d+),\s?(\d+)\s?\)$/;
+const rgbRegex = /^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/;
 const ansiRegex = /^ansi256\(\s?(\d+)\s?\)$/;
 
 const isNamedColor = (color: string): color is ForegroundColorName => {
-	return color in chalk;
+	return foregroundColorNames.includes(color as ForegroundColorName);
 };
 
 const colorize = (
