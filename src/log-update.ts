@@ -266,7 +266,7 @@ const createIncremental = (
 				ansiEscapes.eraseLines(previousVisible - visibleCount + extraSlot),
 				ansiEscapes.cursorUp(visibleCount),
 			);
-		} else {
+		} else if (previousLines.length > 1) {
 			buffer.push(ansiEscapes.cursorUp(previousLines.length - 1));
 		}
 

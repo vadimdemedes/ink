@@ -529,6 +529,41 @@ test('standard rendering - sync() without cursor does not write to stream', t =>
 
 // No-trailing-newline tests (fullscreen mode)
 
+test('incremental rendering - single line without trailing newline stays on the same row', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {
+		showCursor: true,
+		incremental: true,
+	});
+
+	render('Before');
+	render('After');
+
+	t.is(
+		(stdout.write as any).secondCall.args[0],
+		ansiEscapes.cursorTo(0) + 'After' + ansiEscapes.eraseEndLine,
+	);
+});
+
+test('incremental rendering - growing a single line without trailing newline starts on the same row', t => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {
+		showCursor: true,
+		incremental: true,
+	});
+
+	render('First');
+	render('First\nSecond');
+
+	t.is(
+		(stdout.write as any).secondCall.args[0],
+		ansiEscapes.cursorNextLine +
+			ansiEscapes.cursorTo(0) +
+			'Second' +
+			ansiEscapes.eraseEndLine,
+	);
+});
+
 test('incremental rendering - no trailing newline: trailing to no-trailing transition', t => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout, {
