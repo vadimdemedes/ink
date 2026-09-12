@@ -77,7 +77,7 @@ function App({
 	interactive,
 	renderThrottleMs,
 }: Props): React.ReactNode {
-	const [isFocusEnabled, setIsFocusEnabled] = useState(true);
+	const isFocusEnabledRef = useRef(true);
 	const [activeFocusId, setActiveFocusId] = useState<string | undefined>(
 		undefined,
 	);
@@ -260,11 +260,11 @@ function App({
 			}
 
 			// Reset focus when there's an active focused component on Esc
-			if (input === escape && isFocusEnabled) {
+			if (input === escape && isFocusEnabledRef.current) {
 				setActiveFocusId(undefined);
 			}
 		},
-		[exitOnCtrlC, handleExit, isFocusEnabled],
+		[exitOnCtrlC, handleExit],
 	);
 
 	const emitInput = useCallback(
@@ -556,7 +556,7 @@ function App({
 	// Handle tab navigation via effect that subscribes to input events
 	useEffect(() => {
 		const handleTabNavigation = (input: string): void => {
-			if (!isFocusEnabled || focusablesCountRef.current === 0) return;
+			if (!isFocusEnabledRef.current || focusablesCountRef.current === 0) return;
 
 			if (input === tab) {
 				focusNext();
@@ -573,20 +573,21 @@ function App({
 		return () => {
 			emitter.off('input', handleTabNavigation);
 		};
-	}, [isFocusEnabled, focusNext, focusPrevious]);
+	}, [focusNext, focusPrevious]);
 
 	const enableFocus = useCallback((): void => {
-		setIsFocusEnabled(true);
+		isFocusEnabledRef.current = true;
 	}, []);
 
 	const disableFocus = useCallback((): void => {
-		setIsFocusEnabled(false);
+		isFocusEnabledRef.current = false;
+		setActiveFocusId(undefined);
 	}, []);
 
 	const focus = useCallback((id: string): void => {
 		setFocusables(currentFocusables => {
 			const hasFocusableId = currentFocusables.some(
-				focusable => focusable?.id === id,
+				focusable => focusable.id === id && focusable.isActive,
 			);
 
 			if (hasFocusableId) {
@@ -611,7 +612,7 @@ function App({
 				];
 			});
 
-			if (autoFocus) {
+			if (autoFocus && isFocusEnabledRef.current) {
 				setActiveFocusId(currentActiveFocusId => {
 					if (!currentActiveFocusId) {
 						return id;

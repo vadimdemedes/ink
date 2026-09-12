@@ -1,4 +1,4 @@
-import {useEffect, useContext, useMemo} from 'react';
+import {useEffect, useContext, useId} from 'react';
 import FocusContext from '../components/FocusContext.js';
 import useStdin from './use-stdin.js';
 
@@ -44,9 +44,8 @@ const useFocus = ({
 	const {activeId, add, remove, activate, deactivate, focus} =
 		useContext(FocusContext);
 
-	const id = useMemo(() => {
-		return customId ?? Math.random().toString().slice(2, 7);
-	}, [customId]);
+	const generatedId = useId();
+	const id = customId ?? generatedId;
 
 	useEffect(() => {
 		add(id, {autoFocus});
@@ -57,12 +56,13 @@ const useFocus = ({
 	}, [id, autoFocus, add, remove]);
 
 	useEffect(() => {
+		// Reapply active state when autoFocus changes and re-registers this component.
 		if (isActive) {
 			activate(id);
 		} else {
 			deactivate(id);
 		}
-	}, [isActive, id, activate, deactivate]);
+	}, [isActive, id, autoFocus, activate, deactivate]);
 
 	useEffect(() => {
 		if (!isRawModeSupported || !isActive) {
