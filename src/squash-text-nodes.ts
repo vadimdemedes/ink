@@ -1,3 +1,4 @@
+import wrapAnsi from 'wrap-ansi';
 import {type DOMElement} from './dom.js';
 import sanitizeAnsi from './sanitize-ansi.js';
 
@@ -42,7 +43,14 @@ const squashTextNodes = (node: DOMElement): string => {
 		text += nodeText;
 	}
 
-	return sanitizeAnsi(text);
+	text = sanitizeAnsi(text.replaceAll('\r\n', '\n'));
+
+	// Expand tabs after combining nested text so measurement and rendering use the same columns.
+	if (node.nodeName === 'ink-text' && text.includes('\t')) {
+		text = wrapAnsi(text, Number.POSITIVE_INFINITY, {trim: false});
+	}
+
+	return text;
 };
 
 export default squashTextNodes;

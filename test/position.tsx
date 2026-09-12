@@ -31,6 +31,18 @@ test('absolute position with bottom and right offsets', t => {
 	t.is(output, '\n\n    X\n');
 });
 
+test('renders visible lines of text positioned above the output area', t => {
+	const output = renderToString(
+		<Box width={6} height={2}>
+			<Box position="absolute" top={-1}>
+				<Text>{'Hidden\nFirst\nSecond'}</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.is(output, 'First\nSecond');
+});
+
 test('absolute position with percentage offsets', t => {
 	const output = renderToString(
 		<Box width={6} height={4}>

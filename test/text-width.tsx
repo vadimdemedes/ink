@@ -5,6 +5,49 @@ import stringWidth from 'string-width';
 import {Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 
+test('zero-width spaces do not overwrite box borders', t => {
+	const output = renderToString(
+		<Box borderStyle="single" width={7}>
+			<Text>{'he\u200Bllo'}</Text>
+		</Box>,
+	);
+
+	t.is(output.replaceAll('\u200B', ''), '┌─────┐\n│hello│\n└─────┘');
+});
+
+test('zero-width overlay does not erase wide characters', t => {
+	const output = renderToString(
+		<Box width={4} height={1}>
+			<Text>你好</Text>
+			<Box position="absolute" left={1}>
+				<Text>{'\u200B'}</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.is(output.replaceAll('\u200B', ''), '你好');
+});
+
+test('combining marks and joined emoji retain their graphemes', t => {
+	const output = renderToString(
+		<Box borderStyle="single" width={5}>
+			<Text>{'e\u0301👩‍💻'}</Text>
+		</Box>,
+	);
+
+	t.is(output, '┌───┐\n│e\u0301👩‍💻│\n└───┘');
+});
+
+test('CRLF line endings do not overwrite box borders', t => {
+	const output = renderToString(
+		<Box borderStyle="single" width={7}>
+			<Text>{'hello\r\nworld'}</Text>
+		</Box>,
+	);
+
+	t.is(output, '┌─────┐\n│hello│\n│world│\n└─────┘');
+});
+
 test('wide characters do not add extra space inside fixed-width Box', t => {
 	const output = renderToString(
 		<Box flexDirection="column">
@@ -212,4 +255,18 @@ test('clipped empty write does not corrupt existing wide characters', t => {
 	);
 
 	t.is(stripAnsi(output), 'あい');
+});
+
+test('wide characters crossing the left output edge preserve visible columns', t => {
+	const output = renderToString(
+		<Box width={4} height={1}>
+			<Box position="absolute" left={-1}>
+				<Text>好AB</Text>
+			</Box>
+			<Box position="absolute" left={3}>
+				<Text>!</Text>
+			</Box>
+		</Box>,
+	);
+	t.is(output, ' AB!');
 });

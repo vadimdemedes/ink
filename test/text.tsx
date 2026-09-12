@@ -27,6 +27,50 @@ test('<Text> with null children', t => {
 	t.is(output, '');
 });
 
+test('tabs are measured and rendered without overwriting adjacent text', t => {
+	const output = renderToString(
+		<Box width={20}>
+			<Text>
+				A<Text>{'\tB'}</Text>
+			</Text>
+			<Text>!</Text>
+		</Box>,
+	);
+
+	t.is(output, 'A       B!');
+});
+
+test('expanded tabs participate in text wrapping', t => {
+	const output = renderToString(
+		<Box width={5} flexDirection="column">
+			<Text>{'A\tB'}</Text>
+			<Text>!</Text>
+		</Box>,
+	);
+
+	t.is(output, 'A\n   B\n!');
+});
+
+test('tab stops account for styled wide characters', t => {
+	const originalLevel = chalk.level;
+	chalk.level = 3;
+	t.teardown(() => {
+		chalk.level = originalLevel;
+	});
+
+	const output = renderToString(
+		<Box width={20}>
+			<Text>
+				<Text color="red">界</Text>
+				{'\tB'}
+			</Text>
+			<Text>!</Text>
+		</Box>,
+	);
+
+	t.is(output, chalk.red('界') + '      B!');
+});
+
 test('text with standard color', t => {
 	const output = renderToString(<Text color="green">Test</Text>);
 	t.is(output, chalk.green('Test'));
