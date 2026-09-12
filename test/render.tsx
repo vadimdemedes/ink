@@ -1054,6 +1054,37 @@ test.serial('clear output', async t => {
 	}
 });
 
+for (const mode of ['standard', 'incremental', 'screen-reader']) {
+	test(`preserve terminal history when rerendering after clear - ${mode}`, async t => {
+		const stdout = createStdout();
+		stdout.write('History\n');
+		const instance = render(<Text>{'First\nSecond'}</Text>, {
+			stdout,
+			interactive: true,
+			patchConsole: false,
+			incrementalRendering: mode === 'incremental',
+			isScreenReaderEnabled: mode === 'screen-reader',
+		});
+		t.teardown(instance.unmount);
+		await instance.waitUntilRenderFlush();
+
+		const visibleLines = () =>
+			reconstructTerminalLines(
+				stdout.getWrites().join('').replaceAll('\n', '\r\n'),
+				100,
+			).filter(Boolean);
+
+		instance.clear();
+		t.deepEqual(visibleLines(), ['History']);
+		instance.clear();
+		t.deepEqual(visibleLines(), ['History']);
+		instance.rerender(<Text>Updated</Text>);
+		await instance.waitUntilRenderFlush();
+
+		t.deepEqual(visibleLines(), ['History', 'Updated']);
+	});
+}
+
 test('clear screen-reader output', t => {
 	const stdout = createStdout(10);
 	const instance = render(<Text>{'First line\nSecond line'}</Text>, {
@@ -1099,6 +1130,67 @@ test('preserve screen-reader output around stdout writes', t => {
 			10,
 		).filter(Boolean),
 		['Log message', 'First line', 'Second line'],
+	);
+});
+
+test('replace restored screen-reader output after clear and stdout write', async t => {
+	const stdout = createStdout(10);
+	let write: (text: string) => void = () => {};
+	function Test() {
+		({write} = useStdout());
+		return <Text>First Second Third</Text>;
+	}
+
+	const instance = render(<Test />, {
+		stdout,
+		interactive: true,
+		isScreenReaderEnabled: true,
+		patchConsole: false,
+	});
+	t.teardown(instance.unmount);
+	await instance.waitUntilRenderFlush();
+
+	instance.clear();
+	write('Log\n');
+	instance.rerender(<Text>Updated</Text>);
+	await instance.waitUntilRenderFlush();
+
+	t.deepEqual(
+		reconstructTerminalLines(
+			stdout.getWrites().join('').replaceAll('\n', '\r\n'),
+			10,
+		).filter(Boolean),
+		['Log', 'Updated'],
+	);
+});
+
+test('replace screen-reader output ending in a newline after stdout write', async t => {
+	const stdout = createStdout();
+	let write: (text: string) => void = () => {};
+	function Test() {
+		({write} = useStdout());
+		return <Text>{'First\n'}</Text>;
+	}
+
+	const instance = render(<Test />, {
+		stdout,
+		interactive: true,
+		isScreenReaderEnabled: true,
+		patchConsole: false,
+	});
+	t.teardown(instance.unmount);
+	await instance.waitUntilRenderFlush();
+
+	write('Log\n');
+	instance.rerender(<Text>Updated</Text>);
+	await instance.waitUntilRenderFlush();
+
+	t.deepEqual(
+		reconstructTerminalLines(
+			stdout.getWrites().join('').replaceAll('\n', '\r\n'),
+			100,
+		).filter(Boolean),
+		['Log', 'Updated'],
 	);
 });
 
@@ -1170,6 +1262,24 @@ test.serial(
 		]);
 	},
 );
+
+test('update trailing newline when unchanged output becomes fullscreen', async t => {
+	const stdout = createStdout();
+	stdout.rows = 24;
+	const instance = render(<Text>{'First\nSecond'}</Text>, {
+		stdout,
+		interactive: true,
+		patchConsole: false,
+	});
+	t.teardown(instance.unmount);
+	await instance.waitUntilRenderFlush();
+	t.is(stripAnsi(getContentWrites(stdout.write).at(-1)!), 'First\nSecond\n');
+
+	stdout.rows = 2;
+	stdout.emit('resize');
+	await instance.waitUntilRenderFlush();
+	t.is(stripAnsi(getContentWrites(stdout.write).at(-1)!), 'First\nSecond');
+});
 
 test.serial('rerender on resize', async t => {
 	const stdout = createStdout(10);

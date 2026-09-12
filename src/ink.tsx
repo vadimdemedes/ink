@@ -528,17 +528,6 @@ export default class Ink {
 				this.options.stdout.write(bsu);
 			}
 
-			if (hasStaticOutput) {
-				// We need to erase the main output before writing new static output
-				const erase =
-					this.lastOutputHeight > 0
-						? ansiEscapes.eraseLines(this.lastOutputHeight)
-						: '';
-				this.options.stdout.write(erase + staticOutput);
-				// After erasing, the last output is gone, so we should reset its height
-				this.lastOutputHeight = 0;
-			}
-
 			const terminalWidth = getWindowSize(this.options.stdout).columns;
 			const wrappedOutput = wrapAnsi(output, terminalWidth, {
 				trim: false,
@@ -553,16 +542,16 @@ export default class Ink {
 				return;
 			}
 
-			// If we haven't erased yet, do it now.
+			// Erase the main output before writing new static output or replacing the frame.
+			// Log-update tracks the actual rows, including frames restored after external writes.
+			this.log.clear();
+			// After erasing, the last output is gone, so reset its height until the new frame is written.
+			this.lastOutputHeight = 0;
 			if (hasStaticOutput) {
-				this.options.stdout.write(wrappedOutput);
-			} else {
-				const erase =
-					this.lastOutputHeight > 0
-						? ansiEscapes.eraseLines(this.lastOutputHeight)
-						: '';
-				this.options.stdout.write(erase + wrappedOutput);
+				this.options.stdout.write(staticOutput);
 			}
+
+			this.options.stdout.write(wrappedOutput);
 
 			this.lastOutput = output;
 			this.lastOutputToRender = wrappedOutput;
@@ -908,9 +897,8 @@ export default class Ink {
 	clear(): void {
 		if (this.interactive && !this.options.debug) {
 			this.log.clear();
-			// Sync lastOutput so that unmount's final onRender
-			// sees it as unchanged and log-update skips it
-			this.log.sync(this.lastOutputToRender || this.lastOutput + '\n');
+			// Keep lastOutput so that unmount's final onRender sees it as unchanged, but no rows remain on screen.
+			this.lastOutputHeight = 0;
 		}
 	}
 
@@ -1041,9 +1029,6 @@ export default class Ink {
 		outputHeight: number,
 		staticOutput: string,
 	): void {
-		// Keep the committed cursor position when its component skips rendering.
-		this.log.setCursorPosition(this.cursorPosition);
-
 		const hasStaticOutput = staticOutput !== '';
 		const isTty = Boolean(this.options.stdout.isTTY);
 
@@ -1060,6 +1045,18 @@ export default class Ink {
 			nextOutputHeight: outputHeight,
 			isUnmounting: this.isUnmounting,
 		});
+
+		if (
+			!shouldClearTerminal &&
+			!hasStaticOutput &&
+			outputToRender === this.lastOutputToRender &&
+			!this.log.isCursorDirty()
+		) {
+			return;
+		}
+
+		// Keep the committed cursor position when its component skips rendering.
+		this.log.setCursorPosition(this.cursorPosition);
 
 		if (shouldClearTerminal) {
 			const sync = this.shouldSync();
@@ -1096,7 +1093,7 @@ export default class Ink {
 			if (sync) {
 				this.options.stdout.write(esu);
 			}
-		} else if (output !== this.lastOutput || this.log.isCursorDirty()) {
+		} else {
 			// ThrottledLog manages its own bsu/esu at actual write time
 			this.throttledLog(outputToRender);
 		}
