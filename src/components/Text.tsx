@@ -84,6 +84,8 @@ export default function Text({
 }: Props) {
 	const {isScreenReaderEnabled} = useContext(accessibilityContext);
 	const inheritedBackgroundColor = useContext(backgroundContext);
+	// Use explicit backgroundColor if provided, otherwise inherit from the nearest parent Text or Box.
+	const effectiveBackgroundColor = backgroundColor ?? inheritedBackgroundColor;
 	const childrenOrAriaLabel =
 		isScreenReaderEnabled && ariaLabel ? ariaLabel : children;
 
@@ -100,9 +102,6 @@ export default function Text({
 			children = colorize(children, color, 'foreground');
 		}
 
-		// Use explicit backgroundColor if provided, otherwise use inherited from parent Box
-		const effectiveBackgroundColor =
-			backgroundColor ?? inheritedBackgroundColor;
 		if (effectiveBackgroundColor) {
 			children = colorize(children, effectiveBackgroundColor, 'background');
 		}
@@ -135,11 +134,18 @@ export default function Text({
 	}
 
 	return (
-		<ink-text
-			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row', textWrap: wrap}}
-			internal_transform={transform}
-		>
-			{childrenOrAriaLabel}
-		</ink-text>
+		<backgroundContext.Provider value={effectiveBackgroundColor}>
+			<ink-text
+				style={{
+					flexGrow: 0,
+					flexShrink: 1,
+					flexDirection: 'row',
+					textWrap: wrap,
+				}}
+				internal_transform={transform}
+			>
+				{childrenOrAriaLabel}
+			</ink-text>
+		</backgroundContext.Provider>
 	);
 }

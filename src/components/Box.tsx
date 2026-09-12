@@ -74,6 +74,10 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 		ref,
 	) => {
 		const {isScreenReaderEnabled} = useContext(accessibilityContext);
+		const inheritedBackgroundColor = useContext(backgroundContext);
+		const effectiveBackgroundColor =
+			// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- Empty background colors inherit from the parent too.
+			backgroundColor || inheritedBackgroundColor;
 		const label = ariaLabel ? <ink-text>{ariaLabel}</ink-text> : undefined;
 		if (isScreenReaderEnabled && ariaHidden) {
 			return null;
@@ -101,16 +105,12 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 			</ink-box>
 		);
 
-		// If this Box has a background color, provide it to children via context
-		if (backgroundColor) {
-			return (
-				<backgroundContext.Provider value={backgroundColor}>
-					{boxElement}
-				</backgroundContext.Provider>
-			);
-		}
-
-		return boxElement;
+		// Provide this Box's background color or its inherited color to children via context
+		return (
+			<backgroundContext.Provider value={effectiveBackgroundColor}>
+				{boxElement}
+			</backgroundContext.Provider>
+		);
 	},
 );
 

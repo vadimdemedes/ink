@@ -1,7 +1,7 @@
-import React from 'react';
+import React, {useState} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
-import {render, Box, Text} from '../src/index.js';
+import {render, Box, Text, Static} from '../src/index.js';
 import {
 	renderToString,
 	renderToStringAsync,
@@ -48,6 +48,43 @@ test.after(() => {
 	disableTestColors();
 });
 
+for (const initialBackgroundColor of [undefined, 'red']) {
+	test(`Box preserves child state when ${initialBackgroundColor ? 'removing' : 'adding'} a background color`, async t => {
+		function StatefulChild({initialValue}: {readonly initialValue: string}) {
+			// eslint-disable-next-line react/hook-use-state -- A remount must be observable through the initial state.
+			const [value] = useState(initialValue);
+			return <Text>{value}</Text>;
+		}
+
+		const {getOutput, rerenderAsync, unmount} = await renderAsync(
+			<Box backgroundColor={initialBackgroundColor}>
+				<StatefulChild initialValue="original" />
+			</Box>,
+		);
+		t.teardown(unmount);
+		t.true(getOutput().includes('original'));
+
+		await rerenderAsync(
+			<Box backgroundColor={initialBackgroundColor ? undefined : 'red'}>
+				<StatefulChild initialValue="reset" />
+			</Box>,
+		);
+
+		t.true(getOutput().includes('original'));
+		t.false(getOutput().includes('reset'));
+	});
+}
+
+test('Static background color is inherited by its text', t => {
+	const output = renderToString(
+		<Static items={['A']} style={{width: 3, backgroundColor: 'blue'}}>
+			{item => <Text key={item}>{item}</Text>}
+		</Static>,
+	);
+
+	t.is(output, `${ansi.bgBlue}A  ${ansi.bgReset}\n`);
+});
+
 // Text inheritance tests (these work in non-TTY)
 test('Text inherits parent Box background color', t => {
 	const output = renderToString(
@@ -75,6 +112,18 @@ test('Nested Box background inheritance', t => {
 			<Box backgroundColor="blue">
 				<Text>Hello World</Text>
 			</Box>
+		</Box>,
+	);
+
+	t.is(output, chalk.bgBlue('Hello World'));
+});
+
+test('Nested Text inherits the nearest Text background instead of the Box background', t => {
+	const output = renderToString(
+		<Box backgroundColor="red" alignSelf="flex-start">
+			<Text backgroundColor="blue">
+				Hello <Text>World</Text>
+			</Text>
 		</Box>,
 	);
 
