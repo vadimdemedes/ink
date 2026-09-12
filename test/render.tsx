@@ -244,6 +244,16 @@ const countOccurrences = (text: string, searchValue: string): number => {
 	return text.split(searchValue).length - 1;
 };
 
+test.serial('undefined stream options use the default streams', async t => {
+	const ps = term('undefined-render-streams', [], {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		env: {CI: 'true'},
+	});
+	await ps.waitForExit();
+	t.true(ps.output.includes('Default streams: true'));
+});
+
+
 const isWriteBarrierChunk = (chunk: string | Uint8Array): boolean =>
 	(typeof chunk === 'string' && chunk === '') ||
 	(chunk instanceof Uint8Array && chunk.length === 0);
@@ -1246,22 +1256,24 @@ test('rewrap screen-reader output when the terminal gets wider', t => {
 	t.deepEqual(visibleLines(), ['Hello world']);
 });
 
-test.serial(
-	'intercept console methods and display result above output',
-	async t => {
-		const ps = term('console');
-		await ps.waitForExit();
+for (const patchConsoleOption of ['omitted', 'undefined']) {
+	test.serial(
+		`intercept console methods with ${patchConsoleOption} patchConsole option`,
+		async t => {
+			const ps = term('console', [patchConsoleOption]);
+			await ps.waitForExit();
 
-		const frames = ps.output.split(ansiEscapes.eraseLines(2)).map(line => {
-			return stripAnsi(line);
-		});
+			const frames = ps.output.split(ansiEscapes.eraseLines(2)).map(line => {
+				return stripAnsi(line);
+			});
 
-		t.deepEqual(frames, [
-			'Hello World\r\n',
-			'First log\r\nHello World\r\nSecond log\r\n',
-		]);
-	},
-);
+			t.deepEqual(frames, [
+				'Hello World\r\n',
+				'First log\r\nHello World\r\nSecond log\r\n',
+			]);
+		},
+	);
+}
 
 test('update trailing newline when unchanged output becomes fullscreen', async t => {
 	const stdout = createStdout();

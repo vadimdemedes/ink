@@ -7,6 +7,12 @@ import createStdout from './helpers/create-stdout.js';
 for (const {name, input, exitOnCtrlC, shouldExit} of [
 	{name: 'legacy Ctrl+C', input: '\u0003', exitOnCtrlC: true, shouldExit: true},
 	{
+		name: 'legacy Ctrl+C with an undefined exit option',
+		input: '\u0003',
+		exitOnCtrlC: undefined,
+		shouldExit: true,
+	},
+	{
 		name: 'kitty Ctrl+C',
 		input: '\u001B[99;5u',
 		exitOnCtrlC: true,
