@@ -2003,6 +2003,29 @@ test.serial(
 );
 
 test.serial(
+	'waitUntilExit after unmount does not retain a beforeExit listener',
+	async t => {
+		const existingListeners = process.listeners('beforeExit');
+		t.teardown(() => {
+			for (const listener of process.listeners('beforeExit')) {
+				if (!existingListeners.includes(listener)) {
+					process.off('beforeExit', listener);
+				}
+			}
+		});
+
+		const instance = render(<Text>Hello</Text>, {
+			stdout: createStdout(),
+			patchConsole: false,
+		});
+		instance.unmount();
+		await instance.waitUntilExit();
+
+		t.deepEqual(process.listeners('beforeExit'), existingListeners);
+	},
+);
+
+test.serial(
 	'waitUntilRenderFlush after unmount does not register beforeExit listener',
 	async t => {
 		const stdout = createStdout();

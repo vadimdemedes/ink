@@ -838,7 +838,7 @@ export default class Ink {
 	}
 
 	async waitUntilExit(): Promise<unknown> {
-		if (!this.beforeExitHandler) {
+		if (!this.isUnmounting && !this.beforeExitHandler) {
 			this.beforeExitHandler = () => {
 				this.unmount();
 			};
