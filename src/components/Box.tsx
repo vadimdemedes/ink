@@ -63,6 +63,8 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 		{
 			children,
 			backgroundColor,
+			flexWrap = 'nowrap',
+			flexDirection = 'row',
 			'aria-label': ariaLabel,
 			'aria-hidden': ariaHidden,
 			'aria-role': role,
@@ -81,8 +83,8 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 			<ink-box
 				ref={ref}
 				style={{
-					flexWrap: 'nowrap',
-					flexDirection: 'row',
+					flexWrap,
+					flexDirection,
 					flexGrow: 0,
 					flexShrink: 1,
 					...style,

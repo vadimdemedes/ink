@@ -1,6 +1,7 @@
 import React from 'react';
 import test from 'ava';
-import {Box, Text} from '../src/index.js';
+import {Box, Text, render} from '../src/index.js';
+import createStdout from './helpers/create-stdout.js';
 import {
 	renderToString,
 	renderToStringAsync,
@@ -27,6 +28,53 @@ test('padding X', t => {
 	);
 
 	t.is(output, '  X  Y');
+});
+
+test('removing paddingLeft restores paddingX on rerender', t => {
+	function Example({paddingLeft}: {readonly paddingLeft?: number}) {
+		return (
+			<Box>
+				<Box paddingX={2} paddingLeft={paddingLeft}>
+					<Text>X</Text>
+				</Box>
+				<Text>Y</Text>
+			</Box>
+		);
+	}
+
+	const stdout = createStdout();
+	const {rerender, unmount} = render(<Example paddingLeft={1} />, {
+		stdout,
+		debug: true,
+	});
+	t.teardown(unmount);
+
+	t.is(stdout.get(), ' X  Y');
+	rerender(<Example />);
+	t.is(stdout.get(), '  X  Y');
+	rerender(<Example paddingLeft={0} />);
+	t.is(stdout.get(), 'X  Y');
+});
+
+test('removing paddingX restores padding on rerender', t => {
+	function Example({paddingX}: {readonly paddingX?: number}) {
+		return (
+			<Box padding={2} paddingX={paddingX}>
+				<Text>X</Text>
+			</Box>
+		);
+	}
+
+	const stdout = createStdout();
+	const {rerender, unmount} = render(<Example paddingX={1} />, {
+		stdout,
+		debug: true,
+	});
+	t.teardown(unmount);
+
+	t.is(stdout.get(), '\n\n X\n\n');
+	rerender(<Example />);
+	t.is(stdout.get(), '\n\n  X\n\n');
 });
 
 test('padding Y', t => {

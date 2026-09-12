@@ -1,6 +1,7 @@
 import React from 'react';
 import test from 'ava';
-import {Box, Text} from '../src/index.js';
+import {Box, Text, render} from '../src/index.js';
+import createStdout from './helpers/create-stdout.js';
 import {
 	renderToString,
 	renderToStringAsync,
@@ -39,6 +40,38 @@ test('row gap', t => {
 
 	t.is(output, 'A\n\nB');
 });
+
+for (const [property, flexDirection, separator] of [
+	['columnGap', 'row', ' '],
+	['rowGap', 'column', '\n'],
+] as const) {
+	test(`removing ${property} restores gap on rerender`, t => {
+		function Example({override}: {readonly override?: number}) {
+			return (
+				<Box gap={2} flexDirection={flexDirection} {...{[property]: override}}>
+					<Text>A</Text>
+					<Text>B</Text>
+				</Box>
+			);
+		}
+
+		const stdout = createStdout();
+		const {rerender, unmount} = render(<Example override={1} />, {
+			stdout,
+			debug: true,
+		});
+		t.teardown(unmount);
+		const lineBreak = flexDirection === 'column' ? '\n' : '';
+
+		t.is(stdout.get(), `A${separator}${lineBreak}B`);
+		rerender(<Example />);
+		t.is(stdout.get(), `A${separator.repeat(2)}${lineBreak}B`);
+		rerender(<Example override={0} />);
+		t.is(stdout.get(), `A${lineBreak}B`);
+		rerender(<Example />);
+		t.is(stdout.get(), `A${separator.repeat(2)}${lineBreak}B`);
+	});
+}
 
 // Concurrent mode tests
 test('gap - concurrent', async t => {

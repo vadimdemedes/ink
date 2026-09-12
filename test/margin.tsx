@@ -1,6 +1,7 @@
 import React from 'react';
 import test from 'ava';
-import {Box, Text} from '../src/index.js';
+import {Box, Text, render} from '../src/index.js';
+import createStdout from './helpers/create-stdout.js';
 import {
 	renderToString,
 	renderToStringAsync,
@@ -27,6 +28,32 @@ test('margin X', t => {
 	);
 
 	t.is(output, '  X  Y');
+});
+
+test('removing marginLeft restores marginX on rerender', t => {
+	function Example({marginLeft}: {readonly marginLeft?: number}) {
+		return (
+			<Box>
+				<Box marginX={2} marginLeft={marginLeft}>
+					<Text>X</Text>
+				</Box>
+				<Text>Y</Text>
+			</Box>
+		);
+	}
+
+	const stdout = createStdout();
+	const {rerender, unmount} = render(<Example marginLeft={1} />, {
+		stdout,
+		debug: true,
+	});
+	t.teardown(unmount);
+
+	t.is(stdout.get(), ' X  Y');
+	rerender(<Example />);
+	t.is(stdout.get(), '  X  Y');
+	rerender(<Example marginLeft={0} />);
+	t.is(stdout.get(), 'X  Y');
 });
 
 test('margin Y', t => {

@@ -33,6 +33,20 @@ test('set width in percent', t => {
 	t.is(output, 'A    B');
 });
 
+test('set width in fractional percent', t => {
+	const output = renderToString(
+		<Box width={200}>
+			<Box width="12.5%">
+				<Text>A</Text>
+			</Box>
+			<Text>B</Text>
+		</Box>,
+		{columns: 200},
+	);
+
+	t.is(output, `A${' '.repeat(24)}B`);
+});
+
 test('set min width', t => {
 	const smallerOutput = renderToString(
 		<Box>
