@@ -2,7 +2,7 @@ import React from 'react';
 import test from 'ava';
 import boxen, {type Options} from 'boxen';
 import sliceAnsi from 'slice-ansi';
-import {Box, Text} from '../src/index.js';
+import {Box, Text, Transform} from '../src/index.js';
 import {
 	renderToString,
 	renderToStringAsync,
@@ -21,6 +21,22 @@ const clipX = (text: string, columns: number): string => {
 		.map(line => sliceAnsi(line, 0, columns).trim())
 		.join('\n');
 };
+
+test('vertical clipping preserves Transform line indices', t => {
+	const output = renderToString(
+		<Box height={2} overflow="hidden" contentOffsetY={1}>
+			<Box flexDirection="column" flexShrink={0}>
+				<Transform
+					transform={(line, index) => line.replaceAll('x', String(index))}
+				>
+					<Text>{'xx\nxx\nxx'}</Text>
+				</Transform>
+			</Box>
+		</Box>,
+	);
+
+	t.is(output, '11\n22');
+});
 
 test('overflowX - single text node in a box inside overflow container', t => {
 	const output = renderToString(
@@ -361,6 +377,34 @@ test('overflowY - box intersecting with bottom edge of overflow container with b
 	);
 
 	t.is(output, box('Hello'));
+});
+
+test('overflowX visible overrides overflow hidden while preserving vertical clipping', t => {
+	const output = renderToString(
+		<Box width={6} height={2}>
+			<Box width={3} height={1} overflow="hidden" overflowX="visible">
+				<Box width={6} height={2} flexShrink={0}>
+					<Text>{'ABCDEF\nGHIJKL'}</Text>
+				</Box>
+			</Box>
+		</Box>,
+	);
+
+	t.is(output, 'ABCDEF\n');
+});
+
+test('overflowY visible overrides overflow hidden while preserving horizontal clipping', t => {
+	const output = renderToString(
+		<Box width={6} height={2}>
+			<Box width={3} height={1} overflow="hidden" overflowY="visible">
+				<Box width={6} height={2} flexShrink={0}>
+					<Text>{'ABCDEF\nGHIJKL'}</Text>
+				</Box>
+			</Box>
+		</Box>,
+	);
+
+	t.is(output, 'ABC\nGHI');
 });
 
 test('overflow - single text node inside overflow container', t => {

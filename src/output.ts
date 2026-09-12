@@ -300,7 +300,7 @@ export default class Output {
 					}
 
 					for (const transformer of transformers) {
-						line = transformer(line, index);
+						line = transformer(line, index + y - operation.y);
 					}
 
 					const characters = this.caches.getStyledChars(line);

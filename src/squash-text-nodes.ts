@@ -11,13 +11,7 @@ import sanitizeAnsi from './sanitize-ansi.js';
 const squashTextNodes = (node: DOMElement): string => {
 	let text = '';
 
-	for (let index = 0; index < node.childNodes.length; index++) {
-		const childNode = node.childNodes[index];
-
-		if (childNode === undefined) {
-			continue;
-		}
-
+	for (const childNode of node.childNodes) {
 		let nodeText = '';
 
 		if (childNode.nodeName === '#text') {
@@ -36,7 +30,11 @@ const squashTextNodes = (node: DOMElement): string => {
 				nodeText.length > 0 &&
 				typeof childNode.internal_transform === 'function'
 			) {
-				nodeText = childNode.internal_transform(nodeText, index);
+				const transform = childNode.internal_transform;
+				nodeText = nodeText
+					.split('\n')
+					.map((line, lineIndex) => transform(line, lineIndex))
+					.join('\n');
 			}
 		}
 
