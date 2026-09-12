@@ -1,3 +1,4 @@
+import vm from 'node:vm';
 import test from 'ava';
 import chalk from 'chalk';
 import boxen from 'boxen';
@@ -310,12 +311,66 @@ test('runs effect cleanup on teardown', t => {
 
 // ── Error handling ──────────────────────────────────────
 
+test('runs effect cleanup when a transform throws', t => {
+	const error = new Error('Transform failed');
+	let setupCount = 0;
+	let cleanupCount = 0;
+	function Test() {
+		useLayoutEffect(() => {
+			setupCount++;
+			return () => {
+				cleanupCount++;
+			};
+		}, []);
+
+		return (
+			<Transform
+				transform={() => {
+					throw error;
+				}}
+			>
+				<Text>Hello</Text>
+			</Transform>
+		);
+	}
+
+	const caughtError = t.throws(() => renderToString(<Test />));
+	t.is(caughtError, error);
+	t.is(setupCount, 1);
+	t.is(cleanupCount, 1);
+	t.is(renderToString(<Text>Still works</Text>), 'Still works');
+});
+
 test('component that throws propagates the error', t => {
 	function Broken(): React.JSX.Element {
 		throw new Error('Component error');
 	}
 
 	t.throws(() => renderToString(<Broken />), {message: 'Component error'});
+});
+
+test('preserves component errors from another realm', t => {
+	const error = vm.runInNewContext(
+		'new TypeError("Invalid configuration")',
+	) as Error;
+
+	function Broken(): React.JSX.Element {
+		throw error;
+	}
+
+	const caughtError = t.throws(() => renderToString(<Broken />));
+	t.is(caughtError, error);
+	t.is(renderToString(<Text>Still works</Text>), 'Still works');
+});
+
+test('component that throws undefined does not silently return empty output', t => {
+	function Broken(): React.JSX.Element {
+		// eslint-disable-next-line @typescript-eslint/only-throw-error
+		throw undefined;
+	}
+
+	t.throws(() => renderToString(<Broken />), {message: 'undefined'});
+	t.is(renderToString(<Text>Still works</Text>), 'Still works');
 });
 
 test('text outside Text component throws', t => {
