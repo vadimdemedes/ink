@@ -1,6 +1,14 @@
-import {type RefObject, useState, useEffect, useCallback, useMemo} from 'react';
+import {
+	type RefObject,
+	useState,
+	useEffect,
+	useCallback,
+	useMemo,
+	useContext,
+} from 'react';
 import {type DOMElement, addLayoutListener} from '../dom.js';
 import measureElement from '../measure-element.js';
+import RootNodeContext from '../components/RootNodeContext.js';
 
 // Yoga's `right`/`bottom` are omitted: always `0` for flow layout and unintuitive for absolute positioning.
 /**
@@ -56,19 +64,6 @@ const emptyMetrics: BoxMetrics = {
 	clientHeight: 0,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-restricted-types
-const findRootNode = (node: DOMElement | null): DOMElement | undefined => {
-	if (!node) {
-		return undefined;
-	}
-
-	if (!node.parentNode) {
-		return node.nodeName === 'ink-root' ? node : undefined;
-	}
-
-	return findRootNode(node.parentNode);
-};
-
 /**
 A React hook that returns the current layout metrics for a tracked box element.
 It updates when layout changes (for example terminal resize, sibling/content changes, or position changes).
@@ -101,6 +96,7 @@ const useBoxMetrics = (
 		will be passed to a DOM node's ref attribute, is common in React. */
 	ref: RefObject<DOMElement | null>,
 ): UseBoxMetricsResult => {
+	const rootNode = useContext(RootNodeContext);
 	const [metrics, setMetrics] = useState(emptyMetrics);
 	const [hasMeasured, setHasMeasured] = useState(false);
 
@@ -142,14 +138,15 @@ const useBoxMetrics = (
 	// Subscribe to root layout commits so memoized components still receive
 	// sibling-driven position/size updates, even when they skip re-rendering.
 	useEffect(() => {
-		const rootNode = findRootNode(ref.current);
-
 		if (!rootNode) {
 			return;
 		}
 
-		return addLayoutListener(rootNode, updateMetrics);
-	});
+		return addLayoutListener(rootNode, () => {
+			// React attaches refs after the layout notification, during the same commit.
+			queueMicrotask(updateMetrics);
+		});
+	}, [rootNode, updateMetrics]);
 
 	return useMemo(
 		() => ({

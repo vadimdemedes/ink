@@ -1,10 +1,11 @@
 import {types} from 'node:util';
-import type {ReactNode} from 'react';
+import {createElement, type ReactNode} from 'react';
 import Yoga from 'yoga-layout';
 import {LegacyRoot} from 'react-reconciler/constants.js';
 import reconciler from './reconciler.js';
 import renderer from './renderer.js';
 import {createNode, type DOMElement} from './dom.js';
+import RootNodeContext from './components/RootNodeContext.js';
 
 export type RenderToStringOptions = {
 	/**
@@ -109,7 +110,12 @@ const renderToString = (
 		let output: string;
 		try {
 			// Synchronously render the React tree into the container
-			reconciler.updateContainerSync(node, container, null, () => {});
+			reconciler.updateContainerSync(
+				createElement(RootNodeContext.Provider, {value: rootNode}, node),
+				container,
+				null,
+				() => {},
+			);
 			reconciler.flushSyncWork();
 
 			// Yoga layout has already been calculated by onComputeLayout during commit.

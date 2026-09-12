@@ -19,6 +19,7 @@ import logUpdate, {type LogUpdate, type CursorPosition} from './log-update.js';
 import {bsu, esu, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
 import App from './components/App.js';
+import RootNodeContext from './components/RootNodeContext.js';
 import {type TerminalSuspension} from './components/AppContext.js';
 import {accessibilityContext as AccessibilityContext} from './components/AccessibilityContext.js';
 import {
@@ -602,7 +603,9 @@ export default class Ink {
 						this.finishKittyDetection?.(true);
 					}}
 				>
-					{node}
+					<RootNodeContext.Provider value={this.rootNode}>
+						{node}
+					</RootNodeContext.Provider>
 				</App>
 			</AccessibilityContext.Provider>
 		);

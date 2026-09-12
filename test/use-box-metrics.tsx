@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {act, useRef, useState} from 'react';
 import test from 'ava';
 import delay from 'delay';
 import stripAnsi from 'strip-ansi';
@@ -584,3 +584,55 @@ test('content size updates when content grows', async t => {
 
 	t.true(stripAnsi(stdout.get()).includes('contentHeight:3'));
 });
+
+for (const concurrent of [false, true]) {
+	test(`tracks a box mounted by child state - concurrent=${concurrent}`, async t => {
+		const stdout = createStdout();
+		let setChildVisible!: (visible: boolean) => void;
+
+		function Child({
+			boxRef,
+		}: {
+			// eslint-disable-next-line @typescript-eslint/no-restricted-types
+			readonly boxRef: React.RefObject<DOMElement | null>;
+		}) {
+			const [isVisible, setIsVisible] = useState(false);
+			setChildVisible = setIsVisible;
+			return isVisible ? (
+				<Box ref={boxRef} width={10}>
+					<Text>Tracked</Text>
+				</Box>
+			) : null;
+		}
+
+		function Parent() {
+			const ref = useRef<DOMElement>(null);
+			const {width, hasMeasured} = useBoxMetrics(ref);
+			return (
+				<Box flexDirection="column">
+					<Child boxRef={ref} />
+					<Text>
+						{width}:{String(hasMeasured)}
+					</Text>
+				</Box>
+			);
+		}
+
+		let instance!: ReturnType<typeof render>;
+		await act(async () => {
+			instance = render(<Parent />, {stdout, debug: true, concurrent});
+		});
+		t.teardown(instance.unmount);
+		t.is(stdout.get(), '0:false');
+
+		await act(async () => {
+			setChildVisible(true);
+		});
+		t.is(stdout.get(), 'Tracked\n10:true');
+
+		await act(async () => {
+			setChildVisible(false);
+		});
+		t.is(stdout.get(), '0:false');
+	});
+}
