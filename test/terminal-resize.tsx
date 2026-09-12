@@ -2,7 +2,7 @@ import process from 'node:process';
 import test from 'ava';
 import delay from 'delay';
 import stripAnsi from 'strip-ansi';
-import React from 'react';
+import React, {useLayoutEffect} from 'react';
 import {render, Box, Text, useWindowSize} from '../src/index.js';
 import createStdout, {type FakeStdout} from './helpers/create-stdout.js';
 
@@ -15,6 +15,42 @@ const getWriteContents = (stdout: FakeStdout): string[] =>
 				!w.startsWith('\u001B[?25') &&
 				!w.startsWith('\u001B[?2026'),
 		);
+
+test.serial(
+	'useWindowSize catches resizes before its subscription is installed',
+	async t => {
+		const stdout = createStdout(100);
+		stdout.rows = 40;
+		let initialSize: string | undefined;
+
+		function Test() {
+			const {columns, rows} = useWindowSize();
+			initialSize ??= `${columns}x${rows}`;
+
+			useLayoutEffect(() => {
+				stdout.columns = 60;
+				stdout.rows = 20;
+				stdout.emit('resize');
+			}, []);
+
+			return (
+				<Text>
+					{columns}x{rows}
+				</Text>
+			);
+		}
+
+		const {unmount, waitUntilRenderFlush} = render(<Test />, {
+			stdout,
+			debug: true,
+		});
+		t.teardown(unmount);
+		await waitUntilRenderFlush();
+
+		t.is(initialSize, '100x40');
+		t.is(stdout.get(), '60x20');
+	},
+);
 
 test.serial(
 	'useWindowSize returns current terminal dimensions and updates on resize',

@@ -30,6 +30,7 @@ const useWindowSize = (): WindowSize => {
 		};
 
 		stdout.on('resize', onResize);
+		onResize();
 
 		return () => {
 			stdout.off('resize', onResize);
