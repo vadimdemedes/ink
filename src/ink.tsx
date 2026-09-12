@@ -481,6 +481,7 @@ export default class Ink {
 			this.log.clear();
 			this.lastOutput = '';
 			this.lastOutputToRender = '';
+			this.lastOutputHeight = 0;
 		}
 
 		this.calculateLayout();
@@ -619,20 +620,19 @@ export default class Ink {
 				this.lastOutputHeight = 0;
 			}
 
-			if (output === this.lastOutput && !hasStaticOutput) {
+			const terminalWidth = getWindowSize(this.options.stdout).columns;
+			const wrappedOutput = wrapAnsi(output, terminalWidth, {
+				trim: false,
+				hard: true,
+			});
+
+			if (wrappedOutput === this.lastOutputToRender && !hasStaticOutput) {
 				if (sync) {
 					this.options.stdout.write(esu);
 				}
 
 				return;
 			}
-
-			const terminalWidth = getWindowSize(this.options.stdout).columns;
-
-			const wrappedOutput = wrapAnsi(output, terminalWidth, {
-				trim: false,
-				hard: true,
-			});
 
 			// If we haven't erased yet, do it now.
 			if (hasStaticOutput) {
@@ -649,6 +649,9 @@ export default class Ink {
 			this.lastOutputToRender = wrappedOutput;
 			this.lastOutputHeight =
 				wrappedOutput === '' ? 0 : wrappedOutput.split('\n').length;
+			// Screen-reader output uses its own cursor placement.
+			this.log.setCursorPosition(undefined);
+			this.log.sync(wrappedOutput);
 
 			if (sync) {
 				this.options.stdout.write(esu);

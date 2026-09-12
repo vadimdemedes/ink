@@ -24,10 +24,12 @@ import {
 	render,
 	Box,
 	Text,
+	Static,
 	useApp,
 	useCursor,
 	useInput,
 	useStdin,
+	useStdout,
 } from '../src/index.js';
 import {type RenderMetrics, homeAndEraseDown} from '../src/ink.js';
 import {bsu, esu} from '../src/write-synchronized.js';
@@ -1050,6 +1052,106 @@ test.serial('clear output', async t => {
 	for (const letter of ['A', 'B', 'C']) {
 		t.false(secondFrame?.includes(letter));
 	}
+});
+
+test('clear screen-reader output', t => {
+	const stdout = createStdout(10);
+	const instance = render(<Text>{'First line\nSecond line'}</Text>, {
+		stdout,
+		interactive: true,
+		isScreenReaderEnabled: true,
+		patchConsole: false,
+	});
+	t.teardown(instance.unmount);
+
+	const visibleLines = () =>
+		reconstructTerminalLines(
+			stdout.getWrites().join('').replaceAll('\n', '\r\n'),
+			10,
+		).filter(Boolean);
+
+	t.deepEqual(visibleLines(), ['First line', 'Second', 'line']);
+	instance.clear();
+	t.deepEqual(visibleLines(), []);
+});
+
+test('preserve screen-reader output around stdout writes', t => {
+	const stdout = createStdout();
+	let write: (text: string) => void = () => {};
+	function Test() {
+		({write} = useStdout());
+		return <Text>{'First line\nSecond line'}</Text>;
+	}
+
+	const instance = render(<Test />, {
+		stdout,
+		interactive: true,
+		isScreenReaderEnabled: true,
+		patchConsole: false,
+	});
+	t.teardown(instance.unmount);
+
+	write('Log message\n');
+
+	t.deepEqual(
+		reconstructTerminalLines(
+			stdout.getWrites().join('').replaceAll('\n', '\r\n'),
+			10,
+		).filter(Boolean),
+		['Log message', 'First line', 'Second line'],
+	);
+});
+
+test('preserve static history when screen-reader output resizes', t => {
+	const stdout = createStdout(20);
+	const instance = render(
+		<>
+			<Static items={['History']}>
+				{item => <Text key={item}>{item}</Text>}
+			</Static>
+			<Text>{'First line\nSecond line'}</Text>
+		</>,
+		{
+			stdout,
+			interactive: true,
+			isScreenReaderEnabled: true,
+			patchConsole: false,
+		},
+	);
+	t.teardown(instance.unmount);
+
+	stdout.columns = 10;
+	stdout.emit('resize');
+
+	t.deepEqual(
+		reconstructTerminalLines(
+			stdout.getWrites().join('').replaceAll('\n', '\r\n'),
+			10,
+		).filter(Boolean),
+		['History', 'First line', 'Second', 'line'],
+	);
+});
+
+test('rewrap screen-reader output when the terminal gets wider', t => {
+	const stdout = createStdout(10);
+	const instance = render(<Text>Hello world</Text>, {
+		stdout,
+		interactive: true,
+		isScreenReaderEnabled: true,
+		patchConsole: false,
+	});
+	t.teardown(instance.unmount);
+
+	const visibleLines = () =>
+		reconstructTerminalLines(
+			stdout.getWrites().join('').replaceAll('\n', '\r\n'),
+			10,
+		).filter(Boolean);
+
+	t.deepEqual(visibleLines(), ['Hello', 'world']);
+	stdout.columns = 20;
+	stdout.emit('resize');
+	t.deepEqual(visibleLines(), ['Hello world']);
 });
 
 test.serial(

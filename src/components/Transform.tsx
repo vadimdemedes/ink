@@ -24,19 +24,23 @@ export default function Transform({
 	accessibilityLabel,
 }: Props) {
 	const {isScreenReaderEnabled} = useContext(accessibilityContext);
+	const childrenOrAccessibilityLabel = isScreenReaderEnabled
+		? (accessibilityLabel ?? children)
+		: children;
 
-	if (children === undefined || children === null) {
+	if (
+		childrenOrAccessibilityLabel === undefined ||
+		childrenOrAccessibilityLabel === null
+	) {
 		return null;
 	}
 
 	return (
 		<ink-text
 			style={{flexGrow: 0, flexShrink: 1, flexDirection: 'row'}}
-			internal_transform={transform}
+			internal_transform={isScreenReaderEnabled ? undefined : transform}
 		>
-			{isScreenReaderEnabled && accessibilityLabel
-				? accessibilityLabel
-				: children}
+			{childrenOrAccessibilityLabel}
 		</ink-text>
 	);
 }

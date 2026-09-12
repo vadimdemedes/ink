@@ -1,7 +1,56 @@
 import test from 'ava';
 import React from 'react';
-import {Box, Text} from '../src/index.js';
+import chalk from 'chalk';
+import {Box, Text, Transform} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
+
+test('omit nested Text styling from screen-reader output', t => {
+	const previousColorLevel = chalk.level;
+	chalk.level = 3;
+	t.teardown(() => {
+		chalk.level = previousColorLevel;
+	});
+
+	const element = (
+		<Text>
+			Status: <Text color="green">Ready</Text>
+		</Text>
+	);
+
+	t.is(renderToString(element, {isScreenReaderEnabled: true}), 'Status: Ready');
+	t.is(renderToString(element), `Status: ${chalk.green('Ready')}`);
+});
+
+test('preserve nested Transform accessibility labels for screen readers', t => {
+	const element = (
+		<Text>
+			Status:{' '}
+			<Transform
+				accessibilityLabel="Ready"
+				transform={text => '*'.repeat(text.length)}
+			>
+				<Text>ready</Text>
+			</Transform>
+		</Text>
+	);
+
+	t.is(renderToString(element, {isScreenReaderEnabled: true}), 'Status: Ready');
+	t.is(renderToString(element), 'Status: *****');
+});
+
+test('honor empty Transform accessibility labels for screen readers', t => {
+	const element = (
+		<Text>
+			<Transform accessibilityLabel="" transform={text => text.toUpperCase()}>
+				<Text>decorative</Text>
+			</Transform>
+			Ready
+		</Text>
+	);
+
+	t.is(renderToString(element, {isScreenReaderEnabled: true}), 'Ready');
+	t.is(renderToString(element), 'DECORATIVEReady');
+});
 
 test('render text for screen readers', t => {
 	const output = renderToString(
@@ -89,6 +138,21 @@ test('render aria-label only Box for screen readers', t => {
 	});
 
 	t.is(output, 'Screen-reader only');
+});
+
+test('render accessibilityLabel only Transform for screen readers', t => {
+	const element = (
+		<Transform
+			accessibilityLabel="Screen-reader only"
+			transform={text => text.toUpperCase()}
+		/>
+	);
+
+	t.is(
+		renderToString(element, {isScreenReaderEnabled: true}),
+		'Screen-reader only',
+	);
+	t.is(renderToString(element), '');
 });
 
 test('omit ANSI styling in screen-reader output', t => {

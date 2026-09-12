@@ -142,7 +142,7 @@ export default function Text({
 					flexDirection: 'row',
 					textWrap: wrap,
 				}}
-				internal_transform={transform}
+				internal_transform={isScreenReaderEnabled ? undefined : transform}
 			>
 				{childrenOrAriaLabel}
 			</ink-text>
