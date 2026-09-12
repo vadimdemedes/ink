@@ -56,12 +56,12 @@ test.serial(
 );
 
 test.serial(
-	'useInput - handle Ctrl+C via kitty codepoint-3 form when `exitOnCtrlC` is `false`',
+	'useInput - handle Ctrl+C via kitty protocol when `exitOnCtrlC` is `false`',
 	async t => {
 		const run = async (tt: ExecutionContext) => {
 			const ps = term('use-input-ctrl-c');
-			// Ctrl+C via kitty codepoint 3 form (modifier 5 = ctrl(4) + 1)
-			ps.write('\u001B[3;5u');
+			// Ctrl+C uses the unshifted letter codepoint (modifier 5 = ctrl(4) + 1)
+			ps.write('\u001B[99;5u');
 			await ps.waitForExit();
 			tt.true(ps.output.includes('exited'));
 		};

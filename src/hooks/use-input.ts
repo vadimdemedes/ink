@@ -205,21 +205,13 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 		if (keypress.isKittyProtocol) {
 			// Use text-as-codepoints field for printable keys (needed when
 			// reportAllKeysAsEscapeCodes flag is enabled), suppress non-printable
-			if (keypress.isPrintable) {
-				input = keypress.text ?? keypress.name;
-			} else if (keypress.ctrl && keypress.name.length === 1) {
-				// Ctrl+letter via codepoint 1-26 form: not printable text, but
-				// the letter name must flow through so handlers (e.g. exitOnCtrlC
-				// checking `input === 'c' && key.ctrl`) still work.
-				input = keypress.name;
-			} else {
-				input = '';
-			}
+			// Functional and modifier keys do not produce text input.
+			input = keypress.isPrintable ? (keypress.text ?? keypress.name) : '';
 		} else if (keypress.ctrl) {
 			// Keypress.name is guaranteed non-undefined by parseKeypress,
 			// but guard defensively since a TypeError here would crash the
 			// entire Ink app (see https://github.com/vadimdemedes/ink/issues/901).
-			input = keypress.name ?? '';
+			input = keypress.name === 'space' ? ' ' : (keypress.name ?? '');
 		} else {
 			input = keypress.sequence;
 		}
@@ -237,12 +229,21 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 			input = input.slice(1);
 		}
 
-		if (input.length === 1 && /[A-Z]/.test(input)) {
+		if (
+			!keypress.isKittyProtocol &&
+			input.length === 1 &&
+			/[A-Z]/.test(input)
+		) {
 			key.shift = true;
 		}
 
 		// If app is supposed to exit on Ctrl+C, skip input listeners.
-		if (input === 'c' && key.ctrl && internal_exitOnCtrlC) {
+		if (
+			keypress.name === 'c' &&
+			key.ctrl &&
+			keypress.eventType !== 'release' &&
+			internal_exitOnCtrlC
+		) {
 			return;
 		}
 

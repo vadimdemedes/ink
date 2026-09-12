@@ -37,6 +37,38 @@ test('parses CSI sequences with parameters', t => {
 	]);
 });
 
+test('keeps rxvt shifted editing keys separate from following text', t => {
+	for (const key of [2, 3, 5, 6, 7, 8]) {
+		const sequence = `\u001B[${key}$`;
+
+		t.deepEqual(parseChunks([`${sequence}hello`]), [sequence, 'hello']);
+	}
+});
+
+test('emits rxvt Shift+Delete as soon as its final byte arrives', t => {
+	const parser = createInputParser();
+
+	t.deepEqual(parser.push('\u001B[3'), []);
+	t.deepEqual(parser.push('$'), ['\u001B[3$']);
+	t.false(parser.hasPendingEscape());
+	t.deepEqual(parser.push('hello'), ['hello']);
+});
+
+test('parses consecutive rxvt shifted keys including meta', t => {
+	t.deepEqual(parseChunks(['\u001B[3$\u001B\u001B[5$\u001B[A']), [
+		'\u001B[3$',
+		'\u001B\u001B[5$',
+		'\u001B[A',
+	]);
+});
+
+test('preserves CSI intermediate bytes outside rxvt shifted keys', t => {
+	t.deepEqual(parseChunks(['\u001B[1;', '2$', 'yhello']), [
+		'\u001B[1;2$y',
+		'hello',
+	]);
+});
+
 test('parses kitty protocol sequence as one key event', t => {
 	t.deepEqual(parseChunks(['\u001B[97;5u']), ['\u001B[97;5u']);
 });
@@ -48,6 +80,22 @@ test('parses SS3 sequences as one key event', t => {
 		'\u001BOC',
 		'\u001BOD',
 	]);
+});
+
+test('preserves modified SS3 keys and following text', t => {
+	for (const sequence of ['\u001BO2P', '\u001BO1;5A', '\u001B\u001BO5D']) {
+		t.deepEqual(parseChunks([`${sequence}hello`]), [sequence, 'hello']);
+	}
+});
+
+test('holds modified SS3 sequences until their final byte arrives', t => {
+	const parser = createInputParser();
+
+	t.deepEqual(parser.push('\u001BO1'), []);
+	t.true(parser.hasPendingEscape());
+	t.deepEqual(parser.push(';5'), []);
+	t.deepEqual(parser.push('A'), ['\u001BO1;5A']);
+	t.false(parser.hasPendingEscape());
 });
 
 test('does not consume a following escape as SS3 final byte', t => {

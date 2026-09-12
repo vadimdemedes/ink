@@ -6,6 +6,62 @@ function UserInput({test}: {readonly test: string | undefined}) {
 	const {exit} = useApp();
 
 	useInput((input, key) => {
+		if (
+			test === 'specialModifiers' &&
+			input === '' &&
+			key.upArrow &&
+			key.super &&
+			!key.meta &&
+			key.eventType === 'press'
+		) {
+			exit();
+			return;
+		}
+
+		if (
+			test === 'keypadNavigation' &&
+			input === '' &&
+			key.downArrow &&
+			key.ctrl &&
+			key.eventType === 'repeat'
+		) {
+			exit();
+			return;
+		}
+
+		if (
+			test === 'alternateKeys' &&
+			input === 'A' &&
+			key.ctrl &&
+			key.shift &&
+			key.eventType === 'repeat'
+		) {
+			exit();
+			return;
+		}
+
+		if (test === 'keypadText' && input === '0' && key.numLock) {
+			exit();
+			return;
+		}
+
+		if (test === 'keypadEnter' && input === '\r' && key.return) {
+			exit();
+			return;
+		}
+
+		if (
+			test === 'associatedText' &&
+			input === 'å' &&
+			key.eventType === 'press' &&
+			!key.ctrl &&
+			!key.meta &&
+			!key.shift
+		) {
+			exit();
+			return;
+		}
+
 		// Test super modifier (Cmd on Mac, Win on Windows)
 		if (test === 'super' && key.super && input === 's') {
 			exit();
@@ -20,6 +76,17 @@ function UserInput({test}: {readonly test: string | undefined}) {
 
 		// Test capsLock
 		if (test === 'capsLock' && key.capsLock) {
+			exit();
+			return;
+		}
+
+		// Test uppercase text from Caps Lock without Shift.
+		if (
+			test === 'capsLockText' &&
+			input === 'A' &&
+			key.capsLock &&
+			!key.shift
+		) {
 			exit();
 			return;
 		}
@@ -76,7 +143,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
-		// Test ctrl+letter via codepoint 1-26 form still provides input
+		// Test Ctrl+letter provides the unshifted key as input.
 		if (test === 'ctrlLetter' && input === 'a' && key.ctrl) {
 			exit();
 			return;

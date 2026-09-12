@@ -1,6 +1,20 @@
 import test from 'ava';
 import term from './helpers/term.js';
 
+test.serial('useInput - handle legacy Ctrl+Space', async t => {
+	const ps = term('use-input', ['ctrlSpace']);
+	ps.write('\u0000');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle Ctrl+punctuation shortcut', async t => {
+	const ps = term('use-input', ['ctrlPunctuation']);
+	ps.write('\u001F');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial(
 	'useInput - discrete priority keeps states in sync with useTransition during rapid input',
 	async t => {
@@ -111,6 +125,13 @@ test.serial('useInput - handle meta', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - handle ctrl + meta + letter', async t => {
+	const ps = term('use-input', ['ctrlMeta']);
+	ps.write('\u001B\u0002');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - handle meta + backspace (0x7F)', async t => {
 	const ps = term('use-input', ['metaBackspace']);
 	ps.write('\u001B\u007F');
@@ -135,6 +156,13 @@ test.serial('useInput - handle meta + O with pending flush', async t => {
 test.serial('useInput - handle tab', async t => {
 	const ps = term('use-input', ['tab']);
 	ps.write('\t');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle meta + tab', async t => {
+	const ps = term('use-input', ['metaTab']);
+	ps.write('\u001B\t');
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });

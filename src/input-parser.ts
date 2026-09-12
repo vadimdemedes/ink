@@ -42,20 +42,26 @@ const parseCsiSequence = (
 			return 'pending';
 		}
 
-		if (isCsiParameterByte(byte) || isCsiIntermediateByte(byte)) {
-			continue;
-		}
-
 		// Preserve legacy terminal function-key sequences like ESC[[A and ESC[[5~.
 		if (byte === 0x5b && index === csiPayloadStart) {
 			continue;
 		}
 
-		if (isCsiFinalByte(byte)) {
+		// Shifted editing keys in rxvt end in $, which is normally a CSI intermediate byte.
+		const isRxvtShiftKey =
+			byte === 0x24 &&
+			index === csiPayloadStart + 1 &&
+			'235678'.includes(input[csiPayloadStart]!);
+
+		if (isCsiFinalByte(byte) || isRxvtShiftKey) {
 			return {
 				sequence: input.slice(startIndex, index + 1),
 				nextIndex: index + 1,
 			};
+		}
+
+		if (isCsiParameterByte(byte) || isCsiIntermediateByte(byte)) {
+			continue;
 		}
 
 		return undefined;
@@ -69,20 +75,23 @@ const parseSs3Sequence = (
 	startIndex: number,
 	prefixLength: number,
 ): ParsedSequence => {
-	const nextIndex = startIndex + prefixLength + 2;
-	if (nextIndex > input.length) {
-		return 'pending';
+	let index = startIndex + prefixLength + 1;
+	for (; index < input.length; index++) {
+		const byte = input.codePointAt(index)!;
+		if (isCsiFinalByte(byte)) {
+			return {
+				sequence: input.slice(startIndex, index + 1),
+				nextIndex: index + 1,
+			};
+		}
+
+		// Modified SS3 keys can include numeric parameters separated by semicolons.
+		if ((byte < 0x30 || byte > 0x39) && byte !== 0x3b) {
+			return undefined;
+		}
 	}
 
-	const finalByte = input.codePointAt(nextIndex - 1);
-	if (finalByte === undefined || !isCsiFinalByte(finalByte)) {
-		return undefined;
-	}
-
-	return {
-		sequence: input.slice(startIndex, nextIndex),
-		nextIndex,
-	};
+	return 'pending';
 };
 
 const parseControlSequence = (

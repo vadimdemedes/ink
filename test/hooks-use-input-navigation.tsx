@@ -74,6 +74,13 @@ test.serial('useInput - handle ctrl + up arrow', async t => {
 	t.true(ps.output.includes('exited'));
 });
 
+test.serial('useInput - handle SS3 ctrl + up arrow', async t => {
+	const ps = term('use-input', ['upArrowCtrl']);
+	ps.write('\u001BO1;5A');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
 test.serial('useInput - handle ctrl + down arrow', async t => {
 	const ps = term('use-input', ['downArrowCtrl']);
 	ps.write('\u001B[1;5B');

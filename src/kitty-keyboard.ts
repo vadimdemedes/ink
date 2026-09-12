@@ -19,6 +19,12 @@ export function resolveFlags(flags: KittyFlagName[]): number {
 		result |= kittyFlags[flag];
 	}
 
+	if (flags.includes('reportAssociatedText')) {
+		// Associated text is defined only when all-key reporting is enabled.
+		// eslint-disable-next-line no-bitwise
+		result |= kittyFlags.reportAllKeysAsEscapeCodes;
+	}
+
 	return result;
 }
 
@@ -39,7 +45,7 @@ export const kittyModifiers = {
 // Options for configuring kitty keyboard protocol.
 export type KittyKeyboardOptions = {
 	// Mode for kitty keyboard protocol support.
-	// - 'auto': Attempt to detect terminal support (default)
+	// - 'auto': Query interactive TTYs for support through the normal input handler, with a 200ms timeout (default). Suspending the terminal cancels pending detection.
 	// - 'enabled': Force enable the protocol
 	// - 'disabled': Never enable the protocol
 	mode?: 'auto' | 'enabled' | 'disabled';
@@ -50,8 +56,10 @@ export type KittyKeyboardOptions = {
 	// Available flags:
 	// - 'disambiguateEscapeCodes' - Disambiguate escape codes (default)
 	// - 'reportEventTypes' - Report key press, repeat, and release events
-	// - 'reportAlternateKeys' - Report alternate key encodings
+	// - 'reportAlternateKeys' - Report alternate key encodings. Ink accepts these sequences but does not expose alternate keys. Without associated text, `useInput` uses the primary key as its input fallback.
 	// - 'reportAllKeysAsEscapeCodes' - Report all keys as escape codes
-	// - 'reportAssociatedText' - Report associated text with key events
+	// - 'reportAssociatedText' - Report associated text with key events. Automatically enables `reportAllKeysAsEscapeCodes`.
+	//
+	// Enable reportAssociatedText when using reportAllKeysAsEscapeCodes to receive composed and shifted text in input. Without associated text, input falls back to the primary unshifted key. Alternate shifted and base-layout keys are not exposed or used for shortcut matching.
 	flags?: KittyFlagName[];
 };

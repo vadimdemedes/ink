@@ -29,92 +29,11 @@ import {
 import {isTty, type OutputStream} from './stream.js';
 
 const noop = () => {};
-const textEncoder = new TextEncoder();
 
 const yieldImmediate = async () =>
 	new Promise<void>(resolve => {
 		setImmediate(resolve);
 	});
-
-const kittyQueryEscapeByte = 0x1b;
-const kittyQueryOpenBracketByte = 0x5b;
-const kittyQueryQuestionMarkByte = 0x3f;
-const kittyQueryLetterByte = 0x75;
-const zeroByte = 0x30;
-const nineByte = 0x39;
-
-type KittyQueryResponseMatch =
-	{state: 'complete'; endIndex: number} | {state: 'partial'};
-
-const isDigitByte = (byte: number): boolean =>
-	byte >= zeroByte && byte <= nineByte;
-
-const matchKittyQueryResponse = (
-	buffer: number[],
-	startIndex: number,
-): KittyQueryResponseMatch | undefined => {
-	if (
-		buffer[startIndex] !== kittyQueryEscapeByte ||
-		buffer[startIndex + 1] !== kittyQueryOpenBracketByte ||
-		buffer[startIndex + 2] !== kittyQueryQuestionMarkByte
-	) {
-		return undefined;
-	}
-
-	let index = startIndex + 3;
-	const digitsStartIndex = index;
-	while (index < buffer.length && isDigitByte(buffer[index]!)) {
-		index++;
-	}
-
-	if (index === digitsStartIndex) {
-		return undefined;
-	}
-
-	if (index === buffer.length) {
-		return {state: 'partial'};
-	}
-
-	if (buffer[index] === kittyQueryLetterByte) {
-		return {state: 'complete', endIndex: index};
-	}
-
-	return undefined;
-};
-
-const hasCompleteKittyQueryResponse = (buffer: number[]): boolean => {
-	for (let index = 0; index < buffer.length; index++) {
-		const match = matchKittyQueryResponse(buffer, index);
-		if (match?.state === 'complete') {
-			return true;
-		}
-	}
-
-	return false;
-};
-
-const stripKittyQueryResponsesAndTrailingPartial = (
-	buffer: number[],
-): number[] => {
-	const keptBytes: number[] = [];
-	let index = 0;
-	while (index < buffer.length) {
-		const match = matchKittyQueryResponse(buffer, index);
-		if (match?.state === 'complete') {
-			index = match.endIndex + 1;
-			continue;
-		}
-
-		if (match?.state === 'partial') {
-			break;
-		}
-
-		keptBytes.push(buffer[index]!);
-		index++;
-	}
-
-	return keptBytes;
-};
 
 // Windows consoles scroll the buffer when the bottom-right cell is written,
 // unlike xterm-like terminals which defer the wrap. That extra scroll
@@ -324,7 +243,7 @@ export default class Ink {
 	private hasPendingThrottledRender = false;
 	private kittyProtocolEnabled = false;
 	private kittyFlags: KittyFlagName[] | undefined;
-	private cancelKittyDetection?: () => void;
+	private finishKittyDetection?: (supported: boolean) => void;
 	private nextRenderCommit?: {promise: Promise<void>; resolve: () => void};
 	// Set while suspendTerminal() has handed the terminal to a child process.
 	private isSuspended = false;
@@ -690,6 +609,9 @@ export default class Ink {
 					onWaitUntilRenderFlush={this.waitUntilRenderFlush}
 					onSuspendTerminal={this.suspendTerminal}
 					onRegisterInputControl={this.registerInputControl}
+					onKittyQueryResponse={() => {
+						this.finishKittyDetection?.(true);
+					}}
 				>
 					{node}
 				</App>
@@ -834,13 +756,12 @@ export default class Ink {
 			}
 
 			// Cancel any in-progress auto-detection before checking protocol state
-			if (this.cancelKittyDetection) {
-				this.cancelKittyDetection();
-			}
+			this.finishKittyDetection?.(false);
 
 			if (canWriteToStdout) {
 				if (this.kittyProtocolEnabled) {
 					this.writeBestEffort(this.options.stdout, '\u001B[<u');
+					this.kittyProtocolEnabled = false;
 				}
 
 				// Alternate-screen content is disposable by design. We intentionally
@@ -1224,47 +1145,21 @@ export default class Ink {
 	}
 
 	private confirmKittySupport(flags: KittyFlagName[]): void {
-		const {stdin, stdout} = this.options;
-
-		let responseBuffer: number[] = [];
-
-		const cleanup = (): void => {
-			this.cancelKittyDetection = undefined;
+		// Consume responses through App's normal input pipeline so user input is never read twice.
+		const finish = (supported: boolean): void => {
+			this.finishKittyDetection = undefined;
 			clearTimeout(timer);
-			stdin.removeListener('data', onData);
-
-			// Re-emit any buffered data that wasn't the protocol response,
-			// so it isn't lost from Ink's normal input pipeline.
-			// Clear responseBuffer afterwards to make cleanup idempotent.
-			const remaining =
-				stripKittyQueryResponsesAndTrailingPartial(responseBuffer);
-			responseBuffer = [];
-			if (remaining.length > 0) {
-				stdin.unshift(Uint8Array.from(remaining));
+			if (supported && !this.isUnmounted) {
+				this.enableKittyProtocol(flags);
 			}
 		};
 
-		const onData = (data: Uint8Array | string): void => {
-			const chunk = typeof data === 'string' ? textEncoder.encode(data) : data;
-			for (const byte of chunk) {
-				responseBuffer.push(byte);
-			}
-
-			if (hasCompleteKittyQueryResponse(responseBuffer)) {
-				cleanup();
-				if (!this.isUnmounted) {
-					this.enableKittyProtocol(flags);
-				}
-			}
-		};
-
-		// Attach listener before writing the query so that synchronous
-		// or immediate responses are not missed.
-		stdin.on('data', onData);
-		const timer = setTimeout(cleanup, 200);
-		this.cancelKittyDetection = cleanup;
-
-		stdout.write('\u001B[?u');
+		// Register before writing the query so immediate responses are not missed.
+		const timer = setTimeout(() => {
+			finish(false);
+		}, 200);
+		this.finishKittyDetection = finish;
+		this.options.stdout.write('\u001B[?u');
 	}
 
 	private enableKittyProtocol(flags: KittyFlagName[]): void {
@@ -1282,6 +1177,7 @@ export default class Ink {
 			);
 		}
 
+		this.finishKittyDetection?.(false);
 		this.isSuspended = true;
 
 		if (!this.interactive || this.isUnmounted || this.isUnmounting) {
@@ -1304,6 +1200,7 @@ export default class Ink {
 
 				if (this.kittyProtocolEnabled) {
 					this.writeBestEffort(this.options.stdout, '\u001B[<u');
+					this.kittyProtocolEnabled = false;
 				}
 
 				if (this.alternateScreen) {
@@ -1356,11 +1253,12 @@ export default class Ink {
 				);
 			}
 
-			if (this.kittyProtocolEnabled && this.kittyFlags) {
+			if (this.kittyFlags) {
 				this.writeBestEffort(
 					this.options.stdout,
 					`\u001B[>${resolveFlags(this.kittyFlags)}u`,
 				);
+				this.kittyProtocolEnabled = true;
 			}
 		}
 

@@ -3,7 +3,7 @@ import {kittyModifiers} from './kitty-keyboard.js';
 
 const textDecoder = new TextDecoder();
 
-const metaKeyCodeRe = /^(?:\x1b)([a-zA-Z0-9])$/;
+const metaKeyCodeRe = /^(?:\x1b)([^\p{C}\[])$/u;
 
 const fnKeyRe =
 	/^(?:\x1b+)(O|N|\[|\[\[)(?:(\d+)(?:;(\d+))?([~^$])|(?:1;)?(\d+)?([a-zA-Z]))/;
@@ -155,13 +155,13 @@ type ParsedKey = {
 	isPrintable?: boolean;
 };
 
-// Kitty keyboard protocol: CSI codepoint ; modifiers [: eventType] [; text-as-codepoints] u
-const kittyKeyRe = /^\x1b\[(\d+)(?:;(\d+)(?::(\d+))?(?:;([\d:]+))?)?u$/;
+// Kitty keyboard protocol: CSI codepoint [: shifted-key [: base-layout-key]] ; modifiers [: eventType] [; text-as-codepoints] u
+const kittyKeyRe = /^\x1b\[(\d+)(?::\d*(?::\d+)?)?(?:;(\d*)(?::(\d+))?(?:;([\d:]+))?)?u$/;
 
-// Kitty-enhanced special keys: CSI number ; modifiers : eventType {letter|~}
-// These are legacy CSI sequences enhanced with the :eventType field.
+// Kitty-enhanced special keys: CSI number [; modifiers [: eventType]] {letter|~}
+// These legacy CSI sequences use Kitty modifiers even without the :eventType field.
 // Examples: \x1b[1;1:1A (up arrow press), \x1b[3;1:3~ (delete release)
-const kittySpecialKeyRe = /^\x1b\[(\d+);(\d+):(\d+)([A-Za-z~])$/;
+const kittySpecialKeyRe = /^\x1b\[(\d+)(?:;(\d+)(?::(\d+))?)?([A-Za-z~])$/;
 
 // Letter-terminated special key names (CSI 1 ; mods letter)
 const kittySpecialLetterKeys: Record<string, string> = {
@@ -174,7 +174,6 @@ const kittySpecialLetterKeys: Record<string, string> = {
 	H: 'home',
 	P: 'f1',
 	Q: 'f2',
-	R: 'f3',
 	S: 'f4',
 };
 
@@ -198,6 +197,7 @@ const kittySpecialNumberKeys: Record<number, string> = {
 	21: 'f10',
 	23: 'f11',
 	24: 'f12',
+	57427: 'clear',
 };
 
 // Map of special codepoints to key names in kitty protocol
@@ -207,7 +207,6 @@ const kittyCodepointNames: Record<number, string> = {
 	// in parseKittyKeypress so they can be marked as printable.
 	9: 'tab',
 	127: 'backspace',
-	8: 'backspace',
 	57358: 'capslock',
 	57359: 'scrolllock',
 	57360: 'numlock',
@@ -252,20 +251,18 @@ const kittyCodepointNames: Record<number, string> = {
 	57411: 'kpmultiply',
 	57412: 'kpsubtract',
 	57413: 'kpadd',
-	57414: 'kpenter',
 	57415: 'kpequal',
 	57416: 'kpseparator',
-	57417: 'kpleft',
-	57418: 'kpright',
-	57419: 'kpup',
-	57420: 'kpdown',
-	57421: 'kppageup',
-	57422: 'kppagedown',
-	57423: 'kphome',
-	57424: 'kpend',
-	57425: 'kpinsert',
-	57426: 'kpdelete',
-	57427: 'kpbegin',
+	57417: 'left',
+	57418: 'right',
+	57419: 'up',
+	57420: 'down',
+	57421: 'pageup',
+	57422: 'pagedown',
+	57423: 'home',
+	57424: 'end',
+	57425: 'insert',
+	57426: 'delete',
 	57428: 'mediaplay',
 	57429: 'mediapause',
 	57430: 'mediaplaypause',
@@ -331,7 +328,12 @@ const parseKittyKeypress = (s: string): ParsedKey | null => {
 	const match = kittyKeyRe.exec(s);
 	if (!match) return null;
 
-	const codepoint = parseInt(match[1]!, 10);
+	let codepoint = parseInt(match[1]!, 10);
+	// Normalize keypad Enter to the same key and text as Return.
+	if (codepoint === 57414) {
+		codepoint = 13;
+	}
+
 	const modifiers = match[2] ? Math.max(0, parseInt(match[2], 10) - 1) : 0;
 	const eventType = match[3] ? parseInt(match[3], 10) : 1;
 	const textField = match[4];
@@ -362,9 +364,13 @@ const parseKittyKeypress = (s: string): ParsedKey | null => {
 	} else if (kittyCodepointNames[codepoint]) {
 		name = kittyCodepointNames[codepoint]!;
 		isPrintable = false;
-	} else if (codepoint >= 1 && codepoint <= 26) {
-		// Ctrl+letter comes as codepoint 1-26
-		name = String.fromCodePoint(codepoint + 96); // 'a' is 97
+	} else if (
+		codepoint < 32 ||
+		(codepoint >= 127 && codepoint <= 159) ||
+		(codepoint >= 57344 && codepoint <= 63743)
+	) {
+		// Control codes and reserved functional keys do not identify printable characters. Ctrl+letters use their Unicode codepoints, such as 97 for 'a'.
+		name = '';
 		isPrintable = false;
 	} else {
 		name = safeFromCodePoint(codepoint).toLowerCase();
@@ -385,28 +391,35 @@ const parseKittyKeypress = (s: string): ParsedKey | null => {
 		sequence: s,
 		raw: s,
 		isKittyProtocol: true,
-		isPrintable,
+		isPrintable: isPrintable || text !== undefined,
 		text,
 	};
 };
 
 // Parse kitty-enhanced special key sequences (arrow keys, function keys, etc.)
-// These use the legacy CSI format but with an added :eventType field.
+// These use the legacy CSI format with optional modifiers and :eventType fields.
 const parseKittySpecialKey = (s: string): ParsedKey | null => {
 	const match = kittySpecialKeyRe.exec(s);
-	if (!match) return null;
+	if (!match) {
+		return null;
+	}
 
 	const number = parseInt(match[1]!, 10);
-	const modifiers = Math.max(0, parseInt(match[2]!, 10) - 1);
-	const eventType = parseInt(match[3]!, 10);
+	const modifiers = match[2] ? Math.max(0, parseInt(match[2], 10) - 1) : 0;
+	const eventType = match[3] ? parseInt(match[3], 10) : 1;
 	const terminator = match[4]!;
+	if (terminator !== '~' && number !== 1) {
+		return null;
+	}
 
 	const name =
 		terminator === '~'
 			? kittySpecialNumberKeys[number]
 			: kittySpecialLetterKeys[terminator];
 
-	if (!name) return null;
+	if (!name) {
+		return null;
+	}
 
 	return {
 		name,
@@ -477,9 +490,10 @@ const parseKeypress = (s: Uint8Array | string = ''): ParsedKey => {
 	} else if (s === '\n') {
 		// enter, should have been called linefeed
 		key.name = 'enter';
-	} else if (s === '\t') {
+	} else if (s === '\t' || s === '\x1b\t') {
 		// tab
 		key.name = 'tab';
+		key.meta = s.length === 2;
 	} else if (s === '\b' || s === '\x1b\b') {
 		// backspace or ctrl+h
 		key.name = 'backspace';
@@ -492,13 +506,16 @@ const parseKeypress = (s: Uint8Array | string = ''): ParsedKey => {
 		// escape key
 		key.name = 'escape';
 		key.meta = s.length === 2;
-	} else if (s === ' ' || s === '\x1b ') {
+	} else if (/^\x1b?[ \x00]$/.test(s)) {
 		key.name = 'space';
+		key.ctrl = s.endsWith('\x00');
 		key.meta = s.length === 2;
-	} else if (s.length === 1 && s <= '\x1a') {
-		// ctrl+letter
-		key.name = String.fromCharCode(s.charCodeAt(0) + 'a'.charCodeAt(0) - 1);
+	} else if (/^\x1b?[\x00-\x1f]$/.test(s)) {
+		// ctrl+letter or ctrl+punctuation
+		const codepoint = s.charCodeAt(s.length - 1);
+		key.name = String.fromCharCode(codepoint + (codepoint <= 26 ? 96 : 64));
 		key.ctrl = true;
+		key.meta = s.length === 2;
 	} else if (s.length === 1 && s >= '0' && s <= '9') {
 		// number
 		key.name = 'number';

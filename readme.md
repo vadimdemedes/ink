@@ -2842,7 +2842,7 @@ render(<MyApp />, {
 Type: `'auto' | 'enabled' | 'disabled'`\
 Default: `'auto'`
 
-- `'auto'`: Detect terminal support using a heuristic precheck (known terminals like kitty, WezTerm, Ghostty) followed by a protocol query confirmation (`CSI ? u`). The protocol is only enabled if the terminal responds to the query within a short timeout.
+- `'auto'`: Query interactive TTY terminals for support (`CSI ? u`). The protocol is enabled when Ink's input handler receives a response within 200 milliseconds. Pending detection is canceled when the terminal is suspended.
 - `'enabled'`: Force enable the protocol. Both stdin and stdout must be TTYs.
 - `'disabled'`: Never enable the protocol.
 
@@ -2857,16 +2857,17 @@ Available flags:
 
 - `'disambiguateEscapeCodes'` - Disambiguate escape codes
 - `'reportEventTypes'` - Report key press, repeat, and release events
-- `'reportAlternateKeys'` - Report alternate key encodings
+- `'reportAlternateKeys'` - Report alternate key encodings. Ink accepts these sequences but does not expose alternate keys. Without associated text, `useInput` uses the primary key as its input fallback.
 - `'reportAllKeysAsEscapeCodes'` - Report all keys as escape codes
-- `'reportAssociatedText'` - Report associated text with key events
+- `'reportAssociatedText'` - Report associated text with key events. Automatically enables `reportAllKeysAsEscapeCodes`.
 
 **Behavior notes**
 
 When the kitty keyboard protocol is enabled, input handling changes in several ways:
 
-- **Non-printable keys produce empty input.** Keys like function keys (F1-F35), modifier-only keys (Shift, Control, Super), media keys, Caps Lock, Print Screen, and similar keys will not produce any text in the `input` parameter of `useInput`. They can still be detected via the `key` object properties.
-- **Ctrl+letter shortcuts work as expected.** When the terminal sends `Ctrl+letter` as codepoint 1-26 (the kitty CSI-u alternate form), `input` is set to the letter name (e.g. `'c'` for `Ctrl+C`) and `key.ctrl` is `true`. This ensures `exitOnCtrlC` and custom `Ctrl+letter` handlers continue to work regardless of which codepoint form the terminal uses.
+- **Non-printable keys produce empty input.** Navigation and editing keys retain their supported `key` properties, such as `key.upArrow` and `key.delete`. Other functional keys, including F1-F35, modifier-only keys, media keys, Caps Lock, and Print Screen, are not individually exposed through the `key` object.
+- **Ctrl+letter shortcuts work as expected.** The terminal sends the unshifted letter codepoint with the Ctrl modifier. For example, `Ctrl+C` produces `input === 'c'` and `key.ctrl === true`.
+- **Text and key identity differ.** Enable `reportAssociatedText` when using `reportAllKeysAsEscapeCodes` to receive composed and shifted text in `input`. Without associated text, `input` falls back to the primary unshifted key. Alternate shifted and base-layout keys are not exposed or used for shortcut matching.
 - **Key disambiguation.** The protocol allows the terminal to distinguish between keys that normally produce the same escape sequence. For example:
   - `Ctrl+I` vs `Tab` - without the protocol, both produce the same byte (`\x09`). With the protocol, they are reported as distinct keys.
   - `Shift+Enter` vs `Enter` - the shift modifier is correctly reported.

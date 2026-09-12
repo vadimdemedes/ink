@@ -1,6 +1,54 @@
 import test from 'ava';
 import term from './helpers/term.js';
 
+test.serial(
+	'useInput - handle kitty special key modifiers without event type',
+	async t => {
+		const ps = term('use-input-kitty', ['specialModifiers']);
+		ps.write('\u001B[1;9A');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
+test.serial('useInput - handle kitty keypad navigation', async t => {
+	const ps = term('use-input-kitty', ['keypadNavigation']);
+	ps.write('\u001B[57420;5:2u');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle kitty alternate key codes', async t => {
+	const ps = term('use-input-kitty', ['alternateKeys']);
+	ps.write('\u001B[97:65:113;6:2;65u');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle kitty keypad associated text', async t => {
+	const ps = term('use-input-kitty', ['keypadText']);
+	ps.write('\u001B[57399;129;48u');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - handle kitty keypad Enter', async t => {
+	const ps = term('use-input-kitty', ['keypadEnter']);
+	ps.write('\u001B[57414u');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial(
+	'useInput - kitty associated text with omitted modifiers',
+	async t => {
+		const ps = term('use-input-kitty', ['associatedText']);
+		ps.write('\u001B[0;;229u');
+		await ps.waitForExit();
+		t.true(ps.output.includes('exited'));
+	},
+);
+
 test.serial('useInput - handle kitty protocol super modifier', async t => {
 	const ps = term('use-input-kitty', ['super']);
 	// 's' with super modifier (modifier 9 = super(8) + 1)
@@ -29,6 +77,14 @@ test.serial('useInput - handle kitty protocol numLock', async t => {
 	const ps = term('use-input-kitty', ['numLock']);
 	// 'a' with numLock (modifier 129 = numLock(128) + 1)
 	ps.write('\u001B[97;129u');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});
+
+test.serial('useInput - kitty capsLock text does not imply shift', async t => {
+	const ps = term('use-input-kitty', ['capsLockText']);
+	// Caps Lock without Shift, with uppercase A as associated text.
+	ps.write('\u001B[97;65;65u');
 	await ps.waitForExit();
 	t.true(ps.output.includes('exited'));
 });
@@ -145,13 +201,10 @@ test.serial(
 	},
 );
 
-test.serial(
-	'useInput - kitty protocol ctrl+letter via codepoint 1-26 produces input',
-	async t => {
-		const ps = term('use-input-kitty', ['ctrlLetter']);
-		// Ctrl+a via codepoint 1 form (modifier 5 = ctrl(4) + 1)
-		ps.write('\u001B[1;5u');
-		await ps.waitForExit();
-		t.true(ps.output.includes('exited'));
-	},
-);
+test.serial('useInput - kitty protocol Ctrl+letter produces input', async t => {
+	const ps = term('use-input-kitty', ['ctrlLetter']);
+	// Ctrl+a uses the unshifted key code (modifier 5 = ctrl(4) + 1).
+	ps.write('\u001B[97;5u');
+	await ps.waitForExit();
+	t.true(ps.output.includes('exited'));
+});

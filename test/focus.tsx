@@ -112,6 +112,51 @@ function Item({label, autoFocus, disabled = false}: ItemProps) {
 	);
 }
 
+for (const [name, input, expected] of [
+	['Tab', '\u001B[9u', ['First', 'Second ✔', 'Third']],
+	['Shift+Tab', '\u001B[9;2u', ['First', 'Second', 'Third ✔']],
+	['Tab repeat', '\u001B[9;1:2u', ['First', 'Second ✔', 'Third']],
+	['Tab release', '\u001B[9;1:3u', ['First ✔', 'Second', 'Third']],
+	['Ctrl+Tab', '\u001B[9;5u', ['First ✔', 'Second', 'Third']],
+	['Alt+Tab', '\u001B[9;3u', ['First ✔', 'Second', 'Third']],
+	['Super+Tab', '\u001B[9;9u', ['First ✔', 'Second', 'Third']],
+	['Hyper+Tab', '\u001B[9;17u', ['First ✔', 'Second', 'Third']],
+	['Escape', '\u001B[27u', ['First', 'Second', 'Third']],
+	['Escape repeat', '\u001B[27;1:2u', ['First', 'Second', 'Third']],
+	['Escape release', '\u001B[27;1:3u', ['First ✔', 'Second', 'Third']],
+	['Shift+Escape', '\u001B[27;2u', ['First ✔', 'Second', 'Third']],
+	['Ctrl+Escape', '\u001B[27;5u', ['First ✔', 'Second', 'Third']],
+	['Alt+Escape', '\u001B[27;3u', ['First ✔', 'Second', 'Third']],
+	['Super+Escape', '\u001B[27;9u', ['First ✔', 'Second', 'Third']],
+	['Hyper+Escape', '\u001B[27;17u', ['First ✔', 'Second', 'Third']],
+] as const) {
+	test(`focus navigation handles kitty ${name}`, async t => {
+		const stdout = createStdout();
+		const stdin = createStdin();
+		let instance!: ReturnType<typeof render>;
+		await act(async () => {
+			instance = render(<Test autoFocus />, {
+				stdout,
+				stdin,
+				debug: true,
+				concurrent: true,
+			});
+		});
+		t.teardown(async () => {
+			await act(async () => {
+				instance.unmount();
+			});
+		});
+		t.is(stdout.get(), ['First ✔', 'Second', 'Third'].join('\n'));
+
+		await act(async () => {
+			emitReadable(stdin, input);
+		});
+
+		t.is(stdout.get(), expected.join('\n'));
+	});
+}
+
 test('do not focus on register when auto focus is off', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
@@ -185,13 +230,15 @@ test('generated focus IDs remain distinct when random values collide', async t =
 test('unfocus active component on Esc', async t => {
 	const stdout = createStdout();
 	const stdin = createStdin();
-	render(<Test />, {
+	const {unmount} = render(<Test autoFocus />, {
 		stdout,
 		stdin,
 		debug: true,
 	});
+	t.teardown(unmount);
 
 	await delay(50);
+	t.is(stdout.get(), ['First ✔', 'Second', 'Third'].join('\n'));
 	emitReadable(stdin, '\u001B');
 	await delay(50);
 	t.is(

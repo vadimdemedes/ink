@@ -23,6 +23,16 @@ function UserInput({test}: {readonly test: string | undefined}) {
 	}, [test]);
 
 	useInput((input, key) => {
+		if (test === 'ctrlSpace' && input === ' ' && key.ctrl && !key.meta) {
+			exit();
+			return;
+		}
+
+		if (test === 'ctrlPunctuation' && input === '_' && key.ctrl && !key.meta) {
+			exit();
+			return;
+		}
+
 		if (test === 'rapidArrowsEnter') {
 			if (key.downArrow) {
 				rapidDownArrowCountRef.current++;
@@ -89,6 +99,11 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		if (test === 'meta' && input === 'm' && key.meta) {
+			exit();
+			return;
+		}
+
+		if (test === 'ctrlMeta' && input === 'b' && key.ctrl && key.meta) {
 			exit();
 			return;
 		}
@@ -194,6 +209,17 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		if (test === 'shiftTab' && input === '' && key.tab && key.shift) {
+			exit();
+			return;
+		}
+
+		if (
+			test === 'metaTab' &&
+			input === '' &&
+			key.tab &&
+			key.meta &&
+			!key.ctrl
+		) {
 			exit();
 			return;
 		}

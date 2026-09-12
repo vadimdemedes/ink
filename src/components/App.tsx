@@ -12,6 +12,7 @@ import React, {
 import cliCursor from 'cli-cursor';
 import {type CursorPosition} from '../log-update.js';
 import {createInputParser} from '../input-parser.js';
+import parseKeypress from '../parse-keypress.js';
 import {getRawModeStream, type OutputStream} from '../stream.js';
 import AppContext, {type SuspendTerminal} from './AppContext.js';
 import StdinContext from './StdinContext.js';
@@ -21,10 +22,6 @@ import FocusContext from './FocusContext.js';
 import AnimationContext from './AnimationContext.js';
 import CursorContext from './CursorContext.js';
 import ErrorBoundary from './ErrorBoundary.js';
-
-const tab = '\t';
-const shiftTab = '\u001B[Z';
-const escape = '\u001B';
 
 type AnimationSubscriber = {
 	readonly callback: (currentTime: number) => void;
@@ -44,6 +41,7 @@ type Props = {
 	readonly onExit: (errorOrResult?: unknown) => void;
 	readonly onWaitUntilRenderFlush: () => Promise<void>;
 	readonly onSuspendTerminal: SuspendTerminal;
+	readonly onKittyQueryResponse: () => void;
 	readonly onRegisterInputControl: (
 		pauseInput: () => void,
 		resumeInput: () => void,
@@ -72,6 +70,7 @@ function App({
 	onExit,
 	onWaitUntilRenderFlush,
 	onSuspendTerminal,
+	onKittyQueryResponse,
 	onRegisterInputControl,
 	setCursorPosition,
 	interactive,
@@ -252,15 +251,30 @@ function App({
 
 	const handleInput = useCallback(
 		(input: string): void => {
+			const key = parseKeypress(input);
+
 			// Exit on Ctrl+C
-			// eslint-disable-next-line unicorn/no-hex-escape
-			if (input === '\x03' && exitOnCtrlC) {
+			if (
+				exitOnCtrlC &&
+				key.ctrl &&
+				key.name === 'c' &&
+				key.eventType !== 'release'
+			) {
 				handleExit();
 				return;
 			}
 
 			// Reset focus when there's an active focused component on Esc
-			if (input === escape && isFocusEnabledRef.current) {
+			if (
+				isFocusEnabledRef.current &&
+				key.name === 'escape' &&
+				key.eventType !== 'release' &&
+				!key.shift &&
+				!key.ctrl &&
+				!key.meta &&
+				key.super !== true &&
+				key.hyper !== true
+			) {
 				setActiveFocusId(undefined);
 			}
 		},
@@ -296,6 +310,13 @@ function App({
 			const inputEvents = inputParserRef.current.push(chunk);
 			for (const event of inputEvents) {
 				if (typeof event === 'string') {
+					// Protocol replies are consumed here; bracketed paste stays literal.
+					// eslint-disable-next-line no-control-regex
+					if (/^\u001B\[\?\d+u$/.test(event)) {
+						onKittyQueryResponse();
+						continue;
+					}
+
 					emitInput(event);
 				} else {
 					// Keep paste on a separate channel from `useInput` so key handlers
@@ -313,7 +334,13 @@ function App({
 		if (inputParserRef.current.hasPendingEscape()) {
 			schedulePendingInputFlush();
 		}
-	}, [stdin, emitInput, clearPendingInputFlush, schedulePendingInputFlush]);
+	}, [
+		stdin,
+		emitInput,
+		clearPendingInputFlush,
+		schedulePendingInputFlush,
+		onKittyQueryResponse,
+	]);
 
 	const attachReadableListener = useCallback((): void => {
 		if (readableListenerRef.current) {
@@ -556,14 +583,26 @@ function App({
 	// Handle tab navigation via effect that subscribes to input events
 	useEffect(() => {
 		const handleTabNavigation = (input: string): void => {
-			if (!isFocusEnabledRef.current || focusablesCountRef.current === 0) return;
-
-			if (input === tab) {
-				focusNext();
+			if (!isFocusEnabledRef.current || focusablesCountRef.current === 0) {
+				return;
 			}
 
-			if (input === shiftTab) {
+			const key = parseKeypress(input);
+			if (
+				key.name !== 'tab' ||
+				key.eventType === 'release' ||
+				key.ctrl ||
+				key.meta ||
+				key.super === true ||
+				key.hyper === true
+			) {
+				return;
+			}
+
+			if (key.shift) {
 				focusPrevious();
+			} else {
+				focusNext();
 			}
 		};
 
