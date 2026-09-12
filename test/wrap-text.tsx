@@ -3,6 +3,29 @@ import test from 'ava';
 import {Box, Text} from '../src/index.js';
 import wrapText, {wrapTextCache} from '../src/wrap-text.js';
 import {renderToString} from './helpers/render-to-string.js';
+import {renderAsync} from './helpers/test-renderer.js';
+
+test('changing text wrapping recalculates the container height', async t => {
+	function Example({truncate}: {readonly truncate: boolean}) {
+		return (
+			<Box width={7} borderStyle="single">
+				<Text wrap={truncate ? 'truncate' : 'wrap'}>abcdefghij</Text>
+			</Box>
+		);
+	}
+
+	const {getOutput, rerenderAsync, unmount} = await renderAsync(
+		<Example truncate={false} />,
+	);
+	t.teardown(unmount);
+	t.is(getOutput(), '┌─────┐\n│abcde│\n│fghij│\n└─────┘');
+
+	await rerenderAsync(<Example truncate />);
+	t.is(getOutput(), '┌─────┐\n│abcd…│\n└─────┘');
+
+	await rerenderAsync(<Example truncate={false} />);
+	t.is(getOutput(), '┌─────┐\n│abcde│\n│fghij│\n└─────┘');
+});
 
 test('wraps text', t => {
 	t.is(wrapText('hello world', 5, 'wrap'), 'hello\n \nworld');

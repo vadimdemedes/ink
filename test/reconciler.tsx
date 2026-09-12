@@ -3,6 +3,102 @@ import test from 'ava';
 import chalk from 'chalk';
 import {Box, Text, render} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
+import {renderAsync} from './helpers/test-renderer.js';
+
+test('Suspense hides nested text while showing its fallback', async t => {
+	let resolvePromise!: () => void;
+	const promise = new Promise<void>(resolve => {
+		resolvePromise = resolve;
+	});
+	t.teardown(resolvePromise);
+
+	function Suspendable({pending}: {readonly pending: boolean}) {
+		if (pending) {
+			// eslint-disable-next-line @typescript-eslint/only-throw-error
+			throw promise;
+		}
+
+		return <Text>Ready</Text>;
+	}
+
+	function Example({
+		pending,
+		showFallback = true,
+	}: {
+		readonly pending: boolean;
+		readonly showFallback?: boolean;
+	}) {
+		return (
+			<Box>
+				<Text>
+					Status:{' '}
+					<Suspense fallback={showFallback ? <Text>Loading</Text> : null}>
+						<Suspendable pending={pending} />
+					</Suspense>
+				</Text>
+				<Text>!</Text>
+			</Box>
+		);
+	}
+
+	const {getOutput, rerenderAsync, unmount} = await renderAsync(
+		<Example pending={false} />,
+	);
+	t.teardown(unmount);
+	t.is(getOutput(), 'Status: Ready!');
+
+	await rerenderAsync(<Example pending />);
+	t.is(getOutput(), 'Status: Loading!');
+
+	await rerenderAsync(<Example pending={false} />);
+	t.is(getOutput(), 'Status: Ready!');
+
+	await rerenderAsync(<Example pending showFallback={false} />);
+	t.is(getOutput(), 'Status: !');
+
+	await rerenderAsync(<Example pending={false} showFallback={false} />);
+	t.is(getOutput(), 'Status: Ready!');
+});
+
+test('resuming Suspense preserves display none', async t => {
+	let resolvePromise!: () => void;
+	const promise = new Promise<void>(resolve => {
+		resolvePromise = resolve;
+	});
+	t.teardown(resolvePromise);
+
+	function Suspendable({pending}: {readonly pending: boolean}) {
+		if (pending) {
+			// eslint-disable-next-line @typescript-eslint/only-throw-error
+			throw promise;
+		}
+
+		return <Text>Visible</Text>;
+	}
+
+	function Test({pending}: {readonly pending: boolean}) {
+		return (
+			<Suspense fallback={<Text>Loading</Text>}>
+				<Box display="none">
+					<Text>Hidden</Text>
+				</Box>
+				<Suspendable pending={pending} />
+			</Suspense>
+		);
+	}
+
+	const {getOutput, rerenderAsync, unmount} = await renderAsync(
+		<Test pending={false} />,
+	);
+	t.teardown(unmount);
+	t.is(getOutput(), 'Visible');
+
+	await rerenderAsync(<Test pending />);
+	t.is(getOutput(), 'Loading');
+
+	await rerenderAsync(<Test pending={false} />);
+	t.is(getOutput(), 'Visible');
+});
 
 test('update child', t => {
 	function Test({update}: {readonly update?: boolean}) {
