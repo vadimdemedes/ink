@@ -142,6 +142,8 @@ export const extractCursorShape = (char: StyledChar) => {
 			return cursorShape;
 		}
 	}
+
+	return;
 };
 
 export const buildCursorShape = (shape: string | undefined) => {

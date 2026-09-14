@@ -682,8 +682,9 @@ function FullscreenCursorApp({
 		<Box flexDirection="column">
 			{fullscreenLines(lineCount, marker).map((line, i) => (
 				<Text key={line}>
-					{line}
+					{line.substring(0, 3)}
 					{i === cursorY && <Cursor />}
+					{line.substring(3)}
 				</Text>
 			))}
 		</Box>
