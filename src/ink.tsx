@@ -526,7 +526,7 @@ export default class Ink {
 		// NOTE: Absence of a <Cursor /> only means that we should hide the cursor
 		// if we're already in component mode; if in hook mode, we simply aren't
 		// using the component, so an empty position is expected
-		if (position != null || this.cursorMode === 'component') {
+		if (position !== undefined || this.cursorMode === 'component') {
 			this.setCursorPositionInternal('component', position);
 		}
 	};
@@ -535,9 +535,10 @@ export default class Ink {
 		expectedMode: CursorMode,
 		position: CursorPosition | undefined,
 	): void => {
-		if (this.cursorMode != null && this.cursorMode !== expectedMode) {
+		if (this.cursorMode !== undefined && this.cursorMode !== expectedMode) {
 			throw new Error('Mixing cursor modes');
 		}
+
 		this.cursorMode = expectedMode;
 		this.cursorPosition = position;
 		this.log.setCursorPosition(position);

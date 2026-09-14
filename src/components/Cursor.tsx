@@ -1,7 +1,7 @@
 import React from 'react';
 import {buildRenderCursorHereSequence} from '../cursor-helpers.js';
 
-const SHAPE_TO_CODE = {
+const shapeToCode = {
 	blockBlink: 1,
 	block: 2,
 	underscoreBlink: 3,
@@ -11,14 +11,15 @@ const SHAPE_TO_CODE = {
 };
 
 export type Props = {
-	readonly shape?: keyof typeof SHAPE_TO_CODE;
+	readonly shape?: keyof typeof shapeToCode;
 };
 
 export default function Cursor({shape = 'block'}: Props) {
-	const code = SHAPE_TO_CODE[shape];
-	if (code == null) {
+	const code = shapeToCode[shape];
+	if (code === undefined) {
 		throw new Error(`No such cursor shape ${shape}`);
 	}
+
 	const marker = buildRenderCursorHereSequence(code);
 	return <ink-text>{marker}</ink-text>;
 }

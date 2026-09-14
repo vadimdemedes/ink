@@ -8,9 +8,9 @@ import {
 } from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
 import {
-	CursorPosition,
+	type CursorPosition,
 	extractCursorShape,
-	RENDER_CURSOR_HERE_SEQUENCE_PREFIX,
+	renderCursorHereSequencePrefix,
 } from './cursor-helpers.js';
 
 /**
@@ -268,9 +268,7 @@ export default class Output {
 
 					if (clipHorizontally) {
 						lines = lines.map(line => {
-							const hasCursor = line.includes(
-								RENDER_CURSOR_HERE_SEQUENCE_PREFIX,
-							);
+							const hasCursor = line.includes(renderCursorHereSequencePrefix);
 							const from = x < clip.x1! ? clip.x1! - x : 0;
 							const width = this.caches.getStringWidth(line);
 							const to = x + width > clip.x2! ? clip.x2! - x : width;
@@ -346,7 +344,7 @@ export default class Output {
 
 					for (const character of characters) {
 						const cursorShape = extractCursorShape(character);
-						if (cursorShape != null) {
+						if (cursorShape !== undefined) {
 							cursor = {x: x + offsetX, y: y + offsetY, shape: cursorShape};
 							continue;
 						}

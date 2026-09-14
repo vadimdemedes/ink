@@ -119,36 +119,35 @@ export const buildReturnToBottomPrefix = (
 };
 
 // Special URL with zero-width string
-export const CURSOR_POSITION_CHAR = '\u200B';
-export const RENDER_CURSOR_HERE_SEQUENCE_PREFIX = '\u001B]8;;ink.js://cursor/';
-const RENDER_CURSOR_HERE_SEQUENCE_SUFFIX = `\u001B\\${CURSOR_POSITION_CHAR}\u001B]8;;\u001B\\`;
+export const cursorPositionChar = '\u200B';
+export const renderCursorHereSequencePrefix = '\u001B]8;;ink.js://cursor/';
+const renderCursorHereSequenceSuffix = `\u001B\\${cursorPositionChar}\u001B]8;;\u001B\\`;
 
 export const buildRenderCursorHereSequence = (shape: number) =>
-	RENDER_CURSOR_HERE_SEQUENCE_PREFIX +
-	shape +
-	RENDER_CURSOR_HERE_SEQUENCE_SUFFIX;
+	renderCursorHereSequencePrefix + shape + renderCursorHereSequenceSuffix;
 
 export const extractCursorShape = (char: StyledChar) => {
-	if (char.value !== CURSOR_POSITION_CHAR) {
+	if (char.value !== cursorPositionChar) {
 		return;
 	}
 
 	for (const style of char.styles) {
-		if (style.code.startsWith(RENDER_CURSOR_HERE_SEQUENCE_PREFIX)) {
-			const cursorShape = style.code.substring(
-				RENDER_CURSOR_HERE_SEQUENCE_PREFIX.length,
-				style.code.length - 2,
+		if (style.code.startsWith(renderCursorHereSequencePrefix)) {
+			const cursorShape = style.code.slice(
+				renderCursorHereSequencePrefix.length,
+				-2,
 			);
 			return cursorShape;
 		}
 	}
 
-	return;
+	return undefined;
 };
 
 export const buildCursorShape = (shape: string | undefined) => {
-	if (shape == null) {
+	if (shape === undefined) {
 		return '';
 	}
+
 	return `\u001B[${shape} q`;
 };
