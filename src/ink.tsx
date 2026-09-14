@@ -220,6 +220,11 @@ export type RenderMetrics = {
 	Time spent rendering in milliseconds.
 	*/
 	renderTime: number;
+
+	/**
+	Rendered CursorPosition, if any
+	*/
+	cursor?: CursorPosition;
 };
 
 export type Options = {
@@ -569,12 +574,16 @@ export default class Ink {
 		}
 
 		const startTime = performance.now();
-		const {output, outputHeight, staticOutput} = render(
+		const {output, outputHeight, staticOutput, cursor} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
 		);
 
-		this.options.onRender?.({renderTime: performance.now() - startTime});
+		this.setCursorPosition(cursor);
+		this.options.onRender?.({
+			renderTime: performance.now() - startTime,
+			cursor,
+		});
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';

@@ -1,8 +1,10 @@
 import ansiEscapes from 'ansi-escapes';
+import type {StyledChar} from '@alcalzone/ansi-tokenize';
 
 export type CursorPosition = {
 	x: number;
 	y: number;
+	shape?: string;
 };
 
 const showCursorEscape = '\u001B[?25h';
@@ -44,7 +46,8 @@ export const buildCursorSuffix = (
 	return (
 		(moveUp > 0 ? ansiEscapes.cursorUp(moveUp) : '') +
 		ansiEscapes.cursorTo(cursorPosition.x) +
-		showCursorEscape
+		showCursorEscape +
+		buildCursorShape(cursorPosition.shape)
 	);
 };
 
@@ -113,4 +116,37 @@ export const buildReturnToBottomPrefix = (
 		hideCursorEscape +
 		buildReturnToBottom(previousLineCount, previousCursorPosition)
 	);
+};
+
+// Special URL with zero-width string
+export const CURSOR_POSITION_CHAR = '\u200B';
+export const RENDER_CURSOR_HERE_SEQUENCE_PREFIX = '\u001B]8;;ink.js://cursor/';
+const RENDER_CURSOR_HERE_SEQUENCE_SUFFIX = `\u001B\\${CURSOR_POSITION_CHAR}\u001B]8;;\u001B\\`;
+
+export const buildRenderCursorHereSequence = (shape: number) =>
+	RENDER_CURSOR_HERE_SEQUENCE_PREFIX +
+	shape +
+	RENDER_CURSOR_HERE_SEQUENCE_SUFFIX;
+
+export const extractCursorShape = (char: StyledChar) => {
+	if (char.value !== CURSOR_POSITION_CHAR) {
+		return;
+	}
+
+	for (const style of char.styles) {
+		if (style.code.startsWith(RENDER_CURSOR_HERE_SEQUENCE_PREFIX)) {
+			const cursorShape = style.code.substring(
+				RENDER_CURSOR_HERE_SEQUENCE_PREFIX.length,
+				style.code.length - 2,
+			);
+			return cursorShape;
+		}
+	}
+};
+
+export const buildCursorShape = (shape: string | undefined) => {
+	if (shape == null) {
+		return '';
+	}
+	return `\u001B[${shape} q`;
 };

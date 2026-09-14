@@ -4,6 +4,8 @@ export type {RenderToStringOptions} from './render-to-string.js';
 export {default as renderToString} from './render-to-string.js';
 export type {Props as BoxProps} from './components/Box.js';
 export {default as Box} from './components/Box.js';
+export type {Props as CursorProps} from './components/Cursor.js';
+export {default as Cursor} from './components/Cursor.js';
 export type {Props as TextProps} from './components/Text.js';
 export {default as Text} from './components/Text.js';
 export type {Props as AppProps} from './components/AppContext.js';

@@ -7,6 +7,11 @@ import {
 	tokenize,
 } from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
+import {
+	CursorPosition,
+	extractCursorShape,
+	RENDER_CURSOR_HERE_SEQUENCE_PREFIX,
+} from './cursor-helpers.js';
 
 /**
 "Virtual" output class
@@ -192,7 +197,7 @@ export default class Output {
 		);
 	}
 
-	get(): {output: string; height: number} {
+	get(): {output: string; height: number; cursor?: CursorPosition} {
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
 		const output: StyledChar[][] = [];
 
@@ -213,6 +218,7 @@ export default class Output {
 
 		const clips: Clip[] = [];
 
+		let cursor: CursorPosition | undefined;
 		for (const operation of this.operations) {
 			if (operation.type === 'clip') {
 				// Nested clips must intersect, not replace, otherwise an inner `overflow="hidden"` box lets content escape the outer clip and overwrite surrounding UI.
@@ -262,11 +268,18 @@ export default class Output {
 
 					if (clipHorizontally) {
 						lines = lines.map(line => {
+							const hasCursor = line.includes(
+								RENDER_CURSOR_HERE_SEQUENCE_PREFIX,
+							);
 							const from = x < clip.x1! ? clip.x1! - x : 0;
 							const width = this.caches.getStringWidth(line);
 							const to = x + width > clip.x2! ? clip.x2! - x : width;
 
-							return this.sliceLineToColumns(line, from, to);
+							return this.sliceLineToColumns(
+								line,
+								from,
+								hasCursor ? to + 1 : to,
+							);
 						});
 
 						if (x < clip.x1!) {
@@ -332,6 +345,12 @@ export default class Output {
 					}
 
 					for (const character of characters) {
+						const cursorShape = extractCursorShape(character);
+						if (cursorShape != null) {
+							cursor = {x: x + offsetX, y: y + offsetY, shape: cursorShape};
+							continue;
+						}
+
 						currentLine[offsetX] = character;
 
 						// Determine printed width using string-width to align with measurement
@@ -376,6 +395,7 @@ export default class Output {
 		return {
 			output: generatedOutput,
 			height: output.length,
+			cursor,
 		};
 	}
 }
