@@ -28,6 +28,8 @@ import {
 } from './kitty-keyboard.js';
 import {isTty, type OutputStream} from './stream.js';
 
+type CursorMode = 'hook' | 'component';
+
 const noop = () => {};
 const textEncoder = new TextEncoder();
 
@@ -299,6 +301,7 @@ export default class Ink {
 
 	private readonly options: Options;
 	private readonly log: LogUpdate;
+	private cursorMode: CursorMode | undefined;
 	private cursorPosition: CursorPosition | undefined;
 	private readonly throttledLog:
 		LogUpdate | DebouncedFunc<(output: string) => void>;
@@ -513,7 +516,29 @@ export default class Ink {
 		this.unmount();
 	};
 
-	setCursorPosition = (position: CursorPosition | undefined): void => {
+	setCursorPositionFromHook = (position: CursorPosition | undefined): void => {
+		this.setCursorPositionInternal('hook', position);
+	};
+
+	setCursorPositionFromComponent = (
+		position: CursorPosition | undefined,
+	): void => {
+		// NOTE: Absence of a <Cursor /> only means that we should hide the cursor
+		// if we're already in component mode; if in hook mode, we simply aren't
+		// using the component, so an empty position is expected
+		if (position != null || this.cursorMode === 'component') {
+			this.setCursorPositionInternal('component', position);
+		}
+	};
+
+	setCursorPositionInternal = (
+		expectedMode: CursorMode,
+		position: CursorPosition | undefined,
+	): void => {
+		if (this.cursorMode != null && this.cursorMode !== expectedMode) {
+			throw new Error('Mixing cursor modes');
+		}
+		this.cursorMode = expectedMode;
 		this.cursorPosition = position;
 		this.log.setCursorPosition(position);
 	};
@@ -579,7 +604,7 @@ export default class Ink {
 			this.isScreenReaderEnabled,
 		);
 
-		this.setCursorPosition(cursor);
+		this.setCursorPositionFromComponent(cursor);
 		this.options.onRender?.({
 			renderTime: performance.now() - startTime,
 			cursor,
@@ -691,7 +716,7 @@ export default class Ink {
 					renderThrottleMs={this.renderThrottleMs}
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
-					setCursorPosition={this.setCursorPosition}
+					setCursorPosition={this.setCursorPositionFromHook}
 					onExit={this.handleAppExit}
 					onWaitUntilRenderFlush={this.waitUntilRenderFlush}
 					onSuspendTerminal={this.suspendTerminal}
