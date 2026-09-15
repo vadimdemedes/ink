@@ -37,11 +37,11 @@ test('cursorPositionChanged - undefined vs defined returns true', t => {
 // BuildCursorSuffix
 
 test('buildCursorSuffix - returns empty string when cursorPosition is undefined', t => {
-	t.is(buildCursorSuffix(3, undefined), '');
+	t.is(buildCursorSuffix(3, undefined, undefined), '');
 });
 
 test('buildCursorSuffix - moves up and positions cursor', t => {
-	const result = buildCursorSuffix(3, {x: 5, y: 1});
+	const result = buildCursorSuffix(3, undefined, {x: 5, y: 1});
 	t.is(
 		result,
 		ansiEscapes.cursorUp(2) + ansiEscapes.cursorTo(5) + showCursorEscape,
@@ -49,12 +49,12 @@ test('buildCursorSuffix - moves up and positions cursor', t => {
 });
 
 test('buildCursorSuffix - no cursorUp when cursor is at last visible line', t => {
-	const result = buildCursorSuffix(3, {x: 0, y: 3});
+	const result = buildCursorSuffix(3, undefined, {x: 0, y: 3});
 	t.is(result, ansiEscapes.cursorTo(0) + showCursorEscape);
 });
 
 test('buildCursorSuffix - cursor at first line of single-line output', t => {
-	const result = buildCursorSuffix(1, {x: 4, y: 0});
+	const result = buildCursorSuffix(1, undefined, {x: 4, y: 0});
 	t.is(
 		result,
 		ansiEscapes.cursorUp(1) + ansiEscapes.cursorTo(4) + showCursorEscape,
@@ -84,12 +84,13 @@ test('buildCursorOnlySequence - builds full sequence with hide prefix when curso
 		cursorWasShown: true,
 		previousLineCount: 2,
 		previousCursorPosition: {x: 0, y: 0},
+		previousCursorShape: 'block',
 		cursorPosition: {x: 3, y: 0},
 	});
 	const expected =
 		hideCursorEscape +
 		buildReturnToBottom(2, {x: 0, y: 0}) +
-		buildCursorSuffix(1, {x: 3, y: 0});
+		buildCursorSuffix(1, undefined, {x: 3, y: 0});
 	t.is(result, expected);
 });
 
@@ -98,6 +99,7 @@ test('buildCursorOnlySequence - no hide prefix when cursor was not shown', t => 
 		cursorWasShown: false,
 		previousLineCount: 0,
 		previousCursorPosition: undefined,
+		previousCursorShape: 'block',
 		cursorPosition: {x: 3, y: 0},
 	});
 	t.false(result.startsWith(hideCursorEscape));
