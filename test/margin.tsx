@@ -123,6 +123,18 @@ test('apply margin to wrapped text', t => {
 	t.is(output, '\n Hello\n World\n');
 });
 
+test('negative margin top with multiline string', t => {
+	const output = renderToString(
+		<Box flexDirection="column">
+			<Box marginTop={-1} flexDirection="column">
+				<Text>{'Line 1\nLine 2\nLine 3'}</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.is(output, 'Line 2\nLine 3');
+});
+
 // Concurrent mode tests
 test('margin - concurrent', async t => {
 	const output = await renderToStringAsync(
