@@ -10,8 +10,9 @@ import {
 	useStdout,
 	useStderr,
 	Cursor,
+	type CursorPosition,
 } from '../src/index.js';
-import {homeAndEraseDown} from '../src/ink.js';
+import {homeAndEraseDown, RenderMetrics} from '../src/ink.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
 
@@ -783,12 +784,17 @@ for (const {name, incremental} of inkRenderingModes) {
 			const stdout = createStdout();
 			(stdout as any).rows = 5;
 
+			let lastCursor: CursorPosition | undefined;
+			const onRender = ({cursor}: RenderMetrics) => {
+				lastCursor = cursor;
+			};
+
 			// Output taller than the viewport is still fullscreen, and the second
 			// such frame clears the terminal and repositions through log.sync()
 			// rather than through the renderer's normal write path.
 			const {rerender, unmount, waitUntilRenderFlush} = render(
 				<FullscreenCursorApp lineCount={6} cursorY={2} marker="" />,
-				{stdout, incrementalRendering: incremental},
+				{stdout, incrementalRendering: incremental, onRender},
 			);
 			await waitUntilRenderFlush();
 
@@ -810,6 +816,8 @@ for (const {name, incremental} of inkRenderingModes) {
 					ansiEscapes.cursorUp(4) + ansiEscapes.cursorTo(3) + showCursorEscape,
 				),
 			);
+
+			t.deepEqual(lastCursor, {x: 3, y: 2, shape: 'block'});
 
 			unmount();
 		},

@@ -4,7 +4,7 @@ import type {StyledChar} from '@alcalzone/ansi-tokenize';
 export type CursorPosition = {
 	x: number;
 	y: number;
-	shape?: string;
+	shape?: CursorShape;
 };
 
 const showCursorEscape = '\u001B[?25h';
@@ -122,11 +122,24 @@ export const buildReturnToBottomPrefix = (
 export const cursorPositionChar = '\u200B';
 const cursorPositionUrl = 'ink.js://cursor/';
 
-export const buildRenderCursorHereSequence = (shape: number) =>
+const shapeToAnsiCode = {
+	blockBlink: 1,
+	block: 2,
+	underscoreBlink: 3,
+	underscore: 4,
+	pipeBlink: 5,
+	pipe: 6,
+};
+export type CursorShape = keyof typeof shapeToAnsiCode;
+
+export const isValidCursorShape = (shape: string): shape is CursorShape =>
+	shape in shapeToAnsiCode;
+
+export const buildRenderCursorHereSequence = (shape: CursorShape) =>
 	ansiEscapes.link(cursorPositionChar, cursorPositionUrl + shape);
 
 export const renderCursorHereSequencePrefix =
-	buildRenderCursorHereSequence(999).split('999')[0];
+	buildRenderCursorHereSequence('block').split('block')[0]!;
 
 export const extractCursorShape = (char: StyledChar) => {
 	if (char.value !== cursorPositionChar) {
@@ -137,7 +150,7 @@ export const extractCursorShape = (char: StyledChar) => {
 		if (style.code.startsWith(renderCursorHereSequencePrefix)) {
 			const cursorShape = style.code.slice(
 				renderCursorHereSequencePrefix.length,
-				-2,
+				-1,
 			);
 			return cursorShape;
 		}
@@ -146,10 +159,11 @@ export const extractCursorShape = (char: StyledChar) => {
 	return undefined;
 };
 
-export const buildCursorShape = (shape: string | undefined) => {
+export const buildCursorShape = (shape: CursorShape | undefined) => {
 	if (shape === undefined) {
 		return '';
 	}
 
-	return `\u001B[${shape} q`;
+	const code = shapeToAnsiCode[shape];
+	return `\u001B[${code} q`;
 };
