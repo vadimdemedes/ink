@@ -64,8 +64,8 @@ const waitForCondition = async (condition: () => boolean): Promise<void> => {
 	});
 };
 
-function InputApp() {
-	const [text, setText] = useState('');
+function InputApp({initialText = ''}: {initialText?: string}) {
+	const [text, setText] = useState(initialText);
 
 	useInput((input, key) => {
 		if (key.backspace || key.delete) {
@@ -823,3 +823,38 @@ for (const {name, incremental} of inkRenderingModes) {
 		},
 	);
 }
+
+test.serial('cursor wraps with text', async t => {
+	const stdout = createStdout(5);
+	const stdin = createStdin();
+
+	let lastCursor: CursorPosition | undefined;
+	const onRender = ({cursor}: RenderMetrics) => {
+		lastCursor = cursor;
+	};
+
+	const {unmount, waitUntilRenderFlush} = render(
+		<InputApp initialText="the quick" />,
+		{stdout, stdin, onRender},
+	);
+	await waitUntilRenderFlush();
+
+	const firstRenderOutput = getWriteCalls(stdout).join('');
+	// Cursor should be shown at x=2 (after "> ")
+	t.true(
+		firstRenderOutput.includes(showCursorEscape),
+		'cursor should be visible after first render',
+	);
+	t.true(
+		firstRenderOutput.includes(ansiEscapes.cursorTo(5)),
+		'cursor should be at column 5',
+	);
+	// It renders with a trailing newline, so need to move up one row
+	t.true(
+		firstRenderOutput.includes(ansiEscapes.cursorUp(1)),
+		'cursor should be on last visible line',
+	);
+	t.deepEqual(lastCursor, {x: 5, y: 2, shape: 'block'});
+
+	unmount();
+});
