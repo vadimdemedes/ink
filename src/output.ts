@@ -11,6 +11,7 @@ import {
 	type CursorPosition,
 	extractCursorShape,
 	renderCursorHereSequencePrefix,
+	isValidCursorShape,
 } from './cursor-helpers.js';
 
 /**
@@ -345,7 +346,11 @@ export default class Output {
 					for (const character of characters) {
 						const cursorShape = extractCursorShape(character);
 						if (cursorShape !== undefined) {
-							cursor = {x: x + offsetX, y: y + offsetY, shape: cursorShape};
+							cursor = {
+								x: x + offsetX,
+								y: y + offsetY,
+								shape: isValidCursorShape(cursorShape) ? cursorShape : 'block',
+							};
 							continue;
 						}
 
