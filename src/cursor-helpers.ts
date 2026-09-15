@@ -48,9 +48,9 @@ export const buildCursorSuffix = (
 		(moveUp > 0 ? ansiEscapes.cursorUp(moveUp) : '') +
 		ansiEscapes.cursorTo(cursorPosition.x) +
 		showCursorEscape +
-		((lastShape ?? 'block') !== cursorPosition.shape
-			? buildCursorShape(cursorPosition.shape)
-			: '')
+		((lastShape ?? 'block') === cursorPosition.shape
+			? ''
+			: buildCursorShape(cursorPosition.shape))
 	);
 };
 

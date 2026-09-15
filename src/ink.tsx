@@ -894,8 +894,8 @@ export default class Ink {
 					this.alternateScreen = false;
 				}
 
-				const cursorPosition = this.cursorPosition;
-				if (cursorPosition != null && cursorPosition.shape !== 'block') {
+				const {cursorPosition} = this;
+				if (cursorPosition !== undefined && cursorPosition.shape !== 'block') {
 					this.writeBestEffort(this.options.stdout, buildCursorShape('block'));
 					cursorPosition.shape = 'block';
 				}

@@ -13,9 +13,9 @@ import {
 	type CursorPosition,
 } from '../src/index.js';
 import {homeAndEraseDown, type RenderMetrics} from '../src/ink.js';
+import {buildCursorShape, type CursorShape} from '../src/cursor-helpers.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
-import {buildCursorShape, CursorShape} from '../src/cursor-helpers.js';
 
 const showCursorEscape = '\u001B[?25h';
 const hideCursorEscape = '\u001B[?25l';
@@ -65,10 +65,10 @@ const waitForCondition = async (condition: () => boolean): Promise<void> => {
 	});
 };
 
-interface InputAppProps {
-	initialText?: string;
-	cursorShape?: CursorShape;
-}
+type InputAppProps = {
+	readonly initialText?: string;
+	readonly cursorShape?: CursorShape;
+};
 
 function InputApp({initialText = '', cursorShape}: InputAppProps) {
 	const [text, setText] = useState(initialText);

@@ -106,9 +106,10 @@ const createStandard = (
 		}
 
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
-		if (activeCursor != null) {
+		if (activeCursor !== undefined) {
 			previousCursorShape = activeCursor.shape ?? 'block';
 		}
+
 		cursorWasShown = activeCursor !== undefined;
 		return true;
 	};
@@ -240,9 +241,10 @@ const createIncremental = (
 				}),
 			);
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
-			if (activeCursor != null) {
+			if (activeCursor !== undefined) {
 				previousCursorShape = activeCursor.shape ?? 'block';
 			}
+
 			cursorWasShown = activeCursor !== undefined;
 			return true;
 		}
@@ -267,9 +269,10 @@ const createIncremental = (
 			);
 			cursorWasShown = activeCursor !== undefined;
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
-			if (activeCursor != null) {
+			if (activeCursor !== undefined) {
 				previousCursorShape = activeCursor?.shape ?? 'block';
 			}
+
 			previousOutput = str;
 			previousLines = nextLines;
 			return true;
@@ -329,9 +332,10 @@ const createIncremental = (
 
 		cursorWasShown = activeCursor !== undefined;
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
-		if (activeCursor != null) {
+		if (activeCursor !== undefined) {
 			previousCursorShape = activeCursor.shape ?? 'block';
 		}
+
 		previousOutput = str;
 		previousLines = nextLines;
 		return true;

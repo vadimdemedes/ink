@@ -15,6 +15,7 @@ function App() {
 		if (key.leftArrow) {
 			setCursor(previous => Math.max(0, previous - 1));
 		}
+
 		if (key.rightArrow) {
 			setCursor(previous => Math.min(previous + 1, text.length));
 		}
