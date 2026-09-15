@@ -14,7 +14,11 @@ import {getWindowSize} from './utils.js';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
-import {hideCursorEscape, showCursorEscape} from './cursor-helpers.js';
+import {
+	buildCursorShape,
+	hideCursorEscape,
+	showCursorEscape,
+} from './cursor-helpers.js';
 import logUpdate, {type LogUpdate, type CursorPosition} from './log-update.js';
 import {bsu, esu, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
@@ -27,6 +31,8 @@ import {
 	resolveFlags,
 } from './kitty-keyboard.js';
 import {isTty, type OutputStream} from './stream.js';
+
+type CursorMode = 'hook' | 'component';
 
 const noop = () => {};
 const textEncoder = new TextEncoder();
@@ -220,6 +226,11 @@ export type RenderMetrics = {
 	Time spent rendering in milliseconds.
 	*/
 	renderTime: number;
+
+	/**
+	Rendered CursorPosition, if any
+	*/
+	cursor?: CursorPosition;
 };
 
 export type Options = {
@@ -294,6 +305,7 @@ export default class Ink {
 
 	private readonly options: Options;
 	private readonly log: LogUpdate;
+	private cursorMode: CursorMode | undefined;
 	private cursorPosition: CursorPosition | undefined;
 	private readonly throttledLog:
 		LogUpdate | DebouncedFunc<(output: string) => void>;
@@ -508,7 +520,30 @@ export default class Ink {
 		this.unmount();
 	};
 
-	setCursorPosition = (position: CursorPosition | undefined): void => {
+	setCursorPositionFromHook = (position: CursorPosition | undefined): void => {
+		this.setCursorPositionInternal('hook', position);
+	};
+
+	setCursorPositionFromComponent = (
+		position: CursorPosition | undefined,
+	): void => {
+		// NOTE: Absence of a <Cursor /> only means that we should hide the cursor
+		// if we're already in component mode; if in hook mode, we simply aren't
+		// using the component, so an empty position is expected
+		if (position !== undefined || this.cursorMode === 'component') {
+			this.setCursorPositionInternal('component', position);
+		}
+	};
+
+	setCursorPositionInternal = (
+		expectedMode: CursorMode,
+		position: CursorPosition | undefined,
+	): void => {
+		if (this.cursorMode !== undefined && this.cursorMode !== expectedMode) {
+			throw new Error('Mixing cursor modes');
+		}
+
+		this.cursorMode = expectedMode;
 		this.cursorPosition = position;
 		this.log.setCursorPosition(position);
 	};
@@ -569,12 +604,16 @@ export default class Ink {
 		}
 
 		const startTime = performance.now();
-		const {output, outputHeight, staticOutput} = render(
+		const {output, outputHeight, staticOutput, cursor} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
 		);
 
-		this.options.onRender?.({renderTime: performance.now() - startTime});
+		this.setCursorPositionFromComponent(cursor);
+		this.options.onRender?.({
+			renderTime: performance.now() - startTime,
+			cursor,
+		});
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
@@ -682,7 +721,7 @@ export default class Ink {
 					renderThrottleMs={this.renderThrottleMs}
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
-					setCursorPosition={this.setCursorPosition}
+					setCursorPosition={this.setCursorPositionFromHook}
 					onExit={this.handleAppExit}
 					onWaitUntilRenderFlush={this.waitUntilRenderFlush}
 					onSuspendTerminal={this.suspendTerminal}
@@ -853,6 +892,12 @@ export default class Ink {
 					);
 					this.writeBestEffort(this.options.stdout, showCursorEscape);
 					this.alternateScreen = false;
+				}
+
+				const {cursorPosition} = this;
+				if (cursorPosition !== undefined && cursorPosition.shape !== 'block') {
+					this.writeBestEffort(this.options.stdout, buildCursorShape('block'));
+					cursorPosition.shape = 'block';
 				}
 
 				if (!this.interactive) {

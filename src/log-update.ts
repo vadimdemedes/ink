@@ -7,6 +7,7 @@ import {
 	buildCursorOnlySequence,
 	buildReturnToBottomPrefix,
 	hideCursorEscape,
+	type CursorShape,
 } from './cursor-helpers.js';
 
 export type {CursorPosition} from './cursor-helpers.js';
@@ -37,6 +38,7 @@ const createStandard = (
 	let cursorPosition: CursorPosition | undefined;
 	let cursorDirty = false;
 	let previousCursorPosition: CursorPosition | undefined;
+	let previousCursorShape: CursorShape = 'block';
 	let cursorWasShown = false;
 
 	const getActiveCursor = () => (cursorDirty ? cursorPosition : undefined);
@@ -71,7 +73,11 @@ const createStandard = (
 		}
 
 		const lines = str.split('\n');
-		const cursorSuffix = buildCursorSuffix(lines.length - 1, activeCursor);
+		const cursorSuffix = buildCursorSuffix(
+			lines.length - 1,
+			previousCursorShape,
+			activeCursor,
+		);
 
 		if (str === previousOutput && cursorChanged) {
 			stream.write(
@@ -79,6 +85,7 @@ const createStandard = (
 					cursorWasShown,
 					previousLineCount,
 					previousCursorPosition,
+					previousCursorShape,
 					cursorPosition: activeCursor,
 				}),
 			);
@@ -99,6 +106,10 @@ const createStandard = (
 		}
 
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+		if (activeCursor !== undefined) {
+			previousCursorShape = activeCursor.shape ?? 'block';
+		}
+
 		cursorWasShown = activeCursor !== undefined;
 		return true;
 	};
@@ -132,6 +143,7 @@ const createStandard = (
 		previousOutput = '';
 		previousLineCount = 0;
 		previousCursorPosition = undefined;
+		previousCursorShape = 'block';
 		cursorWasShown = false;
 	};
 
@@ -148,7 +160,11 @@ const createStandard = (
 		}
 
 		if (activeCursor) {
-			stream.write(buildCursorSuffix(lines.length - 1, activeCursor));
+			stream.write(
+				buildCursorSuffix(lines.length - 1, previousCursorShape, activeCursor),
+			);
+
+			previousCursorShape = activeCursor.shape ?? 'block';
 		}
 
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
@@ -176,6 +192,7 @@ const createIncremental = (
 	let cursorPosition: CursorPosition | undefined;
 	let cursorDirty = false;
 	let previousCursorPosition: CursorPosition | undefined;
+	let previousCursorShape: CursorShape = 'block';
 	let cursorWasShown = false;
 
 	const getActiveCursor = () => (cursorDirty ? cursorPosition : undefined);
@@ -219,10 +236,15 @@ const createIncremental = (
 					cursorWasShown,
 					previousLineCount: previousLines.length,
 					previousCursorPosition,
+					previousCursorShape,
 					cursorPosition: activeCursor,
 				}),
 			);
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+			if (activeCursor !== undefined) {
+				previousCursorShape = activeCursor.shape ?? 'block';
+			}
+
 			cursorWasShown = activeCursor !== undefined;
 			return true;
 		}
@@ -236,6 +258,7 @@ const createIncremental = (
 		if (str === '\n' || previousOutput.length === 0) {
 			const cursorSuffix = buildCursorSuffix(
 				nextLines.length - 1,
+				previousCursorShape,
 				activeCursor,
 			);
 			stream.write(
@@ -246,6 +269,10 @@ const createIncremental = (
 			);
 			cursorWasShown = activeCursor !== undefined;
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+			if (activeCursor !== undefined) {
+				previousCursorShape = activeCursor?.shape ?? 'block';
+			}
+
 			previousOutput = str;
 			previousLines = nextLines;
 			return true;
@@ -294,13 +321,21 @@ const createIncremental = (
 			);
 		}
 
-		const cursorSuffix = buildCursorSuffix(nextLines.length - 1, activeCursor);
+		const cursorSuffix = buildCursorSuffix(
+			nextLines.length - 1,
+			previousCursorShape,
+			activeCursor,
+		);
 		buffer.push(cursorSuffix);
 
 		stream.write(buffer.join(''));
 
 		cursorWasShown = activeCursor !== undefined;
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+		if (activeCursor !== undefined) {
+			previousCursorShape = activeCursor.shape ?? 'block';
+		}
+
 		previousOutput = str;
 		previousLines = nextLines;
 		return true;
@@ -335,6 +370,7 @@ const createIncremental = (
 		previousOutput = '';
 		previousLines = [];
 		previousCursorPosition = undefined;
+		previousCursorShape = 'block';
 		cursorWasShown = false;
 	};
 
@@ -351,7 +387,11 @@ const createIncremental = (
 		}
 
 		if (activeCursor) {
-			stream.write(buildCursorSuffix(lines.length - 1, activeCursor));
+			stream.write(
+				buildCursorSuffix(lines.length - 1, previousCursorShape, activeCursor),
+			);
+
+			previousCursorShape = activeCursor.shape ?? 'block';
 		}
 
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;

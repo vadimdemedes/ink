@@ -3,11 +3,13 @@ import renderNodeToOutput, {
 } from './render-node-to-output.js';
 import Output from './output.js';
 import {type DOMElement} from './dom.js';
+import {type CursorPosition} from './cursor-helpers.js';
 
 type Result = {
 	output: string;
 	outputHeight: number;
 	staticOutput: string;
+	cursor?: CursorPosition;
 };
 
 const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
@@ -56,7 +58,11 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			});
 		}
 
-		const {output: generatedOutput, height: outputHeight} = output.get();
+		const {
+			output: generatedOutput,
+			height: outputHeight,
+			cursor,
+		} = output.get();
 
 		return {
 			output: generatedOutput,
@@ -64,6 +70,7 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			// Newline at the end is needed, because static output doesn't have one, so
 			// interactive output will override last line of static output
 			staticOutput: staticOutput ? `${staticOutput.get().output}\n` : '',
+			cursor,
 		};
 	}
 
