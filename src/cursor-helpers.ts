@@ -18,7 +18,7 @@ Compare two cursor positions. Returns true if they differ.
 export const cursorPositionChanged = (
 	a: CursorPosition | undefined,
 	b: CursorPosition | undefined,
-): boolean => a?.x !== b?.x || a?.y !== b?.y;
+): boolean => a?.x !== b?.x || a?.y !== b?.y || a?.shape !== b?.shape;
 
 /**
 Build escape sequence to move cursor from the bottom of the output to the target position and show it.
@@ -36,6 +36,7 @@ This is the same row basis `buildReturnToBottom` measures from, so the two stay 
 */
 export const buildCursorSuffix = (
 	bottomLine: number,
+	lastShape: CursorShape | undefined,
 	cursorPosition: CursorPosition | undefined,
 ): string => {
 	if (!cursorPosition) {
@@ -47,7 +48,9 @@ export const buildCursorSuffix = (
 		(moveUp > 0 ? ansiEscapes.cursorUp(moveUp) : '') +
 		ansiEscapes.cursorTo(cursorPosition.x) +
 		showCursorEscape +
-		buildCursorShape(cursorPosition.shape)
+		((lastShape ?? 'block') !== cursorPosition.shape
+			? buildCursorShape(cursorPosition.shape)
+			: '')
 	);
 };
 
@@ -94,6 +97,7 @@ export const buildCursorOnlySequence = (input: CursorOnlyInput): string => {
 	);
 	const cursorSuffix = buildCursorSuffix(
 		input.previousLineCount - 1,
+		input.previousCursorPosition?.shape ?? 'block',
 		input.cursorPosition,
 	);
 	return hidePrefix + returnToBottom + cursorSuffix;

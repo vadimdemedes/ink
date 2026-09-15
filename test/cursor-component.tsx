@@ -15,6 +15,7 @@ import {
 import {homeAndEraseDown, type RenderMetrics} from '../src/ink.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
+import {buildCursorShape} from '../src/cursor-helpers.js';
 
 const showCursorEscape = '\u001B[?25h';
 const hideCursorEscape = '\u001B[?25l';
@@ -823,6 +824,30 @@ for (const {name, incremental} of inkRenderingModes) {
 		},
 	);
 }
+
+test.serial('block cursor default is not redundantly requested', async t => {
+	const stdout = createStdout(5);
+	const stdin = createStdin();
+
+	let lastCursor: CursorPosition | undefined;
+	const onRender = ({cursor}: RenderMetrics) => {
+		lastCursor = cursor;
+	};
+
+	const {unmount, waitUntilRenderFlush} = render(
+		<InputApp initialText="the quick" />,
+		{stdout, stdin, onRender},
+	);
+	await waitUntilRenderFlush();
+
+	const firstRenderOutput = getWriteCalls(stdout).join('');
+	t.false(
+		firstRenderOutput.includes(buildCursorShape('block')),
+		'cursor shape should not be requested if unchanged from default',
+	);
+
+	unmount();
+});
 
 test.serial('cursor wraps with text', async t => {
 	const stdout = createStdout(5);
