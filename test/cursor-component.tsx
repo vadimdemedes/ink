@@ -12,7 +12,7 @@ import {
 	Cursor,
 	type CursorPosition,
 } from '../src/index.js';
-import {homeAndEraseDown, RenderMetrics} from '../src/ink.js';
+import {homeAndEraseDown, type RenderMetrics} from '../src/ink.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
 

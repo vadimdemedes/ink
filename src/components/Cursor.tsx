@@ -1,7 +1,7 @@
 import React from 'react';
 import {
 	buildRenderCursorHereSequence,
-	CursorShape,
+	type CursorShape,
 	isValidCursorShape,
 } from '../cursor-helpers.js';
 
@@ -16,7 +16,7 @@ export type Props = {
  */
 export default function Cursor({shape = 'block'}: Props) {
 	if (!isValidCursorShape(shape)) {
-		throw new Error(`No such cursor shape ${shape}`);
+		throw new Error('Invalid cursor shape');
 	}
 
 	const marker = buildRenderCursorHereSequence(shape);
