@@ -79,6 +79,7 @@ export type CursorOnlyInput = {
 	cursorWasShown: boolean;
 	previousLineCount: number;
 	previousCursorPosition: CursorPosition | undefined;
+	previousCursorShape: CursorShape;
 	cursorPosition: CursorPosition | undefined;
 };
 
@@ -97,7 +98,7 @@ export const buildCursorOnlySequence = (input: CursorOnlyInput): string => {
 	);
 	const cursorSuffix = buildCursorSuffix(
 		input.previousLineCount - 1,
-		input.previousCursorPosition?.shape ?? 'block',
+		input.previousCursorShape,
 		input.cursorPosition,
 	);
 	return hidePrefix + returnToBottom + cursorSuffix;
