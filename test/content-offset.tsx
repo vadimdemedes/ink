@@ -439,3 +439,49 @@ test('horizontal scrolling preserves borders beside fully clipped rows', t => {
 
 	t.is(output, ['┌──┐', '│  │', '│GH│', '└──┘'].join('\n'));
 });
+
+test('contentOffsetY - keeps the visible lines of a multi-line text node', t => {
+	const output = renderToString(
+		<Box height={2} contentOffsetY={1} flexDirection="column">
+			<Box flexDirection="column" flexShrink={0}>
+				<Text>{'Line 1\nLine 2\nLine 3'}</Text>
+			</Box>
+		</Box>,
+	);
+
+	// The offset puts the text node one row above the top of the output, so only its first line is off screen. The box sets no `overflow`, so nothing slices the lines before they are written.
+	t.is(output, 'Line 2\nLine 3');
+});
+
+test('contentOffsetY - keeps the visible lines of a multi-line text node with only horizontal clipping', t => {
+	const output = renderToString(
+		<Box
+			height={2}
+			overflowX="hidden"
+			contentOffsetY={1}
+			flexDirection="column"
+		>
+			<Box flexDirection="column" flexShrink={0}>
+				<Text>{'Line 1\nLine 2\nLine 3'}</Text>
+			</Box>
+		</Box>,
+	);
+
+	// `overflowX="hidden"` clips columns only, so the vertical write path still receives the full set of lines with a negative `y`.
+	t.is(output, 'Line 2\nLine 3');
+});
+
+test('clipped content keeps its visible lines when the clip starts above the top', t => {
+	const output = renderToString(
+		<Box flexDirection="column">
+			<Box marginTop={-1} height={3} overflowY="hidden" flexDirection="column">
+				<Box flexDirection="column" flexShrink={0}>
+					<Text>{'Line 1\nLine 2\nLine 3'}</Text>
+				</Box>
+			</Box>
+		</Box>,
+	);
+
+	// The clipping box itself starts one row above the top, so `clip.y1` is negative and the reset after the slice leaves `y` negative as well.
+	t.is(output, 'Line 2\nLine 3');
+});

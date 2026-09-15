@@ -292,8 +292,11 @@ export default class Output {
 				for (let [index, line] of lines.entries()) {
 					const currentLine = output[y + offsetY];
 
-					// Line can be missing if `text` is taller than height of pre-initialized `this.output`
+					// Line can be missing if `text` starts above the top of
+					// `this.output` or is taller than its height. Advance `offsetY`
+					// anyway, so the lines that do land inside still get written.
 					if (!currentLine) {
+						offsetY++;
 						continue;
 					}
 
