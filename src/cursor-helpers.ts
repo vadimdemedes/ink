@@ -120,11 +120,13 @@ export const buildReturnToBottomPrefix = (
 
 // Special URL with zero-width string
 export const cursorPositionChar = '\u200B';
-export const renderCursorHereSequencePrefix = '\u001B]8;;ink.js://cursor/';
-const renderCursorHereSequenceSuffix = `\u001B\\${cursorPositionChar}\u001B]8;;\u001B\\`;
+const cursorPositionUrl = 'ink.js://cursor/';
 
 export const buildRenderCursorHereSequence = (shape: number) =>
-	renderCursorHereSequencePrefix + shape + renderCursorHereSequenceSuffix;
+	ansiEscapes.link(cursorPositionChar, cursorPositionUrl + shape);
+
+export const renderCursorHereSequencePrefix =
+	buildRenderCursorHereSequence(999).split('999')[0];
 
 export const extractCursorShape = (char: StyledChar) => {
 	if (char.value !== cursorPositionChar) {
