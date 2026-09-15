@@ -15,7 +15,7 @@ import {
 import {homeAndEraseDown, type RenderMetrics} from '../src/ink.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
-import {buildCursorShape} from '../src/cursor-helpers.js';
+import {buildCursorShape, CursorShape} from '../src/cursor-helpers.js';
 
 const showCursorEscape = '\u001B[?25h';
 const hideCursorEscape = '\u001B[?25l';
@@ -65,7 +65,12 @@ const waitForCondition = async (condition: () => boolean): Promise<void> => {
 	});
 };
 
-function InputApp({initialText = ''}: {initialText?: string}) {
+interface InputAppProps {
+	initialText?: string;
+	cursorShape?: CursorShape;
+}
+
+function InputApp({initialText = '', cursorShape}: InputAppProps) {
 	const [text, setText] = useState(initialText);
 
 	useInput((input, key) => {
@@ -83,7 +88,7 @@ function InputApp({initialText = ''}: {initialText?: string}) {
 		<Box>
 			<Text>
 				{`> ${text}`}
-				<Cursor />
+				<Cursor shape={cursorShape} />
 			</Text>
 		</Box>
 	);
@@ -882,4 +887,35 @@ test.serial('cursor wraps with text', async t => {
 	t.deepEqual(lastCursor, {x: 5, y: 2, shape: 'block'});
 
 	unmount();
+});
+
+test.serial(
+	'cursor shape sequence not written on unmount by default',
+	async t => {
+		const stdout = createStdout(5);
+		const stdin = createStdin();
+
+		const {unmount, waitUntilRenderFlush} = render(
+			<InputApp initialText="the quick" />,
+			{stdout, stdin},
+		);
+		await waitUntilRenderFlush();
+		unmount();
+
+		t.false(getWriteCalls(stdout).includes(buildCursorShape('block')));
+	},
+);
+
+test.serial('cursor shape is restored on unmount if needed', async t => {
+	const stdout = createStdout(5);
+	const stdin = createStdin();
+
+	const {unmount, waitUntilRenderFlush} = render(
+		<InputApp initialText="the quick" cursorShape="pipe" />,
+		{stdout, stdin},
+	);
+	await waitUntilRenderFlush();
+	unmount();
+
+	t.true(getWriteCalls(stdout).includes(buildCursorShape('block')));
 });

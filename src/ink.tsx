@@ -14,7 +14,11 @@ import {getWindowSize} from './utils.js';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
-import {hideCursorEscape, showCursorEscape} from './cursor-helpers.js';
+import {
+	buildCursorShape,
+	hideCursorEscape,
+	showCursorEscape,
+} from './cursor-helpers.js';
 import logUpdate, {type LogUpdate, type CursorPosition} from './log-update.js';
 import {bsu, esu, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
@@ -888,6 +892,12 @@ export default class Ink {
 					);
 					this.writeBestEffort(this.options.stdout, showCursorEscape);
 					this.alternateScreen = false;
+				}
+
+				const cursorPosition = this.cursorPosition;
+				if (cursorPosition != null && cursorPosition.shape !== 'block') {
+					this.writeBestEffort(this.options.stdout, buildCursorShape('block'));
+					cursorPosition.shape = 'block';
 				}
 
 				if (!this.interactive) {
