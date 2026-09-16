@@ -178,7 +178,12 @@ export default class Output {
 	}
 
 	// `sliceAnsi` works in terminal columns, but it drops a wide character (e.g. CJK) outright when the slice edge falls between its two halves. The visible half still owns a cell, so without padding it back the rest of the line shifts by a column and one column of content disappears.
-	sliceLineToColumns(line: string, from: number, to: number): string {
+	sliceLineToColumns(
+		line: string,
+		from: number,
+		to: number,
+		hasCursor: boolean,
+	): string {
 		if (from >= to) {
 			return '';
 		}
@@ -189,7 +194,11 @@ export default class Output {
 				? from - this.caches.getStringWidth(sliceAnsi(line, 0, from))
 				: 0;
 		const lostTrailing =
-			to - from - this.caches.getStringWidth(slice) - lostLeading;
+			to -
+			from -
+			this.caches.getStringWidth(slice) -
+			lostLeading -
+			(hasCursor ? 1 : 0);
 
 		return (
 			' '.repeat(Math.max(0, lostLeading)) +
@@ -269,16 +278,18 @@ export default class Output {
 
 					if (clipHorizontally) {
 						lines = lines.map(line => {
-							const hasCursor = line.includes(renderCursorHereSequencePrefix);
 							const from = x < clip.x1! ? clip.x1! - x : 0;
 							const width = this.caches.getStringWidth(line);
-							const to = x + width > clip.x2! ? clip.x2! - x : width;
+							let to = x + width > clip.x2! ? clip.x2! - x : width;
 
-							return this.sliceLineToColumns(
-								line,
-								from,
-								hasCursor ? to + 1 : to,
-							);
+							// Account for the cursor index
+							const cursorIndex = line.indexOf(renderCursorHereSequencePrefix);
+							const hasCursor = cursorIndex >= from && cursorIndex < to;
+							if (hasCursor) {
+								++to;
+							}
+
+							return this.sliceLineToColumns(line, from, to, hasCursor);
 						});
 
 						if (x < clip.x1!) {

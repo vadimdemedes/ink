@@ -11,11 +11,13 @@ import {
 	useStderr,
 	Cursor,
 	type CursorPosition,
+	renderToString,
 } from '../src/index.js';
 import {homeAndEraseDown, type RenderMetrics} from '../src/ink.js';
 import {buildCursorShape, type CursorShape} from '../src/cursor-helpers.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
+import stripAnsi from 'strip-ansi';
 
 const showCursorEscape = '\u001B[?25h';
 const hideCursorEscape = '\u001B[?25l';
@@ -918,4 +920,19 @@ test.serial('cursor shape is restored on unmount if needed', async t => {
 	unmount();
 
 	t.true(getWriteCalls(stdout).includes(buildCursorShape('block')));
+});
+
+test('overflowX - single text node inside overflow container with <Cursor />', t => {
+	const output = renderToString(
+		<Box width={5} overflowX="hidden">
+			<Box width={16} flexShrink={0}>
+				<Text>
+					<Cursor />
+					Hello World
+				</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.is(stripAnsi(output), 'Hello');
 });
