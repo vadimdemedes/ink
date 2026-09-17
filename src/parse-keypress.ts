@@ -487,6 +487,12 @@ const parseKeypress = (s: Uint8Array | string = ''): ParsedKey => {
 		key.raw = undefined;
 		key.name = 'return';
 		key.meta = s.length === 2;
+	} else if (s === '\x1bOM' || s === '\x1b\x1bOM') {
+		// Application keypad Enter has the same input value as Return.
+		key.raw = undefined;
+		key.name = 'return';
+		key.sequence = '\r';
+		key.meta = s.length === 4;
 	} else if (s === '\n') {
 		// enter, should have been called linefeed
 		key.name = 'enter';

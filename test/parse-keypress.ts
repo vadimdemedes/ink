@@ -237,6 +237,22 @@ test('kitty keypad Enter produces a return key and carriage return text', t => {
 	}
 });
 
+test('application keypad Enter maps to Return with carriage return sequence', t => {
+	for (const [sequence, meta] of [
+		['OM', false],
+		['OM', true],
+	] as const) {
+		const key = parseKeypress(sequence);
+
+		t.is(key.name, 'return');
+		t.is(key.sequence, '\r');
+		t.is(key.raw, undefined);
+		t.is(key.meta, meta);
+		t.false(key.ctrl);
+		t.false(key.shift);
+	}
+});
+
 test('Meta+Tab preserves the tab key and Meta modifier', t => {
 	const key = parseKeypress('\u001B\t');
 
