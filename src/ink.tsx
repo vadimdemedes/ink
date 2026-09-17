@@ -888,7 +888,7 @@ export default class Ink {
 		staticOutput: string,
 	): void {
 		// If <Static> output isn't empty, it means new children have been added to it
-		const hasStaticOutput = staticOutput && staticOutput !== '\n';
+		const hasStaticOutput = staticOutput !== '';
 
 		if (this.options.debug) {
 			if (hasStaticOutput) {
