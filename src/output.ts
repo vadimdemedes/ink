@@ -7,6 +7,13 @@ import {
 } from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
 
+// Replaces the remaining half of a partially overwritten wide character with a space that keeps its styles.
+const blankCell = (cell: StyledChar): StyledChar => ({
+	...cell,
+	value: ' ',
+	fullWidth: false,
+});
+
 /**
 "Virtual" output class
 
@@ -337,25 +344,19 @@ export default class Output {
 						continue;
 					}
 
-					const spaceCell: StyledChar = {
-						type: 'char',
-						value: ' ',
-						fullWidth: false,
-						styles: [],
-					};
-
 					// Wide characters (e.g. CJK) occupy two cells: a leading
 					// cell with the character and a trailing placeholder with
 					// value ''. When an overlapping write lands in the middle
 					// of a wide character, the boundary cells need cleanup so
 					// the terminal never renders a half-visible wide character.
+					// Preserve the styles of cells outside the overlapping write.
 					if (
 						currentLine[offsetX]?.value === '' &&
 						offsetX > 0 &&
 						this.caches.getStringWidth(currentLine[offsetX - 1]?.value ?? '') >
 							1
 					) {
-						currentLine[offsetX - 1] = spaceCell;
+						currentLine[offsetX - 1] = blankCell(currentLine[offsetX - 1]!);
 					}
 
 					for (const character of characters) {
@@ -384,7 +385,7 @@ export default class Output {
 					}
 
 					if (currentLine[offsetX]?.value === '') {
-						currentLine[offsetX] = spaceCell;
+						currentLine[offsetX] = blankCell(currentLine[offsetX]!);
 					}
 				}
 			}
