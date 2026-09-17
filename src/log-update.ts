@@ -274,7 +274,8 @@ const createIncremental = (
 			const isLastLine = i === visibleCount - 1;
 
 			// We do not write lines if the contents are the same. This prevents flickering during renders.
-			if (nextLines[i] === previousLines[i]) {
+			// New blank rows need a line feed to scroll at the terminal bottom; the trailing split entry is not a visible row.
+			if (i < previousVisible && nextLines[i] === previousLines[i]) {
 				// Don't move past the last line when there's no trailing newline,
 				// otherwise the cursor overshoots the rendered block.
 				if (!isLastLine || hasTrailingNewline) {
