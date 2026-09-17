@@ -280,18 +280,18 @@ test('preserve C1 OSC sequences in text', t => {
 	const input = '\u009D8;;https://example.com\u0007link\u009D8;;\u0007';
 	const output = renderText(input);
 
-	t.true(output.includes('\u009D8;;https://example.com'));
-	t.true(output.includes('\u009D8;;\u0007'));
-	t.is(output, input);
+	t.true(output.includes('\u001B]8;;https://example.com'));
+	t.true(output.includes('\u001B]8;;\u0007'));
+	t.is(stripAnsi(output), 'link');
 });
 
 test('preserve C1 OSC hyperlink sequences with ST terminator in text', t => {
 	const input = '\u009D8;;https://example.com\u001B\\link\u009D8;;\u001B\\';
 	const output = renderText(input);
 
-	t.true(output.includes('\u009D8;;https://example.com'));
+	t.true(output.includes('\u001B]8;;https://example.com'));
 	t.true(output.includes('\u001B\\'));
-	t.is(output, input);
+	t.is(stripAnsi(output), 'link');
 });
 
 test('preserve SGR sequences with colon parameters', t => {
