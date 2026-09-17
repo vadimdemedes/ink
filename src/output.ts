@@ -230,7 +230,17 @@ export default class Output {
 			if (operation.type === 'write') {
 				const {text, transformers} = operation;
 				let {x, y} = operation;
-				let lines = text.split('\n');
+				// Preserve styles across explicit newlines before clipping individual rows.
+				const characterLines: StyledChar[][] = [[]];
+				for (const character of this.caches.getStyledChars(text)) {
+					if (character.value === '\n') {
+						characterLines.push([]);
+					} else {
+						characterLines.at(-1)!.push(character);
+					}
+				}
+
+				let lines = characterLines.map(line => styledCharsToString(line));
 
 				const clip = clips.at(-1);
 
