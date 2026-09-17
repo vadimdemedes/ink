@@ -108,6 +108,7 @@ const renderToString = (
 
 	try {
 		let output: string;
+		let outputHeight: number;
 		try {
 			// Synchronously render the React tree into the container
 			reconciler.updateContainerSync(
@@ -120,7 +121,7 @@ const renderToString = (
 
 			// Yoga layout has already been calculated by onComputeLayout during commit.
 			// Render the DOM tree to a string — this captures the dynamic (non-static) output.
-			({output} = renderer(rootNode, false));
+			({output, outputHeight} = renderer(rootNode, false));
 		} finally {
 			// Tear down: unmount the tree so the reconciler cleans up child nodes
 			// and runs effect cleanup functions. Child Yoga nodes are freed by the
@@ -145,7 +146,8 @@ const renderToString = (
 			? capturedStaticOutput.slice(0, -1)
 			: capturedStaticOutput;
 
-		if (output) {
+		// A single blank dynamic row has empty text but still needs the separator after Static output.
+		if (outputHeight > 0) {
 			return capturedStaticOutput + output;
 		}
 
