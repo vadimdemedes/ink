@@ -1174,6 +1174,10 @@ export default class Ink {
 	}
 
 	private beginSuspend(): void {
+		if (!this.interactive) {
+			return;
+		}
+
 		if (this.isSuspended) {
 			throw new Error(
 				'The terminal is already suspended. Resume the current suspension before suspending again.',
