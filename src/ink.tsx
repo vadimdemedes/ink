@@ -495,89 +495,9 @@ export default class Ink {
 			this.isScreenReaderEnabled,
 		);
 
-		this.options.onRender?.({renderTime: performance.now() - startTime});
-
-		// If <Static> output isn't empty, it means new children have been added to it
-		const hasStaticOutput = staticOutput && staticOutput !== '\n';
-
-		if (this.options.debug) {
-			if (hasStaticOutput) {
-				this.fullStaticOutput += staticOutput;
-			}
-
-			this.lastOutput = output;
-			this.lastOutputToRender = output;
-			this.lastOutputHeight = outputHeight;
-			this.options.stdout.write(this.fullStaticOutput + output);
-			return;
-		}
-
-		if (!this.interactive) {
-			if (hasStaticOutput) {
-				this.options.stdout.write(staticOutput);
-			}
-
-			this.lastOutput = output;
-			this.lastOutputToRender = output + '\n';
-			this.lastOutputHeight = outputHeight;
-			return;
-		}
-
-		if (this.isScreenReaderEnabled) {
-			const sync = this.shouldSync();
-			if (sync) {
-				this.options.stdout.write(bsu);
-			}
-
-			const terminalWidth = getWindowSize(this.options.stdout).columns;
-			const wrappedOutput = wrapAnsi(output, terminalWidth, {
-				trim: false,
-				hard: true,
-			});
-
-			if (wrappedOutput === this.lastOutputToRender && !hasStaticOutput) {
-				if (sync) {
-					this.options.stdout.write(esu);
-				}
-
-				return;
-			}
-
-			// Erase the main output before writing new static output or replacing the frame.
-			// Log-update tracks the actual rows, including frames restored after external writes.
-			this.log.clear();
-			// After erasing, the last output is gone, so reset its height until the new frame is written.
-			this.lastOutputHeight = 0;
-			if (hasStaticOutput) {
-				this.options.stdout.write(staticOutput);
-			}
-
-			this.options.stdout.write(wrappedOutput);
-
-			this.lastOutput = output;
-			this.lastOutputToRender = wrappedOutput;
-			this.lastOutputHeight =
-				wrappedOutput === '' ? 0 : wrappedOutput.split('\n').length;
-			// Screen-reader output uses its own cursor placement.
-			this.log.setCursorPosition(undefined);
-			this.log.sync(wrappedOutput);
-
-			if (sync) {
-				this.options.stdout.write(esu);
-			}
-
-			return;
-		}
-
-		if (hasStaticOutput) {
-			this.fullStaticOutput += staticOutput;
-		}
-
-		this.renderInteractiveFrame(
-			output,
-			outputHeight,
-			hasStaticOutput ? staticOutput : '',
-		);
+		const renderTime = performance.now() - startTime;
+		this.renderFrame(output, outputHeight, staticOutput);
+		this.options.onRender?.({renderTime});
 	};
 
 	render(node: ReactNode): void {
@@ -952,6 +872,94 @@ export default class Ink {
 		};
 
 		return {resume, [Symbol.asyncDispose]: resume};
+	}
+
+	private renderFrame(
+		output: string,
+		outputHeight: number,
+		staticOutput: string,
+	): void {
+		// If <Static> output isn't empty, it means new children have been added to it
+		const hasStaticOutput = staticOutput && staticOutput !== '\n';
+
+		if (this.options.debug) {
+			if (hasStaticOutput) {
+				this.fullStaticOutput += staticOutput;
+			}
+
+			this.lastOutput = output;
+			this.lastOutputToRender = output;
+			this.lastOutputHeight = outputHeight;
+			this.options.stdout.write(this.fullStaticOutput + output);
+			return;
+		}
+
+		if (!this.interactive) {
+			if (hasStaticOutput) {
+				this.options.stdout.write(staticOutput);
+			}
+
+			this.lastOutput = output;
+			this.lastOutputToRender = output + '\n';
+			this.lastOutputHeight = outputHeight;
+			return;
+		}
+
+		if (this.isScreenReaderEnabled) {
+			const sync = this.shouldSync();
+			if (sync) {
+				this.options.stdout.write(bsu);
+			}
+
+			const terminalWidth = getWindowSize(this.options.stdout).columns;
+			const wrappedOutput = wrapAnsi(output, terminalWidth, {
+				trim: false,
+				hard: true,
+			});
+
+			if (wrappedOutput === this.lastOutputToRender && !hasStaticOutput) {
+				if (sync) {
+					this.options.stdout.write(esu);
+				}
+
+				return;
+			}
+
+			// Erase the main output before writing new static output or replacing the frame.
+			// Log-update tracks the actual rows, including frames restored after external writes.
+			this.log.clear();
+			// After erasing, the last output is gone, so reset its height until the new frame is written.
+			this.lastOutputHeight = 0;
+			if (hasStaticOutput) {
+				this.options.stdout.write(staticOutput);
+			}
+
+			this.options.stdout.write(wrappedOutput);
+
+			this.lastOutput = output;
+			this.lastOutputToRender = wrappedOutput;
+			this.lastOutputHeight =
+				wrappedOutput === '' ? 0 : wrappedOutput.split('\n').length;
+			// Screen-reader output uses its own cursor placement.
+			this.log.setCursorPosition(undefined);
+			this.log.sync(wrappedOutput);
+
+			if (sync) {
+				this.options.stdout.write(esu);
+			}
+
+			return;
+		}
+
+		if (hasStaticOutput) {
+			this.fullStaticOutput += staticOutput;
+		}
+
+		this.renderInteractiveFrame(
+			output,
+			outputHeight,
+			hasStaticOutput ? staticOutput : '',
+		);
 	}
 
 	private setAlternateScreen(enabled: boolean): void {
