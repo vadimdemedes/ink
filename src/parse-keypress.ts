@@ -437,8 +437,8 @@ const parseKeypress = (s: Uint8Array | string = ''): ParsedKey => {
 
 	if (s instanceof Uint8Array) {
 		if (s[0]! > 127 && s[1] === undefined) {
-			// Copy before mutating so the caller's buffer is never modified
-			s = '\x1b' + textDecoder.decode(new Uint8Array([s[0]! - 128]));
+			// Convert the Meta byte to ASCII without modifying the caller's buffer.
+			s = '\x1b' + String.fromCharCode(s[0]! - 128);
 		} else {
 			s = textDecoder.decode(s);
 		}

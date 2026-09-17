@@ -1,3 +1,4 @@
+import {Buffer} from 'node:buffer';
 import test from 'ava';
 import parseKeypress from '../src/parse-keypress.js';
 
@@ -8,6 +9,26 @@ test('parsing a single-byte Meta key does not mutate the input', t => {
 	t.like(firstKey, {name: 'a', meta: true, sequence: 'a'});
 	t.deepEqual(input, new Uint8Array([0xe1]));
 	t.deepEqual(parseKeypress(input), firstKey);
+});
+
+test('Meta byte parsing preserves shared buffers across the full byte range', t => {
+	for (let byte = 128; byte <= 255; byte++) {
+		const buffer = Buffer.from([0, byte, 0]);
+		const input = buffer.subarray(1, 2);
+		const expected = parseKeypress(`${String.fromCodePoint(byte - 128)}`);
+
+		t.deepEqual(parseKeypress(input), expected);
+		t.deepEqual(buffer, Buffer.from([0, byte, 0]));
+		t.deepEqual(parseKeypress(input), expected);
+	}
+});
+
+test('byte parsing preserves ASCII and multibyte UTF-8 input', t => {
+	for (const text of ['a', 'hello', 'é', '😀']) {
+		const input = Buffer.from(text);
+		t.deepEqual(parseKeypress(input), parseKeypress(text));
+		t.deepEqual(input, Buffer.from(text));
+	}
 });
 
 test('kitty functional keys preserve modifiers without an explicit event type', t => {

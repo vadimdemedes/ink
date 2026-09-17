@@ -218,7 +218,10 @@ test.serial(
 		const stdout = createStdout();
 		const stdin = createStdin();
 
-		const {unmount, waitUntilRenderFlush} = render(<InputApp />, {stdout, stdin});
+		const {unmount, waitUntilRenderFlush} = render(<InputApp />, {
+			stdout,
+			stdin,
+		});
 		t.teardown(unmount);
 		await waitUntilRenderFlush();
 
