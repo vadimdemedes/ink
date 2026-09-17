@@ -77,7 +77,7 @@ const useFocus = ({
 	}, [isActive, isRawModeSupported, setRawMode]);
 
 	return {
-		isFocused: Boolean(id) && activeId === id,
+		isFocused: activeId === id,
 		focus,
 	};
 };

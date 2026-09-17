@@ -653,7 +653,7 @@ function App({
 
 			if (autoFocus && isFocusEnabledRef.current) {
 				setActiveFocusId(currentActiveFocusId => {
-					if (!currentActiveFocusId) {
+					if (currentActiveFocusId === undefined) {
 						return id;
 					}
 
