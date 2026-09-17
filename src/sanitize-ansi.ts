@@ -1,6 +1,8 @@
 import {hasAnsiControlCharacters, tokenizeAnsi} from './ansi-tokenizer.js';
 
 const sgrParametersRegex = /^[\d:;]*$/;
+// Cursor controls in plain text must not move outside the rendered cells.
+const cursorControlsRegex = /[\b\v\f\r]/g;
 
 // Strip ANSI escape sequences that would conflict with Ink's layout.
 // Preserved: SGR sequences (colors, bold, etc. - end with 'm') and
@@ -8,13 +10,18 @@ const sgrParametersRegex = /^[\d:;]*$/;
 // Stripped: cursor movement, screen clearing, and other control sequences.
 const sanitizeAnsi = (text: string): string => {
 	if (!hasAnsiControlCharacters(text)) {
-		return text;
+		return text.replaceAll(cursorControlsRegex, '');
 	}
 
 	let output = '';
 
 	for (const token of tokenizeAnsi(text)) {
-		if (token.type === 'text' || token.type === 'osc') {
+		if (token.type === 'text') {
+			output += token.value.replaceAll(cursorControlsRegex, '');
+			continue;
+		}
+
+		if (token.type === 'osc') {
 			output += token.value;
 			continue;
 		}
