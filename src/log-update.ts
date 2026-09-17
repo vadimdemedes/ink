@@ -6,6 +6,7 @@ import {
 	buildCursorSuffix,
 	buildCursorOnlySequence,
 	buildReturnToBottomPrefix,
+	buildReturnToBottom,
 	hideCursorEscape,
 } from './cursor-helpers.js';
 
@@ -117,6 +118,13 @@ const createStandard = (
 	};
 
 	render.done = () => {
+		if (previousCursorPosition) {
+			// Leave the terminal at the output bottom before discarding the cursor position.
+			stream.write(
+				buildReturnToBottom(previousLineCount, previousCursorPosition),
+			);
+		}
+
 		previousOutput = '';
 		previousLineCount = 0;
 		previousCursorPosition = undefined;
@@ -321,6 +329,13 @@ const createIncremental = (
 	};
 
 	render.done = () => {
+		if (previousCursorPosition) {
+			// Leave the terminal at the output bottom before discarding the cursor position.
+			stream.write(
+				buildReturnToBottom(previousLines.length, previousCursorPosition),
+			);
+		}
+
 		previousOutput = '';
 		previousLines = [];
 		previousCursorPosition = undefined;

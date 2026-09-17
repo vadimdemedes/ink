@@ -676,6 +676,10 @@ export default class Ink {
 					this.kittyProtocolEnabled = false;
 				}
 
+				if (this.interactive && !this.options.debug) {
+					this.log.done();
+				}
+
 				// Alternate-screen content is disposable by design. We intentionally
 				// leave it active until React cleanup finishes, then restore the
 				// primary buffer without replaying prior frames, hook writes, or
@@ -699,8 +703,6 @@ export default class Ink {
 					this.options.stdout.write(
 						this.options.debug ? '\n' : this.lastOutput + '\n',
 					);
-				} else if (!this.options.debug) {
-					this.log.done();
 				}
 			}
 
