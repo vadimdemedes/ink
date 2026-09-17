@@ -285,8 +285,14 @@ const measureTextNode = function (
 
 	const textWrap = node.style?.textWrap ?? 'wrap';
 	const wrappedText = wrapText(text, width, textWrap);
+	const wrappedDimensions = measureText(wrappedText);
 
-	return measureText(wrappedText);
+	// Reserve the truncation width so rendering does not truncate again at a narrower width when a wide character leaves an unused column.
+	if (textWrap.startsWith('truncate')) {
+		return {width, height: wrappedDimensions.height};
+	}
+
+	return wrappedDimensions;
 };
 
 const findClosestYogaNode = (node?: DOMNode): YogaNode | undefined => {
