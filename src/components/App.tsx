@@ -80,11 +80,8 @@ function App({
 	const [activeFocusId, setActiveFocusId] = useState<string | undefined>(
 		undefined,
 	);
-	// Focusables array is managed internally via setFocusables callback pattern
-	// eslint-disable-next-line react/hook-use-state
-	const [, setFocusables] = useState<Focusable[]>([]);
-	// Track focusables count for tab navigation check (avoids stale closure)
-	const focusablesCountRef = useRef(0);
+	// The registry is not rendered. Keep it current without nesting state updates, so focus changes are queued in call order.
+	const focusablesRef = useRef<Focusable[]>([]);
 	const animationSubscribersRef = useRef(
 		new Map<(currentTime: number) => void, AnimationSubscriber>(),
 	);
@@ -547,43 +544,39 @@ function App({
 	);
 
 	const focusNext = useCallback((): void => {
-		setFocusables(currentFocusables => {
-			setActiveFocusId(currentActiveFocusId => {
-				const firstFocusableId = currentFocusables.find(
-					focusable => focusable.isActive,
-				)?.id;
-				const nextFocusableId = findNextFocusable(
-					currentFocusables,
-					currentActiveFocusId,
-				);
+		const currentFocusables = focusablesRef.current;
+		setActiveFocusId(currentActiveFocusId => {
+			const firstFocusableId = currentFocusables.find(
+				focusable => focusable.isActive,
+			)?.id;
+			const nextFocusableId = findNextFocusable(
+				currentFocusables,
+				currentActiveFocusId,
+			);
 
-				return nextFocusableId ?? firstFocusableId;
-			});
-			return currentFocusables;
+			return nextFocusableId ?? firstFocusableId;
 		});
 	}, [findNextFocusable]);
 
 	const focusPrevious = useCallback((): void => {
-		setFocusables(currentFocusables => {
-			setActiveFocusId(currentActiveFocusId => {
-				const lastFocusableId = currentFocusables.findLast(
-					focusable => focusable.isActive,
-				)?.id;
-				const previousFocusableId = findPreviousFocusable(
-					currentFocusables,
-					currentActiveFocusId,
-				);
+		const currentFocusables = focusablesRef.current;
+		setActiveFocusId(currentActiveFocusId => {
+			const lastFocusableId = currentFocusables.findLast(
+				focusable => focusable.isActive,
+			)?.id;
+			const previousFocusableId = findPreviousFocusable(
+				currentFocusables,
+				currentActiveFocusId,
+			);
 
-				return previousFocusableId ?? lastFocusableId;
-			});
-			return currentFocusables;
+			return previousFocusableId ?? lastFocusableId;
 		});
 	}, [findPreviousFocusable]);
 
 	// Handle tab navigation via effect that subscribes to input events
 	useEffect(() => {
 		const handleTabNavigation = (input: string): void => {
-			if (!isFocusEnabledRef.current || focusablesCountRef.current === 0) {
+			if (!isFocusEnabledRef.current || focusablesRef.current.length === 0) {
 				return;
 			}
 
@@ -624,32 +617,18 @@ function App({
 	}, []);
 
 	const focus = useCallback((id: string): void => {
-		setFocusables(currentFocusables => {
-			const hasFocusableId = currentFocusables.some(
-				focusable => focusable.id === id && focusable.isActive,
-			);
+		const hasFocusableId = focusablesRef.current.some(
+			focusable => focusable.id === id && focusable.isActive,
+		);
 
-			if (hasFocusableId) {
-				setActiveFocusId(id);
-			}
-
-			return currentFocusables;
-		});
+		if (hasFocusableId) {
+			setActiveFocusId(id);
+		}
 	}, []);
 
 	const addFocusable = useCallback(
 		(id: string, {autoFocus}: {autoFocus: boolean}): void => {
-			setFocusables(currentFocusables => {
-				focusablesCountRef.current = currentFocusables.length + 1;
-
-				return [
-					...currentFocusables,
-					{
-						id,
-						isActive: true,
-					},
-				];
-			});
+			focusablesRef.current = [...focusablesRef.current, {id, isActive: true}];
 
 			if (autoFocus && isFocusEnabledRef.current) {
 				setActiveFocusId(currentActiveFocusId => {
@@ -673,29 +652,19 @@ function App({
 			return currentActiveFocusId;
 		});
 
-		setFocusables(currentFocusables => {
-			const filtered = currentFocusables.filter(focusable => {
-				return focusable.id !== id;
-			});
-			focusablesCountRef.current = filtered.length;
-
-			return filtered;
+		focusablesRef.current = focusablesRef.current.filter(focusable => {
+			return focusable.id !== id;
 		});
 	}, []);
 
 	const activateFocusable = useCallback((id: string): void => {
-		setFocusables(currentFocusables =>
-			currentFocusables.map(focusable => {
-				if (focusable.id !== id) {
-					return focusable;
-				}
+		focusablesRef.current = focusablesRef.current.map(focusable => {
+			if (focusable.id !== id) {
+				return focusable;
+			}
 
-				return {
-					id,
-					isActive: true,
-				};
-			}),
-		);
+			return {id, isActive: true};
+		});
 	}, []);
 
 	const deactivateFocusable = useCallback((id: string): void => {
@@ -707,18 +676,13 @@ function App({
 			return currentActiveFocusId;
 		});
 
-		setFocusables(currentFocusables =>
-			currentFocusables.map(focusable => {
-				if (focusable.id !== id) {
-					return focusable;
-				}
+		focusablesRef.current = focusablesRef.current.map(focusable => {
+			if (focusable.id !== id) {
+				return focusable;
+			}
 
-				return {
-					id,
-					isActive: false,
-				};
-			}),
-		);
+			return {id, isActive: false};
+		});
 	}, []);
 
 	// Handle cursor visibility, raw mode, and bracketed paste mode cleanup on unmount
