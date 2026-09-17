@@ -867,7 +867,13 @@ export default class Ink {
 			return undefined;
 		}
 
+		let resumed = false;
 		const resume = async (): Promise<void> => {
+			if (resumed) {
+				return;
+			}
+
+			resumed = true;
 			await this.endSuspend();
 		};
 
