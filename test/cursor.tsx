@@ -218,16 +218,17 @@ test.serial(
 		const stdout = createStdout();
 		const stdin = createStdin();
 
-		const {unmount} = render(<InputApp />, {stdout, stdin});
-		await delay(50);
+		const {unmount, waitUntilRenderFlush} = render(<InputApp />, {stdout, stdin});
+		t.teardown(unmount);
+		await waitUntilRenderFlush();
 
 		emitReadable(stdin, 'a');
-		await delay(50);
+		await waitUntilRenderFlush();
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		const afterA = (stdout.write as any).callCount;
 
 		emitReadable(stdin, ' ');
-		await delay(50);
+		await waitUntilRenderFlush();
 
 		// Space adds to text, cursor should move even if Ink output looks the same (padded)
 		t.true(

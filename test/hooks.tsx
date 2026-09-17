@@ -1,6 +1,7 @@
 import test, {type ExecutionContext} from 'ava';
 import stripAnsi from 'strip-ansi';
 import term from './helpers/term.js';
+import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 
 test.serial('useInput - ignore input if not active', async t => {
 	const ps = term('use-input-multiple');
@@ -102,7 +103,12 @@ test.serial('useStdout - write to stdout', async t => {
 	]);
 });
 
-// `node-pty` doesn't support streaming stderr output, so I need to figure out
-// how to test useStderr() hook. child_process.spawn() can't be used, because
-// Ink fails with "raw mode unsupported" error.
-test.todo('useStderr - write to stderr');
+test.serial('useStderr - write to stderr', async t => {
+	const ps = term('use-stderr');
+	await ps.waitForExit();
+
+	// Both streams share the PTY. Separate-stream tests in cursor.tsx cover routing; reconstruct the screen here to verify clearing and repainting.
+	const lines = reconstructTerminalLines(ps.output, 24).filter(Boolean);
+
+	t.deepEqual(lines, ['Hello from Ink to stderr', 'Hello World', 'exited']);
+});
