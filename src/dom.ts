@@ -1,4 +1,4 @@
-import Yoga, {type Node as YogaNode} from 'yoga-layout';
+import Yoga, {type Node as YogaNode, type MeasureMode} from 'yoga-layout';
 import measureText from './measure-text.js';
 import {type Styles} from './styles.js';
 import wrapText from './wrap-text.js';
@@ -266,14 +266,16 @@ export const createTextNode = (text: string): TextNode => {
 const measureTextNode = function (
 	node: DOMNode,
 	width: number,
+	widthMode: MeasureMode,
 ): {width: number; height: number} {
 	const text =
 		node.nodeName === '#text' ? node.nodeValue : squashTextNodes(node);
 
 	const dimensions = measureText(text);
 
+	// An unconstrained Yoga measurement requests the natural size, not wrapping or truncation at its NaN width.
 	// Text fits into container, no need to wrap
-	if (dimensions.width <= width) {
+	if (widthMode === Yoga.MEASURE_MODE_UNDEFINED || dimensions.width <= width) {
 		return dimensions;
 	}
 
