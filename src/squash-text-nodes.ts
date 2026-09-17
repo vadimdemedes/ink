@@ -3,14 +3,43 @@ import {type DOMElement} from './dom.js';
 import sanitizeAnsi from './sanitize-ansi.js';
 import {tokenizeAnsi} from './ansi-tokenizer.js';
 
+// The layout dependencies (wrap-ansi, slice-ansi) only understand the legacy semicolon form of 256-color and truecolor SGR parameters, so rewrite the colon form (`38:5:n`, `38:2::r:g:b`) to it.
+const normalizeColorParameter = (parameter: string): string => {
+	const parts = parameter.split(':');
+	if (parts[0] !== '38' && parts[0] !== '48') {
+		return parameter;
+	}
+
+	if (parts[1] === '5' && parts.length === 3) {
+		return parts.join(';');
+	}
+
+	if (parts[1] === '2') {
+		// Drop an empty or default color space id.
+		if (parts.length === 6 && (parts[2] === '' || parts[2] === '0')) {
+			parts.splice(2, 1);
+		}
+
+		if (parts.length === 5) {
+			return parts.join(';');
+		}
+	}
+
+	return parameter;
+};
+
 // Combining marks share their base character's cell. Defer SGR changes until after the marks so ANSI tokenization cannot consume them as part of an escape sequence.
-const preserveStyledCombiningMarks = (text: string): string => {
+const normalizeStyledText = (text: string): string => {
 	let output = '';
 	let pendingStyles = '';
 
 	for (const token of tokenizeAnsi(text)) {
 		if (token.type === 'csi' && token.finalCharacter === 'm') {
-			pendingStyles += token.value;
+			const parameters = token.parameterString
+				.split(';')
+				.map(parameter => normalizeColorParameter(parameter))
+				.join(';');
+			pendingStyles += `[${parameters}${token.intermediateString}m`;
 			continue;
 		}
 
@@ -81,8 +110,11 @@ const squashTextNodes = (node: DOMElement): string => {
 	// Measurement and styling dependencies understand the ESC forms of these C1 controls.
 	text = text.replaceAll('', '[').replaceAll('', ']').replaceAll('', '\\');
 
-	if (node.nodeName === 'ink-text' && /\p{Mark}/u.test(text)) {
-		text = preserveStyledCombiningMarks(text);
+	if (
+		node.nodeName === 'ink-text' &&
+		(text.includes(':') || /\p{Mark}/u.test(text))
+	) {
+		text = normalizeStyledText(text);
 	}
 
 	// Expand tabs after combining nested text so measurement and rendering use the same columns.

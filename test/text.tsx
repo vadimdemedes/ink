@@ -294,10 +294,11 @@ test('preserve C1 OSC hyperlink sequences with ST terminator in text', t => {
 	t.is(stripAnsi(output), 'link');
 });
 
-test('preserve SGR sequences with colon parameters', t => {
+test('preserve colors encoded with colon parameters', t => {
 	const output = renderText('A\u001B[38:2::255:100:0mcolor\u001B[0mB');
 
-	t.true(output.includes('\u001B[38:2::255:100:0m'));
+	t.is(output, renderText('A\u001B[38;2;255;100;0mcolor\u001B[0mB'));
+	t.true(output.includes('\u001B[38;2;255;100;0m'));
 	t.is(stripAnsi(output), 'AcolorB');
 });
 
