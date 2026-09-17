@@ -1249,13 +1249,12 @@ export default class Ink {
 
 		this.isSuspended = false;
 
-		// Reclaim input even mid-unmount: pauseInput already ran in beginSuspend, so
-		// restoring it is symmetric regardless of any state change during suspension.
-		this.resumeInput?.();
-
 		if (!this.interactive || this.isUnmounted || this.isUnmounting) {
 			return;
 		}
+
+		// Reclaim input only while the app still owns the terminal. After unmount, App cleanup has already restored raw mode, so resuming must not re-enable it.
+		this.resumeInput?.();
 
 		const {stdout} = this.options;
 		const {canWriteToStdout} = getWritableStreamState(stdout);
