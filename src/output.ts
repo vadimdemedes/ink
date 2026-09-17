@@ -1,4 +1,3 @@
-import sliceAnsi from 'slice-ansi';
 import stringWidth from 'string-width';
 import {
 	type StyledChar,
@@ -175,25 +174,42 @@ export default class Output {
 		});
 	}
 
-	// `sliceAnsi` works in terminal columns, but it drops a wide character (e.g. CJK) outright when the slice edge falls between its two halves. The visible half still owns a cell, so without padding it back the rest of the line shifts by a column and one column of content disappears.
+	// Clipping works in terminal columns. A wide character (e.g. CJK) occupies two cells, so when a clip edge falls between its halves, the character must be replaced by a space that keeps its styles, otherwise its background disappears and the rest of the line shifts by a column.
 	sliceLineToColumns(line: string, from: number, to: number): string {
 		if (from >= to) {
 			return '';
 		}
 
-		const slice = sliceAnsi(line, from, to);
-		const lostLeading =
-			from > 0
-				? from - this.caches.getStringWidth(sliceAnsi(line, 0, from))
-				: 0;
-		const lostTrailing =
-			to - from - this.caches.getStringWidth(slice) - lostLeading;
+		const result: StyledChar[] = [];
+		let column = 0;
 
-		return (
-			' '.repeat(Math.max(0, lostLeading)) +
-			slice +
-			' '.repeat(Math.max(0, lostTrailing))
-		);
+		for (const character of this.caches.getStyledChars(line)) {
+			const width = this.caches.getStringWidth(character.value);
+			const start = column;
+			column += width;
+
+			if (column <= from) {
+				continue;
+			}
+
+			if (start >= to) {
+				break;
+			}
+
+			if (width > 1 && (start < from || column > to)) {
+				// Only part of this wide character is visible, so keep the cell count and styles, but drop the glyph itself.
+				result.push({
+					type: 'char',
+					value: ' ',
+					fullWidth: false,
+					styles: character.styles,
+				});
+			} else {
+				result.push(character);
+			}
+		}
+
+		return styledCharsToString(result);
 	}
 
 	get(): {output: string; height: number} {
