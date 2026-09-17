@@ -1,6 +1,37 @@
 import wrapAnsi from 'wrap-ansi';
 import {type DOMElement} from './dom.js';
 import sanitizeAnsi from './sanitize-ansi.js';
+import {tokenizeAnsi} from './ansi-tokenizer.js';
+
+// Combining marks share their base character's cell. Defer SGR changes until after the marks so ANSI tokenization cannot consume them as part of an escape sequence.
+const preserveStyledCombiningMarks = (text: string): string => {
+	let output = '';
+	let pendingStyles = '';
+
+	for (const token of tokenizeAnsi(text)) {
+		if (token.type === 'csi' && token.finalCharacter === 'm') {
+			pendingStyles += token.value;
+			continue;
+		}
+
+		if (token.type === 'text') {
+			const marks = /^\p{Mark}+/u.exec(token.value)?.[0] ?? '';
+			output += marks;
+			const remainder = token.value.slice(marks.length);
+			if (remainder === '') {
+				continue;
+			}
+
+			output += pendingStyles + remainder;
+		} else {
+			output += pendingStyles + token.value;
+		}
+
+		pendingStyles = '';
+	}
+
+	return output + pendingStyles;
+};
 
 // Squashing text nodes allows to combine multiple text nodes into one and write
 // to `Output` instance only once. For example, <Text>hello{' '}world</Text>
@@ -49,6 +80,10 @@ const squashTextNodes = (node: DOMElement): string => {
 
 	// Measurement and styling dependencies understand the ESC forms of these C1 controls.
 	text = text.replaceAll('', '[').replaceAll('', ']').replaceAll('', '\\');
+
+	if (node.nodeName === 'ink-text' && /\p{Mark}/u.test(text)) {
+		text = preserveStyledCombiningMarks(text);
+	}
 
 	// Expand tabs after combining nested text so measurement and rendering use the same columns.
 	if (node.nodeName === 'ink-text' && text.includes('\t')) {
