@@ -131,6 +131,25 @@ const clearStaticNodeIfContained = (
 	}
 };
 
+const findStaticNode = (node: DOMElement): DOMElement | undefined => {
+	if (node.internal_static) {
+		return node;
+	}
+
+	for (const child of node.childNodes) {
+		if (child.nodeName === '#text') {
+			continue;
+		}
+
+		const staticNode = findStaticNode(child);
+		if (staticNode) {
+			return staticNode;
+		}
+	}
+
+	return undefined;
+};
+
 type Props = Record<string, unknown>;
 
 type HostContext = {
@@ -204,6 +223,13 @@ export default createReconciler<
 	preparePortalMount: () => null,
 	clearContainer: () => false,
 	resetAfterCommit(rootNode) {
+		// Save the <Static> reference from the committed tree so rendering can access it directly. createInstance also runs for abandoned transitions and must not replace the committed reference.
+		const staticNode = findStaticNode(rootNode);
+		rootNode.staticNode = staticNode;
+		if (staticNode !== rootNode.previousStaticNode) {
+			rootNode.isStaticDirty = true;
+		}
+
 		if (typeof rootNode.onComputeLayout === 'function') {
 			rootNode.onComputeLayout();
 		}
@@ -247,7 +273,7 @@ export default createReconciler<
 		return {isInsideText};
 	},
 	shouldSetTextContent: () => false,
-	createInstance(originalType, newProps, rootNode, hostContext) {
+	createInstance(originalType, newProps, _rootNode, hostContext) {
 		if (hostContext.isInsideText && originalType === 'ink-box') {
 			throw new Error(`<Box> can’t be nested inside <Text> component`);
 		}
@@ -281,11 +307,6 @@ export default createReconciler<
 
 			if (key === 'internal_static') {
 				node.internal_static = true;
-				rootNode.isStaticDirty = true;
-
-				// Save reference to <Static> node to skip traversal of entire
-				// node tree to find it
-				rootNode.staticNode = node;
 				continue;
 			}
 
