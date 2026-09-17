@@ -437,8 +437,8 @@ const parseKeypress = (s: Uint8Array | string = ''): ParsedKey => {
 
 	if (s instanceof Uint8Array) {
 		if (s[0]! > 127 && s[1] === undefined) {
-			(s[0] as unknown as number) -= 128;
-			s = '\x1b' + textDecoder.decode(s);
+			// Copy before mutating so the caller's buffer is never modified
+			s = '\x1b' + textDecoder.decode(new Uint8Array([s[0]! - 128]));
 		} else {
 			s = textDecoder.decode(s);
 		}

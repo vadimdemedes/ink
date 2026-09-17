@@ -1,6 +1,15 @@
 import test from 'ava';
 import parseKeypress from '../src/parse-keypress.js';
 
+test('parsing a single-byte Meta key does not mutate the input', t => {
+	const input = new Uint8Array([0xe1]);
+	const firstKey = parseKeypress(input);
+
+	t.like(firstKey, {name: 'a', meta: true, sequence: 'a'});
+	t.deepEqual(input, new Uint8Array([0xe1]));
+	t.deepEqual(parseKeypress(input), firstKey);
+});
+
 test('kitty functional keys preserve modifiers without an explicit event type', t => {
 	for (const [sequence, name] of [
 		['\u001B[1;249A', 'up'],
