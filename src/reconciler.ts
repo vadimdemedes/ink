@@ -12,6 +12,7 @@ import {
 	removeChildNode,
 	freeYogaSubtree,
 	emitLayoutListeners,
+	setTransform,
 	setStyle,
 	setTextNodeValue,
 	setNodeHidden,
@@ -379,7 +380,7 @@ export default createReconciler<
 				}
 
 				if (key === 'internal_transform') {
-					node.internal_transform = value as OutputTransformer;
+					setTransform(node, value as OutputTransformer);
 					continue;
 				}
 

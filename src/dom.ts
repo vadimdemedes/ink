@@ -224,6 +224,21 @@ export const setAttribute = (
 	node.attributes[key] = value;
 };
 
+/**
+Update a text transform and invalidate measurements that include its output.
+*/
+export const setTransform = (
+	node: DOMElement,
+	transform: OutputTransformer | undefined,
+): void => {
+	node.internal_transform = transform;
+
+	// Nested transforms contribute to the enclosing text node's measured content.
+	if (node.nodeName === 'ink-virtual-text') {
+		markNodeAsDirty(node);
+	}
+};
+
 export const setStyle = (node: DOMNode, style?: Styles): void => {
 	if (node.nodeName === 'ink-text' && node.style.textWrap !== style?.textWrap) {
 		// Wrapping changes text measurements without changing any Yoga style.
