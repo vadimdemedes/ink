@@ -86,7 +86,10 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			outputHeight,
 			// Newline at the end is needed, because static output doesn't have one, so
 			// interactive output will override last line of static output
-			staticOutput: staticOutput ? `${staticOutput.get().output}\n` : '',
+			staticOutput:
+				staticOutput && staticOutput.height > 0
+					? `${staticOutput.get().output}\n`
+					: '',
 		};
 	}
 

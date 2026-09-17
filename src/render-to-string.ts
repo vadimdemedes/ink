@@ -71,7 +71,7 @@ const renderToString = (
 
 	rootNode.onImmediateRender = () => {
 		const {staticOutput} = renderer(rootNode, false);
-		if (staticOutput && staticOutput !== '\n') {
+		if (staticOutput) {
 			capturedStaticOutput += staticOutput;
 		}
 	};
@@ -145,11 +145,11 @@ const renderToString = (
 			? capturedStaticOutput.slice(0, -1)
 			: capturedStaticOutput;
 
-		if (normalizedStaticOutput && output) {
-			return normalizedStaticOutput + '\n' + output;
+		if (output) {
+			return capturedStaticOutput + output;
 		}
 
-		return normalizedStaticOutput || output;
+		return normalizedStaticOutput;
 	} finally {
 		// Ensure native Yoga memory is freed even if rendering or teardown threw.
 		// Yoga nodes are WASM-backed and not garbage collected.
