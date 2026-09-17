@@ -440,51 +440,37 @@ function App({
 		[stdout],
 	);
 
-	// Remembers which input modes were active so resumeInput can reinstate exactly
-	// those after a terminal suspension, without touching the ref counts (the React
-	// components still "own" raw mode/bracketed paste across the suspension).
-	const suspendedInputStateRef = useRef({
-		rawMode: false,
-		bracketedPaste: false,
-	});
-
+	// Pausing and resuming leave the ref counts untouched: the React components
+	// still "own" raw mode/bracketed paste across the suspension.
 	const pauseInput = useCallback((): void => {
-		const wasRawMode = isRawModeSupported && rawModeEnabledCount.current > 0;
-		const wasBracketedPaste = bracketedPasteModeEnabledCount.current > 0;
-		suspendedInputStateRef.current = {
-			rawMode: wasRawMode,
-			bracketedPaste: wasBracketedPaste,
-		};
-
-		if (wasBracketedPaste && stdout.isTTY) {
+		if (bracketedPasteModeEnabledCount.current > 0 && stdout.isTTY) {
 			try {
 				stdout.write('\u001B[?2004l');
 			} catch {}
 		}
 
-		if (wasRawMode) {
+		if (isRawModeSupported && rawModeEnabledCount.current > 0) {
 			rawModeStdin?.setRawMode(false);
 			rawModeStdin?.unref?.();
 			clearInputState();
 		}
 	}, [isRawModeSupported, rawModeStdin, stdout, clearInputState]);
 
+	// Hooks may have been disabled or removed while suspended, so restore only the modes that still have an owner.
 	const resumeInput = useCallback((): void => {
-		const {rawMode, bracketedPaste} = suspendedInputStateRef.current;
-
-		if (rawMode) {
+		if (isRawModeSupported && rawModeEnabledCount.current > 0) {
 			rawModeStdin?.setEncoding('utf8');
 			rawModeStdin?.ref?.();
 			rawModeStdin?.setRawMode(true);
 			attachReadableListener();
 		}
 
-		if (bracketedPaste && stdout.isTTY) {
+		if (bracketedPasteModeEnabledCount.current > 0 && stdout.isTTY) {
 			try {
 				stdout.write('\u001B[?2004h');
 			} catch {}
 		}
-	}, [rawModeStdin, stdout, attachReadableListener]);
+	}, [isRawModeSupported, rawModeStdin, stdout, attachReadableListener]);
 
 	// Register input pause/resume in an insertion effect: it runs before every
 	// passive effect (parent and child), so a child that calls suspendTerminal()
