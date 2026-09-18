@@ -20,9 +20,9 @@ const triggers = {
 	},
 };
 
-for (const incrementalRendering of [false, true]) {
+for (const mode of ['standard', 'incremental', 'screen-reader'] as const) {
 	for (const [trigger, update] of Object.entries(triggers)) {
-		test(`${trigger} restores unchanged content after clear (incremental: ${incrementalRendering})`, async t => {
+		test(`${trigger} restores unchanged content after clear (${mode})`, async t => {
 			const stdout = createStdout(80, true);
 			stdout.rows = 8;
 			let instance!: ReturnType<typeof render>;
@@ -30,7 +30,8 @@ for (const incrementalRendering of [false, true]) {
 				instance = render(<Hello />, {
 					stdout,
 					interactive: true,
-					incrementalRendering,
+					incrementalRendering: mode === 'incremental',
+					isScreenReaderEnabled: mode === 'screen-reader',
 					patchConsole: false,
 				});
 			});
@@ -50,13 +51,14 @@ for (const incrementalRendering of [false, true]) {
 		});
 	}
 
-	test(`unmount does not restore cleared content (incremental: ${incrementalRendering})`, async t => {
+	test(`unmount does not restore cleared content (${mode})`, async t => {
 		const stdout = createStdout(80, true);
 		stdout.rows = 8;
 		const instance = render(<Text>Hello</Text>, {
 			stdout,
 			interactive: true,
-			incrementalRendering,
+			incrementalRendering: mode === 'incremental',
+			isScreenReaderEnabled: mode === 'screen-reader',
 			patchConsole: false,
 		});
 		t.teardown(instance.unmount);
