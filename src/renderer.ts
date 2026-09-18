@@ -4,11 +4,13 @@ import renderNodeToOutput, {
 } from './render-node-to-output.js';
 import Output from './output.js';
 import {type DOMElement} from './dom.js';
+import {type CursorPosition} from './cursor-helpers.js';
 
 type Result = {
 	output: string;
 	outputHeight: number;
 	staticOutput: string;
+	cursorPosition?: CursorPosition;
 };
 
 const getVisibleStaticNode = (
@@ -55,7 +57,7 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			height: node.yogaNode.getComputedHeight(),
 		});
 
-		renderNodeToOutput(node, output, {
+		const effects = renderNodeToOutput(node, output, {
 			skipStaticElements: true,
 		});
 
@@ -90,6 +92,7 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 				staticOutput && staticOutput.height > 0
 					? `${staticOutput.get().output}\n`
 					: '',
+			cursorPosition: effects?.cursorPosition,
 		};
 	}
 

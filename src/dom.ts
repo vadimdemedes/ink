@@ -71,6 +71,9 @@ export type DOMElement = {
 	onImmediateRender?: () => void;
 	onStaticChange?: () => void;
 	internal_layoutListeners?: Set<LayoutListener>;
+
+	/** Character offset within an ink-text at which to place the cursor */
+	internal_cursorOffset?: number;
 } & InkNode;
 
 export type TextNode = {
@@ -111,7 +114,7 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 
 export const appendChildNode = (
 	node: DOMElement,
-	childNode: DOMElement,
+	childNode: DOMElement | TextNode,
 ): void => {
 	if (childNode.parentNode) {
 		removeChildNode(childNode.parentNode, childNode);
@@ -269,7 +272,7 @@ const measureTextNode = function (
 	widthMode: MeasureMode,
 ): {width: number; height: number} {
 	const text =
-		node.nodeName === '#text' ? node.nodeValue : squashTextNodes(node);
+		node.nodeName === '#text' ? node.nodeValue : squashTextNodes(node).text;
 
 	const dimensions = measureText(text);
 
