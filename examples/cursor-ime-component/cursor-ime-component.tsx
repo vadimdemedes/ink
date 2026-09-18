@@ -34,7 +34,7 @@ function App() {
 	const after = text.slice(cursor);
 
 	return (
-		<Box flexDirection="column" width={8}>
+		<Box flexDirection="column" width={5}>
 			<Text>Type Korean (Ctrl+C to exit):</Text>
 			<Text>
 				{'> '}

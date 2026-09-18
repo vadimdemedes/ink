@@ -247,7 +247,7 @@ const wrapCursorOffset = (wrappedText: string, cursorOffset: number) => {
 		// y counts number of newlines added in the wrapped text; we
 		// need to augment cursorOffset by that amount when comparing
 		// offsets into the wrapped text.
-		if (end === -1 || end >= cursorOffset + y) {
+		if (end === -1 || end > cursorOffset + y) {
 			break;
 		}
 

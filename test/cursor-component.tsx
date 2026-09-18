@@ -68,9 +68,10 @@ const waitForCondition = async (condition: () => boolean): Promise<void> => {
 
 type InputAppProps = {
 	readonly initialText?: string;
+	readonly offset?: number;
 };
 
-function InputApp({initialText = ''}: InputAppProps) {
+function InputApp({initialText = '', offset}: InputAppProps) {
 	const [text, setText] = useState(initialText);
 
 	useInput((input, key) => {
@@ -84,11 +85,19 @@ function InputApp({initialText = ''}: InputAppProps) {
 		}
 	});
 
+	let before = text;
+	let after = null;
+	if (offset != null) {
+		before = text.slice(0, offset);
+		after = text.slice(offset);
+	}
+
 	return (
 		<Box>
 			<Text>
-				{`> ${text}`}
+				{`> ${before}`}
 				<Cursor />
+				{after}
 			</Text>
 		</Box>
 	);
@@ -829,11 +838,12 @@ for (const {name, incremental} of inkRenderingModes) {
 		},
 	);
 }
+
 [
 	{text: 'the quick', cursorTo: 5, cursorUp: 1, cursor: {x: 5, y: 2}},
 	{text: '3456 7', cursorTo: 1, cursorUp: 1, cursor: {x: 1, y: 2}},
 ].forEach((config, i) => {
-	test.serial(`cursor wraps with text ${i}`, async t => {
+	test.serial(`cursor wraps after text #${i}`, async t => {
 		const stdout = createStdout(5);
 		const stdin = createStdin();
 
@@ -844,6 +854,49 @@ for (const {name, incremental} of inkRenderingModes) {
 
 		const {unmount, waitUntilRenderFlush} = render(
 			<InputApp initialText={config.text} />,
+			{stdout, stdin, onCursorUpdated},
+		);
+		await waitUntilRenderFlush();
+
+		const firstRenderOutput = getWriteCalls(stdout).join('');
+		// Cursor should be shown at x=2 (after "> ")
+		t.true(
+			firstRenderOutput.includes(showCursorEscape),
+			'cursor should be visible after first render',
+		);
+		t.deepEqual(
+			lastCursor,
+			config.cursor,
+			`cursor should be at ${JSON.stringify(config.cursor)}`,
+		);
+		t.true(
+			firstRenderOutput.includes(ansiEscapes.cursorTo(config.cursorTo)),
+			`cursor should be at column ${config.cursorTo}; saw ${JSON.stringify(firstRenderOutput)}`,
+		);
+		// It renders with a trailing newline, so need to move up one row
+		t.true(
+			firstRenderOutput.includes(ansiEscapes.cursorUp(config.cursorUp)),
+			`cursor should be on last visible line - ${config.cursorUp - 1}`,
+		);
+
+		unmount();
+	});
+});
+
+[
+	{text: '01 345', offset: 3, cursorTo: 0, cursorUp: 1, cursor: {x: 0, y: 1}},
+].forEach((config, i) => {
+	test.serial(`cursor wraps within text #${i}`, async t => {
+		const stdout = createStdout(5);
+		const stdin = createStdin();
+
+		let lastCursor: CursorPosition | undefined;
+		const onCursorUpdated = (cursor: CursorPosition | undefined) => {
+			lastCursor = cursor;
+		};
+
+		const {unmount, waitUntilRenderFlush} = render(
+			<InputApp initialText={config.text} offset={config.offset} />,
 			{stdout, stdin, onCursorUpdated},
 		);
 		await waitUntilRenderFlush();
