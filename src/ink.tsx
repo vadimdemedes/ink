@@ -14,7 +14,11 @@ import {getWindowSize} from './utils.js';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
-import {hideCursorEscape, showCursorEscape} from './cursor-helpers.js';
+import {
+	cursorPositionChanged,
+	hideCursorEscape,
+	showCursorEscape,
+} from './cursor-helpers.js';
 import logUpdate, {type LogUpdate, type CursorPosition} from './log-update.js';
 import {bsu, esu, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
@@ -152,6 +156,7 @@ export type Options = {
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
 	onRender?: (metrics: RenderMetrics) => void;
+	onCursorUpdated?: (cursor: CursorPosition | undefined) => void;
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<unknown>;
 	maxFps?: number;
@@ -453,6 +458,14 @@ export default class Ink {
 	): void => {
 		if (this.cursorMode !== undefined && this.cursorMode !== expectedMode) {
 			throw new Error('Mixing cursor modes');
+		}
+
+		const listener = this.options?.onCursorUpdated;
+		if (
+			listener != null &&
+			cursorPositionChanged(this.cursorPosition, position)
+		) {
+			listener(position);
 		}
 
 		this.cursorMode = expectedMode;

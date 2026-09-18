@@ -14,7 +14,7 @@ import {
 	type CursorPosition,
 	renderToString,
 } from '../src/index.js';
-import {homeAndEraseDown, type RenderMetrics} from '../src/ink.js';
+import {homeAndEraseDown} from '../src/ink.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
 
@@ -426,7 +426,7 @@ const hookWriteCases: HookWriteCase[] = [
 		App: StderrWriteApp,
 		includeStderr: true,
 		assertTargetWrite(t, _output, stderr) {
-			t.true((stderr?.write as any).called);
+			t.true((stderr!.write as any).called);
 		},
 	},
 ];
@@ -791,7 +791,7 @@ for (const {name, incremental} of inkRenderingModes) {
 			(stdout as any).rows = 5;
 
 			let lastCursor: CursorPosition | undefined;
-			const onRender = ({cursor}: RenderMetrics) => {
+			const onCursorUpdated = (cursor: CursorPosition | undefined) => {
 				lastCursor = cursor;
 			};
 
@@ -800,7 +800,7 @@ for (const {name, incremental} of inkRenderingModes) {
 			// rather than through the renderer's normal write path.
 			const {rerender, unmount, waitUntilRenderFlush} = render(
 				<FullscreenCursorApp lineCount={6} cursorY={2} marker="" />,
-				{stdout, incrementalRendering: incremental, onRender},
+				{stdout, incrementalRendering: incremental, onCursorUpdated},
 			);
 			await waitUntilRenderFlush();
 
@@ -823,6 +823,8 @@ for (const {name, incremental} of inkRenderingModes) {
 				),
 			);
 
+			t.deepEqual(lastCursor, {x: 3, y: 2});
+
 			unmount();
 		},
 	);
@@ -833,13 +835,13 @@ test.serial('cursor wraps with text', async t => {
 	const stdin = createStdin();
 
 	let lastCursor: CursorPosition | undefined;
-	const onRender = ({cursor}: RenderMetrics) => {
+	const onCursorUpdated = (cursor: CursorPosition | undefined) => {
 		lastCursor = cursor;
 	};
 
 	const {unmount, waitUntilRenderFlush} = render(
 		<InputApp initialText="the quick" />,
-		{stdout, stdin, onRender},
+		{stdout, stdin, onCursorUpdated},
 	);
 	await waitUntilRenderFlush();
 
@@ -858,7 +860,7 @@ test.serial('cursor wraps with text', async t => {
 		firstRenderOutput.includes(ansiEscapes.cursorUp(1)),
 		'cursor should be on last visible line',
 	);
-	t.deepEqual(lastCursor, {x: 5, y: 2, shape: 'block'});
+	t.deepEqual(lastCursor, {x: 5, y: 2});
 
 	unmount();
 });
@@ -902,7 +904,7 @@ test('padding with <Cursor /> is counted once', t => {
 	const stdin = createStdin();
 
 	let lastCursor: CursorPosition | undefined;
-	const onRender = ({cursor}: RenderMetrics) => {
+	const onCursorUpdated = (cursor: CursorPosition | undefined) => {
 		lastCursor = cursor;
 	};
 
@@ -912,11 +914,11 @@ test('padding with <Cursor /> is counted once', t => {
 				<Cursor />X
 			</Text>
 		</Box>,
-		{stdout, stdin, onRender},
+		{stdout, stdin, onCursorUpdated},
 	);
 	waitUntilRenderFlush();
 
-	t.deepEqual(lastCursor, {x: 2, y: 2, shape: 'block'});
+	t.deepEqual(lastCursor, {x: 2, y: 2});
 
 	unmount();
 });
