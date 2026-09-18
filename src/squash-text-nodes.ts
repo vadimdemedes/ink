@@ -1,6 +1,12 @@
+import stringWidth from 'string-width';
 import wrapAnsi from 'wrap-ansi';
 import {type DOMElement} from './dom.js';
 import sanitizeAnsi from './sanitize-ansi.js';
+
+type SquashedOutput = {
+	text: string;
+	cursorOffset?: number;
+};
 
 // Squashing text nodes allows to combine multiple text nodes into one and write
 // to `Output` instance only once. For example, <Text>hello{' '}world</Text>
@@ -8,7 +14,8 @@ import sanitizeAnsi from './sanitize-ansi.js';
 //
 // Also, this is necessary for libraries like ink-link (https://github.com/sindresorhus/ink-link),
 // which need to wrap all children at once, instead of wrapping 3 text nodes separately.
-const squashTextNodes = (node: DOMElement): string => {
+const squashTextNodes = (node: DOMElement): SquashedOutput => {
+	let cursor: number | undefined;
 	let text = '';
 
 	for (const childNode of node.childNodes) {
@@ -25,7 +32,14 @@ const squashTextNodes = (node: DOMElement): string => {
 				childNode.nodeName === 'ink-text' ||
 				childNode.nodeName === 'ink-virtual-text'
 			) {
-				nodeText = squashTextNodes(childNode);
+				const {text: newNodeText, cursorOffset} = squashTextNodes(childNode);
+				nodeText = newNodeText;
+				if (childNode.internal_cursorOffset !== undefined) {
+					// Outer Cursor elements override inner ones
+					cursor = text.length + childNode.internal_cursorOffset;
+				} else if (cursorOffset !== undefined) {
+					cursor = text.length + cursorOffset;
+				}
 			}
 
 			// Since these text nodes are being concatenated, `Output` instance won't be able to
@@ -52,10 +66,21 @@ const squashTextNodes = (node: DOMElement): string => {
 
 	// Expand tabs after combining nested text so measurement and rendering use the same columns.
 	if (node.nodeName === 'ink-text' && text.includes('\t')) {
+		if (cursor !== undefined) {
+			const beforeCursor = wrapAnsi(
+				text.slice(0, cursor),
+				Number.POSITIVE_INFINITY,
+				{trim: false},
+			);
+			cursor = stringWidth(beforeCursor);
+		}
+
 		text = wrapAnsi(text, Number.POSITIVE_INFINITY, {trim: false});
+	} else if (node.nodeName === 'ink-text') {
+		cursor = stringWidth(text);
 	}
 
-	return text;
+	return {text, cursorOffset: cursor};
 };
 
 export default squashTextNodes;

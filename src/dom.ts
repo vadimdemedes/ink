@@ -71,6 +71,7 @@ export type DOMElement = {
 	onImmediateRender?: () => void;
 	onStaticChange?: () => void;
 	internal_layoutListeners?: Set<LayoutListener>;
+	internal_cursorOffset?: number;
 } & InkNode;
 
 export type TextNode = {
@@ -269,7 +270,7 @@ const measureTextNode = function (
 	widthMode: MeasureMode,
 ): {width: number; height: number} {
 	const text =
-		node.nodeName === '#text' ? node.nodeValue : squashTextNodes(node);
+		node.nodeName === '#text' ? node.nodeValue : squashTextNodes(node).text;
 
 	const dimensions = measureText(text);
 
