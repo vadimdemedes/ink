@@ -18,6 +18,7 @@ import {buildCursorShape, type CursorShape} from '../src/cursor-helpers.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
 import stripAnsi from 'strip-ansi';
+import {renderAsync} from './helpers/test-renderer.js';
 
 const showCursorEscape = '\u001B[?25h';
 const hideCursorEscape = '\u001B[?25l';
@@ -935,4 +936,70 @@ test('overflowX - single text node inside overflow container with <Cursor />', t
 	);
 
 	t.is(stripAnsi(output), 'Hello');
+});
+
+(
+	[
+		{wrap: 'truncate-end', expected: 'Hell…'},
+		{wrap: 'truncate-middle', expected: 'He…ld'},
+		{wrap: 'truncate-start', expected: '…orld'},
+	] as const
+).forEach(({wrap, expected}) => {
+	test(`wrap=${wrap} - single text node wrapping with <Cursor />`, t => {
+		const output = renderToString(
+			<Box width={5}>
+				<Text wrap={wrap}>
+					<Cursor />
+					Hello World
+				</Text>
+			</Box>,
+		);
+
+		t.is(stripAnsi(output), expected);
+	});
+});
+
+test('padding with <Cursor /> is counted once', t => {
+	const stdout = createStdout(5);
+	const stdin = createStdin();
+
+	let lastCursor: CursorPosition | undefined;
+	const onRender = ({cursor}: RenderMetrics) => {
+		lastCursor = cursor;
+	};
+
+	const {unmount, waitUntilRenderFlush} = render(
+		<Box padding={2}>
+			<Text>
+				<Cursor />X
+			</Text>
+		</Box>,
+		{stdout, stdin, onRender},
+	);
+	waitUntilRenderFlush();
+
+	t.deepEqual(lastCursor, {x: 2, y: 2, shape: 'block'});
+
+	unmount();
+});
+
+test('<Cursor /> does not pollute screen readers', t => {
+	const stdout = createStdout(100);
+	render(
+		<Box>
+			<Text>
+				Hello <Cursor />
+				World
+			</Text>
+		</Box>,
+		{
+			stdout,
+			debug: true,
+			isScreenReaderEnabled: true,
+		},
+	);
+
+	const output = stdout.get();
+
+	t.is(output, 'Hello World');
 });
