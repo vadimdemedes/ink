@@ -1,6 +1,24 @@
+import stringWidth from 'string-width';
 import wrapAnsi from 'wrap-ansi';
 import {type DOMElement} from './dom.js';
 import sanitizeAnsi from './sanitize-ansi.js';
+import {iterateAnsiTokens} from './ansi-tokenizer.js';
+import {
+	countNonAnsiGraphemes,
+	iterateGraphemeSegments,
+} from './string-utils.js';
+
+type SquashedOutput = {
+	text: string;
+
+	/**
+	 * The requested cursor *visual* offset (if any) within
+	 * `text` (that is, ignoring ansi sequences, how many
+	 * *graphemes* need to be skipped past within `text` before
+	 * placing the cursor).
+	 */
+	cursorOffset?: number;
+};
 
 // Squashing text nodes allows to combine multiple text nodes into one and write
 // to `Output` instance only once. For example, <Text>hello{' '}world</Text>
@@ -8,7 +26,8 @@ import sanitizeAnsi from './sanitize-ansi.js';
 //
 // Also, this is necessary for libraries like ink-link (https://github.com/sindresorhus/ink-link),
 // which need to wrap all children at once, instead of wrapping 3 text nodes separately.
-const squashTextNodes = (node: DOMElement): string => {
+const squashTextNodes = (node: DOMElement): SquashedOutput => {
+	let cursor: number | undefined;
 	let text = '';
 
 	for (const childNode of node.childNodes) {
@@ -25,7 +44,19 @@ const squashTextNodes = (node: DOMElement): string => {
 				childNode.nodeName === 'ink-text' ||
 				childNode.nodeName === 'ink-virtual-text'
 			) {
-				nodeText = squashTextNodes(childNode);
+				const {text: newNodeText, cursorOffset} = squashTextNodes(childNode);
+				nodeText = newNodeText;
+				if (childNode.internal_cursorOffset !== undefined) {
+					// Outer Cursor elements override inner ones
+					cursor =
+						countNonAnsiGraphemes(text) +
+						Math.min(
+							countNonAnsiGraphemes(newNodeText),
+							childNode.internal_cursorOffset,
+						);
+				} else if (cursorOffset !== undefined) {
+					cursor = countNonAnsiGraphemes(text) + cursorOffset;
+				}
 			}
 
 			// Since these text nodes are being concatenated, `Output` instance won't be able to
@@ -45,6 +76,21 @@ const squashTextNodes = (node: DOMElement): string => {
 		text += nodeText;
 	}
 
+	if (
+		node.childNodes.length === 0 &&
+		node.nodeName === 'ink-text' &&
+		node.internal_cursorOffset !== undefined
+	) {
+		// The only valid cursorOffset in this situation is zero; so if it's set it must be zero
+		cursor = 0;
+	}
+
+	// Normalize cursor *before* expanding tabs or sanitizing, since
+	// the offset we've built is into the un-sanitized string
+	if (node.nodeName === 'ink-text' && cursor !== undefined) {
+		cursor = normalizeCursor(text, cursor);
+	}
+
 	text = sanitizeAnsi(text.replaceAll('\r\n', '\n'));
 
 	// Measurement and styling dependencies understand the ESC forms of these C1 controls.
@@ -55,7 +101,59 @@ const squashTextNodes = (node: DOMElement): string => {
 		text = wrapAnsi(text, Infinity, {trim: false});
 	}
 
-	return text;
+	return {
+		text,
+		cursorOffset: cursor,
+	};
+};
+
+const tabSize = 8;
+
+const normalizeCursor = (text: string, cursorOffset: number) => {
+	if (cursorOffset === 0) return 0;
+
+	let visualLength = 0;
+	let offsetsToVisit = cursorOffset;
+	for (const {token} of iterateAnsiTokens(text)) {
+		if (offsetsToVisit <= 0) break;
+
+		if (token.type === 'text') {
+			for (const {index, segment} of iterateGraphemeSegments(token.value)) {
+				visualLength += stringWidth(segment);
+				switch (segment) {
+					// Tabs are expanded to 8 spaces during normalization
+					case '\t': {
+						const spaces = tabSize - (visualLength % tabSize);
+
+						// NOTE: cursorOffset and visualLength already include 1 for
+						// this byte, so we add one fewer than the
+						// number of spaces added
+						cursorOffset += spaces - 1;
+						visualLength += spaces - 1;
+						break;
+					}
+
+					case '\r': {
+						if (token.value[index + 1] === '\n') {
+							--cursorOffset;
+							continue;
+						}
+
+						break;
+					}
+
+					default: {
+						// Nothing special to do
+						break;
+					}
+				}
+
+				if (--offsetsToVisit <= 0) break;
+			}
+		}
+	}
+
+	return cursorOffset;
 };
 
 export default squashTextNodes;

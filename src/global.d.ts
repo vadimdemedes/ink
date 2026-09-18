@@ -1,6 +1,6 @@
 import {type ReactNode, type Key, type Ref} from 'react';
 import {type Except} from 'type-fest';
-import {type DOMElement} from './dom.js';
+import {type DOMElement, type TextNode} from './dom.js';
 import {type Styles} from './styles.js';
 
 declare module 'react' {
@@ -31,5 +31,6 @@ declare namespace Ink {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		internal_transform?: (children: string, index: number) => string;
 		internal_accessibility?: DOMElement['internal_accessibility'];
+		internal_cursorOffset?: TextNode['internal_cursorOffset'];
 	};
 }
