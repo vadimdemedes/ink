@@ -7,7 +7,10 @@ import {
 	tokenize,
 } from '@alcalzone/ansi-tokenize';
 import measureText from './measure-text.js';
-import {type OutputTransformer} from './render-node-to-output.js';
+import {
+	type RenderEffects,
+	type OutputTransformer,
+} from './render-node-to-output.js';
 import sanitizeAnsi, {normalizeC1Controls} from './sanitize-ansi.js';
 import SizedCache from './sized-cache.js';
 
@@ -81,6 +84,7 @@ type WriteOperation = {
 	y: number;
 	text: string;
 	transformers: OutputTransformer[];
+	effects?: RenderEffects;
 };
 
 type ClipOperation = {
@@ -261,6 +265,7 @@ export default class Output {
 		output: StyledChar[][],
 		operation: WriteOperation,
 		clip: Clip | undefined,
+		effects: RenderEffects,
 	): void {
 		const {text, transformers} = operation;
 		let {x, y} = operation;
@@ -292,6 +297,14 @@ export default class Output {
 			if (shouldClipHorizontally) {
 				const width = this.caches.getWidestLine(text);
 
+				const {cursorPosition} = effects;
+				if (
+					cursorPosition !== undefined &&
+					(cursorPosition.x < clip.x1! || cursorPosition.x > clip.x2!)
+				) {
+					effects.cursorPosition = undefined;
+				}
+
 				if (x + width < clip.x1! || x > clip.x2!) {
 					return;
 				}
@@ -315,6 +328,14 @@ export default class Output {
 				const from = y < clip.y1! ? clip.y1! - y : 0;
 				const height = lines.length;
 				const to = y + height > clip.y2! ? clip.y2! - y : height;
+
+				const {cursorPosition} = effects;
+				if (
+					cursorPosition !== undefined &&
+					(cursorPosition.y < clip.y1! || cursorPosition.y >= clip.y2!)
+				) {
+					effects.cursorPosition = undefined;
+				}
 
 				lines = lines.slice(from, to);
 
@@ -399,11 +420,11 @@ export default class Output {
 		x: number,
 		y: number,
 		text: string,
-		options: {transformers: OutputTransformer[]},
+		options: {transformers: OutputTransformer[]; effects?: RenderEffects},
 	): void {
-		const {transformers} = options;
+		const {effects, transformers} = options;
 
-		if (text === '') {
+		if (text === '' && effects === undefined) {
 			return;
 		}
 
@@ -413,6 +434,7 @@ export default class Output {
 			y,
 			text,
 			transformers,
+			effects,
 		});
 	}
 
@@ -485,7 +507,12 @@ export default class Output {
 			} else if (operation.type === 'unclip') {
 				clips.pop();
 			} else {
-				this.applyWriteOperation(output, operation, clips.at(-1));
+				this.applyWriteOperation(
+					output,
+					operation,
+					clips.at(-1),
+					operation.effects ?? {},
+				);
 			}
 		}
 
