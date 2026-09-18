@@ -7,7 +7,7 @@ import {
 } from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
 
-// Replaces the remaining half of a partially overwritten wide character with a space that keeps its styles.
+// Replaces a partially visible wide character with a space that keeps its styles.
 const blankCell = (cell: StyledChar): StyledChar => ({
 	...cell,
 	value: ' ',
@@ -205,12 +205,7 @@ export default class Output {
 
 			if (width > 1 && (start < from || column > to)) {
 				// Only part of this wide character is visible, so keep the cell count and styles, but drop the glyph itself.
-				result.push({
-					type: 'char',
-					value: ' ',
-					fullWidth: false,
-					styles: character.styles,
-				});
+				result.push(blankCell(character));
 			} else {
 				result.push(character);
 			}
