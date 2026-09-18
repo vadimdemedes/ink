@@ -1,9 +1,9 @@
 import React from 'react';
 import test from 'ava';
 import {Text, Transform} from '../src/index.js';
-import {renderToString} from './helpers/render-to-string.js';
 import squashTextNodes from '../src/squash-text-nodes.js';
 import {appendChildNode, createNode, createTextNode} from '../src/dom.js';
+import {renderToString} from './helpers/render-to-string.js';
 
 test('nested transforms receive each explicit line with its line index', t => {
 	const output = renderToString(

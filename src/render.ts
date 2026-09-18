@@ -4,7 +4,7 @@ import type {ReactNode} from 'react';
 import Ink, {type Options as InkOptions, type RenderMetrics} from './ink.js';
 import instances from './instances.js';
 import {type KittyKeyboardOptions} from './kitty-keyboard.js';
-import {CursorPosition} from './cursor-helpers.js';
+import {type CursorPosition} from './cursor-helpers.js';
 
 export type RenderOptions = {
 	/**
