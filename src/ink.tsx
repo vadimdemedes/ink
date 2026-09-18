@@ -489,6 +489,15 @@ export default class Ink {
 			this.nextRenderCommit = undefined;
 		}
 
+		// After clear(), the recorded frame is no longer on screen, so forget it and draw the next frame even when unchanged. Keep it while unmounting, so clear() followed by unmount() leaves the terminal clean.
+		if (
+			this.lastOutputHeight === 0 &&
+			this.lastOutput !== '' &&
+			!this.isUnmounting
+		) {
+			this.lastOutputToRender = '';
+		}
+
 		const startTime = performance.now();
 		const {output, outputHeight, staticOutput} = render(
 			this.rootNode,
