@@ -829,40 +829,48 @@ for (const {name, incremental} of inkRenderingModes) {
 		},
 	);
 }
+[
+	{text: 'the quick', cursorTo: 5, cursorUp: 1, cursor: {x: 5, y: 2}},
+	{text: '3456 7', cursorTo: 1, cursorUp: 1, cursor: {x: 1, y: 2}},
+].forEach((config, i) => {
+	test.serial(`cursor wraps with text ${i}`, async t => {
+		const stdout = createStdout(5);
+		const stdin = createStdin();
 
-test.serial('cursor wraps with text', async t => {
-	const stdout = createStdout(5);
-	const stdin = createStdin();
+		let lastCursor: CursorPosition | undefined;
+		const onCursorUpdated = (cursor: CursorPosition | undefined) => {
+			lastCursor = cursor;
+		};
 
-	let lastCursor: CursorPosition | undefined;
-	const onCursorUpdated = (cursor: CursorPosition | undefined) => {
-		lastCursor = cursor;
-	};
+		const {unmount, waitUntilRenderFlush} = render(
+			<InputApp initialText={config.text} />,
+			{stdout, stdin, onCursorUpdated},
+		);
+		await waitUntilRenderFlush();
 
-	const {unmount, waitUntilRenderFlush} = render(
-		<InputApp initialText="the quick" />,
-		{stdout, stdin, onCursorUpdated},
-	);
-	await waitUntilRenderFlush();
+		const firstRenderOutput = getWriteCalls(stdout).join('');
+		// Cursor should be shown at x=2 (after "> ")
+		t.true(
+			firstRenderOutput.includes(showCursorEscape),
+			'cursor should be visible after first render',
+		);
+		t.deepEqual(
+			lastCursor,
+			config.cursor,
+			`cursor should be at ${JSON.stringify(config.cursor)}`,
+		);
+		t.true(
+			firstRenderOutput.includes(ansiEscapes.cursorTo(config.cursorTo)),
+			`cursor should be at column ${config.cursorTo}; saw ${JSON.stringify(firstRenderOutput)}`,
+		);
+		// It renders with a trailing newline, so need to move up one row
+		t.true(
+			firstRenderOutput.includes(ansiEscapes.cursorUp(config.cursorUp)),
+			`cursor should be on last visible line - ${config.cursorUp - 1}`,
+		);
 
-	const firstRenderOutput = getWriteCalls(stdout).join('');
-	// Cursor should be shown at x=2 (after "> ")
-	t.true(
-		firstRenderOutput.includes(showCursorEscape),
-		'cursor should be visible after first render',
-	);
-	t.true(
-		firstRenderOutput.includes(ansiEscapes.cursorTo(5)),
-		'cursor should be at column 5',
-	);
-	// It renders with a trailing newline, so need to move up one row
-	t.true(
-		firstRenderOutput.includes(ansiEscapes.cursorUp(1)),
-		'cursor should be on last visible line',
-	);
-	t.deepEqual(lastCursor, {x: 5, y: 2});
-
-	unmount();
+		unmount();
+	});
 });
 
 test('overflowX - single text node inside overflow container with <Cursor />', t => {
