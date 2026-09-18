@@ -236,6 +236,7 @@ const renderNodeToOutput = (
 
 	return undefined;
 };
+
 const wrapCursorOffset = (wrappedText: string, cursorOffset: number) => {
 	let x = cursorOffset;
 	let y = 0;

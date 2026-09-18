@@ -472,7 +472,7 @@ export default class Ink {
 
 		const listener = this.options?.onCursorUpdated;
 		if (
-			listener != null &&
+			listener !== undefined &&
 			cursorPositionChanged(this.cursorPosition, position)
 		) {
 			listener(position);

@@ -899,7 +899,7 @@ for (const {wrap, expected} of [
 	});
 }
 
-test('padding with <Cursor /> is counted once', t => {
+test('padding with <Cursor /> is counted once', async t => {
 	const stdout = createStdout(5);
 	const stdin = createStdin();
 
@@ -916,7 +916,7 @@ test('padding with <Cursor /> is counted once', t => {
 		</Box>,
 		{stdout, stdin, onCursorUpdated},
 	);
-	waitUntilRenderFlush();
+	await waitUntilRenderFlush();
 
 	t.deepEqual(lastCursor, {x: 2, y: 2});
 
