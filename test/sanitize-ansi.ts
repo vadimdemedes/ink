@@ -7,10 +7,55 @@ test('preserve plain text', t => {
 });
 
 test('preserve SGR sequences', t => {
-	const output = sanitizeAnsi('A\u001B[38:2::255:100:0mcolor\u001B[0mB');
+	const input = 'A\u001B[1;4mtext\u001B[0mB';
 
-	t.true(output.includes('\u001B[38:2::255:100:0m'));
-	t.is(stripAnsi(output), 'AcolorB');
+	t.is(sanitizeAnsi(input), input);
+});
+
+for (const [colon, semicolon] of [
+	['38:5:196', '38;5;196'],
+	['48:5:21', '48;5;21'],
+	['38:2::255:0:0', '38;2;255;0;0'],
+	['38:2:0:255:0:0', '38;2;255;0;0'],
+	['38:2:255:0:0', '38;2;255;0;0'],
+	['1;38:5:196;48:2::0:0:255', '1;38;5;196;48;2;0;0;255'],
+] as const) {
+	test(`normalize colon color parameters ${colon}`, t => {
+		t.is(
+			sanitizeAnsi(`\u001B[${colon}mcolor\u001B[0m`),
+			`\u001B[${semicolon}mcolor\u001B[0m`,
+		);
+	});
+}
+
+for (const parameters of ['4:3', '38:2:1:255:0:0', '38:5:196:0']) {
+	test(`keep unrecognized colon parameters ${parameters}`, t => {
+		const input = `\u001B[${parameters}mtext\u001B[0m`;
+
+		t.is(sanitizeAnsi(input), input);
+	});
+}
+
+test('defer SGR sequences until after combining marks', t => {
+	t.is(
+		sanitizeAnsi('e\u001B[31m\u001B[1m\u0301X\u001B[39m'),
+		'e\u0301\u001B[31m\u001B[1mX\u001B[39m',
+	);
+});
+
+test('defer a trailing SGR sequence past a combining mark', t => {
+	t.is(sanitizeAnsi('e\u001B[31m\u0301'), 'e\u0301\u001B[31m');
+});
+
+test('keep deferred SGR sequences before a following hyperlink', t => {
+	t.is(
+		sanitizeAnsi('e\u001B[31m\u0301\u001B]8;;https://example.com\u001B\\X'),
+		'e\u0301\u001B[31m\u001B]8;;https://example.com\u001B\\X',
+	);
+});
+
+test('strip cursor controls before checking for combining marks', t => {
+	t.is(sanitizeAnsi('e\u001B[31m\r\u0301X'), 'e\u0301\u001B[31mX');
 });
 
 test('preserve OSC hyperlinks', t => {
@@ -71,11 +116,8 @@ test('strip C1 non-SGR CSI sequences as complete units', t => {
 	t.is(stripAnsi(output), 'ABC');
 });
 
-test('preserve C1 SGR CSI sequences', t => {
-	const output = sanitizeAnsi('A\u009B31mgreen\u009B0mB');
-
-	t.true(output.includes('\u009B31m'));
-	t.is(stripAnsi(output), 'AgreenB');
+test('normalize C1 SGR CSI sequences to ESC form', t => {
+	t.is(sanitizeAnsi('A\u009B31mgreen\u009B0mB'), 'A\u001B[31mgreen\u001B[0mB');
 });
 
 test('strip private-parameter m-sequences that are not SGR', t => {
