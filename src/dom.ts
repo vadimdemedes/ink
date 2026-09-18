@@ -71,6 +71,8 @@ export type DOMElement = {
 	onImmediateRender?: () => void;
 	onStaticChange?: () => void;
 	internal_layoutListeners?: Set<LayoutListener>;
+
+	/** Character offset within an ink-text at which to place the cursor */
 	internal_cursorOffset?: number;
 } & InkNode;
 
@@ -112,7 +114,7 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 
 export const appendChildNode = (
 	node: DOMElement,
-	childNode: DOMElement,
+	childNode: DOMElement | TextNode,
 ): void => {
 	if (childNode.parentNode) {
 		removeChildNode(childNode.parentNode, childNode);

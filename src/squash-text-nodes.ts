@@ -36,7 +36,9 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 				nodeText = newNodeText;
 				if (childNode.internal_cursorOffset !== undefined) {
 					// Outer Cursor elements override inner ones
-					cursor = text.length + childNode.internal_cursorOffset;
+					cursor =
+						text.length +
+						Math.min(newNodeText.length, childNode.internal_cursorOffset);
 				} else if (cursorOffset !== undefined) {
 					cursor = text.length + cursorOffset;
 				}
@@ -63,6 +65,8 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 
 	// Expand tabs after combining nested text so measurement and rendering use the same columns.
 	if (node.nodeName === 'ink-text' && text.includes('\t')) {
+		// NOTE: We need to handle the tabs case separately to make
+		// sure we get the string width *after* expanding tabs
 		if (cursor !== undefined) {
 			const beforeCursor = wrapAnsi(
 				text.slice(0, cursor),
@@ -73,11 +77,19 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 		}
 
 		text = wrapAnsi(text, Number.POSITIVE_INFINITY, {trim: false});
-	} else if (node.nodeName === 'ink-text') {
-		cursor = stringWidth(text);
+	} else if (node.nodeName === 'ink-text' && cursor !== undefined) {
+		const beforeCursor = wrapAnsi(
+			text.slice(0, cursor),
+			Number.POSITIVE_INFINITY,
+			{trim: false},
+		);
+		cursor = stringWidth(beforeCursor);
 	}
 
-	return {text, cursorOffset: cursor};
+	return {
+		text,
+		cursorOffset: cursor,
+	};
 };
 
 export default squashTextNodes;
