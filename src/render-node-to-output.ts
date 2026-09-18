@@ -148,7 +148,7 @@ const renderNodeToOutput = (
 
 		if (node.nodeName === 'ink-text') {
 			let {text, cursorOffset} = squashTextNodes(node);
-			let cursorPosition: CursorPosition | undefined;
+			let cursorOffsetY: number | undefined;
 
 			if (text.length > 0) {
 				const currentWidth = widestLine(text);
@@ -157,18 +157,22 @@ const renderNodeToOutput = (
 				if (currentWidth > maxWidth) {
 					const textWrap = node.style.textWrap ?? 'wrap';
 					text = wrapText(text, maxWidth, textWrap);
+
+					if (cursorOffset !== undefined) {
+						const {x: newX, y: newY} = wrapCursorOffset(text, cursorOffset);
+						cursorOffset = newX;
+						cursorOffsetY = newY;
+					}
 				}
 
 				text = applyPaddingToText(node, text);
 
 				output.write(x, y, text, {transformers: newTransformers});
-				if (cursorOffset !== undefined) {
-					// TODO: wrap
-					cursorPosition = {x: x + cursorOffset, y};
-				}
 			}
 
-			return cursorPosition === undefined ? undefined : {cursorPosition};
+			return cursorOffset === undefined
+				? undefined
+				: {cursorPosition: {x: x + cursorOffset, y: y + (cursorOffsetY ?? 0)}};
 		}
 
 		let clipped = false;
@@ -231,6 +235,25 @@ const renderNodeToOutput = (
 	}
 
 	return undefined;
+};
+const wrapCursorOffset = (wrappedText: string, cursorOffset: number) => {
+	let x = cursorOffset;
+	let y = 0;
+
+	let start = 0;
+	while (true) {
+		const end = wrappedText.indexOf('\n', start);
+		if (end === -1 || end >= cursorOffset) {
+			break;
+		}
+
+		x -= end - start;
+		++y;
+
+		start = end + 1;
+	}
+
+	return {x, y};
 };
 
 export default renderNodeToOutput;
