@@ -8,6 +8,7 @@ import renderBorder from './render-border.js';
 import renderBackground from './render-background.js';
 import {type DOMElement} from './dom.js';
 import type Output from './output.js';
+import {type CursorPosition} from './cursor-helpers.js';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.
@@ -51,7 +52,7 @@ export const renderNodeToScreenReaderOutput = (
 	let output = '';
 
 	if (node.nodeName === 'ink-text') {
-		output = squashTextNodes(node);
+		output = squashTextNodes(node).text;
 	} else if (node.nodeName === 'ink-box' || node.nodeName === 'ink-root') {
 		const separator =
 			node.style.flexDirection === 'row' ||
@@ -100,6 +101,10 @@ export const renderNodeToScreenReaderOutput = (
 	return output;
 };
 
+export type RenderEffects = {
+	cursorPosition?: CursorPosition;
+};
+
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
 const renderNodeToOutput = (
 	node: DOMElement,
@@ -110,7 +115,7 @@ const renderNodeToOutput = (
 		transformers?: OutputTransformer[];
 		skipStaticElements: boolean;
 	},
-) => {
+): RenderEffects | undefined => {
 	const {
 		offsetX = 0,
 		offsetY = 0,
@@ -142,7 +147,8 @@ const renderNodeToOutput = (
 		}
 
 		if (node.nodeName === 'ink-text') {
-			let text = squashTextNodes(node);
+			let {text, cursorOffset} = squashTextNodes(node);
+			let cursorPosition: CursorPosition | undefined;
 
 			if (text.length > 0) {
 				const currentWidth = widestLine(text);
@@ -156,9 +162,13 @@ const renderNodeToOutput = (
 				text = applyPaddingToText(node, text);
 
 				output.write(x, y, text, {transformers: newTransformers});
+				if (cursorOffset !== undefined) {
+					// TODO: wrap
+					cursorPosition = {x: x + cursorOffset, y};
+				}
 			}
 
-			return;
+			return cursorPosition === undefined ? undefined : {cursorPosition};
 		}
 
 		let clipped = false;
@@ -198,21 +208,29 @@ const renderNodeToOutput = (
 			}
 		}
 
+		let resultEffects: RenderEffects | undefined;
 		if (node.nodeName === 'ink-root' || node.nodeName === 'ink-box') {
 			for (const childNode of node.childNodes) {
-				renderNodeToOutput(childNode as DOMElement, output, {
+				const effects = renderNodeToOutput(childNode as DOMElement, output, {
 					offsetX: x - normalizeContentOffset(node.style.contentOffsetX),
 					offsetY: y - normalizeContentOffset(node.style.contentOffsetY),
 					transformers: newTransformers,
 					skipStaticElements,
 				});
+				if (effects !== undefined) {
+					resultEffects = effects;
+				}
 			}
 
 			if (clipped) {
 				output.unclip();
 			}
 		}
+
+		return resultEffects;
 	}
+
+	return undefined;
 };
 
 export default renderNodeToOutput;
