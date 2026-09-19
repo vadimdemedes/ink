@@ -1639,12 +1639,19 @@ for (const mode of ['standard', 'incremental', 'screen-reader']) {
 	});
 }
 
+const staticHistoryItems = ['S1', 'S2', 'S3'];
+
 type StaticHistoryProps = {
 	readonly liveLines: number;
 	readonly tick: number;
+	readonly items?: string[];
 };
 
-function StaticHistoryApp({liveLines, tick}: StaticHistoryProps) {
+function StaticHistoryApp({
+	liveLines,
+	tick,
+	items = staticHistoryItems,
+}: StaticHistoryProps) {
 	const lines = [];
 	for (let index = 0; index < liveLines; index++) {
 		lines.push(<Text key={index}>{`live ${index} tick ${tick}`}</Text>);
@@ -1652,9 +1659,7 @@ function StaticHistoryApp({liveLines, tick}: StaticHistoryProps) {
 
 	return (
 		<>
-			<Static items={['S1', 'S2', 'S3']}>
-				{item => <Text key={item}>{item}</Text>}
-			</Static>
+			<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
 			<Box flexDirection="column">{lines}</Box>
 		</>
 	);
@@ -1756,6 +1761,55 @@ for (const mode of ['standard', 'incremental']) {
 			'live 3 tick 1',
 			'live 4 tick 1',
 		]);
+	});
+
+	test(`<Static> items added while the frame overflows are written once - ${mode}`, async t => {
+		const rows = 4;
+		const stdout = createStdout();
+		stdout.rows = rows;
+		const instance = render(
+			<StaticHistoryApp items={['S1']} liveLines={rows + 2} tick={0} />,
+			{
+				stdout,
+				interactive: true,
+				patchConsole: false,
+				incrementalRendering: mode === 'incremental',
+			},
+		);
+		t.teardown(instance.unmount);
+		await instance.waitUntilRenderFlush();
+
+		// Both rerenders go through the full-clear path and each one carries a
+		// new <Static> item, which must still reach the terminal.
+		instance.rerender(
+			<StaticHistoryApp items={['S1', 'S2']} liveLines={rows + 2} tick={1} />,
+		);
+		await instance.waitUntilRenderFlush();
+		instance.rerender(
+			<StaticHistoryApp
+				items={['S1', 'S2', 'S3']}
+				liveLines={rows + 2}
+				tick={2}
+			/>,
+		);
+		await instance.waitUntilRenderFlush();
+
+		const output = stdout.getWrites().join('');
+		t.true(
+			countOccurrences(output, homeAndEraseDown) >= 2,
+			'Expected the rerenders to go through the full-clear path',
+		);
+
+		const terminalLines = reconstructTerminalLines(
+			output.replaceAll('\n', '\r\n'),
+			rows,
+		).filter(Boolean);
+
+		t.deepEqual(
+			terminalLines.filter(line => line.startsWith('S')),
+			['S1', 'S2', 'S3'],
+			'Expected every static item to be written exactly once, in order',
+		);
 	});
 }
 
