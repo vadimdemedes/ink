@@ -8,6 +8,7 @@ import renderBorder from './render-border.js';
 import renderBackground from './render-background.js';
 import {type DOMElement} from './dom.js';
 import type Output from './output.js';
+import {type CursorPosition} from './cursor-helpers.js';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.
@@ -51,7 +52,7 @@ export const renderNodeToScreenReaderOutput = (
 	let output = '';
 
 	if (node.nodeName === 'ink-text') {
-		output = squashTextNodes(node);
+		output = squashTextNodes(node).text;
 	} else if (node.nodeName === 'ink-box' || node.nodeName === 'ink-root') {
 		const separator =
 			node.style.flexDirection === 'row' ||
@@ -100,6 +101,10 @@ export const renderNodeToScreenReaderOutput = (
 	return output;
 };
 
+export type RenderEffects = {
+	cursorPosition?: CursorPosition;
+};
+
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
 const renderNodeToOutput = (
 	node: DOMElement,
@@ -110,7 +115,7 @@ const renderNodeToOutput = (
 		transformers?: OutputTransformer[];
 		skipStaticElements: boolean;
 	},
-) => {
+): RenderEffects | undefined => {
 	const {
 		offsetX = 0,
 		offsetY = 0,
@@ -142,7 +147,8 @@ const renderNodeToOutput = (
 		}
 
 		if (node.nodeName === 'ink-text') {
-			let text = squashTextNodes(node);
+			let {text, cursorOffset} = squashTextNodes(node);
+			let cursorOffsetY: number | undefined;
 
 			if (text.length > 0) {
 				const currentWidth = widestLine(text);
@@ -151,6 +157,12 @@ const renderNodeToOutput = (
 				if (currentWidth > maxWidth) {
 					const textWrap = node.style.textWrap ?? 'wrap';
 					text = wrapText(text, maxWidth, textWrap);
+
+					if (cursorOffset !== undefined) {
+						const {x: newX, y: newY} = wrapCursorOffset(text, cursorOffset);
+						cursorOffset = newX;
+						cursorOffsetY = newY;
+					}
 				}
 
 				text = applyPaddingToText(node, text);
@@ -158,7 +170,9 @@ const renderNodeToOutput = (
 				output.write(x, y, text, {transformers: newTransformers});
 			}
 
-			return;
+			return cursorOffset === undefined
+				? undefined
+				: {cursorPosition: {x: x + cursorOffset, y: y + (cursorOffsetY ?? 0)}};
 		}
 
 		let clipped = false;
@@ -198,21 +212,52 @@ const renderNodeToOutput = (
 			}
 		}
 
+		let resultEffects: RenderEffects | undefined;
 		if (node.nodeName === 'ink-root' || node.nodeName === 'ink-box') {
 			for (const childNode of node.childNodes) {
-				renderNodeToOutput(childNode as DOMElement, output, {
+				const effects = renderNodeToOutput(childNode as DOMElement, output, {
 					offsetX: x - normalizeContentOffset(node.style.contentOffsetX),
 					offsetY: y - normalizeContentOffset(node.style.contentOffsetY),
 					transformers: newTransformers,
 					skipStaticElements,
 				});
+				if (effects !== undefined) {
+					resultEffects = effects;
+				}
 			}
 
 			if (clipped) {
 				output.unclip();
 			}
 		}
+
+		return resultEffects;
 	}
+
+	return undefined;
+};
+
+const wrapCursorOffset = (wrappedText: string, cursorOffset: number) => {
+	let x = cursorOffset;
+	let y = 0;
+
+	let start = 0;
+	while (true) {
+		const end = wrappedText.indexOf('\n', start);
+		// `y` counts number of newlines added in the wrapped text; we
+		// need to augment cursorOffset by that amount when comparing
+		// offsets into the wrapped text.
+		if (end === -1 || end > cursorOffset + y) {
+			break;
+		}
+
+		x -= end - start;
+		++y;
+
+		start = end + 1;
+	}
+
+	return {x, y};
 };
 
 export default renderNodeToOutput;
