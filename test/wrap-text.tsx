@@ -35,6 +35,24 @@ test('truncates text at the end', t => {
 	t.is(wrapText('hello world', 5, 'truncate-end'), 'hell…');
 });
 
+test('truncates each line of multi-line text separately', t => {
+	t.is(wrapText('hello world\nfoo', 6, 'truncate-end'), 'hello…\nfoo');
+	t.is(wrapText('foo\nhello world', 6, 'truncate-end'), 'foo\nhello…');
+	t.is(wrapText('ab\ncdefgh\nij', 4, 'truncate-end'), 'ab\ncde…\nij');
+	t.is(wrapText('hello world\nfoo', 6, 'truncate-middle'), 'hel…ld\nfoo');
+	t.is(wrapText('hello world\nfoo', 6, 'truncate-start'), '…world\nfoo');
+});
+
+test('truncated multi-line text keeps its lines in the layout', t => {
+	const output = renderToString(
+		<Box width={8} borderStyle="single">
+			<Text wrap="truncate">{'hello world\nfoo'}</Text>
+		</Box>,
+	);
+
+	t.is(output, '┌──────┐\n│hello…│\n│foo   │\n└──────┘');
+});
+
 test('uses separate cache entries for different widths', t => {
 	t.is(wrapText('hello world', 5, 'truncate-end'), 'hell…');
 	t.is(wrapText('hello world', 8, 'truncate-end'), 'hello w…');
