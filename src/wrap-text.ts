@@ -48,7 +48,13 @@ const wrapText = (
 			position = 'start';
 		}
 
-		wrappedText = cliTruncate(text, maxWidth, {position});
+		// `cliTruncate` treats its input as a single line: newlines are zero-width, so
+		// the widths of every line would add up and the text would be cut as one run.
+		// Truncate each line on its own instead, the same way `wrapAnsi` wraps each line.
+		wrappedText = text
+			.split('\n')
+			.map(line => cliTruncate(line, maxWidth, {position}))
+			.join('\n');
 	}
 
 	wrapTextCache.set(cacheKey, wrappedText);
