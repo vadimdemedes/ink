@@ -87,7 +87,7 @@ function InputApp({initialText = '', offset}: InputAppProps) {
 
 	let before = text;
 	let after = null;
-	if (offset != null) {
+	if (offset !== null) {
 		before = text.slice(0, offset);
 		after = text.slice(offset);
 	}
@@ -839,10 +839,12 @@ for (const {name, incremental} of inkRenderingModes) {
 	);
 }
 
-[
-	{text: 'the quick', cursorTo: 5, cursorUp: 1, cursor: {x: 5, y: 2}},
-	{text: '3456 7', cursorTo: 1, cursorUp: 1, cursor: {x: 1, y: 2}},
-].forEach((config, i) => {
+for (const [i, config] of (
+	[
+		{text: 'the quick', cursorTo: 5, cursorUp: 1, cursor: {x: 5, y: 2}},
+		{text: '3456 7', cursorTo: 1, cursorUp: 1, cursor: {x: 1, y: 2}},
+	] as const
+).entries()) {
 	test.serial(`cursor wraps after text #${i}`, async t => {
 		const stdout = createStdout(5);
 		const stdin = createStdin();
@@ -881,11 +883,13 @@ for (const {name, incremental} of inkRenderingModes) {
 
 		unmount();
 	});
-});
+}
 
-[
-	{text: '01 345', offset: 3, cursorTo: 0, cursorUp: 1, cursor: {x: 0, y: 1}},
-].forEach((config, i) => {
+for (const [i, config] of (
+	[
+		{text: '01 345', offset: 3, cursorTo: 0, cursorUp: 1, cursor: {x: 0, y: 1}},
+	] as const
+).entries()) {
 	test.serial(`cursor wraps within text #${i}`, async t => {
 		const stdout = createStdout(5);
 		const stdin = createStdin();
@@ -924,7 +928,7 @@ for (const {name, incremental} of inkRenderingModes) {
 
 		unmount();
 	});
-});
+}
 
 test('overflowX - single text node inside overflow container with <Cursor />', t => {
 	const output = renderToString(
