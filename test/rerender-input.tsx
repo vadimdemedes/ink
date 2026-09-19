@@ -33,6 +33,29 @@ test('rerender() keeps a pending Escape keypress', async t => {
 	t.deepEqual(keys, ['escape']);
 });
 
+test('rerender() keeps an escape sequence that spans two reads', async t => {
+	const stdin = createStdin();
+	const stdout = createStdout();
+	const keys: Array<{input: string; upArrow: boolean; shift: boolean}> = [];
+	function Example({label}: {readonly label: string}) {
+		useInput((input, key) => {
+			keys.push({input, upArrow: key.upArrow, shift: key.shift});
+		});
+		return <Text>{label}</Text>;
+	}
+
+	const app = render(<Example label="a" />, {stdin, stdout, interactive: true});
+	t.teardown(app.unmount);
+	await delay(5);
+	stdin.push('\u001B[');
+	await delay(2);
+	app.rerender(<Example label="b" />);
+	await delay(2);
+	stdin.push('A');
+	await delay(40);
+	t.deepEqual(keys, [{input: '', upArrow: true, shift: false}]);
+});
+
 test('rerender() keeps a bracketed paste that spans two reads', async t => {
 	const stdin = createStdin();
 	const stdout = createStdout();
