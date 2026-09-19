@@ -1,39 +1,42 @@
-import {Readable} from 'node:stream';
-import {setTimeout as delay} from 'node:timers/promises';
 import React from 'react';
 import test from 'ava';
+import FakeTimers from '@sinonjs/fake-timers';
 import {render, useInput, usePaste, Text} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
-
-const createStdin = () =>
-	Object.assign(new Readable({read() {}}), {
-		// eslint-disable-next-line @typescript-eslint/naming-convention
-		isTTY: true,
-		setRawMode() {},
-	});
+import {createStdin, emitReadable} from './helpers/create-stdin.js';
 
 test('rerender() keeps a pending Escape keypress', async t => {
-	const stdin = createStdin();
-	const stdout = createStdout();
-	const keys: string[] = [];
-	function Example({label}: {readonly label: string}) {
-		useInput((_input, key) => {
-			keys.push(key.escape ? 'escape' : 'other');
-		});
-		return <Text>{label}</Text>;
-	}
+	const clock = FakeTimers.install({
+		toFake: ['setTimeout', 'clearTimeout'],
+	});
 
-	const app = render(<Example label="a" />, {stdin, stdout, interactive: true});
-	t.teardown(app.unmount);
-	await delay(5);
-	stdin.push('\u001B');
-	await delay(2);
-	app.rerender(<Example label="b" />);
-	await delay(40);
-	t.deepEqual(keys, ['escape']);
+	try {
+		const stdin = createStdin();
+		const stdout = createStdout();
+		const keys: string[] = [];
+		function Example({label}: {readonly label: string}) {
+			useInput((_input, key) => {
+				keys.push(key.escape ? 'escape' : 'other');
+			});
+			return <Text>{label}</Text>;
+		}
+
+		const app = render(<Example label="a" />, {
+			stdin,
+			stdout,
+			interactive: true,
+		});
+		t.teardown(app.unmount);
+		emitReadable(stdin, '\u001B');
+		app.rerender(<Example label="b" />);
+		await clock.tickAsync(20);
+		t.deepEqual(keys, ['escape']);
+	} finally {
+		clock.uninstall();
+	}
 });
 
-test('rerender() keeps an escape sequence that spans two reads', async t => {
+test('rerender() keeps an escape sequence that spans two reads', t => {
 	const stdin = createStdin();
 	const stdout = createStdout();
 	const keys: Array<{input: string; upArrow: boolean; shift: boolean}> = [];
@@ -46,17 +49,13 @@ test('rerender() keeps an escape sequence that spans two reads', async t => {
 
 	const app = render(<Example label="a" />, {stdin, stdout, interactive: true});
 	t.teardown(app.unmount);
-	await delay(5);
-	stdin.push('\u001B[');
-	await delay(2);
+	emitReadable(stdin, '\u001B[');
 	app.rerender(<Example label="b" />);
-	await delay(2);
-	stdin.push('A');
-	await delay(40);
+	emitReadable(stdin, 'A');
 	t.deepEqual(keys, [{input: '', upArrow: true, shift: false}]);
 });
 
-test('rerender() keeps a bracketed paste that spans two reads', async t => {
+test('rerender() keeps a bracketed paste that spans two reads', t => {
 	const stdin = createStdin();
 	const stdout = createStdout();
 	const inputs: string[] = [];
@@ -73,18 +72,14 @@ test('rerender() keeps a bracketed paste that spans two reads', async t => {
 
 	const app = render(<Example label="a" />, {stdin, stdout, interactive: true});
 	t.teardown(app.unmount);
-	await delay(5);
-	stdin.push('\u001B[200~part1');
-	await delay(2);
+	emitReadable(stdin, '\u001B[200~part1');
 	app.rerender(<Example label="b" />);
-	await delay(2);
-	stdin.push('part2\u001B[201~');
-	await delay(20);
+	emitReadable(stdin, 'part2\u001B[201~');
 	t.deepEqual(pastes, ['part1part2']);
 	t.deepEqual(inputs, []);
 });
 
-test('rerender() does not detach and reattach the stdin readable listener', async t => {
+test('rerender() does not detach and reattach the stdin readable listener', t => {
 	const stdin = createStdin();
 	const stdout = createStdout();
 	let removed = 0;
@@ -101,8 +96,6 @@ test('rerender() does not detach and reattach the stdin readable listener', asyn
 
 	const app = render(<Example label="a" />, {stdin, stdout, interactive: true});
 	t.teardown(app.unmount);
-	await delay(5);
 	app.rerender(<Example label="b" />);
-	await delay(5);
 	t.is(removed, 0);
 });
