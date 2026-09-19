@@ -43,6 +43,20 @@ test('truncates each line of multi-line text separately', t => {
 	t.is(wrapText('hello world\nfoo', 6, 'truncate-start'), '…world\nfoo');
 });
 
+test('truncated multi-line text keeps styles that span a newline', t => {
+	t.is(
+		wrapText('\u001B[31mabcdef\nuvwxyz\u001B[39m', 4, 'truncate-end'),
+		'\u001B[31mabc…\u001B[39m\n\u001B[31muvw…\u001B[39m',
+	);
+
+	const link = '\u001B]8;;https://example.com\u0007';
+	const linkEnd = '\u001B]8;;\u0007';
+	t.is(
+		wrapText(`${link}abcdef\nuvwxyz${linkEnd}`, 4, 'truncate-end'),
+		`${link}abc${linkEnd}…\n${link}uvw${linkEnd}…`,
+	);
+});
+
 test('truncated multi-line text keeps its lines in the layout', t => {
 	const output = renderToString(
 		<Box width={8} borderStyle="single">
