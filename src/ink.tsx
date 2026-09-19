@@ -232,9 +232,10 @@ export default class Ink {
 	private lastTerminalWidth: number;
 	private readonly container: FiberRoot;
 	private readonly rootNode: dom.DOMElement;
-	// This variable is used only in debug mode to store full static output
-	// so that it's rerendered every time, not just new static parts, like in non-debug mode
+	// Used only in debug mode to store full static output so that it's rerendered every time, not just new static parts, like in non-debug mode.
 	private fullStaticOutput: string;
+	// Whether any <Static> output has been written. The final unmount render is skipped once it has, since rendering again would duplicate <Static> children on exit (#397).
+	private hasRenderedStaticOutput: boolean;
 	private readonly exitPromise!: Promise<unknown>;
 	private exitResult: unknown;
 	private beforeExitHandler?: () => void;
@@ -338,9 +339,8 @@ export default class Ink {
 		this.lastOutputHeight = 0;
 		this.lastTerminalWidth = getWindowSize(this.options.stdout).columns;
 
-		// This variable is used only in debug mode to store full static output
-		// so that it's rerendered every time, not just new static parts, like in non-debug mode
 		this.fullStaticOutput = '';
+		this.hasRenderedStaticOutput = false;
 
 		// Use ConcurrentRoot for concurrent mode, LegacyRoot for legacy mode
 		const rootTag = options.concurrent ? ConcurrentRoot : LegacyRoot;
@@ -460,9 +460,10 @@ export default class Ink {
 		yogaNode.calculateLayout(undefined, undefined, Yoga.DIRECTION_LTR);
 	};
 
-	// Resets `fullStaticOutput` when the <Static> identity changes so stale items from a previous instance are not replayed on future rewrites.
+	// Resets the accumulated static output when the <Static> identity changes so stale items from a previous instance are not replayed on future rewrites.
 	handleStaticChange = (): void => {
 		this.fullStaticOutput = '';
+		this.hasRenderedStaticOutput = false;
 	};
 
 	onRender: () => void = () => {
@@ -646,7 +647,7 @@ export default class Ink {
 			// exists, as that can duplicate <Static> children output on exit (see issue #397).
 			const shouldRenderFinalFrame =
 				!this.throttledOnRender ||
-				(!this.hasPendingThrottledRender && this.fullStaticOutput === '');
+				(!this.hasPendingThrottledRender && !this.hasRenderedStaticOutput);
 
 			if (shouldRenderFinalFrame) {
 				this.calculateLayout();
@@ -902,6 +903,7 @@ export default class Ink {
 		if (this.options.debug) {
 			if (hasStaticOutput) {
 				this.fullStaticOutput += staticOutput;
+				this.hasRenderedStaticOutput = true;
 			}
 
 			this.lastOutput = output;
@@ -969,7 +971,7 @@ export default class Ink {
 		}
 
 		if (hasStaticOutput) {
-			this.fullStaticOutput += staticOutput;
+			this.hasRenderedStaticOutput = true;
 		}
 
 		this.renderInteractiveFrame(
@@ -1092,9 +1094,25 @@ export default class Ink {
 				this.options.stdout.write(bsu);
 			}
 
-			this.options.stdout.write(
-				homeAndEraseDown + this.fullStaticOutput + outputToRender,
-			);
+			// Erase only the previous frame. Everything above it, whether <Static>
+			// output, console writes or the shell's own history, is left where the
+			// terminal put it, so nothing needs to be replayed. Replaying
+			// `fullStaticOutput` here used to restore what `clearTerminal` wiped;
+			// with scrollback preserved it only stamps another copy of every
+			// <Static> line into history on each full clear.
+			if (this.lastOutputHeight >= viewportRows) {
+				// The previous frame filled the viewport, so erasing the viewport
+				// erases exactly that frame. The absolute sequence also sidesteps the
+				// cursor-relative erase that Windows consoles desynchronize (#969).
+				this.options.stdout.write(homeAndEraseDown + outputToRender);
+			} else {
+				// The previous frame only covers the bottom of the viewport. Erase
+				// those rows relative to the cursor and let the new frame scroll
+				// whatever sits above them into scrollback naturally.
+				this.log.clear();
+				this.options.stdout.write(outputToRender);
+			}
+
 			this.lastOutput = output;
 			this.lastOutputToRender = outputToRender;
 			this.lastOutputHeight = outputHeight;
