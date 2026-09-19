@@ -64,7 +64,7 @@ export type DOMElement = {
 	isHidden?: boolean;
 	isStaticDirty?: boolean;
 	staticNode?: DOMElement;
-	// Tracks the previous commit's `staticNode` so the reconciler can detect identity changes (mount, unmount, key-driven remount) and reset `fullStaticOutput`.
+	// Tracks the previous commit's `staticNode` so the reconciler can detect identity changes (mount, unmount, key-driven remount) and reset the accumulated static output.
 	previousStaticNode?: DOMElement;
 	onComputeLayout?: () => void;
 	onRender?: () => void;

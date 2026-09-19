@@ -1725,8 +1725,8 @@ for (const mode of ['standard', 'incremental']) {
 		const stdout = createStdout();
 		stdout.rows = rows;
 		stdout.write('History\n');
-		// With a one-line live region, only `History` and `S1` have scrolled into
-		// scrollback; `S2` and `S3` are still in the viewport.
+		// With a one-line live region and three rows, `History`, `S1` and `S2`
+		// have scrolled into scrollback; only `S3` is still in the viewport.
 		const instance = render(<StaticHistoryApp liveLines={1} tick={0} />, {
 			stdout,
 			interactive: true,

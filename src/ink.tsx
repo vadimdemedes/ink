@@ -1094,24 +1094,14 @@ export default class Ink {
 				this.options.stdout.write(bsu);
 			}
 
-			// Erase only the previous frame. Everything above it, whether <Static>
-			// output, console writes or the shell's own history, is left where the
-			// terminal put it, so nothing needs to be replayed. Replaying
-			// `fullStaticOutput` here used to restore what `clearTerminal` wiped;
-			// with scrollback preserved it only stamps another copy of every
-			// <Static> line into history on each full clear. New <Static> output
-			// from this frame is still written once, ahead of the frame.
+			// Erase only the previous frame. Everything above it, whether <Static> output, console writes or the shell's own history, is left where the terminal put it, so nothing needs to be replayed. Replaying `fullStaticOutput` here used to restore what `clearTerminal` wiped; with scrollback preserved it only stamps another copy of every <Static> line into history on each full clear. New <Static> output from this frame is still written once, ahead of the frame.
 			if (this.lastOutputHeight >= viewportRows) {
-				// The previous frame filled the viewport, so erasing the viewport
-				// erases exactly that frame. The absolute sequence also sidesteps the
-				// cursor-relative erase that Windows consoles desynchronize (#969).
+				// The previous frame filled the viewport, so erasing the viewport erases exactly that frame. The absolute sequence also sidesteps the cursor-relative erase that Windows consoles desynchronize (#969).
 				this.options.stdout.write(
 					homeAndEraseDown + staticOutput + outputToRender,
 				);
 			} else {
-				// The previous frame only covers the bottom of the viewport. Erase
-				// those rows relative to the cursor and let the new frame scroll
-				// whatever sits above them into scrollback naturally.
+				// The previous frame only covers the bottom of the viewport. Erase those rows relative to the cursor and let the new frame scroll whatever sits above them into scrollback naturally.
 				this.log.clear();
 				this.options.stdout.write(staticOutput + outputToRender);
 			}
