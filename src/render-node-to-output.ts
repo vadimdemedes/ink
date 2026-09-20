@@ -148,7 +148,7 @@ const renderNodeToOutput = (
 
 		if (node.nodeName === 'ink-text') {
 			let {text, cursorOffset} = squashTextNodes(node);
-			let cursorOffsetY: number | undefined;
+			let cursorPosition: CursorPosition | undefined;
 
 			if (text.length > 0) {
 				const currentWidth = widestLine(text);
@@ -157,12 +157,11 @@ const renderNodeToOutput = (
 				if (currentWidth > maxWidth) {
 					const textWrap = node.style.textWrap ?? 'wrap';
 					text = wrapText(text, maxWidth, textWrap);
+				}
 
-					if (cursorOffset !== undefined) {
-						const {x: newX, y: newY} = wrapCursorOffset(text, cursorOffset);
-						cursorOffset = newX;
-						cursorOffsetY = newY;
-					}
+				if (cursorOffset !== undefined) {
+					const {x: newX, y: newY} = wrapCursorOffset(text, cursorOffset);
+					cursorPosition = {x: x + newX, y: y + newY};
 				}
 
 				text = applyPaddingToText(node, text);
@@ -170,9 +169,7 @@ const renderNodeToOutput = (
 				output.write(x, y, text, {transformers: newTransformers});
 			}
 
-			return cursorOffset === undefined
-				? undefined
-				: {cursorPosition: {x: x + cursorOffset, y: y + (cursorOffsetY ?? 0)}};
+			return cursorPosition === undefined ? undefined : {cursorPosition};
 		}
 
 		let clipped = false;

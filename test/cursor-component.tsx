@@ -841,7 +841,9 @@ for (const {name, incremental} of inkRenderingModes) {
 
 for (const [i, config] of (
 	[
+		{text: '', cursorTo: 2, cursorUp: 1, cursor: {x: 2, y: 0}},
 		{text: 'the quick', cursorTo: 5, cursorUp: 1, cursor: {x: 5, y: 2}},
+		{text: '3456 7', cursorTo: 1, cursorUp: 1, cursor: {x: 1, y: 2}},
 		{text: '3456 7', cursorTo: 1, cursorUp: 1, cursor: {x: 1, y: 2}},
 	] as const
 ).entries()) {
@@ -887,6 +889,7 @@ for (const [i, config] of (
 for (const [i, config] of (
 	[
 		{text: '01 345', offset: 3, cursorTo: 0, cursorUp: 1, cursor: {x: 0, y: 1}},
+		{text: '0\n23', offset: 3, cursorTo: 1, cursorUp: 1, cursor: {x: 1, y: 1}},
 	] as const
 ).entries()) {
 	test.serial(`cursor wraps within text #${i}`, async t => {
