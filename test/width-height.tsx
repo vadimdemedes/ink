@@ -84,6 +84,63 @@ test.failing('set min width in percent', t => {
 	t.is(output, 'A    B');
 });
 
+test('set width to zero', t => {
+	const output = renderToString(
+		<Box>
+			<Box width={0}>
+				<Text>hello</Text>
+			</Box>
+			<Text>|</Text>
+		</Box>,
+	);
+
+	t.is(output, '|ello');
+});
+
+test('set width to zero with text below', t => {
+	const output = renderToString(
+		<Box flexDirection="column">
+			<Box>
+				<Box width={0}>
+					<Text>hello</Text>
+				</Box>
+				<Text>|</Text>
+			</Box>
+			<Text>next</Text>
+		</Box>,
+	);
+
+	t.is(output, '|ello\nnext');
+});
+
+test('padding leaves no room for text', t => {
+	const output = renderToString(
+		<Box>
+			<Box width={2} paddingX={1}>
+				<Text>hello</Text>
+			</Box>
+			<Text>|</Text>
+		</Box>,
+	);
+
+	t.is(output, ' h|llo');
+});
+
+test('shrink text to zero width', t => {
+	const output = renderToString(
+		<Box width={5}>
+			<Box flexBasis={0} flexShrink={1}>
+				<Text>hello</Text>
+			</Box>
+			<Box width={5}>
+				<Text>world</Text>
+			</Box>
+		</Box>,
+	);
+
+	t.is(output, 'world');
+});
+
 test('set height', t => {
 	const output = renderToString(
 		<Box height={4}>

@@ -16,6 +16,11 @@ const wrapText = (
 	maxWidth: number,
 	wrapType: Styles['textWrap'],
 ): string => {
+	// `wrapAnsi` only breaks a row once something is on it, so wrapping into less than one column puts every character on its own row and the layout height grows to the character count. Text with no room keeps its natural width instead, like any other content that does not fit. Truncation is left alone: it cuts to nothing at zero columns.
+	if (maxWidth < 1 && (wrapType === 'wrap' || wrapType === 'hard')) {
+		return text;
+	}
+
 	// `text` goes last because it's the only part of the key that can contain
 	// arbitrary characters. With it first, ('ab', 12, 'wrap') and
 	// ('ab1', 2, 'wrap') both produce the key `ab12wrap` and share a result.
