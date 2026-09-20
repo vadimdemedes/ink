@@ -1,13 +1,14 @@
 import wrapAnsi from 'wrap-ansi';
 import {type DOMElement} from './dom.js';
-import sanitizeAnsi, {isSanitizedCsi} from './sanitize-ansi.js';
+import sanitizeAnsi from './sanitize-ansi.js';
 import {tokenizeAnsi} from './ansi-tokenizer.js';
 
 type SquashedOutput = {
 	text: string;
 
 	/**
-	 * The requested cursor offset (if any) within `text`
+	 * The requested cursor offset (if any) within `text`.
+	 * Ansi sequences are not counted
 	 */
 	cursorOffset?: number;
 };
@@ -91,7 +92,7 @@ const normalizeCursor = (text: string, cursorOffset: number) => {
 	const before = text.slice(0, cursorOffset);
 
 	for (const token of tokenizeAnsi(before)) {
-		if (token.type === 'csi' && !isSanitizedCsi(token)) {
+		if (token.type !== 'text') {
 			cursorOffset -= token.value.length;
 		}
 	}

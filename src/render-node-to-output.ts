@@ -1,4 +1,5 @@
 import stringWidth from 'string-width';
+import stripAnsi from 'strip-ansi';
 import widestLine from 'widest-line';
 import indentString from 'indent-string';
 import Yoga from 'yoga-layout';
@@ -264,7 +265,7 @@ const wrapCursorOffsetToPosition = ({
 
 	let columnAdjustments = 0;
 	let start = 0;
-	for (const [i, ch] of [...wrappedText].entries()) {
+	for (const [i, ch] of [...stripAnsi(wrappedText)].entries()) {
 		if (ch === '\n') {
 			// Reset column adjustments; they apply to a previous line
 			// on which the cursor will not sit
