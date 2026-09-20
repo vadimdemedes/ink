@@ -1,5 +1,11 @@
 import wrapAnsi from 'wrap-ansi';
 import cliTruncate from 'cli-truncate';
+import {
+	type StyledChar,
+	styledCharsFromTokens,
+	styledCharsToString,
+	tokenize,
+} from '@alcalzone/ansi-tokenize';
 import QuickLRU from 'quick-lru';
 import {type Styles} from './styles.js';
 
@@ -48,7 +54,25 @@ const wrapText = (
 			position = 'start';
 		}
 
-		wrappedText = cliTruncate(text, maxWidth, {position});
+		// `cliTruncate` treats its input as a single line: newlines are zero-width, so the widths of every line would add up and the text would be cut as one run. Truncate each line on its own instead, the same way `wrapAnsi` wraps each line. Split on styled characters rather than the raw string so styles and links that span a newline are reopened on every line they cover. Single-line text skips the tokenization, which is the expensive part on long strings.
+		let lines = [text];
+
+		if (text.includes('\n')) {
+			const styledLines: StyledChar[][] = [[]];
+			for (const character of styledCharsFromTokens(tokenize(text))) {
+				if (character.value === '\n') {
+					styledLines.push([]);
+				} else {
+					styledLines.at(-1)!.push(character);
+				}
+			}
+
+			lines = styledLines.map(line => styledCharsToString(line));
+		}
+
+		wrappedText = lines
+			.map(line => cliTruncate(line, maxWidth, {position}))
+			.join('\n');
 	}
 
 	wrapTextCache.set(cacheKey, wrappedText);
