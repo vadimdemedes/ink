@@ -1,8 +1,19 @@
 import test from 'ava';
 import React from 'react';
 import chalk from 'chalk';
-import {Box, Text, Transform, Static} from '../src/index.js';
+import ansiEscapes from 'ansi-escapes';
+import {
+	Box,
+	Text,
+	Transform,
+	Static,
+	render,
+	useStdout,
+	useStderr,
+} from '../src/index.js';
+import {bsu, esu} from '../src/write-synchronized.js';
 import {renderToString} from './helpers/render-to-string.js';
+import createStdout from './helpers/create-stdout.js';
 
 test('omit Static content inside a hidden ancestor from screen-reader output', t => {
 	const output = renderToString(
@@ -460,3 +471,89 @@ test('render listbox with multiselectable options', t => {
 		'listbox: (multiselectable) option: (selected) Option 1\noption: Option 2\noption: (selected) Option 3',
 	);
 });
+
+const contentWrites = (stdout: ReturnType<typeof createStdout>) =>
+	stdout.getWrites().filter(write => write.length > 0);
+
+test('restore screen-reader output after stdout writes without touching the cursor', async t => {
+	const stdout = createStdout(40, true);
+	let write: (text: string) => void = () => {};
+	function Test() {
+		({write} = useStdout());
+		return <Text>Hello</Text>;
+	}
+
+	const instance = render(<Test />, {
+		stdout,
+		interactive: true,
+		isScreenReaderEnabled: true,
+		patchConsole: false,
+	});
+	t.teardown(instance.unmount);
+	await instance.waitUntilRenderFlush();
+	t.deepEqual(contentWrites(stdout), [bsu, 'Hello', esu]);
+
+	write('External\n');
+
+	t.deepEqual(contentWrites(stdout).slice(3), [
+		bsu,
+		ansiEscapes.eraseLines(1),
+		'External\n',
+		'Hello',
+		esu,
+	]);
+});
+
+test('restore screen-reader output after stderr writes without touching the cursor', async t => {
+	const stdout = createStdout(40, true);
+	const stderr = createStdout(40, true);
+	let write: (text: string) => void = () => {};
+	function Test() {
+		({write} = useStderr());
+		return <Text>Hello</Text>;
+	}
+
+	const instance = render(<Test />, {
+		stdout,
+		stderr,
+		interactive: true,
+		isScreenReaderEnabled: true,
+		patchConsole: false,
+	});
+	t.teardown(instance.unmount);
+	await instance.waitUntilRenderFlush();
+
+	write('External\n');
+
+	t.deepEqual(contentWrites(stderr), ['External\n']);
+	t.deepEqual(contentWrites(stdout).slice(3), [
+		bsu,
+		ansiEscapes.eraseLines(1),
+		'Hello',
+		esu,
+	]);
+});
+
+test.serial(
+	'restore screen-reader output after console.log without touching the cursor',
+	async t => {
+		const stdout = createStdout(40, true);
+		const instance = render(<Text>Hello</Text>, {
+			stdout,
+			interactive: true,
+			isScreenReaderEnabled: true,
+		});
+		t.teardown(instance.unmount);
+		await instance.waitUntilRenderFlush();
+
+		console.log('External');
+
+		t.deepEqual(contentWrites(stdout).slice(3), [
+			bsu,
+			ansiEscapes.eraseLines(1),
+			'External\n',
+			'Hello',
+			esu,
+		]);
+	},
+);
