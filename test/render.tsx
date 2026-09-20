@@ -1813,6 +1813,104 @@ for (const mode of ['standard', 'incremental']) {
 	});
 }
 
+for (const mode of ['standard', 'incremental']) {
+	test(`alternate screen replays <Static> output when the frame shrinks after overflowing - ${mode}`, async t => {
+		// Enough rows for the three static lines, the live line and the row its trailing newline leaves the cursor on, so the first frame does not scroll.
+		const rows = 5;
+		const stdout = createStdout();
+		stdout.rows = rows;
+		const instance = render(<StaticHistoryApp liveLines={1} tick={0} />, {
+			stdout,
+			interactive: true,
+			alternateScreen: true,
+			patchConsole: false,
+			incrementalRendering: mode === 'incremental',
+		});
+		t.teardown(instance.unmount);
+		await instance.waitUntilRenderFlush();
+
+		// The alternate screen has no scrollback, so the <Static> rows that the overflowing frame pushes off the top are gone once the frame shrinks unless they are replayed.
+		instance.rerender(<StaticHistoryApp liveLines={rows + 2} tick={1} />);
+		await instance.waitUntilRenderFlush();
+		instance.rerender(<StaticHistoryApp liveLines={1} tick={2} />);
+		await instance.waitUntilRenderFlush();
+
+		// Reconstruct only what the last full clear left on screen, so a replay that writes the static rows twice cannot hide the first copy above the viewport.
+		const output = stdout.getWrites().join('');
+		const lastClear = output.lastIndexOf(homeAndEraseDown);
+		t.true(
+			lastClear >= 0,
+			'Expected the shrink to go through the full-clear path',
+		);
+
+		t.deepEqual(
+			reconstructTerminalLines(
+				output.slice(lastClear).replaceAll('\n', '\r\n'),
+				rows,
+			),
+			['S1', 'S2', 'S3', 'live 0 tick 2', ''],
+		);
+	});
+
+	test(`alternate screen replays <Static> items added while the frame overflows once - ${mode}`, async t => {
+		const rows = 5;
+		const stdout = createStdout();
+		stdout.rows = rows;
+		const instance = render(
+			<StaticHistoryApp items={['S1']} liveLines={rows + 2} tick={0} />,
+			{
+				stdout,
+				interactive: true,
+				alternateScreen: true,
+				patchConsole: false,
+				incrementalRendering: mode === 'incremental',
+			},
+		);
+		t.teardown(instance.unmount);
+		await instance.waitUntilRenderFlush();
+
+		// Each overflowing rerender adds a <Static> item that the replay must carry exactly once, both while the frame overflows and after it shrinks.
+		instance.rerender(
+			<StaticHistoryApp items={['S1', 'S2']} liveLines={rows + 2} tick={1} />,
+		);
+		await instance.waitUntilRenderFlush();
+		instance.rerender(
+			<StaticHistoryApp
+				items={['S1', 'S2', 'S3']}
+				liveLines={rows + 2}
+				tick={2}
+			/>,
+		);
+		await instance.waitUntilRenderFlush();
+		instance.rerender(
+			<StaticHistoryApp items={['S1', 'S2', 'S3']} liveLines={1} tick={3} />,
+		);
+		await instance.waitUntilRenderFlush();
+
+		// Check the static rows every full clear writes, not just what ends up on screen, since an overflowing frame scrolls a duplicate off the top before it can be seen.
+		const frames = stdout.getWrites().join('').split(homeAndEraseDown).slice(1);
+		t.true(
+			frames.length >= 3,
+			'Expected the rerenders to go through the full-clear path',
+		);
+		for (const frame of frames) {
+			const staticLines = frame
+				.split('\n')
+				.filter(line => line.startsWith('S'));
+			t.deepEqual(
+				staticLines,
+				['S1', 'S2', 'S3'].slice(0, staticLines.length),
+				'Expected every static item to be written exactly once, in order',
+			);
+		}
+
+		t.deepEqual(
+			reconstructTerminalLines(frames.at(-1)!.replaceAll('\n', '\r\n'), rows),
+			['S1', 'S2', 'S3', 'live 0 tick 3', ''],
+		);
+	});
+}
+
 test('clear screen-reader output', t => {
 	const stdout = createStdout(10);
 	const instance = render(<Text>{'First line\nSecond line'}</Text>, {

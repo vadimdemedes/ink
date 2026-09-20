@@ -232,7 +232,7 @@ export default class Ink {
 	private lastTerminalWidth: number;
 	private readonly container: FiberRoot;
 	private readonly rootNode: dom.DOMElement;
-	// Used only in debug mode to store full static output so that it's rerendered every time, not just new static parts, like in non-debug mode.
+	// Accumulated <Static> output. Only kept in debug mode, where every frame rewrites it, and on the alternate screen, where it has to be replayed on full clears because there is no scrollback to keep it in.
 	private fullStaticOutput: string;
 	// Whether any <Static> output has been written. The final unmount render is skipped once it has, since rendering again would duplicate <Static> children on exit (#397).
 	private hasRenderedStaticOutput: boolean;
@@ -972,6 +972,10 @@ export default class Ink {
 
 		if (hasStaticOutput) {
 			this.hasRenderedStaticOutput = true;
+
+			if (this.alternateScreen) {
+				this.fullStaticOutput += staticOutput;
+			}
 		}
 
 		this.renderInteractiveFrame(
@@ -1094,8 +1098,13 @@ export default class Ink {
 				this.options.stdout.write(bsu);
 			}
 
-			// Erase only the previous frame. Everything above it, whether <Static> output, console writes or the shell's own history, is left where the terminal put it, so nothing needs to be replayed. Replaying `fullStaticOutput` here used to restore what `clearTerminal` wiped; with scrollback preserved it only stamps another copy of every <Static> line into history on each full clear. New <Static> output from this frame is still written once, ahead of the frame.
-			if (this.lastOutputHeight >= viewportRows) {
+			// On the primary screen, erase only the previous frame. Everything above it, whether <Static> output, console writes or the shell's own history, is left where the terminal put it, so nothing needs to be replayed there. Replaying `fullStaticOutput` used to restore what `clearTerminal` wiped; with scrollback preserved it only stamps another copy of every <Static> line into history on each full clear. New <Static> output from this frame is still written once, ahead of the frame.
+			if (this.alternateScreen) {
+				// The alternate screen has no scrollback, so whatever the full clear erases or an overflowing frame pushed off the top is gone for good. Replay the accumulated static output, which already includes this frame's new items, ahead of the frame.
+				this.options.stdout.write(
+					homeAndEraseDown + this.fullStaticOutput + outputToRender,
+				);
+			} else if (this.lastOutputHeight >= viewportRows) {
 				// The previous frame filled the viewport, so erasing the viewport erases exactly that frame. The absolute sequence also sidesteps the cursor-relative erase that Windows consoles desynchronize (#969).
 				this.options.stdout.write(
 					homeAndEraseDown + staticOutput + outputToRender,
