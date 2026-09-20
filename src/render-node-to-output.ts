@@ -1,3 +1,4 @@
+import stringWidth from 'string-width';
 import widestLine from 'widest-line';
 import indentString from 'indent-string';
 import Yoga from 'yoga-layout';
@@ -9,7 +10,6 @@ import renderBackground from './render-background.js';
 import {type DOMElement} from './dom.js';
 import type Output from './output.js';
 import {type CursorPosition} from './cursor-helpers.js';
-import stringWidth from 'string-width';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.

@@ -102,6 +102,7 @@ const countNewlines = (text: string) => {
 		if (start === -1) {
 			return count;
 		}
+
 		++count;
 	}
 };
