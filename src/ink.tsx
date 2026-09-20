@@ -434,6 +434,14 @@ export default class Ink {
 		this.log.setCursorPosition(position);
 	};
 
+	// Must stay referentially stable across `render()` calls: it feeds into App's
+	// `setRawMode` identity, so a new function per `rerender()` would make every
+	// `useInput`/`usePaste` re-run its raw-mode effect and reset the input parser,
+	// dropping keys and pastes that were still in flight.
+	handleKittyQueryResponse = (): void => {
+		this.finishKittyDetection?.(true);
+	};
+
 	restoreLastOutput = (): void => {
 		if (!this.interactive) {
 			return;
@@ -528,9 +536,7 @@ export default class Ink {
 					onWaitUntilRenderFlush={this.waitUntilRenderFlush}
 					onSuspendTerminal={this.suspendTerminal}
 					onRegisterInputControl={this.registerInputControl}
-					onKittyQueryResponse={() => {
-						this.finishKittyDetection?.(true);
-					}}
+					onKittyQueryResponse={this.handleKittyQueryResponse}
 				>
 					<RootNodeContext.Provider value={this.rootNode}>
 						{node}
