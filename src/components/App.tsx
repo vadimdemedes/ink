@@ -92,6 +92,8 @@ function App({
 	// raw mode until all components don't need it anymore
 	const rawModeEnabledCount = useRef(0);
 	const pendingDisableRawModeRef = useRef(false);
+	// Set while suspendTerminal() has handed input to a child process. Input hooks that change while it is set only update the ref counts; resumeInput restores the modes that still have an owner.
+	const isInputPausedRef = useRef(false);
 	// Count how many components enabled bracketed paste mode
 	const bracketedPasteModeEnabledCount = useRef(0);
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -372,12 +374,14 @@ function App({
 					const isRawModeAlreadyEnabled = pendingDisableRawModeRef.current;
 					pendingDisableRawModeRef.current = false;
 
-					if (!isRawModeAlreadyEnabled) {
-						rawModeStdin.ref?.();
-						rawModeStdin.setRawMode(true);
-					}
+					if (!isInputPausedRef.current) {
+						if (!isRawModeAlreadyEnabled) {
+							rawModeStdin.ref?.();
+							rawModeStdin.setRawMode(true);
+						}
 
-					attachReadableListener();
+						attachReadableListener();
+					}
 				}
 
 				rawModeEnabledCount.current++;
@@ -389,6 +393,11 @@ function App({
 			}
 
 			if (--rawModeEnabledCount.current === 0) {
+				// Nothing to release while suspended: pauseInput already did.
+				if (isInputPausedRef.current) {
+					return;
+				}
+
 				// Stop owning input immediately so pending parser state cannot leak into
 				// a replacement `useInput` component mounted in the same React update.
 				clearInputState();
@@ -421,7 +430,10 @@ function App({
 			}
 
 			if (isEnabled) {
-				if (bracketedPasteModeEnabledCount.current === 0) {
+				if (
+					bracketedPasteModeEnabledCount.current === 0 &&
+					!isInputPausedRef.current
+				) {
 					stdout.write('\u001B[?2004h');
 				}
 
@@ -433,7 +445,10 @@ function App({
 				return;
 			}
 
-			if (--bracketedPasteModeEnabledCount.current === 0) {
+			if (
+				--bracketedPasteModeEnabledCount.current === 0 &&
+				!isInputPausedRef.current
+			) {
 				stdout.write('\u001B[?2004l');
 			}
 		},
@@ -443,6 +458,8 @@ function App({
 	// Pausing and resuming leave the ref counts untouched: the React components
 	// still "own" raw mode/bracketed paste across the suspension.
 	const pauseInput = useCallback((): void => {
+		isInputPausedRef.current = true;
+
 		if (bracketedPasteModeEnabledCount.current > 0 && stdout.isTTY) {
 			try {
 				stdout.write('\u001B[?2004l');
@@ -456,8 +473,10 @@ function App({
 		}
 	}, [isRawModeSupported, rawModeStdin, stdout, clearInputState]);
 
-	// Hooks may have been disabled or removed while suspended, so restore only the modes that still have an owner.
+	// Hooks may have changed while suspended, so restore only the modes that still have an owner.
 	const resumeInput = useCallback((): void => {
+		isInputPausedRef.current = false;
+
 		if (isRawModeSupported && rawModeEnabledCount.current > 0) {
 			rawModeStdin?.setEncoding('utf8');
 			rawModeStdin?.ref?.();
