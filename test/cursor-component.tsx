@@ -87,7 +87,7 @@ function InputApp({initialText = '', offset}: InputAppProps) {
 
 	let before = text;
 	let after = null;
-	if (offset !== null) {
+	if (offset !== undefined) {
 		before = text.slice(0, offset);
 		after = text.slice(offset);
 	}
@@ -861,7 +861,6 @@ for (const [i, config] of (
 		await waitUntilRenderFlush();
 
 		const firstRenderOutput = getWriteCalls(stdout).join('');
-		// Cursor should be shown at x=2 (after "> ")
 		t.true(
 			firstRenderOutput.includes(showCursorEscape),
 			'cursor should be visible after first render',
