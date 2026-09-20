@@ -249,7 +249,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
-		if (test === 'unmappedCtrlSequence' && input === '' && key.ctrl) {
+		if (test === 'unmappedCtrlSequence' && input === 'q') {
 			exit();
 			return;
 		}

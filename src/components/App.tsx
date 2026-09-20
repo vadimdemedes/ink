@@ -30,6 +30,10 @@ type AnimationSubscriber = {
 	nextDueTime: number;
 };
 
+const controlSequenceRegex =
+	// eslint-disable-next-line no-control-regex
+	/^\u001B{1,2}(?:\[[\u0030-\u003F]*[\u0020-\u002F]*|O)[\u0040-\u007E]$/;
+
 type Props = {
 	readonly children: ReactNode;
 	readonly stdin: NodeJS.ReadableStream;
@@ -312,6 +316,14 @@ function App({
 					if (/^\u001B\[\?\d+u$/.test(event)) {
 						onKittyQueryResponse();
 						continue;
+					}
+
+					// A complete CSI or SS3 sequence that maps to no key Ink can represent is not printable text. Terminal replies (focus in/out, cursor position, mouse, device attributes) and keys without a `Key` field would otherwise reach `useInput` with the ESC stripped, as if typed.
+					if (controlSequenceRegex.test(event)) {
+						const key = parseKeypress(event);
+						if (!key.isKittyProtocol && key.name === '') {
+							continue;
+						}
 					}
 
 					emitInput(event);
