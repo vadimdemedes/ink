@@ -47,6 +47,9 @@ const squashTextNodes = (node: DOMElement): string => {
 
 	text = sanitizeAnsi(text.replaceAll('\r\n', '\n'));
 
+	// Measurement and styling dependencies understand the ESC forms of these C1 controls.
+	text = text.replaceAll('', '[').replaceAll('', ']').replaceAll('', '\\');
+
 	// Expand tabs after combining nested text so measurement and rendering use the same columns.
 	if (node.nodeName === 'ink-text' && text.includes('\t')) {
 		text = wrapAnsi(text, Number.POSITIVE_INFINITY, {trim: false});

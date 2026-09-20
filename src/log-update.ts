@@ -6,6 +6,7 @@ import {
 	buildCursorSuffix,
 	buildCursorOnlySequence,
 	buildReturnToBottomPrefix,
+	buildReturnToBottom,
 	hideCursorEscape,
 } from './cursor-helpers.js';
 
@@ -117,6 +118,13 @@ const createStandard = (
 	};
 
 	render.done = () => {
+		if (previousCursorPosition) {
+			// Leave the terminal at the output bottom before discarding the cursor position.
+			stream.write(
+				buildReturnToBottom(previousLineCount, previousCursorPosition),
+			);
+		}
+
 		previousOutput = '';
 		previousLineCount = 0;
 		previousCursorPosition = undefined;
@@ -274,7 +282,8 @@ const createIncremental = (
 			const isLastLine = i === visibleCount - 1;
 
 			// We do not write lines if the contents are the same. This prevents flickering during renders.
-			if (nextLines[i] === previousLines[i]) {
+			// New blank rows need a line feed to scroll at the terminal bottom; the trailing split entry is not a visible row.
+			if (i < previousVisible && nextLines[i] === previousLines[i]) {
 				// Don't move past the last line when there's no trailing newline,
 				// otherwise the cursor overshoots the rendered block.
 				if (!isLastLine || hasTrailingNewline) {
@@ -320,6 +329,13 @@ const createIncremental = (
 	};
 
 	render.done = () => {
+		if (previousCursorPosition) {
+			// Leave the terminal at the output bottom before discarding the cursor position.
+			stream.write(
+				buildReturnToBottom(previousLines.length, previousCursorPosition),
+			);
+		}
+
 		previousOutput = '';
 		previousLines = [];
 		previousCursorPosition = undefined;

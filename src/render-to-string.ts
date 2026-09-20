@@ -59,6 +59,9 @@ const renderToString = (
 	// onRender callback), giving us a chance to capture it before it's cleared
 	// by the subsequent re-render.
 	let capturedStaticOutput = '';
+	rootNode.onStaticChange = () => {
+		capturedStaticOutput = '';
+	};
 
 	rootNode.onComputeLayout = () => {
 		rootNode.yogaNode!.setWidth(columns);
@@ -71,7 +74,7 @@ const renderToString = (
 
 	rootNode.onImmediateRender = () => {
 		const {staticOutput} = renderer(rootNode, false);
-		if (staticOutput && staticOutput !== '\n') {
+		if (staticOutput) {
 			capturedStaticOutput += staticOutput;
 		}
 	};
@@ -108,6 +111,8 @@ const renderToString = (
 
 	try {
 		let output: string;
+		let outputHeight: number;
+		let staticOutput: string;
 		try {
 			// Synchronously render the React tree into the container
 			reconciler.updateContainerSync(
@@ -120,7 +125,9 @@ const renderToString = (
 
 			// Yoga layout has already been calculated by onComputeLayout during commit.
 			// Render the DOM tree to a string — this captures the dynamic (non-static) output.
-			({output} = renderer(rootNode, false));
+			({output, outputHeight} = renderer(rootNode, false));
+			// Cleanup removes Static too; preserve the completed render before teardown.
+			staticOutput = capturedStaticOutput;
 		} finally {
 			// Tear down: unmount the tree so the reconciler cleans up child nodes
 			// and runs effect cleanup functions. Child Yoga nodes are freed by the
@@ -138,18 +145,16 @@ const renderToString = (
 			throw uncaughtError;
 		}
 
-		// The renderer appends a trailing newline to static output for terminal
-		// rendering (so dynamic output starts on a fresh line). Strip it here
-		// so renderToString returns clean output.
-		const normalizedStaticOutput = capturedStaticOutput.endsWith('\n')
-			? capturedStaticOutput.slice(0, -1)
-			: capturedStaticOutput;
-
-		if (normalizedStaticOutput && output) {
-			return normalizedStaticOutput + '\n' + output;
+		// The renderer appends a trailing newline to static output so dynamic output starts on a fresh line.
+		// A single blank dynamic row has empty text but still needs that separator.
+		if (outputHeight > 0) {
+			return staticOutput + output;
 		}
 
-		return normalizedStaticOutput || output;
+		// Without dynamic output, strip the separator so renderToString returns clean output.
+		return staticOutput.endsWith('\n')
+			? staticOutput.slice(0, -1)
+			: staticOutput;
 	} finally {
 		// Ensure native Yoga memory is freed even if rendering or teardown threw.
 		// Yoga nodes are WASM-backed and not garbage collected.

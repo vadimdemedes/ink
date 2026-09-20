@@ -437,8 +437,8 @@ const parseKeypress = (s: Uint8Array | string = ''): ParsedKey => {
 
 	if (s instanceof Uint8Array) {
 		if (s[0]! > 127 && s[1] === undefined) {
-			(s[0] as unknown as number) -= 128;
-			s = '\x1b' + textDecoder.decode(s);
+			// Convert the Meta byte to ASCII without modifying the caller's buffer.
+			s = '\x1b' + String.fromCharCode(s[0]! - 128);
 		} else {
 			s = textDecoder.decode(s);
 		}
@@ -487,6 +487,12 @@ const parseKeypress = (s: Uint8Array | string = ''): ParsedKey => {
 		key.raw = undefined;
 		key.name = 'return';
 		key.meta = s.length === 2;
+	} else if (s === '\x1bOM' || s === '\x1b\x1bOM') {
+		// Application keypad Enter has the same input value as Return.
+		key.raw = undefined;
+		key.name = 'return';
+		key.sequence = '\r';
+		key.meta = s.length === 4;
 	} else if (s === '\n') {
 		// enter, should have been called linefeed
 		key.name = 'enter';

@@ -33,7 +33,7 @@ const term = (fixture: string, args: string[] = []) => {
 	};
 
 	const ps = spawn(
-		'node',
+		process.execPath,
 		['--import=tsx', path.join(fixturesDir, `${fixture}.tsx`), ...args],
 		{
 			name: 'xterm-color',

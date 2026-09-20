@@ -194,7 +194,7 @@ const term = (
 	};
 
 	const ps = spawn(
-		'node',
+		process.execPath,
 		[
 			'--import=tsx',
 			path.join(__dirname, `./fixtures/${fixture}.tsx`),

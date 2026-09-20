@@ -1,4 +1,4 @@
-import Yoga, {type Node as YogaNode} from 'yoga-layout';
+import Yoga, {type Node as YogaNode, type MeasureMode} from 'yoga-layout';
 import measureText from './measure-text.js';
 import {type Styles} from './styles.js';
 import wrapText from './wrap-text.js';
@@ -224,6 +224,21 @@ export const setAttribute = (
 	node.attributes[key] = value;
 };
 
+/**
+Update a text transform and invalidate measurements that include its output.
+*/
+export const setTransform = (
+	node: DOMElement,
+	transform: OutputTransformer | undefined,
+): void => {
+	node.internal_transform = transform;
+
+	// Nested transforms contribute to the enclosing text node's measured content.
+	if (node.nodeName === 'ink-virtual-text') {
+		markNodeAsDirty(node);
+	}
+};
+
 export const setStyle = (node: DOMNode, style?: Styles): void => {
 	if (node.nodeName === 'ink-text' && node.style.textWrap !== style?.textWrap) {
 		// Wrapping changes text measurements without changing any Yoga style.
@@ -251,14 +266,16 @@ export const createTextNode = (text: string): TextNode => {
 const measureTextNode = function (
 	node: DOMNode,
 	width: number,
+	widthMode: MeasureMode,
 ): {width: number; height: number} {
 	const text =
 		node.nodeName === '#text' ? node.nodeValue : squashTextNodes(node);
 
 	const dimensions = measureText(text);
 
+	// An unconstrained Yoga measurement requests the natural size, not wrapping or truncation at its NaN width.
 	// Text fits into container, no need to wrap
-	if (dimensions.width <= width) {
+	if (widthMode === Yoga.MEASURE_MODE_UNDEFINED || dimensions.width <= width) {
 		return dimensions;
 	}
 
@@ -270,8 +287,14 @@ const measureTextNode = function (
 
 	const textWrap = node.style?.textWrap ?? 'wrap';
 	const wrappedText = wrapText(text, width, textWrap);
+	const wrappedDimensions = measureText(wrappedText);
 
-	return measureText(wrappedText);
+	// Reserve the truncation width so rendering does not truncate again at a narrower width when a wide character leaves an unused column.
+	if (textWrap.startsWith('truncate')) {
+		return {width, height: wrappedDimensions.height};
+	}
+
+	return wrappedDimensions;
 };
 
 const findClosestYogaNode = (node?: DOMNode): YogaNode | undefined => {

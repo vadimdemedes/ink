@@ -434,6 +434,14 @@ export default class Ink {
 		this.log.setCursorPosition(position);
 	};
 
+	// Must stay referentially stable across `render()` calls: it feeds into App's
+	// `setRawMode` identity, so a new function per `rerender()` would make every
+	// `useInput`/`usePaste` re-run its raw-mode effect and reset the input parser,
+	// dropping keys and pastes that were still in flight.
+	handleKittyQueryResponse = (): void => {
+		this.finishKittyDetection?.(true);
+	};
+
 	restoreLastOutput = (): void => {
 		if (!this.interactive) {
 			return;
@@ -489,95 +497,24 @@ export default class Ink {
 			this.nextRenderCommit = undefined;
 		}
 
+		// After clear(), the recorded frame is no longer on screen, so forget it and draw the next frame even when unchanged. Keep it while unmounting, so clear() followed by unmount() leaves the terminal clean.
+		if (
+			this.lastOutputHeight === 0 &&
+			this.lastOutput !== '' &&
+			!this.isUnmounting
+		) {
+			this.lastOutputToRender = '';
+		}
+
 		const startTime = performance.now();
 		const {output, outputHeight, staticOutput} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
 		);
 
-		this.options.onRender?.({renderTime: performance.now() - startTime});
-
-		// If <Static> output isn't empty, it means new children have been added to it
-		const hasStaticOutput = staticOutput && staticOutput !== '\n';
-
-		if (this.options.debug) {
-			if (hasStaticOutput) {
-				this.fullStaticOutput += staticOutput;
-			}
-
-			this.lastOutput = output;
-			this.lastOutputToRender = output;
-			this.lastOutputHeight = outputHeight;
-			this.options.stdout.write(this.fullStaticOutput + output);
-			return;
-		}
-
-		if (!this.interactive) {
-			if (hasStaticOutput) {
-				this.options.stdout.write(staticOutput);
-			}
-
-			this.lastOutput = output;
-			this.lastOutputToRender = output + '\n';
-			this.lastOutputHeight = outputHeight;
-			return;
-		}
-
-		if (this.isScreenReaderEnabled) {
-			const sync = this.shouldSync();
-			if (sync) {
-				this.options.stdout.write(bsu);
-			}
-
-			const terminalWidth = getWindowSize(this.options.stdout).columns;
-			const wrappedOutput = wrapAnsi(output, terminalWidth, {
-				trim: false,
-				hard: true,
-			});
-
-			if (wrappedOutput === this.lastOutputToRender && !hasStaticOutput) {
-				if (sync) {
-					this.options.stdout.write(esu);
-				}
-
-				return;
-			}
-
-			// Erase the main output before writing new static output or replacing the frame.
-			// Log-update tracks the actual rows, including frames restored after external writes.
-			this.log.clear();
-			// After erasing, the last output is gone, so reset its height until the new frame is written.
-			this.lastOutputHeight = 0;
-			if (hasStaticOutput) {
-				this.options.stdout.write(staticOutput);
-			}
-
-			this.options.stdout.write(wrappedOutput);
-
-			this.lastOutput = output;
-			this.lastOutputToRender = wrappedOutput;
-			this.lastOutputHeight =
-				wrappedOutput === '' ? 0 : wrappedOutput.split('\n').length;
-			// Screen-reader output uses its own cursor placement.
-			this.log.setCursorPosition(undefined);
-			this.log.sync(wrappedOutput);
-
-			if (sync) {
-				this.options.stdout.write(esu);
-			}
-
-			return;
-		}
-
-		if (hasStaticOutput) {
-			this.fullStaticOutput += staticOutput;
-		}
-
-		this.renderInteractiveFrame(
-			output,
-			outputHeight,
-			hasStaticOutput ? staticOutput : '',
-		);
+		const renderTime = performance.now() - startTime;
+		this.renderFrame(output, outputHeight, staticOutput);
+		this.options.onRender?.({renderTime});
 	};
 
 	render(node: ReactNode): void {
@@ -599,9 +536,7 @@ export default class Ink {
 					onWaitUntilRenderFlush={this.waitUntilRenderFlush}
 					onSuspendTerminal={this.suspendTerminal}
 					onRegisterInputControl={this.registerInputControl}
-					onKittyQueryResponse={() => {
-						this.finishKittyDetection?.(true);
-					}}
+					onKittyQueryResponse={this.handleKittyQueryResponse}
 				>
 					<RootNodeContext.Provider value={this.rootNode}>
 						{node}
@@ -756,6 +691,10 @@ export default class Ink {
 					this.kittyProtocolEnabled = false;
 				}
 
+				if (this.interactive && !this.options.debug) {
+					this.log.done();
+				}
+
 				// Alternate-screen content is disposable by design. We intentionally
 				// leave it active until React cleanup finishes, then restore the
 				// primary buffer without replaying prior frames, hook writes, or
@@ -779,8 +718,6 @@ export default class Ink {
 					this.options.stdout.write(
 						this.options.debug ? '\n' : this.lastOutput + '\n',
 					);
-				} else if (!this.options.debug) {
-					this.log.done();
 				}
 			}
 
@@ -947,11 +884,105 @@ export default class Ink {
 			return undefined;
 		}
 
+		let resumed = false;
 		const resume = async (): Promise<void> => {
+			if (resumed) {
+				return;
+			}
+
+			resumed = true;
 			await this.endSuspend();
 		};
 
 		return {resume, [Symbol.asyncDispose]: resume};
+	}
+
+	private renderFrame(
+		output: string,
+		outputHeight: number,
+		staticOutput: string,
+	): void {
+		// If <Static> output isn't empty, it means new children have been added to it
+		const hasStaticOutput = staticOutput !== '';
+
+		if (this.options.debug) {
+			if (hasStaticOutput) {
+				this.fullStaticOutput += staticOutput;
+			}
+
+			this.lastOutput = output;
+			this.lastOutputToRender = output;
+			this.lastOutputHeight = outputHeight;
+			this.options.stdout.write(this.fullStaticOutput + output);
+			return;
+		}
+
+		if (!this.interactive) {
+			if (hasStaticOutput) {
+				this.options.stdout.write(staticOutput);
+			}
+
+			this.lastOutput = output;
+			this.lastOutputToRender = output + '\n';
+			this.lastOutputHeight = outputHeight;
+			return;
+		}
+
+		if (this.isScreenReaderEnabled) {
+			const sync = this.shouldSync();
+			if (sync) {
+				this.options.stdout.write(bsu);
+			}
+
+			const terminalWidth = getWindowSize(this.options.stdout).columns;
+			const wrappedOutput = wrapAnsi(output, terminalWidth, {
+				trim: false,
+				hard: true,
+			});
+
+			if (wrappedOutput === this.lastOutputToRender && !hasStaticOutput) {
+				if (sync) {
+					this.options.stdout.write(esu);
+				}
+
+				return;
+			}
+
+			// Erase the main output before writing new static output or replacing the frame.
+			// Log-update tracks the actual rows, including frames restored after external writes.
+			this.log.clear();
+			// After erasing, the last output is gone, so reset its height until the new frame is written.
+			this.lastOutputHeight = 0;
+			if (hasStaticOutput) {
+				this.options.stdout.write(staticOutput);
+			}
+
+			this.options.stdout.write(wrappedOutput);
+
+			this.lastOutput = output;
+			this.lastOutputToRender = wrappedOutput;
+			this.lastOutputHeight =
+				wrappedOutput === '' ? 0 : wrappedOutput.split('\n').length;
+			// Screen-reader output uses its own cursor placement.
+			this.log.setCursorPosition(undefined);
+			this.log.sync(wrappedOutput);
+
+			if (sync) {
+				this.options.stdout.write(esu);
+			}
+
+			return;
+		}
+
+		if (hasStaticOutput) {
+			this.fullStaticOutput += staticOutput;
+		}
+
+		this.renderInteractiveFrame(
+			output,
+			outputHeight,
+			hasStaticOutput ? staticOutput : '',
+		);
 	}
 
 	private setAlternateScreen(enabled: boolean): void {
@@ -1174,6 +1205,10 @@ export default class Ink {
 	}
 
 	private beginSuspend(): void {
+		if (!this.interactive) {
+			return;
+		}
+
 		if (this.isSuspended) {
 			throw new Error(
 				'The terminal is already suspended. Resume the current suspension before suspending again.',
@@ -1237,13 +1272,12 @@ export default class Ink {
 
 		this.isSuspended = false;
 
-		// Reclaim input even mid-unmount: pauseInput already ran in beginSuspend, so
-		// restoring it is symmetric regardless of any state change during suspension.
-		this.resumeInput?.();
-
 		if (!this.interactive || this.isUnmounted || this.isUnmounting) {
 			return;
 		}
+
+		// Reclaim input only while the app still owns the terminal. After unmount, App cleanup has already restored raw mode, so resuming must not re-enable it.
+		this.resumeInput?.();
 
 		const {stdout} = this.options;
 		const {canWriteToStdout} = getWritableStreamState(stdout);

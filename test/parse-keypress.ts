@@ -1,5 +1,35 @@
+import {Buffer} from 'node:buffer';
 import test from 'ava';
 import parseKeypress from '../src/parse-keypress.js';
+
+test('parsing a single-byte Meta key does not mutate the input', t => {
+	const input = new Uint8Array([0xe1]);
+	const firstKey = parseKeypress(input);
+
+	t.like(firstKey, {name: 'a', meta: true, sequence: 'a'});
+	t.deepEqual(input, new Uint8Array([0xe1]));
+	t.deepEqual(parseKeypress(input), firstKey);
+});
+
+test('Meta byte parsing preserves shared buffers across the full byte range', t => {
+	for (let byte = 128; byte <= 255; byte++) {
+		const buffer = Buffer.from([0, byte, 0]);
+		const input = buffer.subarray(1, 2);
+		const expected = parseKeypress(`${String.fromCodePoint(byte - 128)}`);
+
+		t.deepEqual(parseKeypress(input), expected);
+		t.deepEqual(buffer, Buffer.from([0, byte, 0]));
+		t.deepEqual(parseKeypress(input), expected);
+	}
+});
+
+test('byte parsing preserves ASCII and multibyte UTF-8 input', t => {
+	for (const text of ['a', 'hello', 'é', '😀']) {
+		const input = Buffer.from(text);
+		t.deepEqual(parseKeypress(input), parseKeypress(text));
+		t.deepEqual(input, Buffer.from(text));
+	}
+});
 
 test('kitty functional keys preserve modifiers without an explicit event type', t => {
 	for (const [sequence, name] of [
@@ -204,6 +234,22 @@ test('kitty keypad Enter produces a return key and carriage return text', t => {
 		t.is(key.sequence, sequence);
 		t.is(key.shift, shift);
 		t.is(key.eventType, eventType);
+	}
+});
+
+test('application keypad Enter maps to Return with carriage return sequence', t => {
+	for (const [sequence, meta] of [
+		['OM', false],
+		['OM', true],
+	] as const) {
+		const key = parseKeypress(sequence);
+
+		t.is(key.name, 'return');
+		t.is(key.sequence, '\r');
+		t.is(key.raw, undefined);
+		t.is(key.meta, meta);
+		t.false(key.ctrl);
+		t.false(key.shift);
 	}
 });
 

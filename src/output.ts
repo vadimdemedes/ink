@@ -1,4 +1,3 @@
-import sliceAnsi from 'slice-ansi';
 import stringWidth from 'string-width';
 import {
 	type StyledChar,
@@ -7,6 +6,13 @@ import {
 	tokenize,
 } from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
+
+// Replaces a partially visible wide character with a space that keeps its styles.
+const blankCell = (cell: StyledChar): StyledChar => ({
+	...cell,
+	value: ' ',
+	fullWidth: false,
+});
 
 /**
 "Virtual" output class
@@ -175,25 +181,37 @@ export default class Output {
 		});
 	}
 
-	// `sliceAnsi` works in terminal columns, but it drops a wide character (e.g. CJK) outright when the slice edge falls between its two halves. The visible half still owns a cell, so without padding it back the rest of the line shifts by a column and one column of content disappears.
+	// Clipping works in terminal columns. A wide character (e.g. CJK) occupies two cells, so when a clip edge falls between its halves, the character must be replaced by a space that keeps its styles, otherwise its background disappears and the rest of the line shifts by a column.
 	sliceLineToColumns(line: string, from: number, to: number): string {
 		if (from >= to) {
 			return '';
 		}
 
-		const slice = sliceAnsi(line, from, to);
-		const lostLeading =
-			from > 0
-				? from - this.caches.getStringWidth(sliceAnsi(line, 0, from))
-				: 0;
-		const lostTrailing =
-			to - from - this.caches.getStringWidth(slice) - lostLeading;
+		const result: StyledChar[] = [];
+		let column = 0;
 
-		return (
-			' '.repeat(Math.max(0, lostLeading)) +
-			slice +
-			' '.repeat(Math.max(0, lostTrailing))
-		);
+		for (const character of this.caches.getStyledChars(line)) {
+			const width = this.caches.getStringWidth(character.value);
+			const start = column;
+			column += width;
+
+			if (column <= from) {
+				continue;
+			}
+
+			if (start >= to) {
+				break;
+			}
+
+			if (width > 1 && (start < from || column > to)) {
+				// Only part of this wide character is visible, so keep the cell count and styles, but drop the glyph itself.
+				result.push(blankCell(character));
+			} else {
+				result.push(character);
+			}
+		}
+
+		return styledCharsToString(result);
 	}
 
 	get(): {output: string; height: number} {
@@ -230,7 +248,17 @@ export default class Output {
 			if (operation.type === 'write') {
 				const {text, transformers} = operation;
 				let {x, y} = operation;
-				let lines = text.split('\n');
+				// Preserve styles across explicit newlines before clipping individual rows.
+				const characterLines: StyledChar[][] = [[]];
+				for (const character of this.caches.getStyledChars(text)) {
+					if (character.value === '\n') {
+						characterLines.push([]);
+					} else {
+						characterLines.at(-1)!.push(character);
+					}
+				}
+
+				let lines = characterLines.map(line => styledCharsToString(line));
 
 				const clip = clips.at(-1);
 
@@ -311,25 +339,19 @@ export default class Output {
 						continue;
 					}
 
-					const spaceCell: StyledChar = {
-						type: 'char',
-						value: ' ',
-						fullWidth: false,
-						styles: [],
-					};
-
 					// Wide characters (e.g. CJK) occupy two cells: a leading
 					// cell with the character and a trailing placeholder with
 					// value ''. When an overlapping write lands in the middle
 					// of a wide character, the boundary cells need cleanup so
 					// the terminal never renders a half-visible wide character.
+					// Preserve the styles of cells outside the overlapping write.
 					if (
 						currentLine[offsetX]?.value === '' &&
 						offsetX > 0 &&
 						this.caches.getStringWidth(currentLine[offsetX - 1]?.value ?? '') >
 							1
 					) {
-						currentLine[offsetX - 1] = spaceCell;
+						currentLine[offsetX - 1] = blankCell(currentLine[offsetX - 1]!);
 					}
 
 					for (const character of characters) {
@@ -358,7 +380,7 @@ export default class Output {
 					}
 
 					if (currentLine[offsetX]?.value === '') {
-						currentLine[offsetX] = spaceCell;
+						currentLine[offsetX] = blankCell(currentLine[offsetX]!);
 					}
 				}
 			}
