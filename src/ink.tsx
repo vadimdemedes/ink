@@ -1304,9 +1304,10 @@ export default class Ink {
 
 		if (canWriteToStdout) {
 			if (this.alternateScreen) {
+				// Re-entering the alternate screen gives an empty buffer with no scrollback behind it, and the forced redraw below only carries new <Static> items. Replay the accumulated static output ahead of it, as the full-clear path does, so the rows the child process's turn erased come back.
 				this.writeBestEffort(
 					this.options.stdout,
-					ansiEscapes.enterAlternativeScreen,
+					ansiEscapes.enterAlternativeScreen + this.fullStaticOutput,
 				);
 			}
 
