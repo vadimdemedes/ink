@@ -5,11 +5,20 @@ const sgrParametersRegex = /^[\d:;]*$/;
 const cursorControlsRegex = /[\b\v\f\r]/g;
 const leadingMarksRegex = /^\p{Mark}+/u;
 
-// The layout dependencies (wrap-ansi, string-width) only understand the legacy semicolon form of 256-color and truecolor SGR parameters, so rewrite the colon form (`38:5:n`, `38:2::r:g:b`) to it.
-const normalizeColorParameter = (parameter: string): string => {
+// @alcalzone/ansi-tokenize only accepts `[0-9;]` SGR parameters and renders anything else as visible cells, so colon sub-parameters are rewritten before layout.
+// 256-color and truecolor forms map losslessly to the semicolon form, underline styles (`4:n`) degrade to plain underline, everything else (underline color `58:...`, malformed color forms) is dropped.
+const normalizeParameter = (parameter: string): string | undefined => {
 	const parts = parameter.split(':');
-	if (parts[0] !== '38' && parts[0] !== '48') {
+	if (parts.length === 1) {
 		return parameter;
+	}
+
+	if (parts[0] === '4') {
+		return parts[1] === '0' || parts[1] === '' ? '24' : '4';
+	}
+
+	if (parts[0] !== '38' && parts[0] !== '48') {
+		return undefined;
 	}
 
 	if (parts[1] === '5' && parts.length === 3) {
@@ -27,7 +36,7 @@ const normalizeColorParameter = (parameter: string): string => {
 		}
 	}
 
-	return parameter;
+	return undefined;
 };
 
 // Strip ANSI escape sequences that would conflict with Ink's layout.
@@ -71,9 +80,12 @@ const sanitizeAnsi = (text: string): string => {
 		) {
 			const parameters = token.parameterString
 				.split(';')
-				.map(parameter => normalizeColorParameter(parameter))
-				.join(';');
-			pendingStyles += `\u001B[${parameters}m`;
+				.map(parameter => normalizeParameter(parameter))
+				.filter(parameter => parameter !== undefined);
+
+			if (parameters.length > 0) {
+				pendingStyles += `\u001B[${parameters.join(';')}m`;
+			}
 		}
 	}
 
