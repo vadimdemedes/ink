@@ -1063,3 +1063,29 @@ test('<Cursor /> handles ansi sanitization', async t => {
 
 	unmount();
 });
+
+test('<Cursor /> handles styling', async t => {
+	const stdout = createStdout(3);
+	const stdin = createStdin();
+
+	let lastCursor: CursorPosition | undefined;
+	const onCursorUpdated = (cursor: CursorPosition | undefined) => {
+		lastCursor = cursor;
+	};
+
+	const {unmount, waitUntilRenderFlush} = render(
+		<Box>
+			<Text>
+				<Text color="red">ABCD</Text>
+				<Cursor />
+				{'E'}
+			</Text>
+		</Box>,
+		{stdout, stdin, onCursorUpdated},
+	);
+	await waitUntilRenderFlush();
+
+	t.deepEqual(lastCursor, {x: 1, y: 1});
+
+	unmount();
+});
