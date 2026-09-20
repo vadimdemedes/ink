@@ -1,8 +1,8 @@
 import {hasAnsiControlCharacters, tokenizeAnsi} from './ansi-tokenizer.js';
 
 const sgrParametersRegex = /^[\d:;]*$/;
-// Cursor controls in plain text must not move outside the rendered cells.
-const cursorControlsRegex = /[\b\v\f\r]/g;
+// Terminals print nothing for C0 controls and DEL, so strip them; tabs and newlines carry layout. ESC and C1 never reach text tokens, the tokenizer owns them.
+const controlCharactersRegex = /(?![\t\n])\p{Cc}/gu;
 const leadingMarksRegex = /^\p{Mark}+/u;
 
 // The layout dependencies (wrap-ansi, string-width) only understand the legacy semicolon form of 256-color and truecolor SGR parameters, so rewrite the colon form (`38:5:n`, `38:2::r:g:b`) to it.
@@ -37,7 +37,7 @@ const normalizeColorParameter = (parameter: string): string => {
 // Combining marks share their base character's cell, so SGR sequences are deferred until after the marks. Otherwise ANSI tokenization consumes the marks as part of the escape sequence.
 const sanitizeAnsi = (text: string): string => {
 	if (!hasAnsiControlCharacters(text)) {
-		return text.replaceAll(cursorControlsRegex, '');
+		return text.replaceAll(controlCharactersRegex, '');
 	}
 
 	let output = '';
@@ -45,7 +45,7 @@ const sanitizeAnsi = (text: string): string => {
 
 	for (const token of tokenizeAnsi(text)) {
 		if (token.type === 'text') {
-			const value = token.value.replaceAll(cursorControlsRegex, '');
+			const value = token.value.replaceAll(controlCharactersRegex, '');
 			const marks = leadingMarksRegex.exec(value)?.[0] ?? '';
 			output += marks;
 
