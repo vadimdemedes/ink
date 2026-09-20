@@ -264,10 +264,7 @@ const wrapCursorOffsetToPosition = ({
 
 	let columnAdjustments = 0;
 	let start = 0;
-	for (let i = 0; i < wrappedText.length; ++i) {
-		const ch = wrappedText[i];
-		if (ch === undefined) break;
-
+	for (const [i, ch] of [...wrappedText].entries()) {
 		if (ch === '\n') {
 			// Reset column adjustments; they apply to a previous line
 			// on which the cursor will not sit
@@ -278,6 +275,7 @@ const wrapCursorOffsetToPosition = ({
 			if (countableNewlines-- > 0) {
 				--x;
 			}
+
 			x -= i - start;
 			start = i + 1;
 		} else {

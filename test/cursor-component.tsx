@@ -1049,7 +1049,7 @@ test('<Cursor /> handles ansi sanitization', async t => {
 		<Box>
 			<Text>
 				{'A'}
-				{'\x1B[2J'}
+				{'\u001B[2J'}
 				{'B'}
 				<Cursor />
 				{'C'}

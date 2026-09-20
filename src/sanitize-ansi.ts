@@ -1,5 +1,5 @@
 import {
-	CsiToken,
+	type CsiToken,
 	hasAnsiControlCharacters,
 	tokenizeAnsi,
 } from './ansi-tokenizer.js';

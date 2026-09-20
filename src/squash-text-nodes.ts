@@ -95,6 +95,7 @@ const normalizeCursor = (text: string, cursorOffset: number) => {
 			cursorOffset -= token.value.length;
 		}
 	}
+
 	return cursorOffset;
 };
 
