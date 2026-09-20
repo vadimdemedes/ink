@@ -10,6 +10,7 @@ import renderBackground from './render-background.js';
 import {type DOMElement} from './dom.js';
 import type Output from './output.js';
 import {type CursorPosition} from './cursor-helpers.js';
+import {countOfCharIn} from './string-utils.js';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.
@@ -154,6 +155,7 @@ const renderNodeToOutput = (
 			if (text.length > 0) {
 				const currentWidth = widestLine(text);
 				const maxWidth = getMaxWidth(yogaNode);
+				const originalText = text;
 
 				if (currentWidth > maxWidth) {
 					const textWrap = node.style.textWrap ?? 'wrap';
@@ -161,11 +163,12 @@ const renderNodeToOutput = (
 				}
 
 				if (cursorOffset !== undefined) {
-					const {x: newX, y: newY} = wrapCursorOffset(text, cursorOffset);
-					const beforeWidth = stringWidth(
-						text.split('\n')[newY]!.slice(0, newX),
-					);
-					cursorPosition = {x: x + beforeWidth, y: y + newY};
+					const {x: newX, y: newY} = wrapCursorOffsetToPosition({
+						originalText,
+						wrappedText: text,
+						cursorOffset,
+					});
+					cursorPosition = {x: x + newX, y: y + newY};
 				}
 
 				text = applyPaddingToText(node, text);
@@ -238,27 +241,61 @@ const renderNodeToOutput = (
 	return undefined;
 };
 
-const wrapCursorOffset = (wrappedText: string, cursorOffset: number) => {
+const wrapCursorOffsetToPosition = ({
+	originalText,
+	wrappedText,
+	cursorOffset,
+}: {
+	originalText: string;
+	wrappedText: string;
+	cursorOffset: number;
+}) => {
 	let x = cursorOffset;
 	let y = 0;
 
+	// Any newlines in originalText should be "consumed" when
+	// counting cursor offsets; any others were introduced by
+	// wrapping and should not be counted as part of cursorOffset
+	let countableNewlines = countOfCharIn({
+		text: originalText,
+		char: '\n',
+		end: cursorOffset,
+	});
+
+	let columnAdjustments = 0;
 	let start = 0;
-	while (true) {
-		const end = wrappedText.indexOf('\n', start);
-		// `y` counts number of newlines added in the wrapped text; we
-		// need to augment cursorOffset by that amount when comparing
-		// offsets into the wrapped text.
-		if (end === -1 || end > cursorOffset + y) {
-			break;
+	for (let i = 0; i < wrappedText.length; ++i) {
+		const ch = wrappedText[i];
+		if (ch === undefined) break;
+
+		if (ch === '\n') {
+			// Reset column adjustments; they apply to a previous line
+			// on which the cursor will not sit
+			columnAdjustments = 0;
+
+			++y;
+
+			if (countableNewlines-- > 0) {
+				--x;
+			}
+			x -= i - start;
+			start = i + 1;
+		} else {
+			const width = stringWidth(ch);
+			if (width > 1) {
+				// Wide characters (eg: CJK) occupy multiple cells but
+				// a single offset; account for that extra cell here:
+				columnAdjustments += width - 1;
+			} else if (width === 0) {
+				// A zero-width character consumes *zero* cells (of course)
+				columnAdjustments -= 1;
+			}
 		}
 
-		x -= end - start;
-		++y;
-
-		start = end + 1;
+		if (x <= 0) break;
 	}
 
-	return {x, y};
+	return {x: x + columnAdjustments, y};
 };
 
 export default renderNodeToOutput;

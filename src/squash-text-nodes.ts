@@ -1,9 +1,14 @@
 import wrapAnsi from 'wrap-ansi';
 import {type DOMElement} from './dom.js';
-import sanitizeAnsi from './sanitize-ansi.js';
+import sanitizeAnsi, {isSanitizedCsi} from './sanitize-ansi.js';
+import {tokenizeAnsi} from './ansi-tokenizer.js';
 
 type SquashedOutput = {
 	text: string;
+
+	/**
+	 * The requested cursor offset (if any) within `text`
+	 */
 	cursorOffset?: number;
 };
 
@@ -60,6 +65,12 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 		text += nodeText;
 	}
 
+	// Normalize cursor *before* expanding tabs or sanitizing, since
+	// the offset we've built is into the un-sanitized string
+	if (node.nodeName === 'ink-text' && cursor !== undefined) {
+		cursor = normalizeCursor(text, cursor);
+	}
+
 	text = sanitizeAnsi(text.replaceAll('\r\n', '\n'));
 
 	// Measurement and styling dependencies understand the ESC forms of these C1 controls.
@@ -67,15 +78,7 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 
 	// Expand tabs after combining nested text so measurement and rendering use the same columns.
 	if (node.nodeName === 'ink-text' && text.includes('\t')) {
-		// NOTE: We need to handle the tabs case separately to make
-		// sure we get the string width *after* expanding tabs
-		if (cursor !== undefined) {
-			cursor = normalizeCursor(text, cursor);
-		}
-
 		text = wrapAnsi(text, Number.POSITIVE_INFINITY, {trim: false});
-	} else if (node.nodeName === 'ink-text' && cursor !== undefined) {
-		cursor = normalizeCursor(text, cursor);
 	}
 
 	return {
@@ -86,25 +89,13 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 
 const normalizeCursor = (text: string, cursorOffset: number) => {
 	const before = text.slice(0, cursorOffset);
-	const beforeCursor = wrapAnsi(before, Number.POSITIVE_INFINITY, {
-		trim: false,
-	});
-	return beforeCursor.length - countNewlines(before);
-};
 
-const countNewlines = (text: string) => {
-	if (text.length === 0) return 0;
-
-	let count = 0;
-	let start = -1;
-	while (true) {
-		start = text.indexOf('\n', start + 1);
-		if (start === -1) {
-			return count;
+	for (const token of tokenizeAnsi(before)) {
+		if (token.type === 'csi' && !isSanitizedCsi(token)) {
+			cursorOffset -= token.value.length;
 		}
-
-		++count;
 	}
+	return cursorOffset;
 };
 
 export default squashTextNodes;

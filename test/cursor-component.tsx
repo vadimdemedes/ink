@@ -1048,8 +1048,11 @@ test('<Cursor /> handles ansi sanitization', async t => {
 	const {unmount, waitUntilRenderFlush} = render(
 		<Box>
 			<Text>
-				{'A\x1B[2JB'}
-				<Cursor />C
+				{'A'}
+				{'\x1B[2J'}
+				{'B'}
+				<Cursor />
+				{'C'}
 			</Text>
 		</Box>,
 		{stdout, stdin, onCursorUpdated},
