@@ -9,6 +9,7 @@ import renderBackground from './render-background.js';
 import {type DOMElement} from './dom.js';
 import type Output from './output.js';
 import {type CursorPosition} from './cursor-helpers.js';
+import stringWidth from 'string-width';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.
@@ -161,7 +162,10 @@ const renderNodeToOutput = (
 
 				if (cursorOffset !== undefined) {
 					const {x: newX, y: newY} = wrapCursorOffset(text, cursorOffset);
-					cursorPosition = {x: x + newX, y: y + newY};
+					const beforeWidth = stringWidth(
+						text.split('\n')[newY]!.slice(0, newX),
+					);
+					cursorPosition = {x: x + beforeWidth, y: y + newY};
 				}
 
 				text = applyPaddingToText(node, text);

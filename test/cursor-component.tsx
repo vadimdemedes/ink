@@ -1010,3 +1010,28 @@ test('<Cursor /> does not pollute screen readers', t => {
 
 	t.is(output, 'Hello World');
 });
+
+test('<Cursor /> handles wide characters', async t => {
+	const stdout = createStdout(4);
+	const stdin = createStdin();
+
+	let lastCursor: CursorPosition | undefined;
+	const onCursorUpdated = (cursor: CursorPosition | undefined) => {
+		lastCursor = cursor;
+	};
+
+	const {unmount, waitUntilRenderFlush} = render(
+		<Box>
+			<Text>
+				你好你
+				<Cursor />
+			</Text>
+		</Box>,
+		{stdout, stdin, onCursorUpdated},
+	);
+	await waitUntilRenderFlush();
+
+	t.deepEqual(lastCursor, {x: 2, y: 1});
+
+	unmount();
+});

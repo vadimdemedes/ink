@@ -1,4 +1,3 @@
-import stringWidth from 'string-width';
 import wrapAnsi from 'wrap-ansi';
 import {type DOMElement} from './dom.js';
 import sanitizeAnsi from './sanitize-ansi.js';
@@ -71,28 +70,40 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 		// NOTE: We need to handle the tabs case separately to make
 		// sure we get the string width *after* expanding tabs
 		if (cursor !== undefined) {
-			const beforeCursor = wrapAnsi(
-				text.slice(0, cursor),
-				Number.POSITIVE_INFINITY,
-				{trim: false},
-			);
-			cursor = stringWidth(beforeCursor);
+			cursor = normalizeCursor(text, cursor);
 		}
 
 		text = wrapAnsi(text, Number.POSITIVE_INFINITY, {trim: false});
 	} else if (node.nodeName === 'ink-text' && cursor !== undefined) {
-		const beforeCursor = wrapAnsi(
-			text.slice(0, cursor),
-			Number.POSITIVE_INFINITY,
-			{trim: false},
-		);
-		cursor = stringWidth(beforeCursor);
+		cursor = normalizeCursor(text, cursor);
 	}
 
 	return {
 		text,
 		cursorOffset: cursor,
 	};
+};
+
+const normalizeCursor = (text: string, cursorOffset: number) => {
+	const before = text.slice(0, cursorOffset);
+	const beforeCursor = wrapAnsi(before, Number.POSITIVE_INFINITY, {
+		trim: false,
+	});
+	return beforeCursor.length - countNewlines(before);
+};
+
+const countNewlines = (text: string) => {
+	if (text.length === 0) return 0;
+
+	let count = 0;
+	let start = -1;
+	while (true) {
+		start = text.indexOf('\n', start + 1);
+		if (start === -1) {
+			return count;
+		}
+		++count;
+	}
 };
 
 export default squashTextNodes;
