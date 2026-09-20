@@ -55,12 +55,14 @@ export const homeAndEraseDown =
 const shouldClearTerminalForFrame = ({
 	isTty,
 	viewportRows,
+	previousViewportRows,
 	previousOutputHeight,
 	nextOutputHeight,
 	isUnmounting,
 }: {
 	isTty: boolean;
 	viewportRows: number;
+	previousViewportRows: number;
 	previousOutputHeight: number;
 	nextOutputHeight: number;
 	isUnmounting: boolean;
@@ -75,6 +77,7 @@ const shouldClearTerminalForFrame = ({
 	const isOverflowing = nextOutputHeight > viewportRows;
 	const isFullscreen = nextOutputHeight >= viewportRows;
 	const isLeavingFullscreen = wasFullscreen && nextOutputHeight < viewportRows;
+	const isViewportShrinking = viewportRows < previousViewportRows;
 	const shouldClearOnUnmount = isUnmounting && wasFullscreen;
 
 	if (isWindowsConsole && (wasFullscreen || isFullscreen)) {
@@ -87,6 +90,8 @@ const shouldClearTerminalForFrame = ({
 		(isOverflowing && hadPreviousFrame) ||
 		// Clear when shrinking from fullscreen to non-fullscreen output.
 		isLeavingFullscreen ||
+		// A terminal that loses rows scrolls only as far as it must to keep the cursor on screen, so the frame is cut only when it fills the new viewport. Then the cursor-relative diff no longer lines up with what is on screen.
+		(isViewportShrinking && wasFullscreen) ||
 		// Preserve legacy unmount behavior for fullscreen frames: final teardown
 		// render should clear once to avoid leaving a scrolled viewport state.
 		shouldClearOnUnmount
@@ -1103,10 +1108,12 @@ export default class Ink {
 		const shouldClearTerminal = shouldClearTerminalForFrame({
 			isTty,
 			viewportRows,
+			previousViewportRows: this.lastTerminalHeight,
 			previousOutputHeight: this.lastOutputHeight,
 			nextOutputHeight: outputHeight,
 			isUnmounting: this.isUnmounting,
 		});
+		this.lastTerminalHeight = viewportRows;
 
 		if (
 			!shouldClearTerminal &&
