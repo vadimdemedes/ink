@@ -27,7 +27,7 @@ export const run: Run = async (fixture, props) => {
 
 	return new Promise<string>((resolve, reject) => {
 		const term = spawn(
-			'node',
+			process.execPath,
 			['--import=tsx', path.join(__dirname, `/../fixtures/${fixture}.tsx`)],
 			{
 				name: 'xterm-color',

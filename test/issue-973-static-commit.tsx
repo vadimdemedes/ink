@@ -14,7 +14,7 @@ test.serial(
 	async t => {
 		const rows = 6;
 		const child = spawn(
-			'node',
+			process.execPath,
 			['--import=tsx', 'issue-973-static-commit.tsx', String(rows)],
 			{
 				name: 'xterm-color',
