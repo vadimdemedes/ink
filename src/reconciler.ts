@@ -122,7 +122,7 @@ const clearStaticNodeIfContained = (
 		if (current === removeNode) {
 			// Only clear staticNode, not previousStaticNode. The inequality
 			// (undefined !== previousStaticNode) triggers onStaticChange in
-			// resetAfterCommit, which resets fullStaticOutput.
+			// resetAfterCommit, which resets the accumulated static output.
 			rootNode.staticNode = undefined;
 			return;
 		}
@@ -237,7 +237,7 @@ export default createReconciler<
 		emitLayoutListeners(rootNode);
 
 		/*
-		Fire `onStaticChange` BEFORE `onImmediateRender` so ink resets accumulated static output before the new instance emits. Without this, items from a replaced/removed <Static> stay in `fullStaticOutput` and get replayed on rewrites.
+		Fire `onStaticChange` BEFORE `onImmediateRender` so ink resets accumulated static output before the new instance emits. Without this, items from a replaced/removed <Static> stay in `fullStaticOutput` (debug mode) and `hasRenderedStaticOutput` stays set, skipping the final unmount render for the new instance.
 		*/
 		if (rootNode.staticNode !== rootNode.previousStaticNode) {
 			rootNode.previousStaticNode = rootNode.staticNode;
