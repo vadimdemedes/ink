@@ -3,6 +3,7 @@ import React, {Suspense, act, useEffect, useState} from 'react';
 import ansiEscapes from 'ansi-escapes';
 import delay from 'delay';
 import stripAnsi from 'strip-ansi';
+import ansiStyles from 'ansi-styles';
 import {
 	render,
 	Box,
@@ -18,7 +19,6 @@ import {
 import {homeAndEraseDown} from '../src/ink.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
-import ansiStyles from 'ansi-styles';
 
 const showCursorEscape = '\u001B[?25h';
 const hideCursorEscape = '\u001B[?25l';
