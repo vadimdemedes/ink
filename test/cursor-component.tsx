@@ -1035,3 +1035,28 @@ test('<Cursor /> handles wide characters', async t => {
 
 	unmount();
 });
+
+test('<Cursor /> handles ansi sanitization', async t => {
+	const stdout = createStdout(4);
+	const stdin = createStdin();
+
+	let lastCursor: CursorPosition | undefined;
+	const onCursorUpdated = (cursor: CursorPosition | undefined) => {
+		lastCursor = cursor;
+	};
+
+	const {unmount, waitUntilRenderFlush} = render(
+		<Box>
+			<Text>
+				{'A\x1B[2JB'}
+				<Cursor />C
+			</Text>
+		</Box>,
+		{stdout, stdin, onCursorUpdated},
+	);
+	await waitUntilRenderFlush();
+
+	t.deepEqual(lastCursor, {x: 2, y: 0});
+
+	unmount();
+});
