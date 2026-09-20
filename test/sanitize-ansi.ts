@@ -28,13 +28,44 @@ for (const [colon, semicolon] of [
 	});
 }
 
-for (const parameters of ['4:3', '38:2:1:255:0:0', '38:5:196:0']) {
-	test(`keep unrecognized colon parameters ${parameters}`, t => {
-		const input = `\u001B[${parameters}mtext\u001B[0m`;
-
-		t.is(sanitizeAnsi(input), input);
+for (const [colon, semicolon] of [
+	['4:1', '4'],
+	['4:3', '4'],
+	['4:0', '24'],
+	['4:', '24'],
+	['1;4:3;31', '1;4;31'],
+] as const) {
+	test(`normalize underline style ${colon}`, t => {
+		t.is(
+			sanitizeAnsi(`\u001B[${colon}mtext\u001B[0m`),
+			`\u001B[${semicolon}mtext\u001B[0m`,
+		);
 	});
 }
+
+for (const parameters of [
+	'58:5:1',
+	'58:2::1:2:3',
+	'38:2:1:255:0:0',
+	'38:5:196:0',
+]) {
+	test(`drop unsupported colon parameters ${parameters}`, t => {
+		t.is(sanitizeAnsi(`\u001B[${parameters}mtext\u001B[0m`), 'text\u001B[0m');
+	});
+}
+
+test('keep the remaining parameters when dropping colon parameters', t => {
+	t.is(
+		sanitizeAnsi('\u001B[1;58:5:1;31mtext\u001B[0m'),
+		'\u001B[1;31mtext\u001B[0m',
+	);
+});
+
+test('preserve empty SGR parameters', t => {
+	const input = 'A\u001B[mB\u001B[;1mC';
+
+	t.is(sanitizeAnsi(input), input);
+});
 
 test('defer SGR sequences until after combining marks', t => {
 	t.is(
