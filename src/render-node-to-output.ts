@@ -169,7 +169,9 @@ const renderNodeToOutput = (
 						wrappedText: text,
 						cursorOffset,
 					});
-					effects = {cursorPosition: {x: x + newX, y: y + newY}};
+					effects = {
+						cursorPosition: {x: x + Math.min(maxWidth, newX), y: y + newY},
+					};
 				}
 
 				text = applyPaddingToText(node, text);

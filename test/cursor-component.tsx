@@ -18,7 +18,7 @@ import {
 } from '../src/index.js';
 import {homeAndEraseDown} from '../src/ink.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
-import createStdout from './helpers/create-stdout.js';
+import createStdout, {FakeStdout} from './helpers/create-stdout.js';
 
 const showCursorEscape = '\u001B[?25h';
 const hideCursorEscape = '\u001B[?25l';
@@ -67,6 +67,49 @@ const waitForCondition = async (condition: () => boolean): Promise<void> => {
 		}, intervalMs);
 	});
 };
+
+interface InteractiveRenderProps {
+	waitUntilRenderFlush: () => Promise<void>;
+	stdin: NodeJS.WriteStream;
+	stdout: FakeStdout;
+	getLastCursor: () => CursorPosition | undefined;
+	getWriteCallsString: () => string;
+	getLastTrimmedRender: () => string;
+}
+async function withInteractiveRender(
+	node: React.ReactNode,
+	handler: (props: InteractiveRenderProps) => Promise<void> | void,
+) {
+	const stdout = createStdout(5);
+	const stdin = createStdin();
+
+	let lastCursor: CursorPosition | undefined;
+	const onCursorUpdated = (cursor: CursorPosition | undefined) => {
+		lastCursor = cursor;
+	};
+
+	const {unmount, waitUntilRenderFlush} = render(node, {
+		stdout,
+		stdin,
+		onCursorUpdated,
+	});
+
+	const getWriteCallsString = () => getWriteCalls(stdout).join('');
+
+	try {
+		await waitUntilRenderFlush();
+		await handler({
+			waitUntilRenderFlush,
+			stdin,
+			stdout,
+			getLastCursor: () => lastCursor,
+			getWriteCallsString,
+			getLastTrimmedRender: () => stripAnsi(getWriteCallsString()).trimEnd(),
+		});
+	} finally {
+		unmount();
+	}
+}
 
 type InputAppProps = {
 	readonly initialText?: string;
@@ -954,42 +997,52 @@ for (const {wrap, expected} of [
 	{wrap: 'truncate-middle', expected: 'He…ld'},
 	{wrap: 'truncate-start', expected: '…orld'},
 ] as const) {
-	test(`wrap=${wrap} - single text node wrapping with <Cursor />`, t => {
-		const output = renderToString(
+	test(`wrap=${wrap} - single text node wrapping with <Cursor /> at start`, t =>
+		withInteractiveRender(
 			<Box width={5}>
 				<Text wrap={wrap}>
 					<Cursor />
 					Hello World
 				</Text>
 			</Box>,
-		);
+			async ({getLastCursor, getLastTrimmedRender}) => {
+				t.is(getLastTrimmedRender(), expected);
+				t.deepEqual(getLastCursor(), {x: 0, y: 0});
+			},
+		));
+}
 
-		t.is(stripAnsi(output), expected);
-	});
+for (const {wrap, expected} of [
+	{wrap: 'truncate-end', expected: 'Hell…'},
+	{wrap: 'truncate-middle', expected: 'He…ld'},
+	{wrap: 'truncate-start', expected: '…orld'},
+] as const) {
+	test(`wrap=${wrap} - single text node wrapping with <Cursor /> at end`, t =>
+		withInteractiveRender(
+			<Box width={5}>
+				<Text wrap={wrap}>
+					Hello World
+					<Cursor />
+				</Text>
+			</Box>,
+			async ({getLastCursor, getLastTrimmedRender}) => {
+				t.is(getLastTrimmedRender(), expected);
+				t.deepEqual(getLastCursor(), {x: 5, y: 0});
+			},
+		));
 }
 
 test('padding with <Cursor /> is counted once', async t => {
-	const stdout = createStdout(5);
-	const stdin = createStdin();
-
-	let lastCursor: CursorPosition | undefined;
-	const onCursorUpdated = (cursor: CursorPosition | undefined) => {
-		lastCursor = cursor;
-	};
-
-	const {unmount, waitUntilRenderFlush} = render(
+	return withInteractiveRender(
 		<Box padding={2}>
 			<Text>
 				<Cursor />X
 			</Text>
 		</Box>,
-		{stdout, stdin, onCursorUpdated},
+		({getLastCursor}) => {
+			t.deepEqual(getLastCursor(), {x: 2, y: 2});
+		},
 	);
-	await waitUntilRenderFlush();
-
-	t.deepEqual(lastCursor, {x: 2, y: 2});
-
-	unmount();
 });
 
 test('<Cursor /> does not pollute screen readers', t => {
