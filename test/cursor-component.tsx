@@ -1121,3 +1121,37 @@ test('<Cursor /> handles style-adding transforms', async t => {
 
 	unmount();
 });
+
+test('<Cursor /> is hidden when clipped via overflow', async t => {
+	const stdout = createStdout(3);
+	const stdin = createStdin();
+
+	let lastCursor: CursorPosition | undefined;
+	const onCursorUpdated = (cursor: CursorPosition | undefined) => {
+		lastCursor = cursor;
+	};
+
+	const {unmount, waitUntilRenderFlush} = render(
+		<Box width={3} overflowX="hidden">
+			<Box width={16} flexShrink={0}>
+				<Text>
+					{'ABCD'}
+					<Cursor />
+					{'E'}
+				</Text>
+			</Box>
+		</Box>,
+		{stdout, stdin, onCursorUpdated},
+	);
+	await waitUntilRenderFlush();
+
+	t.is(lastCursor, undefined);
+
+	const firstRenderOutput = getWriteCalls(stdout).join('');
+	t.false(
+		firstRenderOutput.includes(showCursorEscape),
+		'cursor should NOT be visible after first render',
+	);
+
+	unmount();
+});
