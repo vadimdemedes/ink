@@ -13,10 +13,12 @@ import {
 	Cursor,
 	type CursorPosition,
 	renderToString,
+	Transform,
 } from '../src/index.js';
 import {homeAndEraseDown} from '../src/ink.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
+import ansiStyles from 'ansi-styles';
 
 const showCursorEscape = '\u001B[?25h';
 const hideCursorEscape = '\u001B[?25l';
@@ -1077,6 +1079,36 @@ test('<Cursor /> handles styling', async t => {
 		<Box>
 			<Text>
 				<Text color="red">ABCD</Text>
+				<Cursor />
+				{'E'}
+			</Text>
+		</Box>,
+		{stdout, stdin, onCursorUpdated},
+	);
+	await waitUntilRenderFlush();
+
+	t.deepEqual(lastCursor, {x: 1, y: 1});
+
+	unmount();
+});
+
+test('<Cursor /> handles style-adding transforms', async t => {
+	const stdout = createStdout(3);
+	const stdin = createStdin();
+
+	let lastCursor: CursorPosition | undefined;
+	const onCursorUpdated = (cursor: CursorPosition | undefined) => {
+		lastCursor = cursor;
+	};
+
+	const addStyle = (s: string) => {
+		return ansiStyles.red.open + s + ansiStyles.red.close;
+	};
+
+	const {unmount, waitUntilRenderFlush} = render(
+		<Box>
+			<Text>
+				<Transform transform={addStyle}>ABCD</Transform>
 				<Cursor />
 				{'E'}
 			</Text>
