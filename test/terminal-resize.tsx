@@ -435,6 +435,33 @@ for (const incrementalRendering of [false, true]) {
 	}
 
 	test.serial(
+		`width and height shrinking together keeps lines above the frame${mode}`,
+		async t => {
+			const stdout = createStdout(100);
+			stdout.rows = 10;
+
+			const {unmount, waitUntilRenderFlush} = render(<Frame cursorY={0} />, {
+				stdout,
+				incrementalRendering,
+			});
+			t.teardown(unmount);
+			await waitUntilRenderFlush();
+
+			const writesBeforeResize = stdout.getWrites().length;
+			// A width decrease forces a redraw on its own; pairing it with a height decrease on the same resize event must still use the committed cursor position rather than the frame height to find what to erase.
+			stdout.columns = 50;
+			stdout.rows = 6;
+			stdout.emit('resize');
+			await waitUntilRenderFlush();
+
+			t.deepEqual(screenAfterShrink(stdout, writesBeforeResize, 6), [
+				...shell,
+				...letters,
+			]);
+		},
+	);
+
+	test.serial(
 		`rows shrink right after a commit clears the cursor keeps lines above the frame${mode}`,
 		async t => {
 			const stdout = createStdout(100);
