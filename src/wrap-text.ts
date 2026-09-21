@@ -21,6 +21,11 @@ const wrapText = (
 		return text;
 	}
 
+	// Yoga rounds a text node's width up to a whole column, so a positive fraction of a column is measured as the one column it renders into.
+	if (maxWidth > 0 && maxWidth < 1) {
+		maxWidth = 1;
+	}
+
 	// `text` goes last because it's the only part of the key that can contain
 	// arbitrary characters. With it first, ('ab', 12, 'wrap') and
 	// ('ab1', 2, 'wrap') both produce the key `ab12wrap` and share a result.

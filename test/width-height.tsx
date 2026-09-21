@@ -129,6 +129,19 @@ test('set width to a fraction of a column', t => {
 	t.is(output, '|\ne\nl\nl\no\nnext');
 });
 
+test('truncated text at a positive fractional width keeps its row', t => {
+	const output = renderToString(
+		<Box width={10} flexDirection="column">
+			<Box width={0.5}>
+				<Text wrap="truncate">hello</Text>
+			</Box>
+			<Text>next</Text>
+		</Box>,
+	);
+
+	t.is(output, '…\nnext');
+});
+
 test('padding leaves no room for text', t => {
 	const output = renderToString(
 		<Box>
