@@ -11,7 +11,7 @@ import React, {
 } from 'react';
 import cliCursor from 'cli-cursor';
 import {type CursorPosition} from '../log-update.js';
-import {createInputParser} from '../input-parser.js';
+import {createInputParser, isCompleteControlSequence} from '../input-parser.js';
 import parseKeypress from '../parse-keypress.js';
 import {getRawModeStream, type OutputStream} from '../stream.js';
 import AppContext, {type SuspendTerminal} from './AppContext.js';
@@ -29,10 +29,6 @@ type AnimationSubscriber = {
 	readonly startTime: number;
 	nextDueTime: number;
 };
-
-const controlSequenceRegex =
-	// eslint-disable-next-line no-control-regex
-	/^\u001B{1,2}(?:\[[\u0030-\u003F]*[\u0020-\u002F]*|O)[\u0040-\u007E]$/;
 
 type Props = {
 	readonly children: ReactNode;
@@ -319,7 +315,7 @@ function App({
 					}
 
 					// A complete CSI or SS3 sequence that maps to no key Ink can represent is not printable text. Terminal replies (focus in/out, cursor position, mouse, device attributes) and keys without a `Key` field would otherwise reach `useInput` with the ESC stripped, as if typed.
-					if (controlSequenceRegex.test(event)) {
+					if (isCompleteControlSequence(event)) {
 						const key = parseKeypress(event);
 						if (!key.isKittyProtocol && key.name === '') {
 							continue;

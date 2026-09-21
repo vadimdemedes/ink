@@ -231,6 +231,8 @@ for (const [name, sequence] of [
 	['SGR mouse report', '\u001B[<0;10;20M'],
 	['primary device attributes', '\u001B[?62;1;4c'],
 	['stray bracketed paste end', '\u001B[201~'],
+	['unmapped legacy CSI', '\u001B[[Z'],
+	['unmapped modified SS3', '\u001BO1;5Z'],
 ] as const) {
 	test(`useInput - drops unmapped control sequence: ${name}`, async t => {
 		const stdin = createStdin();
