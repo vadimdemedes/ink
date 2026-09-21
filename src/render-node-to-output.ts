@@ -164,13 +164,31 @@ const renderNodeToOutput = (
 				}
 
 				if (cursorOffset !== undefined) {
-					const {x: newX, y: newY} = wrapCursorOffsetToPosition({
+					let {x: newX, y: newY} = wrapCursorOffsetToPosition({
 						originalText,
 						wrappedText: text,
 						cursorOffset,
 					});
+
+					const textWrap = node.style.textWrap ?? 'wrap';
+					if (currentWidth > maxWidth) {
+						let maxX = maxWidth;
+						if (textWrap === 'truncate-middle') {
+							const truncatedAmount = currentWidth - maxWidth - 1;
+							const truncationStart = Math.floor(maxWidth / 2);
+							if (
+								newX >= truncationStart &&
+								newX < truncationStart + truncatedAmount
+							) {
+								maxX = truncationStart;
+							}
+						}
+
+						newX = Math.min(maxX, newX);
+					}
+
 					effects = {
-						cursorPosition: {x: x + Math.min(maxWidth, newX), y: y + newY},
+						cursorPosition: {x: x + newX, y: y + newY},
 					};
 				}
 
