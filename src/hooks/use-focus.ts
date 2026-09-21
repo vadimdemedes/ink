@@ -14,7 +14,7 @@ type Input = {
 	autoFocus?: boolean;
 
 	/**
-	Assign an ID to this component, so it can be programmatically focused with `focus(id)`.
+	Assign an ID to this component, so it can be programmatically focused with `focus(id)`. The ID must be unique among focusable components.
 	*/
 	id?: string;
 };
