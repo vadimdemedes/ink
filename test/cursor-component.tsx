@@ -128,7 +128,7 @@ async function withInteractiveRender(
 			stdout,
 			getLastCursor: () => lastCursor,
 			getWriteCallsString,
-			getLastTrimmedRender: () => stripAnsi(getWriteCallsString()).trimEnd(),
+			getLastTrimmedRender: () => stripAnsi(getWriteCallsString()).trim(),
 		});
 	} finally {
 		unmount();

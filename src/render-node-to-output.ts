@@ -174,11 +174,11 @@ const renderNodeToOutput = (
 					if (currentWidth > maxWidth) {
 						let maxX = maxWidth;
 						if (textWrap === 'truncate-middle') {
-							const truncatedAmount = currentWidth - maxWidth - 1;
+							const truncatedAmount = currentWidth - maxWidth;
 							const truncationStart = Math.floor(maxWidth / 2);
 							if (
-								newX >= truncationStart &&
-								newX < truncationStart + truncatedAmount
+								cursorOffset >= truncationStart &&
+								cursorOffset < truncationStart + truncatedAmount
 							) {
 								maxX = truncationStart;
 							}
