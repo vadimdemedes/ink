@@ -1,4 +1,4 @@
-import React, {act} from 'react';
+import React, {act, useEffect} from 'react';
 import test from 'ava';
 import {type SinonStub} from 'sinon';
 import {render, useApp, useInput, usePaste} from '../src/index.js';
@@ -190,4 +190,65 @@ test('a paste hook activated while suspended does not enable bracketed paste unt
 	t.is(pasteEnableCount(), 1);
 	t.deepEqual(setRawModeArgs(stdin).slice(callCount), [true]);
 	t.is(stdin.listenerCount('readable'), 1);
+});
+
+test('suspending in the same commit that disables the last input hook disables raw mode before the callback runs', async t => {
+	const stdin = createStdin();
+	const log: string[] = [];
+	(stdin.setRawMode as SinonStub).callsFake((value: boolean) => {
+		log.push(`setRawMode(${value})`);
+	});
+
+	let resume!: () => void;
+	function Input() {
+		useInput(() => {});
+		return null;
+	}
+
+	function Example({suspended}: {readonly suspended: boolean}) {
+		const app = useApp();
+		useEffect(() => {
+			if (!suspended) {
+				return;
+			}
+
+			void app.suspendTerminal(async () => {
+				log.push('callback start');
+				await new Promise<void>(resolve => {
+					resume = resolve;
+				});
+			});
+		}, [suspended, app]);
+		return suspended ? null : <Input />;
+	}
+
+	let instance!: ReturnType<typeof render>;
+	await act(async () => {
+		instance = render(<Example suspended={false} />, {
+			stdin,
+			stdout: createStdout(),
+			interactive: true,
+			patchConsole: false,
+		});
+	});
+	t.teardown(instance.unmount);
+	log.length = 0;
+
+	await act(async () => {
+		instance.rerender(<Example suspended />);
+	});
+	await new Promise(resolve => {
+		setTimeout(resolve, 0);
+	});
+
+	t.deepEqual(log, ['setRawMode(false)', 'callback start']);
+	t.is(stdin.listenerCount('readable'), 0);
+
+	resume();
+	await new Promise(resolve => {
+		setTimeout(resolve, 0);
+	});
+
+	t.deepEqual(log, ['setRawMode(false)', 'callback start']);
+	t.is(stdin.listenerCount('readable'), 0);
 });

@@ -466,7 +466,12 @@ function App({
 			} catch {}
 		}
 
-		if (isRawModeSupported && rawModeEnabledCount.current > 0) {
+		// A queued raw-mode disable (last input hook released this commit) has not run yet, so raw mode is still on. Disable it now, before the child owns the terminal, and cancel the microtask.
+		if (
+			isRawModeSupported &&
+			(rawModeEnabledCount.current > 0 || pendingDisableRawModeRef.current)
+		) {
+			pendingDisableRawModeRef.current = false;
 			rawModeStdin?.setRawMode(false);
 			rawModeStdin?.unref?.();
 			clearInputState();
