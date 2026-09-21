@@ -230,6 +230,7 @@ export default class Ink {
 	private lastOutputToRender: string;
 	private lastOutputHeight: number;
 	private lastTerminalWidth: number;
+	private lastTerminalHeight: number;
 	private readonly container: FiberRoot;
 	private readonly rootNode: dom.DOMElement;
 	// Accumulated <Static> output. Only kept in debug mode, where every frame rewrites it, and on the alternate screen, where it has to be replayed on full clears because there is no scrollback to keep it in.
@@ -337,7 +338,9 @@ export default class Ink {
 		this.lastOutput = '';
 		this.lastOutputToRender = '';
 		this.lastOutputHeight = 0;
-		this.lastTerminalWidth = getWindowSize(this.options.stdout).columns;
+		const {columns, rows} = getWindowSize(this.options.stdout);
+		this.lastTerminalWidth = columns;
+		this.lastTerminalHeight = rows;
 
 		this.fullStaticOutput = '';
 		this.hasRenderedStaticOutput = false;
@@ -394,10 +397,16 @@ export default class Ink {
 	}
 
 	resized = () => {
-		const currentWidth = getWindowSize(this.options.stdout).columns;
+		const {columns: currentWidth, rows: currentHeight} = getWindowSize(
+			this.options.stdout,
+		);
 
-		if (currentWidth < this.lastTerminalWidth) {
-			// We clear the screen when decreasing terminal width to prevent duplicate overlapping re-renders.
+		// We clear the screen when decreasing terminal width to prevent duplicate overlapping re-renders. Decreasing the height with a cursor shown also drops the frame rows below the cursor, so erase what is left and render the frame again.
+		if (
+			currentWidth < this.lastTerminalWidth ||
+			(currentHeight < this.lastTerminalHeight &&
+				this.log.getCursorPosition() !== undefined)
+		) {
 			this.log.clear();
 			this.lastOutput = '';
 			this.lastOutputToRender = '';
@@ -409,6 +418,7 @@ export default class Ink {
 		this.onRender();
 
 		this.lastTerminalWidth = currentWidth;
+		this.lastTerminalHeight = currentHeight;
 	};
 
 	resolveExitPromise: (result?: unknown) => void = () => {};

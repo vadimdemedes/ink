@@ -3,7 +3,8 @@ import test from 'ava';
 import delay from 'delay';
 import stripAnsi from 'strip-ansi';
 import React, {useLayoutEffect} from 'react';
-import {render, Box, Text, useWindowSize} from '../src/index.js';
+import {render, Box, Text, useWindowSize, useCursor} from '../src/index.js';
+import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 import createStdout, {type FakeStdout} from './helpers/create-stdout.js';
 
 const getWriteContents = (stdout: FakeStdout): string[] =>
@@ -325,3 +326,122 @@ test.serial('width decrease clears lastOutput to force rerender', async t => {
 		stripAnsi(getWriteContents(stdout).at(-1)!).includes('Updated Content'),
 	);
 });
+
+// Replays the writes on a 10-row terminal below three shell lines, shrinking it to `rows` after the first `writesBeforeResize` writes. Only trailing empty rows are dropped, so a stray blank row inside the output still fails the comparison.
+const screenAfterShrink = (
+	stdout: FakeStdout,
+	writesBeforeResize: number,
+	rows: number,
+): string[] => {
+	const writes = stdout
+		.getWrites()
+		.map(write => write.replaceAll('\n', '\r\n'));
+	const lines = reconstructTerminalLines(
+		[
+			'shell 0\r\nshell 1\r\nshell 2\r\n',
+			...writes.slice(0, writesBeforeResize),
+			{rows},
+			...writes.slice(writesBeforeResize),
+		],
+		10,
+	);
+
+	while (lines.at(-1) === '') {
+		lines.pop();
+	}
+
+	return lines;
+};
+
+const shell = ['shell 0', 'shell 1', 'shell 2'];
+const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+function Frame({
+	suffix = '',
+	cursorY,
+}: {
+	readonly suffix?: string;
+	readonly cursorY: number | undefined;
+}) {
+	const {setCursorPosition} = useCursor();
+	setCursorPosition(cursorY === undefined ? undefined : {x: 0, y: cursorY});
+
+	return (
+		<Box flexDirection="column">
+			{letters.map(letter => (
+				<Text key={letter}>{letter + suffix}</Text>
+			))}
+		</Box>
+	);
+}
+
+for (const incrementalRendering of [false, true]) {
+	const mode = incrementalRendering ? ' (incremental)' : '';
+
+	for (const {cursorY, rows} of [
+		{cursorY: 0, rows: 8},
+		// The cursor has fewer rows below it than the shrink removes, so the terminal also scrolls the top off.
+		{cursorY: 4, rows: 7},
+	]) {
+		test.serial(
+			`rows shrink with a cursor above the output bottom keeps lines above the frame - cursor row ${cursorY}, ${rows} rows${mode}`,
+			async t => {
+				const stdout = createStdout(100);
+				stdout.rows = 10;
+
+				const {rerender, unmount, waitUntilRenderFlush} = render(
+					<Frame cursorY={cursorY} />,
+					{stdout, incrementalRendering},
+				);
+				t.teardown(unmount);
+				await waitUntilRenderFlush();
+
+				const writesBeforeResize = stdout.getWrites().length;
+				stdout.rows = rows;
+				stdout.emit('resize');
+				await waitUntilRenderFlush();
+
+				// The shrink drops the frame rows below the cursor, so they have to be repainted right away.
+				t.deepEqual(screenAfterShrink(stdout, writesBeforeResize, rows), [
+					...shell,
+					...letters,
+				]);
+
+				rerender(<Frame suffix="!" cursorY={cursorY} />);
+				await waitUntilRenderFlush();
+
+				t.deepEqual(screenAfterShrink(stdout, writesBeforeResize, rows), [
+					...shell,
+					...letters.map(letter => letter + '!'),
+				]);
+			},
+		);
+	}
+
+	test.serial(
+		`rows shrink right after a commit clears the cursor keeps lines above the frame${mode}`,
+		async t => {
+			const stdout = createStdout(100);
+			stdout.rows = 10;
+
+			const {rerender, unmount, waitUntilRenderFlush} = render(
+				<Frame cursorY={0} />,
+				{stdout, incrementalRendering},
+			);
+			t.teardown(unmount);
+			await waitUntilRenderFlush();
+
+			// The commit clears the cursor, but its frame is still throttled, so the terminal still shows the cursor when the rows shrink.
+			rerender(<Frame cursorY={undefined} />);
+			const writesBeforeResize = stdout.getWrites().length;
+			stdout.rows = 8;
+			stdout.emit('resize');
+			await waitUntilRenderFlush();
+
+			t.deepEqual(screenAfterShrink(stdout, writesBeforeResize, 8), [
+				...shell,
+				...letters,
+			]);
+		},
+	);
+}
