@@ -68,6 +68,9 @@ const waitForCondition = async (condition: () => boolean): Promise<void> => {
 	});
 };
 
+type InteractiveRenderOpts = {
+	stdoutColumns?: number;
+};
 type InteractiveRenderProps = {
 	waitUntilRenderFlush: () => Promise<void>;
 	stdin: NodeJS.WriteStream;
@@ -76,11 +79,32 @@ type InteractiveRenderProps = {
 	getWriteCallsString: () => string;
 	getLastTrimmedRender: () => string;
 };
+type InteractiveRenderHandler = (
+	props: InteractiveRenderProps,
+) => Promise<void> | void;
+
 async function withInteractiveRender(
 	node: React.ReactNode,
-	handler: (props: InteractiveRenderProps) => Promise<void> | void,
+	handler: InteractiveRenderHandler,
+): Promise<void>;
+async function withInteractiveRender(
+	node: React.ReactNode,
+	opts: InteractiveRenderOpts,
+	handler: InteractiveRenderHandler,
+): Promise<void>;
+async function withInteractiveRender(
+	node: React.ReactNode,
+	optsOrHandler: InteractiveRenderHandler | InteractiveRenderOpts,
+	providedHandler?: InteractiveRenderHandler,
 ) {
-	const stdout = createStdout(5);
+	const opts =
+		providedHandler === undefined
+			? (optsOrHandler as InteractiveRenderOpts)
+			: {};
+	const handler =
+		providedHandler ?? (optsOrHandler as InteractiveRenderHandler);
+
+	const stdout = createStdout(opts.stdoutColumns ?? 5);
 	const stdin = createStdin();
 
 	let lastCursor: CursorPosition | undefined;
@@ -1086,28 +1110,18 @@ test('<Cursor /> does not pollute screen readers', t => {
 });
 
 test('<Cursor /> handles wide characters', async t => {
-	const stdout = createStdout(4);
-	const stdin = createStdin();
-
-	let lastCursor: CursorPosition | undefined;
-	const onCursorUpdated = (cursor: CursorPosition | undefined) => {
-		lastCursor = cursor;
-	};
-
-	const {unmount, waitUntilRenderFlush} = render(
+	await withInteractiveRender(
 		<Box>
 			<Text>
 				你好你
 				<Cursor />
 			</Text>
 		</Box>,
-		{stdout, stdin, onCursorUpdated},
+		{stdoutColumns: 4},
+		({getLastCursor}) => {
+			t.deepEqual(getLastCursor(), {x: 2, y: 1});
+		},
 	);
-	await waitUntilRenderFlush();
-
-	t.deepEqual(lastCursor, {x: 2, y: 1});
-
-	unmount();
 });
 
 test('<Cursor /> handles ansi sanitization', async t => {
