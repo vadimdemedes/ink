@@ -113,6 +113,22 @@ test('set width to zero with text below', t => {
 	t.is(output, '|ello\nnext');
 });
 
+test('set width to a fraction of a column', t => {
+	const output = renderToString(
+		<Box width={10} flexDirection="column">
+			<Box>
+				<Box width={0.25}>
+					<Text>hello</Text>
+				</Box>
+				<Text>|</Text>
+			</Box>
+			<Text>next</Text>
+		</Box>,
+	);
+
+	t.is(output, '|\ne\nl\nl\no\nnext');
+});
+
 test('padding leaves no room for text', t => {
 	const output = renderToString(
 		<Box>

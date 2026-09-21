@@ -107,6 +107,11 @@ test('keeps text at its natural width when there is no room to wrap', t => {
 	t.is(wrapText('hello', -1, 'wrap'), 'hello');
 });
 
+test('wraps a fraction of a column like one column', t => {
+	t.is(wrapText('hello', 0.5, 'wrap'), 'h\ne\nl\nl\no');
+	t.is(wrapText('hello', 0.5, 'hard'), 'h\ne\nl\nl\no');
+});
+
 test('leaves truncation at zero columns alone', t => {
 	t.is(wrapText('hello', 0, 'truncate'), '');
 });
