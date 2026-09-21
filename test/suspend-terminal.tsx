@@ -323,8 +323,13 @@ test('suspendTerminal exits and re-enters the alternate screen', async t => {
 	t.true(reEnteredAltAfterResume);
 });
 
-for (const mode of ['standard', 'incremental']) {
-	test(`suspendTerminal replays <Static> output when it re-enters the alternate screen - ${mode}`, async t => {
+for (const [mode, options] of Object.entries({
+	standard: {},
+	incremental: {incrementalRendering: true},
+	'screen reader': {isScreenReaderEnabled: true},
+	debug: {debug: true},
+})) {
+	test(`suspendTerminal shows <Static> output once after resume re-enters the alternate screen - ${mode}`, async t => {
 		const rows = 5;
 		const stdout = createStdout();
 		stdout.rows = rows;
@@ -365,13 +370,12 @@ for (const mode of ['standard', 'incremental']) {
 			alternateScreen: true,
 			interactive: true,
 			patchConsole: false,
-			incrementalRendering: mode === 'incremental',
+			...options,
 		});
 		await done;
 		await delay(50);
-		unmount();
 
-		// Re-entering the alternate screen starts from an empty buffer, so reconstruct only what was written from that point on. The redraw carries no new <Static> items, so the rows must come from a replay.
+		// Re-entering the alternate screen starts from an empty buffer, so reconstruct only what was written from that point on. The redraw carries no new <Static> items, so the rows must come from the replay, or in debug mode from the redraw alone, which writes every item itself.
 		const output = stdout.getWrites().join('');
 		const resumed = output.lastIndexOf(enterAltScreen);
 		t.true(resumed >= 0, 'Expected resume to re-enter the alternate screen');
@@ -383,6 +387,7 @@ for (const mode of ['standard', 'incremental']) {
 			),
 			['S1', 'S2', 'S3', 'live', ''],
 		);
+		unmount();
 	});
 }
 
