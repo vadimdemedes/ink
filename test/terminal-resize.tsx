@@ -489,6 +489,70 @@ for (const incrementalRendering of [false, true]) {
 		},
 	);
 
+	function CursorSixLines({cursorRow}: {readonly cursorRow: number}) {
+		const {setCursorPosition} = useCursor();
+		setCursorPosition({x: 0, y: cursorRow});
+		return <SixLines />;
+	}
+
+	for (const {description, initialCursorRow, shrink} of [
+		{
+			description: 'a custom cursor sits on it',
+			initialCursorRow: 0,
+			shrink(stdout: FakeStdout) {
+				stdout.emit('resize');
+			},
+		},
+		{
+			description: 'the same render moves a custom cursor',
+			initialCursorRow: 4,
+			shrink(_stdout: FakeStdout, rerender: (tree: React.ReactNode) => void) {
+				rerender(<CursorSixLines cursorRow={2} />);
+			},
+		},
+	]) {
+		test.serial(
+			`${name} rendering - keeps content above the frame when the terminal height shrinks onto it and ${description}`,
+			async t => {
+				const stdout = createStdout(40);
+				stdout.rows = 10;
+
+				const {unmount, rerender, waitUntilRenderFlush} = render(
+					<CursorSixLines cursorRow={initialCursorRow} />,
+					{stdout, incrementalRendering},
+				);
+				t.teardown(unmount);
+				await waitUntilRenderFlush();
+
+				const writesBefore = stdout.getWrites().length;
+				stdout.rows = 6;
+				shrink(stdout, rerender);
+				await waitUntilRenderFlush();
+
+				// The byte stream alone cannot show what a shrink erases, so replay it on a modelled terminal with shell output above the frame.
+				const writes = stdout
+					.getWrites()
+					.map(write => write.replaceAll('\n', '\r\n'));
+				const lines = reconstructTerminalLines(
+					[
+						'shell 0\r\nshell 1\r\nshell 2\r\n',
+						...writes.slice(0, writesBefore),
+						{rows: 6},
+						...writes.slice(writesBefore),
+					],
+					10,
+				);
+
+				t.deepEqual(lines.filter(Boolean), [
+					'shell 0',
+					'shell 1',
+					'shell 2',
+					...frame.split('\n'),
+				]);
+			},
+		);
+	}
+
 	test.serial(
 		`${name} rendering - writes nothing when the terminal height shrinks and the frame still fits`,
 		async t => {
