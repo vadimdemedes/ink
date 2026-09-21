@@ -274,50 +274,41 @@ const wrapCursorOffsetToPosition = ({
 	wrappedText: string;
 	cursorOffset: number;
 }) => {
-	let x = cursorOffset;
+	let x = 0;
 	let y = 0;
+	let consumable = cursorOffset;
+	if (consumable <= 0) {
+		// Easy case:
+		return {x, y};
+	}
 
 	// Any newlines in originalText should be "consumed" when
 	// counting cursor offsets; any others were introduced by
 	// wrapping and should not be counted as part of cursorOffset
-	let countableNewlines = countOfCharIn({
+	let consumableNewlines = countOfCharIn({
 		text: originalText,
 		char: '\n',
 		end: cursorOffset,
 	});
 
-	let columnAdjustments = 0;
-	let start = 0;
-	for (const [i, ch] of [...stripAnsi(wrappedText)].entries()) {
+	for (const ch of stripAnsi(wrappedText)) {
+		// NOTE: If the cursor lands on a newline, it should wrap
+		if (consumable <= 0 && ch !== '\n') break;
 		if (ch === '\n') {
-			// Reset column adjustments; they apply to a previous line
-			// on which the cursor will not sit
-			columnAdjustments = 0;
-
+			x = 0;
 			++y;
 
-			if (countableNewlines-- > 0) {
-				--x;
+			if (consumableNewlines > 0) {
+				--consumableNewlines;
+				--consumable;
 			}
-
-			x -= i - start;
-			start = i + 1;
 		} else {
-			const width = stringWidth(ch);
-			if (width > 1) {
-				// Wide characters (eg: CJK) occupy multiple cells but
-				// a single offset; account for that extra cell here:
-				columnAdjustments += width - 1;
-			} else if (width === 0) {
-				// A zero-width character consumes *zero* cells (of course)
-				columnAdjustments -= 1;
-			}
+			--consumable;
+			x += stringWidth(ch);
 		}
-
-		if (x <= 0) break;
 	}
 
-	return {x: x + columnAdjustments, y};
+	return {x, y};
 };
 
 export default renderNodeToOutput;

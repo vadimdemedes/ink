@@ -961,43 +961,32 @@ for (const [i, config] of (
 		{text: '0\n23', offset: 3, cursorTo: 1, cursorUp: 1, cursor: {x: 1, y: 1}},
 	] as const
 ).entries()) {
-	test.serial(`cursor wraps within text #${i}`, async t => {
-		const stdout = createStdout(5);
-		const stdin = createStdin();
-
-		let lastCursor: CursorPosition | undefined;
-		const onCursorUpdated = (cursor: CursorPosition | undefined) => {
-			lastCursor = cursor;
-		};
-
-		const {unmount, waitUntilRenderFlush} = render(
+	test.serial.only(`cursor wraps within text #${i}`, async t => {
+		await withInteractiveRender(
 			<InputApp initialText={config.text} offset={config.offset} />,
-			{stdout, stdin, onCursorUpdated},
+			({stdout, getLastCursor}) => {
+				const firstRenderOutput = getWriteCalls(stdout).join('');
+				// Cursor should be shown at x=2 (after "> ")
+				t.true(
+					firstRenderOutput.includes(showCursorEscape),
+					'cursor should be visible after first render',
+				);
+				t.deepEqual(
+					getLastCursor(),
+					config.cursor,
+					`cursor should be at ${JSON.stringify(config.cursor)}`,
+				);
+				t.true(
+					firstRenderOutput.includes(ansiEscapes.cursorTo(config.cursorTo)),
+					`cursor should be at column ${config.cursorTo}; saw ${JSON.stringify(firstRenderOutput)}`,
+				);
+				// It renders with a trailing newline, so need to move up one row
+				t.true(
+					firstRenderOutput.includes(ansiEscapes.cursorUp(config.cursorUp)),
+					`cursor should be on last visible line - ${config.cursorUp - 1}`,
+				);
+			},
 		);
-		await waitUntilRenderFlush();
-
-		const firstRenderOutput = getWriteCalls(stdout).join('');
-		// Cursor should be shown at x=2 (after "> ")
-		t.true(
-			firstRenderOutput.includes(showCursorEscape),
-			'cursor should be visible after first render',
-		);
-		t.deepEqual(
-			lastCursor,
-			config.cursor,
-			`cursor should be at ${JSON.stringify(config.cursor)}`,
-		);
-		t.true(
-			firstRenderOutput.includes(ansiEscapes.cursorTo(config.cursorTo)),
-			`cursor should be at column ${config.cursorTo}; saw ${JSON.stringify(firstRenderOutput)}`,
-		);
-		// It renders with a trailing newline, so need to move up one row
-		t.true(
-			firstRenderOutput.includes(ansiEscapes.cursorUp(config.cursorUp)),
-			`cursor should be on last visible line - ${config.cursorUp - 1}`,
-		);
-
-		unmount();
 	});
 }
 
@@ -1124,16 +1113,23 @@ test('<Cursor /> handles wide characters', async t => {
 	);
 });
 
+test('<Cursor /> interleaves in wide and narrow characters', async t => {
+	await withInteractiveRender(
+		<Box>
+			<Text>
+				{'> '}你好
+				<Cursor />你
+			</Text>
+		</Box>,
+		{stdoutColumns: 4},
+		({getLastCursor}) => {
+			t.deepEqual(getLastCursor(), {x: 2, y: 1});
+		},
+	);
+});
+
 test('<Cursor /> handles ansi sanitization', async t => {
-	const stdout = createStdout(4);
-	const stdin = createStdin();
-
-	let lastCursor: CursorPosition | undefined;
-	const onCursorUpdated = (cursor: CursorPosition | undefined) => {
-		lastCursor = cursor;
-	};
-
-	const {unmount, waitUntilRenderFlush} = render(
+	await withInteractiveRender(
 		<Box>
 			<Text>
 				{'A'}
@@ -1143,13 +1139,11 @@ test('<Cursor /> handles ansi sanitization', async t => {
 				{'C'}
 			</Text>
 		</Box>,
-		{stdout, stdin, onCursorUpdated},
+		{stdoutColumns: 4},
+		({getLastCursor}) => {
+			t.deepEqual(getLastCursor(), {x: 2, y: 0});
+		},
 	);
-	await waitUntilRenderFlush();
-
-	t.deepEqual(lastCursor, {x: 2, y: 0});
-
-	unmount();
 });
 
 test('<Cursor /> handles styling', async t => {
