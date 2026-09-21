@@ -7,6 +7,7 @@ import {
 	buildCursorOnlySequence,
 	buildReturnToBottomPrefix,
 	buildReturnToBottom,
+	buildEraseFrame,
 	hideCursorEscape,
 } from './cursor-helpers.js';
 
@@ -20,6 +21,8 @@ export type LogUpdate = {
 	setCursorPosition: (position: CursorPosition | undefined) => void;
 	isCursorDirty: () => boolean;
 	willRender: (str: string) => boolean;
+	// Where the last render or sync left the real cursor, relative to the top of that frame. Undefined when no cursor position was active or after clear, reset or done.
+	getCursorPosition: () => CursorPosition | undefined;
 	(str: string): boolean;
 };
 
@@ -105,12 +108,7 @@ const createStandard = (
 	};
 
 	render.clear = () => {
-		const prefix = buildReturnToBottomPrefix(
-			cursorWasShown,
-			previousLineCount,
-			previousCursorPosition,
-		);
-		stream.write(prefix + ansiEscapes.eraseLines(previousLineCount));
+		stream.write(buildEraseFrame(previousLineCount, previousCursorPosition));
 		previousOutput = '';
 		previousLineCount = 0;
 		previousCursorPosition = undefined;
@@ -170,6 +168,7 @@ const createStandard = (
 
 	render.isCursorDirty = () => cursorDirty;
 	render.willRender = (str: string) => hasChanges(str, getActiveCursor());
+	render.getCursorPosition = () => previousCursorPosition;
 
 	return render;
 };
@@ -316,12 +315,7 @@ const createIncremental = (
 	};
 
 	render.clear = () => {
-		const prefix = buildReturnToBottomPrefix(
-			cursorWasShown,
-			previousLines.length,
-			previousCursorPosition,
-		);
-		stream.write(prefix + ansiEscapes.eraseLines(previousLines.length));
+		stream.write(buildEraseFrame(previousLines.length, previousCursorPosition));
 		previousOutput = '';
 		previousLines = [];
 		previousCursorPosition = undefined;
@@ -381,6 +375,7 @@ const createIncremental = (
 
 	render.isCursorDirty = () => cursorDirty;
 	render.willRender = (str: string) => hasChanges(str, getActiveCursor());
+	render.getCursorPosition = () => previousCursorPosition;
 
 	return render;
 };

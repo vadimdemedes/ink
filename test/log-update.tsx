@@ -2,6 +2,7 @@ import test from 'ava';
 import ansiEscapes from 'ansi-escapes';
 import logUpdate from '../src/log-update.js';
 import createStdout from './helpers/create-stdout.js';
+import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 
 test('standard rendering - renders and updates output', t => {
 	const stdout = createStdout();
@@ -322,21 +323,24 @@ test('standard rendering - cursor position at second-to-last line emits cursorUp
 });
 
 for (const {name, incremental} of renderingModes) {
-	test(`${name} - clear() returns cursor to bottom before erasing`, t => {
-		const {stdout, render} = createRenderForMode(incremental);
+	for (const y of [0, 5]) {
+		test(`${name} - clear() erases the frame with the cursor at row ${y}`, t => {
+			const {stdout, render} = createRenderForMode(incremental);
 
-		render.setCursorPosition({x: 5, y: 0});
-		render('Line 1\nLine 2\nLine 3\n');
+			render.setCursorPosition({x: 5, y});
+			render('Line 1\nLine 2\nLine 3\n');
+			render.clear();
 
-		render.clear();
-
-		const clearCall = (stdout.write as any).secondCall.args[0] as string;
-		// Cursor was at y=0, output had 4 lines (3 visible + trailing newline).
-		// clear() should: hide cursor, move down to bottom (from y=0 to line 3), then erase
-		t.true(clearCall.includes(hideCursorEscape));
-		t.true(clearCall.includes(ansiEscapes.cursorDown(3)));
-		t.true(clearCall.includes(ansiEscapes.eraseLines(4)));
-	});
+			const writes = ((stdout.write as any).args as string[][]).map(args =>
+				args[0]!.replaceAll('\n', '\r\n'),
+			);
+			t.true(writes[1]!.startsWith(hideCursorEscape));
+			t.deepEqual(
+				reconstructTerminalLines(['shell\r\n', ...writes], 10).filter(Boolean),
+				['shell'],
+			);
+		});
+	}
 }
 
 test('standard rendering - clearing cursor position stops cursor positioning', t => {
