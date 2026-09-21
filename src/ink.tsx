@@ -55,12 +55,14 @@ export const homeAndEraseDown =
 const shouldClearTerminalForFrame = ({
 	isTty,
 	viewportRows,
+	previousViewportRows,
 	previousOutputHeight,
 	nextOutputHeight,
 	isUnmounting,
 }: {
 	isTty: boolean;
 	viewportRows: number;
+	previousViewportRows: number;
 	previousOutputHeight: number;
 	nextOutputHeight: number;
 	isUnmounting: boolean;
@@ -75,6 +77,7 @@ const shouldClearTerminalForFrame = ({
 	const isOverflowing = nextOutputHeight > viewportRows;
 	const isFullscreen = nextOutputHeight >= viewportRows;
 	const isLeavingFullscreen = wasFullscreen && nextOutputHeight < viewportRows;
+	const isViewportShrinking = viewportRows < previousViewportRows;
 	const shouldClearOnUnmount = isUnmounting && wasFullscreen;
 
 	if (isWindowsConsole && (wasFullscreen || isFullscreen)) {
@@ -87,6 +90,8 @@ const shouldClearTerminalForFrame = ({
 		(isOverflowing && hadPreviousFrame) ||
 		// Clear when shrinking from fullscreen to non-fullscreen output.
 		isLeavingFullscreen ||
+		// A terminal that loses rows scrolls only as far as it must to keep the cursor on screen, so the frame is cut only when it fills the new viewport. Then the cursor-relative diff no longer lines up with what is on screen.
+		(isViewportShrinking && wasFullscreen) ||
 		// Preserve legacy unmount behavior for fullscreen frames: final teardown
 		// render should clear once to avoid leaving a scrolled viewport state.
 		shouldClearOnUnmount
@@ -1100,13 +1105,16 @@ export default class Ink {
 		const isFullscreen = isTty && outputHeight >= viewportRows;
 		const outputToRender = isFullscreen ? output : output + '\n';
 
+		const previousViewportRows = this.lastTerminalHeight;
 		const shouldClearTerminal = shouldClearTerminalForFrame({
 			isTty,
 			viewportRows,
+			previousViewportRows,
 			previousOutputHeight: this.lastOutputHeight,
 			nextOutputHeight: outputHeight,
 			isUnmounting: this.isUnmounting,
 		});
+		this.lastTerminalHeight = viewportRows;
 
 		if (
 			!shouldClearTerminal &&
@@ -1134,9 +1142,24 @@ export default class Ink {
 				);
 			} else if (this.lastOutputHeight >= viewportRows) {
 				// The previous frame filled the viewport, so erasing the viewport erases exactly that frame. The absolute sequence also sidesteps the cursor-relative erase that Windows consoles desynchronize (#969).
-				this.options.stdout.write(
-					homeAndEraseDown + staticOutput + outputToRender,
-				);
+				//
+				// When the terminal just lost rows while a useCursor() position was active, the real cursor sat above the bottom of the output, so the terminal dropped the rows below it instead of scrolling and the absolute origin can land on rows above the frame that Ink does not own. Walk up from the committed cursor position to the frame's top row instead.
+				let erasePrefix = homeAndEraseDown;
+				const previousCursor = this.log.getCursorPosition();
+				if (
+					viewportRows < previousViewportRows &&
+					!isWindowsConsole &&
+					previousCursor
+				) {
+					erasePrefix =
+						(previousCursor.y > 0
+							? ansiEscapes.cursorUp(previousCursor.y)
+							: '') +
+						ansiEscapes.cursorTo(0) +
+						ansiEscapes.eraseDown;
+				}
+
+				this.options.stdout.write(erasePrefix + staticOutput + outputToRender);
 			} else {
 				// The previous frame only covers the bottom of the viewport. Erase those rows relative to the cursor and let the new frame scroll whatever sits above them into scrollback naturally.
 				this.log.clear();
