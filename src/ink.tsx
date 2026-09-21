@@ -447,6 +447,14 @@ export default class Ink {
 			return;
 		}
 
+		// Screen-reader frames bypass `log()`, so restore them the same way: write, then sync log-update, with no cursor hide or placement.
+		if (this.isScreenReaderEnabled) {
+			this.options.stdout.write(this.lastOutputToRender);
+			this.log.setCursorPosition(undefined);
+			this.log.sync(this.lastOutputToRender);
+			return;
+		}
+
 		// Clear() resets log-update's cursor state, so replay the latest cursor intent
 		// before restoring output after external stdout/stderr writes.
 		this.log.setCursorPosition(this.cursorPosition);
