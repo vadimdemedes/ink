@@ -115,6 +115,19 @@ const parseControlSequence = (
 	return undefined;
 };
 
+/**
+Whether `input` is exactly one complete CSI or SS3 sequence as the parser defines it, including legacy `ESC[[A`, rxvt `ESC[2$` and parameterized SS3 forms. Partial sequences (timeout-flushed) and plain escaped code points are not.
+*/
+export const isCompleteControlSequence = (input: string): boolean => {
+	if (!input.startsWith(escape)) {
+		return false;
+	}
+
+	const prefixLength = input[1] === escape ? 2 : 1;
+	const parsed = parseControlSequence(input, 0, prefixLength);
+	return typeof parsed === 'object' && parsed.nextIndex === input.length;
+};
+
 const parseEscapedCodePoint = (
 	input: string,
 	escapeIndex: number,

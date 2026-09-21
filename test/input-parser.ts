@@ -1,5 +1,9 @@
 import test from 'ava';
-import {createInputParser, type InputEvent} from '../src/input-parser.js';
+import {
+	createInputParser,
+	isCompleteControlSequence,
+	type InputEvent,
+} from '../src/input-parser.js';
 
 const parseChunks = (chunks: string[]): InputEvent[] => {
 	const parser = createInputParser();
@@ -436,4 +440,49 @@ test('paste event delivers backspace chars verbatim without splitting', t => {
 	t.deepEqual(parseChunks(['\u001B[200~\u007F\u0008\u007F\u001B[201~']), [
 		{paste: '\u007F\u0008\u007F'},
 	]);
+});
+
+test('isCompleteControlSequence accepts every complete CSI and SS3 form the parser emits', t => {
+	for (const sequence of [
+		'\u001B[A',
+		'\u001B[I',
+		'\u001B[24;80R',
+		'\u001B[<0;10;20M',
+		'\u001B[[A',
+		'\u001B[2$',
+		'\u001B[ q',
+		'\u001BOP',
+		'\u001BO1;5A',
+		'\u001B\u001B[A',
+		'\u001B\u001BO5D',
+	]) {
+		t.true(
+			isCompleteControlSequence(sequence),
+			`Sequence: ${JSON.stringify(sequence)}`,
+		);
+		t.deepEqual(parseChunks([sequence]), [sequence]);
+	}
+});
+
+test('isCompleteControlSequence rejects partial sequences and escaped code points', t => {
+	for (const input of [
+		'',
+		'q',
+		'\u001B',
+		'\u001B[',
+		'\u001B[1;',
+		'\u001B[[',
+		'\u001BO',
+		'\u001BO1',
+		'\u001Bx',
+		'\u001B\u001B',
+		'\u001B\u001Bx',
+		'\u001B[1$',
+		'\u001B[Aq',
+	]) {
+		t.false(
+			isCompleteControlSequence(input),
+			`Input: ${JSON.stringify(input)}`,
+		);
+	}
 });

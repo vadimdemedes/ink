@@ -1,4 +1,8 @@
+import React, {act} from 'react';
 import test from 'ava';
+import {render, useInput} from '../src/index.js';
+import createStdout from './helpers/create-stdout.js';
+import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import term from './helpers/term.js';
 
 test.serial('useInput - handle legacy Ctrl+Space', async t => {
@@ -213,9 +217,51 @@ test.serial(
 	'useInput - handle unmapped ctrl escape sequence without crashing',
 	async t => {
 		const ps = term('use-input', ['unmappedCtrlSequence']);
-		// ESC [ 1 ; 5 I — focus-in with ctrl modifier, not in keyName map
-		ps.write('\u001B[1;5I');
+		// ESC [ 1 ; 5 I is focus-in with a ctrl modifier, not in the keyName map.
+		ps.write('\u001B[1;5Iq');
 		await ps.waitForExit();
 		t.true(ps.output.includes('exited'));
 	},
 );
+
+for (const [name, sequence] of [
+	['focus in', '\u001B[I'],
+	['focus out', '\u001B[O'],
+	['cursor position report', '\u001B[24;80R'],
+	['SGR mouse report', '\u001B[<0;10;20M'],
+	['primary device attributes', '\u001B[?62;1;4c'],
+	['stray bracketed paste end', '\u001B[201~'],
+	['unmapped legacy CSI', '\u001B[[Z'],
+	['unmapped modified SS3', '\u001BO1;5Z'],
+] as const) {
+	test(`useInput - drops unmapped control sequence: ${name}`, async t => {
+		const stdin = createStdin();
+		const events: Array<{input: string; escape: boolean}> = [];
+		function Example() {
+			useInput((input, key) => {
+				events.push({input, escape: key.escape});
+			});
+			return null;
+		}
+
+		let instance!: ReturnType<typeof render>;
+		await act(async () => {
+			instance = render(<Example />, {
+				stdin,
+				stdout: createStdout(),
+				patchConsole: false,
+			});
+		});
+		t.teardown(() => {
+			instance.unmount();
+		});
+		await act(async () => {
+			emitReadable(stdin, sequence);
+		});
+		await act(async () => {
+			emitReadable(stdin, 'q');
+		});
+
+		t.deepEqual(events, [{input: 'q', escape: false}]);
+	});
+}

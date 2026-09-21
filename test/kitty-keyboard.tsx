@@ -773,26 +773,26 @@ test.serial(
 );
 
 test.serial(
-	'kitty protocol - auto detection ignores query response without digits',
+	'kitty protocol - auto detection does not treat query response without digits as a response',
 	async t => {
 		const app = createDetectionApp();
 		t.teardown(app.unmount);
 		app.stdin.push('\u001B[?u');
 		await delay(250);
 		t.false(app.writtenStrings.includes('\u001B[>1u'));
-		t.deepEqual(app.inputs, ['[?u']);
+		t.deepEqual(app.inputs, []);
 	},
 );
 
 test.serial(
-	'kitty protocol - auto detection preserves invalid query-like escape sequence',
+	'kitty protocol - auto detection does not treat invalid query-like sequence as a response',
 	async t => {
 		const app = createDetectionApp();
 		t.teardown(app.unmount);
 		app.stdin.push('\u001B[?1x');
 		await delay(250);
 		t.false(app.writtenStrings.includes('\u001B[>1u'));
-		t.deepEqual(app.inputs, ['[?1x']);
+		t.deepEqual(app.inputs, []);
 	},
 );
 

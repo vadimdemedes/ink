@@ -11,7 +11,7 @@ import React, {
 } from 'react';
 import cliCursor from 'cli-cursor';
 import {type CursorPosition} from '../log-update.js';
-import {createInputParser} from '../input-parser.js';
+import {createInputParser, isCompleteControlSequence} from '../input-parser.js';
 import parseKeypress from '../parse-keypress.js';
 import {getRawModeStream, type OutputStream} from '../stream.js';
 import AppContext, {type SuspendTerminal} from './AppContext.js';
@@ -314,6 +314,14 @@ function App({
 					if (/^\u001B\[\?\d+u$/.test(event)) {
 						onKittyQueryResponse();
 						continue;
+					}
+
+					// A complete CSI or SS3 sequence that maps to no key Ink can represent is not printable text. Terminal replies (focus in/out, cursor position, mouse, device attributes) and keys without a `Key` field would otherwise reach `useInput` with the ESC stripped, as if typed.
+					if (isCompleteControlSequence(event)) {
+						const key = parseKeypress(event);
+						if (!key.isKittyProtocol && key.name === '') {
+							continue;
+						}
 					}
 
 					emitInput(event);
