@@ -5,7 +5,7 @@ import {
 	Text,
 	useInput,
 	Cursor,
-	CursorPosition,
+	type CursorPosition,
 } from '../../src/index.js';
 
 let handleCursorUpdated: (pos: CursorPosition | undefined) => void;

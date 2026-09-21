@@ -961,7 +961,7 @@ for (const [i, config] of (
 		{text: '0\n23', offset: 3, cursorTo: 1, cursorUp: 1, cursor: {x: 1, y: 1}},
 	] as const
 ).entries()) {
-	test.serial.only(`cursor wraps within text #${i}`, async t => {
+	test.serial(`cursor wraps within text #${i}`, async t => {
 		await withInteractiveRender(
 			<InputApp initialText={config.text} offset={config.offset} />,
 			({stdout, getLastCursor}) => {
