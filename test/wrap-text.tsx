@@ -101,6 +101,21 @@ for (const [name, text, expected] of [
 	});
 }
 
+test('keeps text at its natural width when there is no room to wrap', t => {
+	t.is(wrapText('hello', 0, 'wrap'), 'hello');
+	t.is(wrapText('hello', 0, 'hard'), 'hello');
+	t.is(wrapText('hello', -1, 'wrap'), 'hello');
+});
+
+test('wraps a fraction of a column like one column', t => {
+	t.is(wrapText('hello', 0.5, 'wrap'), 'h\ne\nl\nl\no');
+	t.is(wrapText('hello', 0.5, 'hard'), 'h\ne\nl\nl\no');
+});
+
+test('leaves truncation at zero columns alone', t => {
+	t.is(wrapText('hello', 0, 'truncate'), '');
+});
+
 test('uses separate cache entries for different widths', t => {
 	t.is(wrapText('hello world', 5, 'truncate-end'), 'hell…');
 	t.is(wrapText('hello world', 8, 'truncate-end'), 'hello w…');

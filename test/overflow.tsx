@@ -50,6 +50,19 @@ test('overflowX - single text node in a box inside overflow container', t => {
 	t.is(output, 'Hello');
 });
 
+test('overflowX - single text node in a zero-width overflow container', t => {
+	const output = renderToString(
+		<Box>
+			<Box width={0} overflowX="hidden">
+				<Text>hello</Text>
+			</Box>
+			<Text>|</Text>
+		</Box>,
+	);
+
+	t.is(output, '|');
+});
+
 test('overflowX - single text node inside overflow container with border', t => {
 	const output = renderToString(
 		<Box width={6} overflowX="hidden" borderStyle="round">
