@@ -2373,7 +2373,7 @@ This is useful for inputs that are temporarily disabled.
 Type: `string`\
 Required: `false`
 
-Set a component's focus ID, which can be used to programmatically focus the component. This is useful for large interfaces with many focusable elements to avoid having to cycle through all of them.
+Set a component's focus ID, which can be used to programmatically focus the component. This is useful for large interfaces with many focusable elements to avoid having to cycle through all of them. The ID must be unique among focusable components.
 
 ```jsx
 import {render, useFocus, Text} from 'ink';

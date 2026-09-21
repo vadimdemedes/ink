@@ -644,24 +644,16 @@ function App({
 	);
 
 	const removeFocusable = useCallback((id: string): void => {
-		// Each component registers its own entry, so unregistering one drops one entry and keeps the ID focusable while another component still uses it
-		const lastIndex = focusablesRef.current.findLastIndex(focusable => {
-			return focusable.id === id;
-		});
-		focusablesRef.current = focusablesRef.current.filter((_, index) => {
-			return index !== lastIndex;
-		});
-
-		if (focusablesRef.current.some(focusable => focusable.id === id)) {
-			return;
-		}
-
 		setActiveFocusId(currentActiveFocusId => {
 			if (currentActiveFocusId === id) {
 				return undefined;
 			}
 
 			return currentActiveFocusId;
+		});
+
+		focusablesRef.current = focusablesRef.current.filter(focusable => {
+			return focusable.id !== id;
 		});
 	}, []);
 
