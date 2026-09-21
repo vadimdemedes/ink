@@ -1,11 +1,19 @@
 import React, {useEffect} from 'react';
 import test from 'ava';
 import stripAnsi from 'strip-ansi';
-import {render, useApp, useInput, useStdout, Text} from '../src/index.js';
+import {
+	render,
+	useApp,
+	useInput,
+	useStdout,
+	Static,
+	Text,
+} from '../src/index.js';
 import {type SuspendTerminal} from '../src/components/AppContext.js';
 import createStdout, {type FakeStdout} from './helpers/create-stdout.js';
 import {createStdin} from './helpers/create-stdin.js';
 import term from './helpers/term.js';
+import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 
 const showCursor = '[?25h';
 const hideCursor = '[?25l';
@@ -314,6 +322,74 @@ test('suspendTerminal exits and re-enters the alternate screen', async t => {
 	t.true(exitedAltDuringSuspend);
 	t.true(reEnteredAltAfterResume);
 });
+
+for (const [mode, options] of Object.entries({
+	standard: {},
+	incremental: {incrementalRendering: true},
+	'screen reader': {isScreenReaderEnabled: true},
+	debug: {debug: true},
+})) {
+	test(`suspendTerminal shows <Static> output once after resume re-enters the alternate screen - ${mode}`, async t => {
+		const rows = 5;
+		const stdout = createStdout();
+		stdout.rows = rows;
+		const stdin = createStdin();
+
+		let finished!: () => void;
+		const done = new Promise<void>(resolve => {
+			finished = resolve;
+		});
+
+		function Example() {
+			const {suspendTerminal} = useApp();
+			useInput(() => {});
+
+			useEffect(() => {
+				void (async () => {
+					try {
+						await suspendTerminal(async () => {});
+					} finally {
+						finished();
+					}
+				})();
+			}, [suspendTerminal]);
+
+			return (
+				<>
+					<Static items={['S1', 'S2', 'S3']}>
+						{item => <Text key={item}>{item}</Text>}
+					</Static>
+					<Text>live</Text>
+				</>
+			);
+		}
+
+		const {unmount} = render(<Example />, {
+			stdout,
+			stdin,
+			alternateScreen: true,
+			interactive: true,
+			patchConsole: false,
+			...options,
+		});
+		await done;
+		await delay(50);
+
+		// Re-entering the alternate screen starts from an empty buffer, so reconstruct only what was written from that point on. The redraw carries no new <Static> items, so the rows must come from the replay, or in debug mode from the redraw alone, which writes every item itself.
+		const output = stdout.getWrites().join('');
+		const resumed = output.lastIndexOf(enterAltScreen);
+		t.true(resumed >= 0, 'Expected resume to re-enter the alternate screen');
+
+		t.deepEqual(
+			reconstructTerminalLines(
+				output.slice(resumed + enterAltScreen.length).replaceAll('\n', '\r\n'),
+				rows,
+			),
+			['S1', 'S2', 'S3', 'live', ''],
+		);
+		unmount();
+	});
+}
 
 test('suspendTerminal rolls back so a later suspend works if handover throws', async t => {
 	let firstRejected = false;
