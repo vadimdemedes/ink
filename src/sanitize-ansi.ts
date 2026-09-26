@@ -1,4 +1,8 @@
-import {hasAnsiControlCharacters, tokenizeAnsi} from './ansi-tokenizer.js';
+import {
+	type CsiToken,
+	hasAnsiControlCharacters,
+	tokenizeAnsi,
+} from './ansi-tokenizer.js';
 
 const sgrParametersRegex = /^[\d:;]*$/;
 // Terminals print nothing for C0 controls and DEL, so strip them; tabs and newlines carry layout. ESC and C1 never reach text tokens, the tokenizer owns them.
@@ -72,12 +76,7 @@ const sanitizeAnsi = (text: string): string => {
 			continue;
 		}
 
-		if (
-			token.type === 'csi' &&
-			token.finalCharacter === 'm' &&
-			token.intermediateString === '' &&
-			sgrParametersRegex.test(token.parameterString)
-		) {
+		if (token.type === 'csi' && isSanitizedCsi(token)) {
 			const parameters = token.parameterString
 				.split(';')
 				.map(parameter => normalizeParameter(parameter))
@@ -90,6 +89,14 @@ const sanitizeAnsi = (text: string): string => {
 	}
 
 	return output + pendingStyles;
+};
+
+export const isSanitizedCsi = (token: CsiToken) => {
+	return (
+		token.finalCharacter === 'm' &&
+		token.intermediateString === '' &&
+		sgrParametersRegex.test(token.parameterString)
+	);
 };
 
 export default sanitizeAnsi;

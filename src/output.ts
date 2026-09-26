@@ -5,7 +5,10 @@ import {
 	styledCharsToString,
 	tokenize,
 } from '@alcalzone/ansi-tokenize';
-import {type OutputTransformer} from './render-node-to-output.js';
+import {
+	type RenderEffects,
+	type OutputTransformer,
+} from './render-node-to-output.js';
 
 // Replaces a partially visible wide character with a space that keeps its styles.
 const blankCell = (cell: StyledChar): StyledChar => ({
@@ -35,6 +38,7 @@ type WriteOperation = {
 	y: number;
 	text: string;
 	transformers: OutputTransformer[];
+	effects?: RenderEffects;
 };
 
 type ClipOperation = {
@@ -151,11 +155,11 @@ export default class Output {
 		x: number,
 		y: number,
 		text: string,
-		options: {transformers: OutputTransformer[]},
+		options: {transformers: OutputTransformer[]; effects?: RenderEffects},
 	): void {
-		const {transformers} = options;
+		const {effects, transformers} = options;
 
-		if (!text) {
+		if (!text && !effects) {
 			return;
 		}
 
@@ -165,6 +169,7 @@ export default class Output {
 			y,
 			text,
 			transformers,
+			effects,
 		});
 	}
 
@@ -246,7 +251,7 @@ export default class Output {
 			}
 
 			if (operation.type === 'write') {
-				const {text, transformers} = operation;
+				const {text, transformers, effects} = operation;
 				let {x, y} = operation;
 				// Preserve styles across explicit newlines before clipping individual rows.
 				const characterLines: StyledChar[][] = [[]];
@@ -279,6 +284,14 @@ export default class Output {
 					if (clipHorizontally) {
 						const width = this.caches.getWidestLine(text);
 
+						const {cursorPosition} = effects ?? {};
+						if (
+							cursorPosition !== undefined &&
+							(cursorPosition.x < clip.x1! || cursorPosition.x > clip.x2!)
+						) {
+							effects!.cursorPosition = undefined;
+						}
+
 						if (x + width < clip.x1! || x > clip.x2!) {
 							continue;
 						}
@@ -286,6 +299,14 @@ export default class Output {
 
 					if (clipVertically) {
 						const height = lines.length;
+
+						const {cursorPosition} = effects ?? {};
+						if (
+							cursorPosition !== undefined &&
+							(cursorPosition.y < clip.y1! || cursorPosition.y > clip.y2!)
+						) {
+							effects!.cursorPosition = undefined;
+						}
 
 						if (y + height < clip.y1! || y > clip.y2!) {
 							continue;

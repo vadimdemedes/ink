@@ -1,6 +1,17 @@
 import wrapAnsi from 'wrap-ansi';
 import {type DOMElement} from './dom.js';
 import sanitizeAnsi from './sanitize-ansi.js';
+import {tokenizeAnsi} from './ansi-tokenizer.js';
+
+type SquashedOutput = {
+	text: string;
+
+	/**
+	 * The requested cursor offset (if any) within `text`.
+	 * Ansi sequences are not counted
+	 */
+	cursorOffset?: number;
+};
 
 // Squashing text nodes allows to combine multiple text nodes into one and write
 // to `Output` instance only once. For example, <Text>hello{' '}world</Text>
@@ -8,7 +19,8 @@ import sanitizeAnsi from './sanitize-ansi.js';
 //
 // Also, this is necessary for libraries like ink-link (https://github.com/sindresorhus/ink-link),
 // which need to wrap all children at once, instead of wrapping 3 text nodes separately.
-const squashTextNodes = (node: DOMElement): string => {
+const squashTextNodes = (node: DOMElement): SquashedOutput => {
+	let cursor: number | undefined;
 	let text = '';
 
 	for (const childNode of node.childNodes) {
@@ -25,7 +37,16 @@ const squashTextNodes = (node: DOMElement): string => {
 				childNode.nodeName === 'ink-text' ||
 				childNode.nodeName === 'ink-virtual-text'
 			) {
-				nodeText = squashTextNodes(childNode);
+				const {text: newNodeText, cursorOffset} = squashTextNodes(childNode);
+				nodeText = newNodeText;
+				if (childNode.internal_cursorOffset !== undefined) {
+					// Outer Cursor elements override inner ones
+					cursor =
+						text.length +
+						Math.min(newNodeText.length, childNode.internal_cursorOffset);
+				} else if (cursorOffset !== undefined) {
+					cursor = text.length + cursorOffset;
+				}
 			}
 
 			// Since these text nodes are being concatenated, `Output` instance won't be able to
@@ -45,6 +66,21 @@ const squashTextNodes = (node: DOMElement): string => {
 		text += nodeText;
 	}
 
+	if (
+		node.childNodes.length === 0 &&
+		node.nodeName === 'ink-text' &&
+		node.internal_cursorOffset !== undefined
+	) {
+		// The only valid cursorOffset in this situation is zero; so if it's set it must be zero
+		cursor = 0;
+	}
+
+	// Normalize cursor *before* expanding tabs or sanitizing, since
+	// the offset we've built is into the un-sanitized string
+	if (node.nodeName === 'ink-text' && cursor !== undefined) {
+		cursor = normalizeCursor(text, cursor);
+	}
+
 	text = sanitizeAnsi(text.replaceAll('\r\n', '\n'));
 
 	// Measurement and styling dependencies understand the ESC forms of these C1 controls.
@@ -55,7 +91,22 @@ const squashTextNodes = (node: DOMElement): string => {
 		text = wrapAnsi(text, Number.POSITIVE_INFINITY, {trim: false});
 	}
 
-	return text;
+	return {
+		text,
+		cursorOffset: cursor,
+	};
+};
+
+const normalizeCursor = (text: string, cursorOffset: number) => {
+	const before = text.slice(0, cursorOffset);
+
+	for (const token of tokenizeAnsi(before)) {
+		if (token.type !== 'text') {
+			cursorOffset -= token.value.length;
+		}
+	}
+
+	return cursorOffset;
 };
 
 export default squashTextNodes;

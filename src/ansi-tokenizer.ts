@@ -10,7 +10,7 @@ const sosCharacter = '\u0098';
 
 type ControlStringType = 'osc' | 'dcs' | 'pm' | 'apc' | 'sos';
 
-type CsiToken = {
+export type CsiToken = {
 	readonly type: 'csi';
 	readonly value: string;
 	readonly parameterString: string;
