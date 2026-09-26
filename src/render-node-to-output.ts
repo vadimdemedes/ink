@@ -198,6 +198,19 @@ const renderNodeToOutput = (
 					transformers: newTransformers,
 					effects,
 				});
+			} else if (cursorOffset !== undefined) {
+				// If there's no text, we've encountered
+				// a bare Cursor
+				effects = {
+					cursorPosition: {x, y},
+				};
+				// We still go ahead and write an empty
+				// string with the Effects in case clipping
+				// is at play
+				output.write(x, y, '', {
+					transformers: [],
+					effects,
+				});
 			}
 
 			return effects;

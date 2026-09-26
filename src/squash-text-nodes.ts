@@ -66,6 +66,15 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 		text += nodeText;
 	}
 
+	if (
+		node.childNodes.length === 0 &&
+		node.nodeName === 'ink-text' &&
+		node.internal_cursorOffset !== undefined
+	) {
+		// The only valid cursorOffset in this situation is zero; so if it's set it must be zero
+		cursor = 0;
+	}
+
 	// Normalize cursor *before* expanding tabs or sanitizing, since
 	// the offset we've built is into the un-sanitized string
 	if (node.nodeName === 'ink-text' && cursor !== undefined) {

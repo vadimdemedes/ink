@@ -1203,15 +1203,7 @@ test('<Cursor /> handles style-adding transforms', async t => {
 });
 
 test('<Cursor /> is hidden when clipped via overflow', async t => {
-	const stdout = createStdout(3);
-	const stdin = createStdin();
-
-	let lastCursor: CursorPosition | undefined;
-	const onCursorUpdated = (cursor: CursorPosition | undefined) => {
-		lastCursor = cursor;
-	};
-
-	const {unmount, waitUntilRenderFlush} = render(
+	await withInteractiveRender(
 		<Box width={3} overflowX="hidden">
 			<Box width={16} flexShrink={0}>
 				<Text>
@@ -1221,17 +1213,33 @@ test('<Cursor /> is hidden when clipped via overflow', async t => {
 				</Text>
 			</Box>
 		</Box>,
-		{stdout, stdin, onCursorUpdated},
+		{stdoutColumns: 3},
+		({getLastCursor, getWriteCallsString}) => {
+			t.is(getLastCursor(), undefined);
+
+			const firstRenderOutput = getWriteCallsString();
+			t.false(
+				firstRenderOutput.includes(showCursorEscape),
+				'cursor should NOT be visible after first render',
+			);
+		},
 	);
-	await waitUntilRenderFlush();
+});
 
-	t.is(lastCursor, undefined);
+test('<Cursor /> is shown when rendered by itself', async t => {
+	await withInteractiveRender(
+		<Box width={3} overflowX="hidden">
+			<Cursor />
+		</Box>,
+		{stdoutColumns: 3},
+		({getLastCursor, getWriteCallsString}) => {
+			t.deepEqual(getLastCursor(), {x: 0, y: 0});
 
-	const firstRenderOutput = getWriteCalls(stdout).join('');
-	t.false(
-		firstRenderOutput.includes(showCursorEscape),
-		'cursor should NOT be visible after first render',
+			const firstRenderOutput = getWriteCallsString();
+			t.true(
+				firstRenderOutput.includes(showCursorEscape),
+				'cursor should be visible after first render',
+			);
+		},
 	);
-
-	unmount();
 });

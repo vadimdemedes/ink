@@ -159,7 +159,7 @@ export default class Output {
 	): void {
 		const {effects, transformers} = options;
 
-		if (!text) {
+		if (!text && !effects) {
 			return;
 		}
 
