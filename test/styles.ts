@@ -61,9 +61,7 @@ for (const [property, edge] of [
 for (const [property, getter] of [
 	['width', 'getWidth'],
 	['height', 'getHeight'],
-	['minWidth', 'getMinWidth'],
 	['minHeight', 'getMinHeight'],
-	['maxWidth', 'getMaxWidth'],
 	['maxHeight', 'getMaxHeight'],
 	['flexBasis', 'getFlexBasis'],
 ] as const) {

@@ -74,6 +74,7 @@ test('set min width', t => {
 test.failing('set min width in percent', t => {
 	const output = renderToString(
 		<Box width={10}>
+			{/* @ts-expect-error Unsupported until Yoga fixes percentage width constraints. */}
 			<Box minWidth="50%">
 				<Text>A</Text>
 			</Box>
@@ -415,6 +416,7 @@ test('clears aspectRatio on rerender', t => {
 test.failing('set max width in percent', t => {
 	const output = renderToString(
 		<Box width={10}>
+			{/* @ts-expect-error Unsupported until Yoga fixes percentage width constraints. */}
 			<Box maxWidth="50%">
 				<Text>AAAAAAAAAA</Text>
 			</Box>
