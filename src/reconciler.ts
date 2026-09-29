@@ -1,5 +1,8 @@
 import process from 'node:process';
-import createReconciler, {type ReactContext} from 'react-reconciler';
+import createReconciler, {
+	type HostConfig as ReconcilerHostConfig,
+	type ReactContext,
+} from 'react-reconciler';
 import {
 	DefaultEventPriority,
 	NoEventPriority,
@@ -200,12 +203,13 @@ if (process.env['DEV'] === 'true') {
 	}
 }
 
-export default createReconciler<
+type HostConfig = ReconcilerHostConfig<
 	ElementNames,
 	Props,
 	DOMElement,
 	DOMElement,
 	TextNode,
+	unknown,
 	DOMElement,
 	unknown,
 	unknown,
@@ -214,8 +218,19 @@ export default createReconciler<
 	unknown,
 	unknown,
 	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
 	unknown
->({
+> & {
+	// React 19.3 adds fragment refs before the DefinitelyTyped host config exposes them.
+	// eslint-disable-next-line @typescript-eslint/no-restricted-types -- React uses null for unsupported fragment refs.
+	createFragmentInstance: () => null;
+};
+
+const hostConfig: HostConfig = {
 	getRootHostContext: () => ({
 		isInsideText: false,
 	}),
@@ -359,7 +374,6 @@ export default createReconciler<
 	detachDeletedInstance() {},
 	getInstanceFromNode: () => null,
 	// Fragment refs (React 19.3) have no meaning in a terminal. Returning null makes a `<Fragment ref>` resolve to null instead of crashing inside React, and keeps React from calling the other fragment-instance hooks.
-	// @ts-expect-error @types/react-reconciler is outdated and doesn't include createFragmentInstance
 	createFragmentInstance: () => null,
 	prepareScopeUpdate() {},
 	getInstanceFromScope: () => null,
@@ -448,6 +462,9 @@ export default createReconciler<
 		// Return true to enable Suspense resource preloading
 		return true;
 	},
+	// Terminal host instances have no asynchronous resources to wait for on updates.
+	maySuspendCommitOnUpdate: () => false,
+	maySuspendCommitInSyncRender: () => false,
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	NotPendingTransition: undefined,
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -476,6 +493,19 @@ export default createReconciler<
 	waitForCommitToBeReady() {
 		return null;
 	},
+	getSuspendedCommitReason: () => null,
+	extraDevToolsConfig: null,
+	bindToConsole(methodName, args) {
+		// Replay React's captured console calls without browser-specific badge styling.
+		const method: unknown = Reflect.get(console, methodName);
+		return () => {
+			if (typeof method === 'function') {
+				Reflect.apply(method, console, args);
+			}
+		};
+	},
 	rendererPackageName: packageInfo.name,
 	rendererVersion: packageInfo.version,
-});
+};
+
+export default createReconciler(hostConfig);
