@@ -1,9 +1,11 @@
 import process from 'node:process';
 import test from 'ava';
+import ansiEscapes from 'ansi-escapes';
 import delay from 'delay';
 import stripAnsi from 'strip-ansi';
 import React, {useLayoutEffect} from 'react';
 import {render, Box, Text, useWindowSize, useCursor} from '../src/index.js';
+import {homeAndEraseDown} from '../src/ink.js';
 import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 import createStdout, {type FakeStdout} from './helpers/create-stdout.js';
 
@@ -375,8 +377,22 @@ function Frame({
 	);
 }
 
+const lines = Array.from({length: 6}, (_, index) => `line ${index}`);
+const frame = lines.join('\n');
+
+function SixLines() {
+	return (
+		<Box flexDirection="column">
+			{lines.map(line => (
+				<Text key={line}>{line}</Text>
+			))}
+		</Box>
+	);
+}
+
 for (const incrementalRendering of [false, true]) {
 	const mode = incrementalRendering ? ' (incremental)' : '';
+	const name = incrementalRendering ? 'incremental' : 'standard';
 
 	for (const {cursorY, rows} of [
 		{cursorY: 0, rows: 8},
@@ -419,6 +435,33 @@ for (const incrementalRendering of [false, true]) {
 	}
 
 	test.serial(
+		`width and height shrinking together keeps lines above the frame${mode}`,
+		async t => {
+			const stdout = createStdout(100);
+			stdout.rows = 10;
+
+			const {unmount, waitUntilRenderFlush} = render(<Frame cursorY={0} />, {
+				stdout,
+				incrementalRendering,
+			});
+			t.teardown(unmount);
+			await waitUntilRenderFlush();
+
+			const writesBeforeResize = stdout.getWrites().length;
+			// A width decrease forces a redraw on its own; pairing it with a height decrease on the same resize event must still use the committed cursor position rather than the frame height to find what to erase.
+			stdout.columns = 50;
+			stdout.rows = 6;
+			stdout.emit('resize');
+			await waitUntilRenderFlush();
+
+			t.deepEqual(screenAfterShrink(stdout, writesBeforeResize, 6), [
+				...shell,
+				...letters,
+			]);
+		},
+	);
+
+	test.serial(
 		`rows shrink right after a commit clears the cursor keeps lines above the frame${mode}`,
 		async t => {
 			const stdout = createStdout(100);
@@ -442,6 +485,153 @@ for (const incrementalRendering of [false, true]) {
 				...shell,
 				...letters,
 			]);
+		},
+	);
+
+	test.serial(
+		`${name} rendering - erases and rewrites the frame when the terminal height shrinks onto it`,
+		async t => {
+			const stdout = createStdout(40);
+			stdout.rows = 10;
+
+			const {unmount, waitUntilRenderFlush} = render(<SixLines />, {
+				stdout,
+				incrementalRendering,
+			});
+			t.teardown(unmount);
+			await waitUntilRenderFlush();
+
+			t.is(getWriteContents(stdout).at(-1), frame + '\n');
+			const writesBefore = getWriteContents(stdout).length;
+
+			// The frame now exactly fills the viewport, so it loses its trailing newline while every visible line stays the same. The terminal scrolled the top row away when it shrank, so moving the cursor over unchanged lines is not enough.
+			stdout.rows = 6;
+			stdout.emit('resize');
+			await waitUntilRenderFlush();
+
+			t.is(
+				getWriteContents(stdout).slice(writesBefore).join(''),
+				homeAndEraseDown + frame,
+			);
+		},
+	);
+
+	function CursorSixLines({cursorRow}: {readonly cursorRow: number}) {
+		const {setCursorPosition} = useCursor();
+		setCursorPosition({x: 0, y: cursorRow});
+		return <SixLines />;
+	}
+
+	for (const {description, initialCursorRow, shrink} of [
+		{
+			description: 'a custom cursor sits on it',
+			initialCursorRow: 0,
+			shrink(stdout: FakeStdout) {
+				stdout.emit('resize');
+			},
+		},
+		{
+			description: 'the same render moves a custom cursor',
+			initialCursorRow: 4,
+			shrink(_stdout: FakeStdout, rerender: (tree: React.ReactNode) => void) {
+				rerender(<CursorSixLines cursorRow={2} />);
+			},
+		},
+	]) {
+		test.serial(
+			`${name} rendering - keeps content above the frame when the terminal height shrinks onto it and ${description}`,
+			async t => {
+				const stdout = createStdout(40);
+				stdout.rows = 10;
+
+				const {unmount, rerender, waitUntilRenderFlush} = render(
+					<CursorSixLines cursorRow={initialCursorRow} />,
+					{stdout, incrementalRendering},
+				);
+				t.teardown(unmount);
+				await waitUntilRenderFlush();
+
+				const writesBefore = stdout.getWrites().length;
+				stdout.rows = 6;
+				shrink(stdout, rerender);
+				await waitUntilRenderFlush();
+
+				// The byte stream alone cannot show what a shrink erases, so replay it on a modelled terminal with shell output above the frame.
+				const writes = stdout
+					.getWrites()
+					.map(write => write.replaceAll('\n', '\r\n'));
+				const lines = reconstructTerminalLines(
+					[
+						'shell 0\r\nshell 1\r\nshell 2\r\n',
+						...writes.slice(0, writesBefore),
+						{rows: 6},
+						...writes.slice(writesBefore),
+					],
+					10,
+				);
+
+				t.deepEqual(lines.filter(Boolean), [
+					'shell 0',
+					'shell 1',
+					'shell 2',
+					...frame.split('\n'),
+				]);
+			},
+		);
+	}
+
+	test.serial(
+		`${name} rendering - writes nothing when the terminal height shrinks and the frame still fits`,
+		async t => {
+			const stdout = createStdout(40);
+			stdout.rows = 10;
+
+			const {unmount, waitUntilRenderFlush} = render(<SixLines />, {
+				stdout,
+				incrementalRendering,
+			});
+			t.teardown(unmount);
+			await waitUntilRenderFlush();
+
+			t.is(getWriteContents(stdout).at(-1), frame + '\n');
+			const writesBefore = getWriteContents(stdout).length;
+
+			// The terminal only scrolls when the cursor would fall off the bottom, so a frame that still fits stays where it is and the unchanged output is skipped.
+			stdout.rows = 8;
+			stdout.emit('resize');
+			await waitUntilRenderFlush();
+
+			t.deepEqual(getWriteContents(stdout).slice(writesBefore), []);
+		},
+	);
+
+	test.serial(
+		`${name} rendering - leaves fullscreen without clearing when the terminal height grows`,
+		async t => {
+			const stdout = createStdout(40);
+			stdout.rows = 6;
+
+			const {unmount, waitUntilRenderFlush} = render(<SixLines />, {
+				stdout,
+				incrementalRendering,
+			});
+			t.teardown(unmount);
+			await waitUntilRenderFlush();
+
+			t.is(getWriteContents(stdout).at(-1), frame);
+			const writesBefore = getWriteContents(stdout).length;
+
+			stdout.rows = 10;
+			stdout.emit('resize');
+			await waitUntilRenderFlush();
+
+			t.is(
+				getWriteContents(stdout).slice(writesBefore).join(''),
+				incrementalRendering
+					? ansiEscapes.cursorUp(lines.length - 1) +
+							ansiEscapes.cursorNextLine.repeat(lines.length)
+					: ansiEscapes.eraseLines(lines.length) + frame + '\n',
+			);
 		},
 	);
 }
