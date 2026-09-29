@@ -1,5 +1,7 @@
 import ansiEscapes from 'ansi-escapes';
 import cliCursor from 'cli-cursor';
+import lineUpdate from './line-update.js';
+import type {OutputStream} from './stream.js';
 import {
 	type CursorPosition,
 	cursorPositionChanged,
@@ -174,11 +176,12 @@ const createStandard = (
 };
 
 const createIncremental = (
-	stream: NodeJS.WritableStream,
+	stream: OutputStream,
 	{showCursor = false} = {},
 ): LogUpdate => {
 	let previousLines: string[] = [];
 	let previousOutput = '';
+	let previousColumns = stream.columns;
 	let hasHiddenCursor = false;
 	let cursorPosition: CursorPosition | undefined;
 	let cursorDirty = false;
@@ -216,6 +219,8 @@ const createIncremental = (
 			return false;
 		}
 
+		const columnsUnchanged = previousColumns === stream.columns;
+		previousColumns = stream.columns;
 		const nextLines = str.split('\n');
 		const visibleCount = visibleLineCount(nextLines, str);
 		const previousVisible = visibleLineCount(previousLines, previousOutput);
@@ -292,9 +297,14 @@ const createIncremental = (
 				continue;
 			}
 
+			const nextLine = nextLines[i]!;
+			const changedLine =
+				columnsUnchanged && nextLines.length === previousLines.length
+					? lineUpdate(previousLines[i]!, nextLine, stream.columns)
+					: ansiEscapes.cursorTo(0) + nextLine;
+
 			buffer.push(
-				ansiEscapes.cursorTo(0) +
-					nextLines[i] +
+				changedLine +
 					ansiEscapes.eraseEndLine +
 					// Don't append newline after the last line when the input
 					// has no trailing newline (fullscreen mode).
@@ -352,6 +362,7 @@ const createIncremental = (
 		const activeCursor = cursorDirty ? cursorPosition : undefined;
 		cursorDirty = false;
 
+		previousColumns = stream.columns;
 		const lines = str.split('\n');
 		previousOutput = str;
 		previousLines = lines;
@@ -381,7 +392,7 @@ const createIncremental = (
 };
 
 const create = (
-	stream: NodeJS.WritableStream,
+	stream: OutputStream,
 	{showCursor = false, incremental = false} = {},
 ): LogUpdate => {
 	if (incremental) {
