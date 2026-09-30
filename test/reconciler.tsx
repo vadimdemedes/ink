@@ -1,9 +1,37 @@
-import React, {Suspense} from 'react';
+import React, {Suspense, act, startTransition} from 'react';
 import test from 'ava';
 import chalk from 'chalk';
 import {Box, Text, render} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 import {renderAsync} from './helpers/test-renderer.js';
+
+test('fragment refs remain unsupported while their children render and update', async t => {
+	const ref = React.createRef<React.FragmentInstance>();
+	const frame = (text: string) => (
+		// eslint-disable-next-line react/jsx-no-useless-fragment -- The fragment ref is the subject of this test.
+		<React.Fragment ref={ref}>
+			<Text>{text}</Text>
+		</React.Fragment>
+	);
+	const {getOutput, rerenderAsync, unmount} = await renderAsync(frame('first'));
+	t.teardown(unmount);
+	t.is(getOutput(), 'first');
+	t.is(ref.current, null);
+	await rerenderAsync(frame('second'));
+	t.is(getOutput(), 'second');
+	t.is(ref.current, null);
+});
+
+test('terminal host updates complete inside a transition', async t => {
+	const instance = await renderAsync(<Text>first</Text>);
+	t.teardown(instance.unmount);
+	await act(async () => {
+		startTransition(() => {
+			instance.rerender(<Text>second</Text>);
+		});
+	});
+	t.is(instance.getOutput(), 'second');
+});
 
 test('Suspense hides nested text while showing its fallback', async t => {
 	let resolvePromise!: () => void;

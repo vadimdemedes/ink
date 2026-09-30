@@ -365,6 +365,7 @@ export default class Ink {
 			() => {},
 			() => {},
 			() => {},
+			null,
 		);
 
 		// Unmount when process exits
@@ -373,7 +374,6 @@ export default class Ink {
 		this.setAlternateScreen(Boolean(options.alternateScreen));
 
 		if (process.env['DEV'] === 'true') {
-			// @ts-expect-error outdated types
 			reconciler.injectIntoDevTools();
 		}
 
