@@ -14,6 +14,7 @@ import {
 import {homeAndEraseDown} from '../src/ink.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout from './helpers/create-stdout.js';
+import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 
 const showCursorEscape = '\u001B[?25h';
 const hideCursorEscape = '\u001B[?25l';
@@ -783,7 +784,16 @@ for (const {name, incremental} of inkRenderingModes) {
 			const changedRerender = getWriteCalls(stdout)
 				.slice(writesBeforeRerender)
 				.join('');
-			t.true(changedRerender.includes('Line 1!'), 'content actually changed');
+			// Incremental updates may write only the changed suffix. Assert the
+			// resulting screen instead of requiring the whole line in one write.
+			t.deepEqual(
+				reconstructTerminalLines(
+					getWriteCalls(stdout).join('').replaceAll('\n', '\r\n'),
+					5,
+				),
+				fullscreenLines(5, '!'),
+				'content actually changed',
+			);
 			t.true(changedRerender.includes(expected), 'changed rerender');
 			t.false(
 				changedRerender.includes(overshoot),
