@@ -1,12 +1,13 @@
-import React, {act, StrictMode} from 'react';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
+import React, {StrictMode} from 'react';
 import {Box, Text, render, useFocus, useFocusManager} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
+import {act} from './helpers/act.js';
 
-for (const concurrent of [false, true]) {
-	for (const strict of [false, true]) {
-		test(`focus updates preserve call order (concurrent: ${concurrent}, StrictMode: ${strict})`, async t => {
+for (const isConcurrent of [false, true]) {
+	for (const isStrict of [false, true]) {
+		test(`focus updates preserve call order (concurrent: ${isConcurrent}, StrictMode: ${isStrict})`, async (t: TestContext) => {
 			const stdin = createStdin();
 			const stdout = createStdout();
 			let manager!: ReturnType<typeof useFocusManager>;
@@ -30,7 +31,7 @@ for (const concurrent of [false, true]) {
 			let instance!: ReturnType<typeof render>;
 			await act(async () => {
 				instance = render(
-					strict ? (
+					isStrict ? (
 						<StrictMode>
 							<Form />
 						</StrictMode>
@@ -41,12 +42,12 @@ for (const concurrent of [false, true]) {
 						stdout,
 						stdin,
 						debug: true,
-						concurrent,
+						concurrent: isConcurrent,
 						patchConsole: false,
 					},
 				);
 			});
-			t.teardown(async () => {
+			t.after(async () => {
 				await act(async () => {
 					instance.unmount();
 				});
@@ -56,7 +57,7 @@ for (const concurrent of [false, true]) {
 				manager.focusNext();
 				manager.focusNext();
 			});
-			t.is(
+			t.assert.strictEqual(
 				manager.activeId,
 				'b',
 				'Two batched focusNext calls must advance twice',
@@ -66,13 +67,17 @@ for (const concurrent of [false, true]) {
 				manager.focusNext();
 				manager.focus('a');
 			});
-			t.is(manager.activeId, 'a', 'An explicit focus after navigation wins');
+			t.assert.strictEqual(
+				manager.activeId,
+				'a',
+				'An explicit focus after navigation wins',
+			);
 
 			await act(async () => {
 				manager.focus('c');
 				manager.focusPrevious();
 			});
-			t.is(
+			t.assert.strictEqual(
 				manager.activeId,
 				'b',
 				'Navigation starts from the latest explicit focus',
@@ -83,7 +88,7 @@ for (const concurrent of [false, true]) {
 				await act(async () => {
 					emitReadable(stdin, '\t');
 				});
-				t.is(manager.activeId, expected);
+				t.assert.strictEqual(manager.activeId, expected);
 			}
 
 			for (const method of ['focusNext', 'focusPrevious', 'focus'] as const) {
@@ -100,17 +105,21 @@ for (const concurrent of [false, true]) {
 
 					manager.disableFocus();
 				});
-				t.is(
+				t.assert.strictEqual(
 					manager.activeId,
 					undefined,
 					`disableFocus must take effect after ${method}`,
 				);
-				t.is(stdout.get(), 'abc');
+				t.assert.strictEqual(stdout.get(), 'abc');
 
 				await act(async () => {
 					emitReadable(stdin, '\t');
 				});
-				t.is(manager.activeId, undefined, 'Tab must remain disabled');
+				t.assert.strictEqual(
+					manager.activeId,
+					undefined,
+					'Tab must remain disabled',
+				);
 			}
 
 			/* eslint-enable no-await-in-loop, @typescript-eslint/no-loop-func */
@@ -119,12 +128,12 @@ for (const concurrent of [false, true]) {
 				manager.enableFocus();
 				emitReadable(stdin, '\t');
 			});
-			t.is(
+			t.assert.strictEqual(
 				manager.activeId,
 				'a',
 				'Re-enabling focus restores keyboard navigation',
 			);
-			t.is(stdout.get(), '[a]bc');
+			t.assert.strictEqual(stdout.get(), '[a]bc');
 		});
 	}
 }

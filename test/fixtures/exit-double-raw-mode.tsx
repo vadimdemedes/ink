@@ -8,13 +8,17 @@ function Test() {
 	useEffect(() => {
 		setRawMode(true);
 
-		setTimeout(() => {
+		const timer = setTimeout(() => {
 			setRawMode(false);
 			setRawMode(true);
 
 			// Start the test
 			process.stdout.write('s');
 		}, 500);
+
+		return () => {
+			clearTimeout(timer);
+		};
 	}, [setRawMode]);
 
 	return <Text>Hello World</Text>;

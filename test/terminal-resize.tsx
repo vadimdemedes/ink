@@ -1,5 +1,5 @@
 import process from 'node:process';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
 import ansiEscapes from 'ansi-escapes';
 import delay from 'delay';
 import stripAnsi from 'strip-ansi';
@@ -15,76 +15,72 @@ const getWriteContents = (stdout: FakeStdout): string[] =>
 		.filter(
 			w =>
 				w.length > 0 &&
-				!w.startsWith('\u001B[?25') &&
-				!w.startsWith('\u001B[?2026'),
+				!w.startsWith('\u{1B}[?25') &&
+				!w.startsWith('\u{1B}[?2026'),
 		);
 
-test.serial(
-	'useWindowSize catches resizes before its subscription is installed',
-	async t => {
-		const stdout = createStdout(100);
-		stdout.rows = 40;
-		let initialSize: string | undefined;
+test('useWindowSize catches resizes before its subscription is installed', async (t: TestContext) => {
+	const stdout = createStdout(100);
+	stdout.rows = 40;
+	let initialSize: string | undefined;
 
-		function Test() {
-			const {columns, rows} = useWindowSize();
-			initialSize ??= `${columns}x${rows}`;
+	function Test() {
+		const {columns, rows} = useWindowSize();
+		initialSize ??= `${columns}x${rows}`;
 
-			useLayoutEffect(() => {
-				stdout.columns = 60;
-				stdout.rows = 20;
-				stdout.emit('resize');
-			}, []);
+		useLayoutEffect(() => {
+			stdout.columns = 60;
+			stdout.rows = 20;
+			stdout.emit('resize');
+		}, []);
 
-			return (
-				<Text>
-					{columns}x{rows}
-				</Text>
-			);
-		}
+		return (
+			<Text>
+				{columns}x{rows}
+			</Text>
+		);
+	}
 
-		const {unmount, waitUntilRenderFlush} = render(<Test />, {
-			stdout,
-			debug: true,
-		});
-		t.teardown(unmount);
-		await waitUntilRenderFlush();
+	const {unmount, waitUntilRenderFlush} = render(<Test />, {
+		stdout,
+		debug: true,
+	});
+	t.after(() => {
+		unmount();
+	});
+	await waitUntilRenderFlush();
 
-		t.is(initialSize, '100x40');
-		t.is(stdout.get(), '60x20');
-	},
-);
+	t.assert.strictEqual(initialSize, '100x40');
+	t.assert.strictEqual(stdout.get(), '60x20');
+});
 
-test.serial(
-	'useWindowSize returns current terminal dimensions and updates on resize',
-	async t => {
-		const stdout = createStdout(100);
-		(stdout as any).rows = 40;
+test('useWindowSize returns current terminal dimensions and updates on resize', async (t: TestContext) => {
+	const stdout = createStdout(100);
+	(stdout as any).rows = 40;
 
-		function Test() {
-			const {columns, rows} = useWindowSize();
-			return (
-				<Text>
-					{columns}x{rows}
-				</Text>
-			);
-		}
+	function Test() {
+		const {columns, rows} = useWindowSize();
+		return (
+			<Text>
+				{columns}x{rows}
+			</Text>
+		);
+	}
 
-		const {waitUntilRenderFlush} = render(<Test />, {stdout});
-		await waitUntilRenderFlush();
+	const {waitUntilRenderFlush} = render(<Test />, {stdout});
+	await waitUntilRenderFlush();
 
-		t.true(stripAnsi(getWriteContents(stdout).at(-1)!).includes('100x40'));
+	t.assert.ok(stripAnsi(getWriteContents(stdout).at(-1)!).includes('100x40'));
 
-		(stdout as any).columns = 60;
-		(stdout as any).rows = 20;
-		stdout.emit('resize');
-		await delay(100);
+	(stdout as any).columns = 60;
+	(stdout as any).rows = 20;
+	stdout.emit('resize');
+	await delay(100);
 
-		t.true(stripAnsi(getWriteContents(stdout).at(-1)!).includes('60x20'));
-	},
-);
+	t.assert.ok(stripAnsi(getWriteContents(stdout).at(-1)!).includes('60x20'));
+});
 
-test.serial('useWindowSize removes resize listener on unmount', async t => {
+test('useWindowSize removes resize listener on unmount', async (t: TestContext) => {
 	const stdout = createStdout(100);
 	(stdout as any).rows = 24;
 
@@ -101,100 +97,92 @@ test.serial('useWindowSize removes resize listener on unmount', async t => {
 	const {unmount, waitUntilRenderFlush} = render(<Test />, {stdout});
 	await waitUntilRenderFlush();
 
-	t.true(stdout.listenerCount('resize') > initialListenerCount);
+	t.assert.ok(stdout.listenerCount('resize') > initialListenerCount);
 	unmount();
 
-	t.is(stdout.listenerCount('resize'), initialListenerCount);
+	t.assert.strictEqual(stdout.listenerCount('resize'), initialListenerCount);
 });
 
-test.serial(
-	'useWindowSize does not crash when resize fires after unmount',
-	async t => {
-		const stdout = createStdout(100);
-		(stdout as any).rows = 24;
+// eslint-disable-next-line node-test/require-assertion -- Passes when the resize does not throw.
+test('useWindowSize does not crash when resize fires after unmount', async () => {
+	const stdout = createStdout(100);
+	(stdout as any).rows = 24;
 
-		function Test() {
-			const {columns, rows} = useWindowSize();
-			return (
-				<Text>
-					{columns}x{rows}
-				</Text>
-			);
-		}
+	function Test() {
+		const {columns, rows} = useWindowSize();
+		return (
+			<Text>
+				{columns}x{rows}
+			</Text>
+		);
+	}
 
-		const {unmount, waitUntilRenderFlush} = render(<Test />, {stdout});
-		await waitUntilRenderFlush();
-		unmount();
+	const {unmount, waitUntilRenderFlush} = render(<Test />, {stdout});
+	await waitUntilRenderFlush();
+	unmount();
 
-		stdout.emit('resize');
-		await delay(50);
+	stdout.emit('resize');
+	await delay(50);
+});
 
-		t.pass();
-	},
-);
+test('useWindowSize falls back to a positive column count when stdout.columns is 0', async (t: TestContext) => {
+	const stdout = createStdout(0);
+	let capturedColumns = -1;
 
-test.serial(
-	'useWindowSize falls back to a positive column count when stdout.columns is 0',
-	async t => {
-		const stdout = createStdout(0);
-		let capturedColumns = -1;
+	function Test() {
+		const {columns} = useWindowSize();
+		capturedColumns = columns;
+		return <Text>{columns}</Text>;
+	}
 
-		function Test() {
-			const {columns} = useWindowSize();
-			capturedColumns = columns;
-			return <Text>{columns}</Text>;
-		}
+	const {waitUntilRenderFlush} = render(<Test />, {stdout});
+	await waitUntilRenderFlush();
 
-		const {waitUntilRenderFlush} = render(<Test />, {stdout});
-		await waitUntilRenderFlush();
+	t.assert.ok(capturedColumns > 0);
+});
 
-		t.true(capturedColumns > 0);
-	},
-);
+test('useWindowSize falls back to terminal-size rows when stdout.rows is missing', async (t: TestContext) => {
+	const stdout = createStdout(0);
+	let capturedRows = -1;
+	const originalColumns = process.env.COLUMNS;
+	const originalLines = process.env.LINES;
+	const originalProcessStdoutColumns = process.stdout.columns;
+	const originalProcessStdoutRows = process.stdout.rows;
+	const originalProcessStderrColumns = process.stderr.columns;
+	const originalProcessStderrRows = process.stderr.rows;
 
-test.serial(
-	'useWindowSize falls back to terminal-size rows when stdout.rows is missing',
-	async t => {
-		const stdout = createStdout(0);
-		let capturedRows = -1;
-		const originalColumns = process.env.COLUMNS;
-		const originalLines = process.env.LINES;
-		const originalProcessStdoutColumns = process.stdout.columns;
-		const originalProcessStdoutRows = process.stdout.rows;
-		const originalProcessStderrColumns = process.stderr.columns;
-		const originalProcessStderrRows = process.stderr.rows;
+	t.after(() => {
+		process.env.COLUMNS = originalColumns;
+		process.env.LINES = originalLines;
+		process.stdout.columns = originalProcessStdoutColumns;
+		process.stdout.rows = originalProcessStdoutRows;
+		process.stderr.columns = originalProcessStderrColumns;
+		process.stderr.rows = originalProcessStderrRows;
+	});
 
-		t.teardown(() => {
-			process.env.COLUMNS = originalColumns;
-			process.env.LINES = originalLines;
-			process.stdout.columns = originalProcessStdoutColumns;
-			process.stdout.rows = originalProcessStdoutRows;
-			process.stderr.columns = originalProcessStderrColumns;
-			process.stderr.rows = originalProcessStderrRows;
-		});
+	// eslint-disable-next-line node-test/no-process-env-mutation -- Restored in `t.after()`.
+	process.env.COLUMNS = '123';
+	// eslint-disable-next-line node-test/no-process-env-mutation -- Restored in `t.after()`.
+	process.env.LINES = '45';
+	process.stdout.columns = 0;
+	process.stdout.rows = 0;
+	process.stderr.columns = 0;
+	process.stderr.rows = 0;
+	delete (stdout as any).rows;
 
-		process.env.COLUMNS = '123';
-		process.env.LINES = '45';
-		process.stdout.columns = 0;
-		process.stdout.rows = 0;
-		process.stderr.columns = 0;
-		process.stderr.rows = 0;
-		delete (stdout as any).rows;
+	function Test() {
+		const {rows} = useWindowSize();
+		capturedRows = rows;
+		return <Text>{rows}</Text>;
+	}
 
-		function Test() {
-			const {rows} = useWindowSize();
-			capturedRows = rows;
-			return <Text>{rows}</Text>;
-		}
+	const {waitUntilRenderFlush} = render(<Test />, {stdout});
+	await waitUntilRenderFlush();
 
-		const {waitUntilRenderFlush} = render(<Test />, {stdout});
-		await waitUntilRenderFlush();
+	t.assert.strictEqual(capturedRows, 45);
+});
 
-		t.is(capturedRows, 45);
-	},
-);
-
-test.serial('clear screen when terminal width decreases', async t => {
+test('clear screen when terminal width decreases', async (t: TestContext) => {
 	const stdout = createStdout(100);
 
 	function Test() {
@@ -208,8 +196,8 @@ test.serial('clear screen when terminal width decreases', async t => {
 	render(<Test />, {stdout});
 
 	const initialOutput = stripAnsi(getWriteContents(stdout)[0]!);
-	t.true(initialOutput.includes('Hello World'));
-	t.true(initialOutput.includes('╭')); // Box border
+	t.assert.ok(initialOutput.includes('Hello World'));
+	t.assert.ok(initialOutput.includes('╭')); // Box border
 
 	// Decrease width - should trigger clear and rerender
 	stdout.columns = 50;
@@ -218,12 +206,12 @@ test.serial('clear screen when terminal width decreases', async t => {
 
 	// Verify the output was updated for smaller width
 	const lastOutput = stripAnsi(getWriteContents(stdout).at(-1)!);
-	t.true(lastOutput.includes('Hello World'));
-	t.true(lastOutput.includes('╭')); // Box border
-	t.not(initialOutput, lastOutput); // Output should change due to width
+	t.assert.ok(lastOutput.includes('Hello World'));
+	t.assert.ok(lastOutput.includes('╭')); // Box border
+	t.assert.notStrictEqual(initialOutput, lastOutput); // Output should change due to width
 });
 
-test.serial('no screen clear when terminal width increases', async t => {
+test('no screen clear when terminal width increases', async (t: TestContext) => {
 	const stdout = createStdout(50);
 
 	function Test() {
@@ -248,48 +236,45 @@ test.serial('no screen clear when terminal width increases', async t => {
 	// When increasing width, we don't clear, so we should see eraseLines used for incremental update
 	// But when decreasing, the clear() is called which also uses eraseLines
 	// The key difference: decreasing width triggers an explicit clear before render
-	t.not(stripAnsi(initialOutput), stripAnsi(lastOutput));
-	t.true(stripAnsi(lastOutput).includes('Test'));
+	t.assert.notStrictEqual(stripAnsi(initialOutput), stripAnsi(lastOutput));
+	t.assert.ok(stripAnsi(lastOutput).includes('Test'));
 });
 
-test.serial(
-	'consecutive width decreases trigger screen clear each time',
-	async t => {
-		const stdout = createStdout(100);
+test('consecutive width decreases trigger screen clear each time', async (t: TestContext) => {
+	const stdout = createStdout(100);
 
-		function Test() {
-			return (
-				<Box borderStyle="round">
-					<Text>Content</Text>
-				</Box>
-			);
-		}
+	function Test() {
+		return (
+			<Box borderStyle="round">
+				<Text>Content</Text>
+			</Box>
+		);
+	}
 
-		render(<Test />, {stdout});
+	render(<Test />, {stdout});
 
-		const initialOutput = stripAnsi(getWriteContents(stdout)[0]!);
+	const initialOutput = stripAnsi(getWriteContents(stdout)[0]!);
 
-		// First decrease
-		stdout.columns = 80;
-		stdout.emit('resize');
-		await delay(100);
+	// First decrease
+	stdout.columns = 80;
+	stdout.emit('resize');
+	await delay(100);
 
-		const afterFirstDecrease = stripAnsi(getWriteContents(stdout).at(-1)!);
-		t.not(initialOutput, afterFirstDecrease);
-		t.true(afterFirstDecrease.includes('Content'));
+	const afterFirstDecrease = stripAnsi(getWriteContents(stdout).at(-1)!);
+	t.assert.notStrictEqual(initialOutput, afterFirstDecrease);
+	t.assert.ok(afterFirstDecrease.includes('Content'));
 
-		// Second decrease
-		stdout.columns = 60;
-		stdout.emit('resize');
-		await delay(100);
+	// Second decrease
+	stdout.columns = 60;
+	stdout.emit('resize');
+	await delay(100);
 
-		const afterSecondDecrease = stripAnsi(getWriteContents(stdout).at(-1)!);
-		t.not(afterFirstDecrease, afterSecondDecrease);
-		t.true(afterSecondDecrease.includes('Content'));
-	},
-);
+	const afterSecondDecrease = stripAnsi(getWriteContents(stdout).at(-1)!);
+	t.assert.notStrictEqual(afterFirstDecrease, afterSecondDecrease);
+	t.assert.ok(afterSecondDecrease.includes('Content'));
+});
 
-test.serial('width decrease clears lastOutput to force rerender', async t => {
+test('width decrease clears lastOutput to force rerender', async (t: TestContext) => {
 	const stdout = createStdout(100);
 
 	function Test() {
@@ -312,8 +297,8 @@ test.serial('width decrease clears lastOutput to force rerender', async t => {
 	const afterResizeOutput = stripAnsi(getWriteContents(stdout).at(-1)!);
 
 	// Outputs should be different because the border width changed
-	t.not(initialOutput, afterResizeOutput);
-	t.true(afterResizeOutput.includes('Test Content'));
+	t.assert.notStrictEqual(initialOutput, afterResizeOutput);
+	t.assert.ok(afterResizeOutput.includes('Test Content'));
 
 	// Now try to rerender with a different component
 	rerender(
@@ -324,7 +309,7 @@ test.serial('width decrease clears lastOutput to force rerender', async t => {
 	await delay(100);
 
 	// Verify content was updated
-	t.true(
+	t.assert.ok(
 		stripAnsi(getWriteContents(stdout).at(-1)!).includes('Updated Content'),
 	);
 });
@@ -390,131 +375,127 @@ function SixLines() {
 	);
 }
 
-for (const incrementalRendering of [false, true]) {
-	const mode = incrementalRendering ? ' (incremental)' : '';
-	const name = incrementalRendering ? 'incremental' : 'standard';
+for (const isIncrementalRendering of [false, true]) {
+	const mode = isIncrementalRendering ? ' (incremental)' : '';
+	const name = isIncrementalRendering ? 'incremental' : 'standard';
 
 	for (const {cursorY, rows} of [
 		{cursorY: 0, rows: 8},
 		// The cursor has fewer rows below it than the shrink removes, so the terminal also scrolls the top off.
 		{cursorY: 4, rows: 7},
 	]) {
-		test.serial(
-			`rows shrink with a cursor above the output bottom keeps lines above the frame - cursor row ${cursorY}, ${rows} rows${mode}`,
-			async t => {
-				const stdout = createStdout(100);
-				stdout.rows = 10;
-
-				const {rerender, unmount, waitUntilRenderFlush} = render(
-					<Frame cursorY={cursorY} />,
-					{stdout, incrementalRendering},
-				);
-				t.teardown(unmount);
-				await waitUntilRenderFlush();
-
-				const writesBeforeResize = stdout.getWrites().length;
-				stdout.rows = rows;
-				stdout.emit('resize');
-				await waitUntilRenderFlush();
-
-				// The shrink drops the frame rows below the cursor, so they have to be repainted right away.
-				t.deepEqual(screenAfterShrink(stdout, writesBeforeResize, rows), [
-					...shell,
-					...letters,
-				]);
-
-				rerender(<Frame suffix="!" cursorY={cursorY} />);
-				await waitUntilRenderFlush();
-
-				t.deepEqual(screenAfterShrink(stdout, writesBeforeResize, rows), [
-					...shell,
-					...letters.map(letter => letter + '!'),
-				]);
-			},
-		);
-	}
-
-	test.serial(
-		`width and height shrinking together keeps lines above the frame${mode}`,
-		async t => {
-			const stdout = createStdout(100);
-			stdout.rows = 10;
-
-			const {unmount, waitUntilRenderFlush} = render(<Frame cursorY={0} />, {
-				stdout,
-				incrementalRendering,
-			});
-			t.teardown(unmount);
-			await waitUntilRenderFlush();
-
-			const writesBeforeResize = stdout.getWrites().length;
-			// A width decrease forces a redraw on its own; pairing it with a height decrease on the same resize event must still use the committed cursor position rather than the frame height to find what to erase.
-			stdout.columns = 50;
-			stdout.rows = 6;
-			stdout.emit('resize');
-			await waitUntilRenderFlush();
-
-			t.deepEqual(screenAfterShrink(stdout, writesBeforeResize, 6), [
-				...shell,
-				...letters,
-			]);
-		},
-	);
-
-	test.serial(
-		`rows shrink right after a commit clears the cursor keeps lines above the frame${mode}`,
-		async t => {
+		test(`rows shrink with a cursor above the output bottom keeps lines above the frame - cursor row ${cursorY}, ${rows} rows${mode}`, async (t: TestContext) => {
 			const stdout = createStdout(100);
 			stdout.rows = 10;
 
 			const {rerender, unmount, waitUntilRenderFlush} = render(
-				<Frame cursorY={0} />,
-				{stdout, incrementalRendering},
+				<Frame cursorY={cursorY} />,
+				{stdout, incrementalRendering: isIncrementalRendering},
 			);
-			t.teardown(unmount);
-			await waitUntilRenderFlush();
-
-			// The commit clears the cursor, but its frame is still throttled, so the terminal still shows the cursor when the rows shrink.
-			rerender(<Frame cursorY={undefined} />);
-			const writesBeforeResize = stdout.getWrites().length;
-			stdout.rows = 8;
-			stdout.emit('resize');
-			await waitUntilRenderFlush();
-
-			t.deepEqual(screenAfterShrink(stdout, writesBeforeResize, 8), [
-				...shell,
-				...letters,
-			]);
-		},
-	);
-
-	test.serial(
-		`${name} rendering - erases and rewrites the frame when the terminal height shrinks onto it`,
-		async t => {
-			const stdout = createStdout(40);
-			stdout.rows = 10;
-
-			const {unmount, waitUntilRenderFlush} = render(<SixLines />, {
-				stdout,
-				incrementalRendering,
+			t.after(() => {
+				unmount();
 			});
-			t.teardown(unmount);
 			await waitUntilRenderFlush();
 
-			t.is(getWriteContents(stdout).at(-1), frame + '\n');
-			const writesBefore = getWriteContents(stdout).length;
-
-			// The frame now exactly fills the viewport, so it loses its trailing newline while every visible line stays the same. The terminal scrolled the top row away when it shrank, so moving the cursor over unchanged lines is not enough.
-			stdout.rows = 6;
+			const writesBeforeResize = stdout.getWrites().length;
+			stdout.rows = rows;
 			stdout.emit('resize');
 			await waitUntilRenderFlush();
 
-			t.is(
-				getWriteContents(stdout).slice(writesBefore).join(''),
-				homeAndEraseDown + frame,
+			// The shrink drops the frame rows below the cursor, so they have to be repainted right away.
+			t.assert.deepStrictEqual(
+				screenAfterShrink(stdout, writesBeforeResize, rows),
+				[...shell, ...letters],
 			);
-		},
-	);
+
+			rerender(<Frame suffix="!" cursorY={cursorY} />);
+			await waitUntilRenderFlush();
+
+			t.assert.deepStrictEqual(
+				screenAfterShrink(stdout, writesBeforeResize, rows),
+				[...shell, ...letters.map(letter => letter + '!')],
+			);
+		});
+	}
+
+	test(`width and height shrinking together keeps lines above the frame${mode}`, async (t: TestContext) => {
+		const stdout = createStdout(100);
+		stdout.rows = 10;
+
+		const {unmount, waitUntilRenderFlush} = render(<Frame cursorY={0} />, {
+			stdout,
+			incrementalRendering: isIncrementalRendering,
+		});
+		t.after(() => {
+			unmount();
+		});
+		await waitUntilRenderFlush();
+
+		const writesBeforeResize = stdout.getWrites().length;
+		// A width decrease forces a redraw on its own; pairing it with a height decrease on the same resize event must still use the committed cursor position rather than the frame height to find what to erase.
+		stdout.columns = 50;
+		stdout.rows = 6;
+		stdout.emit('resize');
+		await waitUntilRenderFlush();
+
+		t.assert.deepStrictEqual(screenAfterShrink(stdout, writesBeforeResize, 6), [
+			...shell,
+			...letters,
+		]);
+	});
+
+	test(`rows shrink right after a commit clears the cursor keeps lines above the frame${mode}`, async (t: TestContext) => {
+		const stdout = createStdout(100);
+		stdout.rows = 10;
+
+		const {rerender, unmount, waitUntilRenderFlush} = render(
+			<Frame cursorY={0} />,
+			{stdout, incrementalRendering: isIncrementalRendering},
+		);
+		t.after(() => {
+			unmount();
+		});
+		await waitUntilRenderFlush();
+
+		// The commit clears the cursor, but its frame is still throttled, so the terminal still shows the cursor when the rows shrink.
+		rerender(<Frame cursorY={undefined} />);
+		const writesBeforeResize = stdout.getWrites().length;
+		stdout.rows = 8;
+		stdout.emit('resize');
+		await waitUntilRenderFlush();
+
+		t.assert.deepStrictEqual(screenAfterShrink(stdout, writesBeforeResize, 8), [
+			...shell,
+			...letters,
+		]);
+	});
+
+	test(`${name} rendering - erases and rewrites the frame when the terminal height shrinks onto it`, async (t: TestContext) => {
+		const stdout = createStdout(40);
+		stdout.rows = 10;
+
+		const {unmount, waitUntilRenderFlush} = render(<SixLines />, {
+			stdout,
+			incrementalRendering: isIncrementalRendering,
+		});
+		t.after(() => {
+			unmount();
+		});
+		await waitUntilRenderFlush();
+
+		t.assert.strictEqual(getWriteContents(stdout).at(-1), frame + '\n');
+		const writesBefore = getWriteContents(stdout).length;
+
+		// The frame now exactly fills the viewport, so it loses its trailing newline while every visible line stays the same. The terminal scrolled the top row away when it shrank, so moving the cursor over unchanged lines is not enough.
+		stdout.rows = 6;
+		stdout.emit('resize');
+		await waitUntilRenderFlush();
+
+		t.assert.strictEqual(
+			getWriteContents(stdout).slice(writesBefore).join(''),
+			homeAndEraseDown + frame,
+		);
+	});
 
 	function CursorSixLines({cursorRow}: {readonly cursorRow: number}) {
 		const {setCursorPosition} = useCursor();
@@ -538,100 +519,97 @@ for (const incrementalRendering of [false, true]) {
 			},
 		},
 	]) {
-		test.serial(
-			`${name} rendering - keeps content above the frame when the terminal height shrinks onto it and ${description}`,
-			async t => {
-				const stdout = createStdout(40);
-				stdout.rows = 10;
+		test(`${name} rendering - keeps content above the frame when the terminal height shrinks onto it and ${description}`, async (t: TestContext) => {
+			const stdout = createStdout(40);
+			stdout.rows = 10;
 
-				const {unmount, rerender, waitUntilRenderFlush} = render(
-					<CursorSixLines cursorRow={initialCursorRow} />,
-					{stdout, incrementalRendering},
-				);
-				t.teardown(unmount);
-				await waitUntilRenderFlush();
+			const {unmount, rerender, waitUntilRenderFlush} = render(
+				<CursorSixLines cursorRow={initialCursorRow} />,
+				{stdout, incrementalRendering: isIncrementalRendering},
+			);
+			t.after(() => {
+				unmount();
+			});
+			await waitUntilRenderFlush();
 
-				const writesBefore = stdout.getWrites().length;
-				stdout.rows = 6;
-				shrink(stdout, rerender);
-				await waitUntilRenderFlush();
+			const writesBefore = stdout.getWrites().length;
+			stdout.rows = 6;
+			shrink(stdout, rerender);
+			await waitUntilRenderFlush();
 
-				// The byte stream alone cannot show what a shrink erases, so replay it on a modelled terminal with shell output above the frame.
-				const writes = stdout
-					.getWrites()
-					.map(write => write.replaceAll('\n', '\r\n'));
-				const lines = reconstructTerminalLines(
-					[
-						'shell 0\r\nshell 1\r\nshell 2\r\n',
-						...writes.slice(0, writesBefore),
-						{rows: 6},
-						...writes.slice(writesBefore),
-					],
-					10,
-				);
+			// The byte stream alone cannot show what a shrink erases, so replay it on a modelled terminal with shell output above the frame.
+			const writes = stdout
+				.getWrites()
+				.map(write => write.replaceAll('\n', '\r\n'));
+			const visibleLines = reconstructTerminalLines(
+				[
+					'shell 0\r\nshell 1\r\nshell 2\r\n',
+					...writes.slice(0, writesBefore),
+					{rows: 6},
+					...writes.slice(writesBefore),
+				],
+				10,
+			);
 
-				t.deepEqual(lines.filter(Boolean), [
-					'shell 0',
-					'shell 1',
-					'shell 2',
-					...frame.split('\n'),
-				]);
-			},
-		);
+			t.assert.deepStrictEqual(visibleLines.filter(Boolean), [
+				'shell 0',
+				'shell 1',
+				'shell 2',
+				...frame.split('\n'),
+			]);
+		});
 	}
 
-	test.serial(
-		`${name} rendering - writes nothing when the terminal height shrinks and the frame still fits`,
-		async t => {
-			const stdout = createStdout(40);
-			stdout.rows = 10;
+	test(`${name} rendering - writes nothing when the terminal height shrinks and the frame still fits`, async (t: TestContext) => {
+		const stdout = createStdout(40);
+		stdout.rows = 10;
 
-			const {unmount, waitUntilRenderFlush} = render(<SixLines />, {
-				stdout,
-				incrementalRendering,
-			});
-			t.teardown(unmount);
-			await waitUntilRenderFlush();
+		const {unmount, waitUntilRenderFlush} = render(<SixLines />, {
+			stdout,
+			incrementalRendering: isIncrementalRendering,
+		});
+		t.after(() => {
+			unmount();
+		});
+		await waitUntilRenderFlush();
 
-			t.is(getWriteContents(stdout).at(-1), frame + '\n');
-			const writesBefore = getWriteContents(stdout).length;
+		t.assert.strictEqual(getWriteContents(stdout).at(-1), frame + '\n');
+		const writesBefore = getWriteContents(stdout).length;
 
-			// The terminal only scrolls when the cursor would fall off the bottom, so a frame that still fits stays where it is and the unchanged output is skipped.
-			stdout.rows = 8;
-			stdout.emit('resize');
-			await waitUntilRenderFlush();
+		// The terminal only scrolls when the cursor would fall off the bottom, so a frame that still fits stays where it is and the unchanged output is skipped.
+		stdout.rows = 8;
+		stdout.emit('resize');
+		await waitUntilRenderFlush();
 
-			t.deepEqual(getWriteContents(stdout).slice(writesBefore), []);
-		},
-	);
+		t.assert.deepStrictEqual(getWriteContents(stdout).slice(writesBefore), []);
+	});
 
-	test.serial(
-		`${name} rendering - leaves fullscreen without clearing when the terminal height grows`,
-		async t => {
-			const stdout = createStdout(40);
-			stdout.rows = 6;
+	test(`${name} rendering - leaves fullscreen without clearing when the terminal height grows`, async (t: TestContext) => {
+		const stdout = createStdout(40);
+		stdout.rows = 6;
 
-			const {unmount, waitUntilRenderFlush} = render(<SixLines />, {
-				stdout,
-				incrementalRendering,
-			});
-			t.teardown(unmount);
-			await waitUntilRenderFlush();
+		const {unmount, waitUntilRenderFlush} = render(<SixLines />, {
+			stdout,
+			incrementalRendering: isIncrementalRendering,
+		});
+		t.after(() => {
+			unmount();
+		});
+		await waitUntilRenderFlush();
 
-			t.is(getWriteContents(stdout).at(-1), frame);
-			const writesBefore = getWriteContents(stdout).length;
+		t.assert.strictEqual(getWriteContents(stdout).at(-1), frame);
+		const writesBefore = getWriteContents(stdout).length;
 
-			stdout.rows = 10;
-			stdout.emit('resize');
-			await waitUntilRenderFlush();
+		stdout.rows = 10;
+		stdout.emit('resize');
+		await waitUntilRenderFlush();
 
-			t.is(
-				getWriteContents(stdout).slice(writesBefore).join(''),
-				incrementalRendering
-					? ansiEscapes.cursorUp(lines.length - 1) +
-							ansiEscapes.cursorNextLine.repeat(lines.length)
-					: ansiEscapes.eraseLines(lines.length) + frame + '\n',
-			);
-		},
-	);
+		t.assert.strictEqual(
+			getWriteContents(stdout).slice(writesBefore).join(''),
+			isIncrementalRendering
+				? ansiEscapes.cursorUp(lines.length - 1) +
+						ansiEscapes.cursorNextLine.repeat(lines.length)
+				: ansiEscapes.eraseLines(lines.length) + frame + '\n',
+		);
+	});
 }

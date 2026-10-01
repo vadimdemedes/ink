@@ -8,7 +8,7 @@ function Erase() {
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			setShow(false);
-		});
+		}, 0);
 
 		return () => {
 			clearTimeout(timer);

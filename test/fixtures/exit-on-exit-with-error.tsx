@@ -6,7 +6,7 @@ function Test() {
 	const {exit} = useApp();
 
 	useEffect(() => {
-		setTimeout(() => {
+		const exitTimer = setTimeout(() => {
 			exit(new Error('errored'));
 		}, 500);
 
@@ -15,6 +15,7 @@ function Test() {
 		}, 100);
 
 		return () => {
+			clearTimeout(exitTimer);
 			clearInterval(timer);
 		};
 	}, [exit]);

@@ -1,44 +1,48 @@
 import {Buffer} from 'node:buffer';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
 import parseKeypress from '../src/parse-keypress.js';
 
-test('parsing a single-byte Meta key does not mutate the input', t => {
+test('parsing a single-byte Meta key does not mutate the input', (t: TestContext) => {
 	const input = new Uint8Array([0xe1]);
 	const firstKey = parseKeypress(input);
 
-	t.like(firstKey, {name: 'a', meta: true, sequence: 'a'});
-	t.deepEqual(input, new Uint8Array([0xe1]));
-	t.deepEqual(parseKeypress(input), firstKey);
+	t.assert.partialDeepStrictEqual(firstKey, {
+		name: 'a',
+		meta: true,
+		sequence: 'a',
+	});
+	t.assert.deepStrictEqual(input, new Uint8Array([0xe1]));
+	t.assert.deepStrictEqual(parseKeypress(input), firstKey);
 });
 
-test('Meta byte parsing preserves shared buffers across the full byte range', t => {
+test('Meta byte parsing preserves shared buffers across the full byte range', (t: TestContext) => {
 	for (let byte = 128; byte <= 255; byte++) {
 		const buffer = Buffer.from([0, byte, 0]);
 		const input = buffer.subarray(1, 2);
 		const expected = parseKeypress(`${String.fromCodePoint(byte - 128)}`);
 
-		t.deepEqual(parseKeypress(input), expected);
-		t.deepEqual(buffer, Buffer.from([0, byte, 0]));
-		t.deepEqual(parseKeypress(input), expected);
+		t.assert.deepStrictEqual(parseKeypress(input), expected);
+		t.assert.deepStrictEqual(buffer, Buffer.from([0, byte, 0]));
+		t.assert.deepStrictEqual(parseKeypress(input), expected);
 	}
 });
 
-test('byte parsing preserves ASCII and multibyte UTF-8 input', t => {
+test('byte parsing preserves ASCII and multibyte UTF-8 input', (t: TestContext) => {
 	for (const text of ['a', 'hello', 'é', '😀']) {
 		const input = Buffer.from(text);
-		t.deepEqual(parseKeypress(input), parseKeypress(text));
-		t.deepEqual(input, Buffer.from(text));
+		t.assert.deepStrictEqual(parseKeypress(input), parseKeypress(text));
+		t.assert.deepStrictEqual(input, Buffer.from(text));
 	}
 });
 
-test('kitty functional keys preserve modifiers without an explicit event type', t => {
+test('kitty functional keys preserve modifiers without an explicit event type', (t: TestContext) => {
 	for (const [sequence, name] of [
-		['\u001B[1;249A', 'up'],
-		['\u001B[3;249~', 'delete'],
-		['\u001B[13;249~', 'f3'],
-		['\u001B[1;249P', 'f1'],
+		['\u{1B}[1;249A', 'up'],
+		['\u{1B}[3;249~', 'delete'],
+		['\u{1B}[13;249~', 'f3'],
+		['\u{1B}[1;249P', 'f1'],
 	] as const) {
-		t.like(parseKeypress(sequence), {
+		t.assert.partialDeepStrictEqual(parseKeypress(sequence), {
 			name,
 			super: true,
 			hyper: true,
@@ -52,10 +56,13 @@ test('kitty functional keys preserve modifiers without an explicit event type', 
 		});
 	}
 
-	t.like(parseKeypress('\u001B[1;9A'), {super: true, meta: false});
+	t.assert.partialDeepStrictEqual(parseKeypress('\u{1B}[1;9A'), {
+		super: true,
+		meta: false,
+	});
 });
 
-test('kitty modifiers and event types agree across key encodings', t => {
+test('kitty modifiers and event types agree across key encodings', (t: TestContext) => {
 	const modifierNames = [
 		'shift',
 		'meta',
@@ -75,55 +82,55 @@ test('kitty modifiers and event types agree across key encodings', t => {
 		] as const) {
 			const modifiers = `${2 ** bit + 1}${eventCode}`;
 			for (const sequence of [
-				`\u001B[97;${modifiers}u`,
-				`\u001B[1;${modifiers}A`,
-				`\u001B[3;${modifiers}~`,
+				`\u{1B}[97;${modifiers}u`,
+				`\u{1B}[1;${modifiers}A`,
+				`\u{1B}[3;${modifiers}~`,
 			]) {
 				const key = parseKeypress(sequence);
-				t.true(key[modifierName], `Sequence: ${sequence}`);
-				t.is(key.eventType, eventType, `Sequence: ${sequence}`);
+				t.assert.ok(key[modifierName], `Sequence: ${sequence}`);
+				t.assert.strictEqual(key.eventType, eventType, `Sequence: ${sequence}`);
 			}
 		}
 	}
 });
 
-test('kitty keypad Begin supports both functional encodings', t => {
+test('kitty keypad Begin supports both functional encodings', (t: TestContext) => {
 	for (const sequence of [
-		'\u001B[1E',
-		'\u001B[57427~',
-		'\u001B[1;1:2E',
-		'\u001B[57427;1:2~',
+		'\u{1B}[1E',
+		'\u{1B}[57427~',
+		'\u{1B}[1;1:2E',
+		'\u{1B}[57427;1:2~',
 	]) {
-		t.is(parseKeypress(sequence).name, 'clear');
+		t.assert.strictEqual(parseKeypress(sequence).name, 'clear');
 	}
 });
 
-test('kitty text-only events have no key identity', t => {
-	t.like(parseKeypress('\u001B[0;;229:128169u'), {
+test('kitty text-only events have no key identity', (t: TestContext) => {
+	t.assert.partialDeepStrictEqual(parseKeypress('\u{1B}[0;;229:128169u'), {
 		name: '',
 		text: 'å💩',
 		isPrintable: true,
 	});
 });
 
-test('kitty unknown functional and control codes do not invent printable characters', t => {
+test('kitty unknown functional and control codes do not invent printable characters', (t: TestContext) => {
 	for (const codepoint of [0, 1, 3, 31, 128, 159, 57_344, 63_743]) {
-		t.like(parseKeypress(`\u001B[${codepoint}u`), {
+		t.assert.partialDeepStrictEqual(parseKeypress(`\u{1B}[${codepoint}u`), {
 			name: '',
 			isPrintable: false,
 			text: undefined,
 		});
 	}
 
-	t.like(parseKeypress('\u001B[63744u'), {
+	t.assert.partialDeepStrictEqual(parseKeypress('\u{1B}[63744u'), {
 		text: String.fromCodePoint(63_744),
 		isPrintable: true,
 	});
 });
 
-test('legacy Ctrl+Space preserves the space key and modifiers', t => {
-	for (const sequence of ['\u0000', '\u001B\u0000']) {
-		t.like(parseKeypress(sequence), {
+test('legacy Ctrl+Space preserves the space key and modifiers', (t: TestContext) => {
+	for (const sequence of ['\u{0}', '\u{1B}\u{0}']) {
+		t.assert.partialDeepStrictEqual(parseKeypress(sequence), {
 			name: 'space',
 			ctrl: true,
 			meta: sequence.length === 2,
@@ -133,7 +140,7 @@ test('legacy Ctrl+Space preserves the space key and modifiers', t => {
 	}
 });
 
-test('kitty keypad navigation keys use standard key names', t => {
+test('kitty keypad navigation keys use standard key names', (t: TestContext) => {
 	for (const [codepoint, name] of [
 		[57_417, 'left'],
 		[57_418, 'right'],
@@ -146,8 +153,8 @@ test('kitty keypad navigation keys use standard key names', t => {
 		[57_425, 'insert'],
 		[57_426, 'delete'],
 	] as const) {
-		const sequence = `\u001B[${codepoint};5:2u`;
-		t.like(parseKeypress(sequence), {
+		const sequence = `\u{1B}[${codepoint};5:2u`;
+		t.assert.partialDeepStrictEqual(parseKeypress(sequence), {
 			name,
 			ctrl: true,
 			eventType: 'repeat',
@@ -159,16 +166,16 @@ test('kitty keypad navigation keys use standard key names', t => {
 	}
 });
 
-test('legacy Ctrl+punctuation shortcuts preserve the key and modifiers', t => {
+test('legacy Ctrl+punctuation shortcuts preserve the key and modifiers', (t: TestContext) => {
 	for (const [character, name] of [
-		['\u001C', '\\'],
-		['\u001D', ']'],
-		['\u001E', '^'],
-		['\u001F', '_'],
+		['\u{1C}', '\\'],
+		['\u{1D}', ']'],
+		['\u{1E}', '^'],
+		['\u{1F}', '_'],
 	]) {
-		for (const prefix of ['', '\u001B']) {
+		for (const prefix of ['', '\u{1B}']) {
 			const sequence = prefix + character;
-			t.like(parseKeypress(sequence), {
+			t.assert.partialDeepStrictEqual(parseKeypress(sequence), {
 				name,
 				ctrl: true,
 				meta: prefix.length > 0,
@@ -179,13 +186,13 @@ test('legacy Ctrl+punctuation shortcuts preserve the key and modifiers', t => {
 	}
 });
 
-test('kitty alternate key codes preserve the primary key event', t => {
+test('kitty alternate key codes preserve the primary key event', (t: TestContext) => {
 	for (const sequence of [
-		'\u001B[97:65;6:2;65u',
-		'\u001B[97:65:113;6:2;65u',
-		'\u001B[97::113;6:2;65u',
+		'\u{1B}[97:65;6:2;65u',
+		'\u{1B}[97:65:113;6:2;65u',
+		'\u{1B}[97::113;6:2;65u',
 	]) {
-		t.like(parseKeypress(sequence), {
+		t.assert.partialDeepStrictEqual(parseKeypress(sequence), {
 			name: 'a',
 			text: 'A',
 			ctrl: true,
@@ -196,7 +203,7 @@ test('kitty alternate key codes preserve the primary key event', t => {
 		});
 	}
 
-	t.like(parseKeypress('\u001B[1092::97;5u'), {
+	t.assert.partialDeepStrictEqual(parseKeypress('\u{1B}[1092::97;5u'), {
 		name: 'ф',
 		text: 'ф',
 		ctrl: true,
@@ -206,155 +213,159 @@ test('kitty alternate key codes preserve the primary key event', t => {
 	});
 });
 
-test('kitty keypad associated text is printable input', t => {
+test('kitty keypad associated text is printable input', (t: TestContext) => {
 	for (const [sequence, name, text] of [
-		['\u001B[57399;129;48u', 'kp0', '0'],
-		['\u001B[57413;1;43u', 'kpadd', '+'],
+		['\u{1B}[57399;129;48u', 'kp0', '0'],
+		['\u{1B}[57413;1;43u', 'kpadd', '+'],
 	] as const) {
 		const key = parseKeypress(sequence);
 
-		t.is(key.name, name);
-		t.is(key.text, text);
-		t.true(key.isPrintable);
-		t.true(key.isKittyProtocol);
+		t.assert.strictEqual(key.name, name);
+		t.assert.strictEqual(key.text, text);
+		t.assert.ok(key.isPrintable);
+		t.assert.ok(key.isKittyProtocol);
 	}
 });
 
-test('kitty keypad Enter produces a return key and carriage return text', t => {
+test('kitty keypad Enter produces a return key and carriage return text', (t: TestContext) => {
 	for (const [sequence, shift, eventType] of [
-		['\u001B[57414u', false, 'press'],
-		['\u001B[57414;2:2u', true, 'repeat'],
+		['\u{1B}[57414u', false, 'press'],
+		['\u{1B}[57414;2:2u', true, 'repeat'],
 	] as const) {
 		const key = parseKeypress(sequence);
 
-		t.is(key.name, 'return');
-		t.is(key.text, '\r');
-		t.true(key.isPrintable);
-		t.true(key.isKittyProtocol);
-		t.is(key.sequence, sequence);
-		t.is(key.shift, shift);
-		t.is(key.eventType, eventType);
+		t.assert.strictEqual(key.name, 'return');
+		t.assert.strictEqual(key.text, '\r');
+		t.assert.ok(key.isPrintable);
+		t.assert.ok(key.isKittyProtocol);
+		t.assert.strictEqual(key.sequence, sequence);
+		t.assert.strictEqual(key.shift, shift);
+		t.assert.strictEqual(key.eventType, eventType);
 	}
 });
 
-test('application keypad Enter maps to Return with carriage return sequence', t => {
+test('application keypad Enter maps to Return with carriage return sequence', (t: TestContext) => {
 	for (const [sequence, meta] of [
 		['OM', false],
 		['OM', true],
 	] as const) {
 		const key = parseKeypress(sequence);
 
-		t.is(key.name, 'return');
-		t.is(key.sequence, '\r');
-		t.is(key.raw, undefined);
-		t.is(key.meta, meta);
-		t.false(key.ctrl);
-		t.false(key.shift);
+		t.assert.strictEqual(key.name, 'return');
+		t.assert.strictEqual(key.sequence, '\r');
+		t.assert.strictEqual(key.raw, undefined);
+		t.assert.strictEqual(key.meta, meta);
+		t.assert.strictEqual(key.ctrl, false);
+		t.assert.strictEqual(key.shift, false);
 	}
 });
 
-test('Meta+Tab preserves the tab key and Meta modifier', t => {
-	const key = parseKeypress('\u001B\t');
+test('Meta+Tab preserves the tab key and Meta modifier', (t: TestContext) => {
+	const key = parseKeypress('\u{1B}\t');
 
-	t.is(key.name, 'tab');
-	t.true(key.meta);
-	t.false(key.ctrl);
-	t.false(key.shift);
-	t.is(key.sequence, '\u001B\t');
+	t.assert.strictEqual(key.name, 'tab');
+	t.assert.ok(key.meta);
+	t.assert.strictEqual(key.ctrl, false);
+	t.assert.strictEqual(key.shift, false);
+	t.assert.strictEqual(key.sequence, '\u{1B}\t');
 });
 
-test('Ctrl+Meta letters preserve both modifiers and the letter name', t => {
+test('Ctrl+Meta letters preserve both modifiers and the letter name', (t: TestContext) => {
 	for (const [controlCharacter, name] of [
-		['\u0002', 'b'],
-		['\u0006', 'f'],
-		['\u0018', 'x'],
+		['\u{2}', 'b'],
+		['\u{6}', 'f'],
+		['\u{18}', 'x'],
 	]) {
-		const sequence = `\u001B${controlCharacter}`;
+		const sequence = `\u{1B}${controlCharacter}`;
 		const key = parseKeypress(sequence);
 
-		t.is(key.name, name);
-		t.true(key.ctrl);
-		t.true(key.meta);
-		t.false(key.shift);
-		t.is(key.sequence, sequence);
+		t.assert.strictEqual(key.name, name);
+		t.assert.ok(key.ctrl);
+		t.assert.ok(key.meta);
+		t.assert.strictEqual(key.shift, false);
+		t.assert.strictEqual(key.sequence, sequence);
 	}
 });
 
-test('kitty associated text accepts an omitted modifier value', t => {
-	const key = parseKeypress('\u001B[0;;229u');
+test('kitty associated text accepts an omitted modifier value', (t: TestContext) => {
+	const key = parseKeypress('\u{1B}[0;;229u');
 
-	t.true(key.isKittyProtocol);
-	t.true(key.isPrintable);
-	t.is(key.text, 'å');
-	t.is(key.eventType, 'press');
-	t.false(key.ctrl);
-	t.false(key.meta);
-	t.false(key.shift);
+	t.assert.ok(key.isKittyProtocol);
+	t.assert.ok(key.isPrintable);
+	t.assert.strictEqual(key.text, 'å');
+	t.assert.strictEqual(key.eventType, 'press');
+	t.assert.strictEqual(key.ctrl, false);
+	t.assert.strictEqual(key.meta, false);
+	t.assert.strictEqual(key.shift, false);
 });
 
-test('Meta modifier is recognized for punctuation and Unicode characters', t => {
+test('Meta modifier is recognized for punctuation and Unicode characters', (t: TestContext) => {
 	for (const character of ['.', ',', '/', '-', 'é', '😀']) {
-		const sequence = `\u001B${character}`;
+		const sequence = `\u{1B}${character}`;
 		const key = parseKeypress(sequence);
 
-		t.true(key.meta, `Meta modifier for ${character}`);
-		t.is(key.name, character);
-		t.is(key.sequence, sequence);
-		t.false(key.ctrl);
-		t.false(key.shift);
+		t.assert.ok(key.meta, `Meta modifier for ${character}`);
+		t.assert.strictEqual(key.name, character);
+		t.assert.strictEqual(key.sequence, sequence);
+		t.assert.strictEqual(key.ctrl, false);
+		t.assert.strictEqual(key.shift, false);
 	}
 });
 
-test('incomplete and multi-character sequences are not Meta characters', t => {
-	for (const sequence of ['\u001B[', '\u001B[1;', '\u001Bhello']) {
-		t.false(parseKeypress(sequence).meta, `Sequence ${sequence}`);
+test('incomplete and multi-character sequences are not Meta characters', (t: TestContext) => {
+	for (const sequence of ['\u{1B}[', '\u{1B}[1;', '\u{1B}hello']) {
+		t.assert.strictEqual(
+			parseKeypress(sequence).meta,
+			false,
+			`Sequence ${sequence}`,
+		);
 	}
 });
 
 // Vt220-style Ctrl+F1–F4 (ESC [ 1 ; 5 P/Q/R/S)
-test('Ctrl+F1 resolves to name "f1"', t => {
-	const key = parseKeypress('\u001B[1;5P');
-	t.is(key.name, 'f1');
-	t.true(key.ctrl);
-	t.false(key.shift);
-	t.false(key.meta);
+test('Ctrl+F1 resolves to name "f1"', (t: TestContext) => {
+	const key = parseKeypress('\u{1B}[1;5P');
+	t.assert.strictEqual(key.name, 'f1');
+	t.assert.ok(key.ctrl);
+	t.assert.strictEqual(key.shift, false);
+	t.assert.strictEqual(key.meta, false);
 });
 
-test('Ctrl+F2 resolves to name "f2"', t => {
-	const key = parseKeypress('\u001B[1;5Q');
-	t.is(key.name, 'f2');
-	t.true(key.ctrl);
+test('Ctrl+F2 resolves to name "f2"', (t: TestContext) => {
+	const key = parseKeypress('\u{1B}[1;5Q');
+	t.assert.strictEqual(key.name, 'f2');
+	t.assert.ok(key.ctrl);
 });
 
-test('Ctrl+F3 resolves to name "f3"', t => {
-	const key = parseKeypress('\u001B[1;5R');
-	t.is(key.name, 'f3');
-	t.true(key.ctrl);
+test('Ctrl+F3 resolves to name "f3"', (t: TestContext) => {
+	const key = parseKeypress('\u{1B}[1;5R');
+	t.assert.strictEqual(key.name, 'f3');
+	t.assert.ok(key.ctrl);
 });
 
-test('Ctrl+F4 resolves to name "f4"', t => {
-	const key = parseKeypress('\u001B[1;5S');
-	t.is(key.name, 'f4');
-	t.true(key.ctrl);
+test('Ctrl+F4 resolves to name "f4"', (t: TestContext) => {
+	const key = parseKeypress('\u{1B}[1;5S');
+	t.assert.strictEqual(key.name, 'f4');
+	t.assert.ok(key.ctrl);
 });
 
 // Unmapped codes fall back to empty string
-test('unmapped ctrl sequence returns empty name', t => {
-	const key = parseKeypress('\u001B[1;5I');
-	t.is(key.name, '');
-	t.true(key.ctrl);
+test('unmapped ctrl sequence returns empty name', (t: TestContext) => {
+	const key = parseKeypress('\u{1B}[1;5I');
+	t.assert.strictEqual(key.name, '');
+	t.assert.ok(key.ctrl);
 });
 
-test('another unmapped ctrl sequence returns empty name', t => {
-	const key = parseKeypress('\u001B[1;5X');
-	t.is(key.name, '');
-	t.true(key.ctrl);
+test('another unmapped ctrl sequence returns empty name', (t: TestContext) => {
+	const key = parseKeypress('\u{1B}[1;5X');
+	t.assert.strictEqual(key.name, '');
+	t.assert.ok(key.ctrl);
 });
 
 // Shift+F1 (modifier 2) uses the same [P mapping
-test('Shift+F1 resolves to name "f1" with shift', t => {
-	const key = parseKeypress('\u001B[1;2P');
-	t.is(key.name, 'f1');
-	t.true(key.shift);
-	t.false(key.ctrl);
+test('Shift+F1 resolves to name "f1" with shift', (t: TestContext) => {
+	const key = parseKeypress('\u{1B}[1;2P');
+	t.assert.strictEqual(key.name, 'f1');
+	t.assert.ok(key.shift);
+	t.assert.strictEqual(key.ctrl, false);
 });

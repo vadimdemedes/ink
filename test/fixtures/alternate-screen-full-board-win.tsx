@@ -9,11 +9,9 @@ const snake = [];
 for (let y = 0; y < boardHeight; y++) {
 	if (y % 2 === 0) {
 		for (let x = 0; x < boardWidth; x++) {
-			if (x === 0 && y === 0) {
-				continue;
+			if (x !== 0 || y !== 0) {
+				snake.push({x, y});
 			}
-
-			snake.push({x, y});
 		}
 	} else {
 		for (let x = boardWidth - 1; x >= 0; x--) {

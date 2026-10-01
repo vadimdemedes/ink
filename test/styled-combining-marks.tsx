@@ -1,19 +1,19 @@
+import test, {before, after, type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import chalk from 'chalk';
 import stripAnsi from 'strip-ansi';
 import {Box, Text, renderToString} from '../src/index.js';
 
 const originalColorLevel = chalk.level;
-test.before(() => {
+before(() => {
 	chalk.level = 3;
 });
-test.after(() => {
+after(() => {
 	chalk.level = originalColorLevel;
 });
 
 for (const accent of ['́', '̈']) {
-	test(`combining mark ${accent} survives a nested Text style boundary`, t => {
+	test(`combining mark ${accent} survives a nested Text style boundary`, (t: TestContext) => {
 		const output = renderToString(
 			<Box>
 				<Text>
@@ -23,20 +23,20 @@ for (const accent of ['́', '̈']) {
 			</Box>,
 		);
 
-		t.is(stripAnsi(output), `e${accent}X`);
+		t.assert.strictEqual(stripAnsi(output), `e${accent}X`);
 	});
 }
 
-test('following text retains its color after a styled combining mark', t => {
+test('following text retains its color after a styled combining mark', (t: TestContext) => {
 	const output = renderToString(
 		<Text>
 			e<Text color="red">́X</Text>Y
 		</Text>,
 	);
-	t.is(output, `é${chalk.red('X')}Y`);
+	t.assert.strictEqual(output, `é${chalk.red('X')}Y`);
 });
 
-test('a combining mark retains the style of its base character', t => {
+test('a combining mark retains the style of its base character', (t: TestContext) => {
 	const output = renderToString(
 		<Text>
 			<Text color="blue">e</Text>
@@ -49,10 +49,10 @@ test('a combining mark retains the style of its base character', t => {
 			<Text color="red">X</Text>
 		</Text>,
 	);
-	t.is(output, expected);
+	t.assert.strictEqual(output, expected);
 });
 
-test('multiple styled marks attach to one base cell', t => {
+test('multiple styled marks attach to one base cell', (t: TestContext) => {
 	const output = renderToString(
 		<Box>
 			<Text>
@@ -62,20 +62,20 @@ test('multiple styled marks attach to one base cell', t => {
 			<Text>X</Text>
 		</Box>,
 	);
-	t.is(stripAnsi(output), 'á̈X');
+	t.assert.strictEqual(stripAnsi(output), 'á̈X');
 });
 
-test('newlines remain between a base and a following combining mark', t => {
+test('newlines remain between a base and a following combining mark', (t: TestContext) => {
 	const output = renderToString(
 		<Text>
 			e{'\n'}
 			<Text color="red">́X</Text>
 		</Text>,
 	);
-	t.true(stripAnsi(output).startsWith('e\n'));
+	t.assert.ok(stripAnsi(output).startsWith('e\n'));
 });
 
-test('wrapping keeps a styled accent on the preceding base character', t => {
+test('wrapping keeps a styled accent on the preceding base character', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={1}>
 			<Text>
@@ -84,10 +84,10 @@ test('wrapping keeps a styled accent on the preceding base character', t => {
 		</Box>,
 	);
 
-	t.is(stripAnsi(output).normalize(), 'é\nX');
+	t.assert.strictEqual(stripAnsi(output).normalize(), 'é\nX');
 });
 
-test('a styled variation selector keeps emoji presentation and width', t => {
+test('a styled variation selector keeps emoji presentation and width', (t: TestContext) => {
 	const output = renderToString(
 		<Box>
 			<Text>
@@ -97,15 +97,15 @@ test('a styled variation selector keeps emoji presentation and width', t => {
 		</Box>,
 	);
 
-	t.is(stripAnsi(output), '❤️X');
+	t.assert.strictEqual(stripAnsi(output), '❤️X');
 });
 
-test('a styled mark without a base character keeps its position and style', t => {
+test('a styled mark without a base character keeps its position and style', (t: TestContext) => {
 	const output = renderToString(
 		<Text>
-			<Text color="red">{'\u0301X'}</Text>Y
+			<Text color="red">{'\u{301}X'}</Text>Y
 		</Text>,
 	);
 
-	t.is(output, `\u0301${chalk.red('X')}Y`);
+	t.assert.strictEqual(output, `\u{301}${chalk.red('X')}Y`);
 });

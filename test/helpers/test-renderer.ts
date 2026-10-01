@@ -1,6 +1,6 @@
-import {act} from 'react';
 import {render, type Instance} from '../../src/index.js';
 import createStdout from './create-stdout.js';
+import {act} from './act.js';
 
 type TestRenderOptions = {
 	columns?: number;

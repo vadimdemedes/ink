@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: ${{ matrix.node_version }}
       - run: npm install
-      - run: npm test -- --serial
+      - run: npm test
         env:
           FORCE_COLOR: true
           CI: false

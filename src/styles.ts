@@ -1,7 +1,13 @@
 import {type Boxes, type BoxStyle} from 'cli-boxes';
 import {type LiteralUnion} from 'type-fest';
 import {type ForegroundColorName} from 'ansi-styles'; // Note: We import directly from `ansi-styles` to avoid a bug in TypeScript.
-import Yoga, {type Node as YogaNode} from 'yoga-layout';
+import Yoga, {
+	type Node as YogaNode,
+	type Align,
+	type FlexDirection,
+	type Justify,
+	type Wrap,
+} from 'yoga-layout';
 
 export type Styles = {
 	/*
@@ -435,13 +441,14 @@ const applyPositionStyles = (node: YogaNode, style: Styles): void => {
 	}
 
 	for (const [property, edge] of positionEdges) {
-		if (!(property in style)) {
+		if (!Object.hasOwn(style, property)) {
 			continue;
 		}
 
 		const value = style[property];
 
 		if (typeof value === 'string') {
+			// eslint-disable-next-line unicorn/prefer-number-coercion -- Percentage strings like `'50%'` need `Number.parseFloat()`, because `Number('50%')` is `NaN`.
 			node.setPositionPercent(edge, Number.parseFloat(value));
 			continue;
 		}
@@ -510,6 +517,55 @@ const applyPaddingStyles = (node: YogaNode, style: Styles): void => {
 	}
 };
 
+const flexWrapValues = new Map<Styles['flexWrap'], Wrap>([
+	['nowrap', Yoga.WRAP_NO_WRAP],
+	['wrap', Yoga.WRAP_WRAP],
+	['wrap-reverse', Yoga.WRAP_WRAP_REVERSE],
+]);
+
+const flexDirectionValues = new Map<Styles['flexDirection'], FlexDirection>([
+	['row', Yoga.FLEX_DIRECTION_ROW],
+	['row-reverse', Yoga.FLEX_DIRECTION_ROW_REVERSE],
+	['column', Yoga.FLEX_DIRECTION_COLUMN],
+	['column-reverse', Yoga.FLEX_DIRECTION_COLUMN_REVERSE],
+]);
+
+const alignItemsValues = new Map<Styles['alignItems'], Align>([
+	['stretch', Yoga.ALIGN_STRETCH],
+	['flex-start', Yoga.ALIGN_FLEX_START],
+	['center', Yoga.ALIGN_CENTER],
+	['flex-end', Yoga.ALIGN_FLEX_END],
+	['baseline', Yoga.ALIGN_BASELINE],
+]);
+
+const alignSelfValues = new Map<Styles['alignSelf'], Align>([
+	['auto', Yoga.ALIGN_AUTO],
+	['flex-start', Yoga.ALIGN_FLEX_START],
+	['center', Yoga.ALIGN_CENTER],
+	['flex-end', Yoga.ALIGN_FLEX_END],
+	['stretch', Yoga.ALIGN_STRETCH],
+	['baseline', Yoga.ALIGN_BASELINE],
+]);
+
+const alignContentValues = new Map<Styles['alignContent'], Align>([
+	['flex-start', Yoga.ALIGN_FLEX_START],
+	['center', Yoga.ALIGN_CENTER],
+	['flex-end', Yoga.ALIGN_FLEX_END],
+	['space-between', Yoga.ALIGN_SPACE_BETWEEN],
+	['space-around', Yoga.ALIGN_SPACE_AROUND],
+	['space-evenly', Yoga.ALIGN_SPACE_EVENLY],
+	['stretch', Yoga.ALIGN_STRETCH],
+]);
+
+const justifyContentValues = new Map<Styles['justifyContent'], Justify>([
+	['flex-start', Yoga.JUSTIFY_FLEX_START],
+	['center', Yoga.JUSTIFY_CENTER],
+	['flex-end', Yoga.JUSTIFY_FLEX_END],
+	['space-between', Yoga.JUSTIFY_SPACE_BETWEEN],
+	['space-around', Yoga.JUSTIFY_SPACE_AROUND],
+	['space-evenly', Yoga.JUSTIFY_SPACE_EVENLY],
+]);
+
 const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 	if ('flexGrow' in style) {
 		node.setFlexGrow(style.flexGrow ?? 0);
@@ -522,34 +578,18 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 	}
 
 	if ('flexWrap' in style) {
-		if (style.flexWrap === 'nowrap') {
-			node.setFlexWrap(Yoga.WRAP_NO_WRAP);
-		}
+		const flexWrap = flexWrapValues.get(style.flexWrap);
 
-		if (style.flexWrap === 'wrap') {
-			node.setFlexWrap(Yoga.WRAP_WRAP);
-		}
-
-		if (style.flexWrap === 'wrap-reverse') {
-			node.setFlexWrap(Yoga.WRAP_WRAP_REVERSE);
+		if (flexWrap !== undefined) {
+			node.setFlexWrap(flexWrap);
 		}
 	}
 
 	if ('flexDirection' in style) {
-		if (style.flexDirection === 'row') {
-			node.setFlexDirection(Yoga.FLEX_DIRECTION_ROW);
-		}
+		const flexDirection = flexDirectionValues.get(style.flexDirection);
 
-		if (style.flexDirection === 'row-reverse') {
-			node.setFlexDirection(Yoga.FLEX_DIRECTION_ROW_REVERSE);
-		}
-
-		if (style.flexDirection === 'column') {
-			node.setFlexDirection(Yoga.FLEX_DIRECTION_COLUMN);
-		}
-
-		if (style.flexDirection === 'column-reverse') {
-			node.setFlexDirection(Yoga.FLEX_DIRECTION_COLUMN_REVERSE);
+		if (flexDirection !== undefined) {
+			node.setFlexDirection(flexDirection);
 		}
 	}
 
@@ -557,6 +597,7 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 		if (typeof style.flexBasis === 'number') {
 			node.setFlexBasis(style.flexBasis);
 		} else if (typeof style.flexBasis === 'string') {
+			// eslint-disable-next-line unicorn/prefer-number-coercion -- Percentage strings like `'50%'` need `Number.parseFloat()`, because `Number('50%')` is `NaN`.
 			node.setFlexBasisPercent(Number.parseFloat(style.flexBasis));
 		} else {
 			node.setFlexBasisAuto();
@@ -564,108 +605,52 @@ const applyFlexStyles = (node: YogaNode, style: Styles): void => {
 	}
 
 	if ('alignItems' in style) {
-		if (style.alignItems === 'stretch' || !style.alignItems) {
-			node.setAlignItems(Yoga.ALIGN_STRETCH);
-		}
+		const alignItems =
+			// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions -- JavaScript callers pass `null` or `false` (for example `condition && 'center'`), and any falsy value means the default.
+			style.alignItems
+				? alignItemsValues.get(style.alignItems)
+				: Yoga.ALIGN_STRETCH;
 
-		if (style.alignItems === 'flex-start') {
-			node.setAlignItems(Yoga.ALIGN_FLEX_START);
-		}
-
-		if (style.alignItems === 'center') {
-			node.setAlignItems(Yoga.ALIGN_CENTER);
-		}
-
-		if (style.alignItems === 'flex-end') {
-			node.setAlignItems(Yoga.ALIGN_FLEX_END);
-		}
-
-		if (style.alignItems === 'baseline') {
-			node.setAlignItems(Yoga.ALIGN_BASELINE);
+		if (alignItems !== undefined) {
+			node.setAlignItems(alignItems);
 		}
 	}
 
 	if ('alignSelf' in style) {
-		if (style.alignSelf === 'auto' || !style.alignSelf) {
-			node.setAlignSelf(Yoga.ALIGN_AUTO);
-		}
+		const alignSelf =
+			// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions -- JavaScript callers pass `null` or `false` (for example `condition && 'center'`), and any falsy value means the default.
+			style.alignSelf ? alignSelfValues.get(style.alignSelf) : Yoga.ALIGN_AUTO;
 
-		if (style.alignSelf === 'flex-start') {
-			node.setAlignSelf(Yoga.ALIGN_FLEX_START);
-		}
-
-		if (style.alignSelf === 'center') {
-			node.setAlignSelf(Yoga.ALIGN_CENTER);
-		}
-
-		if (style.alignSelf === 'flex-end') {
-			node.setAlignSelf(Yoga.ALIGN_FLEX_END);
-		}
-
-		if (style.alignSelf === 'stretch') {
-			node.setAlignSelf(Yoga.ALIGN_STRETCH);
-		}
-
-		if (style.alignSelf === 'baseline') {
-			node.setAlignSelf(Yoga.ALIGN_BASELINE);
+		if (alignSelf !== undefined) {
+			node.setAlignSelf(alignSelf);
 		}
 	}
 
 	if ('alignContent' in style) {
 		// Keep wrapped lines top-packed by default; stretch can add surprising empty rows in fixed-height boxes.
-		if (style.alignContent === 'flex-start' || !style.alignContent) {
-			node.setAlignContent(Yoga.ALIGN_FLEX_START);
-		}
+		const alignContent =
+			// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions -- JavaScript callers pass `null` or `false` (for example `condition && 'center'`), and any falsy value means the default.
+			style.alignContent
+				? alignContentValues.get(style.alignContent)
+				: Yoga.ALIGN_FLEX_START;
 
-		if (style.alignContent === 'center') {
-			node.setAlignContent(Yoga.ALIGN_CENTER);
-		}
-
-		if (style.alignContent === 'flex-end') {
-			node.setAlignContent(Yoga.ALIGN_FLEX_END);
-		}
-
-		if (style.alignContent === 'space-between') {
-			node.setAlignContent(Yoga.ALIGN_SPACE_BETWEEN);
-		}
-
-		if (style.alignContent === 'space-around') {
-			node.setAlignContent(Yoga.ALIGN_SPACE_AROUND);
-		}
-
-		if (style.alignContent === 'space-evenly') {
-			node.setAlignContent(Yoga.ALIGN_SPACE_EVENLY);
-		}
-
-		if (style.alignContent === 'stretch') {
-			node.setAlignContent(Yoga.ALIGN_STRETCH);
+		if (alignContent !== undefined) {
+			node.setAlignContent(alignContent);
 		}
 	}
 
-	if ('justifyContent' in style) {
-		if (style.justifyContent === 'flex-start' || !style.justifyContent) {
-			node.setJustifyContent(Yoga.JUSTIFY_FLEX_START);
-		}
+	if (!('justifyContent' in style)) {
+		return;
+	}
 
-		if (style.justifyContent === 'center') {
-			node.setJustifyContent(Yoga.JUSTIFY_CENTER);
-		}
+	const justifyContent =
+		// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions -- JavaScript callers pass `null` or `false` (for example `condition && 'center'`), and any falsy value means the default.
+		style.justifyContent
+			? justifyContentValues.get(style.justifyContent)
+			: Yoga.JUSTIFY_FLEX_START;
 
-		if (style.justifyContent === 'flex-end') {
-			node.setJustifyContent(Yoga.JUSTIFY_FLEX_END);
-		}
-
-		if (style.justifyContent === 'space-between') {
-			node.setJustifyContent(Yoga.JUSTIFY_SPACE_BETWEEN);
-		}
-
-		if (style.justifyContent === 'space-around') {
-			node.setJustifyContent(Yoga.JUSTIFY_SPACE_AROUND);
-		}
-
-		if (style.justifyContent === 'space-evenly') {
-			node.setJustifyContent(Yoga.JUSTIFY_SPACE_EVENLY);
-		}
+	if (justifyContent !== undefined) {
+		node.setJustifyContent(justifyContent);
 	}
 };
 
@@ -674,6 +659,7 @@ const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
 		if (typeof style.width === 'number') {
 			node.setWidth(style.width);
 		} else if (typeof style.width === 'string') {
+			// eslint-disable-next-line unicorn/prefer-number-coercion -- Percentage strings like `'50%'` need `Number.parseFloat()`, because `Number('50%')` is `NaN`.
 			node.setWidthPercent(Number.parseFloat(style.width));
 		} else {
 			node.setWidthAuto();
@@ -684,6 +670,7 @@ const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
 		if (typeof style.height === 'number') {
 			node.setHeight(style.height);
 		} else if (typeof style.height === 'string') {
+			// eslint-disable-next-line unicorn/prefer-number-coercion -- Percentage strings like `'50%'` need `Number.parseFloat()`, because `Number('50%')` is `NaN`.
 			node.setHeightPercent(Number.parseFloat(style.height));
 		} else {
 			node.setHeightAuto();
@@ -696,6 +683,7 @@ const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
 
 	if ('minHeight' in style) {
 		if (typeof style.minHeight === 'string') {
+			// eslint-disable-next-line unicorn/prefer-number-coercion -- Percentage strings like `'50%'` need `Number.parseFloat()`, because `Number('50%')` is `NaN`.
 			node.setMinHeightPercent(Number.parseFloat(style.minHeight));
 		} else {
 			node.setMinHeight(style.minHeight ?? 0);
@@ -708,6 +696,7 @@ const applyDimensionStyles = (node: YogaNode, style: Styles): void => {
 
 	if ('maxHeight' in style) {
 		if (typeof style.maxHeight === 'string') {
+			// eslint-disable-next-line unicorn/prefer-number-coercion -- Percentage strings like `'50%'` need `Number.parseFloat()`, because `Number('50%')` is `NaN`.
 			node.setMaxHeightPercent(Number.parseFloat(style.maxHeight));
 		} else {
 			node.setMaxHeight(style.maxHeight);
@@ -743,7 +732,8 @@ const applyBorderStyles = (
 		return;
 	}
 
-	const borderWidth = currentStyle.borderStyle ? 1 : 0;
+	const hasBorder = Boolean(currentStyle.borderStyle);
+	const borderWidth = hasBorder ? 1 : 0;
 
 	node.setBorder(
 		Yoga.EDGE_TOP,

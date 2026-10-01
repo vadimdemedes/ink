@@ -1,9 +1,9 @@
-import React, {forwardRef, useContext, type PropsWithChildren} from 'react';
+import React, {forwardRef, use, type PropsWithChildren} from 'react';
 import {type Except} from 'type-fest';
 import {type Styles} from '../styles.js';
 import {type DOMElement} from '../dom.js';
-import {accessibilityContext} from './AccessibilityContext.js';
-import {backgroundContext} from './BackgroundContext.js';
+import {AccessibilityContext} from './AccessibilityContext.js';
+import {BackgroundContext} from './BackgroundContext.js';
 
 export type Props = Except<Styles, 'textWrap'> & {
 	/**
@@ -58,6 +58,7 @@ export type Props = Except<Styles, 'textWrap'> & {
 /**
 `<Box>` is an essential Ink component to build your layout. It's like `<div style="display: flex">` in the browser.
 */
+// eslint-disable-next-line @eslint-react/no-forward-ref -- Removing `forwardRef` changes the public component type of `Box`.
 const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 	(
 		{
@@ -73,15 +74,15 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 		},
 		ref,
 	) => {
-		const {isScreenReaderEnabled} = useContext(accessibilityContext);
-		const inheritedBackgroundColor = useContext(backgroundContext);
-		const effectiveBackgroundColor =
-			// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- Empty background colors inherit from the parent too.
-			backgroundColor || inheritedBackgroundColor;
-		const label = ariaLabel ? <ink-text>{ariaLabel}</ink-text> : undefined;
+		const {isScreenReaderEnabled} = use(AccessibilityContext);
+		const inheritedBackgroundColor = use(BackgroundContext);
 		if (isScreenReaderEnabled && ariaHidden) {
 			return null;
 		}
+
+		const effectiveBackgroundColor =
+			// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing, @typescript-eslint/strict-boolean-expressions -- Empty background colors inherit from the parent too.
+			backgroundColor || inheritedBackgroundColor;
 
 		const boxElement = (
 			<ink-box
@@ -101,15 +102,19 @@ const Box = forwardRef<DOMElement, PropsWithChildren<Props>>(
 					state: ariaState,
 				}}
 			>
-				{isScreenReaderEnabled && label ? label : children}
+				{isScreenReaderEnabled && Boolean(ariaLabel) ? (
+					<ink-text>{ariaLabel}</ink-text>
+				) : (
+					children
+				)}
 			</ink-box>
 		);
 
 		// Provide this Box's background color or its inherited color to children via context
 		return (
-			<backgroundContext.Provider value={effectiveBackgroundColor}>
+			<BackgroundContext value={effectiveBackgroundColor}>
 				{boxElement}
-			</backgroundContext.Provider>
+			</BackgroundContext>
 		);
 	},
 );

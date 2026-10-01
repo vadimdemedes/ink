@@ -1,5 +1,5 @@
-import React, {useContext, type ReactNode} from 'react';
-import {accessibilityContext} from './AccessibilityContext.js';
+import React, {use, type ReactNode} from 'react';
+import {AccessibilityContext} from './AccessibilityContext.js';
 
 export type Props = {
 	/**
@@ -23,7 +23,7 @@ export default function Transform({
 	transform,
 	accessibilityLabel,
 }: Props) {
-	const {isScreenReaderEnabled} = useContext(accessibilityContext);
+	const {isScreenReaderEnabled} = use(AccessibilityContext);
 	const childrenOrAccessibilityLabel = isScreenReaderEnabled
 		? (accessibilityLabel ?? children)
 		: children;

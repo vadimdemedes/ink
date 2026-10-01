@@ -1,14 +1,16 @@
-import React, {act} from 'react';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
+import React from 'react';
 import {Box, Text, Transform, render} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
+import {act} from './helpers/act.js';
 
 // Tell React these updates are managed by act(), including concurrent commits.
+// eslint-disable-next-line unicorn/no-global-object-property-assignment -- React reads this global flag.
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-for (const concurrent of [false, true]) {
-	for (const nested of [false, true]) {
-		test(`changing nested transform wrap points updates layout (concurrent: ${concurrent}, deeply nested: ${nested})`, async t => {
+for (const isConcurrent of [false, true]) {
+	for (const isNested of [false, true]) {
+		test(`changing nested transform wrap points updates layout (concurrent: ${isConcurrent}, deeply nested: ${isNested})`, async (t: TestContext) => {
 			function Example({replaceSpaces}: {readonly replaceSpaces: boolean}) {
 				const content = (
 					<Transform
@@ -22,7 +24,7 @@ for (const concurrent of [false, true]) {
 
 				return (
 					<Box flexDirection="column" width={4}>
-						<Text>{nested ? <Text>{content}</Text> : content}</Text>
+						<Text>{isNested ? <Text>{content}</Text> : content}</Text>
 						<Text>!</Text>
 					</Box>
 				);
@@ -34,26 +36,26 @@ for (const concurrent of [false, true]) {
 				instance = render(<Example replaceSpaces={false} />, {
 					stdout,
 					debug: true,
-					concurrent,
+					concurrent: isConcurrent,
 				});
 			});
-			t.teardown(async () => {
+			t.after(async () => {
 				await act(async () => {
 					instance.unmount();
 				});
 			});
-			t.is(stdout.get(), 'ab\ncd\nef\n!');
+			t.assert.strictEqual(stdout.get(), 'ab\ncd\nef\n!');
 
 			// Both strings have eight columns. Only the word boundaries change.
 			await act(async () => {
 				instance.rerender(<Example replaceSpaces />);
 			});
-			t.is(stdout.get(), 'abxc\ndxef\n!');
+			t.assert.strictEqual(stdout.get(), 'abxc\ndxef\n!');
 
 			await act(async () => {
 				instance.rerender(<Example replaceSpaces={false} />);
 			});
-			t.is(stdout.get(), 'ab\ncd\nef\n!');
+			t.assert.strictEqual(stdout.get(), 'ab\ncd\nef\n!');
 		});
 	}
 }

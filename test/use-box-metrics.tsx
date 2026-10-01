@@ -1,5 +1,5 @@
-import React, {act, useRef, useState} from 'react';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
+import React, {useRef, useState} from 'react';
 import delay from 'delay';
 import stripAnsi from 'strip-ansi';
 import {
@@ -10,8 +10,9 @@ import {
 	type DOMElement,
 } from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
+import {act} from './helpers/act.js';
 
-test('returns correct size on first render', async t => {
+test('returns correct size on first render', async (t: TestContext) => {
 	const stdout = createStdout(100);
 
 	function Test() {
@@ -31,10 +32,10 @@ test('returns correct size on first render', async t => {
 	await delay(50);
 
 	// Width fills terminal (100); single-line text renders as height 1
-	t.true(stripAnsi(stdout.get()).includes('100x1'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('100x1'));
 });
 
-test('returns correct position', async t => {
+test('returns correct position', async (t: TestContext) => {
 	const stdout = createStdout(100);
 
 	function Test() {
@@ -57,10 +58,10 @@ test('returns correct position', async t => {
 	await delay(50);
 
 	// MarginLeft=5 → left=5; second row → top=1
-	t.true(stripAnsi(stdout.get()).includes('5,1'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('5,1'));
 });
 
-test('updates when terminal is resized', async t => {
+test('updates when terminal is resized', async (t: TestContext) => {
 	const stdout = createStdout(100);
 
 	function Test() {
@@ -77,16 +78,16 @@ test('updates when terminal is resized', async t => {
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Width: 100'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Width: 100'));
 
 	(stdout as any).columns = 60;
 	stdout.emit('resize');
 	await delay(200);
 
-	t.true(stripAnsi(stdout.get()).includes('Width: 60'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Width: 60'));
 });
 
-test('uses latest tracked ref when terminal is resized', async t => {
+test('uses latest tracked ref when terminal is resized', async (t: TestContext) => {
 	const stdout = createStdout(100);
 	let trackSecondRef!: () => void;
 
@@ -120,22 +121,22 @@ test('uses latest tracked ref when terminal is resized', async t => {
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Tracked height: 1'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Tracked height: 1'));
 
 	trackSecondRef();
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Tracked height: 1'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Tracked height: 1'));
 
 	(stdout as any).columns = 20;
 	stdout.emit('resize');
 	await delay(200);
 
-	t.true(stripAnsi(stdout.get()).includes('Tracked height: 4'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Tracked height: 4'));
 });
 
-test('updates when sibling content changes', async t => {
+test('updates when sibling content changes', async (t: TestContext) => {
 	const stdout = createStdout(100);
 	let externalSetSiblingText!: (text: string) => void;
 
@@ -160,19 +161,19 @@ test('updates when sibling content changes', async t => {
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Height: 1'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Height: 1'));
 
 	externalSetSiblingText('line 1\nline 2\nline 3');
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Height: 3'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Height: 3'));
 });
 
-test('updates when sibling content changes but tracked component is memoized', async t => {
+test('updates when sibling content changes but tracked component is memoized', async (t: TestContext) => {
 	const stdout = createStdout(100);
 	let externalSetSiblingText!: (text: string) => void;
 
-	const MemoizedTrackedBox = React.memo(function () {
+	const MemoizedTrackedBox = React.memo(() => {
 		const ref = useRef<DOMElement>(null);
 		const {top} = useBoxMetrics(ref);
 
@@ -199,36 +200,38 @@ test('updates when sibling content changes but tracked component is memoized', a
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Top: 1'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Top: 1'));
 
 	externalSetSiblingText('line 1\nline 2\nline 3');
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Top: 3'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Top: 3'));
 });
 
-test('updates when tracked ref attaches after initial render and component is memoized', async t => {
+test('updates when tracked ref attaches after initial render and component is memoized', async (t: TestContext) => {
 	const stdout = createStdout(100);
 	let externalSetSiblingText!: (text: string) => void;
-	let externalSetIsTrackedElementMounted!: (value: boolean) => void;
+	let externalSetIsTrackedElementMounted!: (isMounted: boolean) => void;
 
-	const MemoizedTrackedBox = React.memo(function ({
-		isTrackedElementMounted,
-	}: {
-		readonly isTrackedElementMounted: boolean;
-	}) {
-		const ref = useRef<DOMElement>(null);
-		const {top} = useBoxMetrics(ref);
+	const MemoizedTrackedBox = React.memo(
+		({
+			isTrackedElementMounted,
+		}: {
+			readonly isTrackedElementMounted: boolean;
+		}) => {
+			const ref = useRef<DOMElement>(null);
+			const {top} = useBoxMetrics(ref);
 
-		return isTrackedElementMounted ? (
-			<Box ref={ref}>
+			return isTrackedElementMounted ? (
+				<Box ref={ref}>
+					<Text>Top: {top}</Text>
+				</Box>
+			) : (
 				<Text>Top: {top}</Text>
-			</Box>
-		) : (
-			<Text>Top: {top}</Text>
-		);
-	});
+			);
+		},
+	);
 
 	function Test() {
 		const [siblingText, setSiblingText] = useState('line 1');
@@ -249,22 +252,22 @@ test('updates when tracked ref attaches after initial render and component is me
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Top: 0'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Top: 0'));
 
 	externalSetIsTrackedElementMounted(true);
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Top: 1'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Top: 1'));
 
 	externalSetSiblingText('line 1\nline 2\nline 3');
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Top: 3'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Top: 3'));
 });
 
-test('does not trigger extra re-renders when layout is unchanged', async t => {
+test('does not trigger extra re-renders when layout is unchanged', async (t: TestContext) => {
 	const stdout = createStdout(100);
 	let renderCount = 0;
 
@@ -285,7 +288,8 @@ test('does not trigger extra re-renders when layout is unchanged', async t => {
 
 	// Renders settle at 2: initial render (layout all zeros) → setLayout triggers
 	// re-render (layout measured) → bail-out prevents any further renders.
-	t.true(renderCount >= 2 && renderCount <= 3);
+	t.assert.ok(renderCount >= 2);
+	t.assert.ok(renderCount <= 3);
 });
 
 function SimpleBox() {
@@ -298,20 +302,21 @@ function SimpleBox() {
 	);
 }
 
-test.serial('removes resize listener on unmount', async t => {
+test('removes resize listener on unmount', async (t: TestContext) => {
 	const stdout = createStdout(100);
 
 	const initialListenerCount = stdout.listenerCount('resize');
 	const {unmount, waitUntilRenderFlush} = render(<SimpleBox />, {stdout});
 	await waitUntilRenderFlush();
 
-	t.true(stdout.listenerCount('resize') > initialListenerCount);
+	t.assert.ok(stdout.listenerCount('resize') > initialListenerCount);
 	unmount();
 
-	t.is(stdout.listenerCount('resize'), initialListenerCount);
+	t.assert.strictEqual(stdout.listenerCount('resize'), initialListenerCount);
 });
 
-test.serial('does not crash when resize fires after unmount', async t => {
+// eslint-disable-next-line node-test/require-assertion -- Passes when the resize does not throw.
+test('does not crash when resize fires after unmount', async () => {
 	const stdout = createStdout(100);
 
 	const {unmount, waitUntilRenderFlush} = render(<SimpleBox />, {stdout});
@@ -320,11 +325,9 @@ test.serial('does not crash when resize fires after unmount', async t => {
 
 	stdout.emit('resize');
 	await delay(50);
-
-	t.pass();
 });
 
-test('returns zeros when ref is not attached', async t => {
+test('returns zeros when ref is not attached', async (t: TestContext) => {
 	const stdout = createStdout(100);
 
 	function Test() {
@@ -343,10 +346,10 @@ test('returns zeros when ref is not attached', async t => {
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('0,0,0,0,false'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('0,0,0,0,false'));
 });
 
-test('hasMeasured becomes true when tracked element is mounted on initial render', async t => {
+test('hasMeasured becomes true when tracked element is mounted on initial render', async (t: TestContext) => {
 	const stdout = createStdout(100);
 
 	function Test() {
@@ -364,10 +367,10 @@ test('hasMeasured becomes true when tracked element is mounted on initial render
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Has measured: true'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Has measured: true'));
 });
 
-test('hasMeasured resets when tracked ref switches to a detached element', async t => {
+test('hasMeasured resets when tracked ref switches to a detached element', async (t: TestContext) => {
 	const stdout = createStdout(100);
 	let trackSecondRef!: () => void;
 	let mountSecondRef!: () => void;
@@ -407,22 +410,22 @@ test('hasMeasured resets when tracked ref switches to a detached element', async
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Has measured: true'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Has measured: true'));
 
 	trackSecondRef();
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Has measured: false'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Has measured: false'));
 
 	mountSecondRef();
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Has measured: true'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Has measured: true'));
 });
 
-test('hasMeasured becomes true after the tracked element is measured', async t => {
+test('hasMeasured becomes true after the tracked element is measured', async (t: TestContext) => {
 	const stdout = createStdout(100);
 	let mountTrackedElement!: () => void;
 
@@ -452,16 +455,16 @@ test('hasMeasured becomes true after the tracked element is measured', async t =
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Has measured: false'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Has measured: false'));
 
 	mountTrackedElement();
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Has measured: true'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Has measured: true'));
 });
 
-test('resets metrics when tracked element unmounts', async t => {
+test('resets metrics when tracked element unmounts', async (t: TestContext) => {
 	const stdout = createStdout(100);
 	let unmountTrackedElement!: () => void;
 
@@ -493,16 +496,16 @@ test('resets metrics when tracked element unmounts', async t => {
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Metrics: 10,1,0,0,true'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Metrics: 10,1,0,0,true'));
 
 	unmountTrackedElement();
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('Metrics: 0,0,0,0,false'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('Metrics: 0,0,0,0,false'));
 });
 
-test('returns viewport client size and content size for overflowing content', async t => {
+test('returns viewport client size and content size for overflowing content', async (t: TestContext) => {
 	const stdout = createStdout(100);
 
 	function Test() {
@@ -540,10 +543,10 @@ test('returns viewport client size and content size for overflowing content', as
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('client:12x2 content:20x5'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('client:12x2 content:20x5'));
 });
 
-test('content size updates when content grows', async t => {
+test('content size updates when content grows', async (t: TestContext) => {
 	const stdout = createStdout(100);
 	let addItem!: () => void;
 
@@ -577,18 +580,18 @@ test('content size updates when content grows', async t => {
 	await waitUntilRenderFlush();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('contentHeight:2'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('contentHeight:2'));
 
 	addItem();
 	await delay(50);
 
-	t.true(stripAnsi(stdout.get()).includes('contentHeight:3'));
+	t.assert.ok(stripAnsi(stdout.get()).includes('contentHeight:3'));
 });
 
-for (const concurrent of [false, true]) {
-	test(`tracks a box mounted by child state - concurrent=${concurrent}`, async t => {
+for (const isConcurrent of [false, true]) {
+	test(`tracks a box mounted by child state - concurrent=${isConcurrent}`, async (t: TestContext) => {
 		const stdout = createStdout();
-		let setChildVisible!: (visible: boolean) => void;
+		let setChildVisible!: (isVisible: boolean) => void;
 
 		function Child({
 			boxRef,
@@ -620,19 +623,25 @@ for (const concurrent of [false, true]) {
 
 		let instance!: ReturnType<typeof render>;
 		await act(async () => {
-			instance = render(<Parent />, {stdout, debug: true, concurrent});
+			instance = render(<Parent />, {
+				stdout,
+				debug: true,
+				concurrent: isConcurrent,
+			});
 		});
-		t.teardown(instance.unmount);
-		t.is(stdout.get(), '0:false');
+		t.after(() => {
+			instance.unmount();
+		});
+		t.assert.strictEqual(stdout.get(), '0:false');
 
 		await act(async () => {
 			setChildVisible(true);
 		});
-		t.is(stdout.get(), 'Tracked\n10:true');
+		t.assert.strictEqual(stdout.get(), 'Tracked\n10:true');
 
 		await act(async () => {
 			setChildVisible(false);
 		});
-		t.is(stdout.get(), '0:false');
+		t.assert.strictEqual(stdout.get(), '0:false');
 	});
 }

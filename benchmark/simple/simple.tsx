@@ -5,8 +5,7 @@ function App() {
 	return (
 		<Box flexDirection="column" padding={1}>
 			<Text underline bold color="red">
-				{/* eslint-disable-next-line react/jsx-curly-brace-presence */}
-				{'Hello World'}
+				Hello World
 			</Text>
 
 			<Box marginTop={1} width={60}>

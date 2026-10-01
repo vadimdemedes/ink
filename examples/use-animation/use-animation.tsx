@@ -100,7 +100,7 @@ function UseAnimationDemo() {
 						rainbowColors[(frame.fast + index) % rainbowColors.length];
 
 					return (
-						// eslint-disable-next-line react/no-array-index-key
+						// eslint-disable-next-line @eslint-react/no-array-index-key -- The title is static and characters can repeat, so the position is the only identity.
 						<Text key={index} color={color}>
 							{character}
 						</Text>
@@ -115,7 +115,7 @@ function UseAnimationDemo() {
 			<Text>
 				{'  '}
 				{segments.map((segment, index) => (
-					// eslint-disable-next-line react/no-array-index-key
+					// eslint-disable-next-line @eslint-react/no-array-index-key -- Segments are rebuilt every frame and have no identity other than their position.
 					<Text key={index} color={segment.color}>
 						{segment.text}
 					</Text>

@@ -167,15 +167,15 @@ export const insertBeforeNode = (
 
 export const removeChildNode = (
 	node: DOMElement,
-	removeNode: DOMNode,
+	removedNode: DOMNode,
 ): void => {
-	if (removeNode.yogaNode) {
-		removeNode.parentNode?.yogaNode?.removeChild(removeNode.yogaNode);
+	if (removedNode.yogaNode) {
+		removedNode.parentNode?.yogaNode?.removeChild(removedNode.yogaNode);
 	}
 
-	removeNode.parentNode = undefined;
+	removedNode.parentNode = undefined;
 
-	const index = node.childNodes.indexOf(removeNode);
+	const index = node.childNodes.indexOf(removedNode);
 	if (index >= 0) {
 		node.childNodes.splice(index, 1);
 	}
@@ -205,10 +205,10 @@ trap on a use-after-free when the wrapper is dereferenced (see
 QwenLM/qwen-code#6820). Nulling the references makes those guards effective and
 turns any lingering access into a safe no-op.
 */
-export const freeYogaSubtree = (removeNode: DOMNode): void => {
-	removeNode.yogaNode?.unsetMeasureFunc();
-	removeNode.yogaNode?.freeRecursive();
-	nullifyYogaNodes(removeNode);
+export const freeYogaSubtree = (removedNode: DOMNode): void => {
+	removedNode.yogaNode?.unsetMeasureFunc();
+	removedNode.yogaNode?.freeRecursive();
+	nullifyYogaNodes(removedNode);
 };
 
 export const setAttribute = (
@@ -284,20 +284,15 @@ const measureTextNode = function (
 	const wrappedDimensions = measureText(wrappedText);
 
 	// Reserve the truncation width so rendering does not truncate again at a narrower width when a wide character leaves an unused column.
-	if (textWrap.startsWith('truncate')) {
-		return {width, height: wrappedDimensions.height};
-	}
-
-	return wrappedDimensions;
+	return textWrap.startsWith('truncate')
+		? {width, height: wrappedDimensions.height}
+		: wrappedDimensions;
 };
 
-const findClosestYogaNode = (node?: DOMNode): YogaNode | undefined => {
-	if (!node?.parentNode) {
-		return undefined;
-	}
-
-	return node.yogaNode ?? findClosestYogaNode(node.parentNode);
-};
+const findClosestYogaNode = (node?: DOMNode): YogaNode | undefined =>
+	node?.parentNode
+		? (node.yogaNode ?? findClosestYogaNode(node.parentNode))
+		: undefined;
 
 const markNodeAsDirty = (node?: DOMNode): void => {
 	// Mark closest Yoga node as dirty to measure text dimensions again
@@ -320,6 +315,7 @@ export const setNodeHidden = (node: DOMElement, isHidden: boolean): void => {
 
 export const setTextNodeValue = (node: TextNode, text: string): void => {
 	if (typeof text !== 'string') {
+		// eslint-disable-next-line unicorn/no-useless-coercion -- Runtime guard for callers that pass non-string values despite the type.
 		text = String(text);
 	}
 

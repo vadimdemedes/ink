@@ -1491,7 +1491,7 @@ render(<Example />);
 
 Output:
 
-```
+```text
 Hello
 World
 ```
@@ -3106,7 +3106,7 @@ For example, for this code:
 
 Ink will generate the following output for screen readers:
 
-```
+```text
 (checked) checkbox: Accept terms and conditions
 ```
 

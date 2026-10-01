@@ -1,5 +1,5 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text, render, renderToString} from '../src/index.js';
 import {type Styles} from '../src/styles.js';
 import createStdout from './helpers/create-stdout.js';
@@ -27,7 +27,7 @@ const cases: Array<[string, Styles, Styles]> = [
 ];
 
 for (const [name, before, after] of cases) {
-	test(`rerender matches fresh layout after ${name}`, async t => {
+	test(`rerender matches fresh layout after ${name}`, async (t: TestContext) => {
 		const view = (style: Styles) => (
 			<Box width={30} height={12} flexDirection="column">
 				<Box {...style}>
@@ -43,11 +43,16 @@ for (const [name, before, after] of cases) {
 			debug: true,
 			patchConsole: false,
 		});
-		t.teardown(instance.unmount);
+		t.after(() => {
+			instance.unmount();
+		});
 		await instance.waitUntilRenderFlush();
 		instance.rerender(view(after));
 		await instance.waitUntilRenderFlush();
 
-		t.is(stdout.get(), renderToString(view(after), {columns: 30}));
+		t.assert.strictEqual(
+			stdout.get(),
+			renderToString(view(after), {columns: 30}),
+		);
 	});
 }

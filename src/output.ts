@@ -63,11 +63,7 @@ const intersectBound = (
 		return b;
 	}
 
-	if (b === undefined) {
-		return a;
-	}
-
-	return tighter(a, b);
+	return b === undefined ? a : tighter(a, b);
 };
 
 // Bounds are half-open: `x2`/`y2` are exclusive, so an axis is empty as soon as its lower bound reaches its upper one.
@@ -134,17 +130,159 @@ class OutputCaches {
 }
 
 export default class Output {
-	width: number;
-	height: number;
-
 	private readonly operations: Operation[] = [];
 	private readonly caches: OutputCaches = new OutputCaches();
+
+	width: number;
+	height: number;
 
 	constructor(options: Options) {
 		const {width, height} = options;
 
 		this.width = width;
 		this.height = height;
+	}
+
+	private applyWriteOperation(
+		output: StyledChar[][],
+		operation: WriteOperation,
+		clip: Clip | undefined,
+	): void {
+		const {text, transformers} = operation;
+		let {x, y} = operation;
+		// Preserve styles across explicit newlines before clipping individual rows.
+		const characterLines: StyledChar[][] = [[]];
+		for (const character of this.caches.getStyledChars(text)) {
+			if (character.value === '\n') {
+				characterLines.push([]);
+			} else {
+				characterLines.at(-1)!.push(character);
+			}
+		}
+
+		let lines = characterLines.map(line => styledCharsToString(line));
+
+		if (clip) {
+			// Two nested clips can intersect to nothing. Nothing is visible, so bail out before slicing.
+			if (isClipEmpty(clip)) {
+				return;
+			}
+
+			const shouldClipHorizontally =
+				typeof clip?.x1 === 'number' && typeof clip?.x2 === 'number';
+
+			const shouldClipVertically =
+				typeof clip?.y1 === 'number' && typeof clip?.y2 === 'number';
+
+			// If text is positioned outside of clipping area altogether,
+			// skip to the next operation to avoid unnecessary calculations
+			if (shouldClipHorizontally) {
+				const width = this.caches.getWidestLine(text);
+
+				if (x + width < clip.x1! || x > clip.x2!) {
+					return;
+				}
+			}
+
+			if (shouldClipVertically) {
+				const height = lines.length;
+
+				if (y + height < clip.y1! || y > clip.y2!) {
+					return;
+				}
+			}
+
+			if (shouldClipHorizontally) {
+				lines = lines.map(line => {
+					const from = x < clip.x1! ? clip.x1! - x : 0;
+					const width = this.caches.getStringWidth(line);
+					const to = x + width > clip.x2! ? clip.x2! - x : width;
+
+					return this.sliceLineToColumns(line, from, to);
+				});
+
+				if (x < clip.x1!) {
+					x = clip.x1!;
+				}
+			}
+
+			if (shouldClipVertically) {
+				const from = y < clip.y1! ? clip.y1! - y : 0;
+				const height = lines.length;
+				const to = y + height > clip.y2! ? clip.y2! - y : height;
+
+				lines = lines.slice(from, to);
+
+				if (y < clip.y1!) {
+					y = clip.y1!;
+				}
+			}
+		}
+
+		for (let [index, line] of lines.entries()) {
+			const currentLine = output[y + index];
+
+			// Lines above or below the output area have no corresponding pre-initialized row.
+			if (!currentLine) {
+				continue;
+			}
+
+			for (const transformer of transformers) {
+				line = transformer(line, index + y - operation.y);
+			}
+
+			const characters = this.caches.getStyledChars(line);
+
+			// Nothing to write (e.g. line was clipped away).
+			if (characters.length === 0) {
+				continue;
+			}
+
+			let offsetX = x;
+
+			// Wide characters (e.g. CJK) occupy two cells: a leading
+			// cell with the character and a trailing placeholder with
+			// value ''. When an overlapping write lands in the middle
+			// of a wide character, the boundary cells need cleanup so
+			// the terminal never renders a half-visible wide character.
+			// Preserve the styles of cells outside the overlapping write.
+			if (
+				currentLine[offsetX]?.value === '' &&
+				offsetX > 0 &&
+				this.caches.getStringWidth(currentLine[offsetX - 1]?.value ?? '') > 1
+			) {
+				currentLine[offsetX - 1] = blankCell(currentLine[offsetX - 1]!);
+			}
+
+			for (const character of characters) {
+				currentLine[offsetX] = character;
+
+				// Determine printed width using string-width to align with measurement
+				const characterWidth = Math.max(
+					1,
+					this.caches.getStringWidth(character.value),
+				);
+
+				// For multi-column characters, clear following cells to avoid stray spaces/artifacts
+				if (characterWidth > 1) {
+					for (let offset = 1; offset < characterWidth; offset++) {
+						currentLine[offsetX + offset] = {
+							type: 'char',
+							// Preserve visible cells when the leading cell is outside the output.
+							value: offsetX < 0 ? ' ' : '',
+							fullWidth: false,
+							styles: character.styles,
+						};
+					}
+				}
+
+				offsetX += characterWidth;
+			}
+
+			if (currentLine[offsetX]?.value === '') {
+				currentLine[offsetX] = blankCell(currentLine[offsetX]!);
+			}
+		}
 	}
 
 	write(
@@ -155,7 +293,7 @@ export default class Output {
 	): void {
 		const {transformers} = options;
 
-		if (!text) {
+		if (text === '') {
 			return;
 		}
 
@@ -239,150 +377,10 @@ export default class Output {
 			if (operation.type === 'clip') {
 				// Nested clips must intersect, not replace, otherwise an inner `overflow="hidden"` box lets content escape the outer clip and overwrite surrounding UI.
 				clips.push(intersectClips(clips.at(-1), operation.clip));
-			}
-
-			if (operation.type === 'unclip') {
+			} else if (operation.type === 'unclip') {
 				clips.pop();
-			}
-
-			if (operation.type === 'write') {
-				const {text, transformers} = operation;
-				let {x, y} = operation;
-				// Preserve styles across explicit newlines before clipping individual rows.
-				const characterLines: StyledChar[][] = [[]];
-				for (const character of this.caches.getStyledChars(text)) {
-					if (character.value === '\n') {
-						characterLines.push([]);
-					} else {
-						characterLines.at(-1)!.push(character);
-					}
-				}
-
-				let lines = characterLines.map(line => styledCharsToString(line));
-
-				const clip = clips.at(-1);
-
-				if (clip) {
-					// Two nested clips can intersect to nothing. Nothing is visible, so bail out before slicing.
-					if (isClipEmpty(clip)) {
-						continue;
-					}
-
-					const clipHorizontally =
-						typeof clip?.x1 === 'number' && typeof clip?.x2 === 'number';
-
-					const clipVertically =
-						typeof clip?.y1 === 'number' && typeof clip?.y2 === 'number';
-
-					// If text is positioned outside of clipping area altogether,
-					// skip to the next operation to avoid unnecessary calculations
-					if (clipHorizontally) {
-						const width = this.caches.getWidestLine(text);
-
-						if (x + width < clip.x1! || x > clip.x2!) {
-							continue;
-						}
-					}
-
-					if (clipVertically) {
-						const height = lines.length;
-
-						if (y + height < clip.y1! || y > clip.y2!) {
-							continue;
-						}
-					}
-
-					if (clipHorizontally) {
-						lines = lines.map(line => {
-							const from = x < clip.x1! ? clip.x1! - x : 0;
-							const width = this.caches.getStringWidth(line);
-							const to = x + width > clip.x2! ? clip.x2! - x : width;
-
-							return this.sliceLineToColumns(line, from, to);
-						});
-
-						if (x < clip.x1!) {
-							x = clip.x1!;
-						}
-					}
-
-					if (clipVertically) {
-						const from = y < clip.y1! ? clip.y1! - y : 0;
-						const height = lines.length;
-						const to = y + height > clip.y2! ? clip.y2! - y : height;
-
-						lines = lines.slice(from, to);
-
-						if (y < clip.y1!) {
-							y = clip.y1!;
-						}
-					}
-				}
-
-				for (let [index, line] of lines.entries()) {
-					const currentLine = output[y + index];
-
-					// Lines above or below the output area have no corresponding pre-initialized row.
-					if (!currentLine) {
-						continue;
-					}
-
-					for (const transformer of transformers) {
-						line = transformer(line, index + y - operation.y);
-					}
-
-					const characters = this.caches.getStyledChars(line);
-					let offsetX = x;
-
-					// Nothing to write (e.g. line was clipped away).
-					if (characters.length === 0) {
-						continue;
-					}
-
-					// Wide characters (e.g. CJK) occupy two cells: a leading
-					// cell with the character and a trailing placeholder with
-					// value ''. When an overlapping write lands in the middle
-					// of a wide character, the boundary cells need cleanup so
-					// the terminal never renders a half-visible wide character.
-					// Preserve the styles of cells outside the overlapping write.
-					if (
-						currentLine[offsetX]?.value === '' &&
-						offsetX > 0 &&
-						this.caches.getStringWidth(currentLine[offsetX - 1]?.value ?? '') >
-							1
-					) {
-						currentLine[offsetX - 1] = blankCell(currentLine[offsetX - 1]!);
-					}
-
-					for (const character of characters) {
-						currentLine[offsetX] = character;
-
-						// Determine printed width using string-width to align with measurement
-						const characterWidth = Math.max(
-							1,
-							this.caches.getStringWidth(character.value),
-						);
-
-						// For multi-column characters, clear following cells to avoid stray spaces/artifacts
-						if (characterWidth > 1) {
-							for (let index = 1; index < characterWidth; index++) {
-								currentLine[offsetX + index] = {
-									type: 'char',
-									// Preserve visible cells when the leading cell is outside the output.
-									value: offsetX < 0 ? ' ' : '',
-									fullWidth: false,
-									styles: character.styles,
-								};
-							}
-						}
-
-						offsetX += characterWidth;
-					}
-
-					if (currentLine[offsetX]?.value === '') {
-						currentLine[offsetX] = blankCell(currentLine[offsetX]!);
-					}
-				}
+			} else {
+				this.applyWriteOperation(output, operation, clips.at(-1));
 			}
 		}
 

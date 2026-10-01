@@ -11,7 +11,7 @@ function PasteDemo({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
-		if (test === 'escapeSequences' && text === 'hello\u001B[Aworld') {
+		if (test === 'escapeSequences' && text === 'hello\u{1B}[Aworld') {
 			exit();
 			return;
 		}
@@ -39,15 +39,17 @@ function PasteDemo({test}: {readonly test: string | undefined}) {
 
 function MultipleHooksDemo() {
 	const {exit} = useApp();
-	const receivedCount = React.useRef(0);
+	const receivedCountRef = React.useRef(0);
 
 	const onPaste = React.useCallback(
 		(text: string) => {
-			if (text === 'hello') {
-				receivedCount.current++;
-				if (receivedCount.current >= 2) {
-					exit();
-				}
+			if (text !== 'hello') {
+				return;
+			}
+
+			receivedCountRef.current++;
+			if (receivedCountRef.current >= 2) {
+				exit();
 			}
 		},
 		[exit],

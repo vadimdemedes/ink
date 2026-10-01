@@ -1,7 +1,7 @@
 import React from 'react';
 import {Box, Text} from '../../src/index.js';
 
-function BoxBackgrounds() {
+export default function BoxBackgrounds() {
 	return (
 		<Box flexDirection="column" gap={1}>
 			<Text bold>Box Background Examples:</Text>
@@ -116,5 +116,3 @@ function BoxBackgrounds() {
 		</Box>
 	);
 }
-
-export default BoxBackgrounds;

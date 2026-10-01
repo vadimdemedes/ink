@@ -46,7 +46,7 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			return {
 				output,
 				outputHeight,
-				staticOutput: staticOutput ? `${staticOutput}\n` : '',
+				staticOutput: staticOutput === '' ? '' : `${staticOutput}\n`,
 			};
 		}
 

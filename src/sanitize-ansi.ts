@@ -2,7 +2,7 @@ import {hasAnsiControlCharacters, tokenizeAnsi} from './ansi-tokenizer.js';
 
 const sgrParametersRegex = /^[\d:;]*$/;
 // Terminals print nothing for C0 controls and DEL, so strip them; tabs and newlines carry layout. ESC and C1 never reach text tokens, the tokenizer owns them.
-const controlCharactersRegex = /(?![\t\n])\p{Cc}/gu;
+const controlCharactersRegex = /(?![\t\n])\p{Control}/gu;
 const leadingMarksRegex = /^\p{Mark}+/u;
 
 // @alcalzone/ansi-tokenize only accepts `[0-9;]` SGR parameters and renders anything else as visible cells, so colon sub-parameters are rewritten before layout.
@@ -73,19 +73,21 @@ const sanitizeAnsi = (text: string): string => {
 		}
 
 		if (
-			token.type === 'csi' &&
-			token.finalCharacter === 'm' &&
-			token.intermediateString === '' &&
-			sgrParametersRegex.test(token.parameterString)
+			token.type !== 'csi' ||
+			token.finalCharacter !== 'm' ||
+			token.intermediateString !== '' ||
+			!sgrParametersRegex.test(token.parameterString)
 		) {
-			const parameters = token.parameterString
-				.split(';')
-				.map(parameter => normalizeParameter(parameter))
-				.filter(parameter => parameter !== undefined);
+			continue;
+		}
 
-			if (parameters.length > 0) {
-				pendingStyles += `\u001B[${parameters.join(';')}m`;
-			}
+		const parameters = token.parameterString
+			.split(';')
+			.map(parameter => normalizeParameter(parameter))
+			.filter(parameter => parameter !== undefined);
+
+		if (parameters.length > 0) {
+			pendingStyles += `\u{1B}[${parameters.join(';')}m`;
 		}
 	}
 

@@ -1,19 +1,19 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text, Newline} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 
-test('row - align text to center', t => {
+test('row - align text to center', (t: TestContext) => {
 	const output = renderToString(
 		<Box alignItems="center" height={3}>
 			<Text>Test</Text>
 		</Box>,
 	);
 
-	t.is(output, '\nTest\n');
+	t.assert.strictEqual(output, '\nTest\n');
 });
 
-test('row - align multiple text nodes to center', t => {
+test('row - align multiple text nodes to center', (t: TestContext) => {
 	const output = renderToString(
 		<Box alignItems="center" height={3}>
 			<Text>A</Text>
@@ -21,20 +21,20 @@ test('row - align multiple text nodes to center', t => {
 		</Box>,
 	);
 
-	t.is(output, '\nAB\n');
+	t.assert.strictEqual(output, '\nAB\n');
 });
 
-test('row - align text to bottom', t => {
+test('row - align text to bottom', (t: TestContext) => {
 	const output = renderToString(
 		<Box alignItems="flex-end" height={3}>
 			<Text>Test</Text>
 		</Box>,
 	);
 
-	t.is(output, '\n\nTest');
+	t.assert.strictEqual(output, '\n\nTest');
 });
 
-test('row - align multiple text nodes to bottom', t => {
+test('row - align multiple text nodes to bottom', (t: TestContext) => {
 	const output = renderToString(
 		<Box alignItems="flex-end" height={3}>
 			<Text>A</Text>
@@ -42,30 +42,30 @@ test('row - align multiple text nodes to bottom', t => {
 		</Box>,
 	);
 
-	t.is(output, '\n\nAB');
+	t.assert.strictEqual(output, '\n\nAB');
 });
 
-test('column - align text to center', t => {
+test('column - align text to center', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="center" width={10}>
 			<Text>Test</Text>
 		</Box>,
 	);
 
-	t.is(output, '   Test');
+	t.assert.strictEqual(output, '   Test');
 });
 
-test('column - align text to right', t => {
+test('column - align text to right', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-end" width={10}>
 			<Text>Test</Text>
 		</Box>,
 	);
 
-	t.is(output, '      Test');
+	t.assert.strictEqual(output, '      Test');
 });
 
-test('row - align items stretch', t => {
+test('row - align items stretch', (t: TestContext) => {
 	const output = renderToString(
 		<Box alignItems="stretch" height={5}>
 			<Box borderStyle="single">
@@ -74,10 +74,10 @@ test('row - align items stretch', t => {
 		</Box>,
 	);
 
-	t.is(output, '┌─┐\n│X│\n│ │\n│ │\n└─┘');
+	t.assert.strictEqual(output, '┌─┐\n│X│\n│ │\n│ │\n└─┘');
 });
 
-test('row - default align items stretches children', t => {
+test('row - default align items stretches children', (t: TestContext) => {
 	const output = renderToString(
 		<Box height={5}>
 			<Box borderStyle="single">
@@ -86,10 +86,10 @@ test('row - default align items stretches children', t => {
 		</Box>,
 	);
 
-	t.is(output, '┌─┐\n│X│\n│ │\n│ │\n└─┘');
+	t.assert.strictEqual(output, '┌─┐\n│X│\n│ │\n│ │\n└─┘');
 });
 
-test('row - align text to baseline', t => {
+test('row - align text to baseline', (t: TestContext) => {
 	const output = renderToString(
 		<Box alignItems="baseline" height={3}>
 			<Text>
@@ -100,5 +100,5 @@ test('row - align text to baseline', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A\nBX\n');
+	t.assert.strictEqual(output, 'A\nBX\n');
 });

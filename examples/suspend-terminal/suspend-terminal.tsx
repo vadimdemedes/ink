@@ -14,9 +14,9 @@ const runChild = async (command: string, args: string[]): Promise<void> =>
 			} else {
 				reject(
 					new Error(
-						signal
-							? `Child process terminated by signal ${signal}`
-							: `Child process exited with code ${code}`,
+						signal === null
+							? `Child process exited with code ${code}`
+							: `Child process terminated by signal ${signal}`,
 					),
 				);
 			}

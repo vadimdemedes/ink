@@ -1,5 +1,5 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text, render} from '../src/index.js';
 import {
 	renderToString,
@@ -7,7 +7,7 @@ import {
 } from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
 
-test('set width', t => {
+test('set width', (t: TestContext) => {
 	const output = renderToString(
 		<Box>
 			<Box width={5}>
@@ -17,10 +17,10 @@ test('set width', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A    B');
+	t.assert.strictEqual(output, 'A    B');
 });
 
-test('set width in percent', t => {
+test('set width in percent', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={10}>
 			<Box width="50%">
@@ -30,10 +30,10 @@ test('set width in percent', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A    B');
+	t.assert.strictEqual(output, 'A    B');
 });
 
-test('set width in fractional percent', t => {
+test('set width in fractional percent', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={200}>
 			<Box width="12.5%">
@@ -44,10 +44,10 @@ test('set width in fractional percent', t => {
 		{columns: 200},
 	);
 
-	t.is(output, `A${' '.repeat(24)}B`);
+	t.assert.strictEqual(output, `A${' '.repeat(24)}B`);
 });
 
-test('set min width', t => {
+test('set min width', (t: TestContext) => {
 	const smallerOutput = renderToString(
 		<Box>
 			<Box minWidth={5}>
@@ -57,7 +57,7 @@ test('set min width', t => {
 		</Box>,
 	);
 
-	t.is(smallerOutput, 'A    B');
+	t.assert.strictEqual(smallerOutput, 'A    B');
 
 	const largerOutput = renderToString(
 		<Box>
@@ -68,24 +68,30 @@ test('set min width', t => {
 		</Box>,
 	);
 
-	t.is(largerOutput, 'AAAAAB');
+	t.assert.strictEqual(largerOutput, 'AAAAAB');
 });
 
-test.failing('set min width in percent', t => {
-	const output = renderToString(
-		<Box width={10}>
-			{/* @ts-expect-error Unsupported until Yoga fixes percentage width constraints. */}
-			<Box minWidth="50%">
-				<Text>A</Text>
-			</Box>
-			<Text>B</Text>
-		</Box>,
-	);
+// TODO: Use `{expectFailure: '…'}` instead of `skip` when we target Node.js 24.
+test(
+	'set min width in percent',
+	// eslint-disable-next-line node-test/no-skip-test -- Known failure. Node.js 22 does not support `expectFailure`.
+	{skip: 'Yoga does not support percentage min width'},
+	(t: TestContext) => {
+		const output = renderToString(
+			<Box width={10}>
+				{/* @ts-expect-error Unsupported until Yoga fixes percentage width constraints. */}
+				<Box minWidth="50%">
+					<Text>A</Text>
+				</Box>
+				<Text>B</Text>
+			</Box>,
+		);
 
-	t.is(output, 'A    B');
-});
+		t.assert.strictEqual(output, 'A    B');
+	},
+);
 
-test('set width to zero', t => {
+test('set width to zero', (t: TestContext) => {
 	const output = renderToString(
 		<Box>
 			<Box width={0}>
@@ -95,10 +101,10 @@ test('set width to zero', t => {
 		</Box>,
 	);
 
-	t.is(output, '|ello');
+	t.assert.strictEqual(output, '|ello');
 });
 
-test('set width to zero with text below', t => {
+test('set width to zero with text below', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Box>
@@ -111,10 +117,10 @@ test('set width to zero with text below', t => {
 		</Box>,
 	);
 
-	t.is(output, '|ello\nnext');
+	t.assert.strictEqual(output, '|ello\nnext');
 });
 
-test('set width to a fraction of a column', t => {
+test('set width to a fraction of a column', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={10} flexDirection="column">
 			<Box>
@@ -127,10 +133,10 @@ test('set width to a fraction of a column', t => {
 		</Box>,
 	);
 
-	t.is(output, '|\ne\nl\nl\no\nnext');
+	t.assert.strictEqual(output, '|\ne\nl\nl\no\nnext');
 });
 
-test('truncated text at a positive fractional width keeps its row', t => {
+test('truncated text at a positive fractional width keeps its row', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={10} flexDirection="column">
 			<Box width={0.5}>
@@ -140,10 +146,10 @@ test('truncated text at a positive fractional width keeps its row', t => {
 		</Box>,
 	);
 
-	t.is(output, '…\nnext');
+	t.assert.strictEqual(output, '…\nnext');
 });
 
-test('padding leaves no room for text', t => {
+test('padding leaves no room for text', (t: TestContext) => {
 	const output = renderToString(
 		<Box>
 			<Box width={2} paddingX={1}>
@@ -153,10 +159,10 @@ test('padding leaves no room for text', t => {
 		</Box>,
 	);
 
-	t.is(output, ' h|llo');
+	t.assert.strictEqual(output, ' h|llo');
 });
 
-test('shrink text to zero width', t => {
+test('shrink text to zero width', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={5}>
 			<Box flexBasis={0} flexShrink={1}>
@@ -168,10 +174,10 @@ test('shrink text to zero width', t => {
 		</Box>,
 	);
 
-	t.is(output, 'world');
+	t.assert.strictEqual(output, 'world');
 });
 
-test('set height', t => {
+test('set height', (t: TestContext) => {
 	const output = renderToString(
 		<Box height={4}>
 			<Text>A</Text>
@@ -179,10 +185,10 @@ test('set height', t => {
 		</Box>,
 	);
 
-	t.is(output, 'AB\n\n\n');
+	t.assert.strictEqual(output, 'AB\n\n\n');
 });
 
-test('set height in percent', t => {
+test('set height in percent', (t: TestContext) => {
 	const output = renderToString(
 		<Box height={6} flexDirection="column">
 			<Box height="50%">
@@ -192,10 +198,10 @@ test('set height in percent', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A\n\n\nB\n\n');
+	t.assert.strictEqual(output, 'A\n\n\nB\n\n');
 });
 
-test('cut text over the set height', t => {
+test('cut text over the set height', (t: TestContext) => {
 	const output = renderToString(
 		<Box height={2}>
 			<Text>AAAABBBBCCCC</Text>
@@ -203,17 +209,17 @@ test('cut text over the set height', t => {
 		{columns: 4},
 	);
 
-	t.is(output, 'AAAA\nBBBB');
+	t.assert.strictEqual(output, 'AAAA\nBBBB');
 });
 
-test('set min height', t => {
+test('set min height', (t: TestContext) => {
 	const smallerOutput = renderToString(
 		<Box minHeight={4}>
 			<Text>A</Text>
 		</Box>,
 	);
 
-	t.is(smallerOutput, 'A\n\n\n');
+	t.assert.strictEqual(smallerOutput, 'A\n\n\n');
 
 	const largerOutput = renderToString(
 		<Box minHeight={2}>
@@ -223,10 +229,10 @@ test('set min height', t => {
 		</Box>,
 	);
 
-	t.is(largerOutput, 'A\n\n\n');
+	t.assert.strictEqual(largerOutput, 'A\n\n\n');
 });
 
-test('set min height in percent', t => {
+test('set min height in percent', (t: TestContext) => {
 	const output = renderToString(
 		<Box height={6} flexDirection="column">
 			<Box minHeight="50%">
@@ -236,10 +242,10 @@ test('set min height in percent', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A\n\n\nB\n\n');
+	t.assert.strictEqual(output, 'A\n\n\nB\n\n');
 });
 
-test('set max width', t => {
+test('set max width', (t: TestContext) => {
 	const constrainedOutput = renderToString(
 		<Box>
 			<Box maxWidth={3}>
@@ -250,7 +256,7 @@ test('set max width', t => {
 		{columns: 10},
 	);
 
-	t.is(constrainedOutput, 'AAAB\nAA');
+	t.assert.strictEqual(constrainedOutput, 'AAAB\nAA');
 
 	const unconstrainedOutput = renderToString(
 		<Box>
@@ -261,10 +267,10 @@ test('set max width', t => {
 		</Box>,
 	);
 
-	t.is(unconstrainedOutput, 'AAAB');
+	t.assert.strictEqual(unconstrainedOutput, 'AAAB');
 });
 
-test('clears maxWidth on rerender', t => {
+test('clears maxWidth on rerender', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test({maxWidth}: {readonly maxWidth?: number}) {
@@ -283,13 +289,13 @@ test('clears maxWidth on rerender', t => {
 		debug: true,
 	});
 
-	t.is(stdout.write.lastCall.args[0], 'AAAB\nAA');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], 'AAAB\nAA');
 
 	rerender(<Test maxWidth={undefined} />);
-	t.is(stdout.write.lastCall.args[0], 'AAAAAB');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], 'AAAAAB');
 });
 
-test('set max height', t => {
+test('set max height', (t: TestContext) => {
 	const constrainedOutput = renderToString(
 		<Box maxHeight={2}>
 			<Box height={4}>
@@ -298,7 +304,7 @@ test('set max height', t => {
 		</Box>,
 	);
 
-	t.is(constrainedOutput, 'A\n');
+	t.assert.strictEqual(constrainedOutput, 'A\n');
 
 	const unconstrainedOutput = renderToString(
 		<Box maxHeight={4}>
@@ -306,10 +312,10 @@ test('set max height', t => {
 		</Box>,
 	);
 
-	t.is(unconstrainedOutput, 'A');
+	t.assert.strictEqual(unconstrainedOutput, 'A');
 });
 
-test('clears maxHeight on rerender', t => {
+test('clears maxHeight on rerender', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test({maxHeight}: {readonly maxHeight?: number}) {
@@ -327,13 +333,13 @@ test('clears maxHeight on rerender', t => {
 		debug: true,
 	});
 
-	t.is(stdout.write.lastCall.args[0], 'A\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], 'A\n');
 
 	rerender(<Test maxHeight={undefined} />);
-	t.is(stdout.write.lastCall.args[0], 'A\n\n\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], 'A\n\n\n');
 });
 
-test('set aspect ratio with width', t => {
+test('set aspect ratio with width', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Box width={8} aspectRatio={2} borderStyle="single">
@@ -343,10 +349,10 @@ test('set aspect ratio with width', t => {
 		</Box>,
 	);
 
-	t.is(output, '┌──────┐\n│X     │\n│      │\n└──────┘\nY');
+	t.assert.strictEqual(output, '┌──────┐\n│X     │\n│      │\n└──────┘\nY');
 });
 
-test('set aspect ratio with height', t => {
+test('set aspect ratio with height', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Box height={3} aspectRatio={2} borderStyle="single">
@@ -356,10 +362,10 @@ test('set aspect ratio with height', t => {
 		</Box>,
 	);
 
-	t.is(output, '┌────┐\n│X   │\n└────┘\nY');
+	t.assert.strictEqual(output, '┌────┐\n│X   │\n└────┘\nY');
 });
 
-test('set aspect ratio with width and height', t => {
+test('set aspect ratio with width and height', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Box width={8} height={3} aspectRatio={2} borderStyle="single">
@@ -369,10 +375,10 @@ test('set aspect ratio with width and height', t => {
 		</Box>,
 	);
 
-	t.is(output, '┌────┐\n│X   │\n└────┘\nY');
+	t.assert.strictEqual(output, '┌────┐\n│X   │\n└────┘\nY');
 });
 
-test('set aspect ratio with maxHeight constraint', t => {
+test('set aspect ratio with maxHeight constraint', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Box width={10} maxHeight={3} aspectRatio={2} borderStyle="single">
@@ -382,10 +388,10 @@ test('set aspect ratio with maxHeight constraint', t => {
 		</Box>,
 	);
 
-	t.is(output, '┌────┐\n│X   │\n└────┘\nY');
+	t.assert.strictEqual(output, '┌────┐\n│X   │\n└────┘\nY');
 });
 
-test('clears aspectRatio on rerender', t => {
+test('clears aspectRatio on rerender', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test({aspectRatio}: {readonly aspectRatio?: number}) {
@@ -404,30 +410,39 @@ test('clears aspectRatio on rerender', t => {
 		debug: true,
 	});
 
-	t.is(
+	t.assert.strictEqual(
 		stdout.write.lastCall.args[0],
 		'┌──────┐\n│X     │\n│      │\n└──────┘\nY',
 	);
 
 	rerender(<Test aspectRatio={undefined} />);
-	t.is(stdout.write.lastCall.args[0], '┌──────┐\n│X     │\n└──────┘\nY');
-});
-
-test.failing('set max width in percent', t => {
-	const output = renderToString(
-		<Box width={10}>
-			{/* @ts-expect-error Unsupported until Yoga fixes percentage width constraints. */}
-			<Box maxWidth="50%">
-				<Text>AAAAAAAAAA</Text>
-			</Box>
-			<Text>B</Text>
-		</Box>,
+	t.assert.strictEqual(
+		stdout.write.lastCall.args[0],
+		'┌──────┐\n│X     │\n└──────┘\nY',
 	);
-
-	t.is(output, 'AAAAAB');
 });
 
-test('set max height in percent', t => {
+// TODO: Use `{expectFailure: '…'}` instead of `skip` when we target Node.js 24.
+test(
+	'set max width in percent',
+	// eslint-disable-next-line node-test/no-skip-test -- Known failure. Node.js 22 does not support `expectFailure`.
+	{skip: 'Yoga does not support percentage max width'},
+	(t: TestContext) => {
+		const output = renderToString(
+			<Box width={10}>
+				{/* @ts-expect-error Unsupported until Yoga fixes percentage width constraints. */}
+				<Box maxWidth="50%">
+					<Text>AAAAAAAAAA</Text>
+				</Box>
+				<Text>B</Text>
+			</Box>,
+		);
+
+		t.assert.strictEqual(output, 'AAAAAB');
+	},
+);
+
+test('set max height in percent', (t: TestContext) => {
 	const output = renderToString(
 		<Box height={6} flexDirection="column">
 			<Box maxHeight="50%">
@@ -439,11 +454,11 @@ test('set max height in percent', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A\n\n\nB\n\n');
+	t.assert.strictEqual(output, 'A\n\n\nB\n\n');
 });
 
 // Concurrent mode tests
-test('set width - concurrent', async t => {
+test('set width - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box>
 			<Box width={5}>
@@ -453,10 +468,10 @@ test('set width - concurrent', async t => {
 		</Box>,
 	);
 
-	t.is(output, 'A    B');
+	t.assert.strictEqual(output, 'A    B');
 });
 
-test('set height - concurrent', async t => {
+test('set height - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box height={4}>
 			<Text>A</Text>
@@ -464,5 +479,5 @@ test('set height - concurrent', async t => {
 		</Box>,
 	);
 
-	t.is(output, 'AB\n\n\n');
+	t.assert.strictEqual(output, 'AB\n\n\n');
 });

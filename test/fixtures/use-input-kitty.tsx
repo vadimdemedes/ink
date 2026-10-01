@@ -63,13 +63,13 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		// Test super modifier (Cmd on Mac, Win on Windows)
-		if (test === 'super' && key.super && input === 's') {
+		if (test === 'super' && input === 's' && key.super) {
 			exit();
 			return;
 		}
 
 		// Test hyper modifier
-		if (test === 'hyper' && key.hyper && input === 'h') {
+		if (test === 'hyper' && input === 'h' && key.hyper) {
 			exit();
 			return;
 		}
@@ -98,7 +98,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		// Test super+ctrl combination
-		if (test === 'superCtrl' && key.super && key.ctrl && input === 's') {
+		if (test === 'superCtrl' && input === 's' && key.super && key.ctrl) {
 			exit();
 			return;
 		}
@@ -116,7 +116,7 @@ function UserInput({test}: {readonly test: string | undefined}) {
 		}
 
 		// Test press event type (default)
-		if (test === 'press' && key.eventType === 'press' && input === 'a') {
+		if (test === 'press' && input === 'a' && key.eventType === 'press') {
 			exit();
 			return;
 		}

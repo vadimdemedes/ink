@@ -7,18 +7,18 @@ function SubprocessOutput() {
 	const [output, setOutput] = React.useState('');
 
 	React.useEffect(() => {
-		const subProcess = childProcess.spawn('npm', [
+		const subprocess = childProcess.spawn('npm', [
 			'run',
 			'example',
 			'examples/jest',
 		]);
 
-		subProcess.on('error', error => {
+		subprocess.on('error', error => {
 			setOutput(error.message);
 		});
 
-		subProcess.stdout.setEncoding('utf8');
-		subProcess.stdout.on('data', (newOutput: string) => {
+		subprocess.stdout.setEncoding('utf8');
+		subprocess.stdout.on('data', (newOutput: string) => {
 			setOutput(previousOutput =>
 				(previousOutput + newOutput).split('\n').slice(-5).join('\n'),
 			);

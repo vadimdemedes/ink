@@ -1,47 +1,47 @@
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
 import measureText from '../src/measure-text.js';
 
-test('measure single word', t => {
-	t.deepEqual(measureText('constructor'), {width: 11, height: 1});
+test('measure single word', (t: TestContext) => {
+	t.assert.deepStrictEqual(measureText('constructor'), {width: 11, height: 1});
 });
 
-test('measure empty string', t => {
-	t.deepEqual(measureText(''), {width: 0, height: 0});
+test('measure empty string', (t: TestContext) => {
+	t.assert.deepStrictEqual(measureText(''), {width: 0, height: 0});
 });
 
-test('measure multiline text', t => {
+test('measure multiline text', (t: TestContext) => {
 	const result = measureText('hello\nworld');
-	t.is(result.width, 5);
-	t.is(result.height, 2);
+	t.assert.strictEqual(result.width, 5);
+	t.assert.strictEqual(result.height, 2);
 });
 
-test('measure multiline text with varying line lengths', t => {
+test('measure multiline text with varying line lengths', (t: TestContext) => {
 	const result = measureText('a\nfoo\nhi');
-	t.is(result.width, 3);
-	t.is(result.height, 3);
+	t.assert.strictEqual(result.width, 3);
+	t.assert.strictEqual(result.height, 3);
 });
 
-test('measure text with trailing newline', t => {
+test('measure text with trailing newline', (t: TestContext) => {
 	const result = measureText('hello\n');
-	t.is(result.width, 5);
-	t.is(result.height, 2);
+	t.assert.strictEqual(result.width, 5);
+	t.assert.strictEqual(result.height, 2);
 });
 
-test('measure text with only newlines', t => {
+test('measure text with only newlines', (t: TestContext) => {
 	const result = measureText('\n\n');
-	t.is(result.width, 0);
-	t.is(result.height, 3);
+	t.assert.strictEqual(result.width, 0);
+	t.assert.strictEqual(result.height, 3);
 });
 
-test('returns cached result on repeated calls', t => {
+test('returns cached result on repeated calls', (t: TestContext) => {
 	const first = measureText('cached-test');
-	t.is(first.width, 11);
-	t.is(first.height, 1);
+	t.assert.strictEqual(first.width, 11);
+	t.assert.strictEqual(first.height, 1);
 	const second = measureText('cached-test');
-	t.is(first, second);
+	t.assert.strictEqual(first, second);
 });
 
-test('evicts old cached results', t => {
+test('evicts old cached results', (t: TestContext) => {
 	const first = measureText('eviction-test-first');
 
 	for (let index = 0; index < 8192; index++) {
@@ -49,35 +49,35 @@ test('evicts old cached results', t => {
 	}
 
 	const second = measureText('eviction-test-first');
-	t.not(first, second);
+	t.assert.notStrictEqual(first, second);
 });
 
-test('measure text with ANSI escape sequences', t => {
-	const result = measureText('\u001B[31mred\u001B[0m');
-	t.is(result.width, 3);
-	t.is(result.height, 1);
+test('measure text with ANSI escape sequences', (t: TestContext) => {
+	const result = measureText('\u{1B}[31mred\u{1B}[0m');
+	t.assert.strictEqual(result.width, 3);
+	t.assert.strictEqual(result.height, 1);
 });
 
-test('measure text with 256-color ANSI', t => {
-	const result = measureText('\u001B[38;5;196mred\u001B[0m');
-	t.is(result.width, 3);
-	t.is(result.height, 1);
+test('measure text with 256-color ANSI', (t: TestContext) => {
+	const result = measureText('\u{1B}[38;5;196mred\u{1B}[0m');
+	t.assert.strictEqual(result.width, 3);
+	t.assert.strictEqual(result.height, 1);
 });
 
-test('measure text with wide characters', t => {
+test('measure text with wide characters', (t: TestContext) => {
 	const result = measureText('你好');
-	t.is(result.width, 4);
-	t.is(result.height, 1);
+	t.assert.strictEqual(result.width, 4);
+	t.assert.strictEqual(result.height, 1);
 });
 
-test('measure text with emoji', t => {
+test('measure text with emoji', (t: TestContext) => {
 	const result = measureText('🍔');
-	t.is(result.width, 2);
-	t.is(result.height, 1);
+	t.assert.strictEqual(result.width, 2);
+	t.assert.strictEqual(result.height, 1);
 });
 
-test('measure multiline with wide characters', t => {
+test('measure multiline with wide characters', (t: TestContext) => {
 	const result = measureText('🍔🍟\nabc');
-	t.is(result.width, 4);
-	t.is(result.height, 2);
+	t.assert.strictEqual(result.width, 4);
+	t.assert.strictEqual(result.height, 2);
 });

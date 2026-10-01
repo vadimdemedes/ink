@@ -1,5 +1,5 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text, render} from '../src/index.js';
 import {
 	renderToString,
@@ -28,13 +28,13 @@ for (const [alignContent, expectedOutput] of [
 	['space-evenly', '\nAB\n\nCD\n\n'],
 	['stretch', 'AB\n\n\nCD\n\n'],
 ] as const) {
-	test(`align content ${alignContent}`, t => {
+	test(`align content ${alignContent}`, (t: TestContext) => {
 		const output = renderWithAlignContent(alignContent);
-		t.is(output, expectedOutput);
+		t.assert.strictEqual(output, expectedOutput);
 	});
 }
 
-test('align content defaults to flex-start', t => {
+test('align content defaults to flex-start', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={2} height={6} flexWrap="wrap">
 			<Text>A</Text>
@@ -44,10 +44,10 @@ test('align content defaults to flex-start', t => {
 		</Box>,
 	);
 
-	t.is(output, 'AB\nCD\n\n\n\n');
+	t.assert.strictEqual(output, 'AB\nCD\n\n\n\n');
 });
 
-test('align content does not add extra spacing when there is no free cross-axis space', t => {
+test('align content does not add extra spacing when there is no free cross-axis space', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={2} height={2} flexWrap="wrap" alignContent="center">
 			<Text>A</Text>
@@ -57,10 +57,10 @@ test('align content does not add extra spacing when there is no free cross-axis 
 		</Box>,
 	);
 
-	t.is(output, 'AB\nCD');
+	t.assert.strictEqual(output, 'AB\nCD');
 });
 
-test('clears alignContent on rerender to default flex-start', t => {
+test('clears alignContent on rerender to default flex-start', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test({
@@ -83,13 +83,13 @@ test('clears alignContent on rerender to default flex-start', t => {
 		debug: true,
 	});
 
-	t.is(stdout.write.lastCall.args[0], '\n\nAB\nCD\n\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], '\n\nAB\nCD\n\n');
 
 	rerender(<Test alignContent={undefined} />);
-	t.is(stdout.write.lastCall.args[0], 'AB\nCD\n\n\n\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], 'AB\nCD\n\n\n\n');
 });
 
-test('clears alignContent from stretch on rerender to default flex-start', t => {
+test('clears alignContent from stretch on rerender to default flex-start', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test({
@@ -112,13 +112,13 @@ test('clears alignContent from stretch on rerender to default flex-start', t => 
 		debug: true,
 	});
 
-	t.is(stdout.write.lastCall.args[0], 'AB\n\n\nCD\n\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], 'AB\n\n\nCD\n\n');
 
 	rerender(<Test alignContent={undefined} />);
-	t.is(stdout.write.lastCall.args[0], 'AB\nCD\n\n\n\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], 'AB\nCD\n\n\n\n');
 });
 
-test('clears alignContent when prop is omitted on rerender', t => {
+test('clears alignContent when prop is omitted on rerender', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test({showAlignContent}: {readonly showAlignContent: boolean}) {
@@ -142,13 +142,13 @@ test('clears alignContent when prop is omitted on rerender', t => {
 		debug: true,
 	});
 
-	t.is(stdout.write.lastCall.args[0], '\n\nAB\nCD\n\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], '\n\nAB\nCD\n\n');
 
 	rerender(<Test showAlignContent={false} />);
-	t.is(stdout.write.lastCall.args[0], 'AB\nCD\n\n\n\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], 'AB\nCD\n\n\n\n');
 });
 
-test('align content center - concurrent', async t => {
+test('align content center - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box width={2} height={6} flexWrap="wrap" alignContent="center">
 			<Text>A</Text>
@@ -158,5 +158,5 @@ test('align content center - concurrent', async t => {
 		</Box>,
 	);
 
-	t.is(output, '\n\nAB\nCD\n\n');
+	t.assert.strictEqual(output, '\n\nAB\nCD\n\n');
 });

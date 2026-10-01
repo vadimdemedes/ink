@@ -11,18 +11,9 @@ const {spawn} = require('node-pty') as typeof import('node-pty');
 const fixturesDir = url.fileURLToPath(new URL('../fixtures', import.meta.url));
 
 const term = (fixture: string, args: string[] = []) => {
-	let resolve: (value?: any) => void;
-	let reject: (error?: Error) => void;
-
-	const exitPromise = new Promise((resolve2, reject2) => {
-		resolve = resolve2;
-		reject = reject2;
-	});
-
-	let readyResolve: () => void;
-	const readyPromise = new Promise<void>(r => {
-		readyResolve = r;
-	});
+	const {promise: exitPromise, resolve, reject} = Promise.withResolvers<void>();
+	const {promise: readyPromise, resolve: readyResolve} =
+		Promise.withResolvers<void>();
 
 	const env: Record<string, string> = {
 		...(process.env as Record<string, string>),

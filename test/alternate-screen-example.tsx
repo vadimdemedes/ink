@@ -1,12 +1,12 @@
 import {spawn as spawnProcess} from 'node:child_process';
 import * as path from 'node:path';
 import url from 'node:url';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
 import {gameReducer} from '../examples/alternate-screen/alternate-screen.js';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
-test('snake can move into the tail cell when the tail moves away', t => {
+test('snake can move into the tail cell when the tail moves away', (t: TestContext) => {
 	const state = {
 		snake: [
 			{x: 2, y: 1},
@@ -26,17 +26,17 @@ test('snake can move into the tail cell when the tail moves away', t => {
 		direction: 'down',
 	});
 
-	t.false(nextState.gameOver);
-	t.deepEqual(nextState.snake, [
+	t.assert.strictEqual(nextState.gameOver, false);
+	t.assert.deepStrictEqual(nextState.snake, [
 		{x: 2, y: 2},
 		{x: 2, y: 1},
 		{x: 1, y: 1},
 		{x: 1, y: 2},
 	]);
-	t.is(nextState.score, state.score);
+	t.assert.strictEqual(nextState.score, state.score);
 });
 
-test('snake ends with a win when it fills the board', async t => {
+test('snake ends with a win when it fills the board', async (t: TestContext) => {
 	const fixturePath = path.join(
 		__dirname,
 		'fixtures/alternate-screen-full-board-win.tsx',
@@ -47,12 +47,8 @@ test('snake ends with a win when it fills the board', async t => {
 	});
 
 	let stdout = '';
-	let stderr = '';
 
-	if (!childProcess.stdout || !childProcess.stderr) {
-		t.fail('Fixture process did not expose stdout/stderr pipes');
-		return;
-	}
+	let stderr = '';
 
 	childProcess.stdout.on('data', (data: Uint8Array | string) => {
 		stdout += typeof data === 'string' ? data : data.toString();
@@ -82,11 +78,15 @@ test('snake ends with a win when it fills the board', async t => {
 	});
 
 	if (result.timedOut) {
-		t.fail('Fixture hung instead of finishing the full-board win case');
+		t.assert.fail('Fixture hung instead of finishing the full-board win case');
 		return;
 	}
 
-	t.is(result.exitCode, 0, `Fixture exited with stderr: ${stderr}`);
+	t.assert.strictEqual(
+		result.exitCode,
+		0,
+		`Fixture exited with stderr: ${stderr}`,
+	);
 
 	const nextState = JSON.parse(stdout) as {
 		gameOver: boolean;
@@ -95,8 +95,8 @@ test('snake ends with a win when it fills the board', async t => {
 		snakeLength: number;
 	};
 
-	t.true(nextState.gameOver);
-	t.true(nextState.won);
-	t.is(nextState.score, 297);
-	t.is(nextState.snakeLength, 300);
+	t.assert.ok(nextState.gameOver);
+	t.assert.ok(nextState.won);
+	t.assert.strictEqual(nextState.score, 297);
+	t.assert.strictEqual(nextState.snakeLength, 300);
 });

@@ -1,7 +1,7 @@
 import {Readable} from 'node:stream';
 import {setTimeout as delay} from 'node:timers/promises';
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {render, useApp, useInput} from '../src/index.js';
 import {resolveFlags} from '../src/kitty-keyboard.js';
 import createStdout from './helpers/create-stdout.js';
@@ -13,12 +13,15 @@ const createStdin = () =>
 		setRawMode() {},
 	});
 
-test('associated text requests include all-key reporting', t => {
-	t.is(resolveFlags(['reportAssociatedText']), 24);
-	t.is(resolveFlags(['disambiguateEscapeCodes', 'reportAssociatedText']), 25);
+test('associated text requests include all-key reporting', (t: TestContext) => {
+	t.assert.strictEqual(resolveFlags(['reportAssociatedText']), 24);
+	t.assert.strictEqual(
+		resolveFlags(['disambiguateEscapeCodes', 'reportAssociatedText']),
+		25,
+	);
 });
 
-test('auto detection consumes responses without duplicating input', async t => {
+test('auto detection consumes responses without duplicating input', async (t: TestContext) => {
 	const stdin = createStdin();
 	const stdout = createStdout();
 	const inputs: string[] = [];
@@ -35,14 +38,16 @@ test('auto detection consumes responses without duplicating input', async t => {
 		interactive: true,
 		kittyKeyboard: {mode: 'auto'},
 	});
-	t.teardown(app.unmount);
-	stdin.push('x\u001B[?0u');
+	t.after(() => {
+		app.unmount();
+	});
+	stdin.push('x\u{1B}[?0u');
 	await delay(30);
-	t.deepEqual(inputs, ['x']);
-	t.true(stdout.getWrites().includes('\u001B[>1u'));
+	t.assert.deepStrictEqual(inputs, ['x']);
+	t.assert.ok(stdout.getWrites().includes('\u{1B}[>1u'));
 });
 
-test('suspension cancels pending keyboard negotiation', async t => {
+test('suspension cancels pending keyboard negotiation', async (t: TestContext) => {
 	const stdin = createStdin();
 	const stdout = createStdout();
 	let suspendTerminal!: ReturnType<typeof useApp>['suspendTerminal'];
@@ -59,17 +64,19 @@ test('suspension cancels pending keyboard negotiation', async t => {
 		alternateScreen: true,
 		kittyKeyboard: {mode: 'auto'},
 	});
-	t.teardown(app.unmount);
+	t.after(() => {
+		app.unmount();
+	});
 	const suspension = await suspendTerminal();
 	const beforeResponse = stdout.getWrites().length;
-	stdin.push('\u001B[?0u');
+	stdin.push('\u{1B}[?0u');
 	await delay(30);
-	t.deepEqual(stdout.getWrites().slice(beforeResponse), []);
+	t.assert.deepStrictEqual(stdout.getWrites().slice(beforeResponse), []);
 	await suspension.resume();
-	t.false(stdout.getWrites().includes('\u001B[>1u'));
+	t.assert.strictEqual(stdout.getWrites().includes('\u{1B}[>1u'), false);
 });
 
-test('unmount while suspended does not pop the primary keyboard stack', async t => {
+test('unmount while suspended does not pop the primary keyboard stack', async (t: TestContext) => {
 	const stdin = createStdin();
 	const stdout = createStdout();
 	let suspendTerminal!: ReturnType<typeof useApp>['suspendTerminal'];
@@ -86,15 +93,23 @@ test('unmount while suspended does not pop the primary keyboard stack', async t 
 		alternateScreen: true,
 		kittyKeyboard: {mode: 'enabled'},
 	});
-	t.teardown(app.unmount);
+	t.after(() => {
+		app.unmount();
+	});
 	const suspension = await suspendTerminal();
 	app.unmount();
 	await suspension.resume();
-	t.is(stdout.getWrites().filter(value => value === '\u001B[>1u').length, 1);
-	t.is(stdout.getWrites().filter(value => value === '\u001B[<u').length, 1);
+	t.assert.strictEqual(
+		stdout.getWrites().filter(value => value === '\u{1B}[>1u').length,
+		1,
+	);
+	t.assert.strictEqual(
+		stdout.getWrites().filter(value => value === '\u{1B}[<u').length,
+		1,
+	);
 });
 
-test('pasted query responses remain input and do not enable the protocol', async t => {
+test('pasted query responses remain input and do not enable the protocol', async (t: TestContext) => {
 	const stdin = createStdin();
 	const stdout = createStdout();
 	const inputs: string[] = [];
@@ -111,9 +126,11 @@ test('pasted query responses remain input and do not enable the protocol', async
 		interactive: true,
 		kittyKeyboard: {mode: 'auto'},
 	});
-	t.teardown(app.unmount);
-	stdin.push('\u001B[200~\u001B[?0u\u001B[201~');
+	t.after(() => {
+		app.unmount();
+	});
+	stdin.push('\u{1B}[200~\u{1B}[?0u\u{1B}[201~');
 	await delay(30);
-	t.deepEqual(inputs, ['[?0u']);
-	t.false(stdout.getWrites().includes('\u001B[>1u'));
+	t.assert.deepStrictEqual(inputs, ['[?0u']);
+	t.assert.strictEqual(stdout.getWrites().includes('\u{1B}[>1u'), false);
 });

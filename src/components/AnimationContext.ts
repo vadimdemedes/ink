@@ -11,7 +11,8 @@ type AnimationContextValue = {
 	};
 };
 
-const animationContext = createContext<AnimationContextValue>({
+// eslint-disable-next-line @typescript-eslint/naming-convention -- React contexts are named like components.
+const AnimationContext = createContext<AnimationContextValue>({
 	renderThrottleMs: 0,
 	subscribe() {
 		return {
@@ -21,6 +22,6 @@ const animationContext = createContext<AnimationContextValue>({
 	},
 });
 
-animationContext.displayName = 'InternalAnimationContext';
+AnimationContext.displayName = 'InternalAnimationContext';
 
-export default animationContext;
+export default AnimationContext;

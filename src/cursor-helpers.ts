@@ -5,14 +5,15 @@ export type CursorPosition = {
 	y: number;
 };
 
-const showCursorEscape = '\u001B[?25h';
-const hideCursorEscape = '\u001B[?25l';
+const showCursorEscape = '\u{1B}[?25h';
+const hideCursorEscape = '\u{1B}[?25l';
 
 export {showCursorEscape, hideCursorEscape};
 
 /**
 Compare two cursor positions. Returns true if they differ.
 */
+// eslint-disable-next-line unicorn/consistent-boolean-name -- Exported helper that tests import by this name.
 export const cursorPositionChanged = (
 	a: CursorPosition | undefined,
 	b: CursorPosition | undefined,
@@ -101,11 +102,11 @@ Build the prefix that hides cursor and returns to bottom before erasing or rewri
 Returns empty string if cursor was not shown.
 */
 export const buildReturnToBottomPrefix = (
-	cursorWasShown: boolean,
+	wasCursorShown: boolean,
 	previousLineCount: number,
 	previousCursorPosition: CursorPosition | undefined,
 ): string => {
-	if (!cursorWasShown) {
+	if (!wasCursorShown) {
 		return '';
 	}
 

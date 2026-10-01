@@ -1,4 +1,4 @@
-import {useEffect, useContext, useId} from 'react';
+import {useEffect, use, useId} from 'react';
 import FocusContext from '../components/FocusContext.js';
 import useStdin from './use-stdin.js';
 
@@ -42,7 +42,7 @@ const useFocus = ({
 }: Input = {}): Output => {
 	const {isRawModeSupported, setRawMode} = useStdin();
 	const {activeId, add, remove, activate, deactivate, focus} =
-		useContext(FocusContext);
+		use(FocusContext);
 
 	const generatedId = useId();
 	const id = customId ?? generatedId;

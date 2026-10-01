@@ -6,7 +6,7 @@ function Counter() {
 
 	React.useEffect(() => {
 		const timer = setInterval(() => {
-			setCounter(prevCounter => prevCounter + 1); // eslint-disable-line unicorn/prevent-abbreviations
+			setCounter(previousCounter => previousCounter + 1);
 		}, 100);
 
 		return () => {

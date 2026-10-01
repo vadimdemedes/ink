@@ -1,11 +1,12 @@
+import eslintConfigXoReact from 'eslint-config-xo-react';
 import {type FlatXoConfig} from 'xo';
 
 const xoConfig: FlatXoConfig = [
 	{
 		ignores: ['src/parse-keypress.ts'],
 	},
+	...eslintConfigXoReact({prettier: true}),
 	{
-		react: true,
 		prettier: true,
 		semicolon: true,
 		rules: {
@@ -26,11 +27,48 @@ const xoConfig: FlatXoConfig = [
 			'react-hooks/globals': 'off',
 			'react-hooks/component-hook': 'off',
 			'@stylistic/curly-newline': 'off',
-			'ava/no-conditional-assertion': 'off',
-			'ava/no-todo-test': 'off',
-			'ava/no-useless-t-pass': 'off',
+			'node-test/no-conditional-assertion': 'off',
+			// The test script only runs `test/*.{ts,tsx}`, so the files in `test/helpers` and `test/fixtures` are never run as tests.
+			'node-test/no-import-test-files': 'off',
+			// Ink has its own `aria-*` props and `autoFocus` for terminal focus, not the DOM ones.
+			'jsx-a11y-x/aria-props': 'off',
+			'jsx-a11y-x/no-autofocus': 'off',
+			// Conflicts with Prettier, which removes the parentheses this rule asks for.
+			'@stylistic/no-mixed-operators': 'off',
 			'max-depth': 'off',
 			'max-lines': 'off',
+		},
+	},
+	{
+		files: ['package.json'],
+		rules: {
+			// Layout output can change between `yoga-layout` minor versions.
+			'package-json/dependency-version-range': [
+				'error',
+				{
+					exceptions: ['yoga-layout'],
+				},
+			],
+		},
+	},
+	{
+		files: ['test/**/*.{ts,tsx}'],
+		rules: {
+			'@typescript-eslint/no-floating-promises': [
+				'error',
+				{
+					checkThenables: true,
+					// eslint-disable-next-line @typescript-eslint/naming-convention -- Option name from typescript-eslint.
+					ignoreIIFE: true,
+					allowForKnownSafeCalls: [
+						{
+							from: 'package',
+							name: ['test', 'todo', 'before', 'after'],
+							package: 'node:test',
+						},
+					],
+				},
+			],
 		},
 	},
 	{

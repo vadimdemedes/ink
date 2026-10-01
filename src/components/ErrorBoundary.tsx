@@ -32,10 +32,10 @@ export default class ErrorBoundary extends PureComponent<Props, State> {
 	}
 
 	override render(): ReactNode {
-		if (this.state.error) {
-			return <ErrorOverview error={this.state.error} />;
-		}
-
-		return this.props.children;
+		return this.state.error ? (
+			<ErrorOverview error={this.state.error} />
+		) : (
+			this.props.children
+		);
 	}
 }

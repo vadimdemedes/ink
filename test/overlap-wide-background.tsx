@@ -1,19 +1,19 @@
+import test, {before, after, type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import chalk from 'chalk';
 import {Box, Text, renderToString} from '../src/index.js';
 
 const originalColorLevel = chalk.level;
-test.before(() => {
+before(() => {
 	chalk.level = 3;
 });
-test.after(() => {
+after(() => {
 	chalk.level = originalColorLevel;
 });
 
 for (const glyph of ['你', '👩‍💻']) {
 	for (const left of [0, 1]) {
-		test(`overwriting ${glyph} cell ${left} preserves the other cell's background`, t => {
+		test(`overwriting ${glyph} cell ${left} preserves the other cell's background`, (t: TestContext) => {
 			const output = renderToString(
 				<Box width={3} height={1}>
 					<Text backgroundColor="blue">{glyph}Z</Text>
@@ -39,13 +39,13 @@ for (const glyph of ['你', '👩‍💻']) {
 				</Text>,
 			);
 
-			t.is(output, expected);
+			t.assert.strictEqual(output, expected);
 		});
 	}
 }
 
 for (const replacement of ['XY', '好']) {
-	test(`fully overwriting a wide character with ${replacement} replaces its styles`, t => {
+	test(`fully overwriting a wide character with ${replacement} replaces its styles`, (t: TestContext) => {
 		const output = renderToString(
 			<Box width={3} height={1}>
 				<Text backgroundColor="blue">你Z</Text>
@@ -61,11 +61,11 @@ for (const replacement of ['XY', '好']) {
 			</Text>,
 		);
 
-		t.is(output, expected);
+		t.assert.strictEqual(output, expected);
 	});
 }
 
-test('an overlay crossing two wide characters preserves both exposed backgrounds', t => {
+test('an overlay crossing two wide characters preserves both exposed backgrounds', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={4} height={1}>
 			<Text>
@@ -85,5 +85,5 @@ test('an overlay crossing two wide characters preserves both exposed backgrounds
 		</Text>,
 	);
 
-	t.is(output, expected);
+	t.assert.strictEqual(output, expected);
 });

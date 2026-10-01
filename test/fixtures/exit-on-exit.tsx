@@ -6,13 +6,14 @@ function Test() {
 	const {exit} = useApp();
 
 	useEffect(() => {
-		setTimeout(exit, 500);
+		const exitTimer = setTimeout(exit, 500);
 
 		const timer = setInterval(() => {
 			setCounter(previous => previous + 1);
 		}, 100);
 
 		return () => {
+			clearTimeout(exitTimer);
 			clearInterval(timer);
 		};
 	}, [exit]);

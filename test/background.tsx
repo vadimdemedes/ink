@@ -1,5 +1,5 @@
+import test, {before, after, type TestContext} from 'node:test';
 import React, {useState} from 'react';
-import test from 'ava';
 import chalk from 'chalk';
 import {render, Box, Text, Static} from '../src/index.js';
 import {
@@ -22,36 +22,36 @@ import {enableTestColors, disableTestColors} from './helpers/force-colors.js';
 //    - Ink:   '\u001b[43mOuter: \u001b[44mInner: \u001b[41mExplicit\u001b[49m' (no intermediate resets)
 const ansi = {
 	// Standard colors
-	bgRed: '\u001B[41m',
-	bgGreen: '\u001B[42m',
-	bgYellow: '\u001B[43m',
-	bgBlue: '\u001B[44m',
-	bgMagenta: '\u001B[45m',
-	bgCyan: '\u001B[46m',
+	bgRed: '\u{1B}[41m',
+	bgGreen: '\u{1B}[42m',
+	bgYellow: '\u{1B}[43m',
+	bgBlue: '\u{1B}[44m',
+	bgMagenta: '\u{1B}[45m',
+	bgCyan: '\u{1B}[46m',
 
 	// Hex/RGB colors (24-bit)
-	bgHexRed: '\u001B[48;2;255;0;0m', // #FF0000 or rgb(255,0,0)
+	bgHexRed: '\u{1B}[48;2;255;0;0m', // #FF0000 or rgb(255,0,0)
 
 	// ANSI256 colors
-	bgAnsi256Nine: '\u001B[48;5;9m', // Ansi256(9)
+	bgAnsi256Nine: '\u{1B}[48;5;9m', // Ansi256(9)
 
 	// Reset
-	bgReset: '\u001B[49m',
+	bgReset: '\u{1B}[49m',
 } as const;
 
 // Enable colors for all tests
-test.before(() => {
+before(() => {
 	enableTestColors();
 });
 
-test.after(() => {
+after(() => {
 	disableTestColors();
 });
 
 for (const initialBackgroundColor of [undefined, 'red']) {
-	test(`Box preserves child state when ${initialBackgroundColor ? 'removing' : 'adding'} a background color`, async t => {
+	test(`Box preserves child state when ${initialBackgroundColor === undefined ? 'adding' : 'removing'} a background color`, async (t: TestContext) => {
 		function StatefulChild({initialValue}: {readonly initialValue: string}) {
-			// eslint-disable-next-line react/hook-use-state -- A remount must be observable through the initial state.
+			// A remount must be observable through the initial state.
 			const [value] = useState(initialValue);
 			return <Text>{value}</Text>;
 		}
@@ -61,52 +61,58 @@ for (const initialBackgroundColor of [undefined, 'red']) {
 				<StatefulChild initialValue="original" />
 			</Box>,
 		);
-		t.teardown(unmount);
-		t.true(getOutput().includes('original'));
+		t.after(() => {
+			unmount();
+		});
+		t.assert.ok(getOutput().includes('original'));
 
 		await rerenderAsync(
-			<Box backgroundColor={initialBackgroundColor ? undefined : 'red'}>
+			<Box
+				backgroundColor={
+					initialBackgroundColor === undefined ? 'red' : undefined
+				}
+			>
 				<StatefulChild initialValue="reset" />
 			</Box>,
 		);
 
-		t.true(getOutput().includes('original'));
-		t.false(getOutput().includes('reset'));
+		t.assert.ok(getOutput().includes('original'));
+		t.assert.strictEqual(getOutput().includes('reset'), false);
 	});
 }
 
-test('Static background color is inherited by its text', t => {
+test('Static background color is inherited by its text', (t: TestContext) => {
 	const output = renderToString(
 		<Static items={['A']} style={{width: 3, backgroundColor: 'blue'}}>
 			{item => <Text key={item}>{item}</Text>}
 		</Static>,
 	);
 
-	t.is(output, `${ansi.bgBlue}A  ${ansi.bgReset}\n`);
+	t.assert.strictEqual(output, `${ansi.bgBlue}A  ${ansi.bgReset}\n`);
 });
 
 // Text inheritance tests (these work in non-TTY)
-test('Text inherits parent Box background color', t => {
+test('Text inherits parent Box background color', (t: TestContext) => {
 	const output = renderToString(
 		<Box backgroundColor="green" alignSelf="flex-start">
 			<Text>Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, chalk.bgGreen('Hello World'));
+	t.assert.strictEqual(output, chalk.bgGreen('Hello World'));
 });
 
-test('Text explicit background color overrides inherited', t => {
+test('Text explicit background color overrides inherited', (t: TestContext) => {
 	const output = renderToString(
 		<Box backgroundColor="red" alignSelf="flex-start">
 			<Text backgroundColor="blue">Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, chalk.bgBlue('Hello World'));
+	t.assert.strictEqual(output, chalk.bgBlue('Hello World'));
 });
 
-test('Nested Box background inheritance', t => {
+test('Nested Box background inheritance', (t: TestContext) => {
 	const output = renderToString(
 		<Box backgroundColor="red" alignSelf="flex-start">
 			<Box backgroundColor="blue">
@@ -115,10 +121,10 @@ test('Nested Box background inheritance', t => {
 		</Box>,
 	);
 
-	t.is(output, chalk.bgBlue('Hello World'));
+	t.assert.strictEqual(output, chalk.bgBlue('Hello World'));
 });
 
-test('Nested Text inherits the nearest Text background instead of the Box background', t => {
+test('Nested Text inherits the nearest Text background instead of the Box background', (t: TestContext) => {
 	const output = renderToString(
 		<Box backgroundColor="red" alignSelf="flex-start">
 			<Text backgroundColor="blue">
@@ -127,20 +133,20 @@ test('Nested Text inherits the nearest Text background instead of the Box backgr
 		</Box>,
 	);
 
-	t.is(output, chalk.bgBlue('Hello World'));
+	t.assert.strictEqual(output, chalk.bgBlue('Hello World'));
 });
 
-test('Text without parent Box background has no inheritance', t => {
+test('Text without parent Box background has no inheritance', (t: TestContext) => {
 	const output = renderToString(
 		<Box alignSelf="flex-start">
 			<Text>Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, 'Hello World');
+	t.assert.strictEqual(output, 'Hello World');
 });
 
-test('Multiple Text elements inherit same background', t => {
+test('Multiple Text elements inherit same background', (t: TestContext) => {
 	const output = renderToString(
 		<Box backgroundColor="yellow" alignSelf="flex-start">
 			<Text>Hello </Text>
@@ -149,10 +155,10 @@ test('Multiple Text elements inherit same background', t => {
 	);
 
 	// Text nodes are rendered as a single block with shared background
-	t.is(output, chalk.bgYellow('Hello World'));
+	t.assert.strictEqual(output, chalk.bgYellow('Hello World'));
 });
 
-test('Mixed text with and without background inheritance', t => {
+test('Mixed text with and without background inheritance', (t: TestContext) => {
 	const output = renderToString(
 		<Box backgroundColor="green" alignSelf="flex-start">
 			<Text>Inherited </Text>
@@ -161,10 +167,13 @@ test('Mixed text with and without background inheritance', t => {
 		</Box>,
 	);
 
-	t.is(output, chalk.bgGreen('Inherited ') + 'No BG ' + chalk.bgRed('Red BG'));
+	t.assert.strictEqual(
+		output,
+		chalk.bgGreen('Inherited ') + 'No BG ' + chalk.bgRed('Red BG'),
+	);
 });
 
-test('Complex nested structure with background inheritance', t => {
+test('Complex nested structure with background inheritance', (t: TestContext) => {
 	const output = renderToString(
 		<Box backgroundColor="yellow" alignSelf="flex-start">
 			<Box>
@@ -178,75 +187,75 @@ test('Complex nested structure with background inheritance', t => {
 	);
 
 	// Colors transition without reset codes between them - actual behavior from debug output
-	t.is(
+	t.assert.strictEqual(
 		output,
 		`${ansi.bgYellow}Outer: ${ansi.bgBlue}Inner: ${ansi.bgRed}Explicit${ansi.bgReset}`,
 	);
 });
 
 // Background color tests for different formats
-test('Box background with standard color', t => {
+test('Box background with standard color', (t: TestContext) => {
 	const output = renderToString(
 		<Box backgroundColor="red" alignSelf="flex-start">
 			<Text>Hello</Text>
 		</Box>,
 	);
 
-	t.is(output, chalk.bgRed('Hello'));
+	t.assert.strictEqual(output, chalk.bgRed('Hello'));
 });
 
-test('Box background with hex color', t => {
+test('Box background with hex color', (t: TestContext) => {
 	const output = renderToString(
 		<Box backgroundColor="#FF0000" alignSelf="flex-start">
 			<Text>Hello</Text>
 		</Box>,
 	);
 
-	t.is(output, chalk.bgHex('#FF0000')('Hello'));
+	t.assert.strictEqual(output, chalk.bgHex('#FF0000')('Hello'));
 });
 
-test('Box background with rgb color', t => {
+test('Box background with rgb color', (t: TestContext) => {
 	const output = renderToString(
 		<Box backgroundColor="rgb(255, 0, 0)" alignSelf="flex-start">
 			<Text>Hello</Text>
 		</Box>,
 	);
 
-	t.is(output, chalk.bgRgb(255, 0, 0)('Hello'));
+	t.assert.strictEqual(output, chalk.bgRgb(255, 0, 0)('Hello'));
 });
 
-test('Box background with ansi256 color', t => {
+test('Box background with ansi256 color', (t: TestContext) => {
 	const output = renderToString(
 		<Box backgroundColor="ansi256(9)" alignSelf="flex-start">
 			<Text>Hello</Text>
 		</Box>,
 	);
 
-	t.is(output, chalk.bgAnsi256(9)('Hello'));
+	t.assert.strictEqual(output, chalk.bgAnsi256(9)('Hello'));
 });
 
-test('Box background with wide characters', t => {
+test('Box background with wide characters', (t: TestContext) => {
 	const output = renderToString(
 		<Box backgroundColor="yellow" alignSelf="flex-start">
 			<Text>こんにちは</Text>
 		</Box>,
 	);
 
-	t.is(output, chalk.bgYellow('こんにちは'));
+	t.assert.strictEqual(output, chalk.bgYellow('こんにちは'));
 });
 
-test('Box background with emojis', t => {
+test('Box background with emojis', (t: TestContext) => {
 	const output = renderToString(
 		<Box backgroundColor="red" alignSelf="flex-start">
 			<Text>🎉🎊</Text>
 		</Box>,
 	);
 
-	t.is(output, chalk.bgRed('🎉🎊'));
+	t.assert.strictEqual(output, chalk.bgRed('🎉🎊'));
 });
 
 // Box background space fill tests - these should work with forced colors
-test('Box background fills entire area with standard color', t => {
+test('Box background fills entire area with standard color', (t: TestContext) => {
 	const output = renderToString(
 		<Box backgroundColor="red" width={10} height={3} alignSelf="flex-start">
 			<Text>Hello</Text>
@@ -254,19 +263,22 @@ test('Box background fills entire area with standard color', t => {
 	);
 
 	// Should contain background color codes and fill spaces for entire Box area
-	t.true(
+	t.assert.ok(
 		output.includes(ansi.bgRed),
 		'Should contain red background start code',
 	);
-	t.true(output.includes(ansi.bgReset), 'Should contain background reset code');
-	t.true(output.includes('Hello'), 'Should contain the text');
-	t.true(
+	t.assert.ok(
+		output.includes(ansi.bgReset),
+		'Should contain background reset code',
+	);
+	t.assert.ok(output.includes('Hello'), 'Should contain the text');
+	t.assert.ok(
 		output.includes(`${ansi.bgRed}          ${ansi.bgReset}`),
 		'Should contain background fill line',
 	);
 });
 
-test('Box background fills with hex color', t => {
+test('Box background fills with hex color', (t: TestContext) => {
 	const output = renderToString(
 		<Box backgroundColor="#FF0000" width={10} height={3} alignSelf="flex-start">
 			<Text>Hello</Text>
@@ -274,15 +286,18 @@ test('Box background fills with hex color', t => {
 	);
 
 	// Should contain hex color background codes and fill spaces
-	t.true(output.includes('Hello'), 'Should contain the text');
-	t.true(
+	t.assert.ok(output.includes('Hello'), 'Should contain the text');
+	t.assert.ok(
 		output.includes(ansi.bgHexRed),
 		'Should contain hex RGB background code',
 	);
-	t.true(output.includes(ansi.bgReset), 'Should contain background reset code');
+	t.assert.ok(
+		output.includes(ansi.bgReset),
+		'Should contain background reset code',
+	);
 });
 
-test('Box background fills with rgb color', t => {
+test('Box background fills with rgb color', (t: TestContext) => {
 	const output = renderToString(
 		<Box
 			backgroundColor="rgb(255, 0, 0)"
@@ -295,12 +310,18 @@ test('Box background fills with rgb color', t => {
 	);
 
 	// Should contain RGB color background codes and fill spaces
-	t.true(output.includes('Hello'), 'Should contain the text');
-	t.true(output.includes(ansi.bgHexRed), 'Should contain RGB background code');
-	t.true(output.includes(ansi.bgReset), 'Should contain background reset code');
+	t.assert.ok(output.includes('Hello'), 'Should contain the text');
+	t.assert.ok(
+		output.includes(ansi.bgHexRed),
+		'Should contain RGB background code',
+	);
+	t.assert.ok(
+		output.includes(ansi.bgReset),
+		'Should contain background reset code',
+	);
 });
 
-test('Box background fills with ansi256 color', t => {
+test('Box background fills with ansi256 color', (t: TestContext) => {
 	const output = renderToString(
 		<Box
 			backgroundColor="ansi256(9)"
@@ -313,15 +334,18 @@ test('Box background fills with ansi256 color', t => {
 	);
 
 	// Should contain ANSI256 color background codes and fill spaces
-	t.true(output.includes('Hello'), 'Should contain the text');
-	t.true(
+	t.assert.ok(output.includes('Hello'), 'Should contain the text');
+	t.assert.ok(
 		output.includes(ansi.bgAnsi256Nine),
 		'Should contain ANSI256 background code',
 	);
-	t.true(output.includes(ansi.bgReset), 'Should contain background reset code');
+	t.assert.ok(
+		output.includes(ansi.bgReset),
+		'Should contain background reset code',
+	);
 });
 
-test('Box background with border fills content area', t => {
+test('Box background with border fills content area', (t: TestContext) => {
 	const output = renderToString(
 		<Box
 			backgroundColor="cyan"
@@ -335,14 +359,20 @@ test('Box background with border fills content area', t => {
 	);
 
 	// Should have background fill inside the border and border characters
-	t.true(output.includes('Hi'), 'Should contain the text');
-	t.true(output.includes(ansi.bgCyan), 'Should contain cyan background code');
-	t.true(output.includes(ansi.bgReset), 'Should contain background reset code');
-	t.true(output.includes('╭'), 'Should contain top-left border');
-	t.true(output.includes('╮'), 'Should contain top-right border');
+	t.assert.ok(output.includes('Hi'), 'Should contain the text');
+	t.assert.ok(
+		output.includes(ansi.bgCyan),
+		'Should contain cyan background code',
+	);
+	t.assert.ok(
+		output.includes(ansi.bgReset),
+		'Should contain background reset code',
+	);
+	t.assert.ok(output.includes('╭'), 'Should contain top-left border');
+	t.assert.ok(output.includes('╮'), 'Should contain top-right border');
 });
 
-test('Box background with padding fills entire padded area', t => {
+test('Box background with padding fills entire padded area', (t: TestContext) => {
 	const output = renderToString(
 		<Box
 			backgroundColor="magenta"
@@ -356,15 +386,18 @@ test('Box background with padding fills entire padded area', t => {
 	);
 
 	// Background should fill the entire Box area including padding
-	t.true(output.includes('Hi'), 'Should contain the text');
-	t.true(
+	t.assert.ok(output.includes('Hi'), 'Should contain the text');
+	t.assert.ok(
 		output.includes(ansi.bgMagenta),
 		'Should contain magenta background code',
 	);
-	t.true(output.includes(ansi.bgReset), 'Should contain background reset code');
+	t.assert.ok(
+		output.includes(ansi.bgReset),
+		'Should contain background reset code',
+	);
 });
 
-test('Box background with center alignment fills entire area', t => {
+test('Box background with center alignment fills entire area', (t: TestContext) => {
 	const output = renderToString(
 		<Box
 			backgroundColor="blue"
@@ -377,12 +410,18 @@ test('Box background with center alignment fills entire area', t => {
 		</Box>,
 	);
 
-	t.true(output.includes('Hi'), 'Should contain centered text');
-	t.true(output.includes(ansi.bgBlue), 'Should contain blue background code');
-	t.true(output.includes(ansi.bgReset), 'Should contain background reset code');
+	t.assert.ok(output.includes('Hi'), 'Should contain centered text');
+	t.assert.ok(
+		output.includes(ansi.bgBlue),
+		'Should contain blue background code',
+	);
+	t.assert.ok(
+		output.includes(ansi.bgReset),
+		'Should contain background reset code',
+	);
 });
 
-test('Box background with column layout fills entire area', t => {
+test('Box background with column layout fills entire area', (t: TestContext) => {
 	const output = renderToString(
 		<Box
 			backgroundColor="green"
@@ -396,14 +435,20 @@ test('Box background with column layout fills entire area', t => {
 		</Box>,
 	);
 
-	t.true(output.includes('Line 1'), 'Should contain first line text');
-	t.true(output.includes('Line 2'), 'Should contain second line text');
-	t.true(output.includes(ansi.bgGreen), 'Should contain green background code');
-	t.true(output.includes(ansi.bgReset), 'Should contain background reset code');
+	t.assert.ok(output.includes('Line 1'), 'Should contain first line text');
+	t.assert.ok(output.includes('Line 2'), 'Should contain second line text');
+	t.assert.ok(
+		output.includes(ansi.bgGreen),
+		'Should contain green background code',
+	);
+	t.assert.ok(
+		output.includes(ansi.bgReset),
+		'Should contain background reset code',
+	);
 });
 
 // Update tests using render() for comprehensive coverage
-test('Box background updates on rerender', t => {
+test('Box background updates on rerender', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test({bgColor}: {readonly bgColor?: string}) {
@@ -419,27 +464,30 @@ test('Box background updates on rerender', t => {
 		debug: true,
 	});
 
-	t.is((stdout.write as any).lastCall.args[0], 'Hello');
+	t.assert.strictEqual((stdout.write as any).lastCall.args[0], 'Hello');
 
 	rerender(<Test bgColor="green" />);
-	t.is((stdout.write as any).lastCall.args[0], chalk.bgGreen('Hello'));
+	t.assert.strictEqual(
+		(stdout.write as any).lastCall.args[0],
+		chalk.bgGreen('Hello'),
+	);
 
 	rerender(<Test />);
-	t.is((stdout.write as any).lastCall.args[0], 'Hello');
+	t.assert.strictEqual((stdout.write as any).lastCall.args[0], 'Hello');
 });
 
 // Concurrent mode tests
-test('Text inherits parent Box background color - concurrent', async t => {
+test('Text inherits parent Box background color - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box backgroundColor="green" alignSelf="flex-start">
 			<Text>Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, chalk.bgGreen('Hello World'));
+	t.assert.strictEqual(output, chalk.bgGreen('Hello World'));
 });
 
-test('Nested Box background inheritance - concurrent', async t => {
+test('Nested Box background inheritance - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box backgroundColor="red" alignSelf="flex-start">
 			<Box backgroundColor="blue">
@@ -448,20 +496,20 @@ test('Nested Box background inheritance - concurrent', async t => {
 		</Box>,
 	);
 
-	t.is(output, chalk.bgBlue('Hello World'));
+	t.assert.strictEqual(output, chalk.bgBlue('Hello World'));
 });
 
-test('Box background with hex color - concurrent', async t => {
+test('Box background with hex color - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box backgroundColor="#FF0000" alignSelf="flex-start">
 			<Text>Hello</Text>
 		</Box>,
 	);
 
-	t.is(output, chalk.bgHex('#FF0000')('Hello'));
+	t.assert.strictEqual(output, chalk.bgHex('#FF0000')('Hello'));
 });
 
-test('Box background updates on rerender - concurrent', async t => {
+test('Box background updates on rerender - concurrent', async (t: TestContext) => {
 	function Test({bgColor}: {readonly bgColor?: string}) {
 		return (
 			<Box backgroundColor={bgColor} alignSelf="flex-start">
@@ -472,16 +520,16 @@ test('Box background updates on rerender - concurrent', async t => {
 
 	const {getOutput, rerenderAsync} = await renderAsync(<Test />);
 
-	t.is(getOutput(), 'Hello');
+	t.assert.strictEqual(getOutput(), 'Hello');
 
 	await rerenderAsync(<Test bgColor="green" />);
-	t.is(getOutput(), chalk.bgGreen('Hello'));
+	t.assert.strictEqual(getOutput(), chalk.bgGreen('Hello'));
 
 	await rerenderAsync(<Test />);
-	t.is(getOutput(), 'Hello');
+	t.assert.strictEqual(getOutput(), 'Hello');
 });
 
-test('Box backgroundColor fills full width on every line when text wraps', t => {
+test('Box backgroundColor fills full width on every line when text wraps', (t: TestContext) => {
 	// "Hello World!!" is 13 chars, width=10 forces wrapping into 2 lines
 	const output = renderToString(
 		<Box backgroundColor="red" width={10} alignSelf="flex-start">
@@ -490,13 +538,13 @@ test('Box backgroundColor fills full width on every line when text wraps', t => 
 	);
 
 	// Both lines are padded to the full 10-char Box width with background color
-	t.is(
+	t.assert.strictEqual(
 		output,
 		`${ansi.bgRed}Hello     ${ansi.bgReset}\n${ansi.bgRed}World!!   ${ansi.bgReset}`,
 	);
 });
 
-test('Text-only backgroundColor colors text content but does not fill Box width', t => {
+test('Text-only backgroundColor colors text content but does not fill Box width', (t: TestContext) => {
 	// Without a Box backgroundColor, only the text characters are colored
 	const output = renderToString(
 		<Box width={10} alignSelf="flex-start">
@@ -505,7 +553,7 @@ test('Text-only backgroundColor colors text content but does not fill Box width'
 	);
 
 	// Text-only bg colors just the text, not the remaining space to fill Box width
-	t.is(
+	t.assert.strictEqual(
 		output,
 		`${ansi.bgRed}Hello ${ansi.bgReset}\n${ansi.bgRed}World!!${ansi.bgReset}`,
 	);

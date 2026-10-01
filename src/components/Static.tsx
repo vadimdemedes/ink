@@ -2,11 +2,11 @@ import React, {
 	useMemo,
 	useState,
 	useLayoutEffect,
-	useContext,
+	use,
 	type ReactNode,
 } from 'react';
 import {type Styles} from '../styles.js';
-import {backgroundContext} from './BackgroundContext.js';
+import {BackgroundContext} from './BackgroundContext.js';
 
 export type Props<T> = {
 	/**
@@ -35,22 +35,20 @@ For example, [Tap](https://github.com/tapjs/node-tap) uses `<Static>` to display
 export default function Static<T>(props: Props<T>) {
 	const {items, children: render, style: customStyle} = props;
 	const [index, setIndex] = useState(0);
-	const inheritedBackgroundColor = useContext(backgroundContext);
+	const inheritedBackgroundColor = use(BackgroundContext);
 	const effectiveBackgroundColor =
-		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- Empty background colors inherit from the parent too.
+		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing, @typescript-eslint/strict-boolean-expressions -- Empty background colors inherit from the parent too.
 		customStyle?.backgroundColor || inheritedBackgroundColor;
 
-	const itemsToRender: T[] = useMemo(() => {
-		return items.slice(index);
-	}, [items, index]);
+	const itemsToRender: T[] = useMemo(() => items.slice(index), [items, index]);
 
 	useLayoutEffect(() => {
 		setIndex(items.length);
 	}, [items.length]);
 
-	const children = itemsToRender.map((item, itemIndex): ReactNode => {
-		return render(item, index + itemIndex);
-	});
+	const children = itemsToRender.map((item, itemIndex): ReactNode =>
+		render(item, index + itemIndex),
+	);
 
 	const style: Styles = useMemo(
 		() => ({
@@ -63,10 +61,10 @@ export default function Static<T>(props: Props<T>) {
 	);
 
 	return (
-		<backgroundContext.Provider value={effectiveBackgroundColor}>
+		<BackgroundContext value={effectiveBackgroundColor}>
 			<ink-box internal_static style={style}>
 				{children}
 			</ink-box>
-		</backgroundContext.Provider>
+		</BackgroundContext>
 	);
 }

@@ -1,14 +1,15 @@
-import React, {act} from 'react';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
+import React from 'react';
 import {render, useInput} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
+import {act} from './helpers/act.js';
 
 for (const [name, sequence] of [
 	['normal Return', '\r'],
 	['application keypad Enter', 'OM'],
 ] as const) {
-	test(`${name} submits through useInput`, async t => {
+	test(`${name} submits through useInput`, async (t: TestContext) => {
 		const stdin = createStdin();
 		const events: Array<{input: string; isReturn: boolean}> = [];
 		function Example() {
@@ -26,19 +27,19 @@ for (const [name, sequence] of [
 				patchConsole: false,
 			});
 		});
-		t.teardown(() => {
+		t.after(() => {
 			instance.unmount();
 		});
 		await act(async () => {
 			emitReadable(stdin, sequence);
 		});
 
-		t.deepEqual(
+		t.assert.deepStrictEqual(
 			events.map(event => event.isReturn),
 			[true],
 		);
 		// Both keys deliver a carriage return as the input value.
-		t.deepEqual(
+		t.assert.deepStrictEqual(
 			events.map(event => event.input),
 			['\r'],
 		);

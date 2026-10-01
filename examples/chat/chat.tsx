@@ -4,7 +4,7 @@ import {render, Text, Box, useInput} from '../../src/index.js';
 const segmenter = new Intl.Segmenter(undefined, {granularity: 'grapheme'});
 
 function ChatApp() {
-	const [{input, messages}, setChat] = useState<{
+	const [chat, setChat] = useState<{
 		input: string;
 		messages: Array<{
 			id: number;
@@ -15,7 +15,7 @@ function ChatApp() {
 	useInput((character, key) => {
 		setChat(previousChat => {
 			if (key.return) {
-				if (previousChat.input) {
+				if (previousChat.input !== '') {
 					return {
 						input: '',
 						messages: [
@@ -46,13 +46,13 @@ function ChatApp() {
 	return (
 		<Box flexDirection="column" padding={1}>
 			<Box flexDirection="column">
-				{messages.map(message => (
+				{chat.messages.map(message => (
 					<Text key={message.id}>{message.text}</Text>
 				))}
 			</Box>
 
 			<Box marginTop={1}>
-				<Text>Enter your message: {input}</Text>
+				<Text>Enter your message: {chat.input}</Text>
 			</Box>
 		</Box>
 	);

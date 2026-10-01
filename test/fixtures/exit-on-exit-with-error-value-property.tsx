@@ -5,11 +5,15 @@ function Test() {
 	const {exit} = useApp();
 
 	useEffect(() => {
-		setTimeout(() => {
+		const timer = setTimeout(() => {
 			const error = new Error('errored');
 			(error as Error & {value: string}).value = 'hello from error';
 			exit(error);
 		}, 500);
+
+		return () => {
+			clearTimeout(timer);
+		};
 	}, [exit]);
 
 	return <Text>Testing</Text>;

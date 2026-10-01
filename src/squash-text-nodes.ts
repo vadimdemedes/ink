@@ -52,7 +52,7 @@ const squashTextNodes = (node: DOMElement): string => {
 
 	// Expand tabs after combining nested text so measurement and rendering use the same columns.
 	if (node.nodeName === 'ink-text' && text.includes('\t')) {
-		text = wrapAnsi(text, Number.POSITIVE_INFINITY, {trim: false});
+		text = wrapAnsi(text, Infinity, {trim: false});
 	}
 
 	return text;

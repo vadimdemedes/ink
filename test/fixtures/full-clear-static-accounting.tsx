@@ -2,6 +2,11 @@ import process from 'node:process';
 import React, {useEffect, useState} from 'react';
 import {Static, Box, Text, render, useApp} from '../../src/index.js';
 
+const nextMacrotask = async () =>
+	new Promise<void>(resolve => {
+		setTimeout(resolve, 0);
+	});
+
 /*
 Related to vadimdemedes/ink#973 (does not close it). This exercises the full-clear accounting bug found while investigating that report: the last line of a <Static> block taller than the viewport is erased (and never repainted) when the live region updates on a later frame. It does not cover the original incremental <Static> path from #973, which stays open.
 
@@ -17,11 +22,6 @@ function FullClearStaticAccounting() {
 	const [label, setLabel] = useState('live');
 
 	useEffect(() => {
-		const nextMacrotask = async () =>
-			new Promise<void>(resolve => {
-				setTimeout(resolve, 0);
-			});
-
 		void (async () => {
 			// Let the initial frame flush before starting the phases.
 			await waitUntilRenderFlush();

@@ -1,11 +1,11 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text, Static, render} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 
 for (const height of [0, 1, 2]) {
-	test(`runtime Static preserves ${height} blank rows in debug output`, async t => {
+	test(`runtime Static preserves ${height} blank rows in debug output`, async (t: TestContext) => {
 		const stdout = createStdout();
 		const instance = render(
 			<>
@@ -16,13 +16,15 @@ for (const height of [0, 1, 2]) {
 			</>,
 			{stdout, debug: true, patchConsole: false},
 		);
-		t.teardown(instance.unmount);
+		t.after(() => {
+			instance.unmount();
+		});
 		await instance.waitUntilRenderFlush();
 
-		t.is(stdout.get(), '\n'.repeat(height) + 'after');
+		t.assert.strictEqual(stdout.get(), '\n'.repeat(height) + 'after');
 	});
 
-	test(`runtime Static preserves ${height} blank rows in non-interactive output`, async t => {
+	test(`runtime Static preserves ${height} blank rows in non-interactive output`, async (t: TestContext) => {
 		const stdout = createStdout(100, false);
 		const instance = render(
 			<>
@@ -33,17 +35,22 @@ for (const height of [0, 1, 2]) {
 			</>,
 			{stdout, interactive: false, patchConsole: false},
 		);
-		t.teardown(instance.unmount);
+		t.after(() => {
+			instance.unmount();
+		});
 		await instance.waitUntilRenderFlush();
 		instance.unmount();
 		await instance.waitUntilExit();
 
-		t.is(stdout.getWrites().join(''), '\n'.repeat(height) + 'after\n');
+		t.assert.strictEqual(
+			stdout.getWrites().join(''),
+			'\n'.repeat(height) + 'after\n',
+		);
 	});
 }
 
-for (const incrementalRendering of [false, true]) {
-	test(`a blank Static append survives a later live update (incremental: ${incrementalRendering})`, async t => {
+for (const isIncrementalRendering of [false, true]) {
+	test(`a blank Static append survives a later live update (incremental: ${isIncrementalRendering})`, async (t: TestContext) => {
 		const stdout = createStdout(100, true);
 		stdout.rows = 8;
 		const view = (items: string[], label: string) => (
@@ -63,10 +70,12 @@ for (const incrementalRendering of [false, true]) {
 		const instance = render(view(['first'], 'live'), {
 			stdout,
 			interactive: true,
-			incrementalRendering,
+			incrementalRendering: isIncrementalRendering,
 			patchConsole: false,
 		});
-		t.teardown(instance.unmount);
+		t.after(() => {
+			instance.unmount();
+		});
 		await instance.waitUntilRenderFlush();
 		instance.rerender(view(['first', 'blank'], 'live'));
 		await instance.waitUntilRenderFlush();
@@ -79,6 +88,11 @@ for (const incrementalRendering of [false, true]) {
 			stdout.getWrites().join('').replaceAll('\n', '\r\n'),
 			8,
 		);
-		t.deepEqual(lines.slice(0, 4), ['first', '', 'last', 'updated']);
+		t.assert.deepStrictEqual(lines.slice(0, 4), [
+			'first',
+			'',
+			'last',
+			'updated',
+		]);
 	});
 }

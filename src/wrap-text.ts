@@ -29,7 +29,7 @@ const wrapText = (
 	// `text` goes last because it's the only part of the key that can contain
 	// arbitrary characters. With it first, ('ab', 12, 'wrap') and
 	// ('ab1', 2, 'wrap') both produce the key `ab12wrap` and share a result.
-	const cacheKey = `${maxWidth}\u0000${String(wrapType)}\u0000${text}`;
+	const cacheKey = `${maxWidth}\u{0}${String(wrapType)}\u{0}${text}`;
 	const cachedText = wrapTextCache.get(cacheKey);
 
 	if (cachedText !== undefined) {
@@ -43,24 +43,18 @@ const wrapText = (
 			trim: false,
 			hard: true,
 		});
-	}
-
-	if (wrapType === 'hard') {
+	} else if (wrapType === 'hard') {
 		wrappedText = wrapAnsi(text, maxWidth, {
 			trim: false,
 			hard: true,
 			wordWrap: false,
 		});
-	}
-
-	if (wrapType!.startsWith('truncate')) {
+	} else if (wrapType!.startsWith('truncate')) {
 		let position: 'end' | 'middle' | 'start' = 'end';
 
 		if (wrapType === 'truncate-middle') {
 			position = 'middle';
-		}
-
-		if (wrapType === 'truncate-start') {
+		} else if (wrapType === 'truncate-start') {
 			position = 'start';
 		}
 

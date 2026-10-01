@@ -1,5 +1,5 @@
 import vm from 'node:vm';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
 import chalk from 'chalk';
 import boxen from 'boxen';
 import React, {useEffect, useLayoutEffect, useState} from 'react';
@@ -15,12 +15,12 @@ import {
 
 // ── Basic rendering ─────────────────────────────────────
 
-test('render simple text', t => {
+test('render simple text', (t: TestContext) => {
 	const output = renderToString(<Text>Hello World</Text>);
-	t.is(output, 'Hello World');
+	t.assert.strictEqual(output, 'Hello World');
 });
 
-test('skip Static content inside a hidden ancestor', t => {
+test('skip Static content inside a hidden ancestor', (t: TestContext) => {
 	const output = renderToString(
 		<>
 			<Box display="none">
@@ -36,15 +36,15 @@ test('skip Static content inside a hidden ancestor', t => {
 		</>,
 	);
 
-	t.is(output, 'Visible');
+	t.assert.strictEqual(output, 'Visible');
 });
 
-test('render text with variable', t => {
+test('render text with variable', (t: TestContext) => {
 	const output = renderToString(<Text>Count: {42}</Text>);
-	t.is(output, 'Count: 42');
+	t.assert.strictEqual(output, 'Count: 42');
 });
 
-test('render nested text components', t => {
+test('render nested text components', (t: TestContext) => {
 	function World() {
 		return <Text>World</Text>;
 	}
@@ -55,32 +55,32 @@ test('render nested text components', t => {
 		</Text>,
 	);
 
-	t.is(output, 'Hello World');
+	t.assert.strictEqual(output, 'Hello World');
 });
 
-test('render empty fragment', t => {
-	const output = renderToString(<></>); // eslint-disable-line react/jsx-no-useless-fragment
-	t.is(output, '');
+test('render empty fragment', (t: TestContext) => {
+	const output = renderToString(<></>); // eslint-disable-line @eslint-react/jsx-no-useless-fragment -- The empty fragment is what this test renders.
+	t.assert.strictEqual(output, '');
 });
 
-test('render null children', t => {
+test('render null children', (t: TestContext) => {
 	const output = renderToString(<Text>{null}</Text>);
-	t.is(output, '');
+	t.assert.strictEqual(output, '');
 });
 
 // ── Layout ──────────────────────────────────────────────
 
-test('render box with padding', t => {
+test('render box with padding', (t: TestContext) => {
 	const output = renderToString(
 		<Box paddingLeft={2}>
 			<Text>Padded</Text>
 		</Box>,
 	);
 
-	t.is(output, '  Padded');
+	t.assert.strictEqual(output, '  Padded');
 });
 
-test('render box with flex direction row', t => {
+test('render box with flex direction row', (t: TestContext) => {
 	const output = renderToString(
 		<Box>
 			<Text>A</Text>
@@ -89,10 +89,10 @@ test('render box with flex direction row', t => {
 		</Box>,
 	);
 
-	t.is(output, 'ABC');
+	t.assert.strictEqual(output, 'ABC');
 });
 
-test('render box with flex direction column', t => {
+test('render box with flex direction column', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Text>Line 1</Text>
@@ -100,20 +100,20 @@ test('render box with flex direction column', t => {
 		</Box>,
 	);
 
-	t.is(output, 'Line 1\nLine 2');
+	t.assert.strictEqual(output, 'Line 1\nLine 2');
 });
 
-test('render margin', t => {
+test('render margin', (t: TestContext) => {
 	const output = renderToString(
 		<Box marginLeft={2}>
 			<Text>Margined</Text>
 		</Box>,
 	);
 
-	t.is(output, '  Margined');
+	t.assert.strictEqual(output, '  Margined');
 });
 
-test('render gap between items', t => {
+test('render gap between items', (t: TestContext) => {
 	const output = renderToString(
 		<Box gap={1}>
 			<Text>A</Text>
@@ -121,10 +121,10 @@ test('render gap between items', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A B');
+	t.assert.strictEqual(output, 'A B');
 });
 
-test('render box with fixed width and height', t => {
+test('render box with fixed width and height', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={10} height={3}>
 			<Text>Hi</Text>
@@ -132,10 +132,10 @@ test('render box with fixed width and height', t => {
 	);
 
 	const lines = output.split('\n');
-	t.is(lines.length, 3);
+	t.assert.strictEqual(lines.length, 3);
 });
 
-test('render spacer pushes content apart', t => {
+test('render spacer pushes content apart', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={20}>
 			<Text>Left</Text>
@@ -144,10 +144,10 @@ test('render spacer pushes content apart', t => {
 		</Box>,
 	);
 
-	t.is(output, 'Left           Right');
+	t.assert.strictEqual(output, 'Left           Right');
 });
 
-test('render newline inserts blank line', t => {
+test('render newline inserts blank line', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Text>Above</Text>
@@ -156,10 +156,10 @@ test('render newline inserts blank line', t => {
 		</Box>,
 	);
 
-	t.is(output, 'Above\n\n\nBelow');
+	t.assert.strictEqual(output, 'Above\n\n\nBelow');
 });
 
-test('render box with border', t => {
+test('render box with border', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="single" width={20}>
 			<Text>Bordered</Text>
@@ -167,7 +167,7 @@ test('render box with border', t => {
 		{columns: 20},
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		boxen('Bordered', {
 			width: 20,
@@ -178,71 +178,71 @@ test('render box with border', t => {
 
 // ── Styling ─────────────────────────────────────────────
 
-test('render colored text', t => {
+test('render colored text', (t: TestContext) => {
 	const output = renderToString(<Text color="green">Green</Text>);
-	t.is(output, chalk.green('Green'));
+	t.assert.strictEqual(output, chalk.green('Green'));
 });
 
-test('render bold text', t => {
+test('render bold text', (t: TestContext) => {
 	const output = renderToString(<Text bold>Bold</Text>);
-	t.is(output, chalk.bold('Bold'));
+	t.assert.strictEqual(output, chalk.bold('Bold'));
 });
 
 // ── Text wrapping and columns ───────────────────────────
 
-test('render text with wrap', t => {
+test('render text with wrap', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={7}>
 			<Text wrap="wrap">Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, 'Hello\nWorld');
+	t.assert.strictEqual(output, 'Hello\nWorld');
 });
 
-test('render text with truncate', t => {
+test('render text with truncate', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={7}>
 			<Text wrap="truncate">Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, 'Hello …');
+	t.assert.strictEqual(output, 'Hello …');
 });
 
-test('default columns is 80', t => {
+test('default columns is 80', (t: TestContext) => {
 	const longText = 'A'.repeat(100);
 	const output = renderToString(<Text>{longText}</Text>);
 
 	const lines = output.split('\n');
-	t.is(lines.length, 2);
-	t.is(lines[0], 'A'.repeat(80));
-	t.is(lines[1], 'A'.repeat(20));
+	t.assert.strictEqual(lines.length, 2);
+	t.assert.strictEqual(lines[0], 'A'.repeat(80));
+	t.assert.strictEqual(lines[1], 'A'.repeat(20));
 });
 
-test('custom columns option', t => {
+test('custom columns option', (t: TestContext) => {
 	const longText = 'A'.repeat(50);
 	const output = renderToString(<Text>{longText}</Text>, {columns: 30});
 
 	const lines = output.split('\n');
-	t.is(lines.length, 2);
-	t.is(lines[0], 'A'.repeat(30));
-	t.is(lines[1], 'A'.repeat(20));
+	t.assert.strictEqual(lines.length, 2);
+	t.assert.strictEqual(lines[0], 'A'.repeat(30));
+	t.assert.strictEqual(lines[1], 'A'.repeat(20));
 });
 
 // ── Components ──────────────────────────────────────────
 
-test('render Transform component', t => {
+test('render Transform component', (t: TestContext) => {
 	const output = renderToString(
 		<Transform transform={output => output.toUpperCase()}>
 			<Text>hello</Text>
 		</Transform>,
 	);
 
-	t.is(output, 'HELLO');
+	t.assert.strictEqual(output, 'HELLO');
 });
 
-test('render Static component with items', t => {
+test('render Static component with items', (t: TestContext) => {
 	const items = ['A', 'B', 'C'];
 
 	const output = renderToString(
@@ -252,10 +252,10 @@ test('render Static component with items', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A\nB\nC\nDynamic');
+	t.assert.strictEqual(output, 'A\nB\nC\nDynamic');
 });
 
-test('Static preserves its margins and all items', t => {
+test('Static preserves its margins and all items', (t: TestContext) => {
 	const output = renderToString(
 		<Static
 			items={['A', 'B']}
@@ -265,20 +265,20 @@ test('Static preserves its margins and all items', t => {
 		</Static>,
 	);
 
-	t.is(output, '\n  A\n  B\n');
+	t.assert.strictEqual(output, '\n  A\n  B\n');
 });
 
-test('render static-only output has no trailing newline', t => {
+test('render static-only output has no trailing newline', (t: TestContext) => {
 	const items = ['A', 'B'];
 
 	const output = renderToString(
 		<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>,
 	);
 
-	t.is(output, 'A\nB');
+	t.assert.strictEqual(output, 'A\nB');
 });
 
-test('render static + dynamic output has exactly one newline between parts', t => {
+test('render static + dynamic output has exactly one newline between parts', (t: TestContext) => {
 	const items = ['A', 'B'];
 
 	const output = renderToString(
@@ -288,12 +288,12 @@ test('render static + dynamic output has exactly one newline between parts', t =
 		</Box>,
 	);
 
-	t.is(output, 'A\nB\nDynamic');
+	t.assert.strictEqual(output, 'A\nB\nDynamic');
 });
 
 // ── Effect behavior ─────────────────────────────────────
 
-test('captures initial render output before effect-driven state updates', t => {
+test('captures initial render output before effect-driven state updates', (t: TestContext) => {
 	function App() {
 		const [text, setText] = useState('Initial');
 
@@ -305,10 +305,10 @@ test('captures initial render output before effect-driven state updates', t => {
 	}
 
 	const output = renderToString(<App />);
-	t.is(output, 'Initial');
+	t.assert.strictEqual(output, 'Initial');
 });
 
-test('useLayoutEffect state updates are reflected in output', t => {
+test('useLayoutEffect state updates are reflected in output', (t: TestContext) => {
 	function App() {
 		const [text, setText] = useState('Initial');
 
@@ -320,30 +320,31 @@ test('useLayoutEffect state updates are reflected in output', t => {
 	}
 
 	const output = renderToString(<App />);
-	t.is(output, 'Layout Updated');
+	t.assert.strictEqual(output, 'Layout Updated');
 });
 
-test('runs effect cleanup on teardown', t => {
-	let cleanupRan = false;
+test('runs effect cleanup on teardown', (t: TestContext) => {
+	let didCleanupRun = false;
 
 	function App() {
-		useEffect(() => {
-			return () => {
-				cleanupRan = true;
-			};
-		}, []);
+		useEffect(
+			() => () => {
+				didCleanupRun = true;
+			},
+			[],
+		);
 
 		return <Text>Cleanup test</Text>;
 	}
 
 	const output = renderToString(<App />);
-	t.is(output, 'Cleanup test');
-	t.true(cleanupRan);
+	t.assert.strictEqual(output, 'Cleanup test');
+	t.assert.ok(didCleanupRun);
 });
 
 // ── Error handling ──────────────────────────────────────
 
-test('runs effect cleanup when a transform throws', t => {
+test('runs effect cleanup when a transform throws', (t: TestContext) => {
 	const error = new Error('Transform failed');
 	let setupCount = 0;
 	let cleanupCount = 0;
@@ -366,22 +367,26 @@ test('runs effect cleanup when a transform throws', t => {
 		);
 	}
 
-	const caughtError = t.throws(() => renderToString(<Test />));
-	t.is(caughtError, error);
-	t.is(setupCount, 1);
-	t.is(cleanupCount, 1);
-	t.is(renderToString(<Text>Still works</Text>), 'Still works');
+	t.assert.throws(
+		() => renderToString(<Test />),
+		caughtError => caughtError === error,
+	);
+	t.assert.strictEqual(setupCount, 1);
+	t.assert.strictEqual(cleanupCount, 1);
+	t.assert.strictEqual(renderToString(<Text>Still works</Text>), 'Still works');
 });
 
-test('component that throws propagates the error', t => {
+test('component that throws propagates the error', (t: TestContext) => {
 	function Broken(): React.JSX.Element {
 		throw new Error('Component error');
 	}
 
-	t.throws(() => renderToString(<Broken />), {message: 'Component error'});
+	t.assert.throws(() => renderToString(<Broken />), {
+		message: 'Component error',
+	});
 });
 
-test('preserves component errors from another realm', t => {
+test('preserves component errors from another realm', (t: TestContext) => {
 	const error = vm.runInNewContext(
 		'new TypeError("Invalid configuration")',
 	) as Error;
@@ -390,50 +395,52 @@ test('preserves component errors from another realm', t => {
 		throw error;
 	}
 
-	const caughtError = t.throws(() => renderToString(<Broken />));
-	t.is(caughtError, error);
-	t.is(renderToString(<Text>Still works</Text>), 'Still works');
+	t.assert.throws(
+		() => renderToString(<Broken />),
+		caughtError => caughtError === error,
+	);
+	t.assert.strictEqual(renderToString(<Text>Still works</Text>), 'Still works');
 });
 
-test('component that throws undefined does not silently return empty output', t => {
+test('component that throws undefined does not silently return empty output', (t: TestContext) => {
 	function Broken(): React.JSX.Element {
 		// eslint-disable-next-line @typescript-eslint/only-throw-error
 		throw undefined;
 	}
 
-	t.throws(() => renderToString(<Broken />), {message: 'undefined'});
-	t.is(renderToString(<Text>Still works</Text>), 'Still works');
+	t.assert.throws(() => renderToString(<Broken />), {message: 'undefined'});
+	t.assert.strictEqual(renderToString(<Text>Still works</Text>), 'Still works');
 });
 
-test('text outside Text component throws', t => {
-	t.throws(() => renderToString(<Box>{'raw text'}</Box>), {
+test('text outside Text component throws', (t: TestContext) => {
+	t.assert.throws(() => renderToString(<Box>raw text</Box>), {
 		message: /must be rendered inside <Text>/,
 	});
 });
 
-test('subsequent calls work after a component error', t => {
+test('subsequent calls work after a component error', (t: TestContext) => {
 	function Broken(): React.JSX.Element {
 		throw new Error('Boom');
 	}
 
-	t.throws(() => renderToString(<Broken />));
+	t.assert.throws(() => renderToString(<Broken />), Error);
 	const output = renderToString(<Text>Still works</Text>);
-	t.is(output, 'Still works');
+	t.assert.strictEqual(output, 'Still works');
 });
 
 // ── Independence ────────────────────────────────────────
 
-test('can be called multiple times independently', t => {
+test('can be called multiple times independently', (t: TestContext) => {
 	const output1 = renderToString(<Text>First</Text>);
 	const output2 = renderToString(<Text>Second</Text>);
 
-	t.is(output1, 'First');
-	t.is(output2, 'Second');
+	t.assert.strictEqual(output1, 'First');
+	t.assert.strictEqual(output2, 'Second');
 });
 
 // ── Deeply nested tree ──────────────────────────────────
 
-test('render deeply nested component tree', t => {
+test('render deeply nested component tree', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Box paddingLeft={1}>
@@ -447,6 +454,6 @@ test('render deeply nested component tree', t => {
 		</Box>,
 	);
 
-	t.true(output.includes('Nested'));
-	t.true(output.includes('deep'));
+	t.assert.ok(output.includes('Nested'));
+	t.assert.ok(output.includes('deep'));
 });

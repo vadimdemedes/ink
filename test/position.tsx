@@ -1,5 +1,5 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text, render} from '../src/index.js';
 import {
 	renderToString,
@@ -7,7 +7,7 @@ import {
 } from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
 
-test('absolute position with top and left offsets', t => {
+test('absolute position with top and left offsets', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={5} height={3}>
 			<Box position="absolute" top={1} left={2}>
@@ -16,10 +16,10 @@ test('absolute position with top and left offsets', t => {
 		</Box>,
 	);
 
-	t.is(output, '\n  X\n');
+	t.assert.strictEqual(output, '\n  X\n');
 });
 
-test('absolute position with bottom and right offsets', t => {
+test('absolute position with bottom and right offsets', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={6} height={4}>
 			<Box position="absolute" bottom={1} right={1}>
@@ -28,10 +28,10 @@ test('absolute position with bottom and right offsets', t => {
 		</Box>,
 	);
 
-	t.is(output, '\n\n    X\n');
+	t.assert.strictEqual(output, '\n\n    X\n');
 });
 
-test('renders visible lines of text positioned above the output area', t => {
+test('renders visible lines of text positioned above the output area', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={6} height={2}>
 			<Box position="absolute" top={-1}>
@@ -40,10 +40,10 @@ test('renders visible lines of text positioned above the output area', t => {
 		</Box>,
 	);
 
-	t.is(output, 'First\nSecond');
+	t.assert.strictEqual(output, 'First\nSecond');
 });
 
-test('absolute position with percentage offsets', t => {
+test('absolute position with percentage offsets', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={6} height={4}>
 			<Box position="absolute" top="50%" left="50%">
@@ -52,10 +52,10 @@ test('absolute position with percentage offsets', t => {
 		</Box>,
 	);
 
-	t.is(output, '\n\n   X\n');
+	t.assert.strictEqual(output, '\n\n   X\n');
 });
 
-test('absolute position with percentage bottom and right offsets', t => {
+test('absolute position with percentage bottom and right offsets', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={6} height={4}>
 			<Box position="absolute" bottom="50%" right="50%">
@@ -64,10 +64,10 @@ test('absolute position with percentage bottom and right offsets', t => {
 		</Box>,
 	);
 
-	t.is(output, '\n  X\n\n');
+	t.assert.strictEqual(output, '\n  X\n\n');
 });
 
-test('relative position offsets visual position while keeping flow', t => {
+test('relative position offsets visual position while keeping flow', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={5}>
 			<Box position="relative" left={2}>
@@ -77,10 +77,10 @@ test('relative position offsets visual position while keeping flow', t => {
 		</Box>,
 	);
 
-	t.is(output, ' BA');
+	t.assert.strictEqual(output, ' BA');
 });
 
-test('static position ignores offsets', t => {
+test('static position ignores offsets', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={5}>
 			<Box position="static" left={2}>
@@ -90,10 +90,10 @@ test('static position ignores offsets', t => {
 		</Box>,
 	);
 
-	t.is(output, 'AB');
+	t.assert.strictEqual(output, 'AB');
 });
 
-test('static position ignores percentage offsets', t => {
+test('static position ignores percentage offsets', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={5}>
 			<Box position="static" left="50%">
@@ -103,10 +103,10 @@ test('static position ignores percentage offsets', t => {
 		</Box>,
 	);
 
-	t.is(output, 'AB');
+	t.assert.strictEqual(output, 'AB');
 });
 
-test('clears top offset on rerender', t => {
+test('clears top offset on rerender', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test({top}: {readonly top?: number}) {
@@ -124,13 +124,13 @@ test('clears top offset on rerender', t => {
 		debug: true,
 	});
 
-	t.is(stdout.write.lastCall.args[0], '\n  X\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], '\n  X\n');
 
 	rerender(<Test top={undefined} />);
-	t.is(stdout.write.lastCall.args[0], '  X\n\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], '  X\n\n');
 });
 
-test('clears percentage top and left offsets on rerender', t => {
+test('clears percentage top and left offsets on rerender', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test({top, left}: {readonly top?: string; readonly left?: string}) {
@@ -148,13 +148,13 @@ test('clears percentage top and left offsets on rerender', t => {
 		debug: true,
 	});
 
-	t.is(stdout.write.lastCall.args[0], '\n\n   X\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], '\n\n   X\n');
 
 	rerender(<Test top={undefined} left={undefined} />);
-	t.is(stdout.write.lastCall.args[0], 'X\n\n\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], 'X\n\n\n');
 });
 
-test('clears percentage top and left offsets when props are omitted on rerender', t => {
+test('clears percentage top and left offsets when props are omitted on rerender', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test({showOffsets}: {readonly showOffsets: boolean}) {
@@ -175,13 +175,13 @@ test('clears percentage top and left offsets when props are omitted on rerender'
 		debug: true,
 	});
 
-	t.is(stdout.write.lastCall.args[0], '\n\n   X\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], '\n\n   X\n');
 
 	rerender(<Test showOffsets={false} />);
-	t.is(stdout.write.lastCall.args[0], 'X\n\n\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], 'X\n\n\n');
 });
 
-test('clears bottom and right offsets on rerender', t => {
+test('clears bottom and right offsets on rerender', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test({
@@ -205,13 +205,13 @@ test('clears bottom and right offsets on rerender', t => {
 		debug: true,
 	});
 
-	t.is(stdout.write.lastCall.args[0], '\n\n    X\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], '\n\n    X\n');
 
 	rerender(<Test bottom={undefined} right={undefined} />);
-	t.is(stdout.write.lastCall.args[0], 'X\n\n\n');
+	t.assert.strictEqual(stdout.write.lastCall.args[0], 'X\n\n\n');
 });
 
-test('absolute position with top and left offsets - concurrent', async t => {
+test('absolute position with top and left offsets - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box width={5} height={3}>
 			<Box position="absolute" top={1} left={2}>
@@ -220,5 +220,5 @@ test('absolute position with top and left offsets - concurrent', async t => {
 		</Box>,
 	);
 
-	t.is(output, '\n  X\n');
+	t.assert.strictEqual(output, '\n  X\n');
 });

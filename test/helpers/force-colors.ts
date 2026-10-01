@@ -8,5 +8,5 @@ export const enableTestColors = () => {
 
 export const disableTestColors = () => {
 	// Restore chalk's automatic detection
-	chalk.level = supportsColor ? supportsColor.level : 0;
+	chalk.level = supportsColor === false ? 0 : supportsColor.level;
 };

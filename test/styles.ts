@@ -1,4 +1,4 @@
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
 import Yoga from 'yoga-layout';
 import applyStyles from '../src/styles.js';
 
@@ -10,23 +10,23 @@ for (const [property, edge] of [
 	['marginTop', Yoga.EDGE_TOP],
 	['marginBottom', Yoga.EDGE_BOTTOM],
 ] as const) {
-	test(`removing ${property} restores shorthand margin`, t => {
+	test(`removing ${property} restores shorthand margin`, (t: TestContext) => {
 		const node = Yoga.Node.create();
-		t.teardown(() => {
+		t.after(() => {
 			node.free();
 		});
 
 		applyStyles(node, {margin: 2, [property]: 1});
 		node.calculateLayout();
-		t.is(node.getComputedMargin(edge), 1);
+		t.assert.strictEqual(node.getComputedMargin(edge), 1);
 
 		applyStyles(node, {[property]: undefined});
 		node.calculateLayout();
-		t.is(node.getComputedMargin(edge), 2);
+		t.assert.strictEqual(node.getComputedMargin(edge), 2);
 
 		applyStyles(node, {[property]: 0});
 		node.calculateLayout();
-		t.is(node.getComputedMargin(edge), 0);
+		t.assert.strictEqual(node.getComputedMargin(edge), 0);
 	});
 }
 
@@ -38,23 +38,23 @@ for (const [property, edge] of [
 	['paddingTop', Yoga.EDGE_TOP],
 	['paddingBottom', Yoga.EDGE_BOTTOM],
 ] as const) {
-	test(`removing ${property} restores shorthand padding`, t => {
+	test(`removing ${property} restores shorthand padding`, (t: TestContext) => {
 		const node = Yoga.Node.create();
-		t.teardown(() => {
+		t.after(() => {
 			node.free();
 		});
 
 		applyStyles(node, {padding: 2, [property]: 1});
 		node.calculateLayout();
-		t.is(node.getComputedPadding(edge), 1);
+		t.assert.strictEqual(node.getComputedPadding(edge), 1);
 
 		applyStyles(node, {[property]: undefined});
 		node.calculateLayout();
-		t.is(node.getComputedPadding(edge), 2);
+		t.assert.strictEqual(node.getComputedPadding(edge), 2);
 
 		applyStyles(node, {[property]: 0});
 		node.calculateLayout();
-		t.is(node.getComputedPadding(edge), 0);
+		t.assert.strictEqual(node.getComputedPadding(edge), 0);
 	});
 }
 
@@ -65,14 +65,17 @@ for (const [property, getter] of [
 	['maxHeight', 'getMaxHeight'],
 	['flexBasis', 'getFlexBasis'],
 ] as const) {
-	test(`${property} preserves fractional percentages`, t => {
+	test(`${property} preserves fractional percentages`, (t: TestContext) => {
 		const node = Yoga.Node.create();
-		t.teardown(() => {
+		t.after(() => {
 			node.free();
 		});
 
 		applyStyles(node, {[property]: '12.5%'});
 
-		t.deepEqual(node[getter](), {value: 12.5, unit: Yoga.UNIT_PERCENT});
+		t.assert.deepStrictEqual(node[getter](), {
+			value: 12.5,
+			unit: Yoga.UNIT_PERCENT,
+		});
 	});
 }

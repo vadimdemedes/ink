@@ -1,10 +1,10 @@
-import React, {useContext, type ReactNode} from 'react';
+import React, {use, type ReactNode} from 'react';
 import chalk, {type ForegroundColorName} from 'chalk';
 import {type LiteralUnion} from 'type-fest';
 import colorize from '../colorize.js';
 import {type Styles} from '../styles.js';
-import {accessibilityContext} from './AccessibilityContext.js';
-import {backgroundContext} from './BackgroundContext.js';
+import {AccessibilityContext} from './AccessibilityContext.js';
+import {BackgroundContext} from './BackgroundContext.js';
 
 export type Props = {
 	/**
@@ -82,59 +82,55 @@ export default function Text({
 	'aria-label': ariaLabel,
 	'aria-hidden': ariaHidden = false,
 }: Props) {
-	const {isScreenReaderEnabled} = useContext(accessibilityContext);
-	const inheritedBackgroundColor = useContext(backgroundContext);
+	const {isScreenReaderEnabled} = use(AccessibilityContext);
+	const inheritedBackgroundColor = use(BackgroundContext);
 	// Use explicit backgroundColor if provided, otherwise inherit from the nearest parent Text or Box.
 	const effectiveBackgroundColor = backgroundColor ?? inheritedBackgroundColor;
 	const childrenOrAriaLabel =
-		isScreenReaderEnabled && ariaLabel ? ariaLabel : children;
+		isScreenReaderEnabled && Boolean(ariaLabel) ? ariaLabel : children;
 
-	if (childrenOrAriaLabel === undefined || childrenOrAriaLabel === null) {
+	if (
+		childrenOrAriaLabel === undefined ||
+		childrenOrAriaLabel === null ||
+		(isScreenReaderEnabled && ariaHidden)
+	) {
 		return null;
 	}
 
-	const transform = (children: string): string => {
+	const transform = (text: string): string => {
 		if (dimColor) {
-			children = chalk.dim(children);
+			text = chalk.dim(text);
 		}
 
-		if (color) {
-			children = colorize(children, color, 'foreground');
-		}
-
-		if (effectiveBackgroundColor) {
-			children = colorize(children, effectiveBackgroundColor, 'background');
-		}
+		// `colorize` returns the text unchanged when the color is unset.
+		text = colorize(text, color, 'foreground');
+		text = colorize(text, effectiveBackgroundColor, 'background');
 
 		if (bold) {
-			children = chalk.bold(children);
+			text = chalk.bold(text);
 		}
 
 		if (italic) {
-			children = chalk.italic(children);
+			text = chalk.italic(text);
 		}
 
 		if (underline) {
-			children = chalk.underline(children);
+			text = chalk.underline(text);
 		}
 
 		if (strikethrough) {
-			children = chalk.strikethrough(children);
+			text = chalk.strikethrough(text);
 		}
 
 		if (inverse) {
-			children = chalk.inverse(children);
+			text = chalk.inverse(text);
 		}
 
-		return children;
+		return text;
 	};
 
-	if (isScreenReaderEnabled && ariaHidden) {
-		return null;
-	}
-
 	return (
-		<backgroundContext.Provider value={effectiveBackgroundColor}>
+		<BackgroundContext value={effectiveBackgroundColor}>
 			<ink-text
 				style={{
 					flexGrow: 0,
@@ -146,6 +142,6 @@ export default function Text({
 			>
 				{childrenOrAriaLabel}
 			</ink-text>
-		</backgroundContext.Provider>
+		</BackgroundContext>
 	);
 }

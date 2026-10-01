@@ -7,7 +7,11 @@ function Test() {
 
 	useEffect(() => {
 		setRawMode(true);
-		setTimeout(exit, 500);
+		const timer = setTimeout(exit, 500);
+
+		return () => {
+			clearTimeout(timer);
+		};
 	}, [exit, setRawMode]);
 
 	return <Text>Hello World</Text>;

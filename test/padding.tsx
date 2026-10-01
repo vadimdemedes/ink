@@ -1,5 +1,5 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text, render} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 import {
@@ -7,17 +7,17 @@ import {
 	renderToStringAsync,
 } from './helpers/render-to-string.js';
 
-test('padding', t => {
+test('padding', (t: TestContext) => {
 	const output = renderToString(
 		<Box padding={2}>
 			<Text>X</Text>
 		</Box>,
 	);
 
-	t.is(output, '\n\n  X\n\n');
+	t.assert.strictEqual(output, '\n\n  X\n\n');
 });
 
-test('padding X', t => {
+test('padding X', (t: TestContext) => {
 	const output = renderToString(
 		<Box>
 			<Box paddingX={2}>
@@ -27,10 +27,10 @@ test('padding X', t => {
 		</Box>,
 	);
 
-	t.is(output, '  X  Y');
+	t.assert.strictEqual(output, '  X  Y');
 });
 
-test('removing paddingLeft restores paddingX on rerender', t => {
+test('removing paddingLeft restores paddingX on rerender', (t: TestContext) => {
 	function Example({paddingLeft}: {readonly paddingLeft?: number}) {
 		return (
 			<Box>
@@ -47,16 +47,18 @@ test('removing paddingLeft restores paddingX on rerender', t => {
 		stdout,
 		debug: true,
 	});
-	t.teardown(unmount);
+	t.after(() => {
+		unmount();
+	});
 
-	t.is(stdout.get(), ' X  Y');
+	t.assert.strictEqual(stdout.get(), ' X  Y');
 	rerender(<Example />);
-	t.is(stdout.get(), '  X  Y');
+	t.assert.strictEqual(stdout.get(), '  X  Y');
 	rerender(<Example paddingLeft={0} />);
-	t.is(stdout.get(), 'X  Y');
+	t.assert.strictEqual(stdout.get(), 'X  Y');
 });
 
-test('removing paddingX restores padding on rerender', t => {
+test('removing paddingX restores padding on rerender', (t: TestContext) => {
 	function Example({paddingX}: {readonly paddingX?: number}) {
 		return (
 			<Box padding={2} paddingX={paddingX}>
@@ -70,54 +72,56 @@ test('removing paddingX restores padding on rerender', t => {
 		stdout,
 		debug: true,
 	});
-	t.teardown(unmount);
+	t.after(() => {
+		unmount();
+	});
 
-	t.is(stdout.get(), '\n\n X\n\n');
+	t.assert.strictEqual(stdout.get(), '\n\n X\n\n');
 	rerender(<Example />);
-	t.is(stdout.get(), '\n\n  X\n\n');
+	t.assert.strictEqual(stdout.get(), '\n\n  X\n\n');
 });
 
-test('padding Y', t => {
+test('padding Y', (t: TestContext) => {
 	const output = renderToString(
 		<Box paddingY={2}>
 			<Text>X</Text>
 		</Box>,
 	);
 
-	t.is(output, '\n\nX\n\n');
+	t.assert.strictEqual(output, '\n\nX\n\n');
 });
 
-test('padding top', t => {
+test('padding top', (t: TestContext) => {
 	const output = renderToString(
 		<Box paddingTop={2}>
 			<Text>X</Text>
 		</Box>,
 	);
 
-	t.is(output, '\n\nX');
+	t.assert.strictEqual(output, '\n\nX');
 });
 
-test('padding bottom', t => {
+test('padding bottom', (t: TestContext) => {
 	const output = renderToString(
 		<Box paddingBottom={2}>
 			<Text>X</Text>
 		</Box>,
 	);
 
-	t.is(output, 'X\n\n');
+	t.assert.strictEqual(output, 'X\n\n');
 });
 
-test('padding left', t => {
+test('padding left', (t: TestContext) => {
 	const output = renderToString(
 		<Box paddingLeft={2}>
 			<Text>X</Text>
 		</Box>,
 	);
 
-	t.is(output, '  X');
+	t.assert.strictEqual(output, '  X');
 });
 
-test('padding right', t => {
+test('padding right', (t: TestContext) => {
 	const output = renderToString(
 		<Box>
 			<Box paddingRight={2}>
@@ -127,10 +131,10 @@ test('padding right', t => {
 		</Box>,
 	);
 
-	t.is(output, 'X  Y');
+	t.assert.strictEqual(output, 'X  Y');
 });
 
-test('nested padding', t => {
+test('nested padding', (t: TestContext) => {
 	const output = renderToString(
 		<Box padding={2}>
 			<Box padding={2}>
@@ -139,39 +143,39 @@ test('nested padding', t => {
 		</Box>,
 	);
 
-	t.is(output, '\n\n\n\n    X\n\n\n\n');
+	t.assert.strictEqual(output, '\n\n\n\n    X\n\n\n\n');
 });
 
-test('padding with multiline string', t => {
+test('padding with multiline string', (t: TestContext) => {
 	const output = renderToString(
 		<Box padding={2}>
 			<Text>{'A\nB'}</Text>
 		</Box>,
 	);
 
-	t.is(output, '\n\n  A\n  B\n\n');
+	t.assert.strictEqual(output, '\n\n  A\n  B\n\n');
 });
 
-test('apply padding to text with newlines', t => {
+test('apply padding to text with newlines', (t: TestContext) => {
 	const output = renderToString(
 		<Box padding={1}>
 			<Text>Hello{'\n'}World</Text>
 		</Box>,
 	);
-	t.is(output, '\n Hello\n World\n');
+	t.assert.strictEqual(output, '\n Hello\n World\n');
 });
 
-test('apply padding to wrapped text', t => {
+test('apply padding to wrapped text', (t: TestContext) => {
 	const output = renderToString(
 		<Box padding={1} width={5}>
 			<Text>Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, '\n Hel\n lo\n Wor\n ld\n');
+	t.assert.strictEqual(output, '\n Hel\n lo\n Wor\n ld\n');
 });
 
-test('text wrapping respects paddingX with flexGrow', t => {
+test('text wrapping respects paddingX with flexGrow', (t: TestContext) => {
 	// https://github.com/vadimdemedes/ink/issues/584
 	const output = renderToString(
 		<Box width={40} borderStyle="round">
@@ -188,7 +192,7 @@ test('text wrapping respects paddingX with flexGrow', t => {
 
 	const lines = output.split('\n');
 	for (const line of lines) {
-		t.true(
+		t.assert.ok(
 			line.length <= 40,
 			`Line "${line}" exceeds container width of 40 (got ${line.length})`,
 		);
@@ -196,17 +200,17 @@ test('text wrapping respects paddingX with flexGrow', t => {
 });
 
 // Concurrent mode tests
-test('padding - concurrent', async t => {
+test('padding - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box padding={2}>
 			<Text>X</Text>
 		</Box>,
 	);
 
-	t.is(output, '\n\n  X\n\n');
+	t.assert.strictEqual(output, '\n\n  X\n\n');
 });
 
-test('nested padding - concurrent', async t => {
+test('nested padding - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box padding={2}>
 			<Box padding={2}>
@@ -215,5 +219,5 @@ test('nested padding - concurrent', async t => {
 		</Box>,
 	);
 
-	t.is(output, '\n\n\n\n    X\n\n\n\n');
+	t.assert.strictEqual(output, '\n\n\n\n    X\n\n\n\n');
 });
