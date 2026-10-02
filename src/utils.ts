@@ -10,11 +10,7 @@ const resolveDimension = (
 		return value;
 	}
 
-	if (fallback !== undefined && fallback > 0) {
-		return fallback;
-	}
-
-	return defaultValue;
+	return fallback !== undefined && fallback > 0 ? fallback : defaultValue;
 };
 
 /**
@@ -29,7 +25,7 @@ export const getWindowSize = (
 	const columns = stdout.columns ?? 0;
 	const rows = stdout.rows ?? 0;
 
-	if (columns && rows) {
+	if (Boolean(columns) && Boolean(rows)) {
 		return {columns, rows};
 	}
 

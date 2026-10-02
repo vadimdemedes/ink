@@ -16,6 +16,7 @@ export type RenderToStringOptions = {
 	columns?: number;
 };
 
+/* eslint-disable jsdoc/require-asterisk-prefix -- `**Notes:**` is Markdown bold text, not a line prefix. */
 /**
 Render a React element to a string synchronously. Unlike `render()`, this function does not write to stdout, does not set up any terminal event listeners, and returns the rendered output as a string.
 
@@ -43,6 +44,7 @@ const output = renderToString(
 console.log(output);
 ```
 */
+/* eslint-enable jsdoc/require-asterisk-prefix */
 const renderToString = (
 	node: ReactNode,
 	options?: RenderToStringOptions,
@@ -74,7 +76,7 @@ const renderToString = (
 
 	rootNode.onImmediateRender = () => {
 		const {staticOutput} = renderer(rootNode, false);
-		if (staticOutput) {
+		if (staticOutput !== '') {
 			capturedStaticOutput += staticOutput;
 		}
 	};
@@ -108,7 +110,7 @@ const renderToString = (
 		null,
 	);
 
-	let teardownSucceeded = false;
+	let didTeardownSucceed = false;
 
 	try {
 		let output: string;
@@ -135,7 +137,7 @@ const renderToString = (
 			// reconciler's removeChildFromContainer → freeYogaSubtree → freeRecursive.
 			reconciler.updateContainerSync(null, container, null, () => {});
 			reconciler.flushSyncWork();
-			teardownSucceeded = true;
+			didTeardownSucceed = true;
 
 			// Free the root yoga node itself (children already freed by reconciler)
 			rootNode.yogaNode!.free();
@@ -159,7 +161,7 @@ const renderToString = (
 	} finally {
 		// Ensure native Yoga memory is freed even if rendering or teardown threw.
 		// Yoga nodes are WASM-backed and not garbage collected.
-		if (!teardownSucceeded && rootNode.yogaNode) {
+		if (!didTeardownSucceed && rootNode.yogaNode) {
 			try {
 				// If reconciler teardown failed, some child nodes may not have been
 				// freed. Use freeRecursive to clean up the entire tree as best-effort.

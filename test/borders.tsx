@@ -1,5 +1,5 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import boxen from 'boxen';
 import indentString from 'indent-string';
 import cliBoxes from 'cli-boxes';
@@ -12,24 +12,27 @@ import {
 import createStdout from './helpers/create-stdout.js';
 import {renderAsync} from './helpers/test-renderer.js';
 
-test('single node - full width box', t => {
+test('single node - full width box', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round">
 			<Text>Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('Hello World', {width: 100, borderStyle: 'round'}));
+	t.assert.strictEqual(
+		output,
+		boxen('Hello World', {width: 100, borderStyle: 'round'}),
+	);
 });
 
-test('single node - full width box with colorful border', t => {
+test('single node - full width box with colorful border', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" borderColor="green">
 			<Text>Hello World</Text>
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		boxen('Hello World', {
 			width: 100,
@@ -39,65 +42,68 @@ test('single node - full width box with colorful border', t => {
 	);
 });
 
-test('single node - fit-content box', t => {
+test('single node - fit-content box', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" alignSelf="flex-start">
 			<Text>Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('Hello World', {borderStyle: 'round'}));
+	t.assert.strictEqual(output, boxen('Hello World', {borderStyle: 'round'}));
 });
 
-test('single node - fit-content box with wide characters', t => {
+test('single node - fit-content box with wide characters', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" alignSelf="flex-start">
 			<Text>こんにちは</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('こんにちは', {borderStyle: 'round'}));
+	t.assert.strictEqual(output, boxen('こんにちは', {borderStyle: 'round'}));
 });
 
-test('single node - fit-content box with emojis', t => {
+test('single node - fit-content box with emojis', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" alignSelf="flex-start">
 			<Text>🌊🌊</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('🌊🌊', {borderStyle: 'round'}));
+	t.assert.strictEqual(output, boxen('🌊🌊', {borderStyle: 'round'}));
 });
 
 // Issue #733: Emojis with variation selectors (FE0F) should align properly
-test('single node - fit-content box with variation selector emojis', t => {
+test('single node - fit-content box with variation selector emojis', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" alignSelf="flex-start">
 			<Text>🌡️⚠️✅</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('🌡️⚠️✅', {borderStyle: 'round'}));
+	t.assert.strictEqual(output, boxen('🌡️⚠️✅', {borderStyle: 'round'}));
 });
 
-test('single node - fixed width box', t => {
+test('single node - fixed width box', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" width={20}>
 			<Text>Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('Hello World'.padEnd(18, ' '), {borderStyle: 'round'}));
+	t.assert.strictEqual(
+		output,
+		boxen('Hello World'.padEnd(18, ' '), {borderStyle: 'round'}),
+	);
 });
 
-test('single node - fixed width and height box', t => {
+test('single node - fixed width and height box', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" width={20} height={20}>
 			<Text>Hello World</Text>
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		boxen('Hello World'.padEnd(18, ' ') + '\n'.repeat(17), {
 			borderStyle: 'round',
@@ -105,27 +111,33 @@ test('single node - fixed width and height box', t => {
 	);
 });
 
-test('single node - box with padding', t => {
+test('single node - box with padding', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" padding={1} alignSelf="flex-start">
 			<Text>Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('\n Hello World \n', {borderStyle: 'round'}));
+	t.assert.strictEqual(
+		output,
+		boxen('\n Hello World \n', {borderStyle: 'round'}),
+	);
 });
 
-test('single node - box with horizontal alignment', t => {
+test('single node - box with horizontal alignment', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" width={20} justifyContent="center">
 			<Text>Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('   Hello World    ', {borderStyle: 'round'}));
+	t.assert.strictEqual(
+		output,
+		boxen('   Hello World    ', {borderStyle: 'round'}),
+	);
 });
 
-test('single node - box with vertical alignment', t => {
+test('single node - box with vertical alignment', (t: TestContext) => {
 	const output = renderToString(
 		<Box
 			borderStyle="round"
@@ -137,7 +149,7 @@ test('single node - box with vertical alignment', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		boxen('\n'.repeat(8) + 'Hello World' + '\n'.repeat(9), {
 			borderStyle: 'round',
@@ -145,34 +157,40 @@ test('single node - box with vertical alignment', t => {
 	);
 });
 
-test('single node - box with wrapping', t => {
+test('single node - box with wrapping', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" width={10}>
 			<Text>Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('Hello   \nWorld', {borderStyle: 'round'}));
+	t.assert.strictEqual(
+		output,
+		boxen('Hello   \nWorld', {borderStyle: 'round'}),
+	);
 });
 
-test('multiple nodes - full width box', t => {
+test('multiple nodes - full width box', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round">
 			<Text>{'Hello '}World</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('Hello World', {width: 100, borderStyle: 'round'}));
+	t.assert.strictEqual(
+		output,
+		boxen('Hello World', {width: 100, borderStyle: 'round'}),
+	);
 });
 
-test('multiple nodes - full width box with colorful border', t => {
+test('multiple nodes - full width box with colorful border', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" borderColor="green">
 			<Text>{'Hello '}World</Text>
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		boxen('Hello World', {
 			width: 100,
@@ -182,32 +200,35 @@ test('multiple nodes - full width box with colorful border', t => {
 	);
 });
 
-test('multiple nodes - fit-content box', t => {
+test('multiple nodes - fit-content box', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" alignSelf="flex-start">
 			<Text>{'Hello '}World</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('Hello World', {borderStyle: 'round'}));
+	t.assert.strictEqual(output, boxen('Hello World', {borderStyle: 'round'}));
 });
 
-test('multiple nodes - fixed width box', t => {
+test('multiple nodes - fixed width box', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" width={20}>
 			<Text>{'Hello '}World</Text>
 		</Box>,
 	);
-	t.is(output, boxen('Hello World'.padEnd(18, ' '), {borderStyle: 'round'}));
+	t.assert.strictEqual(
+		output,
+		boxen('Hello World'.padEnd(18, ' '), {borderStyle: 'round'}),
+	);
 });
 
-test('multiple nodes - fixed width and height box', t => {
+test('multiple nodes - fixed width and height box', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" width={20} height={20}>
 			<Text>{'Hello '}World</Text>
 		</Box>,
 	);
-	t.is(
+	t.assert.strictEqual(
 		output,
 		boxen('Hello World'.padEnd(18, ' ') + '\n'.repeat(17), {
 			borderStyle: 'round',
@@ -215,27 +236,33 @@ test('multiple nodes - fixed width and height box', t => {
 	);
 });
 
-test('multiple nodes - box with padding', t => {
+test('multiple nodes - box with padding', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" padding={1} alignSelf="flex-start">
 			<Text>{'Hello '}World</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('\n Hello World \n', {borderStyle: 'round'}));
+	t.assert.strictEqual(
+		output,
+		boxen('\n Hello World \n', {borderStyle: 'round'}),
+	);
 });
 
-test('multiple nodes - box with horizontal alignment', t => {
+test('multiple nodes - box with horizontal alignment', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" width={20} justifyContent="center">
 			<Text>{'Hello '}World</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('   Hello World    ', {borderStyle: 'round'}));
+	t.assert.strictEqual(
+		output,
+		boxen('   Hello World    ', {borderStyle: 'round'}),
+	);
 });
 
-test('multiple nodes - box with vertical alignment', t => {
+test('multiple nodes - box with vertical alignment', (t: TestContext) => {
 	const output = renderToString(
 		<Box
 			borderStyle="round"
@@ -247,7 +274,7 @@ test('multiple nodes - box with vertical alignment', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		boxen('\n'.repeat(8) + 'Hello World' + '\n'.repeat(9), {
 			borderStyle: 'round',
@@ -255,37 +282,48 @@ test('multiple nodes - box with vertical alignment', t => {
 	);
 });
 
-test('multiple nodes - box with wrapping', t => {
+test('multiple nodes - box with wrapping', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" width={10}>
 			<Text>{'Hello '}World</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('Hello   \nWorld', {borderStyle: 'round'}));
+	t.assert.strictEqual(
+		output,
+		boxen('Hello   \nWorld', {borderStyle: 'round'}),
+	);
 });
 
-test('multiple nodes - box with wrapping and long first node', t => {
+test('multiple nodes - box with wrapping and long first node', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" width={10}>
+			{/* eslint-disable-next-line @stylistic/jsx-curly-brace-presence -- The string expression and the text after it are separate text nodes, which is what this test checks. */}
 			<Text>{'Helloooooo'} World</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('Helloooo\noo World', {borderStyle: 'round'}));
+	t.assert.strictEqual(
+		output,
+		boxen('Helloooo\noo World', {borderStyle: 'round'}),
+	);
 });
 
-test('multiple nodes - box with wrapping and very long first node', t => {
+test('multiple nodes - box with wrapping and very long first node', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" width={10}>
+			{/* eslint-disable-next-line @stylistic/jsx-curly-brace-presence -- The string expression and the text after it are separate text nodes, which is what this test checks. */}
 			<Text>{'Hellooooooooooooo'} World</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('Helloooo\noooooooo\no World', {borderStyle: 'round'}));
+	t.assert.strictEqual(
+		output,
+		boxen('Helloooo\noooooooo\no World', {borderStyle: 'round'}),
+	);
 });
 
-test('nested boxes', t => {
+test('nested boxes', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" width={40} padding={1}>
 			<Box borderStyle="round" justifyContent="center" padding={1}>
@@ -299,13 +337,13 @@ test('nested boxes', t => {
 		1,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		boxen(`${' '.repeat(38)}\n${nestedBox}\n`, {borderStyle: 'round'}),
 	);
 });
 
-test('nested boxes - fit-content box with wide characters on flex-direction row', t => {
+test('nested boxes - fit-content box with wide characters on flex-direction row', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" alignSelf="flex-start">
 			<Box borderStyle="round">
@@ -335,10 +373,10 @@ test('nested boxes - fit-content box with wide characters on flex-direction row'
 		{borderStyle: 'round'},
 	);
 
-	t.is(output, expected);
+	t.assert.strictEqual(output, expected);
 });
 
-test('nested boxes - fit-content box with emojis on flex-direction row', t => {
+test('nested boxes - fit-content box with emojis on flex-direction row', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" alignSelf="flex-start">
 			<Box borderStyle="round">
@@ -368,10 +406,10 @@ test('nested boxes - fit-content box with emojis on flex-direction row', t => {
 		{borderStyle: 'round'},
 	);
 
-	t.is(output, expected);
+	t.assert.strictEqual(output, expected);
 });
 
-test('nested boxes - fit-content box with wide characters on flex-direction column', t => {
+test('nested boxes - fit-content box with wide characters on flex-direction column', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" alignSelf="flex-start" flexDirection="column">
 			<Box borderStyle="round">
@@ -395,10 +433,10 @@ test('nested boxes - fit-content box with wide characters on flex-direction colu
 		{borderStyle: 'round'},
 	);
 
-	t.is(output, expected);
+	t.assert.strictEqual(output, expected);
 });
 
-test('nested boxes - fit-content box with emojis on flex-direction column', t => {
+test('nested boxes - fit-content box with emojis on flex-direction column', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="round" alignSelf="flex-start" flexDirection="column">
 			<Box borderStyle="round">
@@ -422,10 +460,10 @@ test('nested boxes - fit-content box with emojis on flex-direction column', t =>
 		{borderStyle: 'round'},
 	);
 
-	t.is(output, expected);
+	t.assert.strictEqual(output, expected);
 });
 
-test('render border after update', t => {
+test('render border after update', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test({borderColor}: {readonly borderColor?: string}) {
@@ -441,14 +479,14 @@ test('render border after update', t => {
 		debug: true,
 	});
 
-	t.is(
+	t.assert.strictEqual(
 		(stdout.write as any).lastCall.args[0],
 		boxen('Hello World', {width: 100, borderStyle: 'round'}),
 	);
 
 	rerender(<Test borderColor="green" />);
 
-	t.is(
+	t.assert.strictEqual(
 		(stdout.write as any).lastCall.args[0],
 		boxen('Hello World', {
 			width: 100,
@@ -459,7 +497,7 @@ test('render border after update', t => {
 
 	rerender(<Test />);
 
-	t.is(
+	t.assert.strictEqual(
 		(stdout.write as any).lastCall.args[0],
 		boxen('Hello World', {
 			width: 100,
@@ -468,7 +506,7 @@ test('render border after update', t => {
 	);
 });
 
-test('render border edge changes after update when borderStyle is unchanged', t => {
+test('render border edge changes after update when borderStyle is unchanged', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test({borderTop}: {readonly borderTop?: boolean}) {
@@ -484,14 +522,14 @@ test('render border edge changes after update when borderStyle is unchanged', t 
 		debug: true,
 	});
 
-	t.is(
+	t.assert.strictEqual(
 		(stdout.write as any).lastCall.args[0],
 		boxen('Content', {borderStyle: 'round'}),
 	);
 
 	rerender(<Test borderTop={false} />);
 
-	t.is(
+	t.assert.strictEqual(
 		(stdout.write as any).lastCall.args[0],
 		[
 			`${cliBoxes.round.left}Content${cliBoxes.round.right}`,
@@ -503,13 +541,13 @@ test('render border edge changes after update when borderStyle is unchanged', t 
 
 	rerender(<Test />);
 
-	t.is(
+	t.assert.strictEqual(
 		(stdout.write as any).lastCall.args[0],
 		boxen('Content', {borderStyle: 'round'}),
 	);
 });
 
-test('hide top border', t => {
+test('hide top border', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">
 			<Text>Above</Text>
@@ -520,7 +558,7 @@ test('hide top border', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		[
 			'Above',
@@ -533,7 +571,7 @@ test('hide top border', t => {
 	);
 });
 
-test('hide bottom border', t => {
+test('hide bottom border', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">
 			<Text>Above</Text>
@@ -544,7 +582,7 @@ test('hide bottom border', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		[
 			'Above',
@@ -557,7 +595,7 @@ test('hide bottom border', t => {
 	);
 });
 
-test('hide top and bottom borders', t => {
+test('hide top and bottom borders', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">
 			<Text>Above</Text>
@@ -568,7 +606,7 @@ test('hide top and bottom borders', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		[
 			'Above',
@@ -578,7 +616,7 @@ test('hide top and bottom borders', t => {
 	);
 });
 
-test('hide left border', t => {
+test('hide left border', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">
 			<Text>Above</Text>
@@ -589,7 +627,7 @@ test('hide left border', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		[
 			'Above',
@@ -601,7 +639,7 @@ test('hide left border', t => {
 	);
 });
 
-test('hide right border', t => {
+test('hide right border', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">
 			<Text>Above</Text>
@@ -612,7 +650,7 @@ test('hide right border', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		[
 			'Above',
@@ -624,7 +662,7 @@ test('hide right border', t => {
 	);
 });
 
-test('hide left and right border', t => {
+test('hide left and right border', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">
 			<Text>Above</Text>
@@ -635,7 +673,7 @@ test('hide left and right border', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		[
 			'Above',
@@ -647,7 +685,7 @@ test('hide left and right border', t => {
 	);
 });
 
-test('hide all borders', t => {
+test('hide all borders', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">
 			<Text>Above</Text>
@@ -664,10 +702,10 @@ test('hide all borders', t => {
 		</Box>,
 	);
 
-	t.is(output, ['Above', 'Content', 'Below'].join('\n'));
+	t.assert.strictEqual(output, ['Above', 'Content', 'Below'].join('\n'));
 });
 
-test('change color of top border', t => {
+test('change color of top border', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">
 			<Text>Above</Text>
@@ -678,7 +716,7 @@ test('change color of top border', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		[
 			'Above',
@@ -696,7 +734,7 @@ test('change color of top border', t => {
 	);
 });
 
-test('change color of bottom border', t => {
+test('change color of bottom border', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">
 			<Text>Above</Text>
@@ -707,7 +745,7 @@ test('change color of bottom border', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		[
 			'Above',
@@ -725,7 +763,7 @@ test('change color of bottom border', t => {
 	);
 });
 
-test('change color of left border', t => {
+test('change color of left border', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">
 			<Text>Above</Text>
@@ -736,7 +774,7 @@ test('change color of left border', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		[
 			'Above',
@@ -752,7 +790,7 @@ test('change color of left border', t => {
 	);
 });
 
-test('change color of right border', t => {
+test('change color of right border', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">
 			<Text>Above</Text>
@@ -763,7 +801,7 @@ test('change color of right border', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		[
 			'Above',
@@ -779,7 +817,7 @@ test('change color of right border', t => {
 	);
 });
 
-test('custom border style', t => {
+test('custom border style', (t: TestContext) => {
 	const output = renderToString(
 		<Box
 			borderStyle={{
@@ -797,17 +835,20 @@ test('custom border style', t => {
 		</Box>,
 	);
 
-	t.is(output, boxen('Content', {width: 100, borderStyle: 'arrow'}));
+	t.assert.strictEqual(
+		output,
+		boxen('Content', {width: 100, borderStyle: 'arrow'}),
+	);
 });
 
-test('dim border color', t => {
+test('dim border color', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderDimColor borderStyle="round">
 			<Text>Content</Text>
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		boxen('Content', {
 			width: 100,
@@ -817,7 +858,7 @@ test('dim border color', t => {
 	);
 });
 
-test('dim top border color', t => {
+test('dim top border color', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">
 			<Text>Above</Text>
@@ -828,7 +869,7 @@ test('dim top border color', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		[
 			'Above',
@@ -846,7 +887,7 @@ test('dim top border color', t => {
 	);
 });
 
-test('dim bottom border color', t => {
+test('dim bottom border color', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">
 			<Text>Above</Text>
@@ -857,7 +898,7 @@ test('dim bottom border color', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		[
 			'Above',
@@ -875,7 +916,7 @@ test('dim bottom border color', t => {
 	);
 });
 
-test('dim left border color', t => {
+test('dim left border color', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">
 			<Text>Above</Text>
@@ -886,7 +927,7 @@ test('dim left border color', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		[
 			'Above',
@@ -902,7 +943,7 @@ test('dim left border color', t => {
 	);
 });
 
-test('dim right border color', t => {
+test('dim right border color', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" alignItems="flex-start">
 			<Text>Above</Text>
@@ -913,7 +954,7 @@ test('dim right border color', t => {
 		</Box>,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		[
 			'Above',
@@ -931,7 +972,7 @@ test('dim right border color', t => {
 
 // Regression test for https://github.com/vadimdemedes/ink/issues/840
 // borderDimColor should not dim styled child Text components touching the left edge
-test('borderDimColor does not dim styled child Text touching left edge', t => {
+test('borderDimColor does not dim styled child Text touching left edge', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderDimColor borderStyle="round" alignSelf="flex-start">
 			<Text bold color="blue">
@@ -943,7 +984,7 @@ test('borderDimColor does not dim styled child Text touching left edge', t => {
 	// The styled text should be bold and blue (not dimmed)
 	// Note: Text component applies color first then bold, so the escape code order is bold+blue
 	const styledText = chalk.bold(chalk.blue('styled text'));
-	t.true(
+	t.assert.ok(
 		output.includes(styledText),
 		'Child text should retain its color and bold styling, not be dimmed',
 	);
@@ -954,31 +995,34 @@ test('borderDimColor does not dim styled child Text touching left edge', t => {
 			cliBoxes.round.top.repeat(11) +
 			cliBoxes.round.topRight,
 	);
-	t.true(output.includes(dimmedTopBorder), 'Border should be dimmed');
+	t.assert.ok(output.includes(dimmedTopBorder), 'Border should be dimmed');
 });
 
 // Concurrent mode tests
-test('single node - full width box - concurrent', async t => {
+test('single node - full width box - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box borderStyle="round">
 			<Text>Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('Hello World', {width: 100, borderStyle: 'round'}));
+	t.assert.strictEqual(
+		output,
+		boxen('Hello World', {width: 100, borderStyle: 'round'}),
+	);
 });
 
-test('single node - fit-content box - concurrent', async t => {
+test('single node - fit-content box - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box borderStyle="round" alignSelf="flex-start">
 			<Text>Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, boxen('Hello World', {borderStyle: 'round'}));
+	t.assert.strictEqual(output, boxen('Hello World', {borderStyle: 'round'}));
 });
 
-test('nested boxes - concurrent', async t => {
+test('nested boxes - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box borderStyle="round" width={40} padding={1}>
 			<Box borderStyle="round" justifyContent="center" padding={1}>
@@ -992,13 +1036,13 @@ test('nested boxes - concurrent', async t => {
 		1,
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		boxen(`${' '.repeat(38)}\n${nestedBox}\n`, {borderStyle: 'round'}),
 	);
 });
 
-test('render border after update - concurrent', async t => {
+test('render border after update - concurrent', async (t: TestContext) => {
 	function Test({borderColor}: {readonly borderColor?: string}) {
 		return (
 			<Box borderStyle="round" borderColor={borderColor}>
@@ -1009,11 +1053,14 @@ test('render border after update - concurrent', async t => {
 
 	const {getOutput, rerenderAsync} = await renderAsync(<Test />);
 
-	t.is(getOutput(), boxen('Hello World', {width: 100, borderStyle: 'round'}));
+	t.assert.strictEqual(
+		getOutput(),
+		boxen('Hello World', {width: 100, borderStyle: 'round'}),
+	);
 
 	await rerenderAsync(<Test borderColor="green" />);
 
-	t.is(
+	t.assert.strictEqual(
 		getOutput(),
 		boxen('Hello World', {
 			width: 100,

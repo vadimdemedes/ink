@@ -1,131 +1,128 @@
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
 import term from './helpers/term.js';
 
-test.serial('useInput - handle up arrow', async t => {
+test('useInput - handle up arrow', async (t: TestContext) => {
 	const ps = term('use-input', ['upArrow']);
-	ps.write('\u001B[A');
+	ps.write('\u{1B}[A');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle down arrow', async t => {
+test('useInput - handle down arrow', async (t: TestContext) => {
 	const ps = term('use-input', ['downArrow']);
-	ps.write('\u001B[B');
+	ps.write('\u{1B}[B');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle left arrow', async t => {
+test('useInput - handle left arrow', async (t: TestContext) => {
 	const ps = term('use-input', ['leftArrow']);
-	ps.write('\u001B[D');
+	ps.write('\u{1B}[D');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle right arrow', async t => {
+test('useInput - handle right arrow', async (t: TestContext) => {
 	const ps = term('use-input', ['rightArrow']);
-	ps.write('\u001B[C');
+	ps.write('\u{1B}[C');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial(
-	'useInput - handles rapid arrows and enter in one chunk',
-	async t => {
-		const ps = term('use-input', ['rapidArrowsEnter']);
-		ps.write('\u001B[B\u001B[B\u001B[B\r');
-		await ps.waitForExit();
-		t.true(ps.output.includes('exited'));
-	},
-);
+test('useInput - handles rapid arrows and enter in one chunk', async (t: TestContext) => {
+	const ps = term('use-input', ['rapidArrowsEnter']);
+	ps.write('\u{1B}[B\u{1B}[B\u{1B}[B\r');
+	await ps.waitForExit();
+	t.assert.ok(ps.output.includes('exited'));
+});
 
-test.serial('useInput - handle meta + up arrow', async t => {
+test('useInput - handle meta + up arrow', async (t: TestContext) => {
 	const ps = term('use-input', ['upArrowMeta']);
-	ps.write('\u001B\u001B[A');
+	ps.write('\u{1B}\u{1B}[A');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle meta + down arrow', async t => {
+test('useInput - handle meta + down arrow', async (t: TestContext) => {
 	const ps = term('use-input', ['downArrowMeta']);
-	ps.write('\u001B\u001B[B');
+	ps.write('\u{1B}\u{1B}[B');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle meta + left arrow', async t => {
+test('useInput - handle meta + left arrow', async (t: TestContext) => {
 	const ps = term('use-input', ['leftArrowMeta']);
-	ps.write('\u001B\u001B[D');
+	ps.write('\u{1B}\u{1B}[D');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle meta + right arrow', async t => {
+test('useInput - handle meta + right arrow', async (t: TestContext) => {
 	const ps = term('use-input', ['rightArrowMeta']);
-	ps.write('\u001B\u001B[C');
+	ps.write('\u{1B}\u{1B}[C');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle ctrl + up arrow', async t => {
+test('useInput - handle ctrl + up arrow', async (t: TestContext) => {
 	const ps = term('use-input', ['upArrowCtrl']);
-	ps.write('\u001B[1;5A');
+	ps.write('\u{1B}[1;5A');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle SS3 ctrl + up arrow', async t => {
+test('useInput - handle SS3 ctrl + up arrow', async (t: TestContext) => {
 	const ps = term('use-input', ['upArrowCtrl']);
-	ps.write('\u001BO1;5A');
+	ps.write('\u{1B}O1;5A');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle ctrl + down arrow', async t => {
+test('useInput - handle ctrl + down arrow', async (t: TestContext) => {
 	const ps = term('use-input', ['downArrowCtrl']);
-	ps.write('\u001B[1;5B');
+	ps.write('\u{1B}[1;5B');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle ctrl + left arrow', async t => {
+test('useInput - handle ctrl + left arrow', async (t: TestContext) => {
 	const ps = term('use-input', ['leftArrowCtrl']);
-	ps.write('\u001B[1;5D');
+	ps.write('\u{1B}[1;5D');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle ctrl + right arrow', async t => {
+test('useInput - handle ctrl + right arrow', async (t: TestContext) => {
 	const ps = term('use-input', ['rightArrowCtrl']);
-	ps.write('\u001B[1;5C');
+	ps.write('\u{1B}[1;5C');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle page down', async t => {
+test('useInput - handle page down', async (t: TestContext) => {
 	const ps = term('use-input', ['pageDown']);
-	ps.write('\u001B[6~');
+	ps.write('\u{1B}[6~');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle page up', async t => {
+test('useInput - handle page up', async (t: TestContext) => {
 	const ps = term('use-input', ['pageUp']);
-	ps.write('\u001B[5~');
+	ps.write('\u{1B}[5~');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle home', async t => {
+test('useInput - handle home', async (t: TestContext) => {
 	const ps = term('use-input', ['home']);
-	ps.write('\u001B[H');
+	ps.write('\u{1B}[H');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });
 
-test.serial('useInput - handle end', async t => {
+test('useInput - handle end', async (t: TestContext) => {
 	const ps = term('use-input', ['end']);
-	ps.write('\u001B[F');
+	ps.write('\u{1B}[F');
 	await ps.waitForExit();
-	t.true(ps.output.includes('exited'));
+	t.assert.ok(ps.output.includes('exited'));
 });

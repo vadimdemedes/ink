@@ -1,5 +1,5 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text, renderToString} from '../src/index.js';
 
 for (const [wrap, expected] of [
@@ -8,17 +8,17 @@ for (const [wrap, expected] of [
 	['truncate-middle', '你…'],
 	['truncate-start', '…界'],
 ] as const) {
-	test(`${wrap} keeps wide characters that fit`, t => {
+	test(`${wrap} keeps wide characters that fit`, (t: TestContext) => {
 		const output = renderToString(
 			<Box width={4}>
 				<Text wrap={wrap}>你好世界</Text>
 			</Box>,
 		);
 
-		t.is(output, expected);
+		t.assert.strictEqual(output, expected);
 	});
 
-	test(`${wrap} preserves the adjacent column`, t => {
+	test(`${wrap} preserves the adjacent column`, (t: TestContext) => {
 		const output = renderToString(
 			<Box width={5}>
 				<Text wrap={wrap}>你好世界</Text>
@@ -28,11 +28,11 @@ for (const [wrap, expected] of [
 			</Box>,
 		);
 
-		t.is(output, `${expected} |`);
+		t.assert.strictEqual(output, `${expected} |`);
 	});
 }
 
-test('text that fits does not reserve extra width', t => {
+test('text that fits does not reserve extra width', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={10}>
 			<Text wrap="truncate-middle">你好</Text>
@@ -40,5 +40,5 @@ test('text that fits does not reserve extra width', t => {
 		</Box>,
 	);
 
-	t.is(output, '你好|');
+	t.assert.strictEqual(output, '你好|');
 });

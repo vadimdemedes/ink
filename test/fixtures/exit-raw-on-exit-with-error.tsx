@@ -8,9 +8,13 @@ function Test() {
 	useEffect(() => {
 		setRawMode(true);
 
-		setTimeout(() => {
+		const timer = setTimeout(() => {
 			exit(new Error('errored'));
 		}, 500);
+
+		return () => {
+			clearTimeout(timer);
+		};
 	}, [exit, setRawMode]);
 
 	return <Text>Hello World</Text>;

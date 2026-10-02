@@ -1,12 +1,12 @@
-const bellCharacter = '\u0007';
-const escapeCharacter = '\u001B';
-const stringTerminatorCharacter = '\u009C';
-const csiCharacter = '\u009B';
-const oscCharacter = '\u009D';
-const dcsCharacter = '\u0090';
-const pmCharacter = '\u009E';
-const apcCharacter = '\u009F';
-const sosCharacter = '\u0098';
+const bellCharacter = '\u{7}';
+const escapeCharacter = '\u{1B}';
+const stringTerminatorCharacter = '\u{9C}';
+const csiCharacter = '\u{9B}';
+const oscCharacter = '\u{9D}';
+const dcsCharacter = '\u{90}';
+const pmCharacter = '\u{9E}';
+const apcCharacter = '\u{9F}';
+const sosCharacter = '\u{98}';
 
 type ControlStringType = 'osc' | 'dcs' | 'pm' | 'apc' | 'sos';
 
@@ -153,12 +153,12 @@ const readCsiSequence = (
 const findControlStringTerminatorIndex = (
 	text: string,
 	fromIndex: number,
-	allowBellTerminator: boolean,
+	isBellTerminatorAllowed: boolean,
 ): number | undefined => {
 	for (let index = fromIndex; index < text.length; index++) {
 		const character = text[index];
 
-		if (allowBellTerminator && character === bellCharacter) {
+		if (isBellTerminatorAllowed && character === bellCharacter) {
 			return index + 1;
 		}
 
@@ -166,18 +166,20 @@ const findControlStringTerminatorIndex = (
 			return index + 1;
 		}
 
-		if (character === escapeCharacter) {
-			const followingCharacter = text[index + 1];
+		if (character !== escapeCharacter) {
+			continue;
+		}
 
-			// Tmux escapes ESC bytes in payload as ESC ESC.
-			if (followingCharacter === escapeCharacter) {
-				index++;
-				continue;
-			}
+		const followingCharacter = text[index + 1];
 
-			if (followingCharacter === '\\') {
-				return index + 2;
-			}
+		// Tmux escapes ESC bytes in payload as ESC ESC.
+		if (followingCharacter === escapeCharacter) {
+			index++;
+			continue;
+		}
+
+		if (followingCharacter === '\\') {
+			return index + 2;
 		}
 	}
 

@@ -17,7 +17,7 @@ export const emitReadable = (
 	stdin: NodeJS.WriteStream,
 	chunk: string,
 ): void => {
-	/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
+	/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment -- Sinon stub methods are loosely typed. */
 	const read = stdin.read as ReturnType<typeof stub>;
 	read.onCall(0).returns(chunk);
 	read.onCall(1).returns(null);

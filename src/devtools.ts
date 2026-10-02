@@ -1,4 +1,4 @@
-/* eslint-disable import-x/order */
+/* eslint-disable import-x/order -- The window polyfill must be imported before `react-devtools-core`. */
 
 // eslint-disable-next-line import-x/no-unassigned-import
 import './devtools-window-polyfill.js';

@@ -14,17 +14,19 @@ function Example() {
 		let timer: NodeJS.Timeout | undefined;
 
 		const run = () => {
-			if (completedTests++ < 10) {
-				setTests(previousTests => [
-					...previousTests,
-					{
-						id: previousTests.length,
-						title: `Test #${previousTests.length + 1}`,
-					},
-				]);
-
-				timer = setTimeout(run, 100);
+			if (completedTests++ >= 10) {
+				return;
 			}
+
+			setTests(previousTests => [
+				...previousTests,
+				{
+					id: previousTests.length,
+					title: `Test #${previousTests.length + 1}`,
+				},
+			]);
+
+			timer = setTimeout(run, 100);
 		};
 
 		run();

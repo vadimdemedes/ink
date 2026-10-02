@@ -10,11 +10,8 @@ import Text from './Text.js';
 
 // Error's source file is reported as file:///home/user/file.js
 // This function converts file URLs to paths relative to the current directory
-const cleanupPath = (path: string | undefined): string | undefined => {
-	return path?.startsWith('file://')
-		? relative(cwd(), fileURLToPath(path))
-		: path;
-};
+const cleanupPath = (path: string | undefined): string | undefined =>
+	path?.startsWith('file://') ? relative(cwd(), fileURLToPath(path)) : path;
 
 const stackUtils = new StackUtils({
 	cwd: cwd(),
@@ -35,7 +32,12 @@ export default function ErrorOverview({error}: Props) {
 	let lineWidth = 0;
 	const stackLineCounts = new Map<string, number>();
 
-	if (filePath && origin?.line) {
+	if (
+		filePath !== undefined &&
+		filePath !== '' &&
+		origin?.line !== undefined &&
+		origin.line !== 0
+	) {
 		try {
 			const sourceCode = fs.readFileSync(filePath, 'utf8');
 			excerpt = codeExcerpt(sourceCode, origin.line);
@@ -61,7 +63,7 @@ export default function ErrorOverview({error}: Props) {
 				<Text> {error.message}</Text>
 			</Box>
 
-			{origin && filePath ? (
+			{origin && filePath !== undefined && filePath !== '' ? (
 				<Box marginTop={1}>
 					<Text dimColor>
 						{filePath}:{origin.line}:{origin.column}
@@ -111,7 +113,14 @@ export default function ErrorOverview({error}: Props) {
 						// If the line from the stack cannot be parsed, or parsed into an incomplete
 						// frame without source location data (for example, "at native"), we print
 						// out the unparsed line.
-						if (!parsedLine?.file || !parsedLine.line || !parsedLine.column) {
+						if (
+							parsedLine?.file === undefined ||
+							parsedLine.file === '' ||
+							parsedLine.line === undefined ||
+							parsedLine.line === 0 ||
+							parsedLine.column === undefined ||
+							parsedLine.column === 0
+						) {
 							return (
 								<Box key={key}>
 									<Text dimColor>- </Text>

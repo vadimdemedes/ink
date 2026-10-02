@@ -1,4 +1,4 @@
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
 import React from 'react';
 import chalk from 'chalk';
 import ansiEscapes from 'ansi-escapes';
@@ -15,7 +15,7 @@ import {bsu, esu} from '../src/write-synchronized.js';
 import {renderToString} from './helpers/render-to-string.js';
 import createStdout from './helpers/create-stdout.js';
 
-test('omit Static content inside a hidden ancestor from screen-reader output', t => {
+test('omit Static content inside a hidden ancestor from screen-reader output', (t: TestContext) => {
 	const output = renderToString(
 		<>
 			<Box display="none">
@@ -30,13 +30,13 @@ test('omit Static content inside a hidden ancestor from screen-reader output', t
 		{isScreenReaderEnabled: true},
 	);
 
-	t.is(output, 'Visible');
+	t.assert.strictEqual(output, 'Visible');
 });
 
-test('omit nested Text styling from screen-reader output', t => {
+test('omit nested Text styling from screen-reader output', (t: TestContext) => {
 	const previousColorLevel = chalk.level;
 	chalk.level = 3;
-	t.teardown(() => {
+	t.after(() => {
 		chalk.level = previousColorLevel;
 	});
 
@@ -46,11 +46,17 @@ test('omit nested Text styling from screen-reader output', t => {
 		</Text>
 	);
 
-	t.is(renderToString(element, {isScreenReaderEnabled: true}), 'Status: Ready');
-	t.is(renderToString(element), `Status: ${chalk.green('Ready')}`);
+	t.assert.strictEqual(
+		renderToString(element, {isScreenReaderEnabled: true}),
+		'Status: Ready',
+	);
+	t.assert.strictEqual(
+		renderToString(element),
+		`Status: ${chalk.green('Ready')}`,
+	);
 });
 
-test('preserve nested Transform accessibility labels for screen readers', t => {
+test('preserve nested Transform accessibility labels for screen readers', (t: TestContext) => {
 	const element = (
 		<Text>
 			Status:{' '}
@@ -63,11 +69,14 @@ test('preserve nested Transform accessibility labels for screen readers', t => {
 		</Text>
 	);
 
-	t.is(renderToString(element, {isScreenReaderEnabled: true}), 'Status: Ready');
-	t.is(renderToString(element), 'Status: *****');
+	t.assert.strictEqual(
+		renderToString(element, {isScreenReaderEnabled: true}),
+		'Status: Ready',
+	);
+	t.assert.strictEqual(renderToString(element), 'Status: *****');
 });
 
-test('honor empty Transform accessibility labels for screen readers', t => {
+test('honor empty Transform accessibility labels for screen readers', (t: TestContext) => {
 	const element = (
 		<Text>
 			<Transform accessibilityLabel="" transform={text => text.toUpperCase()}>
@@ -77,11 +86,14 @@ test('honor empty Transform accessibility labels for screen readers', t => {
 		</Text>
 	);
 
-	t.is(renderToString(element, {isScreenReaderEnabled: true}), 'Ready');
-	t.is(renderToString(element), 'DECORATIVEReady');
+	t.assert.strictEqual(
+		renderToString(element, {isScreenReaderEnabled: true}),
+		'Ready',
+	);
+	t.assert.strictEqual(renderToString(element), 'DECORATIVEReady');
 });
 
-test('render text for screen readers', t => {
+test('render text for screen readers', (t: TestContext) => {
 	const output = renderToString(
 		<Box aria-label="Hello World">
 			<Text>Not visible to screen readers</Text>
@@ -91,10 +103,10 @@ test('render text for screen readers', t => {
 		},
 	);
 
-	t.is(output, 'Hello World');
+	t.assert.strictEqual(output, 'Hello World');
 });
 
-test('render text for screen readers with aria-hidden', t => {
+test('render text for screen readers with aria-hidden', (t: TestContext) => {
 	const output = renderToString(
 		<Box aria-hidden>
 			<Text>Not visible to screen readers</Text>
@@ -104,10 +116,10 @@ test('render text for screen readers with aria-hidden', t => {
 		},
 	);
 
-	t.is(output, '');
+	t.assert.strictEqual(output, '');
 });
 
-test('render text for screen readers with aria-role', t => {
+test('render text for screen readers with aria-role', (t: TestContext) => {
 	const output = renderToString(
 		<Box aria-role="button">
 			<Text>Click me</Text>
@@ -117,10 +129,10 @@ test('render text for screen readers with aria-role', t => {
 		},
 	);
 
-	t.is(output, 'button: Click me');
+	t.assert.strictEqual(output, 'button: Click me');
 });
 
-test('render select input for screen readers', t => {
+test('render select input for screen readers', (t: TestContext) => {
 	const items = ['Red', 'Green', 'Blue'];
 
 	const output = renderToString(
@@ -147,29 +159,29 @@ test('render select input for screen readers', t => {
 		},
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		'list: Select a color:\nlistitem: 1. Red\nlistitem: (selected) 2. Green\nlistitem: 3. Blue',
 	);
 });
 
-test('render aria-label only Text for screen readers', t => {
+test('render aria-label only Text for screen readers', (t: TestContext) => {
 	const output = renderToString(<Text aria-label="Screen-reader only" />, {
 		isScreenReaderEnabled: true,
 	});
 
-	t.is(output, 'Screen-reader only');
+	t.assert.strictEqual(output, 'Screen-reader only');
 });
 
-test('render aria-label only Box for screen readers', t => {
+test('render aria-label only Box for screen readers', (t: TestContext) => {
 	const output = renderToString(<Box aria-label="Screen-reader only" />, {
 		isScreenReaderEnabled: true,
 	});
 
-	t.is(output, 'Screen-reader only');
+	t.assert.strictEqual(output, 'Screen-reader only');
 });
 
-test('render accessibilityLabel only Transform for screen readers', t => {
+test('render accessibilityLabel only Transform for screen readers', (t: TestContext) => {
 	const element = (
 		<Transform
 			accessibilityLabel="Screen-reader only"
@@ -177,18 +189,17 @@ test('render accessibilityLabel only Transform for screen readers', t => {
 		/>
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		renderToString(element, {isScreenReaderEnabled: true}),
 		'Screen-reader only',
 	);
-	t.is(renderToString(element), '');
+	t.assert.strictEqual(renderToString(element), '');
 });
 
-test('omit ANSI styling in screen-reader output', t => {
+test('omit ANSI styling in screen-reader output', (t: TestContext) => {
 	const output = renderToString(
 		<Box>
-			{/* eslint-disable-next-line react/jsx-sort-props */}
-			<Text bold color="green" inverse underline>
+			<Text bold inverse underline color="green">
 				Styled content
 			</Text>
 		</Box>,
@@ -197,10 +208,10 @@ test('omit ANSI styling in screen-reader output', t => {
 		},
 	);
 
-	t.is(output, 'Styled content');
+	t.assert.strictEqual(output, 'Styled content');
 });
 
-test('skip nodes with display:none style in screen-reader output', t => {
+test('skip nodes with display:none style in screen-reader output', (t: TestContext) => {
 	const output = renderToString(
 		<Box>
 			<Box display="none">
@@ -211,10 +222,10 @@ test('skip nodes with display:none style in screen-reader output', t => {
 		{isScreenReaderEnabled: true},
 	);
 
-	t.is(output, 'Visible');
+	t.assert.strictEqual(output, 'Visible');
 });
 
-test('render multiple Text components', t => {
+test('render multiple Text components', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Text>Hello</Text>
@@ -225,10 +236,10 @@ test('render multiple Text components', t => {
 		},
 	);
 
-	t.is(output, 'Hello\nWorld');
+	t.assert.strictEqual(output, 'Hello\nWorld');
 });
 
-test('render nested Box components with Text', t => {
+test('render nested Box components with Text', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Text>Hello</Text>
@@ -241,14 +252,14 @@ test('render nested Box components with Text', t => {
 		},
 	);
 
-	t.is(output, 'Hello\nWorld');
+	t.assert.strictEqual(output, 'Hello\nWorld');
 });
 
 function NullComponent(): undefined {
 	return undefined;
 }
 
-test('render component that returns null', t => {
+test('render component that returns null', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Text>Hello</Text>
@@ -260,10 +271,10 @@ test('render component that returns null', t => {
 		},
 	);
 
-	t.is(output, 'Hello\nWorld');
+	t.assert.strictEqual(output, 'Hello\nWorld');
 });
 
-test('render with aria-state.busy', t => {
+test('render with aria-state.busy', (t: TestContext) => {
 	const output = renderToString(
 		<Box aria-state={{busy: true}}>
 			<Text>Loading</Text>
@@ -273,10 +284,10 @@ test('render with aria-state.busy', t => {
 		},
 	);
 
-	t.is(output, '(busy) Loading');
+	t.assert.strictEqual(output, '(busy) Loading');
 });
 
-test('render with aria-state.checked', t => {
+test('render with aria-state.checked', (t: TestContext) => {
 	const output = renderToString(
 		<Box aria-role="checkbox" aria-state={{checked: true}}>
 			<Text>Accept terms</Text>
@@ -286,10 +297,10 @@ test('render with aria-state.checked', t => {
 		},
 	);
 
-	t.is(output, 'checkbox: (checked) Accept terms');
+	t.assert.strictEqual(output, 'checkbox: (checked) Accept terms');
 });
 
-test('render with aria-state.disabled', t => {
+test('render with aria-state.disabled', (t: TestContext) => {
 	const output = renderToString(
 		<Box aria-role="button" aria-state={{disabled: true}}>
 			<Text>Submit</Text>
@@ -299,10 +310,10 @@ test('render with aria-state.disabled', t => {
 		},
 	);
 
-	t.is(output, 'button: (disabled) Submit');
+	t.assert.strictEqual(output, 'button: (disabled) Submit');
 });
 
-test('render with aria-state.expanded', t => {
+test('render with aria-state.expanded', (t: TestContext) => {
 	const output = renderToString(
 		<Box aria-role="combobox" aria-state={{expanded: true}}>
 			<Text>Select</Text>
@@ -312,10 +323,10 @@ test('render with aria-state.expanded', t => {
 		},
 	);
 
-	t.is(output, 'combobox: (expanded) Select');
+	t.assert.strictEqual(output, 'combobox: (expanded) Select');
 });
 
-test('render with aria-state.multiline', t => {
+test('render with aria-state.multiline', (t: TestContext) => {
 	const output = renderToString(
 		<Box aria-role="textbox" aria-state={{multiline: true}}>
 			<Text>Hello</Text>
@@ -325,10 +336,10 @@ test('render with aria-state.multiline', t => {
 		},
 	);
 
-	t.is(output, 'textbox: (multiline) Hello');
+	t.assert.strictEqual(output, 'textbox: (multiline) Hello');
 });
 
-test('render with aria-state.multiselectable', t => {
+test('render with aria-state.multiselectable', (t: TestContext) => {
 	const output = renderToString(
 		<Box aria-role="listbox" aria-state={{multiselectable: true}}>
 			<Text>Options</Text>
@@ -338,10 +349,10 @@ test('render with aria-state.multiselectable', t => {
 		},
 	);
 
-	t.is(output, 'listbox: (multiselectable) Options');
+	t.assert.strictEqual(output, 'listbox: (multiselectable) Options');
 });
 
-test('render with aria-state.readonly', t => {
+test('render with aria-state.readonly', (t: TestContext) => {
 	const output = renderToString(
 		<Box aria-role="textbox" aria-state={{readonly: true}}>
 			<Text>Hello</Text>
@@ -351,10 +362,10 @@ test('render with aria-state.readonly', t => {
 		},
 	);
 
-	t.is(output, 'textbox: (readonly) Hello');
+	t.assert.strictEqual(output, 'textbox: (readonly) Hello');
 });
 
-test('render with aria-state.required', t => {
+test('render with aria-state.required', (t: TestContext) => {
 	const output = renderToString(
 		<Box aria-role="textbox" aria-state={{required: true}}>
 			<Text>Name</Text>
@@ -364,10 +375,10 @@ test('render with aria-state.required', t => {
 		},
 	);
 
-	t.is(output, 'textbox: (required) Name');
+	t.assert.strictEqual(output, 'textbox: (required) Name');
 });
 
-test('render with aria-state.selected', t => {
+test('render with aria-state.selected', (t: TestContext) => {
 	const output = renderToString(
 		<Box aria-role="option" aria-state={{selected: true}}>
 			<Text>Blue</Text>
@@ -377,10 +388,10 @@ test('render with aria-state.selected', t => {
 		},
 	);
 
-	t.is(output, 'option: (selected) Blue');
+	t.assert.strictEqual(output, 'option: (selected) Blue');
 });
 
-test('render multi-line text', t => {
+test('render multi-line text', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Text>Line 1</Text>
@@ -391,10 +402,10 @@ test('render multi-line text', t => {
 		},
 	);
 
-	t.is(output, 'Line 1\nLine 2');
+	t.assert.strictEqual(output, 'Line 1\nLine 2');
 });
 
-test('render nested multi-line text', t => {
+test('render nested multi-line text', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="row">
 			<Box flexDirection="column">
@@ -407,10 +418,10 @@ test('render nested multi-line text', t => {
 		},
 	);
 
-	t.is(output, 'Line 1\nLine 2');
+	t.assert.strictEqual(output, 'Line 1\nLine 2');
 });
 
-test('render nested row', t => {
+test('render nested row', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Box flexDirection="row">
@@ -423,10 +434,10 @@ test('render nested row', t => {
 		},
 	);
 
-	t.is(output, 'Line 1 Line 2');
+	t.assert.strictEqual(output, 'Line 1 Line 2');
 });
 
-test('render multi-line text with roles', t => {
+test('render multi-line text with roles', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" aria-role="list">
 			<Box aria-role="listitem">
@@ -441,10 +452,10 @@ test('render multi-line text with roles', t => {
 		},
 	);
 
-	t.is(output, 'list: listitem: Item 1\nlistitem: Item 2');
+	t.assert.strictEqual(output, 'list: listitem: Item 1\nlistitem: Item 2');
 });
 
-test('render listbox with multiselectable options', t => {
+test('render listbox with multiselectable options', (t: TestContext) => {
 	const output = renderToString(
 		<Box
 			flexDirection="column"
@@ -466,7 +477,7 @@ test('render listbox with multiselectable options', t => {
 		},
 	);
 
-	t.is(
+	t.assert.strictEqual(
 		output,
 		'listbox: (multiselectable) option: (selected) Option 1\noption: Option 2\noption: (selected) Option 3',
 	);
@@ -475,7 +486,7 @@ test('render listbox with multiselectable options', t => {
 const contentWrites = (stdout: ReturnType<typeof createStdout>) =>
 	stdout.getWrites().filter(write => write.length > 0);
 
-test('restore screen-reader output after stdout writes without touching the cursor', async t => {
+test('restore screen-reader output after stdout writes without touching the cursor', async (t: TestContext) => {
 	const stdout = createStdout(40, true);
 	let write: (text: string) => void = () => {};
 	function Test() {
@@ -489,13 +500,15 @@ test('restore screen-reader output after stdout writes without touching the curs
 		isScreenReaderEnabled: true,
 		patchConsole: false,
 	});
-	t.teardown(instance.unmount);
+	t.after(() => {
+		instance.unmount();
+	});
 	await instance.waitUntilRenderFlush();
-	t.deepEqual(contentWrites(stdout), [bsu, 'Hello', esu]);
+	t.assert.deepStrictEqual(contentWrites(stdout), [bsu, 'Hello', esu]);
 
 	write('External\n');
 
-	t.deepEqual(contentWrites(stdout).slice(3), [
+	t.assert.deepStrictEqual(contentWrites(stdout).slice(3), [
 		bsu,
 		ansiEscapes.eraseLines(1),
 		'External\n',
@@ -504,7 +517,7 @@ test('restore screen-reader output after stdout writes without touching the curs
 	]);
 });
 
-test('restore screen-reader output after stderr writes without touching the cursor', async t => {
+test('restore screen-reader output after stderr writes without touching the cursor', async (t: TestContext) => {
 	const stdout = createStdout(40, true);
 	const stderr = createStdout(40, true);
 	let write: (text: string) => void = () => {};
@@ -520,13 +533,15 @@ test('restore screen-reader output after stderr writes without touching the curs
 		isScreenReaderEnabled: true,
 		patchConsole: false,
 	});
-	t.teardown(instance.unmount);
+	t.after(() => {
+		instance.unmount();
+	});
 	await instance.waitUntilRenderFlush();
 
 	write('External\n');
 
-	t.deepEqual(contentWrites(stderr), ['External\n']);
-	t.deepEqual(contentWrites(stdout).slice(3), [
+	t.assert.deepStrictEqual(contentWrites(stderr), ['External\n']);
+	t.assert.deepStrictEqual(contentWrites(stdout).slice(3), [
 		bsu,
 		ansiEscapes.eraseLines(1),
 		'Hello',
@@ -534,26 +549,25 @@ test('restore screen-reader output after stderr writes without touching the curs
 	]);
 });
 
-test.serial(
-	'restore screen-reader output after console.log without touching the cursor',
-	async t => {
-		const stdout = createStdout(40, true);
-		const instance = render(<Text>Hello</Text>, {
-			stdout,
-			interactive: true,
-			isScreenReaderEnabled: true,
-		});
-		t.teardown(instance.unmount);
-		await instance.waitUntilRenderFlush();
+test('restore screen-reader output after console.log without touching the cursor', async (t: TestContext) => {
+	const stdout = createStdout(40, true);
+	const instance = render(<Text>Hello</Text>, {
+		stdout,
+		interactive: true,
+		isScreenReaderEnabled: true,
+	});
+	t.after(() => {
+		instance.unmount();
+	});
+	await instance.waitUntilRenderFlush();
 
-		console.log('External');
+	console.log('External');
 
-		t.deepEqual(contentWrites(stdout).slice(3), [
-			bsu,
-			ansiEscapes.eraseLines(1),
-			'External\n',
-			'Hello',
-			esu,
-		]);
-	},
-);
+	t.assert.deepStrictEqual(contentWrites(stdout).slice(3), [
+		bsu,
+		ansiEscapes.eraseLines(1),
+		'External\n',
+		'Hello',
+		esu,
+	]);
+});

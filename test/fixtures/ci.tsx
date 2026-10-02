@@ -15,7 +15,7 @@ function Test() {
 
 			counterRef.current += 1;
 			setCounter(counterRef.current);
-			setItems(prevItems => [...prevItems, `#${counterRef.current}`]);
+			setItems(previousItems => [...previousItems, `#${counterRef.current}`]);
 			timerRef.current = setTimeout(onTimeout, 20);
 		};
 

@@ -8,11 +8,11 @@ const stylePiece = (
 	segment: string,
 	fg?: string,
 	bg?: string,
-	dim?: boolean,
+	isDim?: boolean,
 ): string => {
 	let styled = colorize(segment, fg, 'foreground');
 	styled = colorize(styled, bg, 'background');
-	if (dim) {
+	if (isDim) {
 		styled = chalk.dim(styled);
 	}
 
@@ -25,130 +25,131 @@ const renderBorder = (
 	node: DOMNode,
 	output: Output,
 ): void => {
-	if (node.style.borderStyle) {
-		const width = node.yogaNode!.getComputedWidth();
-		const height = node.yogaNode!.getComputedHeight();
-		const box =
-			typeof node.style.borderStyle === 'string'
-				? cliBoxes[node.style.borderStyle]
-				: node.style.borderStyle;
+	// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions -- JavaScript callers pass `null` or `false` (for example `condition && 'round'`), and any falsy value means unset.
+	if (!node.style.borderStyle) {
+		return;
+	}
 
-		const topBorderColor = node.style.borderTopColor ?? node.style.borderColor;
-		const bottomBorderColor =
-			node.style.borderBottomColor ?? node.style.borderColor;
-		const leftBorderColor =
-			node.style.borderLeftColor ?? node.style.borderColor;
-		const rightBorderColor =
-			node.style.borderRightColor ?? node.style.borderColor;
+	const width = node.yogaNode!.getComputedWidth();
+	const height = node.yogaNode!.getComputedHeight();
+	const box =
+		typeof node.style.borderStyle === 'string'
+			? cliBoxes[node.style.borderStyle]
+			: node.style.borderStyle;
 
-		const topBorderBackgroundColor =
-			node.style.borderTopBackgroundColor ?? node.style.borderBackgroundColor;
-		const bottomBorderBackgroundColor =
-			node.style.borderBottomBackgroundColor ??
-			node.style.borderBackgroundColor;
-		const leftBorderBackgroundColor =
-			node.style.borderLeftBackgroundColor ?? node.style.borderBackgroundColor;
-		const rightBorderBackgroundColor =
-			node.style.borderRightBackgroundColor ?? node.style.borderBackgroundColor;
+	const topBorderColor = node.style.borderTopColor ?? node.style.borderColor;
+	const bottomBorderColor =
+		node.style.borderBottomColor ?? node.style.borderColor;
+	const leftBorderColor = node.style.borderLeftColor ?? node.style.borderColor;
+	const rightBorderColor =
+		node.style.borderRightColor ?? node.style.borderColor;
 
-		const dimTopBorderColor =
-			node.style.borderTopDimColor ?? node.style.borderDimColor;
+	const topBorderBackgroundColor =
+		node.style.borderTopBackgroundColor ?? node.style.borderBackgroundColor;
+	const bottomBorderBackgroundColor =
+		node.style.borderBottomBackgroundColor ?? node.style.borderBackgroundColor;
+	const leftBorderBackgroundColor =
+		node.style.borderLeftBackgroundColor ?? node.style.borderBackgroundColor;
+	const rightBorderBackgroundColor =
+		node.style.borderRightBackgroundColor ?? node.style.borderBackgroundColor;
 
-		const dimBottomBorderColor =
-			node.style.borderBottomDimColor ?? node.style.borderDimColor;
+	const dimTopBorderColor =
+		node.style.borderTopDimColor ?? node.style.borderDimColor;
 
-		const dimLeftBorderColor =
-			node.style.borderLeftDimColor ?? node.style.borderDimColor;
+	const dimBottomBorderColor =
+		node.style.borderBottomDimColor ?? node.style.borderDimColor;
 
-		const dimRightBorderColor =
-			node.style.borderRightDimColor ?? node.style.borderDimColor;
+	const dimLeftBorderColor =
+		node.style.borderLeftDimColor ?? node.style.borderDimColor;
 
-		const showTopBorder = node.style.borderTop !== false;
-		const showBottomBorder = node.style.borderBottom !== false;
-		const showLeftBorder = node.style.borderLeft !== false;
-		const showRightBorder = node.style.borderRight !== false;
+	const dimRightBorderColor =
+		node.style.borderRightDimColor ?? node.style.borderDimColor;
 
-		const contentWidth =
-			width - (showLeftBorder ? 1 : 0) - (showRightBorder ? 1 : 0);
+	const shouldShowTopBorder = node.style.borderTop !== false;
+	const shouldShowBottomBorder = node.style.borderBottom !== false;
+	const shouldShowLeftBorder = node.style.borderLeft !== false;
+	const shouldShowRightBorder = node.style.borderRight !== false;
 
-		let topBorder = showTopBorder
-			? (showLeftBorder ? box.topLeft : '') +
-				box.top.repeat(contentWidth) +
-				(showRightBorder ? box.topRight : '')
-			: undefined;
+	const contentWidth =
+		width - (shouldShowLeftBorder ? 1 : 0) - (shouldShowRightBorder ? 1 : 0);
 
-		topBorder &&= stylePiece(
-			topBorder,
-			topBorderColor,
-			topBorderBackgroundColor,
-			dimTopBorderColor,
+	let topBorder = shouldShowTopBorder
+		? (shouldShowLeftBorder ? box.topLeft : '') +
+			box.top.repeat(contentWidth) +
+			(shouldShowRightBorder ? box.topRight : '')
+		: undefined;
+
+	topBorder &&= stylePiece(
+		topBorder,
+		topBorderColor,
+		topBorderBackgroundColor,
+		dimTopBorderColor,
+	);
+
+	let verticalBorderHeight = height;
+
+	if (shouldShowTopBorder) {
+		verticalBorderHeight -= 1;
+	}
+
+	if (shouldShowBottomBorder) {
+		verticalBorderHeight -= 1;
+	}
+
+	let leftBorder = '';
+
+	if (shouldShowLeftBorder) {
+		const one = stylePiece(
+			box.left,
+			leftBorderColor,
+			leftBorderBackgroundColor,
+			dimLeftBorderColor,
 		);
+		leftBorder = (one + '\n').repeat(verticalBorderHeight);
+	}
 
-		let verticalBorderHeight = height;
+	let rightBorder = '';
 
-		if (showTopBorder) {
-			verticalBorderHeight -= 1;
-		}
-
-		if (showBottomBorder) {
-			verticalBorderHeight -= 1;
-		}
-
-		let leftBorder = '';
-
-		if (showLeftBorder) {
-			const one = stylePiece(
-				box.left,
-				leftBorderColor,
-				leftBorderBackgroundColor,
-				dimLeftBorderColor,
-			);
-			leftBorder = (one + '\n').repeat(verticalBorderHeight);
-		}
-
-		let rightBorder = '';
-
-		if (showRightBorder) {
-			const one = stylePiece(
-				box.right,
-				rightBorderColor,
-				rightBorderBackgroundColor,
-				dimRightBorderColor,
-			);
-			rightBorder = (one + '\n').repeat(verticalBorderHeight);
-		}
-
-		let bottomBorder = showBottomBorder
-			? (showLeftBorder ? box.bottomLeft : '') +
-				box.bottom.repeat(contentWidth) +
-				(showRightBorder ? box.bottomRight : '')
-			: undefined;
-		bottomBorder &&= stylePiece(
-			bottomBorder,
-			bottomBorderColor,
-			bottomBorderBackgroundColor,
-			dimBottomBorderColor,
+	if (shouldShowRightBorder) {
+		const one = stylePiece(
+			box.right,
+			rightBorderColor,
+			rightBorderBackgroundColor,
+			dimRightBorderColor,
 		);
+		rightBorder = (one + '\n').repeat(verticalBorderHeight);
+	}
 
-		const offsetY = showTopBorder ? 1 : 0;
+	let bottomBorder = shouldShowBottomBorder
+		? (shouldShowLeftBorder ? box.bottomLeft : '') +
+			box.bottom.repeat(contentWidth) +
+			(shouldShowRightBorder ? box.bottomRight : '')
+		: undefined;
+	bottomBorder &&= stylePiece(
+		bottomBorder,
+		bottomBorderColor,
+		bottomBorderBackgroundColor,
+		dimBottomBorderColor,
+	);
 
-		if (topBorder) {
-			output.write(x, y, topBorder, {transformers: []});
-		}
+	const offsetY = shouldShowTopBorder ? 1 : 0;
 
-		if (leftBorder) {
-			output.write(x, y + offsetY, leftBorder, {transformers: []});
-		}
+	if (topBorder !== undefined && topBorder !== '') {
+		output.write(x, y, topBorder, {transformers: []});
+	}
 
-		if (rightBorder) {
-			output.write(x + width - 1, y + offsetY, rightBorder, {
-				transformers: [],
-			});
-		}
+	if (leftBorder !== '') {
+		output.write(x, y + offsetY, leftBorder, {transformers: []});
+	}
 
-		if (bottomBorder) {
-			output.write(x, y + height - 1, bottomBorder, {transformers: []});
-		}
+	if (rightBorder !== '') {
+		output.write(x + width - 1, y + offsetY, rightBorder, {
+			transformers: [],
+		});
+	}
+
+	if (bottomBorder !== undefined && bottomBorder !== '') {
+		output.write(x, y + height - 1, bottomBorder, {transformers: []});
 	}
 };
 

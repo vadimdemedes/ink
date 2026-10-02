@@ -15,22 +15,22 @@ function SelectInput() {
 
 	useInput((input, key) => {
 		if (key.upArrow) {
-			setSelectedIndex(previousIndex =>
-				previousIndex === 0 ? items.length - 1 : previousIndex - 1,
+			setSelectedIndex(
+				previousIndex => (previousIndex - 1 + items.length) % items.length,
 			);
 		}
 
 		if (key.downArrow) {
-			setSelectedIndex(previousIndex =>
-				previousIndex === items.length - 1 ? 0 : previousIndex + 1,
-			);
+			setSelectedIndex(previousIndex => (previousIndex + 1) % items.length);
 		}
 
-		if (isScreenReaderEnabled) {
-			const number = Number.parseInt(input, 10);
-			if (!Number.isNaN(number) && number > 0 && number <= items.length) {
-				setSelectedIndex(number - 1);
-			}
+		if (!isScreenReaderEnabled) {
+			return;
+		}
+
+		const number = Number(input);
+		if (Number.isSafeInteger(number) && number > 0 && number <= items.length) {
+			setSelectedIndex(number - 1);
 		}
 	});
 

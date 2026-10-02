@@ -1,11 +1,11 @@
+import test, {type TestContext} from 'node:test';
 import React, {useLayoutEffect} from 'react';
-import test from 'ava';
 import {render, useApp, useStdout, useStderr, Text} from '../src/index.js';
 import {type SuspendTerminal} from '../src/components/AppContext.js';
 import createStdout from './helpers/create-stdout.js';
 import {createStdin} from './helpers/create-stdin.js';
 
-test('non-interactive suspension keeps the latest rendered frame', async t => {
+test('non-interactive suspension keeps the latest rendered frame', async (t: TestContext) => {
 	const stdout = createStdout();
 	let suspendTerminal!: SuspendTerminal;
 
@@ -23,7 +23,7 @@ test('non-interactive suspension keeps the latest rendered frame', async t => {
 		interactive: false,
 		patchConsole: false,
 	});
-	t.teardown(() => {
+	t.after(() => {
 		instance.unmount();
 	});
 	await instance.waitUntilRenderFlush();
@@ -33,11 +33,11 @@ test('non-interactive suspension keeps the latest rendered frame', async t => {
 	});
 	instance.unmount();
 	await instance.waitUntilExit();
-	t.is(stdout.get(), 'after\n');
+	t.assert.strictEqual(stdout.get(), 'after\n');
 });
 
 for (const stream of ['stdout', 'stderr'] as const) {
-	test(`non-interactive suspension preserves ${stream} writes`, async t => {
+	test(`non-interactive suspension preserves ${stream} writes`, async (t: TestContext) => {
 		const stdout = createStdout();
 		const stderr = createStdout();
 		let suspendTerminal!: SuspendTerminal;
@@ -61,14 +61,14 @@ for (const stream of ['stdout', 'stderr'] as const) {
 			interactive: false,
 			patchConsole: false,
 		});
-		t.teardown(() => {
+		t.after(() => {
 			instance.unmount();
 		});
 		await instance.waitUntilRenderFlush();
 		await suspendTerminal(async () => {
 			write('child result\n');
 		});
-		t.true(
+		t.assert.ok(
 			(stream === 'stdout' ? stdout : stderr)
 				.getWrites()
 				.includes('child result\n'),

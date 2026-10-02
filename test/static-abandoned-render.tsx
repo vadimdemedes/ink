@@ -1,8 +1,9 @@
-import React, {Suspense, act, startTransition} from 'react';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
+import React, {Suspense, startTransition} from 'react';
 import {render, Static, Text} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 import {createStdin} from './helpers/create-stdin.js';
+import {act} from './helpers/act.js';
 
 const never = new Promise<never>(() => {});
 
@@ -28,42 +29,39 @@ function App({
 	);
 }
 
-test.serial(
-	'abandoned transition render does not replace committed Static',
-	async t => {
-		const stdout = createStdout();
-		const stdin = createStdin();
+test('abandoned transition render does not replace committed Static', async (t: TestContext) => {
+	const stdout = createStdout();
+	const stdin = createStdin();
 
-		let instance!: ReturnType<typeof render>;
+	let instance!: ReturnType<typeof render>;
+	await act(async () => {
+		instance = render(<App pending={false} items={['first']} />, {
+			stdout,
+			stdin,
+			debug: true,
+			concurrent: true,
+			patchConsole: false,
+		});
+	});
+	t.after(async () => {
 		await act(async () => {
-			instance = render(<App pending={false} items={['first']} />, {
-				stdout,
-				stdin,
-				debug: true,
-				concurrent: true,
-				patchConsole: false,
-			});
+			instance.unmount();
 		});
-		t.teardown(async () => {
-			await act(async () => {
-				instance.unmount();
-			});
+	});
+
+	t.assert.strictEqual(stdout.get(), 'first\nLive');
+
+	// Start a transition that suspends with a keyed <Static> replacement, then
+	// abandon it by committing a normal update without that replacement.
+	await act(async () => {
+		startTransition(() => {
+			instance.rerender(<App pending items={['abandoned']} />);
 		});
+	});
 
-		t.is(stdout.get(), 'first\nLive');
+	await act(async () => {
+		instance.rerender(<App pending={false} items={['first', 'second']} />);
+	});
 
-		// Start a transition that suspends with a keyed <Static> replacement, then
-		// abandon it by committing a normal update without that replacement.
-		await act(async () => {
-			startTransition(() => {
-				instance.rerender(<App pending items={['abandoned']} />);
-			});
-		});
-
-		await act(async () => {
-			instance.rerender(<App pending={false} items={['first', 'second']} />);
-		});
-
-		t.is(stdout.get(), 'first\nsecond\nLive');
-	},
-);
+	t.assert.strictEqual(stdout.get(), 'first\nsecond\nLive');
+});

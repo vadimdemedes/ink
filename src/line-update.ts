@@ -2,22 +2,22 @@ import ansiEscapes from 'ansi-escapes';
 import stringWidth from 'string-width';
 
 const segmenter = new Intl.Segmenter(undefined, {granularity: 'grapheme'});
-// eslint-disable-next-line no-control-regex
-const sgr = /\u001B\[[\d;]*m/g;
+// eslint-disable-next-line no-control-regex, regexp/no-control-character -- SGR starts with ESC.
+const sgr = /\u{1B}\[[\d;]*m/gu;
 // Only SGR is safe to replay without moving the cursor or changing terminal modes.
 // OSC links, tabs, and other controls retain the existing whole-line path.
-// eslint-disable-next-line no-control-regex
-const control = /[\u0000-\u001F\u007F-\u009F]/u;
+const control = /\p{Control}/u;
+// eslint-disable-next-line regexp/no-obscure-range -- The range covers every printable ASCII character.
 const printableAscii = /^[ -~]*$/u;
 
-/** Build a changed line, leaving its identical styled prefix on screen when safe. */
+// Build a changed line, leaving its identical styled prefix on screen when safe.
 export default function lineUpdate(
 	previous: string,
 	next: string,
 	columns: number | undefined,
 ): string {
 	const full = ansiEscapes.cursorTo(0) + next;
-	if (!columns || columns < 1) {
+	if (columns === undefined || Number.isNaN(columns) || columns < 1) {
 		return full;
 	}
 
@@ -40,6 +40,7 @@ export default function lineUpdate(
 		return full;
 	}
 
+	// eslint-disable-next-line unicorn/prefer-iterator-to-array -- Iterator helpers are not in the project's ES2024 library.
 	const codes = [...next.matchAll(sgr)];
 	let textLimit = commonLength;
 	for (const match of codes) {

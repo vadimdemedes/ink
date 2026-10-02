@@ -1,9 +1,9 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text, Static, renderToString} from '../src/index.js';
 
 for (const height of [0, 1, 2]) {
-	test(`renderToString preserves ${height} trailing dynamic rows after Static`, t => {
+	test(`renderToString preserves ${height} trailing dynamic rows after Static`, (t: TestContext) => {
 		const output = renderToString(
 			<>
 				<Static items={['A']}>{item => <Text key={item}>{item}</Text>}</Static>
@@ -11,12 +11,12 @@ for (const height of [0, 1, 2]) {
 			</>,
 		);
 
-		t.is(output, `A${'\n'.repeat(height)}`);
+		t.assert.strictEqual(output, `A${'\n'.repeat(height)}`);
 	});
 }
 
 for (const staticText of ['', 'A', 'A\nB']) {
-	test(`blank dynamic rows agree with ordinary layout after Static ${JSON.stringify(staticText)}`, t => {
+	test(`blank dynamic rows agree with ordinary layout after Static ${JSON.stringify(staticText)}`, (t: TestContext) => {
 		const output = renderToString(
 			<>
 				<Static items={['item']}>
@@ -32,11 +32,11 @@ for (const staticText of ['', 'A', 'A\nB']) {
 			</Box>,
 		);
 
-		t.is(output, expected);
+		t.assert.strictEqual(output, expected);
 	});
 }
 
-test('hidden dynamic content does not add a separator to Static output', t => {
+test('hidden dynamic content does not add a separator to Static output', (t: TestContext) => {
 	const output = renderToString(
 		<>
 			<Static items={['A']}>{item => <Text key={item}>{item}</Text>}</Static>
@@ -46,5 +46,5 @@ test('hidden dynamic content does not add a separator to Static output', t => {
 		</>,
 	);
 
-	t.is(output, 'A');
+	t.assert.strictEqual(output, 'A');
 });

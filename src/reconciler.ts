@@ -49,7 +49,10 @@ if (process.env['DEV'] === 'true') {
 
 type AnyObject = Record<string, unknown>;
 
-const diff = (before: AnyObject, after: AnyObject): AnyObject | undefined => {
+const diff = (
+	before: AnyObject | undefined,
+	after: AnyObject | undefined,
+): AnyObject | undefined => {
 	if (before === after) {
 		return;
 	}
@@ -59,27 +62,31 @@ const diff = (before: AnyObject, after: AnyObject): AnyObject | undefined => {
 	}
 
 	const changed: AnyObject = {};
-	let isChanged = false;
+	let hasChanges = false;
 
 	for (const key of Object.keys(before)) {
 		const isDeleted = after ? !Object.hasOwn(after, key) : true;
 
-		if (isDeleted) {
-			changed[key] = undefined;
-			isChanged = true;
+		if (!isDeleted) {
+			continue;
 		}
+
+		changed[key] = undefined;
+		hasChanges = true;
 	}
 
 	if (after) {
-		for (const key of Object.keys(after)) {
-			if (after[key] !== before[key]) {
-				changed[key] = after[key];
-				isChanged = true;
+		for (const [key, value] of Object.entries(after)) {
+			if (value === before[key]) {
+				continue;
 			}
+
+			changed[key] = value;
+			hasChanges = true;
 		}
 	}
 
-	return isChanged ? changed : undefined;
+	return hasChanges ? changed : undefined;
 };
 
 const findRootNode = (node: DOMElement): DOMElement | undefined => {
@@ -97,32 +104,25 @@ const findRootNode = (node: DOMElement): DOMElement | undefined => {
 };
 
 /**
- * Clear the root's cached `staticNode` when the node it points at is being
- * removed as part of a larger subtree.
- *
- * The previous identity check (`staticNode === removeNode`) only caught direct
- * removal of the `<Static>` element. When an *ancestor* of `<Static>` is
- * removed, the stale `staticNode` reference survives and the next render would
- * replay stale static output (and, before `freeYogaSubtree`, trap on freed
- * WASM memory — see QwenLM/qwen-code#6820).
- *
- * The owning root is derived from the host parent passed to the removal hook,
- * not a module-level global, so instances with separate stdout streams don't
- * clobber each other's pointers.
- */
+Clear the root's cached `staticNode` when the node it points at is being removed as part of a larger subtree.
+
+The previous identity check (`staticNode === removeNode`) only caught direct removal of the `<Static>` element. When an *ancestor* of `<Static>` is removed, the stale `staticNode` reference survives and the next render would replay stale static output (and, before `freeYogaSubtree`, trap on freed WASM memory, see QwenLM/qwen-code#6820).
+
+The owning root is derived from the host parent passed to the removal hook, not a module-level global, so instances with separate stdout streams don't clobber each other's pointers.
+*/
 const clearStaticNodeIfContained = (
 	rootNode: DOMElement | undefined,
-	removeNode: DOMElement | TextNode,
+	removedNode: DOMElement | TextNode,
 ): void => {
 	if (!rootNode?.staticNode) {
 		return;
 	}
 
-	// Walk up from staticNode to see if removeNode is an ancestor.
+	// Walk up from staticNode to see if removedNode is an ancestor.
 	let current: DOMElement | undefined = rootNode.staticNode;
 
 	while (current) {
-		if (current === removeNode) {
+		if (current === removedNode) {
 			// Only clear staticNode, not previousStaticNode. The inequality
 			// (undefined !== previousStaticNode) triggers onStaticChange in
 			// resetAfterCommit, which resets the accumulated static output.
@@ -190,10 +190,14 @@ if (process.env['DEV'] === 'true') {
 	try {
 		const loaded = await loadPackageJson();
 		packageInfo = {
-			// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-			name: loaded.name || packageInfo.name,
-			// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-			version: loaded.version || packageInfo.version,
+			name:
+				loaded.name === undefined || loaded.name === ''
+					? packageInfo.name
+					: loaded.name,
+			version:
+				loaded.version === undefined || loaded.version === ''
+					? packageInfo.version
+					: loaded.version,
 		};
 	} catch (error) {
 		console.warn(
@@ -230,6 +234,7 @@ type HostConfig = ReconcilerHostConfig<
 	createFragmentInstance: () => null;
 };
 
+// eslint-disable-next-line @eslint-react/naming-convention-context-name -- This is the React reconciler host config, not a React context.
 const hostConfig: HostConfig = {
 	getRootHostContext: () => ({
 		isInsideText: false,
@@ -278,19 +283,15 @@ const hostConfig: HostConfig = {
 		}
 	},
 	getChildHostContext(parentHostContext, type) {
-		const previousIsInsideText = parentHostContext.isInsideText;
+		const wasInsideText = parentHostContext.isInsideText;
 		const isInsideText = type === 'ink-text' || type === 'ink-virtual-text';
 
-		if (previousIsInsideText === isInsideText) {
-			return parentHostContext;
-		}
-
-		return {isInsideText};
+		return wasInsideText === isInsideText ? parentHostContext : {isInsideText};
 	},
 	shouldSetTextContent: () => false,
 	createInstance(originalType, newProps, _rootNode, hostContext) {
-		if (hostContext.isInsideText && originalType === 'ink-box') {
-			throw new Error(`<Box> can’t be nested inside <Text> component`);
+		if (originalType === 'ink-box' && hostContext.isInsideText) {
+			throw new Error('<Box> can’t be nested inside <Text> component');
 		}
 
 		const type =
@@ -379,13 +380,13 @@ const hostConfig: HostConfig = {
 	getInstanceFromScope: () => null,
 	appendChildToContainer: appendChildNode,
 	insertInContainerBefore: insertBeforeNode,
-	removeChildFromContainer(node, removeNode) {
+	removeChildFromContainer(node, removedNode) {
 		// `node` is the container, i.e. the root itself. Clear before
 		// removeChildNode breaks the parent chain.
-		clearStaticNodeIfContained(findRootNode(node), removeNode);
+		clearStaticNodeIfContained(findRootNode(node), removedNode);
 
-		removeChildNode(node, removeNode);
-		freeYogaSubtree(removeNode);
+		removeChildNode(node, removedNode);
+		freeYogaSubtree(removedNode);
 	},
 	commitUpdate(node, _type, oldProps, newProps) {
 		if (node.internal_static) {
@@ -439,24 +440,22 @@ const hostConfig: HostConfig = {
 	commitTextUpdate(node, _oldText, newText) {
 		setTextNodeValue(node, newText);
 	},
-	removeChild(node, removeNode) {
+	removeChild(node, removedNode) {
 		// `node` is the host parent; its chain up to the root is still intact
 		// here, so derive the owning root from it rather than a global.
-		clearStaticNodeIfContained(findRootNode(node), removeNode);
+		clearStaticNodeIfContained(findRootNode(node), removedNode);
 
-		removeChildNode(node, removeNode);
-		freeYogaSubtree(removeNode);
+		removeChildNode(node, removedNode);
+		freeYogaSubtree(removedNode);
 	},
 	setCurrentUpdatePriority(newPriority: number) {
 		currentUpdatePriority = newPriority;
 	},
 	getCurrentUpdatePriority: () => currentUpdatePriority,
 	resolveUpdatePriority() {
-		if (currentUpdatePriority !== NoEventPriority) {
-			return currentUpdatePriority;
-		}
-
-		return DefaultEventPriority;
+		return currentUpdatePriority === NoEventPriority
+			? DefaultEventPriority
+			: currentUpdatePriority;
 	},
 	maySuspendCommit() {
 		// Return true to enable Suspense resource preloading

@@ -2,6 +2,10 @@ import process from 'node:process';
 import React, {useEffect} from 'react';
 import {Box, Text, render, useApp} from '../../src/index.js';
 
+const rowsArgument = Number(process.argv[2]);
+const rows =
+	rowsArgument === 0 || Number.isNaN(rowsArgument) ? 5 : rowsArgument;
+
 function Fullscreen() {
 	const {exit} = useApp();
 
@@ -17,8 +21,6 @@ function Fullscreen() {
 	}, [exit]);
 
 	// Force the root to occupy exactly terminal rows
-	const rows = Number(process.argv[2]) || 5;
-
 	return (
 		<Box height={rows} flexDirection="column">
 			<Box flexGrow={1}>
@@ -30,6 +32,6 @@ function Fullscreen() {
 }
 
 // Set terminal size from argument
-process.stdout.rows = Number(process.argv[2]) || 5;
+process.stdout.rows = rows;
 
 render(<Fullscreen />);

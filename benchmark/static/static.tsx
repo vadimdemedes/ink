@@ -7,13 +7,13 @@ function App() {
 			id: number;
 		}>
 	>([]);
-	const itemCountReference = React.useRef(0);
+	const itemCountRef = React.useRef(0);
 
 	React.useEffect(() => {
 		let timer: NodeJS.Timeout | undefined;
 
 		const run = () => {
-			if (itemCountReference.current++ > 1000) {
+			if (itemCountRef.current++ > 1000) {
 				return;
 			}
 
@@ -47,8 +47,7 @@ function App() {
 
 			<Box flexDirection="column" padding={1}>
 				<Text underline bold color="red">
-					{/* eslint-disable-next-line react/jsx-curly-brace-presence */}
-					{'Hello World'}
+					Hello World
 				</Text>
 
 				<Text>Rendered: {items.length}</Text>

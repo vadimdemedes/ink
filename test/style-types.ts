@@ -1,7 +1,7 @@
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
 import ts from 'typescript';
 
-test('Box width constraints only accept numbers', t => {
+test('Box width constraints only accept numbers', (t: TestContext) => {
 	const program = ts.createProgram(
 		['src/global.d.ts', 'test/fixtures/box-width-types.tsx'],
 		{
@@ -14,7 +14,7 @@ test('Box width constraints only accept numbers', t => {
 	);
 
 	const diagnostics = ts.getPreEmitDiagnostics(program);
-	t.deepEqual(
+	t.assert.deepStrictEqual(
 		diagnostics.map(diagnostic =>
 			ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'),
 		),

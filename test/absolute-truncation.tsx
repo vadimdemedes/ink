@@ -1,5 +1,5 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text, renderToString} from '../src/index.js';
 
 for (const wrap of [
@@ -8,7 +8,7 @@ for (const wrap of [
 	'truncate-middle',
 	'truncate-end',
 ] as const) {
-	test(`${wrap} renders text in an absolute box without an explicit width`, t => {
+	test(`${wrap} renders text in an absolute box without an explicit width`, (t: TestContext) => {
 		const output = renderToString(
 			<Box height={2}>
 				<Box position="absolute">
@@ -17,6 +17,6 @@ for (const wrap of [
 			</Box>,
 		);
 
-		t.is(output, 'hello\n');
+		t.assert.strictEqual(output, 'hello\n');
 	});
 }

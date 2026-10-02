@@ -2,6 +2,11 @@ import process from 'node:process';
 import React, {useEffect, useState} from 'react';
 import {Static, Box, Text, render, useApp} from '../../src/index.js';
 
+const nextMacrotask = async () =>
+	new Promise<void>(resolve => {
+		setTimeout(resolve, 0);
+	});
+
 /*
 Reproduction for vadimdemedes/ink#973: a <Static> item taller than the
 viewport commits while a small live region is present, and a later live-only
@@ -17,11 +22,6 @@ function StaticCommit() {
 
 	useEffect(() => {
 		void (async () => {
-			const nextMacrotask = async () =>
-				new Promise<void>(resolve => {
-					setTimeout(resolve, 0);
-				});
-
 			await waitUntilRenderFlush();
 			// Same frame: tall static item commits while the live region stays.
 			setPhase('live');

@@ -6,8 +6,8 @@ function App() {
 	const {exit} = useApp();
 	const [input, setInput] = useState('');
 
-	const handleInput = useCallback((input: string) => {
-		setInput((previousInput: string) => previousInput + input);
+	const handleInput = useCallback((newInput: string) => {
+		setInput((previousInput: string) => previousInput + newInput);
 	}, []);
 
 	useInput(handleInput);
@@ -18,7 +18,11 @@ function App() {
 	}, []);
 
 	useEffect(() => {
-		setTimeout(exit, 100);
+		const timer = setTimeout(exit, 100);
+
+		return () => {
+			clearTimeout(timer);
+		};
 	}, [exit]);
 
 	return <Text>{input}</Text>;

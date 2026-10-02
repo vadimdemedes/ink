@@ -1,5 +1,5 @@
+import test, {type TestContext} from 'node:test';
 import React, {useEffect} from 'react';
-import test from 'ava';
 import stripAnsi from 'strip-ansi';
 import {
 	render,
@@ -41,10 +41,7 @@ const renderWithSuspend = async (
 	const stdout = createStdout();
 	const stdin = createStdin();
 
-	let finished!: () => void;
-	const done = new Promise<void>(resolve => {
-		finished = resolve;
-	});
+	const {promise: done, resolve: finished} = Promise.withResolvers<void>();
 
 	function Example() {
 		const {suspendTerminal} = useApp();
@@ -74,30 +71,30 @@ const renderWithSuspend = async (
 // Note: raw mode is captured inside the run callback (before the harness
 // unmounts), because unmount's cleanup disables raw mode and would otherwise be
 // the last recorded setRawMode call.
-test('suspendTerminal hands the terminal to the callback, then restores Ink', async t => {
-	let ranInsideCallback = false;
+test('suspendTerminal hands the terminal to the callback, then restores Ink', async (t: TestContext) => {
+	let didRunInsideCallback = false;
 	let rawModeDuringCallback: boolean | undefined;
 	let rawModeAfterCallback: boolean | undefined;
 
 	const {stdout} = await renderWithSuspend(async (suspendTerminal, stdin) => {
 		await suspendTerminal(async () => {
-			ranInsideCallback = true;
+			didRunInsideCallback = true;
 			rawModeDuringCallback = lastSetRawModeArg(stdin);
 		});
 		rawModeAfterCallback = lastSetRawModeArg(stdin);
 	});
 
-	t.true(ranInsideCallback);
+	t.assert.ok(didRunInsideCallback);
 	// Raw mode disabled for the child, re-enabled once Ink reclaimed the terminal.
-	t.false(rawModeDuringCallback);
-	t.true(rawModeAfterCallback);
+	t.assert.strictEqual(rawModeDuringCallback, false);
+	t.assert.ok(rawModeAfterCallback);
 	// Cursor shown for the child, then hidden again by the forced redraw.
-	t.true(stdout.getWrites().some(write => write.includes(showCursor)));
-	t.true(stdout.getWrites().some(write => write.includes(hideCursor)));
+	t.assert.ok(stdout.getWrites().some(write => write.includes(showCursor)));
+	t.assert.ok(stdout.getWrites().some(write => write.includes(hideCursor)));
 });
 
-test('suspendTerminal restores the terminal even if the callback throws', async t => {
-	let threw = false;
+test('suspendTerminal restores the terminal even if the callback throws', async (t: TestContext) => {
+	let didThrow = false;
 	let rawModeAfterThrow: boolean | undefined;
 
 	await renderWithSuspend(async (suspendTerminal, stdin) => {
@@ -106,18 +103,18 @@ test('suspendTerminal restores the terminal even if the callback throws', async 
 				throw new Error('boom');
 			});
 		} catch {
-			threw = true;
+			didThrow = true;
 		}
 
 		rawModeAfterThrow = lastSetRawModeArg(stdin);
 	});
 
-	t.true(threw);
+	t.assert.ok(didThrow);
 	// Raw mode was reclaimed despite the throw.
-	t.true(rawModeAfterThrow);
+	t.assert.ok(rawModeAfterThrow);
 });
 
-test('suspendTerminal returns a disposable that resumes on resume()', async t => {
+test('suspendTerminal returns a disposable that resumes on resume()', async (t: TestContext) => {
 	let rawModeWhileSuspended: boolean | undefined;
 	let rawModeAfterResume: boolean | undefined;
 
@@ -128,11 +125,11 @@ test('suspendTerminal returns a disposable that resumes on resume()', async t =>
 		rawModeAfterResume = lastSetRawModeArg(stdin);
 	});
 
-	t.false(rawModeWhileSuspended);
-	t.true(rawModeAfterResume);
+	t.assert.strictEqual(rawModeWhileSuspended, false);
+	t.assert.ok(rawModeAfterResume);
 });
 
-test('suspendTerminal disposable resumes via Symbol.asyncDispose', async t => {
+test('suspendTerminal disposable resumes via Symbol.asyncDispose', async (t: TestContext) => {
 	let rawModeWhileSuspended: boolean | undefined;
 	let rawModeAfterDispose: boolean | undefined;
 
@@ -143,20 +140,17 @@ test('suspendTerminal disposable resumes via Symbol.asyncDispose', async t => {
 		rawModeAfterDispose = lastSetRawModeArg(stdin);
 	});
 
-	t.false(rawModeWhileSuspended);
-	t.true(rawModeAfterDispose);
+	t.assert.strictEqual(rawModeWhileSuspended, false);
+	t.assert.ok(rawModeAfterDispose);
 });
 
-test('suspendTerminal keeps Ink off the terminal while suspended', async t => {
+test('suspendTerminal keeps Ink off the terminal while suspended', async (t: TestContext) => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 
 	let writesDuringSuspend: number | undefined;
 
-	let finished!: () => void;
-	const done = new Promise<void>(resolve => {
-		finished = resolve;
-	});
+	const {promise: done, resolve: finished} = Promise.withResolvers<void>();
 
 	function Example() {
 		const {suspendTerminal} = useApp();
@@ -187,19 +181,16 @@ test('suspendTerminal keeps Ink off the terminal while suspended', async t => {
 	await delay(50);
 	unmount();
 
-	t.is(writesDuringSuspend, 0);
+	t.assert.strictEqual(writesDuringSuspend, 0);
 });
 
-test('suspendTerminal runs the callback but skips the handoff when not interactive', async t => {
+test('suspendTerminal runs the callback but skips the handoff when not interactive', async (t: TestContext) => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 
-	let ranCallback = false;
+	let didRunCallback = false;
 
-	let finished!: () => void;
-	const done = new Promise<void>(resolve => {
-		finished = resolve;
-	});
+	const {promise: done, resolve: finished} = Promise.withResolvers<void>();
 
 	function Example() {
 		const {suspendTerminal} = useApp();
@@ -208,7 +199,7 @@ test('suspendTerminal runs the callback but skips the handoff when not interacti
 			void (async () => {
 				try {
 					await suspendTerminal(async () => {
-						ranCallback = true;
+						didRunCallback = true;
 					});
 				} finally {
 					finished();
@@ -226,61 +217,58 @@ test('suspendTerminal runs the callback but skips the handoff when not interacti
 
 	// The callback still runs, but Ink performs no terminal handoff (no cursor
 	// reveal) in non-interactive mode.
-	t.true(ranCallback);
-	t.false(stdout.getWrites().some(write => write.includes(showCursor)));
+	t.assert.ok(didRunCallback);
+	t.assert.strictEqual(
+		stdout.getWrites().some(write => write.includes(showCursor)),
+		false,
+	);
 });
 
-test('suspendTerminal rejects a nested suspend while already suspended', async t => {
-	let nestedRejected = false;
+test('suspendTerminal rejects a nested suspend while already suspended', async (t: TestContext) => {
+	let wasNestedRejected = false;
 
 	await renderWithSuspend(async suspendTerminal => {
 		await suspendTerminal(async () => {
-			await t.throwsAsync(
+			await t.assert.rejects(
 				suspendTerminal(async () => {}),
 				{
 					message: /already suspended/,
 				},
 			);
-			nestedRejected = true;
+			wasNestedRejected = true;
 		});
 	});
 
-	t.true(nestedRejected);
+	t.assert.ok(wasNestedRejected);
 });
 
-test.serial(
-	'suspendTerminal hands the terminal to a child process, then redraws (PTY)',
-	async t => {
-		const ps = term('suspend-terminal');
-		await ps.waitForExit();
+test('suspendTerminal hands the terminal to a child process, then redraws (PTY)', async (t: TestContext) => {
+	const ps = term('suspend-terminal');
+	await ps.waitForExit();
 
-		const {output} = ps;
+	const {output} = ps;
 
-		// The child process wrote directly to the terminal during suspension.
-		t.true(output.includes('CHILD_OUTPUT'));
-		// Ink showed the cursor when handing the terminal over.
-		t.true(output.includes(showCursor));
-		// Ink reclaimed the terminal and repainted its frame after the child output,
-		// re-hiding the cursor as part of the redraw.
-		const afterChild = output.slice(
-			output.lastIndexOf('CHILD_OUTPUT') + 'CHILD_OUTPUT'.length,
-		);
-		t.true(stripAnsi(afterChild).includes('Ink frame'));
-		t.true(afterChild.includes(hideCursor));
-	},
-);
+	// The child process wrote directly to the terminal during suspension.
+	t.assert.ok(output.includes('CHILD_OUTPUT'));
+	// Ink showed the cursor when handing the terminal over.
+	t.assert.ok(output.includes(showCursor));
+	// Ink reclaimed the terminal and repainted its frame after the child output,
+	// re-hiding the cursor as part of the redraw.
+	const afterChild = output.slice(
+		output.lastIndexOf('CHILD_OUTPUT') + 'CHILD_OUTPUT'.length,
+	);
+	t.assert.ok(stripAnsi(afterChild).includes('Ink frame'));
+	t.assert.ok(afterChild.includes(hideCursor));
+});
 
-test('suspendTerminal exits and re-enters the alternate screen', async t => {
+test('suspendTerminal exits and re-enters the alternate screen', async (t: TestContext) => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 
 	let exitedAltDuringSuspend: boolean | undefined;
 	let reEnteredAltAfterResume: boolean | undefined;
 
-	let finished!: () => void;
-	const done = new Promise<void>(resolve => {
-		finished = resolve;
-	});
+	const {promise: done, resolve: finished} = Promise.withResolvers<void>();
 
 	function Example() {
 		const {suspendTerminal} = useApp();
@@ -319,8 +307,8 @@ test('suspendTerminal exits and re-enters the alternate screen', async t => {
 	await delay(50);
 	unmount();
 
-	t.true(exitedAltDuringSuspend);
-	t.true(reEnteredAltAfterResume);
+	t.assert.ok(exitedAltDuringSuspend);
+	t.assert.ok(reEnteredAltAfterResume);
 });
 
 for (const [mode, options] of Object.entries({
@@ -329,16 +317,13 @@ for (const [mode, options] of Object.entries({
 	'screen reader': {isScreenReaderEnabled: true},
 	debug: {debug: true},
 })) {
-	test(`suspendTerminal shows <Static> output once after resume re-enters the alternate screen - ${mode}`, async t => {
+	test(`suspendTerminal shows <Static> output once after resume re-enters the alternate screen - ${mode}`, async (t: TestContext) => {
 		const rows = 5;
 		const stdout = createStdout();
 		stdout.rows = rows;
 		const stdin = createStdin();
 
-		let finished!: () => void;
-		const done = new Promise<void>(resolve => {
-			finished = resolve;
-		});
+		const {promise: done, resolve: finished} = Promise.withResolvers<void>();
 
 		function Example() {
 			const {suspendTerminal} = useApp();
@@ -378,9 +363,12 @@ for (const [mode, options] of Object.entries({
 		// Re-entering the alternate screen starts from an empty buffer, so reconstruct only what was written from that point on. The redraw carries no new <Static> items, so the rows must come from the replay, or in debug mode from the redraw alone, which writes every item itself.
 		const output = stdout.getWrites().join('');
 		const resumed = output.lastIndexOf(enterAltScreen);
-		t.true(resumed >= 0, 'Expected resume to re-enter the alternate screen');
+		t.assert.ok(
+			resumed >= 0,
+			'Expected resume to re-enter the alternate screen',
+		);
 
-		t.deepEqual(
+		t.assert.deepStrictEqual(
 			reconstructTerminalLines(
 				output.slice(resumed + enterAltScreen.length).replaceAll('\n', '\r\n'),
 				rows,
@@ -391,18 +379,18 @@ for (const [mode, options] of Object.entries({
 	});
 }
 
-test('suspendTerminal rolls back so a later suspend works if handover throws', async t => {
-	let firstRejected = false;
-	let secondSucceeded = false;
+test('suspendTerminal rolls back so a later suspend works if handover throws', async (t: TestContext) => {
+	let wasFirstRejected = false;
+	let didSecondSucceed = false;
 
 	await renderWithSuspend(async (suspendTerminal, stdin) => {
 		const rawModeController = stdin as unknown as {
-			setRawMode: (value: boolean) => unknown;
+			setRawMode: (isEnabled: boolean) => unknown;
 		};
 		const originalSetRawMode = rawModeController.setRawMode;
 		// Force the pause's setRawMode(false) to throw so beginSuspend's rollback runs.
-		rawModeController.setRawMode = (value: boolean) => {
-			if (!value) {
+		rawModeController.setRawMode = (isEnabled: boolean) => {
+			if (!isEnabled) {
 				throw new Error('handover boom');
 			}
 
@@ -412,7 +400,7 @@ test('suspendTerminal rolls back so a later suspend works if handover throws', a
 		try {
 			await suspendTerminal(async () => {});
 		} catch {
-			firstRejected = true;
+			wasFirstRejected = true;
 		}
 
 		// Stop throwing; the app must not be stuck in a suspended state.
@@ -420,10 +408,10 @@ test('suspendTerminal rolls back so a later suspend works if handover throws', a
 
 		try {
 			await suspendTerminal(async () => {});
-			secondSucceeded = true;
+			didSecondSucceed = true;
 		} catch {}
 	});
 
-	t.true(firstRejected);
-	t.true(secondSucceeded);
+	t.assert.ok(wasFirstRejected);
+	t.assert.ok(didSecondSucceed);
 });

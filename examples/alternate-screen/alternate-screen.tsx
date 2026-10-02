@@ -71,28 +71,18 @@ const initialSnake: Point[] = [
 ];
 
 function randomPosition(exclude: Point[]): Point {
-	let point = {
-		x: 0,
-		y: 0,
-	};
-	let isExcluded = true;
-
-	while (isExcluded) {
-		point = {
+	while (true) {
+		const point = {
 			x: Math.floor(Math.random() * boardWidth),
 			y: Math.floor(Math.random() * boardHeight),
 		};
 
-		isExcluded = false;
-		for (const segment of exclude) {
-			if (segment.x === point.x && segment.y === point.y) {
-				isExcluded = true;
-				break;
-			}
+		if (
+			exclude.every(segment => segment.x !== point.x || segment.y !== point.y)
+		) {
+			return point;
 		}
 	}
-
-	return point;
 }
 
 function createInitialState(): GameState {
@@ -129,8 +119,8 @@ export function gameReducer(state: GameState, action: Action): GameState {
 		return {...state, gameOver: true, won: false};
 	}
 
-	const ateFood = newHead.x === state.food.x && newHead.y === state.food.y;
-	const collisionSegments = ateFood ? state.snake : state.snake.slice(0, -1);
+	const didEatFood = newHead.x === state.food.x && newHead.y === state.food.y;
+	const collisionSegments = didEatFood ? state.snake : state.snake.slice(0, -1);
 
 	if (
 		collisionSegments.some(
@@ -142,11 +132,11 @@ export function gameReducer(state: GameState, action: Action): GameState {
 
 	const newSnake = [newHead, ...state.snake];
 
-	if (!ateFood) {
+	if (!didEatFood) {
 		newSnake.pop();
 	}
 
-	if (ateFood && newSnake.length === boardWidth * boardHeight) {
+	if (didEatFood && newSnake.length === boardWidth * boardHeight) {
 		return {
 			snake: newSnake,
 			food: state.food,
@@ -159,8 +149,8 @@ export function gameReducer(state: GameState, action: Action): GameState {
 
 	return {
 		snake: newSnake,
-		food: ateFood ? randomPosition(newSnake) : state.food,
-		score: state.score + (ateFood ? 1 : 0),
+		food: didEatFood ? randomPosition(newSnake) : state.food,
+		score: state.score + (didEatFood ? 1 : 0),
 		gameOver: false,
 		won: false,
 		frame: state.frame + 1,
@@ -203,10 +193,10 @@ function SnakeGame() {
 		undefined,
 		createInitialState,
 	);
-	const directionReference = useRef<Direction>('right');
+	const directionRef = useRef<Direction>('right');
 
 	const tick = useCallback(() => {
-		dispatch({type: 'tick', direction: directionReference.current});
+		dispatch({type: 'tick', direction: directionRef.current});
 	}, []);
 
 	useEffect(() => {
@@ -221,8 +211,8 @@ function SnakeGame() {
 			exit();
 		}
 
-		if (game.gameOver && input === 'r') {
-			directionReference.current = 'right';
+		if (input === 'r' && game.gameOver) {
+			directionRef.current = 'right';
 			dispatch({type: 'restart'});
 			return;
 		}
@@ -234,13 +224,13 @@ function SnakeGame() {
 		const head = game.snake[0]!;
 		const neck = game.snake[1]!;
 		if (key.upArrow && head.y <= neck.y) {
-			directionReference.current = 'up';
+			directionRef.current = 'up';
 		} else if (key.downArrow && head.y >= neck.y) {
-			directionReference.current = 'down';
+			directionRef.current = 'down';
 		} else if (key.leftArrow && head.x <= neck.x) {
-			directionReference.current = 'left';
+			directionRef.current = 'left';
 		} else if (key.rightArrow && head.x >= neck.x) {
-			directionReference.current = 'right';
+			directionRef.current = 'right';
 		}
 	});
 

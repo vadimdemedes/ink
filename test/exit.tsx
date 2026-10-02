@@ -2,7 +2,7 @@ import process from 'node:process';
 import * as path from 'node:path';
 import url from 'node:url';
 import {createRequire} from 'node:module';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
 import stripAnsi from 'strip-ansi';
 import {run} from './helpers/run.js';
 
@@ -13,68 +13,70 @@ const {spawn} = require('node-pty') as typeof import('node-pty');
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
-test.serial('exit normally without unmount() or exit()', async t => {
+test('exit normally without unmount() or exit()', async (t: TestContext) => {
 	const output = await run('exit-normally');
-	t.true(output.includes('exited'));
+	t.assert.ok(output.includes('exited'));
 });
 
-test.serial('exit on unmount()', async t => {
+test('exit on unmount()', async (t: TestContext) => {
 	const output = await run('exit-on-unmount');
-	t.true(output.includes('exited'));
+	t.assert.ok(output.includes('exited'));
 });
 
-test.serial('exit when app finishes execution', async t => {
-	const ps = run('exit-on-finish');
-	await t.notThrowsAsync(ps);
+// eslint-disable-next-line node-test/require-assertion -- Passes when the process exits without an error.
+test('exit when app finishes execution', async () => {
+	await run('exit-on-finish');
 });
 
-test.serial('exit on exit()', async t => {
+test('exit on exit()', async (t: TestContext) => {
 	const output = await run('exit-on-exit');
-	t.true(output.includes('exited'));
+	t.assert.ok(output.includes('exited'));
 });
 
-test.serial('exit on exit() with error', async t => {
+test('exit on exit() with error', async (t: TestContext) => {
 	const output = await run('exit-on-exit-with-error');
-	t.true(output.includes('errored'));
+	t.assert.ok(output.includes('errored'));
 });
 
-test.serial('exit on exit() with error with value property', async t => {
+test('exit on exit() with error with value property', async (t: TestContext) => {
 	const output = await run('exit-on-exit-with-error-value-property');
-	t.true(output.includes('errored'));
+	t.assert.ok(output.includes('errored'));
 });
 
-test.serial('exit on exit() with result value', async t => {
+test('exit on exit() with result value', async (t: TestContext) => {
 	const output = await run('exit-on-exit-with-result');
-	t.true(output.includes('result:hello from ink'));
+	t.assert.ok(output.includes('result:hello from ink'));
 });
 
-test.serial('exit on exit() with object result', async t => {
+test('exit on exit() with object result', async (t: TestContext) => {
 	const output = await run('exit-on-exit-with-value-object');
-	t.true(output.includes('result:hello from ink object'));
+	t.assert.ok(output.includes('result:hello from ink object'));
 });
 
-test.serial('exit on exit() with raw mode', async t => {
+test('exit on exit() with raw mode', async (t: TestContext) => {
 	const output = await run('exit-raw-on-exit');
-	t.true(output.includes('exited'));
+	t.assert.ok(output.includes('exited'));
 });
 
-test.serial('exit on exit() with raw mode with error', async t => {
+test('exit on exit() with raw mode with error', async (t: TestContext) => {
 	const output = await run('exit-raw-on-exit-with-error');
-	t.true(output.includes('errored'));
+	t.assert.ok(output.includes('errored'));
 });
 
-test.serial('exit on unmount() with raw mode', async t => {
+test('exit on unmount() with raw mode', async (t: TestContext) => {
 	const output = await run('exit-raw-on-unmount');
-	t.true(output.includes('exited'));
+	t.assert.ok(output.includes('exited'));
 });
 
-test.serial('exit with thrown error', async t => {
+test('exit with thrown error', async (t: TestContext) => {
 	const output = await run('exit-with-thrown-error');
-	t.true(output.includes('errored'));
+	t.assert.ok(output.includes('errored'));
 });
 
-test.serial('don’t exit while raw mode is active', async t => {
-	await new Promise<void>((resolve, reject) => {
+test('don’t exit while raw mode is active', async (t: TestContext) => {
+	let isExitedBeforeQuit = false;
+
+	const exitOutput = await new Promise<string>((resolve, reject) => {
 		const env: Record<string, string> = {
 			...process.env,
 			// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -100,7 +102,7 @@ test.serial('don’t exit while raw mode is active', async t => {
 		term.onData(data => {
 			if (data === 's') {
 				setTimeout(() => {
-					t.false(isExited);
+					isExitedBeforeQuit = isExited;
 					term.write('q');
 				}, 500);
 
@@ -119,18 +121,19 @@ test.serial('don’t exit while raw mode is active', async t => {
 			isExited = true;
 
 			if (exitCode === 0) {
-				t.true(output.includes('exited'));
-				t.pass();
-				resolve();
+				resolve(output);
 				return;
 			}
 
 			reject(new Error(`Process exited with code ${exitCode}`));
 		});
 	});
+
+	t.assert.strictEqual(isExitedBeforeQuit, false);
+	t.assert.ok(exitOutput.includes('exited'));
 });
 
-test.serial('exit when DEV is set', async t => {
+test('exit when DEV is set', async (t: TestContext) => {
 	const output = await run('exit-normally', {
 		env: {
 			// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -138,18 +141,18 @@ test.serial('exit when DEV is set', async t => {
 		},
 	});
 	// Warning output depends on whether a local React DevTools server is running.
-	t.true(output.includes('exited'));
+	t.assert.ok(output.includes('exited'));
 });
 
-test.serial('exit on exit() with error and static output', async t => {
+test('exit on exit() with error and static output', async (t: TestContext) => {
 	const output = await run('exit-with-static');
 	// Error is propagated, not swallowed
-	t.true(output.includes('errored'));
+	t.assert.ok(output.includes('errored'));
 	// Static items rendered
-	t.true(output.includes('A'));
-	t.true(output.includes('B'));
-	t.true(output.includes('C'));
+	t.assert.ok(output.includes('A'));
+	t.assert.ok(output.includes('B'));
+	t.assert.ok(output.includes('C'));
 	// Static items NOT duplicated (the bug from #397)
 	const cleaned = stripAnsi(output);
-	t.is(cleaned.split('A').length - 1, 1);
+	t.assert.strictEqual(cleaned.split('A').length - 1, 1);
 });

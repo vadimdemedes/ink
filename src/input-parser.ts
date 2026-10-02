@@ -1,6 +1,6 @@
-const escape = '\u001B';
-const pasteStart = '\u001B[200~';
-const pasteEnd = '\u001B[201~';
+const escape = '\u{1B}';
+const pasteStart = '\u{1B}[200~';
+const pasteEnd = '\u{1B}[201~';
 
 export type InputEvent = string | {readonly paste: string};
 
@@ -10,24 +10,20 @@ type ParsedInput = {
 };
 
 type ParsedSequence =
+	| 'pending'
 	| {
 			readonly sequence: string;
 			readonly nextIndex: number;
 	  }
-	| 'pending'
 	| undefined;
 
-const isCsiParameterByte = (byte: number): boolean => {
-	return byte >= 0x30 && byte <= 0x3f;
-};
+const isCsiParameterByte = (byte: number): boolean =>
+	byte >= 0x30 && byte <= 0x3f;
 
-const isCsiIntermediateByte = (byte: number): boolean => {
-	return byte >= 0x20 && byte <= 0x2f;
-};
+const isCsiIntermediateByte = (byte: number): boolean =>
+	byte >= 0x20 && byte <= 0x2f;
 
-const isCsiFinalByte = (byte: number): boolean => {
-	return byte >= 0x40 && byte <= 0x7e;
-};
+const isCsiFinalByte = (byte: number): boolean => byte >= 0x40 && byte <= 0x7e;
 
 const parseCsiSequence = (
 	input: string,
@@ -53,7 +49,7 @@ const parseCsiSequence = (
 			index === csiPayloadStart + 1 &&
 			'235678'.includes(input[csiPayloadStart]!);
 
-		if (isCsiFinalByte(byte) || isRxvtShiftKey) {
+		if (isRxvtShiftKey || isCsiFinalByte(byte)) {
 			return {
 				sequence: input.slice(startIndex, index + 1),
 				nextIndex: index + 1,
@@ -86,7 +82,7 @@ const parseSs3Sequence = (
 		}
 
 		// Modified SS3 keys can include numeric parameters separated by semicolons.
-		if ((byte < 0x30 || byte > 0x39) && byte !== 0x3b) {
+		if (byte !== 0x3b && (byte < 0x30 || byte > 0x39)) {
 			return undefined;
 		}
 	}
@@ -108,11 +104,9 @@ const parseControlSequence = (
 		return parseCsiSequence(input, startIndex, prefixLength);
 	}
 
-	if (sequenceType === 'O') {
-		return parseSs3Sequence(input, startIndex, prefixLength);
-	}
-
-	return undefined;
+	return sequenceType === 'O'
+		? parseSs3Sequence(input, startIndex, prefixLength)
+		: undefined;
 };
 
 /**
@@ -147,11 +141,11 @@ const parseEscapedCodePoint = (
 };
 
 type ParsedEscapeSequence =
+	| 'pending'
 	| {
 			readonly sequence: string;
 			readonly nextIndex: number;
-	  }
-	| 'pending';
+	  };
 
 const parseEscapeSequence = (
 	input: string,
@@ -183,15 +177,9 @@ const parseEscapeSequence = (
 	}
 
 	const controlSequence = parseControlSequence(input, escapeIndex, 1);
-	if (controlSequence === 'pending') {
-		return 'pending';
-	}
-
-	if (controlSequence) {
-		return controlSequence;
-	}
-
-	return parseEscapedCodePoint(input, escapeIndex);
+	return controlSequence === 'pending'
+		? 'pending'
+		: (controlSequence ?? parseEscapedCodePoint(input, escapeIndex));
 };
 
 /**
@@ -204,18 +192,16 @@ const splitControlBytes = (text: string, events: InputEvent[]): void => {
 
 	for (let index = 0; index < text.length; index++) {
 		const character = text[index]!;
-		if (
-			character === '\u007F' ||
-			character === '\u0008' ||
-			character === '\u0003'
-		) {
-			if (index > textSegmentStart) {
-				events.push(text.slice(textSegmentStart, index));
-			}
-
-			events.push(character);
-			textSegmentStart = index + 1;
+		if (!['\u{7F}', '\u{8}', '\u{3}'].includes(character)) {
+			continue;
 		}
+
+		if (index > textSegmentStart) {
+			events.push(text.slice(textSegmentStart, index));
+		}
+
+		events.push(character);
+		textSegmentStart = index + 1;
 	}
 
 	if (textSegmentStart < text.length) {
@@ -294,7 +280,7 @@ export const createInputParser = (): InputParser => {
 			return (
 				pending.startsWith(escape) &&
 				!pending.startsWith(pasteStart) &&
-				pending !== '\u001B[200'
+				pending !== '\u{1B}[200'
 			);
 		},
 		flushPendingEscape() {

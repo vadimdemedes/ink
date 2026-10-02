@@ -35,7 +35,7 @@ function Issue450RerenderFixtureComponent({
 	useEffect(() => {
 		if (frameCount >= frameLimit) {
 			const timer = setTimeout(() => {
-				if (completionMarker) {
+				if (completionMarker !== undefined && completionMarker !== '') {
 					process.stdout.write(completionMarker);
 				}
 
@@ -82,7 +82,11 @@ export const runIssue450RerenderFixture = ({
 	heightForFrame,
 	labelForFrame = defaultLabelForFrame,
 }: RerenderFixtureOptions): void => {
-	const rows = Number(process.argv[2]) || rowsFallback;
+	const rowsArgument = Number(process.argv[2]);
+	const rows =
+		rowsArgument === 0 || Number.isNaN(rowsArgument)
+			? rowsFallback
+			: rowsArgument;
 	process.stdout.rows = rows;
 
 	render(
@@ -142,7 +146,11 @@ export const runIssue450InitialFixture = ({
 	lineCount,
 	linePrefix,
 }: InitialFixtureOptions): void => {
-	const rows = Number(process.argv[2]) || rowsFallback;
+	const rowsArgument = Number(process.argv[2]);
+	const rows =
+		rowsArgument === 0 || Number.isNaN(rowsArgument)
+			? rowsFallback
+			: rowsArgument;
 	process.stdout.rows = rows;
 
 	render(

@@ -1,5 +1,5 @@
+import test, {type TestContext} from 'node:test';
 import React, {useState, useRef, useEffect, useLayoutEffect} from 'react';
-import test from 'ava';
 import delay from 'delay';
 import stripAnsi from 'strip-ansi';
 import {
@@ -12,7 +12,7 @@ import {
 } from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
-test('measure element', async t => {
+test('measure element', async (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test() {
@@ -35,12 +35,12 @@ test('measure element', async t => {
 	}
 
 	render(<Test />, {stdout, debug: true});
-	t.is((stdout.write as any).firstCall.args[0], 'Width: 0');
+	t.assert.strictEqual((stdout.write as any).firstCall.args[0], 'Width: 0');
 	await delay(100);
-	t.is((stdout.write as any).lastCall.args[0], 'Width: 100');
+	t.assert.strictEqual((stdout.write as any).lastCall.args[0], 'Width: 100');
 });
 
-test('measure element after state update', async t => {
+test('measure element after state update', async (t: TestContext) => {
 	const stdout = createStdout();
 	let setTestItems!: (items: string[]) => void;
 
@@ -77,13 +77,13 @@ test('measure element after state update', async t => {
 	setTestItems(['line 1', 'line 2', 'line 3']);
 	await delay(50);
 
-	t.is(
+	t.assert.strictEqual(
 		stripAnsi((stdout.write as any).lastCall.firstArg as string).trim(),
 		'line 1\nline 2\nline 3\nHeight: 3',
 	);
 });
 
-test('measure element after multiple state updates', async t => {
+test('measure element after multiple state updates', async (t: TestContext) => {
 	const stdout = createStdout();
 	let setTestItems!: (items: string[]) => void;
 
@@ -123,13 +123,13 @@ test('measure element after multiple state updates', async t => {
 	setTestItems(['line 1']);
 	await delay(50);
 
-	t.is(
+	t.assert.strictEqual(
 		stripAnsi((stdout.write as any).lastCall.firstArg as string).trim(),
 		'line 1\nHeight: 1',
 	);
 });
 
-test('measure element in useLayoutEffect after state update', async t => {
+test('measure element in useLayoutEffect after state update', async (t: TestContext) => {
 	const stdout = createStdout();
 	let setTestItems!: (items: string[]) => void;
 
@@ -166,13 +166,13 @@ test('measure element in useLayoutEffect after state update', async t => {
 	setTestItems(['line 1', 'line 2', 'line 3']);
 	await delay(50);
 
-	t.is(
+	t.assert.strictEqual(
 		stripAnsi((stdout.write as any).lastCall.firstArg as string).trim(),
 		'line 1\nline 2\nline 3\nHeight: 3',
 	);
 });
 
-test('measure position of nested element with padding offset', async t => {
+test('measure position of nested element with padding offset', async (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test() {
@@ -204,10 +204,10 @@ test('measure position of nested element with padding offset', async t => {
 	await delay(100);
 
 	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
-	t.true(lastWrite.includes('Nested: 4,1'));
+	t.assert.ok(lastWrite.includes('Nested: 4,1'));
 });
 
-test('measure position of deeply nested element accumulates offsets', async t => {
+test('measure position of deeply nested element accumulates offsets', async (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test() {
@@ -238,10 +238,10 @@ test('measure position of deeply nested element accumulates offsets', async t =>
 	await delay(100);
 
 	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
-	t.true(lastWrite.includes('Deep: 5,3'));
+	t.assert.ok(lastWrite.includes('Deep: 5,3'));
 });
 
-test('measure position accounts for margin offset', async t => {
+test('measure position accounts for margin offset', async (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test() {
@@ -272,10 +272,10 @@ test('measure position accounts for margin offset', async t => {
 	await delay(100);
 
 	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
-	t.true(lastWrite.includes('Margin: 5,2'));
+	t.assert.ok(lastWrite.includes('Margin: 5,2'));
 });
 
-test('measure position — sibling offset gives correct y', async t => {
+test('measure position — sibling offset gives correct y', async (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test() {
@@ -306,10 +306,10 @@ test('measure position — sibling offset gives correct y', async t => {
 	await delay(100);
 
 	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
-	t.true(lastWrite.includes('Third: 0,2'));
+	t.assert.ok(lastWrite.includes('Third: 0,2'));
 });
 
-test('Static does not affect layout-tree coordinates', async t => {
+test('Static does not affect layout-tree coordinates', async (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test() {
@@ -342,10 +342,10 @@ test('Static does not affect layout-tree coordinates', async t => {
 
 	const lastWrite = (stdout.write as any).lastCall.args[0] as string;
 	// Static uses position:absolute so it doesn't affect live layout coordinates
-	t.true(lastWrite.includes('Live: 0,0'));
+	t.assert.ok(lastWrite.includes('Live: 0,0'));
 });
 
-test('measure element returns zeros for node without yoga', t => {
+test('measure element returns zeros for node without yoga', (t: TestContext) => {
 	const node = {
 		yogaNode: undefined,
 		parentNode: undefined,
@@ -356,7 +356,7 @@ test('measure element returns zeros for node without yoga', t => {
 	} as unknown as DOMElement;
 
 	const metrics = measureElement(node);
-	t.deepEqual(metrics, {
+	t.assert.deepStrictEqual(metrics, {
 		x: 0,
 		y: 0,
 		width: 0,
@@ -366,7 +366,7 @@ test('measure element returns zeros for node without yoga', t => {
 	});
 });
 
-test.serial('calculate layout while rendering is throttled', async t => {
+test('calculate layout while rendering is throttled', async (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test() {
@@ -398,14 +398,14 @@ test.serial('calculate layout while rendering is throttled', async t => {
 		.map((c: any) => c.args[0] as string)
 		.filter(
 			(w: string) =>
-				!w.startsWith('\u001B[?25') && !w.startsWith('\u001B[?2026'),
+				!w.startsWith('\u{1B}[?25') && !w.startsWith('\u{1B}[?2026'),
 		);
 	const lastContentWrite = writes.at(-1)!;
 
-	t.is(stripAnsi(lastContentWrite).trim(), 'Width: 100');
+	t.assert.strictEqual(stripAnsi(lastContentWrite).trim(), 'Width: 100');
 });
 
-test('measure element client size with overflowing content', async t => {
+test('measure element client size with overflowing content', async (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test() {
@@ -441,14 +441,14 @@ test('measure element client size with overflowing content', async t => {
 	render(<Test />, {stdout, debug: true});
 	await delay(100);
 
-	t.true(
+	t.assert.ok(
 		stripAnsi((stdout.write as any).lastCall.firstArg as string).includes(
 			'client:12x2',
 		),
 	);
 });
 
-test('measure element client size excludes borders', async t => {
+test('measure element client size excludes borders', async (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Test() {
@@ -478,7 +478,7 @@ test('measure element client size excludes borders', async t => {
 	render(<Test />, {stdout, debug: true});
 	await delay(100);
 
-	t.true(
+	t.assert.ok(
 		stripAnsi((stdout.write as any).lastCall.firstArg as string).includes(
 			'12x4 client:10x2',
 		),

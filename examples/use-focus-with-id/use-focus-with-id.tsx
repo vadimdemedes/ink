@@ -12,16 +12,8 @@ function Focus() {
 	const {focus} = useFocusManager();
 
 	useInput(input => {
-		if (input === '1') {
-			focus('1');
-		}
-
-		if (input === '2') {
-			focus('2');
-		}
-
-		if (input === '3') {
-			focus('3');
+		if (['1', '2', '3'].includes(input)) {
+			focus(input);
 		}
 	});
 

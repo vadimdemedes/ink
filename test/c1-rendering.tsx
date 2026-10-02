@@ -1,5 +1,5 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text, renderToString} from '../src/index.js';
 
 for (const [name, encoded, standard] of [
@@ -17,7 +17,7 @@ for (const [name, encoded, standard] of [
 	['mixed color encodings', '[31mred0m', '[31mred[0m'],
 ] as const) {
 	for (const width of [4, 8]) {
-		test(`C1 ${name} preserves layout and styling at width ${width}`, t => {
+		test(`C1 ${name} preserves layout and styling at width ${width}`, (t: TestContext) => {
 			const output = (text: string) =>
 				renderToString(
 					<Box width={width} borderStyle="single">
@@ -25,7 +25,7 @@ for (const [name, encoded, standard] of [
 					</Box>,
 				);
 
-			t.is(output(encoded), output(standard));
+			t.assert.strictEqual(output(encoded), output(standard));
 		});
 	}
 }

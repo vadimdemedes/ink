@@ -8,31 +8,21 @@ export type OutputStream = NodeJS.WritableStream & {
 
 type RawModeStream = NodeJS.ReadableStream & {
 	isTTY: true;
-	setRawMode: (mode: boolean) => void;
+	setRawMode: (isEnabled: boolean) => void;
 	ref?: () => void;
 	unref?: () => void;
 };
 
-export const isTty = (stream: NodeJS.ReadableStream): boolean => {
-	return 'isTTY' in stream && stream.isTTY === true;
-};
+export const isTty = (stream: NodeJS.ReadableStream): boolean =>
+	'isTTY' in stream && stream.isTTY === true;
 
 const isRawModeStream = (
 	stdin: NodeJS.ReadableStream,
-): stdin is RawModeStream => {
-	return (
-		isTty(stdin) &&
-		'setRawMode' in stdin &&
-		typeof stdin.setRawMode === 'function'
-	);
-};
+): stdin is RawModeStream =>
+	isTty(stdin) &&
+	'setRawMode' in stdin &&
+	typeof stdin.setRawMode === 'function';
 
 export const getRawModeStream = (
 	stdin: NodeJS.ReadableStream,
-): RawModeStream | undefined => {
-	if (!isRawModeStream(stdin)) {
-		return undefined;
-	}
-
-	return stdin;
-};
+): RawModeStream | undefined => (isRawModeStream(stdin) ? stdin : undefined);

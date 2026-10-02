@@ -1,19 +1,19 @@
+import test, {before, after, type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 import {enableTestColors, disableTestColors} from './helpers/force-colors.js';
 
 // Ensure Chalk emits colors in non-TTY test environment
-test.before(() => {
+before(() => {
 	enableTestColors();
 });
 
-test.after(() => {
+after(() => {
 	disableTestColors();
 });
 
-test('border with background color', t => {
+test('border with background color', (t: TestContext) => {
 	const output = renderToString(
 		<Box borderStyle="single" borderColor="white" borderBackgroundColor="blue">
 			<Box width={4}>
@@ -23,18 +23,18 @@ test('border with background color', t => {
 	);
 
 	// Verify the border characters are rendered
-	t.true(output.includes('┌'));
-	t.true(output.includes('┐'));
-	t.true(output.includes('└'));
-	t.true(output.includes('┘'));
-	t.true(output.includes('Test'));
+	t.assert.ok(output.includes('┌'));
+	t.assert.ok(output.includes('┐'));
+	t.assert.ok(output.includes('└'));
+	t.assert.ok(output.includes('┘'));
+	t.assert.ok(output.includes('Test'));
 
 	// Verify background color escape for blue is present
 	// Named blue background => ESC[44m
-	t.true(output.includes('\u001B[44m'));
+	t.assert.ok(output.includes('\u{1B}[44m'));
 });
 
-test('border with different background colors per side', t => {
+test('border with different background colors per side', (t: TestContext) => {
 	const output = renderToString(
 		<Box
 			borderStyle="single"
@@ -50,21 +50,21 @@ test('border with different background colors per side', t => {
 	);
 
 	// Verify the border characters are rendered
-	t.true(output.includes('┌'));
-	t.true(output.includes('┐'));
-	t.true(output.includes('└'));
-	t.true(output.includes('┘'));
-	t.true(output.includes('Test'));
+	t.assert.ok(output.includes('┌'));
+	t.assert.ok(output.includes('┐'));
+	t.assert.ok(output.includes('└'));
+	t.assert.ok(output.includes('┘'));
+	t.assert.ok(output.includes('Test'));
 
 	// Verify background colors for each named color are present
 	// red => 41, green => 42, yellow => 43, blue => 44
-	t.true(output.includes('\u001B[41m'));
-	t.true(output.includes('\u001B[42m'));
-	t.true(output.includes('\u001B[43m'));
-	t.true(output.includes('\u001B[44m'));
+	t.assert.ok(output.includes('\u{1B}[41m'));
+	t.assert.ok(output.includes('\u{1B}[42m'));
+	t.assert.ok(output.includes('\u{1B}[43m'));
+	t.assert.ok(output.includes('\u{1B}[44m'));
 });
 
-test('border background color fallback to general borderBackgroundColor', t => {
+test('border background color fallback to general borderBackgroundColor', (t: TestContext) => {
 	const output = renderToString(
 		<Box
 			borderStyle="single"
@@ -78,18 +78,18 @@ test('border background color fallback to general borderBackgroundColor', t => {
 	);
 
 	// Verify the border characters are rendered
-	t.true(output.includes('┌'));
-	t.true(output.includes('┐'));
-	t.true(output.includes('└'));
-	t.true(output.includes('┘'));
-	t.true(output.includes('Test'));
+	t.assert.ok(output.includes('┌'));
+	t.assert.ok(output.includes('┐'));
+	t.assert.ok(output.includes('└'));
+	t.assert.ok(output.includes('┘'));
+	t.assert.ok(output.includes('Test'));
 
 	// Verify cyan (46) and magenta (45) backgrounds appear
-	t.true(output.includes('\u001B[46m'));
-	t.true(output.includes('\u001B[45m'));
+	t.assert.ok(output.includes('\u{1B}[46m'));
+	t.assert.ok(output.includes('\u{1B}[45m'));
 });
 
-test('vertical border background does not bleed into content rows', t => {
+test('vertical border background does not bleed into content rows', (t: TestContext) => {
 	const output = renderToString(
 		<Box
 			borderStyle="classic"
@@ -101,23 +101,25 @@ test('vertical border background does not bleed into content rows', t => {
 		</Box>,
 	);
 
-	const bgCyanPattern = '\u001B\\[46m';
-	const bgResetPattern = '\u001B\\[49m';
+	const bgCyanPattern = '\u{1B}\\[46m';
+	const bgResetPattern = '\u{1B}\\[49m';
 	const tableBorderChar = '|';
 	const tableBorderPattern = bgCyanPattern + tableBorderChar + bgResetPattern;
+
 	const contentRowPattern = new RegExp(
-		`^${tableBorderPattern}.*${tableBorderPattern}$$`,
+		// eslint-disable-next-line regexp/no-control-character -- The pattern matches ANSI escape sequences, which start with a control character.
+		`^${tableBorderPattern}.*${tableBorderPattern}$`,
 	);
 
 	const tableRows = output.split('\n');
 	const contentRows = tableRows.slice(1, -1);
 	t.plan(contentRows.length);
 	for (const contentRow of contentRows) {
-		t.regex(contentRow, contentRowPattern);
+		t.assert.match(contentRow, contentRowPattern);
 	}
 });
 
-test('foreground, background and dim combine correctly', t => {
+test('foreground, background and dim combine correctly', (t: TestContext) => {
 	const output = renderToString(
 		<Box
 			borderTopDimColor
@@ -131,7 +133,7 @@ test('foreground, background and dim combine correctly', t => {
 	);
 
 	// Expect red FG (31), cyan BG (46) and dim (2) to appear
-	t.true(output.includes('\u001B[31m'));
-	t.true(output.includes('\u001B[46m'));
-	t.true(output.includes('\u001B[2m'));
+	t.assert.ok(output.includes('\u{1B}[31m'));
+	t.assert.ok(output.includes('\u{1B}[46m'));
+	t.assert.ok(output.includes('\u{1B}[2m'));
 });

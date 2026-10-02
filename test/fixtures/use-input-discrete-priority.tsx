@@ -13,15 +13,15 @@ function App() {
 	const [query, setQuery] = useState('abcde');
 	const [, startTransition] = useTransition();
 	const [deferredQuery, setDeferredQuery] = useState('abcde');
-	const done = useRef(false);
+	const isDoneRef = useRef(false);
 
 	useInput((input, key) => {
 		if (key.return) {
-			if (done.current) {
+			if (isDoneRef.current) {
 				return;
 			}
 
-			done.current = true;
+			isDoneRef.current = true;
 			process.stdout.write(
 				`\nFINAL query:${JSON.stringify(query)} deferred:${JSON.stringify(deferredQuery)}\n`,
 			);
@@ -29,16 +29,18 @@ function App() {
 			return;
 		}
 
-		if (key.backspace || key.delete) {
-			setQuery(previousQuery => previousQuery.slice(0, -1));
-			startTransition(() => {
-				setDeferredQuery(previousQuery => previousQuery.slice(0, -1));
-			});
+		if (!(key.backspace || key.delete)) {
+			return;
 		}
+
+		setQuery(previousQuery => previousQuery.slice(0, -1));
+		startTransition(() => {
+			setDeferredQuery(previousQuery => previousQuery.slice(0, -1));
+		});
 	});
 
 	const filteredResult = useMemo(() => {
-		if (!deferredQuery) {
+		if (deferredQuery === '') {
 			return '';
 		}
 

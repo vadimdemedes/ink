@@ -1,5 +1,5 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text, renderToString} from '../src/index.js';
 
 for (const [colon, semicolon] of [
@@ -11,7 +11,7 @@ for (const [colon, semicolon] of [
 	['38:2:0:255:0:0', '38;2;255;0;0'],
 	['1;38:5:196;48:2::0:0:255', '1;38;5;196;48;2;0;0;255'],
 ] as const) {
-	test(`colon color ${colon} preserves layout beside a sibling`, t => {
+	test(`colon color ${colon} preserves layout beside a sibling`, (t: TestContext) => {
 		const view = (parameters: string) => (
 			<Box width={6} borderStyle="single">
 				<Text>{`[${parameters}mRed[0m`}</Text>
@@ -19,21 +19,27 @@ for (const [colon, semicolon] of [
 			</Box>
 		);
 
-		t.is(renderToString(view(colon)), renderToString(view(semicolon)));
+		t.assert.strictEqual(
+			renderToString(view(colon)),
+			renderToString(view(semicolon)),
+		);
 	});
 }
 
-test('colon colors wrap and reset like semicolon colors', t => {
+test('colon colors wrap and reset like semicolon colors', (t: TestContext) => {
 	const view = (parameters: string) => (
 		<Box width={2}>
 			<Text>{`[${parameters}mABCD[0mE`}</Text>
 		</Box>
 	);
 
-	t.is(renderToString(view('38:5:196')), renderToString(view('38;5;196')));
+	t.assert.strictEqual(
+		renderToString(view('38:5:196')),
+		renderToString(view('38;5;196')),
+	);
 });
 
-test('color normalization leaves colon-containing hyperlink targets intact', t => {
+test('color normalization leaves colon-containing hyperlink targets intact', (t: TestContext) => {
 	const url = 'https://example.com/38:5:196';
 	const content = `]8;;${url}\\Link]8;;\\`;
 	const view = (parameters: string) => (
@@ -41,16 +47,16 @@ test('color normalization leaves colon-containing hyperlink targets intact', t =
 	);
 
 	const output = renderToString(view('38:5:196'));
-	t.true(output.includes(url));
-	t.is(output, renderToString(view('38;5;196')));
+	t.assert.ok(output.includes(url));
+	t.assert.strictEqual(output, renderToString(view('38;5;196')));
 });
 
 for (const [colon, semicolon] of [['4:3', '4']] as const) {
-	test(`underline style ${colon} renders as plain underline beside a sibling`, t => {
+	test(`underline style ${colon} renders as plain underline beside a sibling`, (t: TestContext) => {
 		const view = (parameters: string) => (
 			<Box>
 				<Box width={6}>
-					<Text>{`\u001B[${parameters}mab\u001B[0m`}</Text>
+					<Text>{`\u{1B}[${parameters}mab\u{1B}[0m`}</Text>
 				</Box>
 				<Text>|</Text>
 			</Box>
@@ -58,32 +64,32 @@ for (const [colon, semicolon] of [['4:3', '4']] as const) {
 
 		const output = renderToString(view(colon));
 
-		t.is(output, `\u001B[${semicolon}mab\u001B[24m    |`);
-		t.is(output, renderToString(view(semicolon)));
+		t.assert.strictEqual(output, `\u{1B}[${semicolon}mab\u{1B}[24m    |`);
+		t.assert.strictEqual(output, renderToString(view(semicolon)));
 	});
 }
 
-test('underline style reset 4:0 turns the underline off', t => {
-	t.is(
+test('underline style reset 4:0 turns the underline off', (t: TestContext) => {
+	t.assert.strictEqual(
 		renderToString(
 			<Box>
 				<Box width={6}>
-					<Text>{'\u001B[4:3ma\u001B[4:0mb'}</Text>
+					<Text>{'\u{1B}[4:3ma\u{1B}[4:0mb'}</Text>
 				</Box>
 				<Text>|</Text>
 			</Box>,
 		),
-		'\u001B[4ma\u001B[24mb    |',
+		'\u{1B}[4ma\u{1B}[24mb    |',
 	);
 });
 
 for (const parameters of ['58:5:1', '58:2::1:2:3']) {
-	test(`underline color ${parameters} is dropped beside a sibling`, t => {
-		t.is(
+	test(`underline color ${parameters} is dropped beside a sibling`, (t: TestContext) => {
+		t.assert.strictEqual(
 			renderToString(
 				<Box>
 					<Box width={6}>
-						<Text>{`\u001B[${parameters}mab\u001B[59m`}</Text>
+						<Text>{`\u{1B}[${parameters}mab\u{1B}[59m`}</Text>
 					</Box>
 					<Text>|</Text>
 				</Box>,
@@ -92,11 +98,11 @@ for (const parameters of ['58:5:1', '58:2::1:2:3']) {
 		);
 	});
 
-	test(`underline color ${parameters} is dropped inside a clipped box`, t => {
-		t.is(
+	test(`underline color ${parameters} is dropped inside a clipped box`, (t: TestContext) => {
+		t.assert.strictEqual(
 			renderToString(
 				<Box width={1} overflow="hidden">
-					<Text>{`\u001B[${parameters}mab\u001B[59m`}</Text>
+					<Text>{`\u{1B}[${parameters}mab\u{1B}[59m`}</Text>
 				</Box>,
 			),
 			'a\nb',
@@ -104,13 +110,13 @@ for (const parameters of ['58:5:1', '58:2::1:2:3']) {
 	});
 }
 
-test('underline style 4:3 is clipped like plain underline', t => {
-	t.is(
+test('underline style 4:3 is clipped like plain underline', (t: TestContext) => {
+	t.assert.strictEqual(
 		renderToString(
 			<Box width={1} overflow="hidden">
-				<Text>{'\u001B[4:3mab\u001B[4:0m'}</Text>
+				<Text>{'\u{1B}[4:3mab\u{1B}[4:0m'}</Text>
 			</Box>,
 		),
-		'\u001B[4ma\u001B[24m\n\u001B[4mb\u001B[24m',
+		'\u{1B}[4ma\u{1B}[24m\n\u{1B}[4mb\u{1B}[24m',
 	);
 });

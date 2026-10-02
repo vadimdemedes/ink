@@ -2,13 +2,11 @@ import React from 'react';
 import {faker} from '@faker-js/faker';
 import {Box, Text, render} from '../../src/index.js';
 
-const users = Array.from({length: 10})
-	.fill(true)
-	.map((_, index) => ({
-		id: index,
-		name: faker.internet.username(),
-		email: faker.internet.email(),
-	}));
+const users = Array.from({length: 10}, (_, index) => ({
+	id: index,
+	name: faker.internet.username(),
+	email: faker.internet.email(),
+}));
 
 function Table() {
 	return (

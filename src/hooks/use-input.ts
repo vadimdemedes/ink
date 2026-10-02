@@ -225,7 +225,7 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 
 		// Strip escape prefix from broken/incomplete sequences that
 		// parseKeypress did not fully resolve (e.g. a flushed "\u001B[").
-		if (input.startsWith('\u001B')) {
+		if (input.startsWith('\u{1B}')) {
 			input = input.slice(1);
 		}
 
@@ -239,10 +239,10 @@ const useInput = (inputHandler: Handler, options: Options = {}) => {
 
 		// If app is supposed to exit on Ctrl+C, skip input listeners.
 		if (
+			internal_exitOnCtrlC &&
 			keypress.name === 'c' &&
 			key.ctrl &&
-			keypress.eventType !== 'release' &&
-			internal_exitOnCtrlC
+			keypress.eventType !== 'release'
 		) {
 			return;
 		}

@@ -1,5 +1,5 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {render, Text} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 
@@ -9,7 +9,7 @@ for (const mode of [
 	{debug: true},
 	{isScreenReaderEnabled: true},
 ]) {
-	test(`onRender observes the committed frame (${JSON.stringify(mode)})`, async t => {
+	test(`onRender observes the committed frame (${JSON.stringify(mode)})`, async (t: TestContext) => {
 		const stdout = createStdout();
 		const observedFrames: string[] = [];
 		const instance = render(<Text>first</Text>, {
@@ -21,14 +21,14 @@ for (const mode of [
 				observedFrames.push(stdout.getWrites().join(''));
 			},
 		});
-		t.teardown(() => {
+		t.after(() => {
 			instance.unmount();
 		});
 		await instance.waitUntilRenderFlush();
-		t.true(observedFrames[0]?.includes('first'));
+		t.assert.ok(observedFrames[0]?.includes('first'));
 
 		instance.rerender(<Text>second</Text>);
 		await instance.waitUntilRenderFlush();
-		t.true(observedFrames.at(-1)?.includes('second'));
+		t.assert.ok(observedFrames.at(-1)?.includes('second'));
 	});
 }

@@ -1,8 +1,9 @@
-import React, {act, useReducer} from 'react';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
+import React, {useReducer} from 'react';
 import {Text, render} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
+import {act} from './helpers/act.js';
 
 let rerenderHello: () => void;
 function Hello() {
@@ -22,7 +23,7 @@ const triggers = {
 
 for (const mode of ['standard', 'incremental', 'screen-reader'] as const) {
 	for (const [trigger, update] of Object.entries(triggers)) {
-		test(`${trigger} restores unchanged content after clear (${mode})`, async t => {
+		test(`${trigger} restores unchanged content after clear (${mode})`, async (t: TestContext) => {
 			const stdout = createStdout(80, true);
 			stdout.rows = 8;
 			let instance!: ReturnType<typeof render>;
@@ -35,7 +36,9 @@ for (const mode of ['standard', 'incremental', 'screen-reader'] as const) {
 					patchConsole: false,
 				});
 			});
-			t.teardown(instance.unmount);
+			t.after(() => {
+				instance.unmount();
+			});
 			await instance.waitUntilRenderFlush();
 			instance.clear();
 			await act(async () => {
@@ -47,11 +50,11 @@ for (const mode of ['standard', 'incremental', 'screen-reader'] as const) {
 				stdout.getWrites().join('').replaceAll('\n', '\r\n'),
 				8,
 			);
-			t.is(lines[0], 'Hello');
+			t.assert.strictEqual(lines[0], 'Hello');
 		});
 	}
 
-	test(`unmount does not restore cleared content (${mode})`, async t => {
+	test(`unmount does not restore cleared content (${mode})`, async (t: TestContext) => {
 		const stdout = createStdout(80, true);
 		stdout.rows = 8;
 		const instance = render(<Text>Hello</Text>, {
@@ -61,7 +64,9 @@ for (const mode of ['standard', 'incremental', 'screen-reader'] as const) {
 			isScreenReaderEnabled: mode === 'screen-reader',
 			patchConsole: false,
 		});
-		t.teardown(instance.unmount);
+		t.after(() => {
+			instance.unmount();
+		});
 		await instance.waitUntilRenderFlush();
 		instance.clear();
 		instance.unmount();
@@ -71,6 +76,6 @@ for (const mode of ['standard', 'incremental', 'screen-reader'] as const) {
 			stdout.getWrites().join('').replaceAll('\n', '\r\n'),
 			8,
 		);
-		t.true(lines.every(line => line === ''));
+		t.assert.ok(lines.every(line => line === ''));
 	});
 }

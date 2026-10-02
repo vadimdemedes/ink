@@ -17,7 +17,7 @@ function generateItems(filter: string): string[] {
 		);
 	}
 
-	if (!filter) {
+	if (filter === '') {
 		return allItems.slice(0, 10);
 	}
 
@@ -52,7 +52,7 @@ function SearchApp() {
 			startTransition(() => {
 				setDeferredQuery(deleteLastGrapheme);
 			});
-		} else if (input && !key.ctrl && !key.meta && !key.return) {
+		} else if (input !== '' && !key.ctrl && !key.meta && !key.return) {
 			setQuery(previousQuery => previousQuery + input);
 			// Wrap the expensive update in a transition
 			startTransition(() => {
@@ -73,14 +73,17 @@ function SearchApp() {
 
 			<Box>
 				<Text>Search: </Text>
-				<Text color="cyan">{query || '(type something)'}</Text>
+				<Text color="cyan">{query === '' ? '(type something)' : query}</Text>
 				{isPending ? <Text color="yellow"> (updating...)</Text> : null}
 			</Box>
 
 			<Box marginTop={1} flexDirection="column">
 				<Text bold>
 					Results{' '}
-					{deferredQuery ? `for "${deferredQuery}"` : '(showing first 10)'}:
+					{deferredQuery === ''
+						? '(showing first 10)'
+						: `for "${deferredQuery}"`}
+					:
 				</Text>
 				{filteredItems.length === 0 ? (
 					<Text dimColor> No items found</Text>

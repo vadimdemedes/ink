@@ -4,7 +4,7 @@ import {
 	useEffect,
 	useCallback,
 	useMemo,
-	useContext,
+	use,
 } from 'react';
 import {type DOMElement, addLayoutListener} from '../dom.js';
 import measureElement from '../measure-element.js';
@@ -96,7 +96,7 @@ const useBoxMetrics = (
 		will be passed to a DOM node's ref attribute, is common in React. */
 	ref: RefObject<DOMElement | null>,
 ): UseBoxMetricsResult => {
-	const rootNode = useContext(RootNodeContext);
+	const rootNode = use(RootNodeContext);
 	const [metrics, setMetrics] = useState(emptyMetrics);
 	const [hasMeasured, setHasMeasured] = useState(false);
 

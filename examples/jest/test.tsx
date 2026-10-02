@@ -34,10 +34,10 @@ function Test({status, path}: Properties) {
 			</Text>
 
 			<Box marginLeft={1}>
-				<Text dimColor>{path.split('/')[0]}/</Text>
+				<Text dimColor>{path.split('/', 1)[0]}/</Text>
 
 				<Text bold color="white">
-					{path.split('/')[1]}
+					{path.split('/', 2)[1]}
 				</Text>
 			</Box>
 		</Box>

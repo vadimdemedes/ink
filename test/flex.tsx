@@ -1,9 +1,9 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 
-test('grow equally', t => {
+test('grow equally', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={6}>
 			<Box flexGrow={1}>
@@ -15,10 +15,10 @@ test('grow equally', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A  B');
+	t.assert.strictEqual(output, 'A  B');
 });
 
-test('grow one element', t => {
+test('grow one element', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={6}>
 			<Box flexGrow={1}>
@@ -28,10 +28,10 @@ test('grow one element', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A    B');
+	t.assert.strictEqual(output, 'A    B');
 });
 
-test('do not shrink', t => {
+test('do not shrink', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={16}>
 			<Box flexShrink={0} width={6}>
@@ -46,10 +46,10 @@ test('do not shrink', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A     B     C');
+	t.assert.strictEqual(output, 'A     B     C');
 });
 
-test('shrink equally', t => {
+test('shrink equally', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={10}>
 			<Box flexShrink={1} width={6}>
@@ -62,10 +62,10 @@ test('shrink equally', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A    B   C');
+	t.assert.strictEqual(output, 'A    B   C');
 });
 
-test('set flex basis with flexDirection="row" container', t => {
+test('set flex basis with flexDirection="row" container', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={6}>
 			<Box flexBasis={3}>
@@ -75,10 +75,10 @@ test('set flex basis with flexDirection="row" container', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A  B');
+	t.assert.strictEqual(output, 'A  B');
 });
 
-test('set flex basis in percent with flexDirection="row" container', t => {
+test('set flex basis in percent with flexDirection="row" container', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={6}>
 			<Box flexBasis="50%">
@@ -88,10 +88,10 @@ test('set flex basis in percent with flexDirection="row" container', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A  B');
+	t.assert.strictEqual(output, 'A  B');
 });
 
-test('set flex basis with flexDirection="column" container', t => {
+test('set flex basis with flexDirection="column" container', (t: TestContext) => {
 	const output = renderToString(
 		<Box height={6} flexDirection="column">
 			<Box flexBasis={3}>
@@ -101,10 +101,10 @@ test('set flex basis with flexDirection="column" container', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A\n\n\nB\n\n');
+	t.assert.strictEqual(output, 'A\n\n\nB\n\n');
 });
 
-test('set flex basis in percent with flexDirection="column" container', t => {
+test('set flex basis in percent with flexDirection="column" container', (t: TestContext) => {
 	const output = renderToString(
 		<Box height={6} flexDirection="column">
 			<Box flexBasis="50%">
@@ -114,5 +114,5 @@ test('set flex basis in percent with flexDirection="column" container', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A\n\n\nB\n\n');
+	t.assert.strictEqual(output, 'A\n\n\nB\n\n');
 });

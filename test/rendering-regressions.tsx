@@ -1,9 +1,9 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text} from '../src/index.js';
 import {renderToString} from './helpers/render-to-string.js';
 
-test('clipping a wide character at the right edge preserves the adjacent marker column', t => {
+test('clipping a wide character at the right edge preserves the adjacent marker column', (t: TestContext) => {
 	const output = renderToString(
 		<Box>
 			<Box width={4} height={1} overflowX="hidden">
@@ -15,10 +15,10 @@ test('clipping a wide character at the right edge preserves the adjacent marker 
 		</Box>,
 	);
 
-	t.is(output, 'X你 |');
+	t.assert.strictEqual(output, 'X你 |');
 });
 
-test('clipping a wide character at the left edge preserves the adjacent marker column', t => {
+test('clipping a wide character at the left edge preserves the adjacent marker column', (t: TestContext) => {
 	const output = renderToString(
 		<Box>
 			<Box width={3} height={1} overflowX="hidden" contentOffsetX={1}>
@@ -30,5 +30,5 @@ test('clipping a wide character at the left edge preserves the adjacent marker c
 		</Box>,
 	);
 
-	t.is(output, ' 好|');
+	t.assert.strictEqual(output, ' 好|');
 });

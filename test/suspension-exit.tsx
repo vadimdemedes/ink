@@ -1,13 +1,13 @@
+import test, {type TestContext} from 'node:test';
 import React, {useLayoutEffect} from 'react';
-import test from 'ava';
 import {type SinonStub} from 'sinon';
 import {render, Text, useApp, useInput} from '../src/index.js';
 import {type SuspendTerminal} from '../src/components/AppContext.js';
 import createStdout from './helpers/create-stdout.js';
 import {createStdin} from './helpers/create-stdin.js';
 
-for (const callback of [false, true]) {
-	test(`resuming after unmount does not re-enable terminal input (callback: ${callback})`, async t => {
+for (const shouldUseCallback of [false, true]) {
+	test(`resuming after unmount does not re-enable terminal input (callback: ${shouldUseCallback})`, async (t: TestContext) => {
 		const stdout = createStdout();
 		const stdin = createStdin();
 		let suspendTerminal!: SuspendTerminal;
@@ -27,11 +27,11 @@ for (const callback of [false, true]) {
 			interactive: true,
 			patchConsole: false,
 		});
-		t.teardown(() => {
+		t.after(() => {
 			instance.unmount();
 		});
 		await instance.waitUntilRenderFlush();
-		if (callback) {
+		if (shouldUseCallback) {
 			await suspendTerminal(async () => {
 				instance.unmount();
 				await instance.waitUntilExit();
@@ -43,7 +43,10 @@ for (const callback of [false, true]) {
 			await suspension.resume();
 		}
 
-		t.false((stdin.setRawMode as SinonStub).lastCall.args[0]);
-		t.is(stdin.listenerCount('readable'), 0);
+		t.assert.strictEqual(
+			(stdin.setRawMode as SinonStub).lastCall.args[0],
+			false,
+		);
+		t.assert.strictEqual(stdin.listenerCount('readable'), 0);
 	});
 }

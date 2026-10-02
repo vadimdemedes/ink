@@ -1,12 +1,12 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import ansiEscapes from 'ansi-escapes';
 import {Box, Text, render} from '../src/index.js';
 import logUpdate from '../src/log-update.js';
 import createStdout from './helpers/create-stdout.js';
 import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 
-test('incremental rendering preserves the screen across shortened and grown suffixes', t => {
+test('incremental rendering preserves the screen across shortened and grown suffixes', (t: TestContext) => {
 	const stdout = createStdout();
 	const update = logUpdate.create(stdout, {
 		showCursor: true,
@@ -18,19 +18,19 @@ test('incremental rendering preserves the screen across shortened and grown suff
 			stdout.getWrites().join('').replaceAll('\n', '\r\n'),
 			10,
 		);
-		t.deepEqual(screen.slice(0, 2), [
+		t.assert.deepStrictEqual(screen.slice(0, 2), [
 			`UNCHANGED LEFT | ${value}`.trimEnd(),
 			'footer',
 		]);
 	}
 
 	for (const output of stdout.getWrites().slice(1)) {
-		t.false(output.includes('UNCHANGED LEFT'));
-		t.true(output.includes(ansiEscapes.eraseEndLine));
+		t.assert.strictEqual(output.includes('UNCHANGED LEFT'), false);
+		t.assert.ok(output.includes(ansiEscapes.eraseEndLine));
 	}
 });
 
-test('falls back after a width change or a frame height change', t => {
+test('falls back after a width change or a frame height change', (t: TestContext) => {
 	const stdout = createStdout(80);
 	const update = logUpdate.create(stdout, {
 		showCursor: true,
@@ -39,15 +39,15 @@ test('falls back after a width change or a frame height change', t => {
 	update('unchanged 0\n');
 	stdout.columns = 100;
 	update('unchanged 1\n');
-	t.true(stdout.get().includes('unchanged 1'));
+	t.assert.ok(stdout.get().includes('unchanged 1'));
 	update('unchanged 2\nextra\n');
-	t.true(stdout.get().includes('unchanged 2'));
+	t.assert.ok(stdout.get().includes('unchanged 2'));
 	update('unchanged 3\n');
-	t.true(stdout.get().includes('unchanged 3'));
+	t.assert.ok(stdout.get().includes('unchanged 3'));
 });
 
 for (const operation of ['clear', 'reset', 'done'] as const) {
-	test(`${operation} invalidates the prefix baseline`, t => {
+	test(`${operation} invalidates the prefix baseline`, (t: TestContext) => {
 		const stdout = createStdout();
 		const update = logUpdate.create(stdout, {
 			showCursor: true,
@@ -56,11 +56,11 @@ for (const operation of ['clear', 'reset', 'done'] as const) {
 		update('unchanged 0\n');
 		update[operation]();
 		update('unchanged 1\n');
-		t.true(stdout.get().includes('unchanged 1'));
+		t.assert.ok(stdout.get().includes('unchanged 1'));
 	});
 }
 
-test('sync establishes the prefix baseline for the next frame', t => {
+test('sync establishes the prefix baseline for the next frame', (t: TestContext) => {
 	const stdout = createStdout();
 	const update = logUpdate.create(stdout, {
 		showCursor: true,
@@ -68,7 +68,7 @@ test('sync establishes the prefix baseline for the next frame', t => {
 	});
 	update.sync('unchanged 0\n');
 	update('unchanged 1\n');
-	t.is(
+	t.assert.strictEqual(
 		stdout.get(),
 		ansiEscapes.cursorUp(1) +
 			ansiEscapes.cursorTo(10) +
@@ -78,7 +78,7 @@ test('sync establishes the prefix baseline for the next frame', t => {
 	);
 });
 
-test('column updates preserve explicit cursor positioning without a trailing newline', t => {
+test('column updates preserve explicit cursor positioning without a trailing newline', (t: TestContext) => {
 	const stdout = createStdout();
 	const update = logUpdate.create(stdout, {
 		showCursor: true,
@@ -88,18 +88,18 @@ test('column updates preserve explicit cursor positioning without a trailing new
 	update('unchanged 0\nfooter');
 	update.setCursorPosition({x: 2, y: 0});
 	update('unchanged 1\nfooter');
-	t.false(stdout.get().includes('unchanged'));
-	t.true(
+	t.assert.strictEqual(stdout.get().includes('unchanged'), false);
+	t.assert.ok(
 		stdout
 			.get()
 			.endsWith(
-				ansiEscapes.cursorUp(1) + ansiEscapes.cursorTo(2) + '\u001B[?25h',
+				ansiEscapes.cursorUp(1) + ansiEscapes.cursorTo(2) + '\u{1B}[?25h',
 			),
 	);
-	t.deepEqual(update.getCursorPosition(), {x: 2, y: 0});
+	t.assert.deepStrictEqual(update.getCursorPosition(), {x: 2, y: 0});
 });
 
-test('side-by-side public components do not rewrite the unchanged left region', async t => {
+test('side-by-side public components do not rewrite the unchanged left region', async (t: TestContext) => {
 	const stdout = createStdout(60);
 	stdout.rows = 24;
 	const frame = (count: number) => (
@@ -117,7 +117,7 @@ test('side-by-side public components do not rewrite the unchanged left region', 
 		alternateScreen: true,
 		patchConsole: false,
 	});
-	t.teardown(() => {
+	t.after(() => {
 		instance.unmount();
 		instance.cleanup();
 	});
@@ -129,7 +129,7 @@ test('side-by-side public components do not rewrite the unchanged left region', 
 		// eslint-disable-next-line no-await-in-loop
 		await instance.waitUntilRenderFlush();
 		const output = stdout.getWrites().slice(before).join('');
-		t.false(output.includes('UNCHANGED LEFT'));
-		t.true(output.includes(ansiEscapes.cursorTo(29) + String(count)));
+		t.assert.strictEqual(output.includes('UNCHANGED LEFT'), false);
+		t.assert.ok(output.includes(ansiEscapes.cursorTo(29) + String(count)));
 	}
 });

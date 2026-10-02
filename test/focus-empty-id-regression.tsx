@@ -1,8 +1,9 @@
-import React, {act} from 'react';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
+import React from 'react';
 import {Box, Text, render, useFocus, useFocusManager} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
+import {act} from './helpers/act.js';
 
 function Field({
 	id,
@@ -19,7 +20,7 @@ function Field({
 }
 
 for (const method of ['programmatic', 'tab'] as const) {
-	test(`empty focus ID reports focus after ${method} navigation`, async t => {
+	test(`empty focus ID reports focus after ${method} navigation`, async (t: TestContext) => {
 		const stdout = createStdout();
 		const stdin = createStdin();
 		let manager!: ReturnType<typeof useFocusManager>;
@@ -38,12 +39,12 @@ for (const method of ['programmatic', 'tab'] as const) {
 				concurrent: true,
 			});
 		});
-		t.teardown(async () => {
+		t.after(async () => {
 			await act(async () => {
 				instance.unmount();
 			});
 		});
-		t.is(stdout.get(), 'empty: blurred');
+		t.assert.strictEqual(stdout.get(), 'empty: blurred');
 
 		await act(async () => {
 			if (method === 'programmatic') {
@@ -53,12 +54,12 @@ for (const method of ['programmatic', 'tab'] as const) {
 			}
 		});
 
-		t.is(manager.activeId, '');
-		t.is(stdout.get(), 'empty: focused');
+		t.assert.strictEqual(manager.activeId, '');
+		t.assert.strictEqual(stdout.get(), 'empty: focused');
 	});
 }
 
-test('autofocus does not replace an already focused empty ID', async t => {
+test('autofocus does not replace an already focused empty ID', async (t: TestContext) => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	let activeId: string | undefined;
@@ -77,12 +78,12 @@ test('autofocus does not replace an already focused empty ID', async t => {
 	await act(async () => {
 		instance = render(<Form />, {stdout, stdin, debug: true, concurrent: true});
 	});
-	t.teardown(async () => {
+	t.after(async () => {
 		await act(async () => {
 			instance.unmount();
 		});
 	});
 
-	t.is(activeId, '');
-	t.is(stdout.get(), 'empty: focused\nsecond: blurred');
+	t.assert.strictEqual(activeId, '');
+	t.assert.strictEqual(stdout.get(), 'empty: focused\nsecond: blurred');
 });

@@ -1,11 +1,12 @@
 import {Readable} from 'node:stream';
-import React, {act} from 'react';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
+import React from 'react';
 import {render, useInput, usePaste} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
+import {act} from './helpers/act.js';
 
 for (const input of ['', 'ab', 'ab']) {
-	test(`Ctrl+C exits when buffered with text: ${JSON.stringify(input)}`, async t => {
+	test(`Ctrl+C exits when buffered with text: ${JSON.stringify(input)}`, async (t: TestContext) => {
 		const stdin = Object.assign(new Readable({read() {}}), {
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			isTTY: true,
@@ -29,14 +30,14 @@ for (const input of ['', 'ab', 'ab']) {
 				exitOnCtrlC: true,
 			});
 		});
-		t.teardown(() => {
+		t.after(() => {
 			instance.unmount();
 			stdin.destroy();
 		});
 
-		let exited = false;
+		let isExited = false;
 		void instance.waitUntilExit().then(() => {
-			exited = true;
+			isExited = true;
 		});
 		await act(async () => {
 			stdin.push(input);
@@ -44,13 +45,13 @@ for (const input of ['', 'ab', 'ab']) {
 				setImmediate(resolve);
 			});
 		});
-		t.true(exited);
-		t.false(inputs.includes('Ctrl+c'));
+		t.assert.ok(isExited);
+		t.assert.strictEqual(inputs.includes('Ctrl+c'), false);
 	});
 }
 
-for (const bracketedPaste of [false, true]) {
-	test(`buffered Ctrl+C respects ${bracketedPaste ? 'bracketed paste' : 'exitOnCtrlC: false'}`, async t => {
+for (const isBracketedPaste of [false, true]) {
+	test(`buffered Ctrl+C respects ${isBracketedPaste ? 'bracketed paste' : 'exitOnCtrlC: false'}`, async (t: TestContext) => {
 		const stdin = Object.assign(new Readable({read() {}}), {
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			isTTY: true,
@@ -75,31 +76,34 @@ for (const bracketedPaste of [false, true]) {
 				stdout: createStdout(),
 				interactive: true,
 				patchConsole: false,
-				exitOnCtrlC: bracketedPaste,
+				exitOnCtrlC: isBracketedPaste,
 			});
 		});
-		t.teardown(() => {
+		t.after(() => {
 			instance.unmount();
 			stdin.destroy();
 		});
 
-		let exited = false;
+		let isExited = false;
 		void instance.waitUntilExit().then(() => {
-			exited = true;
+			isExited = true;
 		});
 		const input = `ab${String.fromCodePoint(3)}cd`;
 		const escape = String.fromCodePoint(27);
 		await act(async () => {
 			stdin.push(
-				bracketedPaste ? `${escape}[200~${input}${escape}[201~` : input,
+				isBracketedPaste ? `${escape}[200~${input}${escape}[201~` : input,
 			);
 			await new Promise<void>(resolve => {
 				setImmediate(resolve);
 			});
 		});
 
-		t.false(exited);
-		t.deepEqual(inputs, bracketedPaste ? [] : ['ab', 'Ctrl+c', 'cd']);
-		t.deepEqual(pastes, bracketedPaste ? [input] : []);
+		t.assert.strictEqual(isExited, false);
+		t.assert.deepStrictEqual(
+			inputs,
+			isBracketedPaste ? [] : ['ab', 'Ctrl+c', 'cd'],
+		);
+		t.assert.deepStrictEqual(pastes, isBracketedPaste ? [input] : []);
 	});
 }

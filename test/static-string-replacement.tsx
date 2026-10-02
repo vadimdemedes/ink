@@ -1,9 +1,9 @@
+import test, {type TestContext} from 'node:test';
 import React, {useLayoutEffect, useState} from 'react';
-import test from 'ava';
 import {Static, Text, renderToString} from '../src/index.js';
 
-for (const replace of [false, true]) {
-	test(`renderToString reflects a layout-effect Static ${replace ? 'replacement' : 'removal'}`, t => {
+for (const shouldReplace of [false, true]) {
+	test(`renderToString reflects a layout-effect Static ${shouldReplace ? 'replacement' : 'removal'}`, (t: TestContext) => {
 		function Example() {
 			const [updated, setUpdated] = useState(false);
 			useLayoutEffect(() => {
@@ -12,7 +12,7 @@ for (const replace of [false, true]) {
 
 			return (
 				<>
-					{!updated || replace ? (
+					{!updated || shouldReplace ? (
 						<Static
 							key={updated ? 'new' : 'old'}
 							items={[updated ? 'New' : 'Old']}
@@ -25,11 +25,14 @@ for (const replace of [false, true]) {
 			);
 		}
 
-		t.is(renderToString(<Example />), replace ? 'New\nLive' : 'Live');
+		t.assert.strictEqual(
+			renderToString(<Example />),
+			shouldReplace ? 'New\nLive' : 'Live',
+		);
 	});
 }
 
-test('layout-effect appends to the same Static retain earlier items', t => {
+test('layout-effect appends to the same Static retain earlier items', (t: TestContext) => {
 	function Example() {
 		const [items, setItems] = useState(['First']);
 		useLayoutEffect(() => {
@@ -41,10 +44,10 @@ test('layout-effect appends to the same Static retain earlier items', t => {
 		);
 	}
 
-	t.is(renderToString(<Example />), 'First\nSecond');
+	t.assert.strictEqual(renderToString(<Example />), 'First\nSecond');
 });
 
-test('replacement Static survives cleanup in static-only output', t => {
+test('replacement Static survives cleanup in static-only output', (t: TestContext) => {
 	let cleanupCount = 0;
 	function Example() {
 		const [updated, setUpdated] = useState(false);
@@ -62,6 +65,6 @@ test('replacement Static survives cleanup in static-only output', t => {
 		);
 	}
 
-	t.is(renderToString(<Example />), 'New');
-	t.is(cleanupCount, 1);
+	t.assert.strictEqual(renderToString(<Example />), 'New');
+	t.assert.strictEqual(cleanupCount, 1);
 });

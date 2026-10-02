@@ -1,24 +1,24 @@
+import test, {before, after, type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import chalk from 'chalk';
 import {Box, Text, renderToString} from '../src/index.js';
 
 const originalColorLevel = chalk.level;
-test.before(() => {
+before(() => {
 	chalk.level = 3;
 });
-test.after(() => {
+after(() => {
 	chalk.level = originalColorLevel;
 });
 
-for (const nested of [false, true]) {
+for (const isNested of [false, true]) {
 	for (const [offset, width, expected] of [
 		[1, 3, ' 好'],
 		[0, 3, '你 '],
 		[1, 2, '  '],
 		[0, 4, '你好'],
 	] as const) {
-		test(`clipping wide text preserves its background (nested: ${nested}, offset: ${offset}, width: ${width})`, t => {
+		test(`clipping wide text preserves its background (nested: ${isNested}, offset: ${offset}, width: ${width})`, (t: TestContext) => {
 			const content = <Text backgroundColor="blue">你好</Text>;
 			const output = renderToString(
 				<Box
@@ -28,17 +28,17 @@ for (const nested of [false, true]) {
 					contentOffsetX={offset}
 				>
 					<Box width={4} flexShrink={0}>
-						{nested ? <Text>{content}</Text> : content}
+						{isNested ? <Text>{content}</Text> : content}
 					</Box>
 				</Box>,
 			);
 
-			t.is(output, chalk.bgBlue(expected));
+			t.assert.strictEqual(output, chalk.bgBlue(expected));
 		});
 	}
 }
 
-test('clipped halves retain their own background colors', t => {
+test('clipped halves retain their own background colors', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={2} height={1} overflowX="hidden" contentOffsetX={1}>
 			<Box width={4} flexShrink={0}>
@@ -56,10 +56,10 @@ test('clipped halves retain their own background colors', t => {
 			<Text backgroundColor="red"> </Text>
 		</Text>,
 	);
-	t.is(output, expected);
+	t.assert.strictEqual(output, expected);
 });
 
-test('clipping a joined emoji preserves its background and adjacent text', t => {
+test('clipping a joined emoji preserves its background and adjacent text', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={2} height={1} overflowX="hidden" contentOffsetX={1}>
 			<Box width={3} flexShrink={0}>
@@ -70,5 +70,5 @@ test('clipping a joined emoji preserves its background and adjacent text', t => 
 		</Box>,
 	);
 
-	t.is(output, chalk.bgBlue(' X'));
+	t.assert.strictEqual(output, chalk.bgBlue(' X'));
 });

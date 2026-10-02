@@ -28,7 +28,7 @@ function App() {
 			return;
 		}
 
-		if (!key.ctrl && !key.meta && !key.return && input) {
+		if (input !== '' && !key.ctrl && !key.meta && !key.return) {
 			setText(previous => previous + input);
 		}
 	});

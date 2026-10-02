@@ -1,16 +1,17 @@
-import React, {act, useEffect} from 'react';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
+import React, {useEffect} from 'react';
 import {type SinonStub} from 'sinon';
 import {render, useApp, useInput, usePaste} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
+import {act} from './helpers/act.js';
 
 const setRawModeArgs = (stdin: NodeJS.WriteStream): boolean[] =>
 	(stdin.setRawMode as unknown as {args: unknown[][]}).args.map(
 		args => args[0] as boolean,
 	);
 
-test('resuming does not enable raw mode for a disabled input hook', async t => {
+test('resuming does not enable raw mode for a disabled input hook', async (t: TestContext) => {
 	const stdin = createStdin();
 	let app!: ReturnType<typeof useApp>;
 	function Example({isActive}: {readonly isActive: boolean}) {
@@ -28,7 +29,9 @@ test('resuming does not enable raw mode for a disabled input hook', async t => {
 			patchConsole: false,
 		});
 	});
-	t.teardown(instance.unmount);
+	t.after(() => {
+		instance.unmount();
+	});
 	const suspension = await app.suspendTerminal();
 	const callCount = setRawModeArgs(stdin).length;
 	await act(async () => {
@@ -36,19 +39,19 @@ test('resuming does not enable raw mode for a disabled input hook', async t => {
 	});
 	await suspension.resume();
 
-	t.deepEqual(setRawModeArgs(stdin).slice(callCount), []);
-	t.is(stdin.listenerCount('readable'), 0);
+	t.assert.deepStrictEqual(setRawModeArgs(stdin).slice(callCount), []);
+	t.assert.strictEqual(stdin.listenerCount('readable'), 0);
 });
 
-for (const keepInput of [false, true]) {
-	test(`resuming does not restore disabled bracketed paste (other input active: ${keepInput})`, async t => {
+for (const shouldKeepInput of [false, true]) {
+	test(`resuming does not restore disabled bracketed paste (other input active: ${shouldKeepInput})`, async (t: TestContext) => {
 		const stdin = createStdin();
 		const stdout = createStdout();
 		let app!: ReturnType<typeof useApp>;
 		function Example({isActive}: {readonly isActive: boolean}) {
 			app = useApp();
 			usePaste(() => {}, {isActive});
-			useInput(() => {}, {isActive: keepInput});
+			useInput(() => {}, {isActive: shouldKeepInput});
 			return null;
 		}
 
@@ -61,7 +64,9 @@ for (const keepInput of [false, true]) {
 				patchConsole: false,
 			});
 		});
-		t.teardown(instance.unmount);
+		t.after(() => {
+			instance.unmount();
+		});
 		const suspension = await app.suspendTerminal();
 		const writeCount = stdout.getWrites().length;
 		await act(async () => {
@@ -69,13 +74,22 @@ for (const keepInput of [false, true]) {
 		});
 		await suspension.resume();
 
-		t.false(stdout.getWrites().slice(writeCount).join('').includes('[?2004'));
-		t.is((stdin.setRawMode as SinonStub).lastCall.args[0], keepInput);
-		t.is(stdin.listenerCount('readable'), keepInput ? 1 : 0);
+		t.assert.strictEqual(
+			stdout.getWrites().slice(writeCount).join('').includes('[?2004'),
+			false,
+		);
+		t.assert.strictEqual(
+			(stdin.setRawMode as SinonStub).lastCall.args[0],
+			shouldKeepInput,
+		);
+		t.assert.strictEqual(
+			stdin.listenerCount('readable'),
+			shouldKeepInput ? 1 : 0,
+		);
 	});
 }
 
-test('resuming enables raw mode for an input hook activated while suspended', async t => {
+test('resuming enables raw mode for an input hook activated while suspended', async (t: TestContext) => {
 	const stdin = createStdin();
 	let app!: ReturnType<typeof useApp>;
 	function Example({isActive}: {readonly isActive: boolean}) {
@@ -93,18 +107,20 @@ test('resuming enables raw mode for an input hook activated while suspended', as
 			patchConsole: false,
 		});
 	});
-	t.teardown(instance.unmount);
+	t.after(() => {
+		instance.unmount();
+	});
 	const suspension = await app.suspendTerminal();
 	await act(async () => {
 		instance.rerender(<Example isActive />);
 	});
 	await suspension.resume();
 
-	t.true((stdin.setRawMode as SinonStub).lastCall.args[0]);
-	t.is(stdin.listenerCount('readable'), 1);
+	t.assert.strictEqual((stdin.setRawMode as SinonStub).lastCall.args[0], true);
+	t.assert.strictEqual(stdin.listenerCount('readable'), 1);
 });
 
-test('an input hook activated while suspended does not take input until resume', async t => {
+test('an input hook activated while suspended does not take input until resume', async (t: TestContext) => {
 	const stdin = createStdin();
 	let app!: ReturnType<typeof useApp>;
 	const inputs: string[] = [];
@@ -128,27 +144,29 @@ test('an input hook activated while suspended does not take input until resume',
 			patchConsole: false,
 		});
 	});
-	t.teardown(instance.unmount);
+	t.after(() => {
+		instance.unmount();
+	});
 	const suspension = await app.suspendTerminal();
 	const callCount = setRawModeArgs(stdin).length;
 	await act(async () => {
 		instance.rerender(<Example isActive />);
 	});
 
-	t.deepEqual(setRawModeArgs(stdin).slice(callCount), []);
-	t.is(stdin.listenerCount('readable'), 0);
+	t.assert.deepStrictEqual(setRawModeArgs(stdin).slice(callCount), []);
+	t.assert.strictEqual(stdin.listenerCount('readable'), 0);
 	emitReadable(stdin, 'x');
-	t.deepEqual(inputs, []);
+	t.assert.deepStrictEqual(inputs, []);
 
 	await suspension.resume();
 
-	t.deepEqual(setRawModeArgs(stdin).slice(callCount), [true]);
-	t.is(stdin.listenerCount('readable'), 1);
+	t.assert.deepStrictEqual(setRawModeArgs(stdin).slice(callCount), [true]);
+	t.assert.strictEqual(stdin.listenerCount('readable'), 1);
 	emitReadable(stdin, 'y');
-	t.deepEqual(inputs, ['y']);
+	t.assert.deepStrictEqual(inputs, ['y']);
 });
 
-test('a paste hook activated while suspended does not enable bracketed paste until resume', async t => {
+test('a paste hook activated while suspended does not enable bracketed paste until resume', async (t: TestContext) => {
 	const stdin = createStdin();
 	const stdout = createStdout();
 	let app!: ReturnType<typeof useApp>;
@@ -167,7 +185,9 @@ test('a paste hook activated while suspended does not enable bracketed paste unt
 			patchConsole: false,
 		});
 	});
-	t.teardown(instance.unmount);
+	t.after(() => {
+		instance.unmount();
+	});
 	const suspension = await app.suspendTerminal();
 	const callCount = setRawModeArgs(stdin).length;
 	const writeCount = stdout.getWrites().length;
@@ -175,28 +195,28 @@ test('a paste hook activated while suspended does not enable bracketed paste unt
 		stdout
 			.getWrites()
 			.slice(writeCount)
-			.filter(write => write.includes('\u001B[?2004h')).length;
+			.filter(write => write.includes('\u{1B}[?2004h')).length;
 
 	await act(async () => {
 		instance.rerender(<Example isActive />);
 	});
 
-	t.is(pasteEnableCount(), 0);
-	t.deepEqual(setRawModeArgs(stdin).slice(callCount), []);
-	t.is(stdin.listenerCount('readable'), 0);
+	t.assert.strictEqual(pasteEnableCount(), 0);
+	t.assert.deepStrictEqual(setRawModeArgs(stdin).slice(callCount), []);
+	t.assert.strictEqual(stdin.listenerCount('readable'), 0);
 
 	await suspension.resume();
 
-	t.is(pasteEnableCount(), 1);
-	t.deepEqual(setRawModeArgs(stdin).slice(callCount), [true]);
-	t.is(stdin.listenerCount('readable'), 1);
+	t.assert.strictEqual(pasteEnableCount(), 1);
+	t.assert.deepStrictEqual(setRawModeArgs(stdin).slice(callCount), [true]);
+	t.assert.strictEqual(stdin.listenerCount('readable'), 1);
 });
 
-test('suspending in the same commit that disables the last input hook disables raw mode before the callback runs', async t => {
+test('suspending in the same commit that disables the last input hook disables raw mode before the callback runs', async (t: TestContext) => {
 	const stdin = createStdin();
 	const log: string[] = [];
-	(stdin.setRawMode as SinonStub).callsFake((value: boolean) => {
-		log.push(`setRawMode(${value})`);
+	(stdin.setRawMode as SinonStub).callsFake((isEnabled: boolean) => {
+		log.push(`setRawMode(${isEnabled})`);
 	});
 
 	let resume!: () => void;
@@ -214,9 +234,9 @@ test('suspending in the same commit that disables the last input hook disables r
 
 			void app.suspendTerminal(async () => {
 				log.push('callback start');
-				await new Promise<void>(resolve => {
-					resume = resolve;
-				});
+				const {promise, resolve} = Promise.withResolvers<void>();
+				resume = resolve;
+				await promise;
 			});
 		}, [suspended, app]);
 		return suspended ? null : <Input />;
@@ -231,7 +251,9 @@ test('suspending in the same commit that disables the last input hook disables r
 			patchConsole: false,
 		});
 	});
-	t.teardown(instance.unmount);
+	t.after(() => {
+		instance.unmount();
+	});
 	log.length = 0;
 
 	await act(async () => {
@@ -241,14 +263,14 @@ test('suspending in the same commit that disables the last input hook disables r
 		setTimeout(resolve, 0);
 	});
 
-	t.deepEqual(log, ['setRawMode(false)', 'callback start']);
-	t.is(stdin.listenerCount('readable'), 0);
+	t.assert.deepStrictEqual(log, ['setRawMode(false)', 'callback start']);
+	t.assert.strictEqual(stdin.listenerCount('readable'), 0);
 
 	resume();
 	await new Promise(resolve => {
 		setTimeout(resolve, 0);
 	});
 
-	t.deepEqual(log, ['setRawMode(false)', 'callback start']);
-	t.is(stdin.listenerCount('readable'), 0);
+	t.assert.deepStrictEqual(log, ['setRawMode(false)', 'callback start']);
+	t.assert.strictEqual(stdin.listenerCount('readable'), 0);
 });

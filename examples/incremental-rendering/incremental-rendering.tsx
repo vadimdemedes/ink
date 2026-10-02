@@ -76,7 +76,9 @@ function IncrementalRendering() {
 	);
 
 	const [selectedIndex, setSelectedIndex] = useState(0);
-	const [timestamp, setTimestamp] = useState(new Date().toLocaleTimeString());
+	const [timestamp, setTimestamp] = useState(() =>
+		new Date().toLocaleTimeString(),
+	);
 	const [counter, setCounter] = useState(0);
 	const [fps, setFps] = useState(0);
 	const [progress1, setProgress1] = useState(0);
@@ -137,11 +139,13 @@ function IncrementalRendering() {
 			// Calculate FPS
 			frameCount++;
 			const now = Date.now();
-			if (now - lastTime >= 1000) {
-				setFps(frameCount);
-				frameCount = 0;
-				lastTime = now;
+			if (now - lastTime < 1000) {
+				return;
 			}
+
+			setFps(frameCount);
+			frameCount = 0;
+			lastTime = now;
 		}, 16); // ~60 updates per second
 
 		return () => {
@@ -151,15 +155,13 @@ function IncrementalRendering() {
 
 	useInput((input, key) => {
 		if (key.upArrow) {
-			setSelectedIndex(previousIndex =>
-				previousIndex === 0 ? serviceCount - 1 : previousIndex - 1,
+			setSelectedIndex(
+				previousIndex => (previousIndex - 1 + serviceCount) % serviceCount,
 			);
 		}
 
 		if (key.downArrow) {
-			setSelectedIndex(previousIndex =>
-				previousIndex === serviceCount - 1 ? 0 : previousIndex + 1,
-			);
+			setSelectedIndex(previousIndex => (previousIndex + 1) % serviceCount);
 		}
 
 		if (input === 'q') {

@@ -5,9 +5,13 @@ function Test() {
 	const {exit} = useApp();
 
 	useEffect(() => {
-		setTimeout(() => {
+		const timer = setTimeout(() => {
 			exit('hello from ink');
 		}, 500);
+
+		return () => {
+			clearTimeout(timer);
+		};
 	});
 
 	return <Text>Testing</Text>;

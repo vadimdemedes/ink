@@ -7,7 +7,7 @@ const instance = instances.get(process.stdout)!;
 await instance.waitUntilRenderFlush();
 
 const read = stub(process.stdin, 'read').returns(null);
-read.onFirstCall().returns('\u001B[32u'.repeat(Number(process.argv[2])));
+read.onFirstCall().returns('\u{1B}[32u'.repeat(Number(process.argv[2])));
 process.stdin.emit('readable');
 read.restore();
 await instance.waitUntilRenderFlush();

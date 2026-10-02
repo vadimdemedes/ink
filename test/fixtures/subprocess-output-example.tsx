@@ -18,7 +18,7 @@ const instance = instances.get(process.stdout)!;
 await instance.waitUntilRenderFlush();
 const chunksByScenario: Record<string, Array<string | Uint8Array>> = {
 	unicode: [...Buffer.from('한🙂')].map(byte => Buffer.from([byte])),
-	ansi: ['\u001B[3', '1mRed\u001B[0', 'm text'],
+	ansi: ['\u{1B}[3', '1mRed\u{1B}[0', 'm text'],
 	error: [],
 	lines: ['one\ntwo\nthree\nfour\nfi', 've\nsix'],
 };

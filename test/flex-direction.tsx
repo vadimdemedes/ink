@@ -1,5 +1,5 @@
+import test, {type TestContext} from 'node:test';
 import React from 'react';
-import test from 'ava';
 import {Box, Text, render} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 import {
@@ -7,7 +7,7 @@ import {
 	renderToStringAsync,
 } from './helpers/render-to-string.js';
 
-test('direction row', t => {
+test('direction row', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="row">
 			<Text>A</Text>
@@ -15,10 +15,10 @@ test('direction row', t => {
 		</Box>,
 	);
 
-	t.is(output, 'AB');
+	t.assert.strictEqual(output, 'AB');
 });
 
-test('undefined direction uses the default row layout', t => {
+test('undefined direction uses the default row layout', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection={undefined}>
 			<Text>A</Text>
@@ -26,10 +26,10 @@ test('undefined direction uses the default row layout', t => {
 		</Box>,
 	);
 
-	t.is(output, 'AB');
+	t.assert.strictEqual(output, 'AB');
 });
 
-test('undefined direction uses row separators for screen readers', t => {
+test('undefined direction uses row separators for screen readers', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection={undefined}>
 			<Text>A</Text>
@@ -38,10 +38,10 @@ test('undefined direction uses row separators for screen readers', t => {
 		{isScreenReaderEnabled: true},
 	);
 
-	t.is(output, 'A B');
+	t.assert.strictEqual(output, 'A B');
 });
 
-test('setting direction to undefined restores the default row layout', t => {
+test('setting direction to undefined restores the default row layout', (t: TestContext) => {
 	function Example({direction}: {readonly direction?: 'column'}) {
 		return (
 			<Box flexDirection={direction}>
@@ -56,14 +56,16 @@ test('setting direction to undefined restores the default row layout', t => {
 		stdout,
 		debug: true,
 	});
-	t.teardown(unmount);
+	t.after(() => {
+		unmount();
+	});
 
-	t.is(stdout.get(), 'A\nB');
+	t.assert.strictEqual(stdout.get(), 'A\nB');
 	rerender(<Example />);
-	t.is(stdout.get(), 'AB');
+	t.assert.strictEqual(stdout.get(), 'AB');
 });
 
-test('direction row reverse', t => {
+test('direction row reverse', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="row-reverse" width={4}>
 			<Text>A</Text>
@@ -71,10 +73,10 @@ test('direction row reverse', t => {
 		</Box>,
 	);
 
-	t.is(output, '  BA');
+	t.assert.strictEqual(output, '  BA');
 });
 
-test('direction column', t => {
+test('direction column', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Text>A</Text>
@@ -82,10 +84,10 @@ test('direction column', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A\nB');
+	t.assert.strictEqual(output, 'A\nB');
 });
 
-test('direction column reverse', t => {
+test('direction column reverse', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column-reverse" height={4}>
 			<Text>A</Text>
@@ -93,10 +95,10 @@ test('direction column reverse', t => {
 		</Box>,
 	);
 
-	t.is(output, '\n\nB\nA');
+	t.assert.strictEqual(output, '\n\nB\nA');
 });
 
-test('don’t squash text nodes when column direction is applied', t => {
+test('don’t squash text nodes when column direction is applied', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Text>A</Text>
@@ -104,11 +106,11 @@ test('don’t squash text nodes when column direction is applied', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A\nB');
+	t.assert.strictEqual(output, 'A\nB');
 });
 
 // Concurrent mode tests
-test('direction row - concurrent', async t => {
+test('direction row - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box flexDirection="row">
 			<Text>A</Text>
@@ -116,10 +118,10 @@ test('direction row - concurrent', async t => {
 		</Box>,
 	);
 
-	t.is(output, 'AB');
+	t.assert.strictEqual(output, 'AB');
 });
 
-test('direction column - concurrent', async t => {
+test('direction column - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box flexDirection="column">
 			<Text>A</Text>
@@ -127,5 +129,5 @@ test('direction column - concurrent', async t => {
 		</Box>,
 	);
 
-	t.is(output, 'A\nB');
+	t.assert.strictEqual(output, 'A\nB');
 });

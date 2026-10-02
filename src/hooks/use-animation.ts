@@ -1,10 +1,4 @@
-import {
-	useState,
-	useLayoutEffect,
-	useRef,
-	useCallback,
-	useContext,
-} from 'react';
+import {useState, useLayoutEffect, useRef, useCallback, use} from 'react';
 import AnimationContext from '../components/AnimationContext.js';
 
 const defaultAnimationInterval = 100;
@@ -67,7 +61,7 @@ const Spinner = () => {
 export default function useAnimation(options?: Options): AnimationResult {
 	const {interval = defaultAnimationInterval, isActive = true} = options ?? {};
 	const safeInterval = normalizeAnimationInterval(interval);
-	const {subscribe, renderThrottleMs} = useContext(AnimationContext);
+	const {subscribe, renderThrottleMs} = use(AnimationContext);
 	const [resetKey, setResetKey] = useState(0);
 	const [animState, setAnimState] = useState(zeroAnimState);
 	const nextRenderTimeRef = useRef(0);
@@ -136,17 +130,11 @@ export default function useAnimation(options?: Options): AnimationResult {
 		previousOptionsRef.current = {isActive, safeInterval, resetKey};
 	}, [isActive, safeInterval, resetKey]);
 
-	if (shouldReset) {
-		return {...zeroAnimState, reset};
-	}
-
-	return {...animState, reset};
+	return shouldReset ? {...zeroAnimState, reset} : {...animState, reset};
 }
 
 function normalizeAnimationInterval(interval: number): number {
-	if (!Number.isFinite(interval)) {
-		return defaultAnimationInterval;
-	}
-
-	return Math.min(maximumTimerInterval, Math.max(1, interval));
+	return Number.isFinite(interval)
+		? Math.min(maximumTimerInterval, Math.max(1, interval))
+		: defaultAnimationInterval;
 }

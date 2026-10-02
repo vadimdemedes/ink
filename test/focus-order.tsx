@@ -1,15 +1,16 @@
-import React, {act} from 'react';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
+import React from 'react';
 import {Box, Text, render, useFocus, useFocusManager} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
+import {act} from './helpers/act.js';
 
 function Field({id}: {readonly id: string}) {
 	const {isFocused} = useFocus({id});
 	return <Text>{`${id}: ${isFocused ? 'focused' : 'blurred'}`}</Text>;
 }
 
-test('focus navigation keeps registration order after keyed reordering', async t => {
+test('focus navigation keeps registration order after keyed reordering', async (t: TestContext) => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 	let manager!: ReturnType<typeof useFocusManager>;
@@ -35,7 +36,7 @@ test('focus navigation keeps registration order after keyed reordering', async t
 			patchConsole: false,
 		});
 	});
-	t.teardown(async () => {
+	t.after(async () => {
 		await act(async () => {
 			instance.unmount();
 		});
@@ -44,12 +45,12 @@ test('focus navigation keeps registration order after keyed reordering', async t
 	await act(async () => {
 		instance.rerender(<Form order={['c', 'a', 'b']} />);
 	});
-	t.is(stdout.get(), 'c: blurred\na: blurred\nb: blurred');
+	t.assert.strictEqual(stdout.get(), 'c: blurred\na: blurred\nb: blurred');
 
 	await act(async () => {
 		emitReadable(stdin, '\t');
 	});
-	t.is(manager.activeId, 'a');
+	t.assert.strictEqual(manager.activeId, 'a');
 });
 
 async function renderDuplicates(ids: string[]) {
@@ -101,42 +102,45 @@ async function renderDuplicates(ids: string[]) {
 			return press('\t', count);
 		},
 		async shiftTab(count: number) {
-			return press('\u001B[Z', count);
+			return press('\u{1B}[Z', count);
 		},
 	};
 }
 
-test('Tab visits a duplicated focus ID once and reaches the components after it', async t => {
+test('Tab visits a duplicated focus ID once and reaches the components after it', async (t: TestContext) => {
 	const {instance, stdout, tab, shiftTab} = await renderDuplicates([
 		'a',
 		'x',
 		'x',
 		'b',
 	]);
-	t.teardown(async () => {
+	t.after(async () => {
 		await act(async () => {
 			instance.unmount();
 		});
 	});
 
-	t.deepEqual(await tab(5), ['a', 'x', 'b', 'a', 'x']);
-	t.is(stdout.get(), 'a: blurred\nx: focused\nx: focused\nb: blurred');
-	t.deepEqual(await shiftTab(4), ['a', 'b', 'x', 'a']);
+	t.assert.deepStrictEqual(await tab(5), ['a', 'x', 'b', 'a', 'x']);
+	t.assert.strictEqual(
+		stdout.get(),
+		'a: blurred\nx: focused\nx: focused\nb: blurred',
+	);
+	t.assert.deepStrictEqual(await shiftTab(4), ['a', 'b', 'x', 'a']);
 });
 
-test('Tab visits a non-adjacent duplicated focus ID at its first registration', async t => {
+test('Tab visits a non-adjacent duplicated focus ID at its first registration', async (t: TestContext) => {
 	const {instance, tab, shiftTab} = await renderDuplicates([
 		'x',
 		'a',
 		'x',
 		'b',
 	]);
-	t.teardown(async () => {
+	t.after(async () => {
 		await act(async () => {
 			instance.unmount();
 		});
 	});
 
-	t.deepEqual(await tab(4), ['x', 'a', 'b', 'x']);
-	t.deepEqual(await shiftTab(4), ['b', 'a', 'x', 'b']);
+	t.assert.deepStrictEqual(await tab(4), ['x', 'a', 'b', 'x']);
+	t.assert.deepStrictEqual(await shiftTab(4), ['b', 'a', 'x', 'b']);
 });

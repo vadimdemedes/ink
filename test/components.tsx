@@ -1,6 +1,6 @@
 import EventEmitter from 'node:events';
 import process from 'node:process';
-import test from 'ava';
+import test, {type TestContext} from 'node:test';
 import FakeTimers from '@sinonjs/fake-timers';
 import delay from 'delay';
 import chalk from 'chalk';
@@ -28,6 +28,7 @@ import {
 } from './helpers/render-to-string.js';
 import {run} from './helpers/run.js';
 import {renderAsync} from './helpers/test-renderer.js';
+import {act} from './helpers/act.js';
 
 const createRawModeStdin = (): NodeJS.WriteStream => {
 	const stdin = new EventEmitter() as NodeJS.WriteStream;
@@ -41,30 +42,30 @@ const createRawModeStdin = (): NodeJS.WriteStream => {
 	return stdin;
 };
 
-test('text', t => {
+test('text', (t: TestContext) => {
 	const output = renderToString(<Text>Hello World</Text>);
 
-	t.is(output, 'Hello World');
+	t.assert.strictEqual(output, 'Hello World');
 });
 
-test('text with variable', t => {
+test('text with variable', (t: TestContext) => {
 	const output = renderToString(<Text>Count: {1}</Text>);
 
-	t.is(output, 'Count: 1');
+	t.assert.strictEqual(output, 'Count: 1');
 });
 
-test('multiple text nodes', t => {
+test('multiple text nodes', (t: TestContext) => {
 	const output = renderToString(
 		<Text>
-			{'Hello'}
+			Hello
 			{' World'}
 		</Text>,
 	);
 
-	t.is(output, 'Hello World');
+	t.assert.strictEqual(output, 'Hello World');
 });
 
-test('text with component', t => {
+test('text with component', (t: TestContext) => {
 	function World() {
 		return <Text>World</Text>;
 	}
@@ -75,191 +76,194 @@ test('text with component', t => {
 		</Text>,
 	);
 
-	t.is(output, 'Hello World');
+	t.assert.strictEqual(output, 'Hello World');
 });
 
-test('text with fragment', t => {
+test('text with fragment', (t: TestContext) => {
 	const output = renderToString(
 		<Text>
-			Hello <>World</> {/* eslint-disable-line react/jsx-no-useless-fragment */}
+			{/* eslint-disable-next-line @eslint-react/jsx-no-useless-fragment -- The fragment is what this test renders. */}
+			Hello <>World</>{' '}
 		</Text>,
 	);
 
-	t.is(output, 'Hello World');
+	t.assert.strictEqual(output, 'Hello World');
 });
 
-test('wrap text', t => {
+test('wrap text', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={7}>
 			<Text wrap="wrap">Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, 'Hello\nWorld');
+	t.assert.strictEqual(output, 'Hello\nWorld');
 });
 
-test('don’t wrap text if there is enough space', t => {
+test('don’t wrap text if there is enough space', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={20}>
 			<Text wrap="wrap">Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, 'Hello World');
+	t.assert.strictEqual(output, 'Hello World');
 });
 
-test('hard wrap text', t => {
+test('hard wrap text', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={7}>
 			<Text wrap="hard">Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, 'Hello W\norld');
+	t.assert.strictEqual(output, 'Hello W\norld');
 });
 
-test('hard wrap with long word', t => {
+test('hard wrap with long word', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={5}>
 			<Text wrap="hard">aaaaaaaaaa</Text>
 		</Box>,
 	);
 
-	t.is(output, 'aaaaa\naaaaa');
+	t.assert.strictEqual(output, 'aaaaa\naaaaa');
 });
 
-test('don’t hard wrap text if there is enough space', t => {
+test('don’t hard wrap text if there is enough space', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={20}>
 			<Text wrap="hard">Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, 'Hello World');
+	t.assert.strictEqual(output, 'Hello World');
 });
 
-test('truncate text in the end', t => {
+test('truncate text in the end', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={7}>
 			<Text wrap="truncate">Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, 'Hello …');
+	t.assert.strictEqual(output, 'Hello …');
 });
 
-test('truncate text in the middle', t => {
+test('truncate text in the middle', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={7}>
 			<Text wrap="truncate-middle">Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, 'Hel…rld');
+	t.assert.strictEqual(output, 'Hel…rld');
 });
 
-test('truncate text in the beginning', t => {
+test('truncate text in the beginning', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={7}>
 			<Text wrap="truncate-start">Hello World</Text>
 		</Box>,
 	);
 
-	t.is(output, '… World');
+	t.assert.strictEqual(output, '… World');
 });
 
 // See https://github.com/vadimdemedes/ink/issues/633
-test('do not wrap text with BEL-terminated OSC hyperlinks', t => {
+test('do not wrap text with BEL-terminated OSC hyperlinks', (t: TestContext) => {
 	// "Click here" is 10 chars, box is 20 wide - should not wrap
 	const hyperlink =
-		'\u001B]8;;https://example.com\u0007Click here\u001B]8;;\u0007';
+		'\u{1B}]8;;https://example.com\u{7}Click here\u{1B}]8;;\u{7}';
 	const output = renderToString(
 		<Box width={20}>
 			<Text wrap="wrap">{hyperlink}</Text>
 		</Box>,
 	);
 
-	t.is(stripAnsi(output), 'Click here');
+	t.assert.strictEqual(stripAnsi(output), 'Click here');
 });
 
 // See https://github.com/vadimdemedes/ink/issues/633
-test('do not wrap text with ST-terminated OSC hyperlinks', t => {
+test('do not wrap text with ST-terminated OSC hyperlinks', (t: TestContext) => {
 	const hyperlink =
-		'\u001B]8;;https://example.com\u001B\\Click here\u001B]8;;\u001B\\';
+		'\u{1B}]8;;https://example.com\u{1B}\\Click here\u{1B}]8;;\u{1B}\\';
 	const output = renderToString(
 		<Box width={20}>
 			<Text wrap="wrap">{hyperlink}</Text>
 		</Box>,
 	);
 
-	t.is(stripAnsi(output), 'Click here');
+	t.assert.strictEqual(stripAnsi(output), 'Click here');
 });
 
 // See https://github.com/vadimdemedes/ink/issues/633
-test('do not wrap text with non-hyperlink OSC sequences', t => {
+test('do not wrap text with non-hyperlink OSC sequences', (t: TestContext) => {
 	// Title-setting OSC followed by visible text
-	const text = '\u001B]0;My Title\u0007Some text';
+	const text = '\u{1B}]0;My Title\u{7}Some text';
 	const output = renderToString(
 		<Box width={20}>
 			<Text wrap="wrap">{text}</Text>
 		</Box>,
 	);
 
-	t.is(stripAnsi(output), 'Some text');
+	t.assert.strictEqual(stripAnsi(output), 'Some text');
 });
 
 // See https://github.com/vadimdemedes/ink/issues/633
-test('hard-wrap single-word BEL-terminated OSC hyperlink', t => {
+test('hard-wrap single-word BEL-terminated OSC hyperlink', (t: TestContext) => {
 	// "abcdefghij" is 10 chars, box is 5 wide - forces wrapWord codepath
 	const hyperlink =
-		'\u001B]8;;https://example.com\u0007abcdefghij\u001B]8;;\u0007';
+		'\u{1B}]8;;https://example.com\u{7}abcdefghij\u{1B}]8;;\u{7}';
 	const output = renderToString(
 		<Box width={5}>
 			<Text wrap="wrap">{hyperlink}</Text>
 		</Box>,
 	);
 
-	t.is(stripAnsi(output), 'abcde\nfghij');
+	t.assert.strictEqual(stripAnsi(output), 'abcde\nfghij');
 });
 
 // See https://github.com/vadimdemedes/ink/issues/633
-test('hard-wrap single-word ST-terminated OSC hyperlink', t => {
+test('hard-wrap single-word ST-terminated OSC hyperlink', (t: TestContext) => {
 	const hyperlink =
-		'\u001B]8;;https://example.com\u001B\\abcdefghij\u001B]8;;\u001B\\';
+		'\u{1B}]8;;https://example.com\u{1B}\\abcdefghij\u{1B}]8;;\u{1B}\\';
 	const output = renderToString(
 		<Box width={5}>
 			<Text wrap="wrap">{hyperlink}</Text>
 		</Box>,
 	);
 
-	t.is(stripAnsi(output), 'abcde\nfghij');
+	t.assert.strictEqual(stripAnsi(output), 'abcde\nfghij');
 });
 
-test('ignore empty text node', t => {
+test('ignore empty text node', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column">
 			<Box>
 				<Text>Hello World</Text>
 			</Box>
+			{/* eslint-disable-next-line @stylistic/jsx-curly-brace-presence -- An empty string child creates the empty text node under test, while `<Text />` renders nothing. */}
 			<Text>{''}</Text>
 		</Box>,
 	);
 
-	t.is(output, 'Hello World');
+	t.assert.strictEqual(output, 'Hello World');
 });
 
-test('render a single empty text node', t => {
+test('render a single empty text node', (t: TestContext) => {
+	// eslint-disable-next-line @stylistic/jsx-curly-brace-presence -- An empty string child creates the empty text node under test, while `<Text />` renders nothing.
 	const output = renderToString(<Text>{''}</Text>);
-	t.is(output, '');
+	t.assert.strictEqual(output, '');
 });
 
-test('number', t => {
+test('number', (t: TestContext) => {
 	const output = renderToString(<Text>{1}</Text>);
 
-	t.is(output, '1');
+	t.assert.strictEqual(output, '1');
 });
 
-test('fail when text nodes are not within <Text> component', t => {
+test('fail when text nodes are not within <Text> component', (t: TestContext) => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
@@ -281,14 +285,14 @@ test('fail when text nodes are not within <Text> component', t => {
 		</ErrorBoundary>,
 	);
 
-	t.truthy(error);
-	t.is(
+	t.assert.ok(error);
+	t.assert.strictEqual(
 		error?.message,
 		'Text string "Hello" must be rendered inside <Text> component',
 	);
 });
 
-test('fail when text node is not within <Text> component', t => {
+test('fail when text node is not within <Text> component', (t: TestContext) => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
@@ -307,14 +311,14 @@ test('fail when text node is not within <Text> component', t => {
 		</ErrorBoundary>,
 	);
 
-	t.truthy(error);
-	t.is(
+	t.assert.ok(error);
+	t.assert.strictEqual(
 		error?.message,
 		'Text string "Hello World" must be rendered inside <Text> component',
 	);
 });
 
-test('fail when <Box> is inside <Text> component', t => {
+test('fail when <Box> is inside <Text> component', (t: TestContext) => {
 	let error: Error | undefined;
 
 	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
@@ -336,11 +340,14 @@ test('fail when <Box> is inside <Text> component', t => {
 		</ErrorBoundary>,
 	);
 
-	t.truthy(error);
-	t.is((error as any).message, '<Box> can’t be nested inside <Text> component');
+	t.assert.ok(error);
+	t.assert.strictEqual(
+		(error as any).message,
+		'<Box> can’t be nested inside <Text> component',
+	);
 });
 
-test('remeasure text dimensions on text change', t => {
+test('remeasure text dimensions on text change', (t: TestContext) => {
 	const stdout = createStdout();
 
 	const {rerender} = render(
@@ -350,7 +357,7 @@ test('remeasure text dimensions on text change', t => {
 		{stdout, debug: true},
 	);
 
-	t.is((stdout.write as any).lastCall.args[0], 'Hello');
+	t.assert.strictEqual((stdout.write as any).lastCall.args[0], 'Hello');
 
 	rerender(
 		<Box>
@@ -358,21 +365,21 @@ test('remeasure text dimensions on text change', t => {
 		</Box>,
 	);
 
-	t.is((stdout.write as any).lastCall.args[0], 'Hello World');
+	t.assert.strictEqual((stdout.write as any).lastCall.args[0], 'Hello World');
 });
 
-test('fragment', t => {
+test('fragment', (t: TestContext) => {
 	const output = renderToString(
-		// eslint-disable-next-line react/jsx-no-useless-fragment
+		// eslint-disable-next-line @eslint-react/jsx-no-useless-fragment -- The fragment is what this test renders.
 		<>
 			<Text>Hello World</Text>
 		</>,
 	);
 
-	t.is(output, 'Hello World');
+	t.assert.strictEqual(output, 'Hello World');
 });
 
-test('transform children', t => {
+test('transform children', (t: TestContext) => {
 	const output = renderToString(
 		<Transform
 			transform={(string: string, index: number) => `[${index}: ${string}]`}
@@ -387,10 +394,10 @@ test('transform children', t => {
 		</Transform>,
 	);
 
-	t.is(output, '[0: {0: test}]');
+	t.assert.strictEqual(output, '[0: {0: test}]');
 });
 
-test('squash multiple text nodes', t => {
+test('squash multiple text nodes', (t: TestContext) => {
 	const output = renderToString(
 		<Transform
 			transform={(string: string, index: number) => `[${index}: ${string}]`}
@@ -406,10 +413,10 @@ test('squash multiple text nodes', t => {
 		</Transform>,
 	);
 
-	t.is(output, '[0: {0: hello world}]');
+	t.assert.strictEqual(output, '[0: {0: hello world}]');
 });
 
-test('transform with multiple lines', t => {
+test('transform with multiple lines', (t: TestContext) => {
 	const output = renderToString(
 		<Transform
 			transform={(string: string, index: number) => `[${index}: ${string}]`}
@@ -419,10 +426,10 @@ test('transform with multiple lines', t => {
 		</Transform>,
 	);
 
-	t.is(output, '[0: hello world]\n[1: goodbye world]');
+	t.assert.strictEqual(output, '[0: hello world]\n[1: goodbye world]');
 });
 
-test('squash multiple nested text nodes', t => {
+test('squash multiple nested text nodes', (t: TestContext) => {
 	const output = renderToString(
 		<Transform
 			transform={(string: string, index: number) => `[${index}: ${string}]`}
@@ -438,10 +445,10 @@ test('squash multiple nested text nodes', t => {
 		</Transform>,
 	);
 
-	t.is(output, '[0: {0: hello world}]');
+	t.assert.strictEqual(output, '[0: {0: hello world}]');
 });
 
-test('squash empty `<Text>` nodes', t => {
+test('squash empty `<Text>` nodes', (t: TestContext) => {
 	const output = renderToString(
 		<Transform transform={(string: string) => `[${string}]`}>
 			<Text>
@@ -452,20 +459,20 @@ test('squash empty `<Text>` nodes', t => {
 		</Transform>,
 	);
 
-	t.is(output, '');
+	t.assert.strictEqual(output, '');
 });
 
-test('<Transform> with undefined children', t => {
+test('<Transform> with undefined children', (t: TestContext) => {
 	const output = renderToString(<Transform transform={children => children} />);
-	t.is(output, '');
+	t.assert.strictEqual(output, '');
 });
 
-test('<Transform> with null children', t => {
+test('<Transform> with null children', (t: TestContext) => {
 	const output = renderToString(<Transform transform={children => children} />);
-	t.is(output, '');
+	t.assert.strictEqual(output, '');
 });
 
-test('hooks', t => {
+test('hooks', (t: TestContext) => {
 	function WithHooks() {
 		const [value, setValue] = useState('Hello');
 
@@ -473,10 +480,10 @@ test('hooks', t => {
 	}
 
 	const output = renderToString(<WithHooks />);
-	t.is(output, 'Hello');
+	t.assert.strictEqual(output, 'Hello');
 });
 
-test('static output', t => {
+test('static output', (t: TestContext) => {
 	const output = renderToString(
 		<Box>
 			<Static items={['A', 'B', 'C']} style={{paddingBottom: 1}}>
@@ -489,10 +496,10 @@ test('static output', t => {
 		</Box>,
 	);
 
-	t.is(output, 'A\nB\nC\n\n\nX');
+	t.assert.strictEqual(output, 'A\nB\nC\n\n\nX');
 });
 
-test('static padding is not emitted again when there are no new items', t => {
+test('static padding is not emitted again when there are no new items', (t: TestContext) => {
 	const stdout = createStdout();
 	const initialItems = ['A'];
 	function Test({
@@ -513,15 +520,17 @@ test('static padding is not emitted again when there are no new items', t => {
 	}
 
 	const app = render(<Test status="Waiting" />, {stdout, debug: true});
-	t.teardown(app.unmount);
-	t.is(stdout.get(), '\n A\n\nWaiting');
+	t.after(() => {
+		app.unmount();
+	});
+	t.assert.strictEqual(stdout.get(), '\n A\n\nWaiting');
 	app.rerender(<Test status="Ready" />);
-	t.is(stdout.get(), '\n A\n\nReady');
+	t.assert.strictEqual(stdout.get(), '\n A\n\nReady');
 	app.rerender(<Test status="Done" items={['A', 'B']} />);
-	t.is(stdout.get(), '\n A\n\n\n B\n\nDone');
+	t.assert.strictEqual(stdout.get(), '\n A\n\n\n B\n\nDone');
 });
 
-test('skip previous output when rendering new static output', t => {
+test('skip previous output when rendering new static output', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Dynamic({items}: {readonly items: string[]}) {
@@ -535,13 +544,13 @@ test('skip previous output when rendering new static output', t => {
 		debug: true,
 	});
 
-	t.is((stdout.write as any).lastCall.args[0], 'A\n');
+	t.assert.strictEqual((stdout.write as any).lastCall.args[0], 'A\n');
 
 	rerender(<Dynamic items={['A', 'B']} />);
-	t.is((stdout.write as any).lastCall.args[0], 'A\nB\n');
+	t.assert.strictEqual((stdout.write as any).lastCall.args[0], 'A\nB\n');
 });
 
-test('static output stops accumulating after Static unmounts (#904)', t => {
+test('static output stops accumulating after Static unmounts (#904)', (t: TestContext) => {
 	const stdout = createStdout();
 	const items = ['A', 'B'];
 
@@ -581,11 +590,11 @@ test('static output stops accumulating after Static unmounts (#904)', t => {
 	// If staticNode is properly cleared, fullStaticOutput stops growing and
 	// outputs stay the same length. If not, each render appends duplicate
 	// static content, making outputs progressively longer.
-	t.is(outputAfterChurn.length, outputAfterUnmount.length);
-	t.true(outputAfterChurn.includes('Dynamic'));
+	t.assert.strictEqual(outputAfterChurn.length, outputAfterUnmount.length);
+	t.assert.ok(outputAfterChurn.includes('Dynamic'));
 });
 
-test('fullStaticOutput is reset when <Static> unmounts so stale items are not replayed', t => {
+test('fullStaticOutput is reset when <Static> unmounts so stale items are not replayed', (t: TestContext) => {
 	// Unmounting <Static> must clear `fullStaticOutput` so its items stop appearing in subsequent writes.
 	const stdout = createStdout();
 
@@ -614,26 +623,35 @@ test('fullStaticOutput is reset when <Static> unmounts so stale items are not re
 	});
 
 	const afterMount = (stdout.write as any).lastCall.args[0] as string;
-	t.true(
-		afterMount.includes('HISTORY-A') && afterMount.includes('HISTORY-B'),
+	t.assert.ok(
+		afterMount.includes('HISTORY-A'),
+		'Static items must be emitted on first mount',
+	);
+	t.assert.ok(
+		afterMount.includes('HISTORY-B'),
 		'Static items must be emitted on first mount',
 	);
 
 	rerender(<App show={false} dynamicLabel="d2" />);
 
 	const afterUnmount = (stdout.write as any).lastCall.args[0] as string;
-	t.false(
+	t.assert.strictEqual(
 		afterUnmount.includes('HISTORY-A'),
+		false,
 		'fullStaticOutput must NOT replay HISTORY-A after Static unmount',
 	);
-	t.false(
+	t.assert.strictEqual(
 		afterUnmount.includes('HISTORY-B'),
+		false,
 		'fullStaticOutput must NOT replay HISTORY-B after Static unmount',
 	);
-	t.true(afterUnmount.includes('d2'), 'new dynamic output must still render');
+	t.assert.ok(
+		afterUnmount.includes('d2'),
+		'new dynamic output must still render',
+	);
 });
 
-test('unmounting an ancestor of <Static> clears staticNode and does not crash the renderer', t => {
+test('unmounting an ancestor of <Static> clears staticNode and does not crash the renderer', (t: TestContext) => {
 	// When a component that *contains* <Static> is unmounted, the reconciler
 	// removes the ancestor and freeRecursive() frees the static node's Yoga
 	// WASM memory. If staticNode is not cleared, the next render calls
@@ -672,7 +690,7 @@ test('unmounting an ancestor of <Static> clears staticNode and does not crash th
 	});
 
 	const afterMount = (stdout.write as any).lastCall.args[0] as string;
-	t.true(afterMount.includes('HISTORY-X'), 'Static item emitted on mount');
+	t.assert.ok(afterMount.includes('HISTORY-X'), 'Static item emitted on mount');
 
 	// Unmount the Wrapper (ancestor of <Static>), not <Static> directly.
 	// Before the fix this left a dangling staticNode pointing at freed WASM
@@ -680,25 +698,26 @@ test('unmounting an ancestor of <Static> clears staticNode and does not crash th
 	rerender(<App showWrapper={false} label="live-2" />);
 
 	const afterUnmount = (stdout.write as any).lastCall.args[0] as string;
-	t.true(
+	t.assert.ok(
 		afterUnmount.includes('live-2'),
 		'dynamic content renders after unmount',
 	);
-	t.false(
+	t.assert.strictEqual(
 		afterUnmount.includes('HISTORY-X'),
+		false,
 		'stale static output must not replay',
 	);
 
 	// A second rerender confirms the renderer is still functional.
 	rerender(<App showWrapper={false} label="live-3" />);
-	t.is(
+	t.assert.strictEqual(
 		(stdout.write as any).lastCall.args[0],
 		'live-3',
 		'renderer remains functional after indirect Static removal',
 	);
 });
 
-test('removing a <Static> ancestor that is a direct child of the root does not crash', t => {
+test('removing a <Static> ancestor that is a direct child of the root does not crash', (t: TestContext) => {
 	// Exercises the removeChildFromContainer path: the wrapper holding <Static>
 	// is a direct child of the root container (via a top-level fragment), so its
 	// removal fires removeChildFromContainer rather than removeChild.
@@ -731,22 +750,26 @@ test('removing a <Static> ancestor that is a direct child of the root does not c
 	});
 
 	const afterMount = (stdout.write as any).lastCall.args[0] as string;
-	t.true(afterMount.includes('ROOT-HISTORY'), 'Static item emitted on mount');
+	t.assert.ok(
+		afterMount.includes('ROOT-HISTORY'),
+		'Static item emitted on mount',
+	);
 
 	rerender(<App showWrapper={false} label="root-2" />);
 
 	const afterUnmount = (stdout.write as any).lastCall.args[0] as string;
-	t.true(
+	t.assert.ok(
 		afterUnmount.includes('root-2'),
 		'dynamic content renders after unmount',
 	);
-	t.false(
+	t.assert.strictEqual(
 		afterUnmount.includes('ROOT-HISTORY'),
+		false,
 		'stale static output must not replay',
 	);
 });
 
-test('separate Ink instances do not clobber each other’s staticNode', t => {
+test('separate Ink instances do not clobber each other’s staticNode', (t: TestContext) => {
 	// The owning root must be derived from the removal hook’s host parent, not a
 	// module-level global. Rendering <Static> in the second instance moves the
 	// global pointer to the second root; removing <Static>’s ancestor from the
@@ -792,22 +815,29 @@ test('separate Ink instances do not clobber each other’s staticNode', t => {
 	first.rerender(<App show={false} label="first-2" />);
 
 	const firstOut = (stdout1.write as any).lastCall.args[0] as string;
-	t.true(firstOut.includes('first-2'), 'first instance renders new output');
-	t.false(
+	t.assert.ok(
+		firstOut.includes('first-2'),
+		'first instance renders new output',
+	);
+	t.assert.strictEqual(
 		firstOut.includes('first-history'),
+		false,
 		'first instance must not replay stale static output',
 	);
 
 	// The second instance stays functional and independent.
 	second.rerender(<App show={false} label="second-2" />);
 	const secondOut = (stdout2.write as any).lastCall.args[0] as string;
-	t.true(secondOut.includes('second-2'), 'second instance renders new output');
+	t.assert.ok(
+		secondOut.includes('second-2'),
+		'second instance renders new output',
+	);
 
 	first.unmount();
 	second.unmount();
 });
 
-test('updating <Static> in one instance after another instance mounted <Static> sets the dirty flag on the correct root', t => {
+test('updating <Static> in one instance after another instance mounted <Static> sets the dirty flag on the correct root', (t: TestContext) => {
 	// CommitUpdate must derive the owning root from the updated node, not a
 	// module-level global. Rendering <Static> in the second instance used to
 	// move the global pointer; appending to the first instance's <Static> then
@@ -849,18 +879,18 @@ test('updating <Static> in one instance after another instance mounted <Static> 
 	first.rerender(<App items={['A', 'B']} label="first" />);
 
 	const firstOut = (stdout1.write as any).lastCall.args[0] as string;
-	t.true(firstOut.includes('B'), 'appended static item must reach stdout');
+	t.assert.ok(firstOut.includes('B'), 'appended static item must reach stdout');
 
 	// The second instance stays functional and independent.
 	second.rerender(<App items={['X', 'Y']} label="second" />);
 	const secondOut = (stdout2.write as any).lastCall.args[0] as string;
-	t.true(secondOut.includes('Y'), 'second instance static update works');
+	t.assert.ok(secondOut.includes('Y'), 'second instance static update works');
 
 	first.unmount();
 	second.unmount();
 });
 
-test('unmounting a <Static> ancestor in screen-reader mode does not replay stale output', t => {
+test('unmounting a <Static> ancestor in screen-reader mode does not replay stale output', (t: TestContext) => {
 	// The screen-reader render path reads node.staticNode without a yogaNode
 	// guard, so a dangling staticNode would replay the stale static subtree.
 	const stdout = createStdout();
@@ -895,19 +925,19 @@ test('unmounting a <Static> ancestor in screen-reader mode does not replay stale
 	rerender(<App showWrapper={false} label="sr-2" />);
 
 	const afterUnmount = (stdout.write as any).lastCall.args[0] as string;
-	t.true(
+	t.assert.ok(
 		afterUnmount.includes('sr-2'),
 		'dynamic content renders after unmount',
 	);
-	t.false(
+	t.assert.strictEqual(
 		afterUnmount.includes('SR-HISTORY'),
+		false,
 		'stale static output must not replay in screen-reader mode',
 	);
 });
 
-test('unmounting a <Static> ancestor in concurrent mode does not crash', async t => {
+test('unmounting a <Static> ancestor in concurrent mode does not crash', async (t: TestContext) => {
 	const stdout = createStdout();
-	const {act} = await import('react');
 
 	function App({
 		showWrapper,
@@ -949,19 +979,20 @@ test('unmounting a <Static> ancestor in concurrent mode does not crash', async t
 	await delay(50);
 
 	const afterUnmount = (stdout.write as any).lastCall.args[0] as string;
-	t.true(
+	t.assert.ok(
 		afterUnmount.includes('cc-2'),
 		'dynamic content renders after unmount',
 	);
-	t.false(
+	t.assert.strictEqual(
 		afterUnmount.includes('CC-HISTORY'),
+		false,
 		'stale static output must not replay',
 	);
 
 	instance.unmount();
 });
 
-test('remounting <Static> via key change emits the new items (nested under <Box>)', t => {
+test('remounting <Static> via key change emits the new items (nested under <Box>)', (t: TestContext) => {
 	/*
 	Exercises the `removeChild` path (Static nested in a <Box>). On key-driven remount, `createInstance` registers the new node before the old one is removed; the removal must not clobber the fresh pointer.
 	*/
@@ -982,25 +1013,29 @@ test('remounting <Static> via key change emits the new items (nested under <Box>
 	const {rerender} = render(<App session={1} />, {stdout, debug: true});
 
 	const afterFirstMount = (stdout.write as any).lastCall.args[0] as string;
-	t.true(
-		afterFirstMount.includes('old-A') && afterFirstMount.includes('old-B'),
+	t.assert.ok(
+		afterFirstMount.includes('old-A'),
+		'first mount must emit its Static items',
+	);
+	t.assert.ok(
+		afterFirstMount.includes('old-B'),
 		'first mount must emit its Static items',
 	);
 
 	rerender(<App session={2} />);
 
 	const afterRemount = (stdout.write as any).lastCall.args[0] as string;
-	t.true(
+	t.assert.ok(
 		afterRemount.includes('new-C'),
 		'remounted Static must emit its first new item ("new-C") to stdout',
 	);
-	t.true(
+	t.assert.ok(
 		afterRemount.includes('new-D'),
 		'remounted Static must emit its second new item ("new-D") to stdout',
 	);
 });
 
-test('remounting <Static> via key change emits the new items (root-level — removeChildFromContainer)', t => {
+test('remounting <Static> via key change emits the new items (root-level — removeChildFromContainer)', (t: TestContext) => {
 	// Same as the nested case above but exercises the `removeChildFromContainer` path (Static is a direct child of the root).
 	const stdout = createStdout();
 
@@ -1016,25 +1051,29 @@ test('remounting <Static> via key change emits the new items (root-level — rem
 	const {rerender} = render(<App session={1} />, {stdout, debug: true});
 
 	const afterFirstMount = (stdout.write as any).lastCall.args[0] as string;
-	t.true(
-		afterFirstMount.includes('old-A') && afterFirstMount.includes('old-B'),
+	t.assert.ok(
+		afterFirstMount.includes('old-A'),
+		'first mount must emit its Static items',
+	);
+	t.assert.ok(
+		afterFirstMount.includes('old-B'),
 		'first mount must emit its Static items',
 	);
 
 	rerender(<App session={2} />);
 
 	const afterRemount = (stdout.write as any).lastCall.args[0] as string;
-	t.true(
+	t.assert.ok(
 		afterRemount.includes('new-C'),
 		'remounted Static must emit "new-C" via removeChildFromContainer path',
 	);
-	t.true(
+	t.assert.ok(
 		afterRemount.includes('new-D'),
 		'remounted Static must emit "new-D" via removeChildFromContainer path',
 	);
 });
 
-test('render only new items in static output on final render', t => {
+test('render only new items in static output on final render', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Dynamic({items}: {readonly items: string[]}) {
@@ -1048,10 +1087,10 @@ test('render only new items in static output on final render', t => {
 		debug: true,
 	});
 
-	t.is((stdout.write as any).lastCall.args[0], '');
+	t.assert.strictEqual((stdout.write as any).lastCall.args[0], '');
 
 	rerender(<Dynamic items={['A']} />);
-	t.is((stdout.write as any).lastCall.args[0], 'A\n');
+	t.assert.strictEqual((stdout.write as any).lastCall.args[0], 'A\n');
 
 	rerender(<Dynamic items={['A', 'B']} />);
 	unmount();
@@ -1060,19 +1099,19 @@ test('render only new items in static output on final render', t => {
 	// With isTTY=true, cli-cursor writes a show-cursor sequence on unmount.
 	const allWrites = stdout.getWrites();
 	const lastContentWrite = allWrites.findLast(
-		w => w.length > 0 && !w.startsWith('\u001B[?25'),
+		w => w.length > 0 && !w.startsWith('\u{1B}[?25'),
 	);
-	t.is(lastContentWrite, 'A\nB\n');
+	t.assert.strictEqual(lastContentWrite, 'A\nB\n');
 });
 
 // See https://github.com/chalk/wrap-ansi/issues/27
-test('ensure wrap-ansi doesn’t trim leading whitespace', t => {
+test('ensure wrap-ansi doesn’t trim leading whitespace', (t: TestContext) => {
 	const output = renderToString(<Text color="red">{' ERROR '}</Text>);
 
-	t.is(output, chalk.red(' ERROR '));
+	t.assert.strictEqual(output, chalk.red(' ERROR '));
 });
 
-test('replace child node with text', t => {
+test('replace child node with text', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Dynamic({replace}: {readonly replace?: boolean}) {
@@ -1084,14 +1123,17 @@ test('replace child node with text', t => {
 		debug: true,
 	});
 
-	t.is((stdout.write as any).lastCall.args[0], chalk.green('test'));
+	t.assert.strictEqual(
+		(stdout.write as any).lastCall.args[0],
+		chalk.green('test'),
+	);
 
 	rerender(<Dynamic replace />);
-	t.is((stdout.write as any).lastCall.args[0], 'x');
+	t.assert.strictEqual((stdout.write as any).lastCall.args[0], 'x');
 });
 
 // See https://github.com/vadimdemedes/ink/issues/145
-test('disable raw mode when all input components are unmounted', async t => {
+test('disable raw mode when all input components are unmounted', async (t: TestContext) => {
 	const stdout = createStdout();
 
 	const stdin = createRawModeStdin();
@@ -1102,7 +1144,11 @@ test('disable raw mode when all input components are unmounted', async t => {
 		debug: true,
 	};
 
-	function Input({setRawMode}: {readonly setRawMode: (mode: boolean) => void}) {
+	function Input({
+		setRawMode,
+	}: {
+		readonly setRawMode: (isEnabled: boolean) => void;
+	}) {
 		useEffect(() => {
 			setRawMode(true);
 
@@ -1136,34 +1182,34 @@ test('disable raw mode when all input components are unmounted', async t => {
 		options,
 	);
 
-	t.true(stdin.setRawMode.calledOnce);
-	t.true(stdin.ref.calledOnce);
-	t.deepEqual(stdin.setRawMode.firstCall.args, [true]);
-	t.is(stdin.listenerCount('readable'), 1);
+	t.assert.strictEqual(stdin.setRawMode.calledOnce, true);
+	t.assert.strictEqual(stdin.ref.calledOnce, true);
+	t.assert.deepStrictEqual(stdin.setRawMode.firstCall.args, [true]);
+	t.assert.strictEqual(stdin.listenerCount('readable'), 1);
 
 	rerender(<Test renderFirstInput />);
 
-	t.true(stdin.setRawMode.calledOnce);
-	t.true(stdin.ref.calledOnce);
-	t.true(stdin.unref.notCalled);
-	t.is(stdin.listenerCount('readable'), 1);
+	t.assert.strictEqual(stdin.setRawMode.calledOnce, true);
+	t.assert.strictEqual(stdin.ref.calledOnce, true);
+	t.assert.strictEqual(stdin.unref.notCalled, true);
+	t.assert.strictEqual(stdin.listenerCount('readable'), 1);
 
 	rerender(<Test />);
-	t.true(stdin.setRawMode.calledOnce);
-	t.true(stdin.unref.notCalled);
-	t.is(stdin.listenerCount('readable'), 0);
+	t.assert.strictEqual(stdin.setRawMode.calledOnce, true);
+	t.assert.strictEqual(stdin.unref.notCalled, true);
+	t.assert.strictEqual(stdin.listenerCount('readable'), 0);
 
 	await new Promise(resolve => {
 		queueMicrotask(resolve);
 	});
 
-	t.true(stdin.setRawMode.calledTwice);
-	t.true(stdin.ref.calledOnce);
-	t.true(stdin.unref.calledOnce);
-	t.deepEqual(stdin.setRawMode.lastCall.args, [false]);
+	t.assert.strictEqual(stdin.setRawMode.calledTwice, true);
+	t.assert.strictEqual(stdin.ref.calledOnce, true);
+	t.assert.strictEqual(stdin.unref.calledOnce, true);
+	t.assert.deepStrictEqual(stdin.setRawMode.lastCall.args, [false]);
 });
 
-test('do not disable raw mode when swapping components that use useInput', async t => {
+test('do not disable raw mode when swapping components that use useInput', async (t: TestContext) => {
 	const stdout = createStdout();
 
 	const stdin = createRawModeStdin();
@@ -1190,24 +1236,24 @@ test('do not disable raw mode when swapping components that use useInput', async
 
 	const {rerender} = render(<Test step={1} />, options);
 
-	t.true(stdin.setRawMode.calledOnce);
-	t.true(stdin.ref.calledOnce);
-	t.deepEqual(stdin.setRawMode.firstCall.args, [true]);
-	t.is(stdin.listenerCount('readable'), 1);
+	t.assert.strictEqual(stdin.setRawMode.calledOnce, true);
+	t.assert.strictEqual(stdin.ref.calledOnce, true);
+	t.assert.deepStrictEqual(stdin.setRawMode.firstCall.args, [true]);
+	t.assert.strictEqual(stdin.listenerCount('readable'), 1);
 
 	rerender(<Test step={2} />);
-	t.is(stdin.listenerCount('readable'), 1);
+	t.assert.strictEqual(stdin.listenerCount('readable'), 1);
 
 	await new Promise(resolve => {
 		queueMicrotask(resolve);
 	});
 
-	t.true(stdin.unref.notCalled);
-	t.deepEqual(stdin.setRawMode.lastCall.args, [true]);
-	t.is(stdin.listenerCount('readable'), 1);
+	t.assert.strictEqual(stdin.unref.notCalled, true);
+	t.assert.deepStrictEqual(stdin.setRawMode.lastCall.args, [true]);
+	t.assert.strictEqual(stdin.listenerCount('readable'), 1);
 });
 
-test('clear pending input parser state when swapping components that use useInput', async t => {
+test('clear pending input parser state when swapping components that use useInput', async (t: TestContext) => {
 	const clock = FakeTimers.install({
 		toFake: ['setTimeout', 'clearTimeout'],
 	});
@@ -1244,7 +1290,7 @@ test('clear pending input parser state when swapping components that use useInpu
 
 		const {rerender} = render(<Test step={1} />, options);
 
-		emitReadable(stdin, '\u001B[');
+		emitReadable(stdin, '\u{1B}[');
 		rerender(<Test step={2} />);
 
 		await new Promise(resolve => {
@@ -1253,13 +1299,13 @@ test('clear pending input parser state when swapping components that use useInpu
 
 		await clock.tickAsync(20);
 
-		t.deepEqual(receivedInputs, []);
+		t.assert.deepStrictEqual(receivedInputs, []);
 	} finally {
 		clock.uninstall();
 	}
 });
 
-test('re-ref stdin when input is used after previous unmount', t => {
+test('re-ref stdin when input is used after previous unmount', (t: TestContext) => {
 	const stdin = createRawModeStdin();
 
 	const options = {
@@ -1268,7 +1314,11 @@ test('re-ref stdin when input is used after previous unmount', t => {
 		debug: true,
 	};
 
-	function Input({setRawMode}: {readonly setRawMode: (mode: boolean) => void}) {
+	function Input({
+		setRawMode,
+	}: {
+		readonly setRawMode: (isEnabled: boolean) => void;
+	}) {
 		useEffect(() => {
 			setRawMode(true);
 
@@ -1295,19 +1345,19 @@ test('re-ref stdin when input is used after previous unmount', t => {
 	// First render
 	const {unmount} = render(<Test onInput={onFirstMountInput} />, options);
 
-	t.true(stdin.ref.calledOnce);
-	t.true(stdin.setRawMode.calledOnce);
-	t.deepEqual(stdin.setRawMode.firstCall.args, [true]);
+	t.assert.strictEqual(stdin.ref.calledOnce, true);
+	t.assert.strictEqual(stdin.setRawMode.calledOnce, true);
+	t.assert.deepStrictEqual(stdin.setRawMode.firstCall.args, [true]);
 	emitReadable(stdin, 'a');
-	t.is(onFirstMountInput.callCount, 1);
-	t.deepEqual(onFirstMountInput.firstCall.args, ['a']);
+	t.assert.strictEqual(onFirstMountInput.callCount, 1);
+	t.assert.deepStrictEqual(onFirstMountInput.firstCall.args, ['a']);
 
 	// Unmount first instance
 	unmount();
 
-	t.true(stdin.unref.calledOnce);
-	t.true(stdin.setRawMode.calledTwice);
-	t.deepEqual(stdin.setRawMode.lastCall.args, [false]);
+	t.assert.strictEqual(stdin.unref.calledOnce, true);
+	t.assert.strictEqual(stdin.setRawMode.calledTwice, true);
+	t.assert.deepStrictEqual(stdin.setRawMode.lastCall.args, [false]);
 
 	// Second render with new Ink instance reusing the same stdin
 	const {unmount: unmount2} = render(
@@ -1315,23 +1365,23 @@ test('re-ref stdin when input is used after previous unmount', t => {
 		options,
 	);
 
-	t.true(stdin.ref.calledTwice);
-	t.true(stdin.setRawMode.calledThrice);
-	t.deepEqual(stdin.setRawMode.lastCall.args, [true]);
+	t.assert.strictEqual(stdin.ref.calledTwice, true);
+	t.assert.strictEqual(stdin.setRawMode.calledThrice, true);
+	t.assert.deepStrictEqual(stdin.setRawMode.lastCall.args, [true]);
 	emitReadable(stdin, 'b');
-	t.is(onSecondMountInput.callCount, 1);
-	t.deepEqual(onSecondMountInput.firstCall.args, ['b']);
-	t.is(onFirstMountInput.callCount, 1);
+	t.assert.strictEqual(onSecondMountInput.callCount, 1);
+	t.assert.deepStrictEqual(onSecondMountInput.firstCall.args, ['b']);
+	t.assert.strictEqual(onFirstMountInput.callCount, 1);
 
 	// Unmount second instance
 	unmount2();
 
-	t.true(stdin.unref.calledTwice);
-	t.is(stdin.setRawMode.callCount, 4);
-	t.deepEqual(stdin.setRawMode.lastCall.args, [false]);
+	t.assert.strictEqual(stdin.unref.calledTwice, true);
+	t.assert.strictEqual(stdin.setRawMode.callCount, 4);
+	t.assert.deepStrictEqual(stdin.setRawMode.lastCall.args, [false]);
 });
 
-test('setRawMode() should throw if raw mode is not supported', t => {
+test('setRawMode() should throw if raw mode is not supported', (t: TestContext) => {
 	const stdout = createStdout();
 
 	const stdin = new EventEmitter() as NodeJS.ReadStream;
@@ -1348,7 +1398,11 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 		debug: true,
 	};
 
-	function Input({setRawMode}: {readonly setRawMode: (mode: boolean) => void}) {
+	function Input({
+		setRawMode,
+	}: {
+		readonly setRawMode: (isEnabled: boolean) => void;
+	}) {
 		useEffect(() => {
 			try {
 				setRawMode(true);
@@ -1376,12 +1430,12 @@ test('setRawMode() should throw if raw mode is not supported', t => {
 	const {unmount} = render(<Test />, options);
 	unmount();
 
-	t.is(didCatchInMount.callCount, 1);
-	t.is(didCatchInUnmount.callCount, 1);
-	t.false(stdin.setRawMode.called);
+	t.assert.strictEqual(didCatchInMount.callCount, 1);
+	t.assert.strictEqual(didCatchInUnmount.callCount, 1);
+	t.assert.strictEqual(stdin.setRawMode.called, false);
 });
 
-test('render different component based on whether stdin is a TTY or not', t => {
+test('render different component based on whether stdin is a TTY or not', (t: TestContext) => {
 	const stdout = createStdout();
 
 	const stdin = new EventEmitter() as NodeJS.WriteStream;
@@ -1395,7 +1449,11 @@ test('render different component based on whether stdin is a TTY or not', t => {
 		debug: true,
 	};
 
-	function Input({setRawMode}: {readonly setRawMode: (mode: boolean) => void}) {
+	function Input({
+		setRawMode,
+	}: {
+		readonly setRawMode: (isEnabled: boolean) => void;
+	}) {
 		useEffect(() => {
 			setRawMode(true);
 
@@ -1433,44 +1491,44 @@ test('render different component based on whether stdin is a TTY or not', t => {
 		options,
 	);
 
-	t.false(stdin.setRawMode.called);
+	t.assert.strictEqual(stdin.setRawMode.called, false);
 
 	rerender(<Test renderFirstInput />);
 
-	t.false(stdin.setRawMode.called);
+	t.assert.strictEqual(stdin.setRawMode.called, false);
 
 	rerender(<Test />);
 
-	t.false(stdin.setRawMode.called);
+	t.assert.strictEqual(stdin.setRawMode.called, false);
 });
 
-test('render only last frame when run in CI', async t => {
+test('render only last frame when run in CI', async (t: TestContext) => {
 	const output = await run('ci', {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		env: {CI: 'true'},
 		columns: 0,
 	});
 
-	for (const num of [0, 1, 2, 3, 4]) {
-		t.false(output.includes(`Counter: ${num}`));
+	for (const count of [0, 1, 2, 3, 4]) {
+		t.assert.strictEqual(output.includes(`Counter: ${count}`), false);
 	}
 
-	t.true(output.includes('Counter: 5'));
+	t.assert.ok(output.includes('Counter: 5'));
 });
 
-test('render all frames if CI environment variable equals false', async t => {
+test('render all frames if CI environment variable equals false', async (t: TestContext) => {
 	const output = await run('ci', {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		env: {CI: 'false'},
 		columns: 0,
 	});
 
-	for (const num of [0, 1, 2, 3, 4, 5]) {
-		t.true(output.includes(`Counter: ${num}`));
+	for (const count of [0, 1, 2, 3, 4, 5]) {
+		t.assert.ok(output.includes(`Counter: ${count}`));
 	}
 });
 
-test('debug mode in CI does not replay final frame during unmount teardown', async t => {
+test('debug mode in CI does not replay final frame during unmount teardown', async (t: TestContext) => {
 	const output = await run('ci-debug', {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		env: {CI: 'true'},
@@ -1480,10 +1538,10 @@ test('debug mode in CI does not replay final frame during unmount teardown', asy
 	const plainOutput = stripAnsi(output).replaceAll('\r', '');
 	const helloCount = plainOutput.match(/Hello/g)?.length ?? 0;
 
-	t.is(helloCount, 2);
+	t.assert.strictEqual(helloCount, 2);
 });
 
-test('debug mode in CI keeps final newline separation after waitUntilExit', async t => {
+test('debug mode in CI keeps final newline separation after waitUntilExit', async (t: TestContext) => {
 	const output = await run('ci-debug-after-exit', {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		env: {CI: 'true'},
@@ -1491,25 +1549,27 @@ test('debug mode in CI keeps final newline separation after waitUntilExit', asyn
 	});
 
 	const plainOutput = stripAnsi(output).replaceAll('\r', '');
-	t.is(plainOutput, 'HelloHello\nDONE');
+	t.assert.strictEqual(plainOutput, 'HelloHello\nDONE');
 });
 
-test('render only last frame when stdout is not a TTY', async t => {
+test('render only last frame when stdout is not a TTY', async (t: TestContext) => {
 	const stdout = createStdout(100, false);
 
 	function Counter() {
 		const [count, setCount] = useState(0);
 
 		React.useEffect(() => {
-			if (count < 3) {
-				const timer = setTimeout(() => {
-					setCount(c => c + 1);
-				}, 10);
-
-				return () => {
-					clearTimeout(timer);
-				};
+			if (!(count < 3)) {
+				return;
 			}
+
+			const timer = setTimeout(() => {
+				setCount(c => c + 1);
+			}, 10);
+
+			return () => {
+				clearTimeout(timer);
+			};
 		}, [count]);
 
 		return <Text>Count: {count}</Text>;
@@ -1532,8 +1592,9 @@ test('render only last frame when stdout is not a TTY', async t => {
 	// Verify no intermediate frames were written
 	const contentWrites = allWrites.map(w => stripAnsi(w));
 	for (const intermediate of ['Count: 0', 'Count: 1', 'Count: 2']) {
-		t.false(
+		t.assert.strictEqual(
 			contentWrites.some(w => w.includes(intermediate)),
+			false,
 			`Intermediate frame "${intermediate}" should not be written in non-interactive mode`,
 		);
 	}
@@ -1542,29 +1603,31 @@ test('render only last frame when stdout is not a TTY', async t => {
 	const hasEraseSequence = allWrites.some(w =>
 		w.includes(ansiEscapes.eraseLines(1)),
 	);
-	t.false(hasEraseSequence);
+	t.assert.strictEqual(hasEraseSequence, false);
 
 	// Verify the final frame is written
 	const lastWrite = allWrites.findLast(w => w.length > 0) ?? '';
-	t.true(lastWrite.includes('Count: 3'));
+	t.assert.ok(lastWrite.includes('Count: 3'));
 });
 
-test('render all frames when interactive is explicitly true', async t => {
+test('render all frames when interactive is explicitly true', async (t: TestContext) => {
 	const stdout = createStdout(100, false);
 
 	function Counter() {
 		const [count, setCount] = useState(0);
 
 		React.useEffect(() => {
-			if (count < 2) {
-				const timer = setTimeout(() => {
-					setCount(c => c + 1);
-				}, 50);
-
-				return () => {
-					clearTimeout(timer);
-				};
+			if (!(count < 2)) {
+				return;
 			}
+
+			const timer = setTimeout(() => {
+				setCount(c => c + 1);
+			}, 50);
+
+			return () => {
+				clearTimeout(timer);
+			};
 		}, [count]);
 
 		return <Text>Count: {count}</Text>;
@@ -1584,29 +1647,31 @@ test('render all frames when interactive is explicitly true', async t => {
 	await waitUntilExit();
 
 	const contentWrites = stdout.getWrites().filter(w => w.length > 0);
-	t.true(contentWrites.length > 1);
+	t.assert.ok(contentWrites.length > 1);
 	const joined = contentWrites.join('');
-	t.true(joined.includes('Count: 0'));
-	t.true(joined.includes('Count: 1'));
-	t.true(joined.includes('Count: 2'));
+	t.assert.ok(joined.includes('Count: 0'));
+	t.assert.ok(joined.includes('Count: 1'));
+	t.assert.ok(joined.includes('Count: 2'));
 });
 
-test('interactive option overrides TTY detection', async t => {
+test('interactive option overrides TTY detection', async (t: TestContext) => {
 	const stdout = createStdout(100, true);
 
 	function Counter() {
 		const [count, setCount] = useState(0);
 
 		React.useEffect(() => {
-			if (count < 3) {
-				const timer = setTimeout(() => {
-					setCount(c => c + 1);
-				}, 10);
-
-				return () => {
-					clearTimeout(timer);
-				};
+			if (!(count < 3)) {
+				return;
 			}
+
+			const timer = setTimeout(() => {
+				setCount(c => c + 1);
+			}, 10);
+
+			return () => {
+				clearTimeout(timer);
+			};
 		}, [count]);
 
 		return <Text>Count: {count}</Text>;
@@ -1630,8 +1695,9 @@ test('interactive option overrides TTY detection', async t => {
 	// Verify no intermediate frames were written
 	const contentWrites = allWrites.map(w => stripAnsi(w));
 	for (const intermediate of ['Count: 0', 'Count: 1', 'Count: 2']) {
-		t.false(
+		t.assert.strictEqual(
 			contentWrites.some(w => w.includes(intermediate)),
+			false,
 			`Intermediate frame "${intermediate}" should not be written when interactive=false overrides TTY`,
 		);
 	}
@@ -1640,14 +1706,14 @@ test('interactive option overrides TTY detection', async t => {
 	const hasEraseSequence = allWrites.some(w =>
 		w.includes(ansiEscapes.eraseLines(1)),
 	);
-	t.false(hasEraseSequence);
+	t.assert.strictEqual(hasEraseSequence, false);
 
 	// Verify only the final frame is written
 	const lastWrite = allWrites.findLast(w => w.length > 0) ?? '';
-	t.true(lastWrite.includes('Count: 3'));
+	t.assert.ok(lastWrite.includes('Count: 3'));
 });
 
-test('alternate screen - enters on mount and exits on unmount', async t => {
+test('alternate screen - enters on mount and exits on unmount', async (t: TestContext) => {
 	const stdout = createStdout(100, true);
 
 	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
@@ -1668,268 +1734,283 @@ test('alternate screen - enters on mount and exits on unmount', async t => {
 		w.includes(ansiEscapes.exitAlternativeScreen),
 	);
 
-	t.not(enterIndex, -1, 'Should write enterAlternativeScreen on mount');
-	t.not(exitIndex, -1, 'Should write exitAlternativeScreen on unmount');
-	t.true(
+	t.assert.notStrictEqual(
+		enterIndex,
+		-1,
+		'Should write enterAlternativeScreen on mount',
+	);
+	t.assert.notStrictEqual(
+		exitIndex,
+		-1,
+		'Should write exitAlternativeScreen on unmount',
+	);
+	t.assert.ok(
 		enterIndex < exitIndex,
 		'enterAlternativeScreen must come before exitAlternativeScreen',
 	);
-	t.is(enterIndex, 0, 'enterAlternativeScreen should be the first write');
+	t.assert.strictEqual(
+		enterIndex,
+		0,
+		'enterAlternativeScreen should be the first write',
+	);
 });
 
-test.serial(
-	'primary screen - cleanup console output follows the native console during unmount',
-	async t => {
-		const stdout = createStdout(100, true);
-		const processStdoutWriteStub = stub(process.stdout, 'write').callsFake(
-			(
-				_chunk: string | Uint8Array,
-				encoding?: BufferEncoding | ((error?: Error) => void),
-				callback?: (error?: Error) => void,
-			) => {
-				if (typeof encoding === 'function') {
-					encoding();
-				}
+test('primary screen - cleanup console output follows the native console during unmount', async (t: TestContext) => {
+	const stdout = createStdout(100, true);
+	const processStdoutWriteStub = stub(process.stdout, 'write').callsFake(
+		(
+			_chunk: string | Uint8Array,
+			encoding?: BufferEncoding | ((error?: Error) => void),
+			callback?: (error?: Error) => void,
+		) => {
+			if (typeof encoding === 'function') {
+				encoding();
+			}
 
-				if (typeof callback === 'function') {
-					callback();
-				}
+			if (typeof callback === 'function') {
+				callback();
+			}
 
-				return true;
+			return true;
+		},
+	);
+	t.after(() => {
+		processStdoutWriteStub.restore();
+	});
+
+	function Test() {
+		useEffect(
+			() => () => {
+				console.log('primary cleanup');
 			},
+			[],
 		);
-		t.teardown(() => {
-			processStdoutWriteStub.restore();
-		});
 
-		function Test() {
-			useEffect(() => {
-				return () => {
-					console.log('primary cleanup');
-				};
-			}, []);
+		return <Text>Hello</Text>;
+	}
 
-			return <Text>Hello</Text>;
-		}
+	const {unmount, waitUntilExit} = render(<Test />, {
+		stdout,
+		interactive: true,
+	});
 
-		const {unmount, waitUntilExit} = render(<Test />, {
-			stdout,
-			interactive: true,
-		});
+	unmount();
+	await waitUntilExit();
 
-		unmount();
-		await waitUntilExit();
+	const output = stdout.getWrites().join('');
+	const hasNativeConsoleLog = processStdoutWriteStub
+		.getCalls()
+		.some(call => String(call.args[0]).includes('primary cleanup'));
 
-		const output = stdout.getWrites().join('');
-		const nativeConsoleLog = processStdoutWriteStub
-			.getCalls()
-			.some(call => String(call.args[0]).includes('primary cleanup'));
+	t.assert.strictEqual(
+		output.includes('primary cleanup'),
+		false,
+		'Should keep cleanup console output out of Ink-managed stdout writes',
+	);
+	t.assert.ok(
+		hasNativeConsoleLog,
+		'Should restore the native console before React cleanup runs',
+	);
+});
 
-		t.false(
-			output.includes('primary cleanup'),
-			'Should keep cleanup console output out of Ink-managed stdout writes',
+test('alternate screen - does not replay exit(Error) output on the primary screen during unmount', async (t: TestContext) => {
+	const stdout = createStdout(100, true);
+
+	function Test() {
+		const {exit} = useApp();
+
+		useEffect(() => {
+			exit(new Error('Done'));
+		}, [exit]);
+
+		return <Text>Done</Text>;
+	}
+
+	const {waitUntilExit} = render(<Test />, {
+		stdout,
+		alternateScreen: true,
+		interactive: true,
+	});
+
+	await t.assert.rejects(waitUntilExit(), Error);
+
+	const allWrites = stdout.getWrites();
+	const exitIndex = allWrites.findLastIndex(write =>
+		write.includes(ansiEscapes.exitAlternativeScreen),
+	);
+	const didReplayErrorOutput = allWrites.slice(exitIndex + 1).some(write => {
+		const plainWrite = stripAnsi(write);
+		return (
+			plainWrite.includes('Error: Done') || plainWrite.includes('Done\n    at')
 		);
-		t.true(
-			nativeConsoleLog,
-			'Should restore the native console before React cleanup runs',
-		);
-	},
-);
+	});
 
-test.serial(
-	'alternate screen - does not replay exit(Error) output on the primary screen during unmount',
-	async t => {
-		const stdout = createStdout(100, true);
+	t.assert.notStrictEqual(
+		exitIndex,
+		-1,
+		'Should exit the alternate screen on unmount',
+	);
+	t.assert.strictEqual(
+		didReplayErrorOutput,
+		false,
+		'Should not replay alternate-screen diagnostics onto the primary screen',
+	);
+});
 
-		function Test() {
-			const {exit} = useApp();
+test('alternate screen - does not replay teardown output on the primary screen during unmount', async (t: TestContext) => {
+	const stdout = createStdout(100, true);
 
-			useEffect(() => {
-				exit(new Error('Done'));
-			}, [exit]);
+	function Test() {
+		const {exit} = useApp();
 
-			return <Text>Done</Text>;
-		}
+		useEffect(() => {
+			exit(new Error('Done'));
+		}, [exit]);
 
-		const {waitUntilExit} = render(<Test />, {
-			stdout,
-			alternateScreen: true,
-			interactive: true,
-		});
+		return <Text>normal ERROR banner</Text>;
+	}
 
-		await t.throwsAsync(waitUntilExit());
+	const {waitUntilExit} = render(<Test />, {
+		stdout,
+		alternateScreen: true,
+		interactive: true,
+	});
 
-		const allWrites = stdout.getWrites();
-		const exitIndex = allWrites.findLastIndex(write =>
-			write.includes(ansiEscapes.exitAlternativeScreen),
-		);
-		const replayedErrorOutput = allWrites.slice(exitIndex + 1).some(write => {
-			const plainWrite = stripAnsi(write);
-			return (
-				plainWrite.includes('Error: Done') ||
-				plainWrite.includes('Done\n    at')
-			);
-		});
+	await t.assert.rejects(waitUntilExit(), Error);
 
-		t.not(exitIndex, -1, 'Should exit the alternate screen on unmount');
-		t.false(
-			replayedErrorOutput,
-			'Should not replay alternate-screen diagnostics onto the primary screen',
-		);
-	},
-);
+	const allWrites = stdout.getWrites();
+	const exitIndex = allWrites.findLastIndex(write =>
+		write.includes(ansiEscapes.exitAlternativeScreen),
+	);
+	const replayedOutput = stripAnsi(allWrites.slice(exitIndex + 1).join(''));
 
-test.serial(
-	'alternate screen - does not replay teardown output on the primary screen during unmount',
-	async t => {
-		const stdout = createStdout(100, true);
+	t.assert.notStrictEqual(
+		exitIndex,
+		-1,
+		'Should exit the alternate screen on unmount',
+	);
+	t.assert.strictEqual(
+		replayedOutput.includes('normal ERROR banner') ||
+			replayedOutput.includes('Error: Done') ||
+			replayedOutput.includes('Done\n    at'),
+		false,
+		'Should not replay alternate-screen teardown output onto the primary screen',
+	);
+});
 
-		function Test() {
-			const {exit} = useApp();
+test('alternate screen - cleanup console output follows the native console during unmount', async (t: TestContext) => {
+	const stdout = createStdout(100, true);
+	const processStdoutWriteStub = stub(process.stdout, 'write').callsFake(
+		(
+			_chunk: string | Uint8Array,
+			encoding?: BufferEncoding | ((error?: Error) => void),
+			callback?: (error?: Error) => void,
+		) => {
+			if (typeof encoding === 'function') {
+				encoding();
+			}
 
-			useEffect(() => {
-				exit(new Error('Done'));
-			}, [exit]);
+			if (typeof callback === 'function') {
+				callback();
+			}
 
-			return <Text>normal ERROR banner</Text>;
-		}
+			return true;
+		},
+	);
+	t.after(() => {
+		processStdoutWriteStub.restore();
+	});
 
-		const {waitUntilExit} = render(<Test />, {
-			stdout,
-			alternateScreen: true,
-			interactive: true,
-		});
-
-		await t.throwsAsync(waitUntilExit());
-
-		const allWrites = stdout.getWrites();
-		const exitIndex = allWrites.findLastIndex(write =>
-			write.includes(ansiEscapes.exitAlternativeScreen),
-		);
-		const replayedOutput = stripAnsi(allWrites.slice(exitIndex + 1).join(''));
-
-		t.not(exitIndex, -1, 'Should exit the alternate screen on unmount');
-		t.false(
-			replayedOutput.includes('normal ERROR banner') ||
-				replayedOutput.includes('Error: Done') ||
-				replayedOutput.includes('Done\n    at'),
-			'Should not replay alternate-screen teardown output onto the primary screen',
-		);
-	},
-);
-
-test.serial(
-	'alternate screen - cleanup console output follows the native console during unmount',
-	async t => {
-		const stdout = createStdout(100, true);
-		const processStdoutWriteStub = stub(process.stdout, 'write').callsFake(
-			(
-				_chunk: string | Uint8Array,
-				encoding?: BufferEncoding | ((error?: Error) => void),
-				callback?: (error?: Error) => void,
-			) => {
-				if (typeof encoding === 'function') {
-					encoding();
-				}
-
-				if (typeof callback === 'function') {
-					callback();
-				}
-
-				return true;
+	function Test() {
+		useEffect(
+			() => () => {
+				console.log('cleanup log');
 			},
-		);
-		t.teardown(() => {
-			processStdoutWriteStub.restore();
-		});
-
-		function Test() {
-			useEffect(() => {
-				return () => {
-					console.log('cleanup log');
-				};
-			}, []);
-
-			return <Text>Hello</Text>;
-		}
-
-		const {unmount, waitUntilExit} = render(<Test />, {
-			stdout,
-			alternateScreen: true,
-			interactive: true,
-		});
-
-		unmount();
-		await waitUntilExit();
-
-		const output = stdout.getWrites().join('');
-		const nativeConsoleLog = processStdoutWriteStub
-			.getCalls()
-			.some(call => String(call.args[0]).includes('cleanup log'));
-
-		t.false(
-			output.includes('cleanup log'),
-			'Should keep cleanup console output out of the alternate-screen stream',
-		);
-		t.true(
-			nativeConsoleLog,
-			'Should restore the native console before React cleanup runs',
-		);
-	},
-);
-
-test.serial(
-	'alternate screen - cleanup() exits the alternate screen',
-	async t => {
-		const stdout = createStdout(100, true);
-
-		const {cleanup, waitUntilExit} = render(<Text>Hello</Text>, {
-			stdout,
-			alternateScreen: true,
-			interactive: true,
-		});
-
-		cleanup();
-		await waitUntilExit();
-
-		const allWrites = stdout.getWrites();
-		const exitIndex = allWrites.findLastIndex(write =>
-			write.includes(ansiEscapes.exitAlternativeScreen),
+			[],
 		);
 
-		t.not(exitIndex, -1, 'Should exit the alternate screen during cleanup()');
-	},
-);
+		return <Text>Hello</Text>;
+	}
 
-test.serial(
-	'alternate screen - debug concurrent teardown restores the cursor before the first commit',
-	async t => {
-		const stdout = createStdout(100, true);
-		const showCursorEscape = '\u001B[?25h';
+	const {unmount, waitUntilExit} = render(<Test />, {
+		stdout,
+		alternateScreen: true,
+		interactive: true,
+	});
 
-		const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
-			stdout,
-			alternateScreen: true,
-			concurrent: true,
-			debug: true,
-		});
+	unmount();
+	await waitUntilExit();
 
-		unmount();
-		await waitUntilExit();
+	const output = stdout.getWrites().join('');
+	const hasNativeConsoleLog = processStdoutWriteStub
+		.getCalls()
+		.some(call => String(call.args[0]).includes('cleanup log'));
 
-		const output = stdout.getWrites().join('');
-		const exitIndex = output.lastIndexOf(ansiEscapes.exitAlternativeScreen);
-		const showCursorIndex = output.lastIndexOf(showCursorEscape);
+	t.assert.strictEqual(
+		output.includes('cleanup log'),
+		false,
+		'Should keep cleanup console output out of the alternate-screen stream',
+	);
+	t.assert.ok(
+		hasNativeConsoleLog,
+		'Should restore the native console before React cleanup runs',
+	);
+});
 
-		t.not(exitIndex, -1, 'Should exit the alternate screen on unmount');
-		t.true(
-			showCursorIndex > exitIndex,
-			'Should restore the cursor after leaving the alternate screen',
-		);
-	},
-);
+test('alternate screen - cleanup() exits the alternate screen', async (t: TestContext) => {
+	const stdout = createStdout(100, true);
 
-test('render warns when stdout is reused before unmount', async t => {
+	const {cleanup, waitUntilExit} = render(<Text>Hello</Text>, {
+		stdout,
+		alternateScreen: true,
+		interactive: true,
+	});
+
+	cleanup();
+	await waitUntilExit();
+
+	const allWrites = stdout.getWrites();
+	const exitIndex = allWrites.findLastIndex(write =>
+		write.includes(ansiEscapes.exitAlternativeScreen),
+	);
+
+	t.assert.notStrictEqual(
+		exitIndex,
+		-1,
+		'Should exit the alternate screen during cleanup()',
+	);
+});
+
+test('alternate screen - debug concurrent teardown restores the cursor before the first commit', async (t: TestContext) => {
+	const stdout = createStdout(100, true);
+	const showCursorEscape = '\u{1B}[?25h';
+
+	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
+		stdout,
+		alternateScreen: true,
+		concurrent: true,
+		debug: true,
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	const output = stdout.getWrites().join('');
+	const exitIndex = output.lastIndexOf(ansiEscapes.exitAlternativeScreen);
+	const showCursorIndex = output.lastIndexOf(showCursorEscape);
+
+	t.assert.notStrictEqual(
+		exitIndex,
+		-1,
+		'Should exit the alternate screen on unmount',
+	);
+	t.assert.ok(
+		showCursorIndex > exitIndex,
+		'Should restore the cursor after leaving the alternate screen',
+	);
+});
+
+test('render warns when stdout is reused before unmount', async (t: TestContext) => {
 	const stdout = createStdout(100, true);
 	const processStderrWriteStub = stub(process.stderr, 'write').callsFake(
 		(
@@ -1948,7 +2029,7 @@ test('render warns when stdout is reused before unmount', async t => {
 			return true;
 		},
 	);
-	t.teardown(() => {
+	t.after(() => {
 		processStderrWriteStub.restore();
 	});
 
@@ -1963,7 +2044,7 @@ test('render warns when stdout is reused before unmount', async t => {
 		stdout,
 	});
 
-	t.true(
+	t.assert.ok(
 		processStderrWriteStub.calledOnceWithExactly(
 			'Warning: render() was called again for the same stdout before the previous Ink instance was unmounted. Reusing stdout across multiple render() calls is unsupported. Call unmount() first.\n',
 		),
@@ -1973,7 +2054,7 @@ test('render warns when stdout is reused before unmount', async t => {
 	await waitUntilExit();
 });
 
-test('alternate screen - ignored when non-interactive', async t => {
+test('alternate screen - ignored when non-interactive', async (t: TestContext) => {
 	const stdout = createStdout(100, true);
 
 	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
@@ -1987,17 +2068,19 @@ test('alternate screen - ignored when non-interactive', async t => {
 
 	const allWrites = stdout.getWrites();
 
-	t.false(
+	t.assert.strictEqual(
 		allWrites.some(w => w.includes(ansiEscapes.enterAlternativeScreen)),
+		false,
 		'Should not write enterAlternativeScreen in non-interactive mode',
 	);
-	t.false(
+	t.assert.strictEqual(
 		allWrites.some(w => w.includes(ansiEscapes.exitAlternativeScreen)),
+		false,
 		'Should not write exitAlternativeScreen in non-interactive mode',
 	);
 });
 
-test('alternate screen - disabled by default', async t => {
+test('alternate screen - disabled by default', async (t: TestContext) => {
 	const stdout = createStdout(100, true);
 
 	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
@@ -2010,17 +2093,19 @@ test('alternate screen - disabled by default', async t => {
 
 	const allWrites = stdout.getWrites();
 
-	t.false(
+	t.assert.strictEqual(
 		allWrites.some(w => w.includes(ansiEscapes.enterAlternativeScreen)),
+		false,
 		'Should not write enterAlternativeScreen by default',
 	);
-	t.false(
+	t.assert.strictEqual(
 		allWrites.some(w => w.includes(ansiEscapes.exitAlternativeScreen)),
+		false,
 		'Should not write exitAlternativeScreen by default',
 	);
 });
 
-test('alternate screen - content is rendered between enter and exit', async t => {
+test('alternate screen - content is rendered between enter and exit', async (t: TestContext) => {
 	const stdout = createStdout(100, true);
 
 	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
@@ -2041,20 +2126,20 @@ test('alternate screen - content is rendered between enter and exit', async t =>
 		w.includes(ansiEscapes.exitAlternativeScreen),
 	);
 
-	t.not(enterIndex, -1);
-	t.not(exitIndex, -1);
-	t.true(enterIndex < exitIndex);
+	t.assert.notStrictEqual(enterIndex, -1);
+	t.assert.notStrictEqual(exitIndex, -1);
+	t.assert.ok(enterIndex < exitIndex);
 
-	const contentBetween = allWrites
+	const hasContentBetween = allWrites
 		.slice(enterIndex + 1, exitIndex)
 		.some(w => stripAnsi(w).includes('Hello'));
-	t.true(
-		contentBetween,
+	t.assert.ok(
+		hasContentBetween,
 		'Rendered content should appear between enter and exit',
 	);
 });
 
-test('alternate screen - ignored when isTTY is false', async t => {
+test('alternate screen - ignored when isTTY is false', async (t: TestContext) => {
 	const stdout = createStdout(100, false);
 
 	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
@@ -2067,17 +2152,19 @@ test('alternate screen - ignored when isTTY is false', async t => {
 
 	const allWrites = stdout.getWrites();
 
-	t.false(
+	t.assert.strictEqual(
 		allWrites.some(w => w.includes(ansiEscapes.enterAlternativeScreen)),
+		false,
 		'Should not write enterAlternativeScreen when isTTY is false',
 	);
-	t.false(
+	t.assert.strictEqual(
 		allWrites.some(w => w.includes(ansiEscapes.exitAlternativeScreen)),
+		false,
 		'Should not write exitAlternativeScreen when isTTY is false',
 	);
 });
 
-test('alternate screen - ignored when isTTY is false even if interactive is true', async t => {
+test('alternate screen - ignored when isTTY is false even if interactive is true', async (t: TestContext) => {
 	const stdout = createStdout(100, false);
 
 	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
@@ -2091,17 +2178,19 @@ test('alternate screen - ignored when isTTY is false even if interactive is true
 
 	const allWrites = stdout.getWrites();
 
-	t.false(
+	t.assert.strictEqual(
 		allWrites.some(w => w.includes(ansiEscapes.enterAlternativeScreen)),
+		false,
 		'Should not write enterAlternativeScreen when isTTY is false, even with interactive=true',
 	);
-	t.false(
+	t.assert.strictEqual(
 		allWrites.some(w => w.includes(ansiEscapes.exitAlternativeScreen)),
+		false,
 		'Should not write exitAlternativeScreen when isTTY is false, even with interactive=true',
 	);
 });
 
-test('static output is written immediately in non-interactive mode', async t => {
+test('static output is written immediately in non-interactive mode', async (t: TestContext) => {
 	const stdout = createStdout(100, false);
 
 	function App() {
@@ -2137,11 +2226,11 @@ test('static output is written immediately in non-interactive mode', async t => 
 	// Capture writes BEFORE unmount — static items must already be here
 	const writesBeforeUnmount = stdout.getWrites().map(w => stripAnsi(w));
 	const preUnmountJoined = writesBeforeUnmount.join('');
-	t.true(
+	t.assert.ok(
 		preUnmountJoined.includes('A'),
 		'Static item A was written before unmount',
 	);
-	t.true(
+	t.assert.ok(
 		preUnmountJoined.includes('B'),
 		'Static item B was written before unmount',
 	);
@@ -2150,20 +2239,21 @@ test('static output is written immediately in non-interactive mode', async t => 
 	await waitUntilExit();
 
 	// Verify the dynamic content was deferred to unmount (not written before it)
-	t.false(
+	t.assert.strictEqual(
 		preUnmountJoined.includes('Dynamic'),
+		false,
 		'Dynamic content was not written before unmount',
 	);
 
 	// Verify dynamic content was eventually written
 	const allWrites = stdout.getWrites().map(w => stripAnsi(w));
-	t.true(
+	t.assert.ok(
 		allWrites.join('').includes('Dynamic'),
 		'Dynamic content was eventually written',
 	);
 });
 
-test('reset prop when it’s removed from the element', t => {
+test('reset prop when it’s removed from the element', (t: TestContext) => {
 	const stdout = createStdout();
 
 	function Dynamic({remove}: {readonly remove?: boolean}) {
@@ -2183,13 +2273,13 @@ test('reset prop when it’s removed from the element', t => {
 		debug: true,
 	});
 
-	t.is((stdout.write as any).lastCall.args[0], '\n\n\nx');
+	t.assert.strictEqual((stdout.write as any).lastCall.args[0], '\n\n\nx');
 
 	rerender(<Dynamic remove />);
-	t.is((stdout.write as any).lastCall.args[0], 'x');
+	t.assert.strictEqual((stdout.write as any).lastCall.args[0], 'x');
 });
 
-test('newline', t => {
+test('newline', (t: TestContext) => {
 	const output = renderToString(
 		<Text>
 			Hello
@@ -2197,10 +2287,10 @@ test('newline', t => {
 			World
 		</Text>,
 	);
-	t.is(output, 'Hello\nWorld');
+	t.assert.strictEqual(output, 'Hello\nWorld');
 });
 
-test('multiple newlines', t => {
+test('multiple newlines', (t: TestContext) => {
 	const output = renderToString(
 		<Text>
 			Hello
@@ -2208,10 +2298,10 @@ test('multiple newlines', t => {
 			World
 		</Text>,
 	);
-	t.is(output, 'Hello\n\nWorld');
+	t.assert.strictEqual(output, 'Hello\n\nWorld');
 });
 
-test('horizontal spacer', t => {
+test('horizontal spacer', (t: TestContext) => {
 	const output = renderToString(
 		<Box width={20}>
 			<Text>Left</Text>
@@ -2220,10 +2310,10 @@ test('horizontal spacer', t => {
 		</Box>,
 	);
 
-	t.is(output, 'Left           Right');
+	t.assert.strictEqual(output, 'Left           Right');
 });
 
-test('vertical spacer', t => {
+test('vertical spacer', (t: TestContext) => {
 	const output = renderToString(
 		<Box flexDirection="column" height={6}>
 			<Text>Top</Text>
@@ -2232,52 +2322,52 @@ test('vertical spacer', t => {
 		</Box>,
 	);
 
-	t.is(output, 'Top\n\n\n\n\nBottom');
+	t.assert.strictEqual(output, 'Top\n\n\n\n\nBottom');
 });
 
-test('link ansi escapes are closed properly', t => {
+test('link ansi escapes are closed properly', (t: TestContext) => {
 	const output = renderToString(
 		<Text>{ansiEscapes.link('Example', 'https://example.com')}</Text>,
 	);
 
-	t.is(output, ']8;;https://example.comExample]8;;');
+	t.assert.strictEqual(output, ']8;;https://example.comExample]8;;');
 });
 
 // Concurrent mode tests
-test('text - concurrent', async t => {
+test('text - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(<Text>Hello World</Text>);
-	t.is(output, 'Hello World');
+	t.assert.strictEqual(output, 'Hello World');
 });
 
-test('multiple text nodes - concurrent', async t => {
+test('multiple text nodes - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Text>
-			{'Hello'}
+			Hello
 			{' World'}
 		</Text>,
 	);
-	t.is(output, 'Hello World');
+	t.assert.strictEqual(output, 'Hello World');
 });
 
-test('wrap text - concurrent', async t => {
+test('wrap text - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box width={7}>
 			<Text wrap="wrap">Hello World</Text>
 		</Box>,
 	);
-	t.is(output, 'Hello\nWorld');
+	t.assert.strictEqual(output, 'Hello\nWorld');
 });
 
-test('truncate text in the end - concurrent', async t => {
+test('truncate text in the end - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box width={7}>
 			<Text wrap="truncate">Hello World</Text>
 		</Box>,
 	);
-	t.is(output, 'Hello …');
+	t.assert.strictEqual(output, 'Hello …');
 });
 
-test('transform children - concurrent', async t => {
+test('transform children - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Transform
 			transform={(string: string, index: number) => `[${index}: ${string}]`}
@@ -2291,10 +2381,10 @@ test('transform children - concurrent', async t => {
 			</Text>
 		</Transform>,
 	);
-	t.is(output, '[0: {0: test}]');
+	t.assert.strictEqual(output, '[0: {0: test}]');
 });
 
-test('static output - concurrent', async t => {
+test('static output - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box>
 			<Static items={['A', 'B', 'C']} style={{paddingBottom: 1}}>
@@ -2306,26 +2396,26 @@ test('static output - concurrent', async t => {
 			</Box>
 		</Box>,
 	);
-	t.is(output, 'A\nB\nC\n\n\nX');
+	t.assert.strictEqual(output, 'A\nB\nC\n\n\nX');
 });
 
-test('remeasure text dimensions on text change - concurrent', async t => {
+test('remeasure text dimensions on text change - concurrent', async (t: TestContext) => {
 	const {getOutput, rerenderAsync} = await renderAsync(
 		<Box>
 			<Text>Hello</Text>
 		</Box>,
 	);
-	t.is(getOutput(), 'Hello');
+	t.assert.strictEqual(getOutput(), 'Hello');
 
 	await rerenderAsync(
 		<Box>
 			<Text>Hello World</Text>
 		</Box>,
 	);
-	t.is(getOutput(), 'Hello World');
+	t.assert.strictEqual(getOutput(), 'Hello World');
 });
 
-test('newline - concurrent', async t => {
+test('newline - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Text>
 			Hello
@@ -2333,10 +2423,10 @@ test('newline - concurrent', async t => {
 			World
 		</Text>,
 	);
-	t.is(output, 'Hello\nWorld');
+	t.assert.strictEqual(output, 'Hello\nWorld');
 });
 
-test('horizontal spacer - concurrent', async t => {
+test('horizontal spacer - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box width={20}>
 			<Text>Left</Text>
@@ -2344,10 +2434,10 @@ test('horizontal spacer - concurrent', async t => {
 			<Text>Right</Text>
 		</Box>,
 	);
-	t.is(output, 'Left           Right');
+	t.assert.strictEqual(output, 'Left           Right');
 });
 
-test('vertical spacer - concurrent', async t => {
+test('vertical spacer - concurrent', async (t: TestContext) => {
 	const output = await renderToStringAsync(
 		<Box flexDirection="column" height={6}>
 			<Text>Top</Text>
@@ -2355,5 +2445,5 @@ test('vertical spacer - concurrent', async t => {
 			<Text>Bottom</Text>
 		</Box>,
 	);
-	t.is(output, 'Top\n\n\n\n\nBottom');
+	t.assert.strictEqual(output, 'Top\n\n\n\n\nBottom');
 });

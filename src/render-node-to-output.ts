@@ -16,7 +16,7 @@ import type Output from './output.js';
 // Only first node is taken into account, because other text nodes can't have margin or padding,
 // so their coordinates will be relative to the first node anyway
 const applyPaddingToText = (node: DOMElement, text: string): string => {
-	const yogaNode = node.childNodes[0]?.yogaNode;
+	const yogaNode = node.childNodes.at(0)?.yogaNode;
 
 	if (yogaNode) {
 		const offsetX = yogaNode.getComputedLeft();
@@ -40,11 +40,10 @@ export const renderNodeToScreenReaderOutput = (
 		skipStaticElements?: boolean;
 	} = {},
 ): string => {
-	if (options.skipStaticElements && node.internal_static) {
-		return '';
-	}
-
-	if (node.yogaNode?.getDisplay() === Yoga.DISPLAY_NONE) {
+	if (
+		Boolean(options.skipStaticElements && node.internal_static) ||
+		node.yogaNode?.getDisplay() === Yoga.DISPLAY_NONE
+	) {
 		return '';
 	}
 
@@ -87,12 +86,12 @@ export const renderNodeToScreenReaderOutput = (
 			const stateKeys = Object.keys(state) as Array<keyof typeof state>;
 			const stateDescription = stateKeys.filter(key => state[key]).join(', ');
 
-			if (stateDescription) {
+			if (stateDescription !== '') {
 				output = `(${stateDescription}) ${output}`;
 			}
 		}
 
-		if (role && role !== options.parentRole) {
+		if (Boolean(role) && role !== options.parentRole) {
 			output = `${role}: ${output}`;
 		}
 	}
@@ -124,94 +123,93 @@ const renderNodeToOutput = (
 
 	const {yogaNode} = node;
 
-	if (yogaNode) {
-		if (yogaNode.getDisplay() === Yoga.DISPLAY_NONE) {
-			return;
-		}
+	if (!yogaNode || yogaNode.getDisplay() === Yoga.DISPLAY_NONE) {
+		return;
+	}
 
-		// Left and top positions in Yoga are relative to their parent node
-		const x = offsetX + yogaNode.getComputedLeft();
-		const y = offsetY + yogaNode.getComputedTop();
+	// Left and top positions in Yoga are relative to their parent node
+	const x = offsetX + yogaNode.getComputedLeft();
+	const y = offsetY + yogaNode.getComputedTop();
 
-		// Transformers are functions that transform final text output of each component
-		// See Output class for logic that applies transformers
-		let newTransformers = transformers;
+	// Transformers are functions that transform final text output of each component
+	// See Output class for logic that applies transformers
+	const newTransformers =
+		typeof node.internal_transform === 'function'
+			? [node.internal_transform, ...transformers]
+			: transformers;
 
-		if (typeof node.internal_transform === 'function') {
-			newTransformers = [node.internal_transform, ...transformers];
-		}
+	if (node.nodeName === 'ink-text') {
+		let text = squashTextNodes(node);
 
-		if (node.nodeName === 'ink-text') {
-			let text = squashTextNodes(node);
+		if (text.length > 0) {
+			const currentWidth = widestLine(text);
+			const maxWidth = getMaxWidth(yogaNode);
 
-			if (text.length > 0) {
-				const currentWidth = widestLine(text);
-				const maxWidth = getMaxWidth(yogaNode);
-
-				if (currentWidth > maxWidth) {
-					const textWrap = node.style.textWrap ?? 'wrap';
-					text = wrapText(text, maxWidth, textWrap);
-				}
-
-				text = applyPaddingToText(node, text);
-
-				output.write(x, y, text, {transformers: newTransformers});
+			if (currentWidth > maxWidth) {
+				const textWrap = node.style.textWrap ?? 'wrap';
+				text = wrapText(text, maxWidth, textWrap);
 			}
 
-			return;
+			text = applyPaddingToText(node, text);
+
+			output.write(x, y, text, {transformers: newTransformers});
 		}
 
-		let clipped = false;
+		return;
+	}
 
-		if (node.nodeName === 'ink-box') {
-			renderBackground(x, y, node, output);
-			renderBorder(x, y, node, output);
+	let isClipped = false;
 
-			const clipHorizontally =
-				(node.style.overflowX ?? node.style.overflow) === 'hidden';
-			const clipVertically =
-				(node.style.overflowY ?? node.style.overflow) === 'hidden';
+	if (node.nodeName === 'ink-box') {
+		renderBackground(x, y, node, output);
+		renderBorder(x, y, node, output);
 
-			if (clipHorizontally || clipVertically) {
-				const x1 = clipHorizontally
-					? x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT)
-					: undefined;
+		const shouldClipHorizontally =
+			(node.style.overflowX ?? node.style.overflow) === 'hidden';
+		const shouldClipVertically =
+			(node.style.overflowY ?? node.style.overflow) === 'hidden';
 
-				const x2 = clipHorizontally
-					? x +
-						yogaNode.getComputedWidth() -
-						yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
-					: undefined;
+		if (shouldClipHorizontally || shouldClipVertically) {
+			const x1 = shouldClipHorizontally
+				? x + yogaNode.getComputedBorder(Yoga.EDGE_LEFT)
+				: undefined;
 
-				const y1 = clipVertically
-					? y + yogaNode.getComputedBorder(Yoga.EDGE_TOP)
-					: undefined;
+			const x2 = shouldClipHorizontally
+				? x +
+					yogaNode.getComputedWidth() -
+					yogaNode.getComputedBorder(Yoga.EDGE_RIGHT)
+				: undefined;
 
-				const y2 = clipVertically
-					? y +
-						yogaNode.getComputedHeight() -
-						yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
-					: undefined;
+			const y1 = shouldClipVertically
+				? y + yogaNode.getComputedBorder(Yoga.EDGE_TOP)
+				: undefined;
 
-				output.clip({x1, x2, y1, y2});
-				clipped = true;
-			}
+			const y2 = shouldClipVertically
+				? y +
+					yogaNode.getComputedHeight() -
+					yogaNode.getComputedBorder(Yoga.EDGE_BOTTOM)
+				: undefined;
+
+			output.clip({x1, x2, y1, y2});
+			isClipped = true;
 		}
+	}
 
-		if (node.nodeName === 'ink-root' || node.nodeName === 'ink-box') {
-			for (const childNode of node.childNodes) {
-				renderNodeToOutput(childNode as DOMElement, output, {
-					offsetX: x - normalizeContentOffset(node.style.contentOffsetX),
-					offsetY: y - normalizeContentOffset(node.style.contentOffsetY),
-					transformers: newTransformers,
-					skipStaticElements,
-				});
-			}
+	if (!(node.nodeName === 'ink-root' || node.nodeName === 'ink-box')) {
+		return;
+	}
 
-			if (clipped) {
-				output.unclip();
-			}
-		}
+	for (const childNode of node.childNodes) {
+		renderNodeToOutput(childNode as DOMElement, output, {
+			offsetX: x - normalizeContentOffset(node.style.contentOffsetX),
+			offsetY: y - normalizeContentOffset(node.style.contentOffsetY),
+			transformers: newTransformers,
+			skipStaticElements,
+		});
+	}
+
+	if (isClipped) {
+		output.unclip();
 	}
 };
 
