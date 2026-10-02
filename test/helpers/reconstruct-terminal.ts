@@ -78,6 +78,11 @@ export const reconstructTerminalLines = (
 				break;
 			}
 
+			case 'C': {
+				col += first === undefined || first === 0 ? 1 : first;
+				break;
+			}
+
 			case 'E': {
 				row = Math.min(rows - 1, row + (first ?? 1));
 				col = 0;

@@ -553,7 +553,7 @@ test('incremental rendering - single line without trailing newline stays on the 
 
 	t.assert.strictEqual(
 		(stdout.write as any).secondCall.args[0],
-		ansiEscapes.cursorTo(0) + 'After' + ansiEscapes.eraseEndLine,
+		ansiEscapes.cursorTo(0) + ansiEscapes.eraseEndLine + 'After',
 	);
 });
 
@@ -571,8 +571,8 @@ test('incremental rendering - growing a single line without trailing newline sta
 		(stdout.write as any).secondCall.args[0],
 		ansiEscapes.cursorNextLine +
 			ansiEscapes.cursorTo(0) +
-			'Second' +
-			ansiEscapes.eraseEndLine,
+			ansiEscapes.eraseEndLine +
+			'Second',
 	);
 });
 

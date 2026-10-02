@@ -294,10 +294,12 @@ const createIncremental = (
 				continue;
 			}
 
+			// Clear before painting so cursor-forward gaps cannot retain old cells.
+			// Erasing after a full-width write also depends on wrap-pending behavior.
 			buffer.push(
 				ansiEscapes.cursorTo(0) +
-					nextLines[i] +
 					ansiEscapes.eraseEndLine +
+					nextLines[i] +
 					// Don't append newline after the last line when the input
 					// has no trailing newline (fullscreen mode).
 					(isLastLine && !hasTrailingNewline ? '' : '\n'),
