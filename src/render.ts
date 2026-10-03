@@ -76,6 +76,8 @@ export type RenderOptions = {
 	/**
 	Enable incremental rendering mode which only updates changed lines instead of redrawing the entire output.
 	This can reduce flickering and improve performance for frequently updating UIs.
+	On changed lines, unchanged prefixes are also skipped when safe, preserving styles and grapheme boundaries.
+	Lines containing unsupported terminal controls fall back to whole-line updates.
 
 	@default false
 	*/
