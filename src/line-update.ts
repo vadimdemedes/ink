@@ -16,7 +16,9 @@ export default function lineUpdate(
 	next: string,
 	columns: number | undefined,
 ): string {
-	const full = ansiEscapes.cursorTo(0) + next;
+	// Erase from the first changed column before painting. This clears sparse
+	// gaps without touching an unchanged prefix or erasing after the last glyph.
+	const full = ansiEscapes.cursorTo(0) + ansiEscapes.eraseEndLine + next;
 	if (columns === undefined || Number.isNaN(columns) || columns < 1) {
 		return full;
 	}
@@ -94,10 +96,14 @@ export default function lineUpdate(
 
 		offset += match[0].length;
 		// Replay the exact SGR history so nested resets and extended colors have
-		// the same state as a full write, including the state used by eraseEndLine.
+		// the same state as a full write.
 		styles += match[0];
 	}
 
-	const partial = ansiEscapes.cursorTo(column) + styles + next.slice(offset);
+	const partial =
+		ansiEscapes.cursorTo(column) +
+		ansiEscapes.eraseEndLine +
+		styles +
+		next.slice(offset);
 	return partial.length < full.length ? partial : full;
 }

@@ -72,8 +72,8 @@ test('sync establishes the prefix baseline for the next frame', (t: TestContext)
 		stdout.get(),
 		ansiEscapes.cursorUp(1) +
 			ansiEscapes.cursorTo(10) +
-			'1' +
 			ansiEscapes.eraseEndLine +
+			'1' +
 			'\n',
 	);
 });
@@ -130,6 +130,10 @@ test('side-by-side public components do not rewrite the unchanged left region', 
 		await instance.waitUntilRenderFlush();
 		const output = stdout.getWrites().slice(before).join('');
 		t.assert.strictEqual(output.includes('UNCHANGED LEFT'), false);
-		t.assert.ok(output.includes(ansiEscapes.cursorTo(29) + String(count)));
+		t.assert.ok(
+			output.includes(
+				ansiEscapes.cursorTo(29) + ansiEscapes.eraseEndLine + String(count),
+			),
+		);
 	}
 });

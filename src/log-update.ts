@@ -303,11 +303,10 @@ const createIncremental = (
 			const changedLine =
 				areColumnsUnchanged && nextLines.length === previousLines.length
 					? lineUpdate(previousLines[i]!, nextLine, stream.columns)
-					: ansiEscapes.cursorTo(0) + nextLine;
+					: ansiEscapes.cursorTo(0) + ansiEscapes.eraseEndLine + nextLine;
 
 			buffer.push(
 				changedLine +
-					ansiEscapes.eraseEndLine +
 					// Don't append newline after the last line when the input
 					// has no trailing newline (fullscreen mode).
 					(isLastLine && !hasTrailingNewline ? '' : '\n'),
