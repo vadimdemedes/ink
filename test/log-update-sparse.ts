@@ -74,6 +74,26 @@ test('full-width updates do not erase after the last character', (t: TestContext
 	);
 });
 
+test('full-width prefix updates clear only the changed suffix', (t: TestContext) => {
+	const stdout = createStdout(5);
+	const update = logUpdate.create(stdout, {
+		incremental: true,
+		showCursor: true,
+	});
+	update('LEFTX');
+	for (const suffix of ['Y', '']) {
+		update(`LEFT${suffix}`);
+		t.assert.strictEqual(
+			stdout.get(),
+			ansiEscapes.cursorTo(4) + ansiEscapes.eraseEndLine + suffix,
+		);
+		t.assert.deepStrictEqual(
+			reconstructTerminalLines(stdout.getWrites().join(''), 2),
+			[`LEFT${suffix}`, ''],
+		);
+	}
+});
+
 test('shorter, empty, and styled rows remove old trailing content', (t: TestContext) => {
 	const stdout = createStdout(10);
 	const update = logUpdate.create(stdout, {
