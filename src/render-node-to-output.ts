@@ -1,4 +1,3 @@
-import {stripVTControlCharacters} from 'node:util';
 import stringWidth from 'string-width';
 import widestLine from 'widest-line';
 import indentString from 'indent-string';
@@ -9,14 +8,12 @@ import squashTextNodes from './squash-text-nodes.js';
 import renderBorder from './render-border.js';
 import renderBackground from './render-background.js';
 import {type DOMElement} from './dom.js';
-import {take} from './iterable-utils.js';
 import type Output from './output.js';
 import {type CursorPosition} from './cursor-helpers.js';
-import {
-	graphemeOffsetToByteOffset,
-	iterateGraphemeSegments,
-} from './string-utils.js';
+import {iterateAnsiGraphemes} from './string-utils.js';
 import {type Styles} from './styles.js';
+import {AnsiToken} from './ansi-tokenizer.js';
+import ansiEscapes from 'ansi-escapes';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.
@@ -166,22 +163,20 @@ const renderNodeToOutput = (
 			}
 
 			if (cursorOffset !== undefined) {
-				const {x: newX, y: newY} = textWrap.startsWith('truncate')
-					? truncateCursorOffsetToPosition({
-							originalText,
-							cursorOffset,
-							maxWidth,
-							wrapType: textWrap,
-						})
-					: wrapCursorOffsetToPosition({
-							originalText,
-							wrappedText: text,
-							cursorOffset,
-						});
+				const position = locateAndWrapCursor({
+					text: originalText,
+					wrappedText: text,
+					cursorOffset,
+					maxWidth,
+					textWrap,
+				});
 
-				effects = {
-					cursorPosition: {x: x + newX, y: y + newY},
-				};
+				if (position !== undefined) {
+					const {x: newX, y: newY} = position;
+					effects = {
+						cursorPosition: {x: x + newX, y: y + newY},
+					};
+				}
 			}
 
 			text = applyPaddingToText(node, text);
@@ -270,157 +265,112 @@ const renderNodeToOutput = (
 	return resultEffects;
 };
 
-const truncateCursorOffsetToPosition = ({
-	originalText,
-	cursorOffset,
-	maxWidth,
-	wrapType,
-}: {
-	originalText: string;
-	cursorOffset: number;
-	maxWidth: number;
-	wrapType: Styles['textWrap'];
-}) => {
-	if (maxWidth > 0 && maxWidth < 1) {
-		maxWidth = 1;
+const getAnsiCursorToken = (linkString: string) => {
+	for (const {token} of iterateAnsiGraphemes(linkString)) {
+		return token.value;
 	}
-
-	const cleanText = stripVTControlCharacters(originalText);
-	let lineIndex = 0;
-	let lineStartIndex = 0;
-	let cursorGraphemesInLine = cursorOffset;
-	let graphemesInLine = 0;
-	for (const {index, segment} of take(
-		iterateGraphemeSegments(cleanText),
-		cursorOffset,
-	)) {
-		++graphemesInLine;
-		if (segment !== '\n') {
-			continue;
-		}
-
-		cursorGraphemesInLine -= graphemesInLine;
-		graphemesInLine = 0;
-		++lineIndex;
-		lineStartIndex = index + 1;
-	}
-
-	const lineEndIndex = cleanText.indexOf('\n', lineStartIndex);
-	const currentLine = cleanText.slice(
-		lineStartIndex,
-		lineEndIndex === -1 ? cleanText.length : lineEndIndex,
-	);
-	const cursorByteOffset = graphemeOffsetToByteOffset(
-		currentLine,
-		cursorGraphemesInLine,
-	);
-
-	const lineWidth = stringWidth(currentLine);
-	if (lineWidth <= maxWidth) {
-		// Not truncated!
-		return {
-			x: stringWidth(currentLine.slice(0, cursorByteOffset)),
-			y: lineIndex,
-		};
-	}
-
-	if (maxWidth <= 0) {
-		return {x: 0, y: lineIndex};
-	}
-
-	if (maxWidth === 1) {
-		return {x: Math.min(1, cursorGraphemesInLine), y: lineIndex};
-	}
-
-	let position: 'end' | 'middle' | 'start' = 'end';
-	if (wrapType === 'truncate-middle') {
-		position = 'middle';
-	} else if (wrapType === 'truncate-start') {
-		position = 'start';
-	}
-
-	let half = 0;
-	if (position === 'middle') {
-		half = Math.min(Math.floor(maxWidth / 2), Math.max(0, maxWidth - 1));
-	} else if (position === 'end') {
-		half = Math.max(0, maxWidth - 1);
-	}
-
-	const prefixLength = half;
-	const prefix = currentLine.slice(0, half);
-	const suffixLength = maxWidth - half - 1;
-	const suffix = currentLine.slice(lineWidth - suffixLength, lineWidth);
-
-	const suffixStartInCurrentLine = currentLine.length - suffixLength;
-
-	let x: number;
-	if (cursorByteOffset <= prefixLength) {
-		x = stringWidth(currentLine.slice(0, cursorByteOffset));
-	} else if (cursorByteOffset < suffixStartInCurrentLine) {
-		x = stringWidth(prefix);
-	} else {
-		const offsetInSuffix = cursorByteOffset - suffixStartInCurrentLine;
-		const suffixBeforeCursor = suffix.slice(0, offsetInSuffix);
-		x = stringWidth(prefix) + 1 + stringWidth(suffixBeforeCursor);
-	}
-
-	return {x, y: lineIndex};
+	throw new Error('No ansi found in link string?');
 };
 
-const wrapCursorOffsetToPosition = ({
-	originalText,
+const locateAndWrapCursor = ({
+	text,
 	wrappedText,
 	cursorOffset,
+	maxWidth,
+	textWrap,
 }: {
-	originalText: string;
+	text: string;
 	wrappedText: string;
 	cursorOffset: number;
-}) => {
-	let x = 0;
-	let y = 0;
-	let consumable = cursorOffset;
-	if (consumable <= 0) {
-		// Easy case:
-		return {x, y};
+	maxWidth: number;
+	textWrap: Styles['textWrap'];
+}): CursorPosition | undefined => {
+	if (cursorOffset === 0 && maxWidth === 0) {
+		return;
+	}
+	if (cursorOffset === 0) {
+		return {x: 0, y: 0};
 	}
 
-	// Any newlines in originalText should be "consumed" when
-	// counting cursor offsets; any others were introduced by
-	// wrapping and should not be counted as part of cursorOffset
-	let consumableNewlines = 0;
-	for (const {segment} of take(
-		iterateGraphemeSegments(stripVTControlCharacters(originalText)),
-		consumable,
-	)) {
-		if (segment === '\n') {
-			++consumableNewlines;
-		}
-	}
-
-	const wrappedGraphemes = iterateGraphemeSegments(
-		stripVTControlCharacters(wrappedText),
-	);
-	for (const {segment} of wrappedGraphemes) {
-		// NOTE: If the cursor lands on a newline, it should wrap
-		if (segment !== '\n' && consumable <= 0) {
+	// Step 1: find the byte offset of the cursor and the
+	// length (in bytes) of the grapheme at that offset
+	let byteOffset = 0;
+	let graphemeLength: undefined | number;
+	for (const {token} of iterateAnsiGraphemes(text)) {
+		if (token.type === 'grapheme' && --cursorOffset < 0) {
+			graphemeLength = token.value.length;
 			break;
 		}
 
-		if (segment === '\n') {
-			x = 0;
-			++y;
-
-			if (consumableNewlines > 0) {
-				--consumableNewlines;
-				--consumable;
-			}
-		} else {
-			--consumable;
-			x += stringWidth(segment);
-		}
+		byteOffset += token.value.length;
 	}
 
-	return {x, y};
+	if (graphemeLength === undefined) {
+		if (cursorOffset === 0) {
+			// Cursor is at the very end of the input
+			return getPositionWhen(wrappedText, () => false);
+		}
+
+		// Cursor is somehow past the input?
+		return undefined;
+	}
+
+	// Step 2: Wrap the grapheme we found in a special Ansi
+	// escape sequence so we can locate after wrapping
+	let toSearch = ansiEscapes.link(
+		text.slice(byteOffset, byteOffset + graphemeLength),
+		'ink://cursor',
+	);
+	let toWrap =
+		text.slice(0, byteOffset) +
+		toSearch +
+		text.slice(byteOffset + graphemeLength);
+	const wrapped = wrapText(toWrap, maxWidth, textWrap);
+
+	// TODO: What if the cursor is within an ellipses?
+
+	const valueToFind = getAnsiCursorToken(toSearch);
+	const {x, y, found} = getPositionWhen(wrapped, token => {
+		// console.error(
+		// 	'hip',
+		// 	JSON.stringify(token.value),
+		// 	'vs',
+		// 	JSON.stringify(valueToFind),
+		// 	token.value === valueToFind,
+		// );
+		return token.value === valueToFind;
+	});
+
+	if (found) {
+		return {x, y};
+	}
+
+	return undefined;
+};
+
+const getPositionWhen = (
+	text: string,
+	isTokenMatched: (
+		token: AnsiToken | {type: 'grapheme'; value: string},
+	) => boolean,
+) => {
+	let x = 0;
+	let y = 0;
+	for (const {token} of iterateAnsiGraphemes(text)) {
+		if (isTokenMatched(token)) {
+			return {x, y, found: true};
+		}
+
+		if (token.value === '\n') {
+			x = 0;
+			++y;
+			continue;
+		}
+		if (token.type === 'grapheme') {
+			x += stringWidth(token.value);
+		}
+	}
+	return {x, y, found: false};
 };
 
 export default renderNodeToOutput;

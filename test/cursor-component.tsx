@@ -1304,3 +1304,23 @@ test('<Cursor /> is shown when rendered by itself', async (t: TestContext) => {
 		},
 	);
 });
+
+test('<Cursor /> within truncate', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box>
+			<Text wrap="truncate-end">
+				a
+				<Cursor />b
+			</Text>
+		</Box>,
+		({getLastCursor, getWriteCallsString}) => {
+			t.assert.deepStrictEqual(getLastCursor(), {x: 1, y: 0});
+
+			const firstRenderOutput = getWriteCallsString();
+			t.assert.ok(
+				firstRenderOutput.includes(showCursorEscape),
+				'cursor should be visible after first render',
+			);
+		},
+	);
+});
