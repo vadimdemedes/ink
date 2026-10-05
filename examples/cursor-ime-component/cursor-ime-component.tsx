@@ -7,6 +7,7 @@ import {
 	Cursor,
 	type CursorPosition,
 } from '../../src/index.js';
+import {countNonAnsiGraphemes} from '../../src/string-utils.js';
 
 let handleCursorUpdated: (pos: CursorPosition | undefined) => void;
 
@@ -21,7 +22,7 @@ function App() {
 	useInput((input, key) => {
 		if (key.backspace || key.delete) {
 			setText(previous => previous.slice(0, -1));
-			setCursor(previous => previous - 1);
+			setCursor(previous => Math.max(0, previous - 1));
 			return;
 		}
 
@@ -42,7 +43,7 @@ function App() {
 			const after = previous.slice(cursor);
 			return before + input + after;
 		});
-		setCursor(previous => previous + 1);
+		setCursor(previous => previous + countNonAnsiGraphemes(input));
 	});
 
 	const before = text.slice(0, cursor);
