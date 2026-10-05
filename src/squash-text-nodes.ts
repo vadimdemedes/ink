@@ -3,10 +3,8 @@ import wrapAnsi from 'wrap-ansi';
 import {type DOMElement} from './dom.js';
 import sanitizeAnsi from './sanitize-ansi.js';
 import {iterateAnsiTokens, type TextToken} from './ansi-tokenizer.js';
-import {
-	countNonAnsiGraphemes,
-	iterateGraphemeSegments,
-} from './string-utils.js';
+import {iterateGraphemeSegments} from './string-utils.js';
+import {InlineCursorHelper} from './cursor-helpers.js';
 
 type SquashedOutput = {
 	text: string;
@@ -18,6 +16,8 @@ type SquashedOutput = {
 	 placing the cursor).
 	 */
 	cursorOffset?: number;
+
+	cursor?: InlineCursorHelper;
 };
 
 // Squashing text nodes allows to combine multiple text nodes into one and write
@@ -28,10 +28,12 @@ type SquashedOutput = {
 // which need to wrap all children at once, instead of wrapping 3 text nodes separately.
 const squashTextNodes = (node: DOMElement): SquashedOutput => {
 	let cursor: number | undefined;
+	let cursorHelper = new InlineCursorHelper();
 	let text = '';
 
 	for (const childNode of node.childNodes) {
 		let nodeText = '';
+		let nodeCursor: InlineCursorHelper | undefined;
 
 		if (childNode.nodeName === '#text') {
 			nodeText = childNode.nodeValue;
@@ -44,19 +46,30 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 				childNode.nodeName === 'ink-text' ||
 				childNode.nodeName === 'ink-virtual-text'
 			) {
-				const {text: newNodeText, cursorOffset} = squashTextNodes(childNode);
-				nodeText = newNodeText;
+				const {text: childNodeText, cursor: childNodeCursor} =
+					squashTextNodes(childNode);
+				nodeText = childNodeText;
+
 				if (childNode.internal_cursorOffset !== undefined) {
 					// Outer Cursor elements override inner ones
-					cursor =
-						countNonAnsiGraphemes(text) +
-						Math.min(
-							countNonAnsiGraphemes(newNodeText),
-							childNode.internal_cursorOffset,
-						);
-				} else if (cursorOffset !== undefined) {
-					cursor = countNonAnsiGraphemes(text) + cursorOffset;
+					// NOTE: We don't support explicit offsets, yet
+					cursorHelper.setCursorPosition();
+				} else if (childNodeCursor !== undefined) {
+					nodeCursor = childNodeCursor;
+					console.error('childCursor=', nodeCursor);
 				}
+
+				// if (childNode.internal_cursorOffset !== undefined) {
+				// 	// Outer Cursor elements override inner ones
+				// 	cursor =
+				// 		countNonAnsiGraphemes(text) +
+				// 		Math.min(
+				// 			countNonAnsiGraphemes(newNodeText),
+				// 			childNode.internal_cursorOffset,
+				// 		);
+				// } else if (cursorOffset !== undefined) {
+				// 	cursor = countNonAnsiGraphemes(text) + cursorOffset;
+				// }
 			}
 
 			// Since these text nodes are being concatenated, `Output` instance won't be able to
@@ -74,6 +87,11 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 		}
 
 		text += nodeText;
+		if (nodeCursor != null) {
+			cursorHelper.appendHelper(nodeCursor);
+		} else {
+			cursorHelper.append(nodeText);
+		}
 	}
 
 	if (
@@ -83,6 +101,7 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 	) {
 		// The only valid cursorOffset in this situation is zero; so if it's set it must be zero
 		cursor = 0;
+		cursorHelper.setCursorPosition();
 	}
 
 	// Normalize cursor *before* expanding tabs or sanitizing, since
@@ -91,6 +110,17 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 		cursor = normalizeCursor(text, cursor);
 	}
 
+	text = sanitizeSquashedText(node, text);
+	cursorHelper.transform(text => sanitizeSquashedText(node, text));
+
+	return {
+		text,
+		cursorOffset: cursor,
+		cursor: cursorHelper.hasCursor ? cursorHelper : undefined,
+	};
+};
+
+const sanitizeSquashedText = (node: DOMElement, text: string) => {
 	text = sanitizeAnsi(text.replaceAll('\r\n', '\n'));
 
 	// Measurement and styling dependencies understand the ESC forms of these C1 controls.
@@ -101,10 +131,7 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 		text = wrapAnsi(text, Infinity, {trim: false});
 	}
 
-	return {
-		text,
-		cursorOffset: cursor,
-	};
+	return text;
 };
 
 const tabSize = 8;
