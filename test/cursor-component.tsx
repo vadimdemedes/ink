@@ -1324,3 +1324,24 @@ test('<Cursor /> within truncate', async (t: TestContext) => {
 		},
 	);
 });
+
+test('Clipped cursors should be hidden', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box flexDirection="row" height={1}>
+			<Box width={2} overflow="hidden">
+				<Text>
+					ab
+					<Cursor />c
+				</Text>
+			</Box>
+			<Box>
+				<Text>other</Text>
+			</Box>
+		</Box>,
+		{stdoutColumns: 100},
+		({getLastCursor, getLastTrimmedRender}) => {
+			t.assert.strictEqual(getLastTrimmedRender(), 'abother');
+			t.assert.strictEqual(getLastCursor(), undefined);
+		},
+	);
+});
