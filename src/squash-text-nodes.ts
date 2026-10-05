@@ -56,20 +56,7 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 					cursorHelper.setCursorPosition();
 				} else if (childNodeCursor !== undefined) {
 					nodeCursor = childNodeCursor;
-					console.error('childCursor=', nodeCursor);
 				}
-
-				// if (childNode.internal_cursorOffset !== undefined) {
-				// 	// Outer Cursor elements override inner ones
-				// 	cursor =
-				// 		countNonAnsiGraphemes(text) +
-				// 		Math.min(
-				// 			countNonAnsiGraphemes(newNodeText),
-				// 			childNode.internal_cursorOffset,
-				// 		);
-				// } else if (cursorOffset !== undefined) {
-				// 	cursor = countNonAnsiGraphemes(text) + cursorOffset;
-				// }
 			}
 
 			// Since these text nodes are being concatenated, `Output` instance won't be able to
