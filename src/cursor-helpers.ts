@@ -1,4 +1,8 @@
 import ansiEscapes from 'ansi-escapes';
+import {stripVTControlCharacters} from 'node:util';
+import {iterateAnsiGraphemes, iterateGraphemeSegments} from './string-utils.js';
+import {AnsiToken} from './ansi-tokenizer.js';
+import stringWidth from 'string-width';
 
 export type CursorPosition = {
 	x: number;
@@ -140,4 +144,168 @@ export const buildEraseFrame = (
 		ansiEscapes.cursorTo(0) +
 		ansiEscapes.eraseDown
 	);
+};
+
+export class InlineCursorHelper {
+	private text: string = '';
+	private cursorIndex: number | undefined;
+	private cursorAtEnd = false;
+
+	private isTransformed = false;
+	private textWithCursor: string | undefined;
+	private cursorSequence: string | undefined;
+
+	constructor() {}
+
+	public get hasCursor() {
+		return this.cursorAtEnd || this.cursorIndex !== undefined;
+	}
+
+	public append(text: string) {
+		if (this.isTransformed) {
+			throw new Error('Appending after transform is illegal?');
+		}
+
+		if (this.cursorAtEnd) {
+			this.cursorIndex = this.text.length;
+			this.cursorAtEnd = false;
+		}
+		this.text += text;
+	}
+
+	public appendHelper(other: InlineCursorHelper) {
+		if (this.isTransformed) {
+			throw new Error('Appending after transform is illegal?');
+		}
+
+		if (other.cursorIndex !== undefined) {
+			this.cursorIndex = this.text.length + other.cursorIndex;
+		} else if (other.cursorAtEnd) {
+			this.cursorAtEnd = true;
+		}
+		this.text += other.text;
+	}
+
+	public transform(handler: (text: string) => string) {
+		this.isTransformed = true;
+		const withCursor = this.ensureTextWithCursor();
+		if (withCursor != null) {
+			this.textWithCursor = handler(withCursor);
+		}
+		this.text = handler(this.text);
+	}
+
+	public setCursorPosition() {
+		this.cursorIndex = undefined;
+		this.cursorAtEnd = true;
+	}
+
+	public locateCursorPosition(): CursorPosition | undefined {
+		if (this.cursorAtEnd) {
+			return getPositionWhen(this.text, () => false);
+		}
+
+		const withCursor = this.ensureTextWithCursor();
+		console.error('locate', {
+			i: this.cursorIndex,
+			e: this.cursorAtEnd,
+			withCursor,
+		});
+		const cursorSequence = this.cursorSequence;
+		if (withCursor === undefined || cursorSequence === undefined) {
+			return undefined;
+		}
+
+		// NOTE: This works because the first chunk of the ansi
+		// sequence carries our ink://cursor emblem.
+		const valueToFind = getAnsiCursorToken(cursorSequence);
+		const {x, y, found} = getPositionWhen(withCursor, token => {
+			console.error('check', {token, valueToFind});
+			return token.value === valueToFind;
+		});
+		if (!found) {
+			return;
+		}
+
+		return {x, y};
+	}
+
+	private ensureTextWithCursor() {
+		if (this.textWithCursor) {
+			return this.textWithCursor;
+		}
+
+		let withCursor: string;
+		if (this.cursorAtEnd) {
+			withCursor = this.text;
+		} else if (this.cursorIndex !== undefined) {
+			const afterCursor = this.text.slice(this.cursorIndex);
+			const nextGraphemeEntry = iterateGraphemeSegments(
+				stripVTControlCharacters(afterCursor),
+			)
+				[Symbol.iterator]()
+				.next();
+			if (nextGraphemeEntry.done === true) {
+				this.cursorAtEnd = true;
+				withCursor = this.text;
+			} else {
+				const grapheme = nextGraphemeEntry.value.segment;
+				const searchSequence = ansiEscapes.link(grapheme, 'ink://cursor');
+				console.error({
+					c: this.cursorIndex,
+					t: this.text,
+					afterCursor,
+					searchSequence,
+					grapheme,
+				});
+				this.cursorSequence = searchSequence;
+				withCursor =
+					this.text.slice(0, this.cursorIndex) +
+					searchSequence +
+					this.text.slice(this.cursorIndex + grapheme.length);
+			}
+		} else {
+			// No cursor
+			return;
+		}
+
+		this.textWithCursor = withCursor;
+		return withCursor;
+	}
+}
+
+const getPositionWhen = (
+	text: string,
+	isTokenMatched: (
+		token: AnsiToken | {type: 'grapheme'; value: string},
+	) => boolean,
+) => {
+	let x = 0;
+	let y = 0;
+	for (const {token} of iterateAnsiGraphemes(text)) {
+		if (isTokenMatched(token)) {
+			return {x, y, found: true};
+		}
+
+		if (token.value === '\n') {
+			x = 0;
+			++y;
+			continue;
+		}
+
+		if (token.type === 'grapheme') {
+			x += stringWidth(token.value);
+		}
+	}
+
+	return {x, y, found: false};
+};
+
+const getAnsiCursorToken = (linkString: string) => {
+	const firstItem = iterateAnsiGraphemes(linkString).next();
+	if (firstItem.done === true) {
+		throw new Error('No ansi found in link string?');
+	}
+
+	return firstItem.value.token.value;
 };
