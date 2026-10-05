@@ -30,7 +30,7 @@ type ControlStringToken = {
 	readonly value: string;
 };
 
-type TextToken = {
+export type TextToken = {
 	readonly type: 'text';
 	readonly value: string;
 };
@@ -345,15 +345,13 @@ export function* iterateAnsiTokens(
 
 	let textStartIndex = 0;
 
-	const textUntil = (index: number) => {
-		return {
-			index: textStartIndex,
-			token: {
-				type: 'text',
-				value: text.slice(textStartIndex, index),
-			} satisfies AnsiToken,
-		};
-	};
+	const textUntil = (index: number) => ({
+		index: textStartIndex,
+		token: {
+			type: 'text',
+			value: text.slice(textStartIndex, index),
+		} satisfies AnsiToken,
+	});
 
 	for (let index = 0; index < text.length;) {
 		const character = text[index];

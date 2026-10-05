@@ -1,8 +1,13 @@
 export function* take<T>(iterable: Iterable<T>, count: number) {
-	if (count === 0) return;
+	if (count === 0) {
+		return;
+	}
+
 	for (const item of iterable) {
 		yield item;
-		if (--count < 0) break;
+		if (--count < 0) {
+			break;
+		}
 	}
 }
 

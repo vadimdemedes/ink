@@ -33,14 +33,16 @@ function App() {
 			setCursor(previous => Math.min(previous + 1, text.length));
 		}
 
-		if (!key.ctrl && !key.meta && input) {
-			setText(previous => {
-				const before = previous.slice(0, cursor);
-				const after = previous.slice(cursor);
-				return before + input + after;
-			});
-			setCursor(previous => previous + 1);
+		if (input !== '' && !key.ctrl && !key.meta && !key.return) {
+			return;
 		}
+
+		setText(previous => {
+			const before = previous.slice(0, cursor);
+			const after = previous.slice(cursor);
+			return before + input + after;
+		});
+		setCursor(previous => previous + 1);
 	});
 
 	const before = text.slice(0, cursor);

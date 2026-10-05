@@ -72,7 +72,9 @@ export type DOMElement = {
 	onStaticChange?: () => void;
 	internal_layoutListeners?: Set<LayoutListener>;
 
-	/** Character offset within an ink-text at which to place the cursor */
+	/**
+	Character offset within an ink-text at which to place the cursor
+	*/
 	internal_cursorOffset?: number;
 } & InkNode;
 
