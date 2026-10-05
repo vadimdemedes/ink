@@ -206,11 +206,6 @@ export class InlineCursorHelper {
 		}
 
 		const withCursor = this.ensureTextWithCursor();
-		console.error('locate', {
-			i: this.cursorIndex,
-			e: this.cursorAtEnd,
-			withCursor,
-		});
 		const cursorSequence = this.cursorSequence;
 		if (withCursor === undefined || cursorSequence === undefined) {
 			return undefined;
@@ -220,7 +215,6 @@ export class InlineCursorHelper {
 		// sequence carries our ink://cursor emblem.
 		const valueToFind = getAnsiCursorToken(cursorSequence);
 		const {x, y, found} = getPositionWhen(withCursor, token => {
-			console.error('check', {token, valueToFind});
 			return token.value === valueToFind;
 		});
 		if (!found) {
@@ -251,13 +245,6 @@ export class InlineCursorHelper {
 			} else {
 				const grapheme = nextGraphemeEntry.value.segment;
 				const searchSequence = ansiEscapes.link(grapheme, 'ink://cursor');
-				console.error({
-					c: this.cursorIndex,
-					t: this.text,
-					afterCursor,
-					searchSequence,
-					grapheme,
-				});
 				this.cursorSequence = searchSequence;
 				withCursor =
 					this.text.slice(0, this.cursorIndex) +
