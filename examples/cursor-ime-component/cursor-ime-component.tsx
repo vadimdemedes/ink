@@ -33,7 +33,7 @@ function App() {
 			setCursor(previous => Math.min(previous + 1, text.length));
 		}
 
-		if (input !== '' && !key.ctrl && !key.meta && !key.return) {
+		if (input === '' || key.ctrl || key.meta || key.return) {
 			return;
 		}
 
