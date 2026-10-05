@@ -309,13 +309,10 @@ const locateAndWrapCursor = ({
 	}
 
 	if (graphemeLength === undefined) {
-		if (cursorOffset === 0) {
-			// Cursor is at the very end of the input
-			return getPositionWhen(wrappedText, () => false);
-		}
-
-		// Cursor is somehow past the input?
-		return undefined;
+		return cursorOffset > 0
+			? undefined
+			: // Cursor is at the very end of the input
+				getPositionWhen(wrappedText, () => false);
 	}
 
 	// Step 2: Wrap the grapheme we found in a special Ansi
