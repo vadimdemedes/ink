@@ -2,6 +2,7 @@ import stringWidth from 'string-width';
 import widestLine from 'widest-line';
 import indentString from 'indent-string';
 import Yoga from 'yoga-layout';
+import ansiEscapes from 'ansi-escapes';
 import wrapText from './wrap-text.js';
 import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';
@@ -12,8 +13,7 @@ import type Output from './output.js';
 import {type CursorPosition} from './cursor-helpers.js';
 import {iterateAnsiGraphemes} from './string-utils.js';
 import {type Styles} from './styles.js';
-import {AnsiToken} from './ansi-tokenizer.js';
-import ansiEscapes from 'ansi-escapes';
+import {type AnsiToken} from './ansi-tokenizer.js';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.
@@ -266,10 +266,12 @@ const renderNodeToOutput = (
 };
 
 const getAnsiCursorToken = (linkString: string) => {
-	for (const {token} of iterateAnsiGraphemes(linkString)) {
-		return token.value;
+	const firstItem = iterateAnsiGraphemes(linkString).next();
+	if (firstItem.done === true) {
+		throw new Error('No ansi found in link string?');
 	}
-	throw new Error('No ansi found in link string?');
+
+	return firstItem.value.token.value;
 };
 
 const locateAndWrapCursor = ({
@@ -288,6 +290,7 @@ const locateAndWrapCursor = ({
 	if (cursorOffset === 0 && maxWidth === 0) {
 		return;
 	}
+
 	if (cursorOffset === 0) {
 		return {x: 0, y: 0};
 	}
@@ -317,11 +320,11 @@ const locateAndWrapCursor = ({
 
 	// Step 2: Wrap the grapheme we found in a special Ansi
 	// escape sequence so we can locate after wrapping
-	let toSearch = ansiEscapes.link(
+	const toSearch = ansiEscapes.link(
 		text.slice(byteOffset, byteOffset + graphemeLength),
 		'ink://cursor',
 	);
-	let toWrap =
+	const toWrap =
 		text.slice(0, byteOffset) +
 		toSearch +
 		text.slice(byteOffset + graphemeLength);
@@ -330,22 +333,20 @@ const locateAndWrapCursor = ({
 	// TODO: What if the cursor is within an ellipses?
 
 	const valueToFind = getAnsiCursorToken(toSearch);
-	const {x, y, found} = getPositionWhen(wrapped, token => {
-		// console.error(
-		// 	'hip',
-		// 	JSON.stringify(token.value),
-		// 	'vs',
-		// 	JSON.stringify(valueToFind),
-		// 	token.value === valueToFind,
-		// );
-		return token.value === valueToFind;
-	});
+	const {x, y, found} = getPositionWhen(
+		wrapped,
+		token =>
+			// Console.error(
+			// 	'hip',
+			// 	JSON.stringify(token.value),
+			// 	'vs',
+			// 	JSON.stringify(valueToFind),
+			// 	token.value === valueToFind,
+			// );
+			token.value === valueToFind,
+	);
 
-	if (found) {
-		return {x, y};
-	}
-
-	return undefined;
+	return found ? {x, y} : undefined;
 };
 
 const getPositionWhen = (
@@ -366,10 +367,12 @@ const getPositionWhen = (
 			++y;
 			continue;
 		}
+
 		if (token.type === 'grapheme') {
 			x += stringWidth(token.value);
 		}
 	}
+
 	return {x, y, found: false};
 };
 
