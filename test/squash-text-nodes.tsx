@@ -59,5 +59,5 @@ test('cursorOffset is preserved across nested nodes', t => {
 	appendChildNode(child, createTextNode('after'));
 
 	const {cursorOffset} = squashTextNodes(rootText);
-	t.assert.equal(cursorOffset, 18);
+	t.assert.strictEqual(cursorOffset, 18);
 });

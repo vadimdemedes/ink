@@ -295,12 +295,14 @@ const truncateCursorOffsetToPosition = ({
 		cursorOffset,
 	)) {
 		++graphemesInLine;
-		if (segment === '\n') {
-			cursorGraphemesInLine -= graphemesInLine;
-			graphemesInLine = 0;
-			++lineIndex;
-			lineStartIndex = index + 1;
+		if (segment !== '\n') {
+			continue;
 		}
+
+		cursorGraphemesInLine -= graphemesInLine;
+		graphemesInLine = 0;
+		++lineIndex;
+		lineStartIndex = index + 1;
 	}
 
 	const lineEndIndex = cleanText.indexOf('\n', lineStartIndex);
@@ -344,15 +346,15 @@ const truncateCursorOffsetToPosition = ({
 		half = Math.max(0, maxWidth - 1);
 	}
 
-	const prefixLen = half;
+	const prefixLength = half;
 	const prefix = currentLine.slice(0, half);
-	const suffixLen = maxWidth - half - 1;
-	const suffix = currentLine.slice(lineWidth - suffixLen, lineWidth);
+	const suffixLength = maxWidth - half - 1;
+	const suffix = currentLine.slice(lineWidth - suffixLength, lineWidth);
 
-	const suffixStartInCurrentLine = currentLine.length - suffixLen;
+	const suffixStartInCurrentLine = currentLine.length - suffixLength;
 
 	let x: number;
-	if (cursorByteOffset <= prefixLen) {
+	if (cursorByteOffset <= prefixLength) {
 		x = stringWidth(currentLine.slice(0, cursorByteOffset));
 	} else if (cursorByteOffset < suffixStartInCurrentLine) {
 		x = stringWidth(prefix);
@@ -400,7 +402,10 @@ const wrapCursorOffsetToPosition = ({
 	);
 	for (const {segment} of wrappedGraphemes) {
 		// NOTE: If the cursor lands on a newline, it should wrap
-		if (consumable <= 0 && segment !== '\n') break;
+		if (segment !== '\n' && consumable <= 0) {
+			break;
+		}
+
 		if (segment === '\n') {
 			x = 0;
 			++y;
