@@ -2,7 +2,7 @@ import stringWidth from 'string-width';
 import wrapAnsi from 'wrap-ansi';
 import {type DOMElement} from './dom.js';
 import sanitizeAnsi from './sanitize-ansi.js';
-import {iterateAnsiTokens} from './ansi-tokenizer.js';
+import {iterateAnsiTokens, type TextToken} from './ansi-tokenizer.js';
 import {
 	countNonAnsiGraphemes,
 	iterateGraphemeSegments,
@@ -12,10 +12,10 @@ type SquashedOutput = {
 	text: string;
 
 	/**
-	 * The requested cursor *visual* offset (if any) within
-	 * `text` (that is, ignoring ansi sequences, how many
-	 * *graphemes* need to be skipped past within `text` before
-	 * placing the cursor).
+	 The requested cursor *visual* offset (if any) within
+	 `text` (that is, ignoring ansi sequences, how many
+	 graphemes* need to be skipped past within `text` before
+	 placing the cursor).
 	 */
 	cursorOffset?: number;
 };
@@ -87,7 +87,7 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 
 	// Normalize cursor *before* expanding tabs or sanitizing, since
 	// the offset we've built is into the un-sanitized string
-	if (node.nodeName === 'ink-text' && cursor !== undefined) {
+	if (cursor !== undefined && node.nodeName === 'ink-text') {
 		cursor = normalizeCursor(text, cursor);
 	}
 
@@ -110,46 +110,61 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 const tabSize = 8;
 
 const normalizeCursor = (text: string, cursorOffset: number) => {
-	if (cursorOffset === 0) return 0;
+	if (cursorOffset === 0) {
+		return 0;
+	}
 
 	let visualLength = 0;
 	let offsetsToVisit = cursorOffset;
-	for (const {token} of iterateAnsiTokens(text)) {
-		if (offsetsToVisit <= 0) break;
 
-		if (token.type === 'text') {
-			for (const {index, segment} of iterateGraphemeSegments(token.value)) {
-				visualLength += stringWidth(segment);
-				switch (segment) {
-					// Tabs are expanded to 8 spaces during normalization
-					case '\t': {
-						const spaces = tabSize - (visualLength % tabSize);
+	const visitSegment = (token: TextToken, index: number, segment: string) => {
+		switch (segment) {
+			// Tabs are expanded to 8 spaces during normalization
+			case '\t': {
+				const spaces = tabSize - (visualLength % tabSize);
 
-						// NOTE: cursorOffset and visualLength already include 1 for
-						// this byte, so we add one fewer than the
-						// number of spaces added
-						cursorOffset += spaces - 1;
-						visualLength += spaces - 1;
-						break;
-					}
+				// NOTE: cursorOffset and visualLength already include 1 for
+				// this byte, so we add one fewer than the
+				// number of spaces added
+				cursorOffset += spaces - 1;
+				visualLength += spaces - 1;
+				break;
+			}
 
-					case '\r': {
-						if (token.value[index + 1] === '\n') {
-							--cursorOffset;
-							continue;
-						}
-
-						break;
-					}
-
-					default: {
-						// Nothing special to do
-						break;
-					}
+			case '\r': {
+				if (token.value[index + 1] === '\n') {
+					--cursorOffset;
+					break;
 				}
 
-				if (--offsetsToVisit <= 0) break;
+				break;
 			}
+
+			default: {
+				// Nothing special to do
+				break;
+			}
+		}
+	};
+
+	const visitText = (token: TextToken) => {
+		for (const {index, segment} of iterateGraphemeSegments(token.value)) {
+			visualLength += stringWidth(segment);
+			visitSegment(token, index, segment);
+
+			if (--offsetsToVisit <= 0) {
+				break;
+			}
+		}
+	};
+
+	for (const {token} of iterateAnsiTokens(text)) {
+		if (offsetsToVisit <= 0) {
+			break;
+		}
+
+		if (token.type === 'text') {
+			visitText(token);
 		}
 	}
 

@@ -35,8 +35,10 @@ const getWriteCalls = (stream: NodeJS.WriteStream): string[] => {
 	return writes;
 };
 
-const waitForCondition = async (condition: () => boolean): Promise<void> => {
-	if (condition()) {
+const waitForCondition = async (
+	isConditionMet: () => boolean,
+): Promise<void> => {
+	if (isConditionMet()) {
 		return;
 	}
 
@@ -48,7 +50,7 @@ const waitForCondition = async (condition: () => boolean): Promise<void> => {
 		let attempts = 0;
 		const interval = setInterval(() => {
 			try {
-				if (condition()) {
+				if (isConditionMet()) {
 					clearInterval(interval);
 					resolve();
 					return;
@@ -62,15 +64,17 @@ const waitForCondition = async (condition: () => boolean): Promise<void> => {
 			}
 
 			attempts++;
-			if (attempts >= maxAttempts) {
-				clearInterval(interval);
-				reject(new Error(`Condition was not met in ${timeoutMs}ms`));
+			if (!(attempts >= maxAttempts)) {
+				return;
 			}
+
+			clearInterval(interval);
+			reject(new Error(`Condition was not met in ${timeoutMs}ms`));
 		}, intervalMs);
 	});
 };
 
-type InteractiveRenderOpts = {
+type InteractiveRenderOptions = {
 	stdoutColumns?: number;
 };
 type InteractiveRenderProps = {
@@ -91,22 +95,22 @@ async function withInteractiveRender(
 ): Promise<void>;
 async function withInteractiveRender(
 	node: React.ReactNode,
-	opts: InteractiveRenderOpts,
+	options: InteractiveRenderOptions,
 	handler: InteractiveRenderHandler,
 ): Promise<void>;
 async function withInteractiveRender(
 	node: React.ReactNode,
-	optsOrHandler: InteractiveRenderHandler | InteractiveRenderOpts,
+	optionsOrHandler: InteractiveRenderHandler | InteractiveRenderOptions,
 	providedHandler?: InteractiveRenderHandler,
 ) {
-	const opts =
+	const options =
 		providedHandler === undefined
 			? {}
-			: (optsOrHandler as InteractiveRenderOpts);
+			: (optionsOrHandler as InteractiveRenderOptions);
 	const handler =
-		providedHandler ?? (optsOrHandler as InteractiveRenderHandler);
+		providedHandler ?? (optionsOrHandler as InteractiveRenderHandler);
 
-	const stdout = createStdout(opts.stdoutColumns ?? 5);
+	const stdout = createStdout(options.stdoutColumns ?? 5);
 	const stdin = createStdin();
 
 	// Ensure any Text style params are respected:
@@ -152,12 +156,12 @@ function InputApp({initialText = '', offset}: InputAppProps) {
 
 	useInput((input, key) => {
 		if (key.backspace || key.delete) {
-			setText(prev => prev.slice(0, -1));
+			setText(previous => previous.slice(0, -1));
 			return;
 		}
 
-		if (!key.ctrl && !key.meta && input) {
-			setText(prev => prev + input);
+		if (input !== '' && !key.ctrl && !key.meta) {
+			setText(previous => previous + input);
 		}
 	});
 
@@ -344,15 +348,12 @@ test('cursor position does not leak from suspended concurrent render to fallback
 	const stdout = createStdout();
 	const stdin = createStdin();
 
-	let resolvePromise: () => void;
-	const promise = new Promise<void>(resolve => {
-		resolvePromise = resolve;
-	});
+	const {promise, resolve: resolvePromise} = Promise.withResolvers<void>();
 
-	let suspended = true;
+	let isSuspended = true;
 
 	function CursorChild() {
-		if (suspended) {
+		if (isSuspended) {
 			// eslint-disable-next-line @typescript-eslint/only-throw-error
 			throw promise;
 		}
@@ -386,8 +387,8 @@ test('cursor position does not leak from suspended concurrent render to fallback
 	);
 
 	// Cleanup: resolve promise and unmount
-	suspended = false;
-	resolvePromise!();
+	isSuspended = false;
+	resolvePromise();
 	await act(async () => {
 		await delay(50);
 	});
@@ -401,8 +402,8 @@ test('screen does not scroll up on subsequent renders', async (t: TestContext) =
 		const [text, setText] = useState('');
 
 		useInput((input, key) => {
-			if (!key.ctrl && !key.meta && input) {
-				setText(prev => prev + input);
+			if (input !== '' && !key.ctrl && !key.meta) {
+				setText(previous => previous + input);
 			}
 		});
 
@@ -503,7 +504,7 @@ const hookWriteCases: HookWriteCase[] = [
 		App: StderrWriteApp,
 		includeStderr: true,
 		assertTargetWrite(t: TestContext, _output, stderr) {
-			t.assert.ok((stderr!.write as any).called);
+			t.assert.strictEqual((stderr?.write as any)?.called, true);
 		},
 	},
 ];
@@ -568,7 +569,7 @@ test('debug mode: useStdout().write() replays latest frame', async (t: TestConte
 		write.includes('from stdout hook\nHello'),
 	);
 
-	t.assert.ok(hookWrite);
+	t.assert.notStrictEqual(hookWrite, undefined);
 	t.assert.strictEqual(writes.includes(''), false);
 
 	unmount();
@@ -909,7 +910,7 @@ for (const {name, incremental} of inkRenderingModes) {
 			false,
 		);
 
-		t.assert.deepEqual(lastCursor, {x: 3, y: 2});
+		t.assert.deepStrictEqual(lastCursor, {x: 3, y: 2});
 
 		unmount();
 	});
@@ -943,7 +944,7 @@ for (const [i, config] of (
 			firstRenderOutput.includes(showCursorEscape),
 			'cursor should be visible after first render',
 		);
-		t.assert.deepEqual(
+		t.assert.deepStrictEqual(
 			lastCursor,
 			config.cursor,
 			`cursor should be at ${JSON.stringify(config.cursor)}`,
@@ -978,7 +979,7 @@ for (const [i, config] of (
 					firstRenderOutput.includes(showCursorEscape),
 					'cursor should be visible after first render',
 				);
-				t.assert.deepEqual(
+				t.assert.deepStrictEqual(
 					getLastCursor(),
 					config.cursor,
 					`cursor should be at ${JSON.stringify(config.cursor)}`,
@@ -1027,7 +1028,7 @@ for (const {wrap, expected} of [
 			</Box>,
 			async ({getLastCursor, getLastTrimmedRender}) => {
 				t.assert.strictEqual(getLastTrimmedRender(), expected);
-				t.assert.deepEqual(getLastCursor(), {x: 0, y: 0});
+				t.assert.deepStrictEqual(getLastCursor(), {x: 0, y: 0});
 			},
 		);
 	});
@@ -1048,13 +1049,13 @@ for (const {wrap, expected} of [
 			</Box>,
 			async ({getLastCursor, getLastTrimmedRender}) => {
 				t.assert.strictEqual(getLastTrimmedRender(), expected);
-				t.assert.deepEqual(getLastCursor(), {x: 5, y: 0});
+				t.assert.deepStrictEqual(getLastCursor(), {x: 5, y: 0});
 			},
 		);
 	});
 }
 
-test(`truncate-middle with truncated <Cursor /> renders on the ellipsis`, async (t: TestContext) => {
+test('truncate-middle with truncated <Cursor /> renders on the ellipsis', async (t: TestContext) => {
 	await withInteractiveRender(
 		<Box width={5}>
 			<Text wrap="truncate-middle">
@@ -1064,12 +1065,12 @@ test(`truncate-middle with truncated <Cursor /> renders on the ellipsis`, async 
 			</Text>
 		</Box>,
 		async ({getLastCursor}) => {
-			t.assert.deepEqual(getLastCursor(), {x: 2, y: 0});
+			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 0});
 		},
 	);
 });
 
-test(`wrap=truncate-middle - cursor in retained suffix`, async (t: TestContext) => {
+test('wrap=truncate-middle - cursor in retained suffix', async (t: TestContext) => {
 	await withInteractiveRender(
 		<Box width={6}>
 			<Text wrap="truncate-middle">
@@ -1080,12 +1081,12 @@ test(`wrap=truncate-middle - cursor in retained suffix`, async (t: TestContext) 
 		</Box>,
 		async ({getLastCursor, getLastTrimmedRender}) => {
 			t.assert.strictEqual(getLastTrimmedRender(), 'abc…hi');
-			t.assert.deepEqual(getLastCursor(), {x: 4, y: 0});
+			t.assert.deepStrictEqual(getLastCursor(), {x: 4, y: 0});
 		},
 	);
 });
 
-test(`wrap=truncate-middle - cursor within retained suffix`, async (t: TestContext) => {
+test('wrap=truncate-middle - cursor within retained suffix', async (t: TestContext) => {
 	await withInteractiveRender(
 		<Box width={6}>
 			<Text wrap="truncate-middle">
@@ -1095,12 +1096,12 @@ test(`wrap=truncate-middle - cursor within retained suffix`, async (t: TestConte
 		</Box>,
 		async ({getLastCursor, getLastTrimmedRender}) => {
 			t.assert.strictEqual(getLastTrimmedRender(), 'abc…hi');
-			t.assert.deepEqual(getLastCursor(), {x: 5, y: 0});
+			t.assert.deepStrictEqual(getLastCursor(), {x: 5, y: 0});
 		},
 	);
 });
 
-test(`wrap=truncate-middle - multiline with cursor on second line`, async (t: TestContext) => {
+test('wrap=truncate-middle - multiline with cursor on second line', async (t: TestContext) => {
 	await withInteractiveRender(
 		<Box width={5}>
 			<Text wrap="truncate-middle">
@@ -1113,7 +1114,7 @@ test(`wrap=truncate-middle - multiline with cursor on second line`, async (t: Te
 		</Box>,
 		async ({getLastCursor, getLastTrimmedRender}) => {
 			t.assert.strictEqual(getLastTrimmedRender(), 'fi…ne\nHe…ld');
-			t.assert.deepEqual(getLastCursor(), {x: 2, y: 1});
+			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 1});
 		},
 	);
 });
@@ -1126,7 +1127,7 @@ test('padding with <Cursor /> is counted once', async (t: TestContext) => {
 			</Text>
 		</Box>,
 		({getLastCursor}) => {
-			t.assert.deepEqual(getLastCursor(), {x: 2, y: 2});
+			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 2});
 		},
 	);
 });
@@ -1164,7 +1165,7 @@ test('<Cursor /> handles wide characters', async (t: TestContext) => {
 		</Box>,
 		{stdoutColumns: 4},
 		({getLastCursor}) => {
-			t.assert.deepEqual(getLastCursor(), {x: 2, y: 1});
+			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 1});
 		},
 	);
 });
@@ -1179,7 +1180,7 @@ test('<Cursor /> interleaves in wide and narrow characters', async (t: TestConte
 		</Box>,
 		{stdoutColumns: 4},
 		({getLastCursor}) => {
-			t.assert.deepEqual(getLastCursor(), {x: 2, y: 1});
+			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 1});
 		},
 	);
 });
@@ -1188,16 +1189,14 @@ test('<Cursor /> handles ansi sanitization', async (t: TestContext) => {
 	await withInteractiveRender(
 		<Box>
 			<Text>
-				{'A'}
-				{'\u001B[2J'}
-				{'B'}
-				<Cursor />
-				{'C'}
+				A{'\u{1B}[2J'}
+				B
+				<Cursor />C
 			</Text>
 		</Box>,
 		{stdoutColumns: 4},
 		({getLastCursor}) => {
-			t.assert.deepEqual(getLastCursor(), {x: 2, y: 0});
+			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 0});
 		},
 	);
 });
@@ -1207,13 +1206,12 @@ test('<Cursor /> handles styling', async (t: TestContext) => {
 		<Box>
 			<Text>
 				<Text color="red">ABCD</Text>
-				<Cursor />
-				{'E'}
+				<Cursor />E
 			</Text>
 		</Box>,
 		{stdoutColumns: 3},
 		({getLastCursor}) => {
-			t.assert.deepEqual(getLastCursor(), {x: 1, y: 1});
+			t.assert.deepStrictEqual(getLastCursor(), {x: 1, y: 1});
 		},
 	);
 });
@@ -1232,7 +1230,7 @@ test('<Cursor /> handles placement within styling', async (t: TestContext) => {
 		{stdoutColumns: 3},
 		({getLastCursor, getWriteCallsString}) => {
 			t.assert.ok(getWriteCallsString().includes(ansiStyles.red.open));
-			t.assert.deepEqual(getLastCursor(), {x: 1, y: 0});
+			t.assert.deepStrictEqual(getLastCursor(), {x: 1, y: 0});
 		},
 	);
 });
@@ -1246,23 +1244,21 @@ test('<Cursor /> handles style-adding transforms', async (t: TestContext) => {
 		lastCursor = cursor;
 	};
 
-	const addStyle = (s: string) => {
-		return ansiStyles.red.open + s + ansiStyles.red.close;
-	};
+	const addStyle = (s: string) =>
+		ansiStyles.red.open + s + ansiStyles.red.close;
 
 	const {unmount, waitUntilRenderFlush} = render(
 		<Box>
 			<Text>
 				<Transform transform={addStyle}>ABCD</Transform>
-				<Cursor />
-				{'E'}
+				<Cursor />E
 			</Text>
 		</Box>,
 		{stdout, stdin, onCursorUpdated},
 	);
 	await waitUntilRenderFlush();
 
-	t.assert.deepEqual(lastCursor, {x: 1, y: 1});
+	t.assert.deepStrictEqual(lastCursor, {x: 1, y: 1});
 
 	unmount();
 });
@@ -1272,9 +1268,8 @@ test('<Cursor /> is hidden when clipped via overflow', async (t: TestContext) =>
 		<Box width={3} overflowX="hidden">
 			<Box width={16} flexShrink={0}>
 				<Text>
-					{'ABCD'}
-					<Cursor />
-					{'E'}
+					ABCD
+					<Cursor />E
 				</Text>
 			</Box>
 		</Box>,
@@ -1299,7 +1294,7 @@ test('<Cursor /> is shown when rendered by itself', async (t: TestContext) => {
 		</Box>,
 		{stdoutColumns: 3},
 		({getLastCursor, getWriteCallsString}) => {
-			t.assert.deepEqual(getLastCursor(), {x: 0, y: 0});
+			t.assert.deepStrictEqual(getLastCursor(), {x: 0, y: 0});
 
 			const firstRenderOutput = getWriteCallsString();
 			t.assert.ok(
