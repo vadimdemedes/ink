@@ -154,7 +154,9 @@ const renderNodeToOutput = (
 			const textWrap = node.style.textWrap ?? 'wrap';
 			if (currentWidth > maxWidth) {
 				text = wrapText(text, maxWidth, textWrap);
-				cursor?.transform(text => wrapText(text, maxWidth, textWrap));
+				cursor?.transform(toTransform =>
+					wrapText(toTransform, maxWidth, textWrap),
+				);
 			}
 
 			const position = cursor?.locateCursorPosition();
