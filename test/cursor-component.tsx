@@ -22,7 +22,7 @@ import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout, {type FakeStdout} from './helpers/create-stdout.js';
 import {act} from './helpers/act.js';
 
-const ELLIPSIZE_CURSOR = true;
+const IS_ELLIPSIZE_CURSOR = true;
 
 const showCursorEscape = '\u{1B}[?25h';
 const hideCursorEscape = '\u{1B}[?25l';
@@ -1031,7 +1031,7 @@ for (const {wrap, expected, cursorOnEllipsis} of [
 			async ({getLastCursor, getLastTrimmedRender}) => {
 				t.assert.strictEqual(getLastTrimmedRender(), expected);
 
-				if (ELLIPSIZE_CURSOR && cursorOnEllipsis === true) {
+				if (IS_ELLIPSIZE_CURSOR && cursorOnEllipsis === true) {
 					t.assert.strictEqual(getLastCursor(), undefined);
 				} else {
 					t.assert.deepStrictEqual(getLastCursor(), {x: 0, y: 0});
@@ -1072,7 +1072,7 @@ test('truncate-middle with truncated <Cursor /> renders on the ellipsis', async 
 			</Text>
 		</Box>,
 		async ({getLastCursor}) => {
-			if (ELLIPSIZE_CURSOR) {
+			if (IS_ELLIPSIZE_CURSOR) {
 				t.assert.strictEqual(getLastCursor(), undefined);
 			} else {
 				t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 0});
@@ -1125,7 +1125,7 @@ test('wrap=truncate-middle - multiline with cursor on second line', async (t: Te
 		</Box>,
 		async ({getLastCursor, getLastTrimmedRender}) => {
 			t.assert.strictEqual(getLastTrimmedRender(), 'fi…ne\nHe…ld');
-			if (ELLIPSIZE_CURSOR) {
+			if (IS_ELLIPSIZE_CURSOR) {
 				t.assert.strictEqual(getLastCursor(), undefined);
 			} else {
 				t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 1});
@@ -1365,7 +1365,7 @@ test('Handle sanitized control characters', async (t: TestContext) => {
 	await withInteractiveRender(
 		<Box flexDirection="row" height={1}>
 			<Text>
-				A{'\x07'}
+				A{'\u{7}'}
 				<Cursor />
 				BC
 			</Text>
@@ -1373,7 +1373,7 @@ test('Handle sanitized control characters', async (t: TestContext) => {
 		{stdoutColumns: 100},
 		({getLastCursor, getLastTrimmedRender}) => {
 			t.assert.strictEqual(getLastTrimmedRender(), 'ABC');
-			t.assert.deepEqual(getLastCursor(), {x: 1, y: 0});
+			t.assert.deepStrictEqual(getLastCursor(), {x: 1, y: 0});
 		},
 	);
 });
