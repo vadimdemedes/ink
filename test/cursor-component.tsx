@@ -1345,3 +1345,20 @@ test('Clipped cursors should be hidden', async (t: TestContext) => {
 		},
 	);
 });
+
+test('Handle sanitized control characters', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box flexDirection="row" height={1}>
+			<Text>
+				A{'\x07'}
+				<Cursor />
+				BC
+			</Text>
+		</Box>,
+		{stdoutColumns: 100},
+		({getLastCursor, getLastTrimmedRender}) => {
+			t.assert.strictEqual(getLastTrimmedRender(), 'ABC');
+			t.assert.deepEqual(getLastCursor(), {x: 1, y: 0});
+		},
+	);
+});
