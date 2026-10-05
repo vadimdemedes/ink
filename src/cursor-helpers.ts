@@ -1,8 +1,8 @@
-import ansiEscapes from 'ansi-escapes';
 import {stripVTControlCharacters} from 'node:util';
-import {iterateAnsiGraphemes, iterateGraphemeSegments} from './string-utils.js';
-import {AnsiToken} from './ansi-tokenizer.js';
+import ansiEscapes from 'ansi-escapes';
 import stringWidth from 'string-width';
+import {iterateAnsiGraphemes, iterateGraphemeSegments} from './string-utils.js';
+import {type AnsiToken} from './ansi-tokenizer.js';
 
 export type CursorPosition = {
 	x: number;
@@ -147,7 +147,7 @@ export const buildEraseFrame = (
 };
 
 export class InlineCursorHelper {
-	private text: string = '';
+	private text = '';
 	private cursorIndex: number | undefined;
 	private cursorAtEnd = false;
 
@@ -155,7 +155,40 @@ export class InlineCursorHelper {
 	private textWithCursor: string | undefined;
 	private cursorSequence: string | undefined;
 
-	constructor() {}
+	private ensureTextWithCursor() {
+		if (this.textWithCursor !== undefined) {
+			return this.textWithCursor;
+		}
+
+		let withCursor: string;
+		if (this.cursorAtEnd) {
+			withCursor = this.text;
+		} else if (this.cursorIndex === undefined) {
+			// No cursor
+			return;
+		} else {
+			const afterCursor = this.text.slice(this.cursorIndex);
+			const segmentsIterable = iterateGraphemeSegments(
+				stripVTControlCharacters(afterCursor),
+			);
+			const nextGraphemeEntry = segmentsIterable[Symbol.iterator]().next();
+			if (nextGraphemeEntry.done === true) {
+				this.cursorAtEnd = true;
+				withCursor = this.text;
+			} else {
+				const grapheme = nextGraphemeEntry.value.segment;
+				const searchSequence = ansiEscapes.link(grapheme, 'ink://cursor');
+				this.cursorSequence = searchSequence;
+				withCursor =
+					this.text.slice(0, this.cursorIndex) +
+					searchSequence +
+					this.text.slice(this.cursorIndex + grapheme.length);
+			}
+		}
+
+		this.textWithCursor = withCursor;
+		return withCursor;
+	}
 
 	public get hasCursor() {
 		return this.cursorAtEnd || this.cursorIndex !== undefined;
@@ -170,6 +203,7 @@ export class InlineCursorHelper {
 			this.cursorIndex = this.text.length;
 			this.cursorAtEnd = false;
 		}
+
 		this.text += text;
 	}
 
@@ -183,15 +217,17 @@ export class InlineCursorHelper {
 		} else if (other.cursorAtEnd) {
 			this.cursorAtEnd = true;
 		}
+
 		this.text += other.text;
 	}
 
 	public transform(handler: (text: string) => string) {
 		this.isTransformed = true;
 		const withCursor = this.ensureTextWithCursor();
-		if (withCursor != null) {
+		if (withCursor !== undefined) {
 			this.textWithCursor = handler(withCursor);
 		}
+
 		this.text = handler(this.text);
 	}
 
@@ -206,7 +242,7 @@ export class InlineCursorHelper {
 		}
 
 		const withCursor = this.ensureTextWithCursor();
-		const cursorSequence = this.cursorSequence;
+		const {cursorSequence} = this;
 		if (withCursor === undefined || cursorSequence === undefined) {
 			return undefined;
 		}
@@ -214,50 +250,11 @@ export class InlineCursorHelper {
 		// NOTE: This works because the first chunk of the ansi
 		// sequence carries our ink://cursor emblem.
 		const valueToFind = getAnsiCursorToken(cursorSequence);
-		const {x, y, found} = getPositionWhen(withCursor, token => {
-			return token.value === valueToFind;
-		});
-		if (!found) {
-			return;
-		}
-
-		return {x, y};
-	}
-
-	private ensureTextWithCursor() {
-		if (this.textWithCursor) {
-			return this.textWithCursor;
-		}
-
-		let withCursor: string;
-		if (this.cursorAtEnd) {
-			withCursor = this.text;
-		} else if (this.cursorIndex !== undefined) {
-			const afterCursor = this.text.slice(this.cursorIndex);
-			const nextGraphemeEntry = iterateGraphemeSegments(
-				stripVTControlCharacters(afterCursor),
-			)
-				[Symbol.iterator]()
-				.next();
-			if (nextGraphemeEntry.done === true) {
-				this.cursorAtEnd = true;
-				withCursor = this.text;
-			} else {
-				const grapheme = nextGraphemeEntry.value.segment;
-				const searchSequence = ansiEscapes.link(grapheme, 'ink://cursor');
-				this.cursorSequence = searchSequence;
-				withCursor =
-					this.text.slice(0, this.cursorIndex) +
-					searchSequence +
-					this.text.slice(this.cursorIndex + grapheme.length);
-			}
-		} else {
-			// No cursor
-			return;
-		}
-
-		this.textWithCursor = withCursor;
-		return withCursor;
+		const {x, y, found} = getPositionWhen(
+			withCursor,
+			token => token.value === valueToFind,
+		);
+		return found ? {x, y} : undefined;
 	}
 }
 

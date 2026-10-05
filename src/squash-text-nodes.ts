@@ -28,7 +28,7 @@ type SquashedOutput = {
 // which need to wrap all children at once, instead of wrapping 3 text nodes separately.
 const squashTextNodes = (node: DOMElement): SquashedOutput => {
 	let cursor: number | undefined;
-	let cursorHelper = new InlineCursorHelper();
+	const cursorHelper = new InlineCursorHelper();
 	let text = '';
 
 	for (const childNode of node.childNodes) {
@@ -74,10 +74,10 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 		}
 
 		text += nodeText;
-		if (nodeCursor != null) {
-			cursorHelper.appendHelper(nodeCursor);
-		} else {
+		if (nodeCursor === undefined) {
 			cursorHelper.append(nodeText);
+		} else {
+			cursorHelper.appendHelper(nodeCursor);
 		}
 	}
 
@@ -98,7 +98,9 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 	}
 
 	text = sanitizeSquashedText(node, text);
-	cursorHelper.transform(text => sanitizeSquashedText(node, text));
+	cursorHelper.transform(toTransform =>
+		sanitizeSquashedText(node, toTransform),
+	);
 
 	return {
 		text,
