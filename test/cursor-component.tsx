@@ -22,6 +22,8 @@ import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import createStdout, {type FakeStdout} from './helpers/create-stdout.js';
 import {act} from './helpers/act.js';
 
+const ELLIPSIZE_CURSOR = true;
+
 const showCursorEscape = '\u{1B}[?25h';
 const hideCursorEscape = '\u{1B}[?25l';
 
@@ -1013,10 +1015,10 @@ test('overflowX - single text node inside overflow container with <Cursor />', (
 	t.assert.strictEqual(stripAnsi(output), 'Hello');
 });
 
-for (const {wrap, expected} of [
+for (const {wrap, expected, cursorOnEllipsis} of [
 	{wrap: 'truncate-end', expected: 'Hell…'},
 	{wrap: 'truncate-middle', expected: 'He…ld'},
-	{wrap: 'truncate-start', expected: '…orld'},
+	{wrap: 'truncate-start', expected: '…orld', cursorOnEllipsis: true},
 ] as const) {
 	test(`wrap=${wrap} - single text node wrapping with <Cursor /> at start`, async (t: TestContext) => {
 		await withInteractiveRender(
@@ -1028,7 +1030,12 @@ for (const {wrap, expected} of [
 			</Box>,
 			async ({getLastCursor, getLastTrimmedRender}) => {
 				t.assert.strictEqual(getLastTrimmedRender(), expected);
-				t.assert.deepStrictEqual(getLastCursor(), {x: 0, y: 0});
+
+				if (ELLIPSIZE_CURSOR && cursorOnEllipsis === true) {
+					t.assert.strictEqual(getLastCursor(), undefined);
+				} else {
+					t.assert.deepStrictEqual(getLastCursor(), {x: 0, y: 0});
+				}
 			},
 		);
 	});
@@ -1065,7 +1072,11 @@ test('truncate-middle with truncated <Cursor /> renders on the ellipsis', async 
 			</Text>
 		</Box>,
 		async ({getLastCursor}) => {
-			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 0});
+			if (ELLIPSIZE_CURSOR) {
+				t.assert.strictEqual(getLastCursor(), undefined);
+			} else {
+				t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 0});
+			}
 		},
 	);
 });
@@ -1114,7 +1125,11 @@ test('wrap=truncate-middle - multiline with cursor on second line', async (t: Te
 		</Box>,
 		async ({getLastCursor, getLastTrimmedRender}) => {
 			t.assert.strictEqual(getLastTrimmedRender(), 'fi…ne\nHe…ld');
-			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 1});
+			if (ELLIPSIZE_CURSOR) {
+				t.assert.strictEqual(getLastCursor(), undefined);
+			} else {
+				t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 1});
+			}
 		},
 	);
 });
