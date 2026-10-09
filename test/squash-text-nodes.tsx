@@ -34,7 +34,7 @@ test('nested transform line indices do not depend on preceding siblings', (t: Te
 	t.assert.strictEqual(output, 'prefix00');
 });
 
-test('cursorOffset is preserved across nested nodes', t => {
+test('cursorOffset is preserved across nested nodes', (t: TestContext) => {
 	const rootText = createNode('ink-text');
 	appendChildNode(rootText, createTextNode('root'));
 
