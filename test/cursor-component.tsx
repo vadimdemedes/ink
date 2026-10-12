@@ -1377,3 +1377,88 @@ test('Handle sanitized control characters', async (t: TestContext) => {
 		},
 	);
 });
+
+test('explicit newline is accounted for without wrapping', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box>
+			<Text>
+				a{'\n'}
+				b
+				<Cursor />c
+			</Text>
+		</Box>,
+		{stdoutColumns: 100},
+		({getLastCursor, getLastTrimmedRender}) => {
+			t.assert.strictEqual(getLastTrimmedRender(), 'a\nbc');
+			t.assert.deepStrictEqual(getLastCursor(), {x: 1, y: 1});
+		},
+	);
+});
+
+test('tab expansion moves cursor to visual column', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box>
+			<Text>
+				A{'\t'}
+				{'\t'}
+				<Cursor />B
+			</Text>
+		</Box>,
+		{stdoutColumns: 100},
+		({getLastCursor, getLastTrimmedRender}) => {
+			// Tabs expand to 8 spaces, so A + 15 spaces before cursor
+			t.assert.strictEqual(getLastTrimmedRender(), 'A               B');
+			t.assert.deepStrictEqual(getLastCursor(), {x: 16, y: 0});
+		},
+	);
+});
+
+test('CRLF is normalised and cursor position is correct', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box>
+			<Text>
+				AB
+				{'\r\n'}C{'\t'}
+				<Cursor />D
+			</Text>
+		</Box>,
+		{stdoutColumns: 100},
+		({getLastCursor, getLastTrimmedRender}) => {
+			// \r\n becomes \n, tab expands to 8 spaces
+			t.assert.strictEqual(getLastTrimmedRender(), 'AB\nC       D');
+			t.assert.deepStrictEqual(getLastCursor(), {x: 8, y: 1});
+		},
+	);
+});
+
+test('cursor survives zero-width joiner emoji', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box>
+			<Text>
+				{'\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}'}
+				<Cursor />X
+			</Text>
+		</Box>,
+		({getLastCursor}) => {
+			// The family emoji is one grapheme cluster, so cursor is after it
+			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 0});
+		},
+	);
+});
+
+test('cursor at start of wrapped line', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box>
+			<Text>
+				12345
+				<Cursor />
+				6789
+			</Text>
+		</Box>,
+		{stdoutColumns: 5},
+		({getLastCursor, getLastTrimmedRender}) => {
+			t.assert.strictEqual(getLastTrimmedRender(), '12345\n6789');
+			t.assert.deepStrictEqual(getLastCursor(), {x: 0, y: 1});
+		},
+	);
+});
