@@ -1,7 +1,6 @@
-import {stripVTControlCharacters} from 'node:util';
 import ansiEscapes from 'ansi-escapes';
 import stringWidth from 'string-width';
-import {iterateAnsiGraphemes, iterateGraphemeSegments} from './string-utils.js';
+import {iterateAnsiGraphemes} from './string-utils.js';
 import {type AnsiToken} from './ansi-tokenizer.js';
 
 export type CursorPosition = {
@@ -146,6 +145,30 @@ export const buildEraseFrame = (
 	);
 };
 
+const wrapNextGrapheme = (
+	text: string,
+	atIndex: number,
+): {wrapped: string; sequence: string} | undefined => {
+	const afterCursor = text.slice(atIndex);
+	let wrapped = text.slice(0, atIndex);
+	for (const {index, token} of iterateAnsiGraphemes(afterCursor)) {
+		if (token.type === 'grapheme') {
+			const sequence = ansiEscapes.link(token.value, 'ink://cursor');
+			return {
+				wrapped:
+					wrapped + sequence + text.slice(atIndex + index + token.value.length),
+				sequence,
+			};
+		} else {
+			wrapped += token.value;
+		}
+	}
+
+	// If we got here, there was no grapheme after the cursor
+	// for us to wrap
+	return undefined;
+};
+
 export class InlineCursorHelper {
 	private text = '';
 	private cursorIndex: number | undefined;
@@ -167,23 +190,16 @@ export class InlineCursorHelper {
 			// No cursor
 			return;
 		} else {
-			const afterCursor = this.text.slice(this.cursorIndex);
-			const segmentsIterable = iterateGraphemeSegments(
-				stripVTControlCharacters(afterCursor),
-			);
-			const nextGraphemeEntry = segmentsIterable[Symbol.iterator]().next();
-			if (nextGraphemeEntry.done === true) {
+			const wrapped = wrapNextGrapheme(this.text, this.cursorIndex);
+			if (wrapped === undefined) {
+				// None next
 				this.cursorAtEnd = true;
-				withCursor = this.text;
-			} else {
-				const grapheme = nextGraphemeEntry.value.segment;
-				const searchSequence = ansiEscapes.link(grapheme, 'ink://cursor');
-				this.cursorSequence = searchSequence;
-				withCursor =
-					this.text.slice(0, this.cursorIndex) +
-					searchSequence +
-					this.text.slice(this.cursorIndex + grapheme.length);
+				return this.text;
 			}
+
+			const {wrapped: wrapResult, sequence} = wrapped;
+			withCursor = wrapResult;
+			this.cursorSequence = sequence;
 		}
 
 		this.textWithCursor = withCursor;
@@ -226,6 +242,7 @@ export class InlineCursorHelper {
 		const withCursor = this.ensureTextWithCursor();
 		if (withCursor !== undefined) {
 			this.textWithCursor = handler(withCursor);
+			console.error({withCursor}, '->', {after: this.textWithCursor});
 		}
 
 		this.text = handler(this.text);
