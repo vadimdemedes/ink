@@ -1462,3 +1462,21 @@ test('cursor at start of wrapped line', async (t: TestContext) => {
 		},
 	);
 });
+
+test('<Cursor /> before a styled sibling wraps like the text it follows', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box>
+			<Text>
+				{'a '}
+				<Cursor />
+				<Text color="red">bc</Text>
+				{' d'}
+			</Text>
+		</Box>,
+		{stdoutColumns: 4},
+		({getLastCursor, getLastTrimmedRender}) => {
+			t.assert.strictEqual(getLastTrimmedRender(), 'a bc\n d');
+			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 0});
+		},
+	);
+});
