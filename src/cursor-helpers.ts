@@ -242,7 +242,6 @@ export class InlineCursorHelper {
 		const withCursor = this.ensureTextWithCursor();
 		if (withCursor !== undefined) {
 			this.textWithCursor = handler(withCursor);
-			console.error({withCursor}, '->', {after: this.textWithCursor});
 		}
 
 		this.text = handler(this.text);
