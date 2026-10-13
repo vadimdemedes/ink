@@ -159,9 +159,9 @@ const wrapNextGrapheme = (
 					wrapped + sequence + text.slice(atIndex + index + token.value.length),
 				sequence,
 			};
-		} else {
-			wrapped += token.value;
 		}
+
+		wrapped += token.value;
 	}
 
 	// If we got here, there was no grapheme after the cursor
