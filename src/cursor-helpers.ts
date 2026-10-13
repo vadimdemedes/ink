@@ -206,6 +206,29 @@ export class InlineCursorHelper {
 		return withCursor;
 	}
 
+	private resolveCursorIndex() {
+		const withCursor = this.textWithCursor;
+		if (withCursor === undefined) {
+			// Easy case; no transform applied, our index is canonical
+			return this.cursorIndex;
+		}
+
+		// A transform (especially, sanitizing) may have moved
+		// the cursor from our index
+		const {cursorSequence} = this;
+		if (cursorSequence === undefined) {
+			return this.cursorIndex;
+		}
+
+		for (const {index, token} of iterateAnsiGraphemes(withCursor)) {
+			if (cursorSequence.startsWith(token.value)) {
+				return index;
+			}
+		}
+
+		return undefined;
+	}
+
 	public get hasCursor() {
 		return this.cursorAtEnd || this.cursorIndex !== undefined;
 	}
@@ -229,7 +252,7 @@ export class InlineCursorHelper {
 		}
 
 		if (other.cursorIndex !== undefined) {
-			this.cursorIndex = this.text.length + other.cursorIndex;
+			this.cursorIndex = this.text.length + (other.resolveCursorIndex() ?? 0);
 		} else if (other.cursorAtEnd) {
 			this.cursorAtEnd = true;
 		}
