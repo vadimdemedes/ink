@@ -293,7 +293,7 @@ export default class Output {
 				const {cursorPosition} = effects;
 				if (
 					cursorPosition !== undefined &&
-					(cursorPosition.x < clip.x1! || cursorPosition.x > clip.x2!)
+					(cursorPosition.x < clip.x1! || cursorPosition.x >= clip.x2!)
 				) {
 					effects.cursorPosition = undefined;
 				}

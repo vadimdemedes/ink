@@ -1605,3 +1605,22 @@ test('<Cursor /> inside a style-adding <Transform /> still wraps correctly', asy
 		},
 	);
 });
+
+test('<Cursor /> on a character clipped at the edge is hidden', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box width={3} overflowX="hidden">
+			<Box width={16} flexShrink={0}>
+				<Text>
+					abc
+					<Cursor />
+					def
+				</Text>
+			</Box>
+		</Box>,
+		{stdoutColumns: 3},
+		({getLastCursor, getLastTrimmedRender}) => {
+			t.assert.strictEqual(getLastTrimmedRender(), 'abc');
+			t.assert.strictEqual(getLastCursor(), undefined);
+		},
+	);
+});
