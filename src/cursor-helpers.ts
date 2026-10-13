@@ -252,10 +252,13 @@ export class InlineCursorHelper {
 			throw new Error('Appending after transform is illegal?');
 		}
 
-		if (other.cursorIndex !== undefined) {
-			this.cursorIndex = this.text.length + (other.resolveCursorIndex() ?? 0);
-		} else if (other.cursorAtEnd) {
+		if (other.cursorAtEnd) {
 			this.cursorAtEnd = true;
+		} else {
+			const resolved = other.resolveCursorIndex();
+			if (resolved !== undefined) {
+				this.cursorIndex = this.text.length + resolved;
+			}
 		}
 
 		this.text += other.text;
