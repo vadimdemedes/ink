@@ -1505,24 +1505,30 @@ for (const {name, junk} of [
 	});
 }
 
-test(`<Cursor /> in a nested <Text /> handles nameCSI sanitization before it`, async (t: TestContext) => {
-	await withInteractiveRender(
-		<Box>
-			<Text>
+for (const {name, junk} of [
+	{name: 'CSI', junk: '\u{1B}[2J'},
+	{name: 'BEL', junk: '\u{7}'},
+] as const) {
+	test(`<Cursor /> at the end of a nested <Text /> handles ${name} sanitization before it`, async (t: TestContext) => {
+		await withInteractiveRender(
+			<Box>
 				<Text>
-					A{'\u{1B}[2J'}
-					B
-					<Cursor />C
+					<Text>
+						A{junk}
+						B
+						<Cursor />
+					</Text>
+					C
 				</Text>
-			</Text>
-		</Box>,
-		{stdoutColumns: 100},
-		({getLastCursor, getLastTrimmedRender}) => {
-			t.assert.strictEqual(getLastTrimmedRender(), 'ABC');
-			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 0});
-		},
-	);
-});
+			</Box>,
+			{stdoutColumns: 100},
+			({getLastCursor, getLastTrimmedRender}) => {
+				t.assert.strictEqual(getLastTrimmedRender(), 'ABC');
+				t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 0});
+			},
+		);
+	});
+}
 
 test('<Cursor /> in a nested <Text /> handles tab expansion before it', async (t: TestContext) => {
 	// Assumes tab expansion happens in sanitizeSquashedText: "A\t" -> column 8

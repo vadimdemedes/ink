@@ -217,7 +217,8 @@ export class InlineCursorHelper {
 		// the cursor from our index
 		const {cursorSequence} = this;
 		if (cursorSequence === undefined) {
-			return this.cursorIndex;
+			// The cursor must have been at the end of the sanitized text
+			return this.text.length;
 		}
 
 		for (const {index, token} of iterateAnsiGraphemes(withCursor)) {
