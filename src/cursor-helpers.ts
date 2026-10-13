@@ -221,8 +221,9 @@ export class InlineCursorHelper {
 			return this.text.length;
 		}
 
+		const expectedToken = getAnsiCursorToken(cursorSequence);
 		for (const {index, token} of iterateAnsiGraphemes(withCursor)) {
-			if (cursorSequence.startsWith(token.value)) {
+			if (token.value === expectedToken) {
 				return index;
 			}
 		}
