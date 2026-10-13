@@ -1480,3 +1480,122 @@ test('<Cursor /> before a styled sibling wraps like the text it follows', async 
 		},
 	);
 });
+
+for (const {name, junk} of [
+	{name: 'CSI', junk: '\u{1B}[2J'},
+	{name: 'BEL', junk: '\u{7}'},
+] as const) {
+	test(`<Cursor /> in a nested <Text /> handles ${name} sanitization before it`, async (t: TestContext) => {
+		await withInteractiveRender(
+			<Box>
+				<Text>
+					<Text>
+						A{junk}
+						B
+						<Cursor />C
+					</Text>
+				</Text>
+			</Box>,
+			{stdoutColumns: 100},
+			({getLastCursor, getLastTrimmedRender}) => {
+				t.assert.strictEqual(getLastTrimmedRender(), 'ABC');
+				t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 0});
+			},
+		);
+	});
+}
+
+test(`<Cursor /> in a nested <Text /> handles nameCSI sanitization before it`, async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box>
+			<Text>
+				<Text>
+					A{'\u{1B}[2J'}
+					B
+					<Cursor />C
+				</Text>
+			</Text>
+		</Box>,
+		{stdoutColumns: 100},
+		({getLastCursor, getLastTrimmedRender}) => {
+			t.assert.strictEqual(getLastTrimmedRender(), 'ABC');
+			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 0});
+		},
+	);
+});
+
+test('<Cursor /> in a nested <Text /> handles tab expansion before it', async (t: TestContext) => {
+	// Assumes tab expansion happens in sanitizeSquashedText: "A\t" -> column 8
+	await withInteractiveRender(
+		<Box>
+			<Text>
+				<Text>
+					{'A\t'}
+					<Cursor />B
+				</Text>
+			</Text>
+		</Box>,
+		{stdoutColumns: 100},
+		({getLastCursor}) => {
+			t.assert.deepStrictEqual(getLastCursor(), {x: 8, y: 0});
+		},
+	);
+});
+
+test('<Cursor /> on the last visible cell of a clipped box stays visible', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box width={3} overflowX="hidden">
+			<Box width={16} flexShrink={0}>
+				<Text>
+					ab
+					<Cursor />
+					cdef
+				</Text>
+			</Box>
+		</Box>,
+		{stdoutColumns: 3},
+		({getLastCursor, getLastTrimmedRender}) => {
+			t.assert.strictEqual(getLastTrimmedRender(), 'abc');
+			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 0});
+		},
+	);
+});
+
+test('<Cursor /> on a vertically clipped row is hidden', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box height={1} overflowY="hidden">
+			<Box flexShrink={0}>
+				<Text>
+					{'a\nb'}
+					<Cursor />c
+				</Text>
+			</Box>
+		</Box>,
+		{stdoutColumns: 100},
+		({getLastCursor, getLastTrimmedRender}) => {
+			t.assert.strictEqual(getLastTrimmedRender(), 'a');
+			t.assert.strictEqual(getLastCursor(), undefined);
+		},
+	);
+});
+
+test('<Cursor /> inside a style-adding <Transform /> still wraps correctly', async (t: TestContext) => {
+	const addStyle = (s: string) =>
+		ansiStyles.red.open + s + ansiStyles.red.close;
+
+	await withInteractiveRender(
+		<Box>
+			<Text>
+				<Transform transform={addStyle}>
+					ABCD
+					<Cursor />E
+				</Transform>
+			</Text>
+		</Box>,
+		{stdoutColumns: 3},
+		({getLastCursor, getLastTrimmedRender}) => {
+			t.assert.strictEqual(getLastTrimmedRender(), 'ABC\nDE');
+			t.assert.deepStrictEqual(getLastCursor(), {x: 1, y: 1});
+		},
+	);
+});
