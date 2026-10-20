@@ -1,6 +1,6 @@
-import widestLine from 'widest-line';
 import indentString from 'indent-string';
 import Yoga from 'yoga-layout';
+import measureText from './measure-text.js';
 import wrapText from './wrap-text.js';
 import getMaxWidth from './get-max-width.js';
 import squashTextNodes from './squash-text-nodes.js';
@@ -142,7 +142,7 @@ const renderNodeToOutput = (
 		let text = squashTextNodes(node);
 
 		if (text.length > 0) {
-			const currentWidth = widestLine(text);
+			const currentWidth = measureText(text).width;
 			const maxWidth = getMaxWidth(yogaNode);
 
 			if (currentWidth > maxWidth) {

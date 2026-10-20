@@ -5,7 +5,9 @@ import {
 	styledCharsToString,
 	tokenize,
 } from '@alcalzone/ansi-tokenize';
+import measureText from './measure-text.js';
 import {type OutputTransformer} from './render-node-to-output.js';
+import SizedCache from './sized-cache.js';
 
 // Replaces a partially visible wide character with a space that keeps its styles.
 const blankCell = (cell: StyledChar): StyledChar => ({
@@ -84,20 +86,70 @@ const intersectClips = (outer: Clip | undefined, inner: Clip): Clip => {
 	};
 };
 
+// Count rows without tokenizing text that may be outside the viewport.
+const countLines = (text: string): number => {
+	let count = 1;
+	for (
+		let index = text.indexOf('\n');
+		index !== -1;
+		index = text.indexOf('\n', index + 1)
+	) {
+		count++;
+	}
+
+	return count;
+};
+
+// Prevent style chars from taking up a cell.
+const parseStyledChars = (text: string): StyledChar[] =>
+	styledCharsFromTokens(tokenize(text)).filter(
+		character => !/^\p{Default_Ignorable_Code_Point}+$/u.test(character.value),
+	);
+
 class OutputCaches {
-	widths = new Map<string, number>();
-	blockWidths = new Map<string, number>();
-	styledChars = new Map<string, StyledChar[]>();
+	// Sized by UTF-16 code units.
+	// Styled characters are much larger than their text, so only single lines are kept.
+	widths = new SizedCache<string, number>(2 ** 18);
+
+	// 2 ** 16 keeps memory close to baseline while still getting good hits.
+	styledChars = new SizedCache<string, StyledChar[]>(2 ** 16);
+	lines = new SizedCache<string, string[]>(2 ** 20);
+
+	getLines(text: string): string[] {
+		let cached = this.lines.get(text);
+		if (cached === undefined) {
+			// Carry styles across newlines, but only keep the first.
+			const characters = text.includes('\n')
+				? parseStyledChars(text)
+				: this.getStyledChars(text);
+			const characterLines: StyledChar[][] = [[]];
+			for (const character of characters) {
+				if (character.value === '\n') {
+					characterLines.push([]);
+				} else {
+					characterLines.at(-1)!.push(character);
+				}
+			}
+
+			cached = characterLines.map(line => styledCharsToString(line));
+			// Include styles and hyperlinks reopened on each line.
+			this.lines.set(
+				text,
+				cached,
+				text.length + cached.reduce((size, line) => size + line.length, 0),
+			);
+		}
+
+		return cached;
+	}
 
 	getStyledChars(line: string): StyledChar[] {
 		let cached = this.styledChars.get(line);
 		if (cached === undefined) {
-			// Standalone invisible Unicode characters must not occupy terminal cells.
-			cached = styledCharsFromTokens(tokenize(line)).filter(
-				character =>
-					!/^\p{Default_Ignorable_Code_Point}+$/u.test(character.value),
-			);
-			this.styledChars.set(line, cached);
+			cached = parseStyledChars(line);
+			if (!line.includes('\n')) {
+				this.styledChars.set(line, cached, line.length);
+			}
 		}
 
 		return cached;
@@ -107,31 +159,25 @@ class OutputCaches {
 		let cached = this.widths.get(text);
 		if (cached === undefined) {
 			cached = stringWidth(text);
-			this.widths.set(text, cached);
+			this.widths.set(text, cached, text.length);
 		}
 
 		return cached;
 	}
 
 	getWidestLine(text: string): number {
-		let cached = this.blockWidths.get(text);
-		if (cached === undefined) {
-			let lineWidth = 0;
-			for (const line of text.split('\n')) {
-				lineWidth = Math.max(lineWidth, this.getStringWidth(line));
-			}
-
-			cached = lineWidth;
-			this.blockWidths.set(text, cached);
-		}
-
-		return cached;
+		// Layout already measured most blocks, so share its cache instead of keeping another copy.
+		return measureText(text).width;
 	}
 }
 
+// Each frame creates an Output, but most of its text is unchanged. Keep these
+// text-only caches across frames and bound them to avoid retaining every write.
+const sharedCaches = new OutputCaches();
+
 export default class Output {
 	private readonly operations: Operation[] = [];
-	private readonly caches: OutputCaches = new OutputCaches();
+	private readonly caches: OutputCaches = sharedCaches;
 
 	width: number;
 	height: number;
@@ -150,24 +196,23 @@ export default class Output {
 	): void {
 		const {text, transformers} = operation;
 		let {x, y} = operation;
-		// Preserve styles across explicit newlines before clipping individual rows.
-		const characterLines: StyledChar[][] = [[]];
-		for (const character of this.caches.getStyledChars(text)) {
-			if (character.value === '\n') {
-				characterLines.push([]);
-			} else {
-				characterLines.at(-1)!.push(character);
-			}
+		const lineCount = countLines(text);
+		if (
+			y + lineCount <= 0 ||
+			y >= output.length ||
+			(clip &&
+				(isClipEmpty(clip) ||
+					(typeof clip.y1 === 'number' &&
+						typeof clip.y2 === 'number' &&
+						(y + lineCount <= clip.y1 || y >= clip.y2))))
+		) {
+			return;
 		}
 
-		let lines = characterLines.map(line => styledCharsToString(line));
+		// Preserve styles across explicit newlines before clipping individual rows.
+		let lines = this.caches.getLines(text);
 
 		if (clip) {
-			// Two nested clips can intersect to nothing. Nothing is visible, so bail out before slicing.
-			if (isClipEmpty(clip)) {
-				return;
-			}
-
 			const shouldClipHorizontally =
 				typeof clip?.x1 === 'number' && typeof clip?.x2 === 'number';
 
@@ -184,21 +229,16 @@ export default class Output {
 				}
 			}
 
-			if (shouldClipVertically) {
-				const height = lines.length;
-
-				if (y + height < clip.y1! || y > clip.y2!) {
-					return;
-				}
-			}
-
 			if (shouldClipHorizontally) {
 				lines = lines.map(line => {
 					const from = x < clip.x1! ? clip.x1! - x : 0;
 					const width = this.caches.getStringWidth(line);
 					const to = x + width > clip.x2! ? clip.x2! - x : width;
 
-					return this.sliceLineToColumns(line, from, to);
+					// Lines that fit don't need to be tokenized and rebuilt.
+					return from === 0 && to >= width
+						? line
+						: this.sliceLineToColumns(line, from, to);
 				});
 
 				if (x < clip.x1!) {
