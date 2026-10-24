@@ -43,6 +43,10 @@ export default class SizedCache<Key, Value> {
 		return old.value;
 	}
 
+	has(key: Key): boolean {
+		return this.current.has(key) || this.previous.has(key);
+	}
+
 	set(key: Key, value: Value, size: number): void {
 		// Don't let one large entry drop everything else.
 		if (size > this.maxSize / 8) {
@@ -56,5 +60,11 @@ export default class SizedCache<Key, Value> {
 		}
 
 		this.add(key, {value, size});
+	}
+
+	clear(): void {
+		this.current.clear();
+		this.previous.clear();
+		this.currentSize = 0;
 	}
 }

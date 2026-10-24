@@ -6,10 +6,11 @@ import {
 	styledCharsToString,
 	tokenize,
 } from '@alcalzone/ansi-tokenize';
-import QuickLRU from 'quick-lru';
+import SizedCache from './sized-cache.js';
 import {type Styles} from './styles.js';
 
-export const wrapTextCache = new QuickLRU<string, string>({maxSize: 4096});
+// Sized by UTF-16 code units of the key and the wrapped text.
+export const wrapTextCache = new SizedCache<string, string>(2 ** 20);
 
 const wrapText = (
 	text: string,
@@ -79,7 +80,11 @@ const wrapText = (
 			.join('\n');
 	}
 
-	wrapTextCache.set(cacheKey, wrappedText);
+	wrapTextCache.set(
+		cacheKey,
+		wrappedText,
+		cacheKey.length + wrappedText.length,
+	);
 
 	return wrappedText;
 };

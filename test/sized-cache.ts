@@ -57,3 +57,20 @@ test('replacing a key does not count its old size', (t: TestContext) => {
 	t.assert.strictEqual(cache.get('kept'), 1);
 	t.assert.strictEqual(cache.get('replaced'), 9);
 });
+
+test('reports and clears entries from both generations', (t: TestContext) => {
+	const cache = createCache();
+	cache.set('previous', 1, 2);
+	cache.set('filler-1', 2, 2);
+	cache.set('filler-2', 3, 2);
+	cache.set('filler-3', 4, 2);
+	cache.set('current', 5, 2);
+
+	t.assert.strictEqual(cache.has('previous'), true);
+	t.assert.strictEqual(cache.has('current'), true);
+	t.assert.strictEqual(cache.has('missing'), false);
+
+	cache.clear();
+	t.assert.strictEqual(cache.has('previous'), false);
+	t.assert.strictEqual(cache.has('current'), false);
+});

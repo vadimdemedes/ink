@@ -143,8 +143,9 @@ test('evicts old cached results', (t: TestContext) => {
 	wrapTextCache.clear();
 	wrapText('cache-test-first', 5, 'truncate-end');
 
-	for (let index = 0; index < 8192; index++) {
-		wrapText(`cache-test-${index}`, 5, 'truncate-end');
+	// The cache is bounded by text size, so a few large texts push out the rest.
+	for (let index = 0; index < 20; index++) {
+		wrapText(`${'x'.repeat(100_000)}${index}`, 5, 'truncate-end');
 	}
 
 	t.assert.strictEqual(wrapTextCache.has(cacheKey), false);

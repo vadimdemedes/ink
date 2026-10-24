@@ -44,8 +44,9 @@ test('returns cached result on repeated calls', (t: TestContext) => {
 test('evicts old cached results', (t: TestContext) => {
 	const first = measureText('eviction-test-first');
 
-	for (let index = 0; index < 8192; index++) {
-		measureText(`eviction-test-${index}`);
+	// The cache is bounded by text size, so a few large texts push out the rest.
+	for (let index = 0; index < 20; index++) {
+		measureText(`${'x'.repeat(100_000)}${index}`);
 	}
 
 	const second = measureText('eviction-test-first');
