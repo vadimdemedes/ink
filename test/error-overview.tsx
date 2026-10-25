@@ -44,6 +44,17 @@ test('renders the original error when its source file is missing', (t: TestConte
 	t.assert.ok(output.includes('missing-source-file.js:1:1'));
 });
 
+test('renders the original error when a file URL in its stack cannot be converted to a path', (t: TestContext) => {
+	const error = createErrorWithStack(
+		'Error: Oh no\n    at file://example.com/app.js:1:1\n    at file:///bad%ZZ.js:2:2',
+	);
+	const output = stripAnsi(renderToString(<ErrorOverview error={error} />));
+
+	t.assert.ok(output.includes('Oh no'));
+	t.assert.ok(output.includes('app.js:1:1'));
+	t.assert.ok(output.includes('file:///bad%ZZ.js:2:2'));
+});
+
 test('multiline error messages are not treated as stack frames', (t: TestContext) => {
 	const sourceUrl = new URL('fixtures/error source.txt', import.meta.url);
 	const error = new Error('Validation failed\nRequired field is missing');
