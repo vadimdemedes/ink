@@ -65,3 +65,15 @@ test('cursor controls inside OSC payloads remain untouched', (t: TestContext) =>
 		`${hyperlink}ab]8;;`,
 	);
 });
+
+test('text does not let an OSC hyperlink smuggle escape sequences to the terminal', (t: TestContext) => {
+	const output = renderToString(
+		<Text>
+			{'\u{1B}]8;;\u{1B}]52;c;SGVsbG8=\u{7}\u{7}a\u{1B}]8;;\u{9B}2J\u{7}b'}
+		</Text>,
+	);
+
+	t.assert.strictEqual(output.includes('\u{1B}]52'), false);
+	t.assert.strictEqual(output.includes('\u{1B}[2J'), false);
+	t.assert.strictEqual(output.includes('\u{9B}'), false);
+});

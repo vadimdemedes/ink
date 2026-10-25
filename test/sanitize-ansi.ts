@@ -140,6 +140,34 @@ test('preserve C1 OSC hyperlinks terminated by BEL', (t: TestContext) => {
 	t.assert.strictEqual(output, input);
 });
 
+test('preserve OSC hyperlinks with parameters', (t: TestContext) => {
+	const input =
+		'\u{1B}]8;id=docs;https://example.com\u{1B}\\link\u{1B}]8;;\u{1B}\\';
+
+	t.assert.strictEqual(sanitizeAnsi(input), input);
+});
+
+for (const [name, payload] of [
+	['an OSC 52 clipboard write', '\u{1B}]52;c;SGVsbG8=\u{7}'],
+	['an ESC-escaped OSC 52 clipboard write', '\u{1B}\u{1B}]52;c;SGVsbG8=\u{7}'],
+	['a C1 OSC 52 clipboard write', '\u{9D}52;c;SGVsbG8=\u{7}'],
+	['a screen clear', '\u{1B}[2J'],
+	['a C1 screen clear', '\u{9B}2J'],
+	['a DCS sequence', '\u{1B}Pq#0\u{1B}\\'],
+]) {
+	test(`strip OSC hyperlinks whose payload smuggles ${name}`, (t: TestContext) => {
+		const output = sanitizeAnsi(`\u{1B}]8;;${payload}\u{7}link\u{1B}]8;;\u{7}`);
+
+		t.assert.strictEqual(output, 'link\u{1B}]8;;\u{7}');
+	});
+}
+
+test('strip OSC sequences other than hyperlinks', (t: TestContext) => {
+	const output = sanitizeAnsi('A\u{1B}]0;title\u{7}B\u{9D}52;c;SGVsbG8=\u{7}C');
+
+	t.assert.strictEqual(output, 'ABC');
+});
+
 test('strip non-SGR CSI sequences as complete units', (t: TestContext) => {
 	const output = sanitizeAnsi('A\u{1B}[>4;2mB\u{1B}[2 qC');
 
