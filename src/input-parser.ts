@@ -50,9 +50,15 @@ const parseCsiSequence = (
 			'235678'.includes(input[csiPayloadStart]!);
 
 		if (isRxvtShiftKey || isCsiFinalByte(byte)) {
+			// A bare ESC[M is a legacy X10/normal mouse report, which is followed by three raw coordinate bytes.
+			const length = byte === 0x4d && index === csiPayloadStart ? 4 : 1;
+			if (index + length > input.length) {
+				return 'pending';
+			}
+
 			return {
-				sequence: input.slice(startIndex, index + 1),
-				nextIndex: index + 1,
+				sequence: input.slice(startIndex, index + length),
+				nextIndex: index + length,
 			};
 		}
 

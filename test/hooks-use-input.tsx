@@ -219,6 +219,7 @@ for (const [name, sequence] of [
 	['focus out', '\u{1B}[O'],
 	['cursor position report', '\u{1B}[24;80R'],
 	['SGR mouse report', '\u{1B}[<0;10;20M'],
+	['legacy mouse report', '\u{1B}[M !"'],
 	['primary device attributes', '\u{1B}[?62;1;4c'],
 	['stray bracketed paste end', '\u{1B}[201~'],
 	['unmapped legacy CSI', '\u{1B}[[Z'],
