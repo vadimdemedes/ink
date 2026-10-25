@@ -234,7 +234,6 @@ type HostConfig = ReconcilerHostConfig<
 	createFragmentInstance: () => null;
 };
 
-// eslint-disable-next-line @eslint-react/naming-convention-context-name -- This is the React reconciler host config, not a React context.
 const hostConfig: HostConfig = {
 	getRootHostContext: () => ({
 		isInsideText: false,
