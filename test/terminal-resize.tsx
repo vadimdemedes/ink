@@ -182,6 +182,63 @@ test('useWindowSize falls back to terminal-size rows when stdout.rows is missing
 	t.assert.strictEqual(capturedRows, 45);
 });
 
+for (const isTty of [false, true]) {
+	test(`resolve the terminal-size fallback once per stream instead of on every render (isTTY: ${String(isTty)})`, async (t: TestContext) => {
+		const stdout = createStdout(0, isTty);
+		const originalColumns = process.env.COLUMNS;
+		const originalLines = process.env.LINES;
+		const originalProcessStdoutColumns = process.stdout.columns;
+		const originalProcessStdoutRows = process.stdout.rows;
+		const originalProcessStderrColumns = process.stderr.columns;
+		const originalProcessStderrRows = process.stderr.rows;
+
+		t.after(() => {
+			process.env.COLUMNS = originalColumns;
+			process.env.LINES = originalLines;
+			process.stdout.columns = originalProcessStdoutColumns;
+			process.stdout.rows = originalProcessStdoutRows;
+			process.stderr.columns = originalProcessStderrColumns;
+			process.stderr.rows = originalProcessStderrRows;
+		});
+
+		// eslint-disable-next-line node-test/no-process-env-mutation -- Restored in `t.after()`.
+		process.env.COLUMNS = '30';
+		// eslint-disable-next-line node-test/no-process-env-mutation -- Restored in `t.after()`.
+		process.env.LINES = '10';
+		process.stdout.columns = 0;
+		process.stdout.rows = 0;
+		process.stderr.columns = 0;
+		process.stderr.rows = 0;
+
+		function Test({label}: {readonly label: string}) {
+			return (
+				<Box borderStyle="single">
+					<Text>{label}</Text>
+				</Box>
+			);
+		}
+
+		const {rerender, unmount, waitUntilRenderFlush} = render(
+			<Test label="first" />,
+			{stdout, debug: true},
+		);
+		await waitUntilRenderFlush();
+
+		// eslint-disable-next-line node-test/no-process-env-mutation -- Restored in `t.after()`.
+		process.env.COLUMNS = '50';
+		rerender(<Test label="second" />);
+		await waitUntilRenderFlush();
+		unmount();
+
+		const lastFrame = stripAnsi(
+			stdout.getWrites().findLast(write => write.includes('second')) ?? '',
+		);
+		const topBorder =
+			lastFrame.split('\n').find(line => line.startsWith('┌')) ?? '';
+		t.assert.strictEqual(topBorder.length, 30);
+	});
+}
+
 test('clear screen when terminal width decreases', async (t: TestContext) => {
 	const stdout = createStdout(100);
 

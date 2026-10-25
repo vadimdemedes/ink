@@ -13,6 +13,24 @@ const resolveDimension = (
 	return fallback !== undefined && fallback > 0 ? fallback : defaultValue;
 };
 
+// `terminal-size` opens `/dev/tty` or spawns `tput` on each call, and this runs on every render. A stream without its own size has no `resize` event to invalidate on, so keep the first result per stream.
+const fallbackSizes = new WeakMap<
+	OutputStream,
+	{columns: number; rows: number}
+>();
+
+const getFallbackSize = (
+	stdout: OutputStream,
+): {columns: number; rows: number} => {
+	let size = fallbackSizes.get(stdout);
+	if (size === undefined) {
+		size = terminalSize();
+		fallbackSizes.set(stdout, size);
+	}
+
+	return size;
+};
+
 /**
 Get the effective terminal dimensions from the given stdout stream.
 
@@ -29,7 +47,7 @@ export const getWindowSize = (
 		return {columns, rows};
 	}
 
-	const fallbackSize = terminalSize();
+	const fallbackSize = getFallbackSize(stdout);
 
 	return {
 		columns: resolveDimension(columns, fallbackSize.columns, 80),
