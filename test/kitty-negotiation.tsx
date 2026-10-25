@@ -1,10 +1,15 @@
 import {Readable} from 'node:stream';
 import {setTimeout as delay} from 'node:timers/promises';
 import test, {type TestContext} from 'node:test';
+import FakeTimers from '@sinonjs/fake-timers';
 import React, {useState} from 'react';
 import {render, useApp, useInput} from '../src/index.js';
 import {resolveFlags} from '../src/kitty-keyboard.js';
 import createStdout from './helpers/create-stdout.js';
+import {
+	createStdin as createSyncStdin,
+	emitReadable,
+} from './helpers/create-stdin.js';
 
 const createStdin = () =>
 	Object.assign(new Readable({read() {}}), {
@@ -136,17 +141,18 @@ test('pasted query responses remain input and do not enable the protocol', async
 });
 
 test('auto detection queries the terminal only once raw mode is enabled', async (t: TestContext) => {
+	const clock = FakeTimers.install({toFake: ['setTimeout', 'clearTimeout']});
 	const stdout = createStdout();
 	const rawModeEnabled = Promise.withResolvers<number>();
-	const stdin = Object.assign(new Readable({read() {}}), {
-		// eslint-disable-next-line @typescript-eslint/naming-convention
-		isTTY: true,
-		setRawMode(isEnabled: boolean) {
-			if (isEnabled) {
-				rawModeEnabled.resolve(stdout.getWrites().length);
-			}
-		},
-	});
+	const stdin = createSyncStdin();
+	stdin.setRawMode = (isEnabled: boolean) => {
+		if (isEnabled) {
+			rawModeEnabled.resolve(stdout.getWrites().length);
+		}
+
+		return stdin;
+	};
+
 	let showInput!: () => void;
 	function Input() {
 		useInput(() => {});
@@ -170,14 +176,14 @@ test('auto detection queries the terminal only once raw mode is enabled', async 
 	});
 	t.after(() => {
 		app.unmount();
+		clock.uninstall();
 	});
 	// Longer than the detection timeout: neither the query nor its timer may start before raw mode.
-	await delay(250);
+	await clock.tickAsync(250);
 	t.assert.strictEqual(stdout.getWrites().includes('\u{1B}[?u'), false);
 	showInput();
 	const writesBeforeRawMode = await rawModeEnabled.promise;
 	t.assert.ok(stdout.getWrites().indexOf('\u{1B}[?u') >= writesBeforeRawMode);
-	stdin.push('\u{1B}[?0u');
-	await delay(30);
+	emitReadable(stdin, '\u{1B}[?0u');
 	t.assert.ok(stdout.getWrites().includes('\u{1B}[>1u'));
 });
