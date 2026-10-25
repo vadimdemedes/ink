@@ -1,6 +1,10 @@
 import {hasAnsiControlCharacters, tokenizeAnsi} from './ansi-tokenizer.js';
 
 const sgrParametersRegex = /^[\d:;]*$/;
+// ESC, CAN, SUB or a C1 control inside the parameters or URI ends the OSC in the terminal, so whatever follows would run as its own escape sequence.
+const hyperlinkRegex =
+	// eslint-disable-next-line no-control-regex, regexp/no-control-character -- OSC introducers and terminators are control characters.
+	/^(?:\u{1B}\]|\u{9D})8;[^\u{18}\u{1A}\u{1B}\u{80}-\u{9F}]*(?:\u{7}|\u{1B}\\|\u{9C})$/u;
 // Terminals print nothing for C0 controls and DEL, so strip them; tabs and newlines carry layout. ESC and C1 never reach text tokens, the tokenizer owns them.
 const controlCharactersRegex = /(?![\t\n])\p{Control}/gu;
 const leadingMarksRegex = /^\p{Mark}+/u;
@@ -41,7 +45,7 @@ const normalizeParameter = (parameter: string): string | undefined => {
 
 // Strip ANSI escape sequences that would conflict with Ink's layout.
 // Preserved: SGR sequences (colors, bold, etc. - end with 'm') and
-// OSC sequences (hyperlinks, etc. - ESC ] or C1 OSC).
+// OSC 8 hyperlinks (ESC ] or C1 OSC) whose payload cannot end the sequence early.
 // Stripped: cursor movement, screen clearing, and other control sequences.
 // Combining marks share their base character's cell, so SGR sequences are deferred until after the marks. Otherwise ANSI tokenization consumes the marks as part of the escape sequence.
 const sanitizeAnsi = (text: string): string => {
@@ -67,8 +71,11 @@ const sanitizeAnsi = (text: string): string => {
 		}
 
 		if (token.type === 'osc') {
-			output += pendingStyles + token.value;
-			pendingStyles = '';
+			if (hyperlinkRegex.test(token.value)) {
+				output += pendingStyles + token.value;
+				pendingStyles = '';
+			}
+
 			continue;
 		}
 
