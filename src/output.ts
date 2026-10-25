@@ -1,11 +1,54 @@
 import stringWidth from 'string-width';
 import {
 	type StyledChar,
+	ansiCodesToString,
+	diffAnsiCodes,
 	styledCharsFromTokens,
-	styledCharsToString,
 	tokenize,
 } from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
+
+const isSameStyle = (
+	a: StyledChar['styles'],
+	b: StyledChar['styles'],
+): boolean =>
+	a === b ||
+	(a.length === b.length &&
+		a.every(
+			(code, index) =>
+				code.code === b[index]!.code && code.endCode === b[index]!.endCode,
+		));
+
+// Same output as `styledCharsToString` from ansi-tokenize, which diffs the styles of every pair of neighboring characters. Neighbors usually share styles, so skipping the diff for them avoids most of that work. Holes (undefined cells) are skipped.
+const styledCharsToString = (
+	characters: ReadonlyArray<StyledChar | undefined>,
+): string => {
+	let result = '';
+	let previous: StyledChar | undefined;
+
+	for (const character of characters) {
+		if (character === undefined) {
+			continue;
+		}
+
+		if (previous === undefined) {
+			result += ansiCodesToString(character.styles);
+		} else if (!isSameStyle(previous.styles, character.styles)) {
+			result += ansiCodesToString(
+				diffAnsiCodes(previous.styles, character.styles),
+			);
+		}
+
+		result += character.value;
+		previous = character;
+	}
+
+	if (previous !== undefined && previous.styles.length > 0) {
+		result += ansiCodesToString(diffAnsiCodes(previous.styles, []));
+	}
+
+	return result;
+};
 
 // Replaces a partially visible wide character with a space that keeps its styles.
 const blankCell = (cell: StyledChar): StyledChar => ({
@@ -128,6 +171,13 @@ class OutputCaches {
 		return cached;
 	}
 }
+
+const emptyCell: StyledChar = {
+	type: 'char',
+	value: ' ',
+	fullWidth: false,
+	styles: [],
+};
 
 export default class Output {
 	private readonly operations: Operation[] = [];
@@ -356,19 +406,14 @@ export default class Output {
 		// Initialize output array with a specific set of rows, so that margin/padding at the bottom is preserved
 		const output: StyledChar[][] = [];
 
+		// Cells are replaced, never mutated, so every row can share one blank cell.
+		const blankRow: StyledChar[] = Array.from(
+			{length: this.width},
+			() => emptyCell,
+		);
+
 		for (let y = 0; y < this.height; y++) {
-			const row: StyledChar[] = [];
-
-			for (let x = 0; x < this.width; x++) {
-				row.push({
-					type: 'char',
-					value: ' ',
-					fullWidth: false,
-					styles: [],
-				});
-			}
-
-			output.push(row);
+			output.push([...blankRow]);
 		}
 
 		const clips: Clip[] = [];
@@ -385,12 +430,10 @@ export default class Output {
 		}
 
 		const generatedOutput = output
-			.map(line => {
-				// See https://github.com/vadimdemedes/ink/pull/564#issuecomment-1637022742
-				const lineWithoutEmptyItems = line.filter(item => item !== undefined);
-
-				return styledCharsToString(lineWithoutEmptyItems).trimEnd();
-			})
+			.map(line =>
+				// Holes are skipped, see https://github.com/vadimdemedes/ink/pull/564#issuecomment-1637022742
+				styledCharsToString(line).trimEnd(),
+			)
 			.join('\n');
 
 		return {
