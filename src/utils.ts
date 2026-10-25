@@ -13,7 +13,7 @@ const resolveDimension = (
 	return fallback !== undefined && fallback > 0 ? fallback : defaultValue;
 };
 
-// `terminal-size` opens `/dev/tty` or spawns `tput` on each call, and this runs on every render. A non-TTY stream never emits `resize`, so resolve its fallback once.
+// `terminal-size` opens `/dev/tty` or spawns `tput` on each call, and this runs on every render. A stream without its own size has no `resize` event to invalidate on, so keep the first result per stream.
 const fallbackSizes = new WeakMap<
 	OutputStream,
 	{columns: number; rows: number}
@@ -22,10 +22,6 @@ const fallbackSizes = new WeakMap<
 const getFallbackSize = (
 	stdout: OutputStream,
 ): {columns: number; rows: number} => {
-	if (stdout.isTTY) {
-		return terminalSize();
-	}
-
 	let size = fallbackSizes.get(stdout);
 	if (!size) {
 		size = terminalSize();
