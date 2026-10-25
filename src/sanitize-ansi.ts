@@ -3,7 +3,7 @@ import {hasAnsiControlCharacters, tokenizeAnsi} from './ansi-tokenizer.js';
 const sgrParametersRegex = /^[\d:;]*$/;
 // ESC, CAN, SUB or a C1 control inside the parameters or URI ends the OSC in the terminal, so whatever follows would run as its own escape sequence.
 const hyperlinkRegex =
-	// eslint-disable-next-line no-control-regex, regexp/no-control-character -- Matching OSC introducers, terminators and the bytes that end an OSC is the point.
+	// eslint-disable-next-line no-control-regex, regexp/no-control-character -- OSC introducers and terminators are control characters.
 	/^(?:\u{1B}\]|\u{9D})8;[^\u{18}\u{1A}\u{1B}\u{80}-\u{9F}]*(?:\u{7}|\u{1B}\\|\u{9C})$/u;
 // Terminals print nothing for C0 controls and DEL, so strip them; tabs and newlines carry layout. ESC and C1 never reach text tokens, the tokenizer owns them.
 const controlCharactersRegex = /(?![\t\n])\p{Control}/gu;

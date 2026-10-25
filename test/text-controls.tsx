@@ -73,7 +73,5 @@ test('text does not let an OSC hyperlink smuggle escape sequences to the termina
 		</Text>,
 	);
 
-	t.assert.strictEqual(output.includes('\u{1B}]52'), false);
-	t.assert.strictEqual(output.includes('\u{1B}[2J'), false);
-	t.assert.strictEqual(output.includes('\u{9B}'), false);
+	t.assert.strictEqual(output, 'ab');
 });
