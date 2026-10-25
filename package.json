@@ -69,6 +69,7 @@
 		"yoga-layout": "~3.2.1"
 	},
 	"devDependencies": {
+		"@eslint-react/eslint-plugin": "^5.28.8",
 		"@faker-js/faker": "^10.6.0",
 		"@sindresorhus/tsconfig": "^8.1.0",
 		"@sinonjs/fake-timers": "^15.3.0",
