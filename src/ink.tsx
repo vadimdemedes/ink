@@ -328,7 +328,11 @@ export default class Ink {
 	};
 
 	restoreLastOutput = (): void => {
-		if (!this.interactive) {
+		// After clear(), the frame is off screen until the next render, so console output must not repaint it.
+		if (
+			!this.interactive ||
+			(this.lastOutputHeight === 0 && this.lastOutput !== '')
+		) {
 			return;
 		}
 
