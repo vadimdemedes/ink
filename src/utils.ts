@@ -23,7 +23,7 @@ const getFallbackSize = (
 	stdout: OutputStream,
 ): {columns: number; rows: number} => {
 	let size = fallbackSizes.get(stdout);
-	if (!size) {
+	if (size === undefined) {
 		size = terminalSize();
 		fallbackSizes.set(stdout, size);
 	}
