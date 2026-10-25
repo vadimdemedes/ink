@@ -1,7 +1,7 @@
 import {Readable} from 'node:stream';
 import {setTimeout as delay} from 'node:timers/promises';
 import test, {type TestContext} from 'node:test';
-import React from 'react';
+import React, {useState} from 'react';
 import {render, useApp, useInput} from '../src/index.js';
 import {resolveFlags} from '../src/kitty-keyboard.js';
 import createStdout from './helpers/create-stdout.js';
@@ -133,4 +133,51 @@ test('pasted query responses remain input and do not enable the protocol', async
 	await delay(30);
 	t.assert.deepStrictEqual(inputs, ['[?0u']);
 	t.assert.strictEqual(stdout.getWrites().includes('\u{1B}[>1u'), false);
+});
+
+test('auto detection queries the terminal only once raw mode is enabled', async (t: TestContext) => {
+	const stdout = createStdout();
+	const rawModeEnabled = Promise.withResolvers<number>();
+	const stdin = Object.assign(new Readable({read() {}}), {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		isTTY: true,
+		setRawMode(isEnabled: boolean) {
+			if (isEnabled) {
+				rawModeEnabled.resolve(stdout.getWrites().length);
+			}
+		},
+	});
+	let showInput!: () => void;
+	function Input() {
+		useInput(() => {});
+		return null;
+	}
+
+	function Example() {
+		const [isInputShown, setIsInputShown] = useState(false);
+		showInput = () => {
+			setIsInputShown(true);
+		};
+
+		return isInputShown ? <Input /> : null;
+	}
+
+	const app = render(<Example />, {
+		stdin,
+		stdout,
+		interactive: true,
+		kittyKeyboard: {mode: 'auto'},
+	});
+	t.after(() => {
+		app.unmount();
+	});
+	// Longer than the detection timeout: neither the query nor its timer may start before raw mode.
+	await delay(250);
+	t.assert.strictEqual(stdout.getWrites().includes('\u{1B}[?u'), false);
+	showInput();
+	const writesBeforeRawMode = await rawModeEnabled.promise;
+	t.assert.ok(stdout.getWrites().indexOf('\u{1B}[?u') >= writesBeforeRawMode);
+	stdin.push('\u{1B}[?0u');
+	await delay(30);
+	t.assert.ok(stdout.getWrites().includes('\u{1B}[>1u'));
 });
