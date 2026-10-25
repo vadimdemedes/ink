@@ -1,4 +1,5 @@
 import test, {type TestContext} from 'node:test';
+import FakeTimers from '@sinonjs/fake-timers';
 import React from 'react';
 import {render, useInput} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
@@ -256,6 +257,7 @@ for (const [name, sequence] of [
 }
 
 test('useInput - meta + escape delivers empty input like plain escape', async (t: TestContext) => {
+	const clock = FakeTimers.install({toFake: ['setTimeout', 'clearTimeout']});
 	const stdin = createStdin();
 	const events: Array<{input: string; escape: boolean; meta: boolean}> = [];
 	function Example() {
@@ -275,15 +277,14 @@ test('useInput - meta + escape delivers empty input like plain escape', async (t
 	});
 	t.after(() => {
 		instance.unmount();
+		clock.uninstall();
 	});
 	for (const sequence of ['\u{1B}', '\u{1B}\u{1B}']) {
 		// eslint-disable-next-line no-await-in-loop
 		await act(async () => {
 			emitReadable(stdin, sequence);
-			// Let the pending escape flush timer deliver the lone escape key.
-			await new Promise(resolve => {
-				setTimeout(resolve, 50);
-			});
+			// Fire the pending escape flush timer so it delivers the lone escape key.
+			await clock.tickAsync(20);
 		});
 	}
 
