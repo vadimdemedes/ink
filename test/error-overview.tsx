@@ -51,7 +51,7 @@ test('renders the original error when a file URL in its stack cannot be converte
 	const output = stripAnsi(renderToString(<ErrorOverview error={error} />));
 
 	t.assert.ok(output.includes('Oh no'));
-	t.assert.ok(output.includes('app.js:1:1'));
+	t.assert.ok(output.includes('file://example.com/app.js:1:1'));
 	t.assert.ok(output.includes('file:///bad%ZZ.js:2:2'));
 });
 
