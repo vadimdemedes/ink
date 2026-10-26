@@ -87,6 +87,7 @@ for (const mode of ['standard', 'incremental', 'screen-reader'] as const) {
 			interactive: true,
 			incrementalRendering: mode === 'incremental',
 			isScreenReaderEnabled: mode === 'screen-reader',
+			stderr: createStdout(80, true),
 			patchConsole: true,
 		});
 		t.after(() => {
@@ -95,8 +96,7 @@ for (const mode of ['standard', 'incremental', 'screen-reader'] as const) {
 		await instance.waitUntilRenderFlush();
 		instance.clear();
 		console.log('Log');
-		instance.unmount();
-		await instance.waitUntilExit();
+		console.error('Error');
 
 		const lines = reconstructTerminalLines(
 			stdout.getWrites().join('').replaceAll('\n', '\r\n'),
