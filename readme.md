@@ -2844,7 +2844,7 @@ render(<MyApp />, {
 Type: `'auto' | 'enabled' | 'disabled'`\
 Default: `'auto'`
 
-- `'auto'`: Query interactive TTY terminals for support (`CSI ? u`). The protocol is enabled when Ink's input handler receives a response within 200 milliseconds. Pending detection is canceled when the terminal is suspended.
+- `'auto'`: Query interactive TTY terminals for support (`CSI ? u`) once an input hook such as `useInput` enables raw mode, so the reply is read by Ink instead of echoed. The protocol is enabled when Ink's input handler receives a response within 200 milliseconds. Pending detection is canceled when the terminal is suspended.
 - `'enabled'`: Force enable the protocol. Both stdin and stdout must be TTYs.
 - `'disabled'`: Never enable the protocol.
 

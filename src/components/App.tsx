@@ -46,6 +46,7 @@ type Props = {
 	readonly onWaitUntilRenderFlush: () => Promise<void>;
 	readonly onSuspendTerminal: SuspendTerminal;
 	readonly onKittyQueryResponse: () => void;
+	readonly onInputReady: () => void;
 	readonly onRegisterInputControl: (
 		pauseInput: () => void,
 		resumeInput: () => void,
@@ -89,6 +90,7 @@ function App({
 	onWaitUntilRenderFlush,
 	onSuspendTerminal,
 	onKittyQueryResponse,
+	onInputReady,
 	onRegisterInputControl,
 	setCursorPosition,
 	interactive,
@@ -378,7 +380,8 @@ function App({
 		// Store the listener reference to avoid stale closure when removing
 		readableListenerRef.current = handleReadable;
 		stdin.addListener('readable', handleReadable);
-	}, [stdin, handleReadable]);
+		onInputReady();
+	}, [stdin, handleReadable, onInputReady]);
 
 	const handleSetRawMode = useCallback(
 		(isEnabled: boolean): void => {

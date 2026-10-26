@@ -45,7 +45,7 @@ export const kittyModifiers = {
 // Options for configuring kitty keyboard protocol.
 export type KittyKeyboardOptions = {
 	// Mode for kitty keyboard protocol support.
-	// - 'auto': Query interactive TTYs for support through the normal input handler, with a 200ms timeout (default). Suspending the terminal cancels pending detection.
+	// - 'auto': Query interactive TTYs for support through the normal input handler once an input hook enables raw mode, with a 200ms timeout (default). Suspending the terminal cancels pending detection.
 	// - 'enabled': Force enable the protocol
 	// - 'disabled': Never enable the protocol
 	mode?: 'auto' | 'enabled' | 'disabled';

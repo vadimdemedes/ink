@@ -245,6 +245,7 @@ export default class Ink {
 	private hasPendingThrottledRender = false;
 	private kittyProtocolEnabled = false;
 	private kittyFlags: KittyFlagName[] | undefined;
+	private pendingKittyFlags: KittyFlagName[] | undefined;
 	private finishKittyDetection?: (isSupported: boolean) => void;
 	private nextRenderCommit?: PromiseWithResolvers<void>;
 	// Set while suspendTerminal() has handed the terminal to a child process.
@@ -313,6 +314,17 @@ export default class Ink {
 	// dropping keys and pastes that were still in flight.
 	handleKittyQueryResponse = (): void => {
 		this.finishKittyDetection?.(true);
+	};
+
+	// Same stability requirement as `handleKittyQueryResponse`.
+	handleInputReady = (): void => {
+		if (!this.pendingKittyFlags) {
+			return;
+		}
+
+		const flags = this.pendingKittyFlags;
+		this.pendingKittyFlags = undefined;
+		this.confirmKittySupport(flags);
 	};
 
 	restoreLastOutput = (): void => {
@@ -861,7 +873,8 @@ export default class Ink {
 		// The CSI ? u query is safe to send to any terminal — unsupporting
 		// terminals simply won't respond, and the 200ms timeout handles that.
 		// This avoids maintaining a hardcoded whitelist of terminal names.
-		this.confirmKittySupport(flags);
+		// The query waits until an input hook enables raw mode: in a cooked tty the terminal echoes the reply, and with no input listener it is left for the shell.
+		this.pendingKittyFlags = flags;
 	}
 
 	private confirmKittySupport(flags: KittyFlagName[]): void {
@@ -1023,6 +1036,7 @@ export default class Ink {
 					onSuspendTerminal={this.suspendTerminal}
 					onRegisterInputControl={this.registerInputControl}
 					onKittyQueryResponse={this.handleKittyQueryResponse}
+					onInputReady={this.handleInputReady}
 				>
 					<RootNodeContext value={this.rootNode}>{node}</RootNodeContext>
 				</App>
