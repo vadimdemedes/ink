@@ -1,7 +1,8 @@
 import fs from 'node:fs';
+import process from 'node:process';
 import path from 'node:path';
 import url from 'node:url';
-import {execSync} from 'node:child_process';
+import {execSync, execFileSync} from 'node:child_process';
 import test, {before, type TestContext} from 'node:test';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
@@ -62,5 +63,33 @@ test('tsconfig.json include only contains src', (t: TestContext) => {
 		tsconfig.include,
 		['src'],
 		'tsconfig.json include should only contain "src" to avoid nested build output',
+	);
+});
+
+test('build/index.js does not load the es-toolkit/compat barrel', (t: TestContext) => {
+	const script = `
+		import {registerHooks} from 'node:module';
+		const loaded = [];
+		registerHooks({
+			resolve(specifier, context, nextResolve) {
+				const result = nextResolve(specifier, context);
+				loaded.push(result.url);
+				return result;
+			},
+		});
+		await import(${JSON.stringify(url.pathToFileURL(path.join(buildDir, 'index.js')).href)});
+		console.log(JSON.stringify(loaded));
+	`;
+
+	const loaded = JSON.parse(
+		execFileSync(process.execPath, ['--input-type=module', '-e', script], {
+			cwd: rootDir,
+			encoding: 'utf8',
+		}),
+	) as string[];
+
+	t.assert.deepStrictEqual(
+		loaded.filter(file => /es-toolkit\/(?:dist\/)?compat\/index\./.test(file)),
+		[],
 	);
 });
