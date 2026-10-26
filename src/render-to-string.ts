@@ -54,7 +54,7 @@ const renderToString = (
 ): string => {
 	const columns = options?.columns ?? 80;
 
-	// Virtual stdout so `useWindowSize` and `useStdout` describe the virtual terminal instead of `process.stdout`. Rows default to 24, the same fallback `getWindowSize` uses.
+	// Virtual stdout so `useWindowSize` and `useStdout` describe the virtual terminal instead of `process.stdout`. Rows are fixed at 24, the same fallback `getWindowSize` uses.
 	const stdout = Object.assign(
 		new Writable({
 			write(_chunk, _encoding, callback) {
