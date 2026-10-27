@@ -149,3 +149,33 @@ test('changing one row of a multiline block does not retain parsed characters fo
 		false,
 	);
 });
+
+// A clip the line fits inside must not change it, including zero-width characters at either end.
+for (const [edge, text] of [
+	['leading', '́abc'],
+	['leading', '\u{7}abc'],
+	['trailing', 'abc\u{7}'],
+	['leading and trailing', '\u{7}abc\u{7}'],
+] as const) {
+	test(`keeps ${edge} zero-width characters when the line fits the clip: ${JSON.stringify(text)}`, (t: TestContext) => {
+		const unclipped = new Output({width: 10, height: 1});
+		unclipped.write(0, 0, text, {transformers: []});
+
+		const clipped = new Output({width: 10, height: 1});
+		clipped.clip({x1: 0, x2: 10, y1: undefined, y2: undefined});
+		clipped.write(0, 0, text, {transformers: []});
+		clipped.unclip();
+
+		t.assert.deepStrictEqual(clipped.get(), unclipped.get());
+		t.assert.deepStrictEqual(clipped.get(), {output: text, height: 1});
+	});
+}
+
+test('drops zero-width characters with the columns a clip cuts from either end', (t: TestContext) => {
+	const output = new Output({width: 10, height: 1});
+	output.clip({x1: 3, x2: 5, y1: undefined, y2: undefined});
+	output.write(2, 0, '\u{7}abc\u{7}', {transformers: []});
+	output.unclip();
+
+	t.assert.deepStrictEqual(output.get(), {output: '   bc', height: 1});
+});

@@ -150,11 +150,10 @@ const parseStyledChars = (text: string): StyledChar[] =>
 	);
 
 class OutputCaches {
-	// Sized by UTF-16 code units.
-	// Styled characters are much larger than their text, so only single lines are kept.
+	// Sized by UTF-16 code units. Most entries are single characters, so real text stays under about 2 MB.
 	widths = new SizedCache<string, number>(2 ** 18);
 
-	// 2 ** 16 keeps memory close to baseline while still getting good hits.
+	// Sized by UTF-16 code units, but each unit is a styled character object of about 140 bytes, so this holds up to about 9 MB. Only single lines are kept, since whole blocks would multiply that. A smaller budget re-tokenizes noticeably more.
 	styledChars = new SizedCache<string, StyledChar[]>(2 ** 16);
 	lines = new SizedCache<string, string[]>(2 ** 20);
 
@@ -285,7 +284,7 @@ export default class Output {
 					const width = this.caches.getStringWidth(line);
 					const to = x + width > clip.x2! ? clip.x2! - x : width;
 
-					// Lines that fit don't need to be tokenized and rebuilt.
+					// Lines that fit don't need to be tokenized and rebuilt. This also keeps zero-width characters at either end, so a line renders the same whether or not a clip is applied.
 					return from === 0 && to >= width
 						? line
 						: this.sliceLineToColumns(line, from, to);

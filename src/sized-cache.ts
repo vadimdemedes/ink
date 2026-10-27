@@ -4,6 +4,7 @@ type SizedEntry<Value> = {value: Value; size: number};
 Cache bounded by the total size of its entries rather than just their count.
 Behaves like quick-lru (two generations), but keeps memory usage stable when entry sizes vary widely, such as when keys are whole blocks of text.
 Callers choose the unit of `size`, e.g. UTF-16 code units for string keys.
+Only `size` counts toward the budget. Each entry also costs about 80 bytes for its Map slot, wrapper and key, which only adds up for caches of many tiny entries. Counting it would make those caches drop entries that are still in use.
 */
 export default class SizedCache<Key, Value> {
 	private current = new Map<Key, SizedEntry<Value>>();
