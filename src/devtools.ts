@@ -37,7 +37,7 @@ export const connectToDevTools = (): (() => void) => {
 	if (connectedInstances === 1) {
 		const socket = new WebSocket('ws://localhost:8097');
 		const listeners = new Set<(message: unknown) => void>();
-		let unsubscribe: (() => void) | undefined;
+		let agent: {shutdown: () => void} | undefined;
 
 		socket.addEventListener('message', event => {
 			let message: unknown;
@@ -53,8 +53,8 @@ export const connectToDevTools = (): (() => void) => {
 		});
 
 		socket.addEventListener('open', () => {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
-			unsubscribe = (devtools as any).connectWithCustomMessagingProtocol({
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+			(devtools as any).connectWithCustomMessagingProtocol({
 				onSubscribe(listener: (message: unknown) => void) {
 					listeners.add(listener);
 				},
@@ -67,10 +67,15 @@ export const connectToDevTools = (): (() => void) => {
 					}
 				},
 			});
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+			agent = (globalThis as any).__REACT_DEVTOOLS_GLOBAL_HOOK__
+				?.reactDevtoolsAgent;
 		});
 
+		// Same teardown as `connectToDevTools()` on close: shutting down the agent unsubscribes from the hook and cleans up the renderer interfaces.
 		socket.addEventListener('close', () => {
-			unsubscribe?.();
+			agent?.shutdown();
+			agent = undefined;
 		});
 
 		websocket = socket;
