@@ -126,7 +126,7 @@ Build the sequence that erases the previous frame, as `clear` does before other 
 
 With a cursor shown, the frame's top row is found relative to the cursor instead of returning to the bottom first. A terminal shrinking its rows drops the rows below the cursor before scrolling anything, so the frame's bottom rows may be gone: moving down clamps at the last row and erasing upward from there reaches into the content above the frame.
 
-`viewportRows` caps the walk at the top row of the viewport, as in `buildCursorSuffix`.
+`viewportRows` caps the erase at the top row of the viewport, as in `buildCursorSuffix`.
 */
 export const buildEraseFrame = (
 	previousLineCount: number,
@@ -134,7 +134,7 @@ export const buildEraseFrame = (
 	viewportRows = Infinity,
 ): string => {
 	if (!previousCursorPosition) {
-		return ansiEscapes.eraseLines(previousLineCount);
+		return ansiEscapes.eraseLines(Math.min(previousLineCount, viewportRows));
 	}
 
 	// `buildCursorSuffix` never moves below the bottom row, so a cursor set past the output sits on that row.

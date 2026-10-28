@@ -939,3 +939,36 @@ for (const {name, incremental} of inkRenderingModes) {
 		unmount();
 	});
 }
+
+for (const {name, incremental} of inkRenderingModes) {
+	test(`${name} - erasing a frame taller than the viewport without a cursor stays in the viewport`, async (t: TestContext) => {
+		const stdout = createStdout();
+		(stdout as any).rows = 5;
+		(stdout as any).columns = 100;
+
+		const {unmount, waitUntilRenderFlush} = render(
+			<Box flexDirection="column">
+				{fullscreenLines(20, '').map(line => (
+					<Text key={line}>{line}</Text>
+				))}
+			</Box>,
+			{stdout, incrementalRendering: incremental, interactive: true},
+		);
+		await waitUntilRenderFlush();
+
+		// Narrowing the terminal erases the frame through `clear()`, like console writes do.
+		const start = (stdout.write as any).callCount as number;
+		(stdout as any).columns = 50;
+		stdout.emit('resize');
+		await waitUntilRenderFlush();
+
+		const afterResize = getWriteCalls(stdout).slice(start).join('');
+		t.assert.ok(afterResize.includes(ansiEscapes.eraseLines(5)));
+		t.assert.strictEqual(
+			afterResize.split(ansiEscapes.cursorUp(1)).length - 1,
+			4,
+		);
+
+		unmount();
+	});
+}

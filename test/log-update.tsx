@@ -817,6 +817,19 @@ for (const {name, incremental} of renderingModes) {
 		);
 	});
 
+	test(`${name} - clearing without a cursor erases only the rows in the viewport`, (t: TestContext) => {
+		const {stdout, render} = createRenderForMode(incremental);
+		stdout.rows = 5;
+
+		render(
+			Array.from({length: 20}, (_, index) => `Line ${index + 1}`).join('\n') +
+				'\n',
+		);
+		render.clear();
+
+		t.assert.strictEqual(stdout.getWrites().at(-1), ansiEscapes.eraseLines(5));
+	});
+
 	test(`${name} - cursor is not clamped when the stream reports 0 rows`, (t: TestContext) => {
 		const {stdout, render} = createRenderForMode(incremental);
 		stdout.rows = 0;
