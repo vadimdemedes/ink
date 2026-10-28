@@ -340,3 +340,45 @@ test('useInput - drops legacy mouse report read from a byte stream', async (t: T
 
 	t.assert.deepStrictEqual(inputs, ['q']);
 });
+
+test('useInput - receives Ctrl+C after a bare legacy mouse prefix', async (t: TestContext) => {
+	const stdin = Object.assign(new Readable({read() {}}), {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		isTTY: true,
+		setRawMode() {},
+	});
+	const keys: string[] = [];
+	function Example() {
+		useInput((input, key) => {
+			keys.push(key.ctrl ? `Ctrl+${input}` : input);
+		});
+		return null;
+	}
+
+	let instance!: ReturnType<typeof render>;
+	await act(async () => {
+		instance = render(<Example />, {
+			stdin,
+			stdout: createStdout(),
+			patchConsole: false,
+			exitOnCtrlC: false,
+		});
+	});
+	t.after(() => {
+		instance.unmount();
+		stdin.destroy();
+	});
+
+	// A control byte can't be a coordinate, so `ESC[M` ends there and Ctrl+C still arrives.
+	for (const chunk of [Buffer.from([0x1b, 0x5b, 0x4d]), Buffer.from([0x03])]) {
+		// eslint-disable-next-line no-await-in-loop
+		await act(async () => {
+			stdin.push(chunk);
+			await new Promise<void>(resolve => {
+				setImmediate(resolve);
+			});
+		});
+	}
+
+	t.assert.deepStrictEqual(keys, ['Ctrl+c']);
+});

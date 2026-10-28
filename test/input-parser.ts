@@ -402,6 +402,7 @@ test('does not hold Ctrl+C as a pending legacy mouse coordinate', (t: TestContex
 	t.assert.deepStrictEqual(parser.push('\u{1B}[M'), []);
 	t.assert.deepStrictEqual(parser.push('\u{3}'), ['\u{1B}[M', '\u{3}']);
 	t.assert.strictEqual(parser.hasPendingEscape(), false);
+	t.assert.ok(isCompleteControlSequence('\u{1B}[M'));
 });
 
 test('keeps the next legacy mouse report intact when coordinate bytes were merged by the UTF-8 decoder', (t: TestContext) => {
@@ -415,6 +416,14 @@ test('keeps the next legacy mouse report intact when coordinate bytes were merge
 		'q',
 	]);
 	t.assert.ok(isCompleteControlSequence('\u{1B}[M@**'));
+});
+
+test('keeps NUL as a legacy mouse coordinate past column 223', (t: TestContext) => {
+	// Xterm sends NUL for a position it can't encode.
+	t.assert.deepStrictEqual(parseChunks(['\u{1B}[M@\u{0}*q']), [
+		'\u{1B}[M@\u{0}*',
+		'q',
+	]);
 });
 
 test('emits paste event for bracketed paste sequence', (t: TestContext) => {
