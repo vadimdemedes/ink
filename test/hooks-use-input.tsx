@@ -1,4 +1,5 @@
 import test, {type TestContext} from 'node:test';
+import FakeTimers from '@sinonjs/fake-timers';
 import React from 'react';
 import {render, useInput} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
@@ -254,3 +255,41 @@ for (const [name, sequence] of [
 		t.assert.deepStrictEqual(events, [{input: 'q', escape: false}]);
 	});
 }
+
+test('useInput - meta + escape delivers empty input like plain escape', async (t: TestContext) => {
+	const clock = FakeTimers.install({toFake: ['setTimeout', 'clearTimeout']});
+	const stdin = createStdin();
+	const events: Array<{input: string; escape: boolean; meta: boolean}> = [];
+	function Example() {
+		useInput((input, key) => {
+			events.push({input, escape: key.escape, meta: key.meta});
+		});
+		return null;
+	}
+
+	let instance!: ReturnType<typeof render>;
+	await act(async () => {
+		instance = render(<Example />, {
+			stdin,
+			stdout: createStdout(),
+			patchConsole: false,
+		});
+	});
+	t.after(() => {
+		instance.unmount();
+		clock.uninstall();
+	});
+	for (const sequence of ['\u{1B}', '\u{1B}\u{1B}']) {
+		// eslint-disable-next-line no-await-in-loop
+		await act(async () => {
+			emitReadable(stdin, sequence);
+			// Fire the pending escape flush timer so it delivers the lone escape key.
+			await clock.tickAsync(20);
+		});
+	}
+
+	t.assert.deepStrictEqual(events, [
+		{input: '', escape: true, meta: false},
+		{input: '', escape: true, meta: true},
+	]);
+});

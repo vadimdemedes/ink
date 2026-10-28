@@ -98,7 +98,11 @@ const keyName: Record<string, string> = {
 	'[Z': 'tab',
 };
 
-export const nonAlphanumericKeys = [...Object.values(keyName), 'backspace'];
+export const nonAlphanumericKeys = [
+	...Object.values(keyName),
+	'backspace',
+	'escape',
+];
 
 const isShiftKey = (code: string) => {
 	return [
