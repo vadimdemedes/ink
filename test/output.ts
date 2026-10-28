@@ -150,24 +150,16 @@ test('changing one row of a multiline block does not retain parsed characters fo
 	);
 });
 
-// A clip the line fits inside must not change it, including zero-width characters at either end.
-for (const [edge, text] of [
-	['leading', '́abc'],
-	['leading', '\u{7}abc'],
-	['trailing', 'abc\u{7}'],
-	['leading and trailing', '\u{7}abc\u{7}'],
-] as const) {
-	test(`keeps ${edge} zero-width characters when the line fits the clip: ${JSON.stringify(text)}`, (t: TestContext) => {
-		const unclipped = new Output({width: 10, height: 1});
-		unclipped.write(0, 0, text, {transformers: []});
+// Zero-width characters at the clip edges are dropped. The cell writer gives each one a column, so keeping them would push text that fills the clip exactly past its edge.
+for (const text of ['\u{301}abc', 'abc\u{7}', '\u{7}abc\u{7}']) {
+	test(`text that fills the clip exactly stays inside it: ${JSON.stringify(text)}`, (t: TestContext) => {
+		const output = new Output({width: 5, height: 1});
+		output.write(3, 0, '|', {transformers: []});
+		output.clip({x1: 0, x2: 3, y1: undefined, y2: undefined});
+		output.write(0, 0, text, {transformers: []});
+		output.unclip();
 
-		const clipped = new Output({width: 10, height: 1});
-		clipped.clip({x1: 0, x2: 10, y1: undefined, y2: undefined});
-		clipped.write(0, 0, text, {transformers: []});
-		clipped.unclip();
-
-		t.assert.deepStrictEqual(clipped.get(), unclipped.get());
-		t.assert.deepStrictEqual(clipped.get(), {output: text, height: 1});
+		t.assert.deepStrictEqual(output.get(), {output: 'abc|', height: 1});
 	});
 }
 

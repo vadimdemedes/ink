@@ -80,3 +80,14 @@ test('horizontal clipping keeps fitting lines and slices overflowing ones', (t: 
 
 	t.assert.strictEqual(output.get().output, '  hello\n  23456789abcde');
 });
+
+test('a leading combining mark in text that fills an overflow box does not overwrite its border', (t: TestContext) => {
+	const text = '\u{301}abc';
+	const output = renderToString(
+		<Box width={5} height={3} borderStyle="single" overflow="hidden">
+			<Text>{text}</Text>
+		</Box>,
+	);
+
+	t.assert.strictEqual(output, '┌───┐\n│abc│\n└───┘');
+});

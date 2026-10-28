@@ -284,10 +284,7 @@ export default class Output {
 					const width = this.caches.getStringWidth(line);
 					const to = x + width > clip.x2! ? clip.x2! - x : width;
 
-					// Lines that fit don't need to be tokenized and rebuilt. This also keeps zero-width characters at either end, so a line renders the same whether or not a clip is applied.
-					return from === 0 && to >= width
-						? line
-						: this.sliceLineToColumns(line, from, to);
+					return this.sliceLineToColumns(line, from, to);
 				});
 
 				if (x < clip.x1!) {
