@@ -33,9 +33,9 @@ export type LogUpdate = {
 const visibleLineCount = (lines: string[], text: string): number =>
 	text.endsWith('\n') ? lines.length - 1 : lines.length;
 
-// Non-TTY streams have no rows, so the cursor is never clamped there.
-const getViewportRows = (stream: OutputStream): number =>
-	stream.rows ?? Infinity;
+// Non-TTY streams have no rows (and some report 0), so the cursor is never clamped there.
+const getViewportRows = ({rows}: OutputStream): number =>
+	rows !== undefined && rows > 0 ? rows : Infinity;
 
 const createStandard = (
 	stream: OutputStream,
@@ -119,7 +119,13 @@ const createStandard = (
 	};
 
 	render.clear = () => {
-		stream.write(buildEraseFrame(previousLineCount, previousCursorPosition));
+		stream.write(
+			buildEraseFrame(
+				previousLineCount,
+				previousCursorPosition,
+				getViewportRows(stream),
+			),
+		);
 		previousOutput = '';
 		previousLineCount = 0;
 		previousCursorPosition = undefined;
@@ -347,7 +353,13 @@ const createIncremental = (
 	};
 
 	render.clear = () => {
-		stream.write(buildEraseFrame(previousLines.length, previousCursorPosition));
+		stream.write(
+			buildEraseFrame(
+				previousLines.length,
+				previousCursorPosition,
+				getViewportRows(stream),
+			),
+		);
 		previousOutput = '';
 		previousLines = [];
 		previousCursorPosition = undefined;

@@ -879,3 +879,63 @@ for (const {name, incremental} of inkRenderingModes) {
 		unmount();
 	});
 }
+
+for (const {name, incremental} of inkRenderingModes) {
+	test(`${name} - cursor in a frame taller than the viewport never moves above it`, async (t: TestContext) => {
+		const stdout = createStdout();
+		(stdout as any).rows = 5;
+		const writesSince = (start: number) =>
+			getWriteCalls(stdout).slice(start).join('');
+		const assertNoCursorUpFrom = (
+			output: string,
+			fromRows: number,
+			label: string,
+		) => {
+			for (let rows = fromRows; rows <= 20; rows++) {
+				t.assert.strictEqual(
+					output.includes(ansiEscapes.cursorUp(rows)),
+					false,
+					`no cursorUp(${rows}) ${label}`,
+				);
+			}
+		};
+
+		const {rerender, unmount, waitUntilRenderFlush} = render(
+			<FullscreenCursorApp lineCount={20} cursorY={0} marker="" />,
+			{stdout, incrementalRendering: incremental, interactive: true},
+		);
+		await waitUntilRenderFlush();
+		rerender(<FullscreenCursorApp lineCount={20} cursorY={0} marker="!" />);
+		await waitUntilRenderFlush();
+		rerender(<FullscreenCursorApp lineCount={20} cursorY={15} marker="!" />);
+		await waitUntilRenderFlush();
+
+		const onFiveRows = writesSince(0);
+		t.assert.ok(
+			onFiveRows.includes(
+				ansiEscapes.cursorUp(4) + ansiEscapes.cursorTo(3) + showCursorEscape,
+			),
+		);
+		assertNoCursorUpFrom(onFiveRows, 5, 'on 5 rows');
+
+		// The resize handler erases the frame by walking up from the cursor.
+		let start = (stdout.write as any).callCount as number;
+		(stdout as any).rows = 3;
+		stdout.emit('resize');
+		await waitUntilRenderFlush();
+		assertNoCursorUpFrom(writesSince(start), 3, 'after a resize to 3 rows');
+
+		// Rows shrinking without a resize event reach the full-clear branch instead.
+		start = (stdout.write as any).callCount as number;
+		(stdout as any).rows = 2;
+		rerender(<FullscreenCursorApp lineCount={20} cursorY={15} marker="?" />);
+		await waitUntilRenderFlush();
+		assertNoCursorUpFrom(
+			writesSince(start),
+			2,
+			'after rows shrink to 2 without a resize event',
+		);
+
+		unmount();
+	});
+}

@@ -767,23 +767,71 @@ for (const {name, incremental} of renderingModes) {
 	test(`${name} - cursor never moves above the top of the viewport`, (t: TestContext) => {
 		const {stdout, render} = createRenderForMode(incremental);
 		stdout.rows = 5;
-		const output =
-			Array.from({length: 20}, (_, index) => `Line ${index + 1}`).join('\n') +
-			'\n';
+		const output = (marker: string) =>
+			Array.from({length: 20}, (_, index) => `Line ${index + 1}${marker}`).join(
+				'\n',
+			) + '\n';
 		const clampedSuffix =
 			ansiEscapes.cursorUp(4) + ansiEscapes.cursorTo(0) + showCursorEscape;
 
 		render.setCursorPosition({x: 0, y: 0});
-		render(output);
+		render(output(''));
 		// Same output, cursor moves only: takes the buildCursorOnlySequence path.
 		render.setCursorPosition({x: 0, y: 1});
-		render(output);
+		render(output(''));
+		// Changed output: rewrites the frame (the line diff in incremental mode).
 		render.setCursorPosition({x: 0, y: 0});
-		render.sync(output);
+		render(output('!'));
+		render.setCursorPosition({x: 0, y: 0});
+		render.sync(output('!'));
 
-		for (const write of stdout.getWrites()) {
+		const writes = stdout.getWrites();
+		t.assert.strictEqual(writes.length, 4);
+		for (const write of writes) {
 			t.assert.ok(write.endsWith(clampedSuffix));
+			for (let rows = 5; rows <= 20; rows++) {
+				t.assert.strictEqual(
+					write.includes(
+						ansiEscapes.cursorUp(rows) +
+							ansiEscapes.cursorTo(0) +
+							showCursorEscape,
+					),
+					false,
+				);
+			}
 		}
+
+		// Erasing walks up from the cursor to the frame's top row, which is capped the same way.
+		render.setCursorPosition({x: 0, y: 15});
+		render(output('!'));
+		render.clear();
+		t.assert.ok(
+			stdout
+				.getWrites()
+				.at(-1)!
+				.endsWith(
+					ansiEscapes.cursorUp(4) +
+						ansiEscapes.cursorTo(0) +
+						ansiEscapes.eraseDown,
+				),
+		);
+	});
+
+	test(`${name} - cursor is not clamped when the stream reports 0 rows`, (t: TestContext) => {
+		const {stdout, render} = createRenderForMode(incremental);
+		stdout.rows = 0;
+
+		render.setCursorPosition({x: 0, y: 0});
+		render('Line 1\nLine 2\nLine 3');
+
+		t.assert.ok(
+			stdout
+				.getWrites()
+				.at(-1)!
+				.endsWith(
+					ansiEscapes.cursorUp(2) + ansiEscapes.cursorTo(0) + showCursorEscape,
+				),
+		);
 	});
 }
 

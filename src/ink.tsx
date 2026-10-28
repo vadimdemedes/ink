@@ -792,10 +792,9 @@ export default class Ink {
 					previousCursor &&
 					viewportRows < previousViewportRows
 				) {
+					const rowsAboveCursor = Math.min(previousCursor.y, viewportRows - 1);
 					erasePrefix =
-						(previousCursor.y > 0
-							? ansiEscapes.cursorUp(previousCursor.y)
-							: '') +
+						(rowsAboveCursor > 0 ? ansiEscapes.cursorUp(rowsAboveCursor) : '') +
 						ansiEscapes.cursorTo(0) +
 						ansiEscapes.eraseDown;
 				}
