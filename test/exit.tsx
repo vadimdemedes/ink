@@ -156,3 +156,9 @@ test('exit on exit() with error and static output', async (t: TestContext) => {
 	const cleaned = stripAnsi(output);
 	t.assert.strictEqual(cleaned.split('A').length - 1, 1);
 });
+
+test('unmount on process.exit() after a dependency using signal-exit 4 registered an exit handler', async (t: TestContext) => {
+	const output = await run('exit-after-signal-exit-v4-user');
+	t.assert.ok(output.includes('Hello World'));
+	t.assert.ok(output.includes('unmounted'), 'Ink did not unmount on exit');
+});

@@ -528,8 +528,9 @@ export default class Ink {
 			null,
 		);
 
-		// Unmount when process exits
+		// Unmount when process exits. The plain `exit` listener covers the case where another copy of `signal-exit` (for example v4 next to Ink's v3) replaced `process.emit` after Ink registered, which drops Ink's `signal-exit` handler from the chain. `unmount` is idempotent, so running from both is fine.
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
+		process.on('exit', this.unmount);
 
 		this.setAlternateScreen(Boolean(options.alternateScreen));
 
@@ -1166,6 +1167,7 @@ export default class Ink {
 		this.isUnmounted = true;
 
 		this.unsubscribeExit();
+		process.off('exit', this.unmount);
 
 		// Flush any pending throttled log writes if possible, otherwise cancel to
 		// prevent delayed callbacks from writing to a closed stream.
