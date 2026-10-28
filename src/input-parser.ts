@@ -52,9 +52,17 @@ const parseCsiSequence = (
 		if (isRxvtShiftKey || isCsiFinalByte(byte)) {
 			// A bare ESC[M is a legacy X10/normal mouse report, which is followed by three raw coordinate bytes.
 			// Best effort: coordinates past 95 are bytes 0x80 and above, which the UTF-8 decoder can merge with the next byte into one character, so the report is no longer three characters long. SGR (1006) reports don't have this problem.
-			const length = byte === 0x4d && index === csiPayloadStart ? 4 : 1;
-			if (index + length > input.length) {
-				return 'pending';
+			// Coordinate bytes are never below 0x20, so if one is, the sequence ends at M and a Ctrl+C or the next report's ESC parses normally.
+			let length = 1;
+			if (byte === 0x4d && index === csiPayloadStart) {
+				const coordinates = input.slice(index + 1, index + 4);
+				if ([...coordinates].every(character => character >= ' ')) {
+					if (coordinates.length < 3) {
+						return 'pending';
+					}
+
+					length = 4;
+				}
 			}
 
 			return {

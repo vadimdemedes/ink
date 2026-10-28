@@ -388,6 +388,35 @@ test('holds legacy mouse report until its coordinate bytes arrive', (t: TestCont
 	t.assert.deepStrictEqual(parser.push('"'), ['\u{1B}[M !"']);
 });
 
+test('ends legacy mouse report at a byte that cannot be a coordinate', (t: TestContext) => {
+	t.assert.deepStrictEqual(parseChunks(['\u{1B}[M\u{3}ab']), [
+		'\u{1B}[M',
+		'\u{3}',
+		'ab',
+	]);
+});
+
+test('does not hold Ctrl+C as a pending legacy mouse coordinate', (t: TestContext) => {
+	const parser = createInputParser();
+
+	t.assert.deepStrictEqual(parser.push('\u{1B}[M'), []);
+	t.assert.deepStrictEqual(parser.push('\u{3}'), ['\u{1B}[M', '\u{3}']);
+	t.assert.strictEqual(parser.hasPendingEscape(), false);
+});
+
+test('keeps the next legacy mouse report intact when coordinate bytes were merged by the UTF-8 decoder', (t: TestContext) => {
+	// Drag to column 200, row 100: bytes 0xE8 0x84 decode to a single U+FFFD.
+	const events = parseChunks(['\u{1B}[M@\u{FFFD}\u{1B}[M@**q']);
+
+	t.assert.deepStrictEqual(events, [
+		'\u{1B}[M',
+		'@\u{FFFD}',
+		'\u{1B}[M@**',
+		'q',
+	]);
+	t.assert.ok(isCompleteControlSequence('\u{1B}[M@**'));
+});
+
 test('emits paste event for bracketed paste sequence', (t: TestContext) => {
 	t.assert.deepStrictEqual(parseChunks(['\u{1B}[200~hello world\u{1B}[201~']), [
 		{paste: 'hello world'},
