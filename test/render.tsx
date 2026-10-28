@@ -2572,7 +2572,7 @@ test('waitUntilRenderFlush waits for all concurrent waiters on the same rerender
 
 test('useApp waitUntilRenderFlush resolves after the first frame write callback', async (t: TestContext) => {
 	let didInitialWriteCallbackFire = false;
-	let didWaitUntilRenderFlushResolve = false;
+	let didWriteCallbackFireBeforeExit = false;
 
 	const stdout = createDelayedWriteCallbackStdout({
 		shouldDelay(chunk) {
@@ -2589,7 +2589,7 @@ test('useApp waitUntilRenderFlush resolves after the first frame write callback'
 		useEffect(() => {
 			void (async () => {
 				await waitUntilRenderFlush();
-				didWaitUntilRenderFlushResolve = true;
+				didWriteCallbackFireBeforeExit = didInitialWriteCallbackFire;
 				exit();
 			})();
 		}, [exit, waitUntilRenderFlush]);
@@ -2597,16 +2597,15 @@ test('useApp waitUntilRenderFlush resolves after the first frame write callback'
 		return <Text>Hello</Text>;
 	}
 
-	const {waitUntilExit} = render(<Test />, {stdout});
+	const {waitUntilExit} = render(<Test />, {stdout, interactive: true});
 	await waitUntilExit();
 
-	t.assert.ok(didInitialWriteCallbackFire);
-	t.assert.ok(didWaitUntilRenderFlushResolve);
+	t.assert.ok(didWriteCallbackFireBeforeExit);
 });
 
 test('useApp waitUntilRenderFlush waits for state update frame flush', async (t: TestContext) => {
 	let didWorldWriteCallbackFire = false;
-	let didWaitUntilRenderFlushResolve = false;
+	let didWriteCallbackFireBeforeExit = false;
 
 	const stdout = createDelayedWriteCallbackStdout({
 		shouldDelay(chunk) {
@@ -2634,7 +2633,7 @@ test('useApp waitUntilRenderFlush waits for state update frame flush', async (t:
 
 			void (async () => {
 				await waitUntilRenderFlush();
-				didWaitUntilRenderFlushResolve = true;
+				didWriteCallbackFireBeforeExit = didWorldWriteCallbackFire;
 				exit();
 			})();
 		}, [exit, text, waitUntilRenderFlush]);
@@ -2642,11 +2641,10 @@ test('useApp waitUntilRenderFlush waits for state update frame flush', async (t:
 		return <Text>{text}</Text>;
 	}
 
-	const {waitUntilExit} = render(<Test />, {stdout});
+	const {waitUntilExit} = render(<Test />, {stdout, interactive: true});
 	await waitUntilExit();
 
-	t.assert.ok(didWorldWriteCallbackFire);
-	t.assert.ok(didWaitUntilRenderFlushResolve);
+	t.assert.ok(didWriteCallbackFireBeforeExit);
 });
 
 test('useApp waitUntilRenderFlush waits for state update queued in same effect tick', async (t: TestContext) => {
