@@ -11,6 +11,7 @@ import {
 	Newline,
 	Spacer,
 	renderToString,
+	useWindowSize,
 } from '../src/index.js';
 
 // ── Basic rendering ─────────────────────────────────────
@@ -228,6 +229,29 @@ test('custom columns option', (t: TestContext) => {
 	t.assert.strictEqual(lines.length, 2);
 	t.assert.strictEqual(lines[0], 'A'.repeat(30));
 	t.assert.strictEqual(lines[1], 'A'.repeat(20));
+});
+
+function WindowSize(): React.JSX.Element {
+	const {columns, rows} = useWindowSize();
+
+	return (
+		<Box flexDirection="column">
+			<Text>{`${columns}x${rows}`}</Text>
+			<Text>{'-'.repeat(columns)}</Text>
+		</Box>
+	);
+}
+
+test('useWindowSize reports the columns option', (t: TestContext) => {
+	const output = renderToString(<WindowSize />, {columns: 20});
+
+	t.assert.strictEqual(output, `20x24\n${'-'.repeat(20)}`);
+});
+
+test('useWindowSize reports 80 columns by default', (t: TestContext) => {
+	const output = renderToString(<WindowSize />);
+
+	t.assert.strictEqual(output, `80x24\n${'-'.repeat(80)}`);
 });
 
 // ── Components ──────────────────────────────────────────

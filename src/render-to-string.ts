@@ -1,3 +1,4 @@
+import {Writable} from 'node:stream';
 import {types} from 'node:util';
 import {createElement, type ReactNode} from 'react';
 import Yoga from 'yoga-layout';
@@ -6,6 +7,7 @@ import reconciler from './reconciler.js';
 import renderer from './renderer.js';
 import {createNode, type DOMElement} from './dom.js';
 import RootNodeContext from './components/RootNodeContext.js';
+import StdoutContext from './components/StdoutContext.js';
 
 export type RenderToStringOptions = {
 	/**
@@ -25,6 +27,7 @@ Useful for generating documentation, writing output to files, testing, or any sc
 **Notes:**
 
 - Terminal-specific hooks (`useInput`, `useStdin`, `useStdout`, `useStderr`, `useApp`, `useFocus`, `useFocusManager`) return default no-op values since there is no terminal session. They will not throw, but they will not function as in a live terminal.
+- `useWindowSize` reports the virtual terminal size: `columns` from the option and 24 rows.
 - `useEffect` callbacks will execute during rendering (due to synchronous rendering mode), but state updates they trigger will not affect the returned output, which reflects the initial render.
 - `useLayoutEffect` callbacks fire synchronously during commit, so state updates they trigger **will** be reflected in the output.
 - The `<Static>` component is supported — its output is prepended to the dynamic output.
@@ -50,6 +53,16 @@ const renderToString = (
 	options?: RenderToStringOptions,
 ): string => {
 	const columns = options?.columns ?? 80;
+
+	// Virtual stdout so `useWindowSize` and `useStdout` describe the virtual terminal instead of `process.stdout`. Rows are fixed at 24, the same fallback `getWindowSize` uses.
+	const stdout = Object.assign(
+		new Writable({
+			write(_chunk, _encoding, callback) {
+				callback();
+			},
+		}),
+		{columns, rows: 24},
+	);
 
 	// Create a standalone root node — no stdout, stdin, or terminal bindings
 	const rootNode: DOMElement = createNode('ink-root');
@@ -119,7 +132,15 @@ const renderToString = (
 		try {
 			// Synchronously render the React tree into the container
 			reconciler.updateContainerSync(
-				createElement(RootNodeContext.Provider, {value: rootNode}, node),
+				createElement(
+					RootNodeContext.Provider,
+					{value: rootNode},
+					createElement(
+						StdoutContext.Provider,
+						{value: {stdout, write() {}}},
+						node,
+					),
+				),
 				container,
 				null,
 				() => {},
