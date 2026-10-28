@@ -57,7 +57,6 @@
 		"indent-string": "^5.0.0",
 		"is-in-ci": "^2.0.0",
 		"patch-console": "^2.0.0",
-		"quick-lru": "^7.3.0",
 		"react-reconciler": "^0.34.0",
 		"signal-exit": "^3.0.7",
 		"stack-utils": "^2.0.6",
