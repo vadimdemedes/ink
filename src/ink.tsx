@@ -12,7 +12,7 @@ import {type FiberRoot} from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import wrapAnsi from 'wrap-ansi';
 import {getWindowSize} from './utils.js';
-import reconciler from './reconciler.js';
+import reconciler, {connectToDevTools} from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
 import {hideCursorEscape, showCursorEscape} from './cursor-helpers.js';
@@ -289,6 +289,7 @@ export default class Ink {
 	resolveExitPromise: (result?: unknown) => void = () => {};
 	rejectExitPromise: (reason?: Error) => void = () => {};
 	unsubscribeExit: () => void = () => {};
+	disconnectFromDevTools: () => void = () => {};
 
 	handleAppExit = (errorOrResult?: unknown): void => {
 		if (this.isUnmounted || this.isUnmounting) {
@@ -536,6 +537,7 @@ export default class Ink {
 
 		if (process.env['DEV'] === 'true') {
 			reconciler.injectIntoDevTools();
+			this.disconnectFromDevTools = connectToDevTools?.() ?? (() => {});
 		}
 
 		if (options.patchConsole) {
@@ -1227,6 +1229,7 @@ export default class Ink {
 			this.kittyProtocolEnabled = false;
 
 			instances.delete(this.options.stdout);
+			this.disconnectFromDevTools();
 
 			// By the time this runs, React has torn down the tree and freed the child Yoga nodes, but the root node is Ink's own. Free it and drop the reference so any late access is a no-op rather than a use-after-free, as `freeYogaSubtree` does.
 			this.rootNode.yogaNode?.free();

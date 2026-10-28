@@ -29,6 +29,8 @@ import {
 import applyStyles, {type Styles} from './styles.js';
 import {type OutputTransformer} from './render-node-to-output.js';
 
+let connectToDevToolsIfLoaded: (() => () => void) | undefined;
+
 // We need to conditionally perform devtools connection to avoid
 // accidentally breaking other third-party code.
 // See https://github.com/vadimdemedes/ink/issues/384
@@ -43,9 +45,13 @@ if (process.env['DEV'] === 'true') {
 	} catch {}
 
 	if (isDevtoolsInstalled) {
-		await import('./devtools.js');
+		({connectToDevTools: connectToDevToolsIfLoaded} =
+			await import('./devtools.js'));
 	}
 }
+
+// Set when DEV is on and `react-devtools-core` is installed.
+export const connectToDevTools = connectToDevToolsIfLoaded;
 
 type AnyObject = Record<string, unknown>;
 
