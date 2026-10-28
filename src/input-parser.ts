@@ -50,11 +50,23 @@ const parseCsiSequence = (
 			'235678'.includes(input[csiPayloadStart]!);
 
 		if (isRxvtShiftKey || isCsiFinalByte(byte)) {
-			// A bare ESC[M is a legacy X10/normal mouse report, which is followed by three raw coordinate bytes.
+			// A bare ESC[M is a legacy X10/normal mouse report, which is followed by three raw bytes: the button, then the column and row.
 			// Best effort: coordinates past 95 are bytes 0x80 and above, which the UTF-8 decoder can merge with the next byte into one character, so the report is no longer three characters long. SGR (1006) reports don't have this problem.
-			const length = byte === 0x4d && index === csiPayloadStart ? 4 : 1;
-			if (index + length > input.length) {
-				return 'pending';
+			// These bytes are never below 0x20 except NUL, which xterm sends for a position past 223, so any other control byte ends the sequence at M and a Ctrl+C or the next report's ESC parses normally.
+			let length = 1;
+			if (byte === 0x4d && index === csiPayloadStart) {
+				const coordinates = input.slice(index + 1, index + 4);
+				if (
+					[...coordinates].every(
+						character => character >= ' ' || character === '\0',
+					)
+				) {
+					if (coordinates.length < 3) {
+						return 'pending';
+					}
+
+					length = 4;
+				}
 			}
 
 			return {
@@ -125,6 +137,12 @@ export const isCompleteControlSequence = (input: string): boolean => {
 	}
 
 	const prefixLength = input[1] === escape ? 2 : 1;
+
+	// The parser emits a bare legacy mouse prefix only when the byte after it can't be a coordinate, so there is nothing left to wait for.
+	if (input.slice(prefixLength) === '[M') {
+		return true;
+	}
+
 	const parsed = parseControlSequence(input, 0, prefixLength);
 	return typeof parsed === 'object' && parsed.nextIndex === input.length;
 };
