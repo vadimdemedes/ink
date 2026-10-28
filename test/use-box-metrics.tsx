@@ -74,7 +74,11 @@ test('updates when terminal is resized', async (t: TestContext) => {
 		);
 	}
 
-	const {waitUntilRenderFlush} = render(<Test />, {stdout, debug: true});
+	const {waitUntilRenderFlush} = render(<Test />, {
+		stdout,
+		debug: true,
+		interactive: true,
+	});
 	await waitUntilRenderFlush();
 	await delay(50);
 
@@ -117,7 +121,11 @@ test('uses latest tracked ref when terminal is resized', async (t: TestContext) 
 		);
 	}
 
-	const {waitUntilRenderFlush} = render(<Test />, {stdout, debug: true});
+	const {waitUntilRenderFlush} = render(<Test />, {
+		stdout,
+		debug: true,
+		interactive: true,
+	});
 	await waitUntilRenderFlush();
 	await delay(50);
 
@@ -306,7 +314,10 @@ test('removes resize listener on unmount', async (t: TestContext) => {
 	const stdout = createStdout(100);
 
 	const initialListenerCount = stdout.listenerCount('resize');
-	const {unmount, waitUntilRenderFlush} = render(<SimpleBox />, {stdout});
+	const {unmount, waitUntilRenderFlush} = render(<SimpleBox />, {
+		stdout,
+		interactive: true,
+	});
 	await waitUntilRenderFlush();
 
 	t.assert.ok(stdout.listenerCount('resize') > initialListenerCount);

@@ -1085,6 +1085,7 @@ test('render only new items in static output on final render', (t: TestContext) 
 	const {rerender, unmount} = render(<Dynamic items={[]} />, {
 		stdout,
 		debug: true,
+		interactive: true,
 	});
 
 	t.assert.strictEqual((stdout.write as any).lastCall.args[0], '');
@@ -1990,6 +1991,7 @@ test('alternate screen - debug concurrent teardown restores the cursor before th
 		alternateScreen: true,
 		concurrent: true,
 		debug: true,
+		interactive: true,
 	});
 
 	unmount();

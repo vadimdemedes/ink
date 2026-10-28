@@ -19,4 +19,3 @@ jobs:
       - run: npm test
         env:
           FORCE_COLOR: true
-          CI: false

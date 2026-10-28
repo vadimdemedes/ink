@@ -18,7 +18,7 @@
 		"dev": "tsc --watch",
 		"build": "tsc",
 		"prepare": "npm run build",
-		"test": "npm run typecheck && npm run lint && FORCE_COLOR=true node --import=tsx --test --test-concurrency=1 'test/*.{ts,tsx}'",
+		"test": "npm run typecheck && npm run lint && FORCE_COLOR=true node --import=tsx --test --test-concurrency=1 --test-timeout=60000 --test-force-exit 'test/*.{ts,tsx}'",
 		"lint": "xo",
 		"format": "prettier --write .",
 		"typecheck": "tsc --noEmit",
