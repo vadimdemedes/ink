@@ -33,8 +33,12 @@ export type LogUpdate = {
 const visibleLineCount = (lines: string[], text: string): number =>
 	text.endsWith('\n') ? lines.length - 1 : lines.length;
 
+// Non-TTY streams have no rows, so the cursor is never clamped there.
+const getViewportRows = (stream: OutputStream): number =>
+	stream.rows ?? Infinity;
+
 const createStandard = (
-	stream: NodeJS.WritableStream,
+	stream: OutputStream,
 	{showCursor = false} = {},
 ): LogUpdate => {
 	let previousLineCount = 0;
@@ -77,7 +81,11 @@ const createStandard = (
 		}
 
 		const lines = text.split('\n');
-		const cursorSuffix = buildCursorSuffix(lines.length - 1, activeCursor);
+		const cursorSuffix = buildCursorSuffix(
+			lines.length - 1,
+			activeCursor,
+			getViewportRows(stream),
+		);
 
 		if (text === previousOutput && hasCursorChanged) {
 			stream.write(
@@ -86,6 +94,7 @@ const createStandard = (
 					previousLineCount,
 					previousCursorPosition,
 					cursorPosition: activeCursor,
+					viewportRows: getViewportRows(stream),
 				}),
 			);
 		} else {
@@ -158,7 +167,13 @@ const createStandard = (
 		}
 
 		if (activeCursor) {
-			stream.write(buildCursorSuffix(lines.length - 1, activeCursor));
+			stream.write(
+				buildCursorSuffix(
+					lines.length - 1,
+					activeCursor,
+					getViewportRows(stream),
+				),
+			);
 		}
 
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
@@ -234,6 +249,7 @@ const createIncremental = (
 					previousLineCount: previousLines.length,
 					previousCursorPosition,
 					cursorPosition: activeCursor,
+					viewportRows: getViewportRows(stream),
 				}),
 			);
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
@@ -251,6 +267,7 @@ const createIncremental = (
 			const cursorSuffix = buildCursorSuffix(
 				nextLines.length - 1,
 				activeCursor,
+				getViewportRows(stream),
 			);
 			stream.write(
 				returnPrefix +
@@ -313,7 +330,11 @@ const createIncremental = (
 			);
 		}
 
-		const cursorSuffix = buildCursorSuffix(nextLines.length - 1, activeCursor);
+		const cursorSuffix = buildCursorSuffix(
+			nextLines.length - 1,
+			activeCursor,
+			getViewportRows(stream),
+		);
 		buffer.push(cursorSuffix);
 
 		stream.write(buffer.join(''));
@@ -375,7 +396,13 @@ const createIncremental = (
 		}
 
 		if (activeCursor) {
-			stream.write(buildCursorSuffix(lines.length - 1, activeCursor));
+			stream.write(
+				buildCursorSuffix(
+					lines.length - 1,
+					activeCursor,
+					getViewportRows(stream),
+				),
+			);
 		}
 
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;

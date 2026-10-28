@@ -763,6 +763,30 @@ for (const {name, incremental} of renderingModes) {
 	});
 }
 
+for (const {name, incremental} of renderingModes) {
+	test(`${name} - cursor never moves above the top of the viewport`, (t: TestContext) => {
+		const {stdout, render} = createRenderForMode(incremental);
+		stdout.rows = 5;
+		const output =
+			Array.from({length: 20}, (_, index) => `Line ${index + 1}`).join('\n') +
+			'\n';
+		const clampedSuffix =
+			ansiEscapes.cursorUp(4) + ansiEscapes.cursorTo(0) + showCursorEscape;
+
+		render.setCursorPosition({x: 0, y: 0});
+		render(output);
+		// Same output, cursor moves only: takes the buildCursorOnlySequence path.
+		render.setCursorPosition({x: 0, y: 1});
+		render(output);
+		render.setCursorPosition({x: 0, y: 0});
+		render.sync(output);
+
+		for (const write of stdout.getWrites()) {
+			t.assert.ok(write.endsWith(clampedSuffix));
+		}
+	});
+}
+
 test('incremental rendering - render to empty string (full clear vs early exit)', (t: TestContext) => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout, {

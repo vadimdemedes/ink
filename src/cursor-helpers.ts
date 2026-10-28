@@ -32,16 +32,19 @@ with a newline:
   line instead of moving past it — which is also `lines.length - 1`.
 
 This is the same row basis `buildReturnToBottom` measures from, so the two stay in step.
+
+`viewportRows` caps the move at the top row of the viewport. Rows above it have scrolled into scrollback, and a larger cursor-up makes some terminals jump there.
 */
 export const buildCursorSuffix = (
 	bottomLine: number,
 	cursorPosition: CursorPosition | undefined,
+	viewportRows = Infinity,
 ): string => {
 	if (!cursorPosition) {
 		return '';
 	}
 
-	const moveUp = bottomLine - cursorPosition.y;
+	const moveUp = Math.min(bottomLine - cursorPosition.y, viewportRows - 1);
 	return (
 		(moveUp > 0 ? ansiEscapes.cursorUp(moveUp) : '') +
 		ansiEscapes.cursorTo(cursorPosition.x) +
@@ -75,6 +78,7 @@ export type CursorOnlyInput = {
 	previousLineCount: number;
 	previousCursorPosition: CursorPosition | undefined;
 	cursorPosition: CursorPosition | undefined;
+	viewportRows?: number;
 };
 
 /**
@@ -93,6 +97,7 @@ export const buildCursorOnlySequence = (input: CursorOnlyInput): string => {
 	const cursorSuffix = buildCursorSuffix(
 		input.previousLineCount - 1,
 		input.cursorPosition,
+		input.viewportRows,
 	);
 	return hidePrefix + returnToBottom + cursorSuffix;
 };
