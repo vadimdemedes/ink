@@ -179,6 +179,9 @@ const term = (
 
 	const env = {
 		...process.env,
+		// The fixtures assume an interactive terminal unless a test opts into CI.
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		CI: 'false',
 		...options.env,
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		NODE_NO_WARNINGS: '1',
@@ -209,17 +212,17 @@ const term = (
 		},
 		output: '',
 		waitForExit: async () => exitPromise,
-		async waitForOutput(text: string) {
-			for (let attempt = 0; attempt < 100; attempt++) {
-				if (result.output.includes(text)) {
-					return;
+		async waitForOutput(text: string, timeout = 10_000) {
+			const deadline = Date.now() + timeout;
+
+			while (!result.output.includes(text)) {
+				if (Date.now() > deadline) {
+					throw new Error(`Timed out waiting for ${JSON.stringify(text)}`);
 				}
 
 				// eslint-disable-next-line no-await-in-loop -- Wait for the terminal to process input before checking again.
 				await delay(20);
 			}
-
-			throw new Error(`Timed out waiting for ${JSON.stringify(text)}`);
 		},
 	};
 
@@ -1426,7 +1429,10 @@ test('#450: viewport shrink into overflow should clear once', async (t: TestCont
 		);
 	}
 
-	const {unmount} = render(<ResizeBoundaryTestComponent />, {stdout});
+	const {unmount} = render(<ResizeBoundaryTestComponent />, {
+		stdout,
+		interactive: true,
+	});
 
 	writes.length = 0;
 	stdout.rows = rows - 1;
@@ -2045,7 +2051,7 @@ test('rerender on resize', async (t: TestContext) => {
 		);
 	}
 
-	const {unmount} = render(<Test />, {stdout});
+	const {unmount} = render(<Test />, {stdout, interactive: true});
 
 	const contentWrites = getContentWrites(stdout.write);
 	t.assert.strictEqual(
@@ -2087,6 +2093,7 @@ test('throttle renders to maxFps', (t: TestContext) => {
 
 		const {unmount, rerender} = render(<ThrottleTestComponent text="Hello" />, {
 			stdout,
+			interactive: true,
 			maxFps: 1, // 1 Hz => ~1000 ms window
 		});
 
@@ -2186,6 +2193,7 @@ test('no throttled renders after unmount', (t: TestContext) => {
 
 		const {unmount, rerender} = render(<ThrottleTestComponent text="Foo" />, {
 			stdout,
+			interactive: true,
 		});
 
 		t.assert.strictEqual(getContentWrites(stdout.write).length, 1);
@@ -2214,6 +2222,7 @@ test('unmount forces pending throttled render', (t: TestContext) => {
 
 		const {unmount, rerender} = render(<ThrottleTestComponent text="Hello" />, {
 			stdout,
+			interactive: true,
 			maxFps: 1, // 1 Hz => ~1000 ms throttle window
 		});
 
@@ -2379,6 +2388,7 @@ test('waitUntilRenderFlush resolves after stdout write callback', async (t: Test
 		<Text>Hello</Text>,
 		{
 			stdout,
+			interactive: true,
 		},
 	);
 
@@ -2398,6 +2408,7 @@ test('waitUntilRenderFlush flushes pending throttled render', async (t: TestCont
 		<ThrottleTestComponent text="Hello" />,
 		{
 			stdout,
+			interactive: true,
 			maxFps: 1,
 		},
 	);
@@ -2427,6 +2438,7 @@ test('waitUntilRenderFlush resolves when stdout is not writable', async (t: Test
 		<ThrottleTestComponent text="Hello" />,
 		{
 			stdout,
+			interactive: true,
 			maxFps: 1,
 		},
 	);
@@ -2463,7 +2475,7 @@ test('waitUntilRenderFlush waits for rerender write callback', async (t: TestCon
 
 	const {unmount, rerender, waitUntilExit, waitUntilRenderFlush} = render(
 		<Text>Hello</Text>,
-		{stdout},
+		{stdout, interactive: true},
 	);
 
 	t.after(async () => {
@@ -2499,6 +2511,7 @@ test('waitUntilRenderFlush waits for concurrent rerender commit', async (t: Test
 		<Text>Hello</Text>,
 		{
 			stdout,
+			interactive: true,
 			concurrent: true,
 		},
 	);
@@ -2532,7 +2545,7 @@ test('waitUntilRenderFlush waits for all concurrent waiters on the same rerender
 
 	const {unmount, rerender, waitUntilExit, waitUntilRenderFlush} = render(
 		<Text>Hello</Text>,
-		{stdout},
+		{stdout, interactive: true},
 	);
 
 	t.after(async () => {
@@ -2673,6 +2686,7 @@ test('useApp waitUntilRenderFlush waits for state update queued in same effect t
 
 	const {waitUntilExit} = render(<Test />, {
 		stdout,
+		interactive: true,
 		concurrent: true,
 	});
 	await waitUntilExit();
@@ -3181,7 +3195,11 @@ const assertNoBsuEsuForUnchangedTrailingRerender = (
 	withFakeClock(clock => {
 		const stdout = createTtyStdout();
 		const writes = captureWrites(stdout);
-		const {unmount, rerender} = render(element, {stdout, maxFps: 1});
+		const {unmount, rerender} = render(element, {
+			stdout,
+			maxFps: 1,
+			interactive: true,
+		});
 		try {
 			t.assert.ok(writes.includes(bsu), 'initial render should include bsu');
 
@@ -3227,6 +3245,7 @@ test('bsu/esu wraps throttledLog trailing call', (t: TestContext) => {
 		const writes = captureWrites(stdout);
 		const {unmount, rerender} = render(<ThrottleTestComponent text="Hello" />, {
 			stdout,
+			interactive: true,
 			maxFps: 1,
 		});
 		try {

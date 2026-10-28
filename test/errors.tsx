@@ -5,6 +5,7 @@ import patchConsole from 'patch-console';
 import stripAnsi from 'strip-ansi';
 import {render, useStdin, Text} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
+import {createStdin} from './helpers/create-stdin.js';
 
 let restore = () => {};
 
@@ -43,17 +44,17 @@ test('catch and display error', (t: TestContext) => {
 			'',
 			'  ERROR  Oh no',
 			'',
-			' test/errors.tsx:23:9',
+			' test/errors.tsx:24:9',
 			'',
-			' 20:   const stdout = createStdout();',
-			' 21:',
-			' 22:   const Test = () => {',
-			" 23:     throw new Error('Oh no');",
-			' 24:   };',
-			' 25:',
-			' 26:   render(<Test />, {stdout});',
+			' 21:   const stdout = createStdout();',
+			' 22:',
+			' 23:   const Test = () => {',
+			" 24:     throw new Error('Oh no');",
+			' 25:   };',
+			' 26:',
+			' 27:   render(<Test />, {stdout});',
 			'',
-			' - Test (test/errors.tsx:23:9)',
+			' - Test (test/errors.tsx:24:9)',
 		],
 	);
 });
@@ -126,22 +127,7 @@ test('ErrorBoundary catches and displays nested component errors', (t: TestConte
 
 test('clean up raw mode when error is thrown', async (t: TestContext) => {
 	const stdout = createStdout();
-
-	// Track setRawMode calls
-	const rawModeCalls: boolean[] = [];
-	const originalSetRawMode = process.stdin.setRawMode?.bind(process.stdin);
-
-	// Only run this test if raw mode is supported
-	if (!process.stdin.isTTY) {
-		t.skip('stdin is not a TTY');
-		return;
-	}
-
-	process.stdin.setRawMode = (isEnabled: boolean) => {
-		rawModeCalls.push(isEnabled);
-
-		return originalSetRawMode?.(isEnabled) ?? process.stdin;
-	};
+	const stdin = createStdin();
 
 	function Test() {
 		const {setRawMode} = useStdin();
@@ -155,18 +141,14 @@ test('clean up raw mode when error is thrown', async (t: TestContext) => {
 		return <Text>Test</Text>;
 	}
 
-	const app = render(<Test />, {stdout});
+	const app = render(<Test />, {stdout, stdin});
 
 	await t.assert.rejects(app.waitUntilExit(), Error);
 
-	// Restore original setRawMode
-	process.stdin.setRawMode = originalSetRawMode;
-
-	// Verify raw mode was enabled then disabled
-	t.assert.ok(rawModeCalls.includes(true), 'Raw mode should have been enabled');
-	t.assert.ok(
-		rawModeCalls.includes(false),
-		'Raw mode should have been disabled on cleanup',
+	// Raw mode was turned off again after the error, and only once. This doesn't tell apart which teardown step disabled it (the error exit or the unmount cleanup).
+	t.assert.deepStrictEqual(
+		(stdin.setRawMode as unknown as {args: unknown[][]}).args,
+		[[true], [false]],
 	);
 });
 

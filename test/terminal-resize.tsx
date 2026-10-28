@@ -67,7 +67,7 @@ test('useWindowSize returns current terminal dimensions and updates on resize', 
 		);
 	}
 
-	const {waitUntilRenderFlush} = render(<Test />, {stdout});
+	const {waitUntilRenderFlush} = render(<Test />, {stdout, interactive: true});
 	await waitUntilRenderFlush();
 
 	t.assert.ok(stripAnsi(getWriteContents(stdout).at(-1)!).includes('100x40'));
@@ -250,7 +250,7 @@ test('clear screen when terminal width decreases', async (t: TestContext) => {
 		);
 	}
 
-	render(<Test />, {stdout});
+	render(<Test />, {stdout, interactive: true});
 
 	const initialOutput = stripAnsi(getWriteContents(stdout)[0]!);
 	t.assert.ok(initialOutput.includes('Hello World'));
@@ -279,7 +279,7 @@ test('no screen clear when terminal width increases', async (t: TestContext) => 
 		);
 	}
 
-	render(<Test />, {stdout});
+	render(<Test />, {stdout, interactive: true});
 
 	const initialOutput = getWriteContents(stdout)[0]!;
 
@@ -308,7 +308,7 @@ test('consecutive width decreases trigger screen clear each time', async (t: Tes
 		);
 	}
 
-	render(<Test />, {stdout});
+	render(<Test />, {stdout, interactive: true});
 
 	const initialOutput = stripAnsi(getWriteContents(stdout)[0]!);
 
@@ -342,7 +342,7 @@ test('width decrease clears lastOutput to force rerender', async (t: TestContext
 		);
 	}
 
-	const {rerender} = render(<Test />, {stdout});
+	const {rerender} = render(<Test />, {stdout, interactive: true});
 
 	const initialOutput = stripAnsi(getWriteContents(stdout)[0]!);
 
@@ -447,7 +447,11 @@ for (const isIncrementalRendering of [false, true]) {
 
 			const {rerender, unmount, waitUntilRenderFlush} = render(
 				<Frame cursorY={cursorY} />,
-				{stdout, incrementalRendering: isIncrementalRendering},
+				{
+					stdout,
+					incrementalRendering: isIncrementalRendering,
+					interactive: true,
+				},
 			);
 			t.after(() => {
 				unmount();
@@ -481,6 +485,7 @@ for (const isIncrementalRendering of [false, true]) {
 
 		const {unmount, waitUntilRenderFlush} = render(<Frame cursorY={0} />, {
 			stdout,
+			interactive: true,
 			incrementalRendering: isIncrementalRendering,
 		});
 		t.after(() => {
@@ -507,7 +512,7 @@ for (const isIncrementalRendering of [false, true]) {
 
 		const {rerender, unmount, waitUntilRenderFlush} = render(
 			<Frame cursorY={0} />,
-			{stdout, incrementalRendering: isIncrementalRendering},
+			{stdout, incrementalRendering: isIncrementalRendering, interactive: true},
 		);
 		t.after(() => {
 			unmount();
@@ -533,6 +538,7 @@ for (const isIncrementalRendering of [false, true]) {
 
 		const {unmount, waitUntilRenderFlush} = render(<SixLines />, {
 			stdout,
+			interactive: true,
 			incrementalRendering: isIncrementalRendering,
 		});
 		t.after(() => {
@@ -582,7 +588,11 @@ for (const isIncrementalRendering of [false, true]) {
 
 			const {unmount, rerender, waitUntilRenderFlush} = render(
 				<CursorSixLines cursorRow={initialCursorRow} />,
-				{stdout, incrementalRendering: isIncrementalRendering},
+				{
+					stdout,
+					incrementalRendering: isIncrementalRendering,
+					interactive: true,
+				},
 			);
 			t.after(() => {
 				unmount();
@@ -623,6 +633,7 @@ for (const isIncrementalRendering of [false, true]) {
 
 		const {unmount, waitUntilRenderFlush} = render(<SixLines />, {
 			stdout,
+			interactive: true,
 			incrementalRendering: isIncrementalRendering,
 		});
 		t.after(() => {
@@ -647,6 +658,7 @@ for (const isIncrementalRendering of [false, true]) {
 
 		const {unmount, waitUntilRenderFlush} = render(<SixLines />, {
 			stdout,
+			interactive: true,
 			incrementalRendering: isIncrementalRendering,
 		});
 		t.after(() => {

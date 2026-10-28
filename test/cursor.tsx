@@ -97,7 +97,7 @@ test('cursor is shown at specified position after render', async (t: TestContext
 	const stdout = createStdout();
 	const stdin = createStdin();
 
-	const {unmount} = render(<InputApp />, {stdout, stdin});
+	const {unmount} = render(<InputApp />, {stdout, stdin, interactive: true});
 	await delay(50);
 
 	// With isTTY=true, cli-cursor writes cursor escape sequences as separate
@@ -138,6 +138,7 @@ for (const isIncrementalRendering of [false, true]) {
 
 		const app = render(<Test status="Waiting" />, {
 			stdout,
+			interactive: true,
 			incrementalRendering: isIncrementalRendering,
 		});
 		t.after(() => {
@@ -175,7 +176,7 @@ test('cursor is not hidden by useEffect after first render', async (t: TestConte
 	const stdout = createStdout();
 	const stdin = createStdin();
 
-	const {unmount} = render(<InputApp />, {stdout, stdin});
+	const {unmount} = render(<InputApp />, {stdout, stdin, interactive: true});
 	await delay(50);
 
 	// Check all writes after the first render — none should be a bare hideCursorEscape
@@ -198,7 +199,7 @@ test('cursor follows text input', async (t: TestContext) => {
 	const stdout = createStdout();
 	const stdin = createStdin();
 
-	const {unmount} = render(<InputApp />, {stdout, stdin});
+	const {unmount} = render(<InputApp />, {stdout, stdin, interactive: true});
 	await delay(50);
 
 	emitReadable(stdin, 'a');
@@ -223,6 +224,7 @@ test('cursor moves on space input even when output is identical', async (t: Test
 
 	const {unmount, waitUntilRenderFlush} = render(<InputApp />, {
 		stdout,
+		interactive: true,
 		stdin,
 	});
 	t.after(() => {
@@ -278,7 +280,7 @@ test('cursor is cleared when component using useCursor unmounts', async (t: Test
 		return <Box>{showChild ? <CursorChild /> : <Text>no cursor</Text>}</Box>;
 	}
 
-	const {unmount} = render(<Parent />, {stdout, stdin});
+	const {unmount} = render(<Parent />, {stdout, stdin, interactive: true});
 	await delay(50);
 
 	// With isTTY=true, cli-cursor writes cursor escape sequences as separate
@@ -339,7 +341,7 @@ test('cursor position does not leak from suspended concurrent render to fallback
 	}
 
 	await act(async () => {
-		render(<Test />, {stdout, stdin, concurrent: true});
+		render(<Test />, {stdout, stdin, concurrent: true, interactive: true});
 	});
 
 	const fallbackOutput = getWriteCalls(stdout).join('');
@@ -382,7 +384,11 @@ test('screen does not scroll up on subsequent renders', async (t: TestContext) =
 		);
 	}
 
-	const {unmount} = render(<MultiLineApp />, {stdout, stdin});
+	const {unmount} = render(<MultiLineApp />, {
+		stdout,
+		stdin,
+		interactive: true,
+	});
 	await delay(50);
 
 	const writesBeforeInput = (stdout.write as any).callCount as number;
@@ -475,7 +481,9 @@ for (const testCase of hookWriteCases) {
 
 		const {unmount} = render(
 			<testCase.App />,
-			stderr ? {stdout, stderr, stdin} : {stdout, stdin},
+			stderr
+				? {stdout, stderr, stdin, interactive: true}
+				: {stdout, stdin, interactive: true},
 		);
 		await delay(50);
 
@@ -758,7 +766,7 @@ for (const {name, incremental} of inkRenderingModes) {
 
 		const {rerender, unmount, waitUntilRenderFlush} = render(
 			<FullscreenCursorApp lineCount={5} cursorY={2} marker="" />,
-			{stdout, incrementalRendering: incremental},
+			{stdout, incrementalRendering: incremental, interactive: true},
 		);
 		await waitUntilRenderFlush();
 
@@ -844,7 +852,7 @@ for (const {name, incremental} of inkRenderingModes) {
 		// rather than through the renderer's normal write path.
 		const {rerender, unmount, waitUntilRenderFlush} = render(
 			<FullscreenCursorApp lineCount={6} cursorY={2} marker="" />,
-			{stdout, incrementalRendering: incremental},
+			{stdout, incrementalRendering: incremental, interactive: true},
 		);
 		await waitUntilRenderFlush();
 
