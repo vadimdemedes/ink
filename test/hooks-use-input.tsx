@@ -1,3 +1,5 @@
+import {Buffer} from 'node:buffer';
+import {Readable} from 'node:stream';
 import test, {type TestContext} from 'node:test';
 import FakeTimers from '@sinonjs/fake-timers';
 import React from 'react';
@@ -219,6 +221,7 @@ for (const [name, sequence] of [
 	['focus out', '\u{1B}[O'],
 	['cursor position report', '\u{1B}[24;80R'],
 	['SGR mouse report', '\u{1B}[<0;10;20M'],
+	['legacy mouse report', '\u{1B}[M !"'],
 	['primary device attributes', '\u{1B}[?62;1;4c'],
 	['stray bracketed paste end', '\u{1B}[201~'],
 	['unmapped legacy CSI', '\u{1B}[[Z'],
@@ -292,4 +295,48 @@ test('useInput - meta + escape delivers empty input like plain escape', async (t
 		{input: '', escape: true, meta: false},
 		{input: '', escape: true, meta: true},
 	]);
+});
+
+test('useInput - drops legacy mouse report read from a byte stream', async (t: TestContext) => {
+	const stdin = Object.assign(new Readable({read() {}}), {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		isTTY: true,
+		setRawMode() {},
+	});
+	const inputs: string[] = [];
+	function Example() {
+		useInput(input => {
+			inputs.push(input);
+		});
+		return null;
+	}
+
+	let instance!: ReturnType<typeof render>;
+	await act(async () => {
+		instance = render(<Example />, {
+			stdin,
+			stdout: createStdout(),
+			patchConsole: false,
+		});
+	});
+	t.after(() => {
+		instance.unmount();
+		stdin.destroy();
+	});
+
+	// Button press at column 1, row 2, decoded by Ink's own `setEncoding('utf8')`.
+	for (const chunk of [
+		Buffer.from([0x1b, 0x5b, 0x4d, 0x20, 0x21, 0x22]),
+		Buffer.from('q'),
+	]) {
+		// eslint-disable-next-line no-await-in-loop
+		await act(async () => {
+			stdin.push(chunk);
+			await new Promise<void>(resolve => {
+				setImmediate(resolve);
+			});
+		});
+	}
+
+	t.assert.deepStrictEqual(inputs, ['q']);
 });

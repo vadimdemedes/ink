@@ -372,6 +372,22 @@ test('assembles CSI sequence from single-byte chunks', (t: TestContext) => {
 	t.assert.deepStrictEqual(parser.push('A'), ['\u{1B}[1;5A']);
 });
 
+test('parses legacy mouse report with its three coordinate bytes as one event', (t: TestContext) => {
+	t.assert.deepStrictEqual(parseChunks(['\u{1B}[M !"q']), ['\u{1B}[M !"', 'q']);
+	t.assert.deepStrictEqual(parseChunks(['\u{1B}\u{1B}[M !"q']), [
+		'\u{1B}\u{1B}[M !"',
+		'q',
+	]);
+});
+
+test('holds legacy mouse report until its coordinate bytes arrive', (t: TestContext) => {
+	const parser = createInputParser();
+
+	t.assert.deepStrictEqual(parser.push('\u{1B}[M'), []);
+	t.assert.deepStrictEqual(parser.push(' !'), []);
+	t.assert.deepStrictEqual(parser.push('"'), ['\u{1B}[M !"']);
+});
+
 test('emits paste event for bracketed paste sequence', (t: TestContext) => {
 	t.assert.deepStrictEqual(parseChunks(['\u{1B}[200~hello world\u{1B}[201~']), [
 		{paste: 'hello world'},
@@ -469,6 +485,7 @@ test('isCompleteControlSequence accepts every complete CSI and SS3 form the pars
 		'\u{1B}[I',
 		'\u{1B}[24;80R',
 		'\u{1B}[<0;10;20M',
+		'\u{1B}[M !"',
 		'\u{1B}[[A',
 		'\u{1B}[2$',
 		'\u{1B}[ q',
@@ -499,6 +516,7 @@ test('isCompleteControlSequence rejects partial sequences and escaped code point
 		'\u{1B}\u{1B}',
 		'\u{1B}\u{1B}x',
 		'\u{1B}[1$',
+		'\u{1B}[M !',
 		'\u{1B}[Aq',
 	]) {
 		t.assert.strictEqual(
