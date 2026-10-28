@@ -1,3 +1,4 @@
+import process from 'node:process';
 import test, {type TestContext} from 'node:test';
 import React from 'react';
 import stripAnsi from 'strip-ansi';
@@ -43,6 +44,31 @@ test('renders the original error when its source file is missing', (t: TestConte
 	t.assert.ok(output.includes('Oh no'));
 	t.assert.ok(output.includes('missing-source-file.js:1:1'));
 });
+
+test('renders the original error when a file URL in its stack has a malformed escape', (t: TestContext) => {
+	const error = createErrorWithStack(
+		'Error: Oh no\n    at file:///bad%ZZ.js:1:1',
+	);
+	const output = stripAnsi(renderToString(<ErrorOverview error={error} />));
+
+	t.assert.ok(output.includes('Oh no'));
+	t.assert.ok(output.includes('file:///bad%ZZ.js:1:1'));
+});
+
+test(
+	'renders the original error when a file URL in its stack has a host',
+	// eslint-disable-next-line node-test/no-skip-test -- A file URL with a host is a valid UNC path on Windows.
+	{skip: process.platform === 'win32'},
+	(t: TestContext) => {
+		const error = createErrorWithStack(
+			'Error: Oh no\n    at file://example.com/app.js:1:1',
+		);
+		const output = stripAnsi(renderToString(<ErrorOverview error={error} />));
+
+		t.assert.ok(output.includes('Oh no'));
+		t.assert.ok(output.includes('file://example.com/app.js:1:1'));
+	},
+);
 
 test('multiline error messages are not treated as stack frames', (t: TestContext) => {
 	const sourceUrl = new URL('fixtures/error source.txt', import.meta.url);

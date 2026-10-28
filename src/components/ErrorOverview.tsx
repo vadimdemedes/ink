@@ -10,8 +10,18 @@ import Text from './Text.js';
 
 // Error's source file is reported as file:///home/user/file.js
 // This function converts file URLs to paths relative to the current directory
-const cleanupPath = (path: string | undefined): string | undefined =>
-	path?.startsWith('file://') ? relative(cwd(), fileURLToPath(path)) : path;
+const cleanupPath = (path: string | undefined): string | undefined => {
+	if (!path?.startsWith('file://')) {
+		return path;
+	}
+
+	try {
+		return relative(cwd(), fileURLToPath(path));
+	} catch {
+		// A stack from another machine or platform can hold a file URL that is not valid here (a host, a malformed escape). Show it as-is rather than let the error screen itself throw.
+		return path;
+	}
+};
 
 const stackUtils = new StackUtils({
 	cwd: cwd(),
