@@ -78,4 +78,33 @@ for (const mode of ['standard', 'incremental', 'screen-reader'] as const) {
 		);
 		t.assert.ok(lines.every(line => line === ''));
 	});
+
+	test(`console output does not restore cleared content (${mode})`, async (t: TestContext) => {
+		const stdout = createStdout(80, true);
+		stdout.rows = 8;
+		const instance = render(<Text>Hello</Text>, {
+			stdout,
+			interactive: true,
+			incrementalRendering: mode === 'incremental',
+			isScreenReaderEnabled: mode === 'screen-reader',
+			stderr: createStdout(80, true),
+			patchConsole: true,
+		});
+		t.after(() => {
+			instance.unmount();
+		});
+		await instance.waitUntilRenderFlush();
+		instance.clear();
+		console.log('Log');
+		console.error('Error');
+
+		const lines = reconstructTerminalLines(
+			stdout.getWrites().join('').replaceAll('\n', '\r\n'),
+			8,
+		);
+		t.assert.deepStrictEqual(
+			lines.filter(line => line !== ''),
+			['Log'],
+		);
+	});
 }
