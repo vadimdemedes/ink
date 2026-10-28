@@ -2789,12 +2789,18 @@ test('waitUntilRenderFlush resolves after exit with error', async (t: TestContex
 });
 
 test('issue 596: useEffect can run before the first frame write callback', async (t: TestContext) => {
+	let didInitialWriteStart = false;
 	let didInitialWriteCallbackFire = false;
 	let didUseEffectRun = false;
 
 	const stdout = createDelayedWriteCallbackStdout({
 		shouldDelay(chunk) {
-			return !isWriteBarrierChunk(chunk);
+			if (isWriteBarrierChunk(chunk)) {
+				return false;
+			}
+
+			didInitialWriteStart = true;
+			return true;
 		},
 		onDelayElapsed() {
 			didInitialWriteCallbackFire = true;
@@ -2809,9 +2815,13 @@ test('issue 596: useEffect can run before the first frame write callback', async
 		return <Text>Hello</Text>;
 	}
 
-	const {unmount, waitUntilExit} = render(<Test />, {stdout});
+	const {unmount, waitUntilExit} = render(<Test />, {
+		stdout,
+		interactive: true,
+	});
 
 	await delay(20);
+	t.assert.ok(didInitialWriteStart);
 	t.assert.ok(didUseEffectRun);
 	t.assert.strictEqual(didInitialWriteCallbackFire, false);
 
