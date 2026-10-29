@@ -24,7 +24,7 @@
 		"typecheck": "tsc --noEmit",
 		"example": "NODE_NO_WARNINGS=1 node --import=tsx",
 		"benchmark": "NODE_NO_WARNINGS=1 node --import=tsx",
-		"inspect": "npx react-devtools"
+		"inspect": "npx react-devtools@^8"
 	},
 	"files": [
 		"build"
