@@ -1,3 +1,4 @@
+import process from 'node:process';
 import test, {type TestContext} from 'node:test';
 import React from 'react';
 import chalk from 'chalk';
@@ -104,6 +105,39 @@ test('render text for screen readers', (t: TestContext) => {
 	);
 
 	t.assert.strictEqual(output, 'Hello World');
+});
+
+test('INK_SCREEN_READER=true enables screen-reader output unless the option disables it', (t: TestContext) => {
+	const previousValue = process.env['INK_SCREEN_READER'];
+	t.after(() => {
+		if (previousValue === undefined) {
+			delete process.env['INK_SCREEN_READER'];
+		} else {
+			process.env['INK_SCREEN_READER'] = previousValue;
+		}
+	});
+
+	// eslint-disable-next-line node-test/no-process-env-mutation -- Restored in `t.after()`.
+	process.env['INK_SCREEN_READER'] = 'true';
+
+	const element = (
+		<Box aria-label="Hello World">
+			<Text>Not visible to screen readers</Text>
+		</Box>
+	);
+
+	t.assert.strictEqual(renderToString(element), 'Hello World');
+	t.assert.strictEqual(
+		renderToString(element, {isScreenReaderEnabled: false}),
+		'Not visible to screen readers',
+	);
+
+	// eslint-disable-next-line node-test/no-process-env-mutation -- Restored in `t.after()`.
+	process.env['INK_SCREEN_READER'] = 'false';
+	t.assert.strictEqual(
+		renderToString(element),
+		'Not visible to screen readers',
+	);
 });
 
 test('render text for screen readers with aria-hidden', (t: TestContext) => {
