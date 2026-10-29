@@ -138,6 +138,10 @@ test('INK_SCREEN_READER=true enables screen-reader output unless the option disa
 		renderToString(element),
 		'Not visible to screen readers',
 	);
+	t.assert.strictEqual(
+		renderToString(element, {isScreenReaderEnabled: true}),
+		'Hello World',
+	);
 });
 
 test('render text for screen readers with aria-hidden', (t: TestContext) => {
