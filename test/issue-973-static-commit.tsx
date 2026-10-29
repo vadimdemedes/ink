@@ -16,6 +16,7 @@ test('#973: static item taller than viewport keeps its last line', async (t: Tes
 		['--import=tsx', 'issue-973-static-commit.tsx', String(rows)],
 		{
 			name: 'xterm-color',
+			useConptyDll: true,
 			cols: 100,
 			rows,
 			cwd: 'test/fixtures',

@@ -566,7 +566,7 @@ for (const isIncrementalRendering of [false, true]) {
 		return <SixLines />;
 	}
 
-	for (const {description, initialCursorRow, shrink} of [
+	for (const {description, initialCursorRow, shrink, windowsTodo} of [
 		{
 			description: 'a custom cursor sits on it',
 			initialCursorRow: 0,
@@ -577,54 +577,61 @@ for (const isIncrementalRendering of [false, true]) {
 		{
 			description: 'the same render moves a custom cursor',
 			initialCursorRow: 4,
+			// Windows keeps the absolute erase for fullscreen frames (#969), so the cursor-relative walk-up that preserves this row is skipped there.
+			windowsTodo:
+				'On Windows the row above the frame is erased when the same render moves the cursor',
 			shrink(_stdout: FakeStdout, rerender: (tree: React.ReactNode) => void) {
 				rerender(<CursorSixLines cursorRow={2} />);
 			},
 		},
 	]) {
-		test(`${name} rendering - keeps content above the frame when the terminal height shrinks onto it and ${description}`, async (t: TestContext) => {
-			const stdout = createStdout(40);
-			stdout.rows = 10;
+		test(
+			`${name} rendering - keeps content above the frame when the terminal height shrinks onto it and ${description}`,
+			{todo: process.platform === 'win32' && windowsTodo},
+			async (t: TestContext) => {
+				const stdout = createStdout(40);
+				stdout.rows = 10;
 
-			const {unmount, rerender, waitUntilRenderFlush} = render(
-				<CursorSixLines cursorRow={initialCursorRow} />,
-				{
-					stdout,
-					incrementalRendering: isIncrementalRendering,
-					interactive: true,
-				},
-			);
-			t.after(() => {
-				unmount();
-			});
-			await waitUntilRenderFlush();
+				const {unmount, rerender, waitUntilRenderFlush} = render(
+					<CursorSixLines cursorRow={initialCursorRow} />,
+					{
+						stdout,
+						incrementalRendering: isIncrementalRendering,
+						interactive: true,
+					},
+				);
+				t.after(() => {
+					unmount();
+				});
+				await waitUntilRenderFlush();
 
-			const writesBefore = stdout.getWrites().length;
-			stdout.rows = 6;
-			shrink(stdout, rerender);
-			await waitUntilRenderFlush();
+				const writesBefore = stdout.getWrites().length;
+				stdout.rows = 6;
+				shrink(stdout, rerender);
+				await waitUntilRenderFlush();
 
-			// The byte stream alone cannot show what a shrink erases, so replay it on a modelled terminal with shell output above the frame.
-			const writes = stdout
-				.getWrites()
-				.map(write => write.replaceAll('\n', '\r\n'));
-			const visibleLines = reconstructTerminalLines(
-				[
-					'shell 0\r\nshell 1\r\nshell 2\r\n',
-					...writes.slice(0, writesBefore),
-					{rows: 6},
-					...writes.slice(writesBefore),
-				],
-				10,
-			);
+				// The byte stream alone cannot show what a shrink erases, so replay it on a modelled terminal with shell output above the frame.
+				const writes = stdout
+					.getWrites()
+					.map(write => write.replaceAll('\n', '\r\n'));
+				const visibleLines = reconstructTerminalLines(
+					[
+						'shell 0\r\nshell 1\r\nshell 2\r\n',
+						...writes.slice(0, writesBefore),
+						{rows: 6},
+						...writes.slice(writesBefore),
+					],
+					10,
+				);
 
-			t.assert.deepStrictEqual(visibleLines.filter(Boolean), [
-				'shell 0',
-				'shell 1',
-				'shell 2',
-				...frame.split('\n'),
-			]);
-		});
+				t.assert.deepStrictEqual(visibleLines.filter(Boolean), [
+					'shell 0',
+					'shell 1',
+					'shell 2',
+					...frame.split('\n'),
+				]);
+			},
+		);
 	}
 
 	test(`${name} rendering - writes nothing when the terminal height shrinks and the frame still fits`, async (t: TestContext) => {

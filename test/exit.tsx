@@ -91,6 +91,7 @@ test('don’t exit while raw mode is active', async (t: TestContext) => {
 			],
 			{
 				name: 'xterm-color',
+				useConptyDll: true,
 				cols: 100,
 				cwd: __dirname,
 				env,
