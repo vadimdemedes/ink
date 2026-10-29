@@ -24,7 +24,7 @@
 		"typecheck": "tsc --noEmit",
 		"example": "NODE_NO_WARNINGS=1 node --import=tsx",
 		"benchmark": "NODE_NO_WARNINGS=1 node --import=tsx",
-		"inspect": "react-devtools"
+		"inspect": "npx react-devtools"
 	},
 	"files": [
 		"build"
@@ -90,7 +90,6 @@
 		"p-queue": "^9.3.3",
 		"prettier": "^3.9.9",
 		"react": "^19.3.0",
-		"react-devtools": "^8.0.0",
 		"react-devtools-core": "^8.0.0",
 		"react-router": "^8.4.0",
 		"sinon": "^22.1.0",
