@@ -373,12 +373,21 @@ test('Shift+F1 resolves to name "f1" with shift', (t: TestContext) => {
 test('legacy function, editing, and rxvt modifier key sequences', (t: TestContext) => {
 	for (const [code, name, shift, ctrl] of [
 		['OP', 'f1', false, false],
+		['OQ', 'f2', false, false],
+		['OR', 'f3', false, false],
 		['OS', 'f4', false, false],
+		['[P', 'f1', false, false],
+		['[Q', 'f2', false, false],
+		['[R', 'f3', false, false],
+		['[S', 'f4', false, false],
 		['[11~', 'f1', false, false],
 		['[12~', 'f2', false, false],
 		['[13~', 'f3', false, false],
 		['[14~', 'f4', false, false],
 		['[[A', 'f1', false, false],
+		['[[B', 'f2', false, false],
+		['[[C', 'f3', false, false],
+		['[[D', 'f4', false, false],
 		['[[E', 'f5', false, false],
 		['[15~', 'f5', false, false],
 		['[17~', 'f6', false, false],
@@ -388,14 +397,34 @@ test('legacy function, editing, and rxvt modifier key sequences', (t: TestContex
 		['[21~', 'f10', false, false],
 		['[23~', 'f11', false, false],
 		['[24~', 'f12', false, false],
+		['[A', 'up', false, false],
+		['[B', 'down', false, false],
+		['[C', 'right', false, false],
+		['[D', 'left', false, false],
+		['[E', 'clear', false, false],
+		['[F', 'end', false, false],
+		['[H', 'home', false, false],
+		['OA', 'up', false, false],
+		['OB', 'down', false, false],
+		['OC', 'right', false, false],
+		['OD', 'left', false, false],
+		['OE', 'clear', false, false],
+		['OF', 'end', false, false],
+		['OH', 'home', false, false],
 		['[1~', 'home', false, false],
 		['[2~', 'insert', false, false],
+		['[3~', 'delete', false, false],
 		['[4~', 'end', false, false],
+		['[5~', 'pageup', false, false],
+		['[6~', 'pagedown', false, false],
 		['[[5~', 'pageup', false, false],
 		['[[6~', 'pagedown', false, false],
 		['[7~', 'home', false, false],
 		['[8~', 'end', false, false],
 		['[a', 'up', true, false],
+		['[b', 'down', true, false],
+		['[c', 'right', true, false],
+		['[d', 'left', true, false],
 		['[e', 'clear', true, false],
 		['[2$', 'insert', true, false],
 		['[3$', 'delete', true, false],
@@ -404,6 +433,9 @@ test('legacy function, editing, and rxvt modifier key sequences', (t: TestContex
 		['[7$', 'home', true, false],
 		['[8$', 'end', true, false],
 		['Oa', 'up', false, true],
+		['Ob', 'down', false, true],
+		['Oc', 'right', false, true],
+		['Od', 'left', false, true],
 		['Oe', 'clear', false, true],
 		['[2^', 'insert', false, true],
 		['[3^', 'delete', false, true],
@@ -418,11 +450,26 @@ test('legacy function, editing, and rxvt modifier key sequences', (t: TestContex
 			{name, shift, ctrl, meta: false},
 			code,
 		);
-		// A leading ESC adds Meta and routes `[N~` codes through the lookup table rather than the CSI parser.
+		// Plain `[N~` codes that the kitty special-key parser recognizes never reach the legacy table. A leading ESC adds Meta and resolves every code through the table, which `code` confirms.
 		t.assert.partialDeepStrictEqual(
 			parseKeypress(`\u{1B}\u{1B}${code}`),
-			{name, shift, ctrl, meta: true},
+			{name, shift, ctrl, meta: true, code},
 			`Meta+${code}`,
 		);
 	}
+});
+
+test('legacy xterm modifier parameters set Meta and Ctrl', (t: TestContext) => {
+	t.assert.partialDeepStrictEqual(parseKeypress('\u{1B}O1;9A'), {
+		name: 'up',
+		meta: true,
+		ctrl: false,
+		shift: false,
+	});
+	t.assert.partialDeepStrictEqual(parseKeypress('\u{1B}\u{1B}[2;5~'), {
+		name: 'insert',
+		meta: true,
+		ctrl: true,
+		shift: false,
+	});
 });
