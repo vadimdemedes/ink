@@ -369,3 +369,60 @@ test('Shift+F1 resolves to name "f1" with shift', (t: TestContext) => {
 	t.assert.ok(key.shift);
 	t.assert.strictEqual(key.ctrl, false);
 });
+
+test('legacy function, editing, and rxvt modifier key sequences', (t: TestContext) => {
+	for (const [code, name, shift, ctrl] of [
+		['OP', 'f1', false, false],
+		['OS', 'f4', false, false],
+		['[11~', 'f1', false, false],
+		['[12~', 'f2', false, false],
+		['[13~', 'f3', false, false],
+		['[14~', 'f4', false, false],
+		['[[A', 'f1', false, false],
+		['[[E', 'f5', false, false],
+		['[15~', 'f5', false, false],
+		['[17~', 'f6', false, false],
+		['[18~', 'f7', false, false],
+		['[19~', 'f8', false, false],
+		['[20~', 'f9', false, false],
+		['[21~', 'f10', false, false],
+		['[23~', 'f11', false, false],
+		['[24~', 'f12', false, false],
+		['[1~', 'home', false, false],
+		['[2~', 'insert', false, false],
+		['[4~', 'end', false, false],
+		['[[5~', 'pageup', false, false],
+		['[[6~', 'pagedown', false, false],
+		['[7~', 'home', false, false],
+		['[8~', 'end', false, false],
+		['[a', 'up', true, false],
+		['[e', 'clear', true, false],
+		['[2$', 'insert', true, false],
+		['[3$', 'delete', true, false],
+		['[5$', 'pageup', true, false],
+		['[6$', 'pagedown', true, false],
+		['[7$', 'home', true, false],
+		['[8$', 'end', true, false],
+		['Oa', 'up', false, true],
+		['Oe', 'clear', false, true],
+		['[2^', 'insert', false, true],
+		['[3^', 'delete', false, true],
+		['[5^', 'pageup', false, true],
+		['[6^', 'pagedown', false, true],
+		['[7^', 'home', false, true],
+		['[8^', 'end', false, true],
+		['[Z', 'tab', true, false],
+	] as const) {
+		t.assert.partialDeepStrictEqual(
+			parseKeypress(`\u{1B}${code}`),
+			{name, shift, ctrl, meta: false},
+			code,
+		);
+		// A leading ESC adds Meta and routes `[N~` codes through the lookup table rather than the CSI parser.
+		t.assert.partialDeepStrictEqual(
+			parseKeypress(`\u{1B}\u{1B}${code}`),
+			{name, shift, ctrl, meta: true},
+			`Meta+${code}`,
+		);
+	}
+});
