@@ -171,3 +171,16 @@ test('drops zero-width characters with the columns a clip cuts from either end',
 
 	t.assert.deepStrictEqual(output.get(), {output: '   bc', height: 1});
 });
+
+test('horizontal clip fast path returns line unchanged when it fits inside clip', (t: TestContext) => {
+	const output = new Output({width: 20, height: 2});
+	const line = 'fitting text';
+	const lineWidth = 12;
+
+	// When from <= 0 and to >= width and edges have non-zero width, return original line reference
+	const result = output.sliceLineToColumns(line, 0, lineWidth + 5);
+	t.assert.strictEqual(result, line);
+
+	const exactResult = output.sliceLineToColumns(line, 0, lineWidth);
+	t.assert.strictEqual(exactResult, line);
+});
