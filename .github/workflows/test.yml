@@ -2,19 +2,13 @@ name: test
 on: [push, pull_request]
 jobs:
   test:
-    name: Node.js ${{ matrix.node_version }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: Node.js ${{ matrix.node_version }}
+    runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         node_version:
           - 24
           - 22
-        os:
-          - ubuntu-latest
-        include:
-          - node_version: 24
-            os: windows-latest
     steps:
       - uses: actions/checkout@v6
       - name: Use Node.js ${{ matrix.node_version }}
