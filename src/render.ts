@@ -117,7 +117,7 @@ export type RenderOptions = {
 
 	Note: Reusing the same stdout across multiple `render()` calls without unmounting is unsupported. Call `unmount()` first if you need to change this option or create a fresh instance.
 
-	@default true (false if in CI or `stdout.isTTY` is falsy)
+	Default: `true` (`false` if in CI or `stdout.isTTY` is falsy)
 	*/
 	interactive?: boolean;
 
