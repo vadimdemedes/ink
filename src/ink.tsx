@@ -602,13 +602,23 @@ export default class Ink {
 				this.options.stdout.write(bsu);
 			}
 
-			const terminalWidth = getWindowSize(this.options.stdout).columns;
+			const {columns: terminalWidth, rows: viewportRows} = getWindowSize(
+				this.options.stdout,
+			);
 			const wrappedOutput = wrapAnsi(output, terminalWidth, {
 				trim: false,
 				hard: true,
 			});
+			// End the frame with a newline like the interactive path does, so the cursor rests on its own row and the shell prompt or output written after exit starts there. Fullscreen frames keep the cursor on the last row.
+			const isFullscreen =
+				Boolean(this.options.stdout.isTTY) &&
+				wrappedOutput.split('\n').length >= viewportRows;
+			const outputToRender =
+				isFullscreen || wrappedOutput === ''
+					? wrappedOutput
+					: wrappedOutput + '\n';
 
-			if (!hasStaticOutput && wrappedOutput === this.lastOutputToRender) {
+			if (!hasStaticOutput && outputToRender === this.lastOutputToRender) {
 				if (shouldSync) {
 					this.options.stdout.write(esu);
 				}
@@ -629,15 +639,15 @@ export default class Ink {
 				}
 			}
 
-			this.options.stdout.write(wrappedOutput);
+			this.options.stdout.write(outputToRender);
 
 			this.lastOutput = output;
-			this.lastOutputToRender = wrappedOutput;
+			this.lastOutputToRender = outputToRender;
 			this.lastOutputHeight =
-				wrappedOutput === '' ? 0 : wrappedOutput.split('\n').length;
+				wrappedOutput === '' ? 0 : outputToRender.split('\n').length;
 			// Screen-reader output uses its own cursor placement.
 			this.log.setCursorPosition(undefined);
-			this.log.sync(wrappedOutput);
+			this.log.sync(outputToRender);
 
 			if (shouldSync) {
 				this.options.stdout.write(esu);
