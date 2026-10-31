@@ -6,6 +6,7 @@ import stripAnsi from 'strip-ansi';
 import React, {useLayoutEffect} from 'react';
 import {render, Box, Text, useWindowSize, useCursor} from '../src/index.js';
 import {homeAndEraseDown} from '../src/ink.js';
+import {bsu} from '../src/write-synchronized.js';
 import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 import createStdout, {type FakeStdout} from './helpers/create-stdout.js';
 
@@ -18,6 +19,10 @@ const getWriteContents = (stdout: FakeStdout): string[] =>
 				!w.startsWith('\u{1B}[?25') &&
 				!w.startsWith('\u{1B}[?2026'),
 		);
+
+// A width decrease clears the frame with a standalone `eraseLines` write before the synchronized frame write; a regular rerender folds the erase into the frame write itself.
+const writesAfter = (stdout: FakeStdout, count: number): string[] =>
+	stdout.getWrites().slice(count);
 
 test('useWindowSize catches resizes before its subscription is installed', async (t: TestContext) => {
 	const stdout = createStdout(100);
@@ -257,9 +262,14 @@ test('clear screen when terminal width decreases', async (t: TestContext) => {
 	t.assert.ok(initialOutput.includes('╭')); // Box border
 
 	// Decrease width - should trigger clear and rerender
+	const writeCount = stdout.getWrites().length;
 	stdout.columns = 50;
 	stdout.emit('resize');
 	await delay(100);
+
+	const writes = writesAfter(stdout, writeCount);
+	t.assert.strictEqual(writes[0], ansiEscapes.eraseLines(4));
+	t.assert.strictEqual(writes[1], bsu);
 
 	// Verify the output was updated for smaller width
 	const lastOutput = stripAnsi(getWriteContents(stdout).at(-1)!);
@@ -284,15 +294,16 @@ test('no screen clear when terminal width increases', async (t: TestContext) => 
 	const initialOutput = getWriteContents(stdout)[0]!;
 
 	// Increase width - should rerender but not clear
+	const writeCount = stdout.getWrites().length;
 	stdout.columns = 100;
 	stdout.emit('resize');
 	await delay(100);
 
+	const writes = writesAfter(stdout, writeCount);
+	t.assert.strictEqual(writes[0], bsu);
+
 	const lastOutput = getWriteContents(stdout).at(-1)!;
 
-	// When increasing width, we don't clear, so we should see eraseLines used for incremental update
-	// But when decreasing, the clear() is called which also uses eraseLines
-	// The key difference: decreasing width triggers an explicit clear before render
 	t.assert.notStrictEqual(stripAnsi(initialOutput), stripAnsi(lastOutput));
 	t.assert.ok(stripAnsi(lastOutput).includes('Test'));
 });
@@ -313,18 +324,30 @@ test('consecutive width decreases trigger screen clear each time', async (t: Tes
 	const initialOutput = stripAnsi(getWriteContents(stdout)[0]!);
 
 	// First decrease
+	const firstWriteCount = stdout.getWrites().length;
 	stdout.columns = 80;
 	stdout.emit('resize');
 	await delay(100);
+
+	t.assert.strictEqual(
+		writesAfter(stdout, firstWriteCount)[0],
+		ansiEscapes.eraseLines(4),
+	);
 
 	const afterFirstDecrease = stripAnsi(getWriteContents(stdout).at(-1)!);
 	t.assert.notStrictEqual(initialOutput, afterFirstDecrease);
 	t.assert.ok(afterFirstDecrease.includes('Content'));
 
 	// Second decrease
+	const secondWriteCount = stdout.getWrites().length;
 	stdout.columns = 60;
 	stdout.emit('resize');
 	await delay(100);
+
+	t.assert.strictEqual(
+		writesAfter(stdout, secondWriteCount)[0],
+		ansiEscapes.eraseLines(4),
+	);
 
 	const afterSecondDecrease = stripAnsi(getWriteContents(stdout).at(-1)!);
 	t.assert.notStrictEqual(afterFirstDecrease, afterSecondDecrease);
@@ -347,9 +370,15 @@ test('width decrease clears lastOutput to force rerender', async (t: TestContext
 	const initialOutput = stripAnsi(getWriteContents(stdout)[0]!);
 
 	// Decrease width - with a border, this will definitely change the output
+	const writeCount = stdout.getWrites().length;
 	stdout.columns = 50;
 	stdout.emit('resize');
 	await delay(100);
+
+	t.assert.strictEqual(
+		writesAfter(stdout, writeCount)[0],
+		ansiEscapes.eraseLines(4),
+	);
 
 	const afterResizeOutput = stripAnsi(getWriteContents(stdout).at(-1)!);
 
