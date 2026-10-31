@@ -14,6 +14,7 @@ import {
 } from '../src/index.js';
 import {bsu, esu} from '../src/write-synchronized.js';
 import {renderToString} from './helpers/render-to-string.js';
+import {run} from './helpers/run.js';
 import createStdout from './helpers/create-stdout.js';
 
 test('omit Static content inside a hidden ancestor from screen-reader output', (t: TestContext) => {
@@ -542,15 +543,15 @@ test('restore screen-reader output after stdout writes without touching the curs
 		instance.unmount();
 	});
 	await instance.waitUntilRenderFlush();
-	t.assert.deepStrictEqual(contentWrites(stdout), [bsu, 'Hello', esu]);
+	t.assert.deepStrictEqual(contentWrites(stdout), [bsu, 'Hello\n', esu]);
 
 	write('External\n');
 
 	t.assert.deepStrictEqual(contentWrites(stdout).slice(3), [
 		bsu,
-		ansiEscapes.eraseLines(1),
+		ansiEscapes.eraseLines(2),
 		'External\n',
-		'Hello',
+		'Hello\n',
 		esu,
 	]);
 });
@@ -581,8 +582,8 @@ test('restore screen-reader output after stderr writes without touching the curs
 	t.assert.deepStrictEqual(contentWrites(stderr), ['External\n']);
 	t.assert.deepStrictEqual(contentWrites(stdout).slice(3), [
 		bsu,
-		ansiEscapes.eraseLines(1),
-		'Hello',
+		ansiEscapes.eraseLines(2),
+		'Hello\n',
 		esu,
 	]);
 });
@@ -603,9 +604,33 @@ test('restore screen-reader output after console.log without touching the cursor
 
 	t.assert.deepStrictEqual(contentWrites(stdout).slice(3), [
 		bsu,
-		ansiEscapes.eraseLines(1),
+		ansiEscapes.eraseLines(2),
 		'External\n',
-		'Hello',
+		'Hello\n',
 		esu,
 	]);
+});
+
+test('screen-reader output ends with a newline so the next line starts below it', async (t: TestContext) => {
+	const stdout = createStdout(40, true);
+	const instance = render(<Text>Hello</Text>, {
+		stdout,
+		interactive: true,
+		isScreenReaderEnabled: true,
+	});
+	await instance.waitUntilRenderFlush();
+	instance.unmount();
+
+	t.assert.deepStrictEqual(contentWrites(stdout).slice(0, 3), [
+		bsu,
+		'Hello\n',
+		esu,
+	]);
+
+	const output = await run('exit-normally', {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		env: {INK_SCREEN_READER: 'true'},
+	});
+	t.assert.ok(output.includes('Hello World\r\n'));
+	t.assert.ok(!output.includes('Worldexited'));
 });
