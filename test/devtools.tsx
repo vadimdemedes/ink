@@ -50,6 +50,7 @@ test('exit on unmount() while connected to React DevTools', async (t: TestContex
 		],
 		{
 			name: 'xterm-color',
+			useConptyDll: true,
 			cols: 100,
 			cwd: __dirname,
 			env: {

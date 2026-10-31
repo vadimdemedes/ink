@@ -1,3 +1,4 @@
+import process from 'node:process';
 import {Buffer} from 'node:buffer';
 import {Readable} from 'node:stream';
 import test, {type TestContext} from 'node:test';
@@ -9,12 +10,17 @@ import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import term from './helpers/term.js';
 import {act} from './helpers/act.js';
 
-test('useInput - handle legacy Ctrl+Space', async (t: TestContext) => {
-	const ps = term('use-input', ['ctrlSpace']);
-	ps.write('\u{0}');
-	await ps.waitForExit();
-	t.assert.ok(ps.output.includes('exited'));
-});
+test(
+	'useInput - handle legacy Ctrl+Space',
+	// eslint-disable-next-line node-test/no-skip-test -- ConPTY drops a NUL byte written to its input.
+	{skip: process.platform === 'win32'},
+	async (t: TestContext) => {
+		const ps = term('use-input', ['ctrlSpace']);
+		ps.write('\u{0}');
+		await ps.waitForExit();
+		t.assert.ok(ps.output.includes('exited'));
+	},
+);
 
 test('useInput - handle Ctrl+punctuation shortcut', async (t: TestContext) => {
 	const ps = term('use-input', ['ctrlPunctuation']);
@@ -23,36 +29,41 @@ test('useInput - handle Ctrl+punctuation shortcut', async (t: TestContext) => {
 	t.assert.ok(ps.output.includes('exited'));
 });
 
-test('useInput - discrete priority keeps states in sync with useTransition during rapid input', async (t: TestContext) => {
-	const ps = term('use-input-discrete-priority');
-	// Simulate rapid delete key repeat at ~30ms intervals.
-	// State starts pre-populated with "abcde". Send 5 rapid deletes
-	// to clear it, then wait for transitions to settle and check state.
-	const delay = async (ms: number) =>
-		new Promise(resolve => {
-			setTimeout(resolve, ms);
-		});
-	const pressDeleteKey = () => {
-		ps.write('\u{1B}[3~');
-	};
+test(
+	'useInput - discrete priority keeps states in sync with useTransition during rapid input',
+	// eslint-disable-next-line node-test/no-skip-test -- ConPTY drops raw VT key sequences written to its input.
+	{skip: process.platform === 'win32'},
+	async (t: TestContext) => {
+		const ps = term('use-input-discrete-priority');
+		// Simulate rapid delete key repeat at ~30ms intervals.
+		// State starts pre-populated with "abcde". Send 5 rapid deletes
+		// to clear it, then wait for transitions to settle and check state.
+		const delay = async (ms: number) =>
+			new Promise(resolve => {
+				setTimeout(resolve, ms);
+			});
+		const pressDeleteKey = () => {
+			ps.write('\u{1B}[3~');
+		};
 
-	// Use escape sequence for delete key (raw \x7F gets processed by pty)
-	for (const delayMilliseconds of [0, 30, 60, 90, 120]) {
-		setTimeout(() => {
-			pressDeleteKey();
-		}, delayMilliseconds);
-	}
+		// Use escape sequence for delete key (raw \x7F gets processed by pty)
+		for (const delayMilliseconds of [0, 30, 60, 90, 120]) {
+			setTimeout(() => {
+				pressDeleteKey();
+			}, delayMilliseconds);
+		}
 
-	await delay(200);
+		await delay(200);
 
-	// Wait for all transitions to settle, then press Enter to report state
-	await delay(2000);
-	ps.write('\r');
-	await ps.waitForExit();
-	const finalMatch = /FINAL .+/.exec(ps.output);
-	t.diagnostic(`Output: ${finalMatch?.[0] ?? ps.output.slice(-300)}`);
-	t.assert.ok(ps.output.includes('FINAL query:"" deferred:""'));
-});
+		// Wait for all transitions to settle, then press Enter to report state
+		await delay(2000);
+		ps.write('\r');
+		await ps.waitForExit();
+		const finalMatch = /FINAL .+/.exec(ps.output);
+		t.diagnostic(`Output: ${finalMatch?.[0] ?? ps.output.slice(-300)}`);
+		t.assert.ok(ps.output.includes('FINAL query:"" deferred:""'));
+	},
+);
 
 test('useInput - handle lowercase character', async (t: TestContext) => {
 	const ps = term('use-input', ['lowercase']);

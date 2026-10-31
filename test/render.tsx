@@ -196,6 +196,7 @@ const term = (
 		],
 		{
 			name: 'xterm-color',
+			useConptyDll: true,
 			cols: options.columns ?? 100,
 			cwd: __dirname,
 			env,
@@ -392,25 +393,30 @@ test('terminal resize example stays open to report resized dimensions', async (t
 	t.assert.ok(ps.output.includes('Rows: 20'));
 });
 
-test('stdout example updates displayed dimensions after resize', async (t: TestContext) => {
-	const ps = term('../../examples/use-stdout/use-stdout', [], {
-		rows: 24,
-		// eslint-disable-next-line @typescript-eslint/naming-convention
-		env: {CI: 'false', FORCE_COLOR: '0'},
-	});
-	t.after(async () => {
-		ps.write('\u{3}');
-		await ps.waitForExit();
-	});
+test(
+	'stdout example updates displayed dimensions after resize',
+	// eslint-disable-next-line node-test/no-skip-test -- Resizing a ConPTY does not emit `resize` in the child process.
+	{skip: process.platform === 'win32'},
+	async (t: TestContext) => {
+		const ps = term('../../examples/use-stdout/use-stdout', [], {
+			rows: 24,
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			env: {CI: 'false', FORCE_COLOR: '0'},
+		});
+		t.after(async () => {
+			ps.write('\u{3}');
+			await ps.waitForExit();
+		});
 
-	await ps.waitForOutput('Width: 100');
-	await ps.waitForOutput('Height: 24');
-	ps.output = '';
-	ps.resize(60, 20);
-	await ps.waitForOutput('Width: 60');
-	await ps.waitForOutput('Height: 20');
-	t.assert.ok(ps.output.includes('Height: 20'));
-});
+		await ps.waitForOutput('Width: 100');
+		await ps.waitForOutput('Height: 24');
+		ps.output = '';
+		ps.resize(60, 20);
+		await ps.waitForOutput('Width: 60');
+		await ps.waitForOutput('Height: 20');
+		t.assert.ok(ps.output.includes('Height: 20'));
+	},
+);
 
 test('transition example deletes a whole grapheme from both queries', async (t: TestContext) => {
 	const ps = term('../../examples/use-transition/use-transition', [], {
@@ -1169,20 +1175,25 @@ test('#442: full terminal-size box should not add an extra scroll line', async (
 	t.assert.ok(lines.at(-1)?.includes('#442 bottom') ?? false);
 });
 
-test('#450: full-height rerenders should not repeatedly clear terminal', async (t: TestContext) => {
-	const {output, fullClearCount, eraseLineCount} =
-		await runIssue450FixtureWithCounts('issue-450-full-height-rerender');
+test(
+	'#450: full-height rerenders should not repeatedly clear terminal',
+	// eslint-disable-next-line node-test/no-skip-test -- Windows full-clears fullscreen frames instead (#969); the #969 test covers that path.
+	{skip: process.platform === 'win32'},
+	async (t: TestContext) => {
+		const {output, fullClearCount, eraseLineCount} =
+			await runIssue450FixtureWithCounts('issue-450-full-height-rerender');
 
-	assertIssue450DynamicFrameOutput(t, output);
-	t.assert.ok(
-		fullClearCount <= 1,
-		`Expected at most one full-clear sequence, received ${fullClearCount}`,
-	);
-	t.assert.ok(
-		eraseLineCount > 0,
-		'Expected incremental erase sequences for fullscreen rerenders',
-	);
-});
+		assertIssue450DynamicFrameOutput(t, output);
+		t.assert.ok(
+			fullClearCount <= 1,
+			`Expected at most one full-clear sequence, received ${fullClearCount}`,
+		);
+		t.assert.ok(
+			eraseLineCount > 0,
+			'Expected incremental erase sequences for fullscreen rerenders',
+		);
+	},
+);
 
 test('#969: full-height rerenders on Windows should clear terminal between frames', async (t: TestContext) => {
 	const output = await runIssue450Fixture(
@@ -1289,40 +1300,57 @@ test('#935: overflowing rerenders must not erase terminal scrollback', async (t:
 	);
 });
 
-test('#450: full-height rerenders should not clear before unmount', async (t: TestContext) => {
-	const renderedMarker = '__FULL_HEIGHT_RERENDER_COMPLETED__';
-	const outputBeforeMarker = await runIssue450FixtureBeforeMarker(
-		t,
-		'issue-450-full-height-rerender-with-marker',
-		renderedMarker,
-	);
-	const {fullClearCount} = getIssue450ControlSequenceCounts(outputBeforeMarker);
+test(
+	'#450: full-height rerenders should not clear before unmount',
+	// eslint-disable-next-line node-test/no-skip-test -- Windows full-clears fullscreen frames instead (#969); the #969 test covers that path.
+	{skip: process.platform === 'win32'},
+	async (t: TestContext) => {
+		const renderedMarker = '__FULL_HEIGHT_RERENDER_COMPLETED__';
+		const outputBeforeMarker = await runIssue450FixtureBeforeMarker(
+			t,
+			'issue-450-full-height-rerender-with-marker',
+			renderedMarker,
+		);
+		const {fullClearCount} =
+			getIssue450ControlSequenceCounts(outputBeforeMarker);
 
-	assertIssue450DynamicFrameOutput(t, outputBeforeMarker);
-	t.assert.strictEqual(fullClearCount, 0);
-});
+		assertIssue450DynamicFrameOutput(t, outputBeforeMarker);
+		t.assert.strictEqual(fullClearCount, 0);
+	},
+);
 
-test('#450: grow from rows - 1 to full-height should not clear before unmount', async (t: TestContext) => {
-	const renderedMarker = '__GROW_TO_FULLSCREEN_RERENDER_COMPLETED__';
-	const outputBeforeMarker = await runIssue450FixtureBeforeMarker(
-		t,
-		'issue-450-grow-to-fullscreen-rerender',
-		renderedMarker,
-	);
-	const {fullClearCount} = getIssue450ControlSequenceCounts(outputBeforeMarker);
+test(
+	'#450: grow from rows - 1 to full-height should not clear before unmount',
+	// eslint-disable-next-line node-test/no-skip-test -- Windows full-clears fullscreen frames instead (#969); the #969 test covers that path.
+	{skip: process.platform === 'win32'},
+	async (t: TestContext) => {
+		const renderedMarker = '__GROW_TO_FULLSCREEN_RERENDER_COMPLETED__';
+		const outputBeforeMarker = await runIssue450FixtureBeforeMarker(
+			t,
+			'issue-450-grow-to-fullscreen-rerender',
+			renderedMarker,
+		);
+		const {fullClearCount} =
+			getIssue450ControlSequenceCounts(outputBeforeMarker);
 
-	assertIssue450DynamicFrameOutput(t, outputBeforeMarker);
-	t.assert.strictEqual(fullClearCount, 0);
-});
+		assertIssue450DynamicFrameOutput(t, outputBeforeMarker);
+		t.assert.strictEqual(fullClearCount, 0);
+	},
+);
 
-test('#450: shrink from full-height to rows - 1 should clear exactly once', async (t: TestContext) => {
-	const {output, fullClearCount} = await runIssue450FixtureWithCounts(
-		'issue-450-shrink-from-fullscreen-rerender',
-	);
+test(
+	'#450: shrink from full-height to rows - 1 should clear exactly once',
+	// eslint-disable-next-line node-test/no-skip-test -- Windows full-clears fullscreen frames instead (#969); the #969 test covers that path.
+	{skip: process.platform === 'win32'},
+	async (t: TestContext) => {
+		const {output, fullClearCount} = await runIssue450FixtureWithCounts(
+			'issue-450-shrink-from-fullscreen-rerender',
+		);
 
-	assertIssue450DynamicFrameOutput(t, output);
-	t.assert.strictEqual(fullClearCount, 1);
-});
+		assertIssue450DynamicFrameOutput(t, output);
+		t.assert.strictEqual(fullClearCount, 1);
+	},
+);
 
 test('#450: shrink from overflow to rows - 1 should clear exactly once', async (t: TestContext) => {
 	const {output, fullClearCount} = await runIssue450FixtureWithCounts(
@@ -1333,15 +1361,20 @@ test('#450: shrink from overflow to rows - 1 should clear exactly once', async (
 	t.assert.strictEqual(fullClearCount, 1);
 });
 
-test('#450: <Static> with shrink from full-height should clear exactly once', async (t: TestContext) => {
-	const {output, fullClearCount} = await runIssue450FixtureWithCounts(
-		'issue-450-static-shrink-from-fullscreen-rerender',
-	);
+test(
+	'#450: <Static> with shrink from full-height should clear exactly once',
+	// eslint-disable-next-line node-test/no-skip-test -- Windows full-clears fullscreen frames instead (#969); the #969 test covers that path.
+	{skip: process.platform === 'win32'},
+	async (t: TestContext) => {
+		const {output, fullClearCount} = await runIssue450FixtureWithCounts(
+			'issue-450-static-shrink-from-fullscreen-rerender',
+		);
 
-	t.assert.ok(output.includes('#450 static line'));
-	assertIssue450DynamicFrameOutput(t, output);
-	t.assert.strictEqual(fullClearCount, 1);
-});
+		t.assert.ok(output.includes('#450 static line'));
+		assertIssue450DynamicFrameOutput(t, output);
+		t.assert.strictEqual(fullClearCount, 1);
+	},
+);
 
 test('#450: non-TTY full-height rerenders should never clear terminal', (t: TestContext) => {
 	const rows = 6;
@@ -1472,26 +1505,31 @@ test('useAnimation can drive explicitly non-interactive process exit', async (t:
 	t.assert.ok(stripAnsi(output).includes('exited'));
 });
 
-test('#450: full-height rerenders with <Static> should not repeatedly clear terminal', async (t: TestContext) => {
-	const {output, fullClearCount, eraseLineCount} =
-		await runIssue450FixtureWithCounts(
-			'issue-450-full-height-with-static-rerender',
-		);
+test(
+	'#450: full-height rerenders with <Static> should not repeatedly clear terminal',
+	// eslint-disable-next-line node-test/no-skip-test -- Windows full-clears fullscreen frames instead (#969); the #969 test covers that path.
+	{skip: process.platform === 'win32'},
+	async (t: TestContext) => {
+		const {output, fullClearCount, eraseLineCount} =
+			await runIssue450FixtureWithCounts(
+				'issue-450-full-height-with-static-rerender',
+			);
 
-	t.assert.ok(
-		output.includes('#450 static line'),
-		'Fixture should emit static output',
-	);
-	assertIssue450DynamicFrameOutput(t, output);
-	t.assert.ok(
-		fullClearCount <= 1,
-		`Expected at most one full-clear sequence, received ${fullClearCount}`,
-	);
-	t.assert.ok(
-		eraseLineCount > 0,
-		'Expected incremental erase sequences for fullscreen rerenders',
-	);
-});
+		t.assert.ok(
+			output.includes('#450 static line'),
+			'Fixture should emit static output',
+		);
+		assertIssue450DynamicFrameOutput(t, output);
+		t.assert.ok(
+			fullClearCount <= 1,
+			`Expected at most one full-clear sequence, received ${fullClearCount}`,
+		);
+		t.assert.ok(
+			eraseLineCount > 0,
+			'Expected incremental erase sequences for fullscreen rerenders',
+		);
+	},
+);
 
 test('clear output', async (t: TestContext) => {
 	const ps = term('clear');
