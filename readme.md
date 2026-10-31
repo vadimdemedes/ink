@@ -132,6 +132,7 @@ render(<Counter />);
 - [ElevenLabs CLI](https://github.com/elevenlabs/cli) - ElevenLabs agents client.
 - [SSH AI Chat](https://github.com/miantiao-me/ssh-ai-chat) - Chat with AI over SSH.
 - [Deep Code CLI](https://github.com/lessweb/deepcode-cli) - AI coding assistant optimized for the DeepSeek model.
+- [Atomic Agent](https://github.com/AtomicBot-ai/atomic-agent) - A local-first coding agent whose TUI has an interactive chat log, model picker, provider wizard, approval prompts, and tabbed panels.
 
 _(PRs welcome. Append new entries at the end. Repos must have 100+ stars and showcase Ink beyond a basic list picker.)_
 
