@@ -8,6 +8,7 @@ import {
 } from '@alcalzone/ansi-tokenize';
 import measureText from './measure-text.js';
 import {type OutputTransformer} from './render-node-to-output.js';
+import sanitizeAnsi from './sanitize-ansi.js';
 import SizedCache from './sized-cache.js';
 
 const isSameStyle = (
@@ -155,6 +156,7 @@ class OutputCaches {
 
 	// Sized by UTF-16 code units, but each unit is a styled character object of about 140 bytes, so this holds up to about 9 MB. Only single lines are kept, since whole blocks would multiply that. A smaller budget re-tokenizes noticeably more.
 	styledChars = new SizedCache<string, StyledChar[]>(2 ** 16);
+	sanitizedLines = new SizedCache<string, string>(2 ** 18);
 	lines = new SizedCache<string, string[]>(2 ** 20);
 
 	getLines(text: string): string[] {
@@ -180,6 +182,16 @@ class OutputCaches {
 				cached,
 				text.length + cached.reduce((size, line) => size + line.length, 0),
 			);
+		}
+
+		return cached;
+	}
+
+	getSanitizedLine(line: string): string {
+		let cached = this.sanitizedLines.get(line);
+		if (cached === undefined) {
+			cached = sanitizeAnsi(line);
+			this.sanitizedLines.set(line, cached, line.length);
 		}
 
 		return cached;
@@ -315,6 +327,11 @@ export default class Output {
 
 			for (const transformer of transformers) {
 				line = transformer(line, index + y - operation.y);
+			}
+
+			// `squashTextNodes` sanitizes the output of child transforms, but this node's own transform runs here, after that.
+			if (transformers.length > 0) {
+				line = this.caches.getSanitizedLine(line);
 			}
 
 			const characters = this.caches.getStyledChars(line);
