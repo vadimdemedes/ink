@@ -6,14 +6,6 @@ import {InlineCursorHelper} from './cursor-helpers.js';
 type SquashedOutput = {
 	text: string;
 
-	/**
-	 The requested cursor *visual* offset (if any) within
-	 `text` (that is, ignoring ansi sequences, how many
-	 graphemes* need to be skipped past within `text` before
-	 placing the cursor).
-	 */
-	cursorOffset?: number;
-
 	cursor?: InlineCursorHelper;
 };
 
@@ -24,7 +16,6 @@ type SquashedOutput = {
 // Also, this is necessary for libraries like ink-link (https://github.com/sindresorhus/ink-link),
 // which need to wrap all children at once, instead of wrapping 3 text nodes separately.
 const squashTextNodes = (node: DOMElement): SquashedOutput => {
-	let cursor: number | undefined;
 	const cursorHelper = new InlineCursorHelper();
 	let text = '';
 
@@ -83,8 +74,6 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 		node.nodeName === 'ink-text' &&
 		node.internal_cursorOffset !== undefined
 	) {
-		// The only valid cursorOffset in this situation is zero; so if it's set it must be zero
-		cursor = 0;
 		cursorHelper.setCursorPosition();
 	}
 
@@ -95,7 +84,6 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 
 	return {
 		text,
-		cursorOffset: cursor,
 		cursor: cursorHelper.hasCursor ? cursorHelper : undefined,
 	};
 };
