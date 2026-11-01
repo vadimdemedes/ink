@@ -332,6 +332,7 @@ export default class Ink {
 		expectedMode: CursorMode,
 		position: CursorPosition | undefined,
 	): void => {
+		// If we clear the cursor, we can change the mode
 		if (this.cursorMode !== undefined && this.cursorMode !== expectedMode) {
 			throw new Error('Mixing cursor modes');
 		}
@@ -449,11 +450,21 @@ export default class Ink {
 			this.lastOutputToRender = '';
 		}
 
+		// Reset the cursorMode before a new render; it's not safe to *mix* cursor
+		// modes, but it's acceptable to switch between them.
+		const oldCursorMode = this.cursorMode;
+		this.cursorMode = undefined;
+
 		const startTime = performance.now();
 		const {output, outputHeight, staticOutput, cursorPosition} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
 		);
+
+		if (oldCursorMode === 'component' && this.cursorMode !== 'hook') {
+			// Still component; restore here so we handle state changes properly
+			this.cursorMode = 'component';
+		}
 
 		this.setCursorPositionFromComponent(cursorPosition);
 		const renderTime = performance.now() - startTime;

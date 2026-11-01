@@ -16,6 +16,7 @@ import {
 	type CursorPosition,
 	renderToString,
 	Transform,
+	useCursor,
 } from '../src/index.js';
 import {homeAndEraseDown} from '../src/ink.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
@@ -80,6 +81,7 @@ type InteractiveRenderOptions = {
 	stdoutColumns?: number;
 };
 type InteractiveRenderProps = {
+	rerender: (component: React.ReactNode) => Promise<void>;
 	waitUntilRenderFlush: () => Promise<void>;
 	stdin: NodeJS.WriteStream;
 	stdout: FakeStdout;
@@ -124,7 +126,7 @@ async function withInteractiveRender(
 		lastCursor = cursor;
 	};
 
-	const {unmount, waitUntilRenderFlush} = render(node, {
+	const {unmount, rerender, waitUntilRenderFlush} = render(node, {
 		stdout,
 		stdin,
 		onCursorUpdated,
@@ -135,6 +137,10 @@ async function withInteractiveRender(
 	try {
 		await waitUntilRenderFlush();
 		await handler({
+			rerender: async (component: React.ReactNode) => {
+				rerender(component);
+				await waitUntilRenderFlush();
+			},
 			waitUntilRenderFlush,
 			stdin,
 			stdout,
@@ -832,7 +838,7 @@ for (const {name, incremental} of inkRenderingModes) {
 			.join('');
 		t.assert.ok(
 			changedRerender.includes('Line 1!'),
-			'content actually changed',
+			`content actually changed (saw: ${JSON.stringify(changedRerender)})`,
 		);
 		t.assert.ok(changedRerender.includes(expected), 'changed rerender');
 		t.assert.strictEqual(
@@ -1620,6 +1626,69 @@ test('<Cursor /> on a character clipped at the edge is hidden', async (t: TestCo
 		{stdoutColumns: 3},
 		({getLastCursor, getLastTrimmedRender}) => {
 			t.assert.strictEqual(getLastTrimmedRender(), 'abc');
+			t.assert.strictEqual(getLastCursor(), undefined);
+		},
+	);
+});
+
+test('<Cursor /> does not poison useCursor', async (t: TestContext) => {
+	const Hook = () => {
+		const {setCursorPosition} = useCursor();
+		setCursorPosition({x: 1, y: 0});
+		return (
+			<Box>
+				<Text>abc</Text>
+			</Box>
+		);
+	};
+
+	const Component = () => {
+		return (
+			<Box>
+				<Text>
+					a<Cursor />
+					bc
+				</Text>
+			</Box>
+		);
+	};
+
+	await withInteractiveRender(
+		<Hook />,
+		{stdoutColumns: 3},
+		async ({getLastCursor, rerender}) => {
+			t.assert.deepEqual(getLastCursor(), {x: 1, y: 0});
+
+			await rerender(<Component />);
+			t.assert.deepEqual(getLastCursor(), {x: 1, y: 0});
+		},
+	);
+});
+
+test('Omitting <Cursor /> hides terminal cursor', async (t: TestContext) => {
+	const Component = ({shown}: {shown: boolean}) => {
+		return (
+			<Box>
+				<Text>
+					a{shown && <Cursor />}
+					bc
+				</Text>
+			</Box>
+		);
+	};
+
+	await withInteractiveRender(
+		<Component shown />,
+		{stdoutColumns: 3},
+		async ({getLastCursor, getWriteCallsString, rerender}) => {
+			t.assert.deepEqual(getLastCursor(), {x: 1, y: 0});
+
+			await rerender(<Component shown={false} />);
+			t.assert.strictEqual(
+				getWriteCallsString().includes(hideCursorEscape),
+				true,
+				'hideCursorEscape should have been sent',
+			);
 			t.assert.strictEqual(getLastCursor(), undefined);
 		},
 	);
