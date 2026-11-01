@@ -428,6 +428,17 @@ export default class Output {
 			return '';
 		}
 
+		if (from <= 0 && to >= this.caches.getStringWidth(line)) {
+			const characters = this.caches.getStyledChars(line);
+			if (
+				characters.length === 0 ||
+				(this.caches.getStringWidth(characters[0]!.value) > 0 &&
+					this.caches.getStringWidth(characters.at(-1)!.value) > 0)
+			) {
+				return line;
+			}
+		}
+
 		const result: StyledChar[] = [];
 		let column = 0;
 
