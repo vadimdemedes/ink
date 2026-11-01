@@ -134,14 +134,15 @@ async function withInteractiveRender(
 	});
 
 	const getWriteCallsString = () => getWriteCalls(stdout).join('');
+	const rerenderWithWait = async (component: React.ReactNode) => {
+		rerender(component);
+		await waitUntilRenderFlush();
+	};
 
 	try {
 		await waitUntilRenderFlush();
 		await handler({
-			rerender: async (component: React.ReactNode) => {
-				rerender(component);
-				await waitUntilRenderFlush();
-			},
+			rerender: rerenderWithWait,
 			waitUntilRenderFlush,
 			stdin,
 			stdout,
@@ -1649,46 +1650,40 @@ test('<Cursor /> does not poison useCursor', async (t: TestContext) => {
 		);
 	};
 
-	const Component = () => {
-		return (
-			<Box>
-				<Text>
-					a<Cursor />
-					bc
-				</Text>
-			</Box>
-		);
-	};
-
+	const Component = () => (
+		<Box>
+			<Text>
+				a<Cursor />
+				bc
+			</Text>
+		</Box>
+	);
 	await withInteractiveRender(
 		<Hook />,
 		{stdoutColumns: 3},
 		async ({getLastCursor, rerender}) => {
-			t.assert.deepEqual(getLastCursor(), {x: 1, y: 0});
+			t.assert.deepStrictEqual(getLastCursor(), {x: 1, y: 0});
 
 			await rerender(<Component />);
-			t.assert.deepEqual(getLastCursor(), {x: 1, y: 0});
+			t.assert.deepStrictEqual(getLastCursor(), {x: 1, y: 0});
 		},
 	);
 });
 
 test('Omitting <Cursor /> hides terminal cursor', async (t: TestContext) => {
-	const Component = ({shown}: {shown: boolean}) => {
-		return (
-			<Box>
-				<Text>
-					a{shown && <Cursor />}
-					bc
-				</Text>
-			</Box>
-		);
-	};
-
+	const Component = ({shown}: {shown: boolean}) => (
+		<Box>
+			<Text>
+				a{shown && <Cursor />}
+				bc
+			</Text>
+		</Box>
+	);
 	await withInteractiveRender(
 		<Component shown />,
 		{stdoutColumns: 3},
 		async ({getLastCursor, getWriteCallsString, rerender}) => {
-			t.assert.deepEqual(getLastCursor(), {x: 1, y: 0});
+			t.assert.deepStrictEqual(getLastCursor(), {x: 1, y: 0});
 
 			await rerender(<Component shown={false} />);
 			t.assert.strictEqual(
