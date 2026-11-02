@@ -5,7 +5,7 @@ export function* take<T>(iterable: Iterable<T>, count: number) {
 
 	for (const item of iterable) {
 		yield item;
-		if (--count < 0) {
+		if (--count <= 0) {
 			break;
 		}
 	}
