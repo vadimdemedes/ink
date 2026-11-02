@@ -18,23 +18,21 @@ export const graphemeOffsetToByteOffset = (
 	graphemeOffset: number,
 ) => {
 	if (graphemeOffset === 0) {
-		return {byteOffset: 0};
+		return 0;
 	}
 
 	let byteOffset = 0;
 	let consumed = 0;
-	for (const {segment} of take(
-		iterateGraphemeSegments(text),
-		graphemeOffset - 1,
-	)) {
+	for (const {segment} of take(iterateGraphemeSegments(text), graphemeOffset)) {
 		++consumed;
 		byteOffset += segment.length;
 	}
 
 	return consumed < graphemeOffset
 		? // The offset does not exist in `text`
-			{graphemeOffsetsSeen: consumed - 1}
-		: {byteOffset};
+			// {graphemeOffsetsSeen: consumed - 1}
+			undefined
+		: byteOffset;
 };
 
 export function* iterateAnsiGraphemes(text: string) {

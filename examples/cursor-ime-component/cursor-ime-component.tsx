@@ -7,7 +7,10 @@ import {
 	Cursor,
 	type CursorPosition,
 } from '../../src/index.js';
-import {countNonAnsiGraphemes} from '../../src/string-utils.js';
+import {
+	countNonAnsiGraphemes,
+	graphemeOffsetToByteOffset,
+} from '../../src/string-utils.js';
 
 let handleCursorUpdated: (pos: CursorPosition | undefined) => void;
 
@@ -21,7 +24,19 @@ function App() {
 
 	useInput((input, key) => {
 		if (key.backspace || key.delete) {
-			setText(previous => previous.slice(0, -1));
+			setText(previous => {
+				if (cursor === 0) {
+					return previous;
+				}
+				const startOfPrevious = graphemeOffsetToByteOffset(
+					previous,
+					cursor - 1,
+				);
+				const startOfCursor = graphemeOffsetToByteOffset(previous, cursor);
+				return (
+					previous.slice(0, startOfPrevious) + previous.slice(startOfCursor)
+				);
+			});
 			setCursor(previous => Math.max(0, previous - 1));
 			return;
 		}
@@ -31,7 +46,8 @@ function App() {
 		}
 
 		if (key.rightArrow) {
-			setCursor(previous => Math.min(previous + 1, text.length));
+			const end = countNonAnsiGraphemes(text);
+			setCursor(previous => Math.min(previous + 1, end));
 		}
 
 		if (input === '' || key.ctrl || key.meta || key.return) {
@@ -39,15 +55,17 @@ function App() {
 		}
 
 		setText(previous => {
-			const before = previous.slice(0, cursor);
-			const after = previous.slice(cursor);
+			const cursorIndex = graphemeOffsetToByteOffset(previous, cursor);
+			const before = previous.slice(0, cursorIndex);
+			const after = previous.slice(cursorIndex);
 			return before + input + after;
 		});
 		setCursor(previous => previous + countNonAnsiGraphemes(input));
 	});
 
-	const before = text.slice(0, cursor);
-	const after = text.slice(cursor);
+	const cursorIndex = graphemeOffsetToByteOffset(text, cursor) ?? text.length;
+	const before = text.slice(0, cursorIndex);
+	const after = text.slice(cursorIndex);
 
 	const posString =
 		cursorPos === undefined ? 'N/A' : `${cursorPos.x},${cursorPos.y}`;
@@ -57,6 +75,7 @@ function App() {
 			<Text>Type Korean (Ctrl+C to exit):</Text>
 			<Text>Text length: {text.length}</Text>
 			<Text>Cursor Offset: {cursor}</Text>
+			<Text>Cursor Index: {cursorIndex}</Text>
 			<Text>CursorPosition: {posString}</Text>
 			<Box width={5}>
 				<Text>
