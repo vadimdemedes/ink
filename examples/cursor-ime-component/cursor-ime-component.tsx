@@ -28,6 +28,7 @@ function App() {
 				if (cursor === 0) {
 					return previous;
 				}
+
 				const startOfPrevious = graphemeOffsetToByteOffset(
 					previous,
 					cursor - 1,
