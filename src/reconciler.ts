@@ -321,6 +321,11 @@ const hostConfig: HostConfig = {
 				continue;
 			}
 
+			if (key === 'internal_cursorOffset') {
+				node.internal_cursorOffset = value as number;
+				continue;
+			}
+
 			if (key === 'internal_transform') {
 				node.internal_transform = value as OutputTransformer;
 				continue;
