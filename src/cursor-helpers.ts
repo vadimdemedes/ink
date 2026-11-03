@@ -178,6 +178,19 @@ export class InlineCursorHelper {
 	private textWithCursor: string | undefined;
 	private cursorSequence: string | undefined;
 
+	public static withText(text: string) {
+		const helper = new InlineCursorHelper();
+		helper.text = text;
+		return helper;
+	}
+
+	public static withCursorAtEndOfText(text: string) {
+		const helper = new InlineCursorHelper();
+		helper.text = text;
+		helper.setCursorPosition();
+		return helper;
+	}
+
 	private ensureTextWithCursor() {
 		if (this.textWithCursor !== undefined) {
 			return this.textWithCursor;

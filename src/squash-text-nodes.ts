@@ -16,7 +16,7 @@ type SquashedOutput = {
 // Also, this is necessary for libraries like ink-link (https://github.com/sindresorhus/ink-link),
 // which need to wrap all children at once, instead of wrapping 3 text nodes separately.
 const squashTextNodes = (node: DOMElement): SquashedOutput => {
-	const cursorHelper = new InlineCursorHelper();
+	let cursorHelper: InlineCursorHelper | undefined;
 	let text = '';
 
 	for (const childNode of node.childNodes) {
@@ -41,7 +41,7 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 				if (childNode.internal_cursorOffset !== undefined) {
 					// Outer Cursor elements override inner ones
 					// NOTE: We don't support explicit offsets, yet
-					cursorHelper.setCursorPosition();
+					cursorHelper = InlineCursorHelper.withCursorAtEndOfText(text);
 				} else if (childNodeCursor !== undefined) {
 					nodeCursor = childNodeCursor;
 				}
@@ -61,12 +61,15 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 			}
 		}
 
-		text += nodeText;
 		if (nodeCursor === undefined) {
-			cursorHelper.append(nodeText);
+			cursorHelper?.append(nodeText);
 		} else {
-			cursorHelper.appendHelper(nodeCursor);
+			const helper =
+				cursorHelper ?? InlineCursorHelper.withText(text);
+			helper.appendHelper(nodeCursor);
+			cursorHelper = helper;
 		}
+		text += nodeText;
 	}
 
 	if (
@@ -74,17 +77,17 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 		node.nodeName === 'ink-text' &&
 		node.internal_cursorOffset !== undefined
 	) {
-		cursorHelper.setCursorPosition();
+		cursorHelper = InlineCursorHelper.withCursorAtEndOfText(text);
 	}
 
 	text = sanitizeSquashedText(node, text);
-	cursorHelper.transform(toTransform =>
+	cursorHelper?.transform(toTransform =>
 		sanitizeSquashedText(node, toTransform),
 	);
 
 	return {
 		text,
-		cursor: cursorHelper.hasCursor ? cursorHelper : undefined,
+		cursor: cursorHelper?.hasCursor === true ? cursorHelper : undefined,
 	};
 };
 
