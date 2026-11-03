@@ -1,4 +1,4 @@
-import {hasAnsiControlCharacters, tokenizeAnsi} from './ansi-tokenizer.js';
+import {hasAnsiControlCharacters, iterateAnsiTokens} from './ansi-tokenizer.js';
 
 const sgrParametersRegex = /^[\d:;]*$/;
 // ESC, CAN, SUB or a C1 control inside the parameters or URI ends the OSC in the terminal, so whatever follows would run as its own escape sequence.
@@ -56,7 +56,7 @@ const sanitizeAnsi = (text: string): string => {
 	let output = '';
 	let pendingStyles = '';
 
-	for (const token of tokenizeAnsi(text)) {
+	for (const {token} of iterateAnsiTokens(text)) {
 		if (token.type === 'text') {
 			const value = token.value.replaceAll(controlCharactersRegex, '');
 			const marks = leadingMarksRegex.exec(value)?.[0] ?? '';
