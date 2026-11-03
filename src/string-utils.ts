@@ -1,6 +1,6 @@
 import {stripVTControlCharacters} from 'node:util';
 import {lengthOf, take} from './iterable-utils.js';
-import {iterateAnsiTokens} from './ansi-tokenizer.js';
+import {tokenizeAnsi} from './ansi-tokenizer.js';
 
 const segmenter = new Intl.Segmenter('en', {granularity: 'grapheme'});
 
@@ -36,7 +36,16 @@ export const graphemeOffsetToByteOffset = (
 };
 
 export function* iterateAnsiGraphemes(text: string) {
-	for (const {index, token} of iterateAnsiTokens(text)) {
+	let offset = 0;
+	for (const token of tokenizeAnsi(text)) {
+		// The tokenizer drops lone ESC characters, so tokens are not always contiguous.
+		if (!text.startsWith(token.value, offset)) {
+			offset = text.indexOf(token.value, offset);
+		}
+
+		const index = offset;
+		offset += token.value.length;
+
 		if (token.type === 'text') {
 			for (const segment of iterateGraphemeSegments(token.value)) {
 				yield {

@@ -10,7 +10,7 @@ const sosCharacter = '\u{98}';
 
 type ControlStringType = 'osc' | 'dcs' | 'pm' | 'apc' | 'sos';
 
-export type CsiToken = {
+type CsiToken = {
 	readonly type: 'csi';
 	readonly value: string;
 	readonly parameterString: string;
@@ -30,7 +30,7 @@ type ControlStringToken = {
 	readonly value: string;
 };
 
-export type TextToken = {
+type TextToken = {
 	readonly type: 'text';
 	readonly value: string;
 };
@@ -307,51 +307,29 @@ export const hasAnsiControlCharacters = (text: string): boolean => {
 	return false;
 };
 
-export const tokenizeAnsi = (text: string): AnsiToken[] => {
-	const tokens = [];
-	for (const {token} of iterateAnsiTokens(text)) {
-		tokens.push(token);
+const malformedFromIndex = (
+	tokens: AnsiToken[],
+	text: string,
+	textStartIndex: number,
+	fromIndex: number,
+): AnsiToken[] => {
+	if (fromIndex > textStartIndex) {
+		tokens.push({type: 'text', value: text.slice(textStartIndex, fromIndex)});
 	}
+
+	// Treat the remainder as invalid so callers can drop it as one unsafe unit.
+	tokens.push({type: 'invalid', value: text.slice(fromIndex)});
 
 	return tokens;
 };
 
-function* malformedFromIndex(
-	text: string,
-	textStartIndex: number,
-	fromIndex: number,
-): Iterable<{index: number; token: AnsiToken}> {
-	if (fromIndex > textStartIndex) {
-		yield {
-			index: textStartIndex,
-			token: {type: 'text', value: text.slice(textStartIndex, fromIndex)},
-		};
-	}
-
-	// Treat the remainder as invalid so callers can drop it as one unsafe unit.
-	yield {
-		index: fromIndex,
-		token: {type: 'invalid', value: text.slice(fromIndex)},
-	};
-}
-
-export function* iterateAnsiTokens(
-	text: string,
-): Iterable<{index: number; token: AnsiToken}> {
+export const tokenizeAnsi = (text: string): AnsiToken[] => {
 	if (!hasAnsiControlCharacters(text)) {
-		yield {index: 0, token: {type: 'text', value: text}};
-		return;
+		return [{type: 'text', value: text}];
 	}
 
+	const tokens: AnsiToken[] = [];
 	let textStartIndex = 0;
-
-	const textUntil = (index: number) => ({
-		index: textStartIndex,
-		token: {
-			type: 'text',
-			value: text.slice(textStartIndex, index),
-		} satisfies AnsiToken,
-	});
 
 	for (let index = 0; index < text.length;) {
 		const character = text[index];
@@ -364,32 +342,27 @@ export function* iterateAnsiTokens(
 			const followingCharacter = text[index + 1];
 
 			if (followingCharacter === undefined) {
-				yield* malformedFromIndex(text, textStartIndex, index);
-				return;
+				return malformedFromIndex(tokens, text, textStartIndex, index);
 			}
 
 			if (followingCharacter === '[') {
 				const csiSequence = readCsiSequence(text, index + 2);
 
 				if (csiSequence === undefined) {
-					yield* malformedFromIndex(text, textStartIndex, index);
-					return;
+					return malformedFromIndex(tokens, text, textStartIndex, index);
 				}
 
 				if (index > textStartIndex) {
-					yield textUntil(index);
+					tokens.push({type: 'text', value: text.slice(textStartIndex, index)});
 				}
 
-				yield {
-					index,
-					token: {
-						type: 'csi',
-						value: text.slice(index, csiSequence.endIndex),
-						parameterString: csiSequence.parameterString,
-						intermediateString: csiSequence.intermediateString,
-						finalCharacter: csiSequence.finalCharacter,
-					},
-				};
+				tokens.push({
+					type: 'csi',
+					value: text.slice(index, csiSequence.endIndex),
+					parameterString: csiSequence.parameterString,
+					intermediateString: csiSequence.intermediateString,
+					finalCharacter: csiSequence.finalCharacter,
+				});
 				index = csiSequence.endIndex;
 				textStartIndex = index;
 				continue;
@@ -406,21 +379,17 @@ export function* iterateAnsiTokens(
 				);
 
 				if (controlStringTerminatorIndex === undefined) {
-					yield* malformedFromIndex(text, textStartIndex, index);
-					return;
+					return malformedFromIndex(tokens, text, textStartIndex, index);
 				}
 
 				if (index > textStartIndex) {
-					yield textUntil(index);
+					tokens.push({type: 'text', value: text.slice(textStartIndex, index)});
 				}
 
-				yield {
-					index,
-					token: {
-						type: escapeControlString.type,
-						value: text.slice(index, controlStringTerminatorIndex),
-					},
-				};
+				tokens.push({
+					type: escapeControlString.type,
+					value: text.slice(index, controlStringTerminatorIndex),
+				});
 				index = controlStringTerminatorIndex;
 				textStartIndex = index;
 				continue;
@@ -431,12 +400,11 @@ export function* iterateAnsiTokens(
 			if (escapeSequence === undefined) {
 				// Incomplete escape sequences with intermediates are malformed control strings.
 				if (isEscapeIntermediateCharacter(followingCharacter)) {
-					yield* malformedFromIndex(text, textStartIndex, index);
-					return;
+					return malformedFromIndex(tokens, text, textStartIndex, index);
 				}
 
 				if (index > textStartIndex) {
-					yield textUntil(index);
+					tokens.push({type: 'text', value: text.slice(textStartIndex, index)});
 				}
 
 				// Ignore lone ESC and continue tokenizing the rest.
@@ -446,18 +414,15 @@ export function* iterateAnsiTokens(
 			}
 
 			if (index > textStartIndex) {
-				yield textUntil(index);
+				tokens.push({type: 'text', value: text.slice(textStartIndex, index)});
 			}
 
-			yield {
-				index,
-				token: {
-					type: 'esc',
-					value: text.slice(index, escapeSequence.endIndex),
-					intermediateString: escapeSequence.intermediateString,
-					finalCharacter: escapeSequence.finalCharacter,
-				},
-			};
+			tokens.push({
+				type: 'esc',
+				value: text.slice(index, escapeSequence.endIndex),
+				intermediateString: escapeSequence.intermediateString,
+				finalCharacter: escapeSequence.finalCharacter,
+			});
 			index = escapeSequence.endIndex;
 			textStartIndex = index;
 			continue;
@@ -467,24 +432,20 @@ export function* iterateAnsiTokens(
 			const csiSequence = readCsiSequence(text, index + 1);
 
 			if (csiSequence === undefined) {
-				yield* malformedFromIndex(text, textStartIndex, index);
-				return;
+				return malformedFromIndex(tokens, text, textStartIndex, index);
 			}
 
 			if (index > textStartIndex) {
-				yield textUntil(index);
+				tokens.push({type: 'text', value: text.slice(textStartIndex, index)});
 			}
 
-			yield {
-				index,
-				token: {
-					type: 'csi',
-					value: text.slice(index, csiSequence.endIndex),
-					parameterString: csiSequence.parameterString,
-					intermediateString: csiSequence.intermediateString,
-					finalCharacter: csiSequence.finalCharacter,
-				},
-			};
+			tokens.push({
+				type: 'csi',
+				value: text.slice(index, csiSequence.endIndex),
+				parameterString: csiSequence.parameterString,
+				intermediateString: csiSequence.intermediateString,
+				finalCharacter: csiSequence.finalCharacter,
+			});
 			index = csiSequence.endIndex;
 			textStartIndex = index;
 			continue;
@@ -500,21 +461,17 @@ export function* iterateAnsiTokens(
 			);
 
 			if (controlStringTerminatorIndex === undefined) {
-				yield* malformedFromIndex(text, textStartIndex, index);
-				return;
+				return malformedFromIndex(tokens, text, textStartIndex, index);
 			}
 
 			if (index > textStartIndex) {
-				yield textUntil(index);
+				tokens.push({type: 'text', value: text.slice(textStartIndex, index)});
 			}
 
-			yield {
-				index,
-				token: {
-					type: c1ControlString.type,
-					value: text.slice(index, controlStringTerminatorIndex),
-				},
-			};
+			tokens.push({
+				type: c1ControlString.type,
+				value: text.slice(index, controlStringTerminatorIndex),
+			});
 			index = controlStringTerminatorIndex;
 			textStartIndex = index;
 			continue;
@@ -522,10 +479,10 @@ export function* iterateAnsiTokens(
 
 		if (character === stringTerminatorCharacter) {
 			if (index > textStartIndex) {
-				yield textUntil(index);
+				tokens.push({type: 'text', value: text.slice(textStartIndex, index)});
 			}
 
-			yield {index, token: {type: 'st', value: character}};
+			tokens.push({type: 'st', value: character});
 			index++;
 			textStartIndex = index;
 			continue;
@@ -534,10 +491,10 @@ export function* iterateAnsiTokens(
 		// Strip remaining C1 controls as standalone functions.
 		if (isC1ControlCharacter(character)) {
 			if (index > textStartIndex) {
-				yield textUntil(index);
+				tokens.push({type: 'text', value: text.slice(textStartIndex, index)});
 			}
 
-			yield {index, token: {type: 'c1', value: character}};
+			tokens.push({type: 'c1', value: character});
 			index++;
 			textStartIndex = index;
 			continue;
@@ -547,6 +504,8 @@ export function* iterateAnsiTokens(
 	}
 
 	if (textStartIndex < text.length) {
-		yield textUntil(text.length);
+		tokens.push({type: 'text', value: text.slice(textStartIndex)});
 	}
-}
+
+	return tokens;
+};
