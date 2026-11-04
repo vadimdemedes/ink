@@ -28,7 +28,6 @@ const graphemeOffsetToByteOffset = (text: string, graphemeOffset: number) => {
 
 	return consumed < graphemeOffset
 		? // The offset does not exist in `text`
-			// {graphemeOffsetsSeen: consumed - 1}
 			undefined
 		: byteOffset;
 };
