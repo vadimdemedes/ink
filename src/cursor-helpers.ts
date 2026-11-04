@@ -179,14 +179,6 @@ const wrapNextGrapheme = (
 };
 
 export class InlineCursorHelper {
-	private text = '';
-	private cursorIndex: number | undefined;
-	private cursorAtEnd = false;
-
-	private isTransformed = false;
-	private textWithCursor: string | undefined;
-	private cursorSequence: string | undefined;
-
 	public static withText(text: string) {
 		const helper = new InlineCursorHelper();
 		helper.text = text;
@@ -199,6 +191,14 @@ export class InlineCursorHelper {
 		helper.setCursorPosition();
 		return helper;
 	}
+
+	private text = '';
+	private cursorIndex: number | undefined;
+	private cursorAtEnd = false;
+
+	private isTransformed = false;
+	private textWithCursor: string | undefined;
+	private cursorSequence: string | undefined;
 
 	private ensureTextWithCursor() {
 		if (this.textWithCursor !== undefined) {

@@ -64,11 +64,11 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 		if (nodeCursor === undefined) {
 			cursorHelper?.append(nodeText);
 		} else {
-			const helper =
-				cursorHelper ?? InlineCursorHelper.withText(text);
+			const helper = cursorHelper ?? InlineCursorHelper.withText(text);
 			helper.appendHelper(nodeCursor);
 			cursorHelper = helper;
 		}
+
 		text += nodeText;
 	}
 
