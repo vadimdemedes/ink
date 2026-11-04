@@ -34,8 +34,6 @@ import {
 } from './kitty-keyboard.js';
 import {isTty, type OutputStream} from './stream.js';
 
-type CursorMode = 'hook' | 'component';
-
 const noop = () => {};
 
 const yieldImmediate = async () =>
@@ -221,7 +219,13 @@ export type Options = {
 export default class Ink {
 	private readonly options: Options;
 	private readonly log: LogUpdate;
-	private cursorMode: CursorMode | undefined;
+	// Set by `useCursor`. Persists across frames until the hook changes it.
+	private hookCursorPosition: CursorPosition | undefined;
+	// Where the last rendered frame placed a `<Cursor />`, if any.
+	private componentCursorPosition: CursorPosition | undefined;
+	// How many `<Cursor />` elements are mounted, for detecting mixed modes.
+	private cursorElementCount = 0;
+	// The effective cursor position.
 	private cursorPosition: CursorPosition | undefined;
 	private readonly throttledLog:
 		LogUpdate | DebouncedFunc<(output: string) => void>;
@@ -316,40 +320,32 @@ export default class Ink {
 	};
 
 	setCursorPositionFromHook = (position: CursorPosition | undefined): void => {
-		this.setCursorPositionInternal('hook', position);
+		this.hookCursorPosition = position;
+		this.updateCursorPosition();
 	};
 
-	setCursorPositionFromComponent = (
-		position: CursorPosition | undefined,
-	): void => {
-		// NOTE: Absence of a <Cursor /> only means that we should hide the cursor
-		// if we're already in component mode; if in hook mode, we simply aren't
-		// using the component, so an empty position is expected
-		if (position !== undefined || this.cursorMode === 'component') {
-			this.setCursorPositionInternal('component', position);
-		}
+	registerCursorElement = (): (() => void) => {
+		this.cursorElementCount++;
+
+		let isRegistered = true;
+		return () => {
+			if (!isRegistered) {
+				return;
+			}
+
+			isRegistered = false;
+			this.cursorElementCount--;
+		};
 	};
 
-	setCursorPositionInternal = (
-		expectedMode: CursorMode,
-		position: CursorPosition | undefined,
-	): void => {
-		// If we clear the cursor, we can change the mode
-		if (this.cursorMode !== undefined && this.cursorMode !== expectedMode) {
-			throw new Error('Mixing cursor modes');
+	// Must be called from a layout effect, after the commit phase when
+	// Cursor/useCursor register their existence/clean up for unmount
+	assertSingleCursorMode = (): void => {
+		if (this.cursorElementCount > 0 && this.hookCursorPosition !== undefined) {
+			throw new Error(
+				'Mixing cursor modes: `useCursor` and `<Cursor />` cannot control the cursor at the same time. Pass `undefined` to `setCursorPosition` while a `<Cursor />` is rendered.',
+			);
 		}
-
-		const listener = this.options?.onCursorUpdated;
-		if (
-			listener !== undefined &&
-			cursorPositionChanged(this.cursorPosition, position)
-		) {
-			listener(position);
-		}
-
-		this.cursorMode = expectedMode;
-		this.cursorPosition = position;
-		this.log.setCursorPosition(position);
 	};
 
 	// Must stay referentially stable across `render()` calls: it feeds into App's
@@ -452,23 +448,14 @@ export default class Ink {
 			this.lastOutputToRender = '';
 		}
 
-		// Reset the cursorMode before a new render; it's not safe to *mix* cursor
-		// modes, but it's acceptable to switch between them.
-		const oldCursorMode = this.cursorMode;
-		this.cursorMode = undefined;
-
 		const startTime = performance.now();
 		const {output, outputHeight, staticOutput, cursorPosition} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
 		);
 
-		if (oldCursorMode === 'component' && this.cursorMode !== 'hook') {
-			// Still component; restore here so we handle state changes properly
-			this.cursorMode = 'component';
-		}
-
-		this.setCursorPositionFromComponent(cursorPosition);
+		this.componentCursorPosition = cursorPosition;
+		this.updateCursorPosition();
 		const renderTime = performance.now() - startTime;
 		// `exit()` from an effect unmounts before `<Static>` has dropped the children it just rendered, so the final frame would write them a second time. Static changes that have not been rendered yet are still marked dirty.
 		const isStaticOutputAlreadyWritten =
@@ -749,6 +736,22 @@ export default class Ink {
 			ansiEscapes.enterAlternativeScreen,
 		);
 		this.writeBestEffort(this.options.stdout, hideCursorEscape);
+	}
+
+	private updateCursorPosition(): void {
+		// Prefer the hook: in the commit that swaps a `<Cursor />` for
+		// `useCursor`, the hook updates before the frame is rendered, so
+		// `componentCursorPosition` still holds the previous frame's position
+		// until then. Both being set in the same frame is otherwise reported by
+		// `assertSingleCursorMode`.
+		const position = this.hookCursorPosition ?? this.componentCursorPosition;
+		if (!cursorPositionChanged(this.cursorPosition, position)) {
+			return;
+		}
+
+		this.options.onCursorUpdated?.(position);
+		this.cursorPosition = position;
+		this.log.setCursorPosition(position);
 	}
 
 	private resolveInteractiveOption(interactive: boolean | undefined): boolean {
@@ -1116,6 +1119,8 @@ export default class Ink {
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
 					setCursorPosition={this.setCursorPositionFromHook}
+					registerCursorElement={this.registerCursorElement}
+					assertSingleCursorMode={this.assertSingleCursorMode}
 					onExit={this.handleAppExit}
 					onWaitUntilRenderFlush={this.waitUntilRenderFlush}
 					onSuspendTerminal={this.suspendTerminal}

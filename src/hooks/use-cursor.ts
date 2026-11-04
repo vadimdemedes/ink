@@ -1,5 +1,5 @@
-import {use, useRef, useCallback, useInsertionEffect} from 'react';
-import CursorContext from '../components/CursorContext.js';
+import {useRef, useCallback, useInsertionEffect} from 'react';
+import {useCursorContext} from '../components/CursorContext.js';
 import {type CursorPosition} from '../log-update.js';
 
 /**
@@ -10,7 +10,7 @@ Setting a cursor position makes the cursor visible at the specified coordinates 
 Pass `undefined` to hide the cursor.
 */
 const useCursor = () => {
-	const context = use(CursorContext);
+	const context = useCursorContext();
 	const positionRef = useRef<CursorPosition | undefined>(undefined);
 
 	const setCursorPosition = useCallback(

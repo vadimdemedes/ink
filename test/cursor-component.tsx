@@ -127,16 +127,36 @@ async function withInteractiveRender(
 		lastCursor = cursor;
 	};
 
-	const {unmount, rerender, waitUntilRenderFlush} = render(node, {
-		stdout,
-		stdin,
-		onCursorUpdated,
+	const {unmount, rerender, waitUntilRenderFlush, waitUntilExit} = render(
+		node,
+		{
+			stdout,
+			stdin,
+			onCursorUpdated,
+		},
+	);
+
+	// Errors thrown during commit (eg: from cursor effects) are caught by
+	// Ink's ErrorBoundary and surface as an exit error; capture it so tests
+	// fail loudly instead of just seeing a missing cursor.
+	let exitError: unknown;
+	let didExitWithError = false;
+	void waitUntilExit().catch((error: unknown) => {
+		exitError = error;
+		didExitWithError = true;
 	});
+	const throwIfExitedWithError = async () => {
+		await delay(0);
+		if (didExitWithError) {
+			throw exitError;
+		}
+	};
 
 	const getWriteCallsString = () => getWriteCalls(stdout).join('');
 	const rerenderWithWait = async (component: React.ReactNode) => {
 		rerender(component);
 		await waitUntilRenderFlush();
+		await throwIfExitedWithError();
 	};
 
 	try {
@@ -150,6 +170,7 @@ async function withInteractiveRender(
 			getWriteCallsString,
 			getLastTrimmedRender: () => stripAnsi(getWriteCallsString()).trim(),
 		});
+		await throwIfExitedWithError();
 	} finally {
 		chalk.level = oldChalkLevel;
 		unmount();
@@ -1666,6 +1687,101 @@ test('<Cursor /> does not poison useCursor', async (t: TestContext) => {
 
 			await rerender(<Component />);
 			t.assert.deepStrictEqual(getLastCursor(), {x: 1, y: 0});
+		},
+	);
+});
+
+test('useCursor does not poison <Cursor />', async (t: TestContext) => {
+	const Hook = () => {
+		const {setCursorPosition} = useCursor();
+		setCursorPosition({x: 1, y: 0});
+		return (
+			<Box>
+				<Text>hook</Text>
+			</Box>
+		);
+	};
+
+	const Component = () => (
+		<Box>
+			<Text>
+				ab
+				<Cursor />c
+			</Text>
+		</Box>
+	);
+	await withInteractiveRender(
+		<Component />,
+		{stdoutColumns: 5},
+		async ({getLastCursor, rerender}) => {
+			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 0});
+
+			await rerender(<Hook />);
+			t.assert.deepStrictEqual(getLastCursor(), {x: 1, y: 0});
+
+			// And back again
+			await rerender(<Component />);
+			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 0});
+		},
+	);
+});
+
+test('Mixing useCursor and <Cursor /> in one tree throws', async (t: TestContext) => {
+	const Hook = ({x}: {readonly x: number}) => {
+		const {setCursorPosition} = useCursor();
+		setCursorPosition({x, y: 0});
+		return <Text>hook</Text>;
+	};
+
+	const Mixed = ({x}: {readonly x: number}) => (
+		<Box flexDirection="column">
+			<Hook x={x} />
+			<Text>
+				ab
+				<Cursor />c
+			</Text>
+		</Box>
+	);
+
+	// The conflict should be reported on the very first frame that mixes
+	// them, rather than letting <Cursor /> silently win until the hook
+	// component happens to re-render.
+	await t.assert.rejects(
+		async () =>
+			withInteractiveRender(<Mixed x={1} />, {stdoutColumns: 5}, () => {
+				// Nop
+			}),
+		/Mixing cursor modes/,
+	);
+});
+
+test('An inactive useCursor does not conflict with <Cursor />', async (t: TestContext) => {
+	// E.g. a third-party input built on useCursor that is not focused
+	const InactiveHook = ({label}: {readonly label: string}) => {
+		const {setCursorPosition} = useCursor();
+		setCursorPosition(undefined);
+		return <Text>{label}</Text>;
+	};
+
+	const Mixed = ({label}: {readonly label: string}) => (
+		<Box flexDirection="column">
+			<InactiveHook label={label} />
+			<Text>
+				ab
+				<Cursor />c
+			</Text>
+		</Box>
+	);
+
+	await withInteractiveRender(
+		<Mixed label="one" />,
+		{stdoutColumns: 5},
+		async ({getLastCursor, rerender}) => {
+			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 1});
+
+			// Re-rendering the inactive hook must not disturb <Cursor />
+			await rerender(<Mixed label="two" />);
+			t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 1});
 		},
 	);
 });
