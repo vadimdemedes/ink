@@ -2039,3 +2039,19 @@ test('<Cursor /> above the top of the frame is hidden', async (t: TestContext) =
 		},
 	);
 });
+
+test('<Cursor /> is not captured by an ink://cursor link in user text', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box>
+			<Text>
+				{'\u{1B}]8;;ink://cursor\u{7}link\u{1B}]8;;\u{7}'}
+				ab
+				<Cursor />c
+			</Text>
+		</Box>,
+		{stdoutColumns: 10},
+		({getLastCursor}) => {
+			t.assert.deepStrictEqual(getLastCursor(), {x: 6, y: 0});
+		},
+	);
+});

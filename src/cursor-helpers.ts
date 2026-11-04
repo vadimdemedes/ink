@@ -1,3 +1,4 @@
+import {randomBytes} from 'node:crypto';
 import ansiEscapes from 'ansi-escapes';
 import stringWidth from 'string-width';
 import {iterateAnsiGraphemes} from './string-utils.js';
@@ -151,7 +152,14 @@ export const buildEraseFrame = (
 // screen, which `sanitizeAnsi()` strips, losing the cursor entirely. The
 // marker only ever lives in the parallel string used to locate the cursor and
 // is never written to the terminal, so it does not need passthrough.
-const cursorMarkerOpen = '\u{1B}]8;;ink://cursor\u{7}';
+let cursorMarkerOpen: string | undefined;
+const getCursorMarkerOpen = () => {
+	// A random per-process scheme keeps user links from matching the marker.
+	// Built lazily to avoid potentially unnecessary overhead on startup
+	cursorMarkerOpen ??= `\u{1B}]8;;ink+${randomBytes(8).toString('hex').toUpperCase()}://cursor\u{7}`;
+	return cursorMarkerOpen;
+};
+
 const cursorMarkerClose = '\u{1B}]8;;\u{7}';
 
 const wrapNextGrapheme = (
@@ -162,7 +170,7 @@ const wrapNextGrapheme = (
 	let wrapped = text.slice(0, atIndex);
 	for (const {index, token} of iterateAnsiGraphemes(afterCursor)) {
 		if (token.type === 'grapheme') {
-			const sequence = cursorMarkerOpen + token.value + cursorMarkerClose;
+			const sequence = getCursorMarkerOpen() + token.value + cursorMarkerClose;
 			return {
 				wrapped:
 					wrapped + sequence + text.slice(atIndex + index + token.value.length),
@@ -268,13 +276,14 @@ export class InlineCursorHelper {
 			return undefined;
 		}
 
+		const markerOpen = getCursorMarkerOpen();
 		const output = handler(marked.wrapped);
-		const openIndex = output.indexOf(cursorMarkerOpen);
-		if (openIndex === -1 || output.includes(cursorMarkerOpen, openIndex + 1)) {
+		const openIndex = output.indexOf(markerOpen);
+		if (openIndex === -1 || output.includes(markerOpen, openIndex + 1)) {
 			return undefined;
 		}
 
-		const contentIndex = openIndex + cursorMarkerOpen.length;
+		const contentIndex = openIndex + markerOpen.length;
 		const closeIndex = output.indexOf(cursorMarkerClose, contentIndex);
 		if (closeIndex === -1) {
 			return undefined;
@@ -380,7 +389,7 @@ export class InlineCursorHelper {
 		}
 
 		// NOTE: This works because the first chunk of the ansi
-		// sequence carries our ink://cursor emblem.
+		// sequence carries our ink+<HEX>://cursor emblem.
 		const valueToFind = getAnsiCursorToken(cursorSequence);
 		const {x, y, found} = getPositionWhen(
 			withoutEmptyMarkers(withCursor, valueToFind),
