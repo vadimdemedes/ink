@@ -145,6 +145,15 @@ export const buildEraseFrame = (
 	);
 };
 
+// The OSC 8 hyperlink used to mark the grapheme under an inline <Cursor />.
+// This is built by hand rather than with `ansiEscapes.link()` because that
+// wraps the sequence in a tmux DCS passthrough when running under tmux or
+// screen, which `sanitizeAnsi()` strips, losing the cursor entirely. The
+// marker only ever lives in the parallel string used to locate the cursor and
+// is never written to the terminal, so it does not need passthrough.
+const cursorMarkerOpen = '\u{1B}]8;;ink://cursor\u{7}';
+const cursorMarkerClose = '\u{1B}]8;;\u{7}';
+
 const wrapNextGrapheme = (
 	text: string,
 	atIndex: number,
@@ -153,7 +162,7 @@ const wrapNextGrapheme = (
 	let wrapped = text.slice(0, atIndex);
 	for (const {index, token} of iterateAnsiGraphemes(afterCursor)) {
 		if (token.type === 'grapheme') {
-			const sequence = ansiEscapes.link(token.value, 'ink://cursor');
+			const sequence = cursorMarkerOpen + token.value + cursorMarkerClose;
 			return {
 				wrapped:
 					wrapped + sequence + text.slice(atIndex + index + token.value.length),
