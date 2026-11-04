@@ -146,6 +146,7 @@ _(PRs welcome. Append new entries at the end. Repos must have 100+ stars and sho
   - [`<Spacer>`](#spacer)
   - [`<Static>`](#static)
   - [`<Transform>`](#transform)
+  - [`<Cursor>`](#cursor)
 - [Hooks](#hooks)
   - [`useInput`](#useinputinputhandler-options)
   - [`usePaste`](#usepastehandler-options)
@@ -1725,6 +1726,35 @@ Type: `number`
 
 The zero-indexed line number of the line that's currently being transformed.
 
+### `<Cursor>`
+
+The `<Cursor>` component marks where Ink should place the terminal cursor. It renders behind the character following it in the parent component, if any, or after any preceding character in the parent component.
+This is essential for IME (Input Method Editor) support, where the composing character is displayed at the cursor location.
+
+`<Cursor>` usage may not be mixed with `useCursor`. Only the last-rendered (in the DOM) will be checked—do not attempt to render more than one `<Cursor>`.
+
+```jsx
+import {useState} from 'react';
+import {Box, Cursor, Text} from 'ink';
+import stringWidth from 'string-width';
+
+const TextInput = () => {
+	const [text, setText] = useState('');
+	const prompt = '> ';
+
+	return (
+		<Box flexDirection="column">
+			<Text>Type here:</Text>
+			<Text>
+				{prompt}
+				{text}
+				<Cursor />
+			</Text>
+		</Box>
+	);
+};
+```
+
 ## Hooks
 
 ### useInput(inputHandler, options?)
@@ -2713,6 +2743,13 @@ That way, both are visible and don't overlap each other.
 Once unmount starts, Ink restores the native console before React cleanup runs. Teardown-time `console.*` output then follows the normal console behavior instead of being rerouted through Ink.
 
 This functionality is powered by [patch-console](https://github.com/vadimdemedes/patch-console), so if you need to disable Ink's interception of output but want to build something custom, you can use that.
+
+###### onCursorUpdated
+
+Type: `({cursorPosition: CursorPosition | undefined}) => void`\
+Default: `undefined`
+
+Runs the given callback after the cursor's position has been updated by either `useCursor` or `<Cursor />`.
 
 ###### onRender
 
