@@ -1823,3 +1823,35 @@ test('Omitting <Cursor /> hides terminal cursor', async (t: TestContext) => {
 		},
 	);
 });
+
+test('<Cursor /> in hidden content should not show up', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box flexDirection="column">
+			<Box height={0} overflow="hidden">
+				<Text>
+					A<Cursor />B
+				</Text>
+			</Box>
+			<Text>next</Text>
+		</Box>,
+		{stdoutColumns: 3},
+		async ({getLastCursor}) => {
+			t.assert.strictEqual(getLastCursor(), undefined);
+		},
+	);
+
+	await withInteractiveRender(
+		<Box flexDirection="column">
+			<Box height={1} contentOffsetY={1} overflow="hidden">
+				<Text>
+					A<Cursor />B
+				</Text>
+			</Box>
+			<Text>next</Text>
+		</Box>,
+		{stdoutColumns: 3},
+		async ({getLastCursor}) => {
+			t.assert.strictEqual(getLastCursor(), undefined);
+		},
+	);
+});

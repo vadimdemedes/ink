@@ -270,6 +270,22 @@ export default class Output {
 		const {text, transformers} = operation;
 		let {x, y} = operation;
 		const lineCount = countLines(text);
+
+		// Cursor visibility depends only on the cursor's own cell, not on the extent of the text carrying it, so decide it before any early return below.
+		const {cursorPosition} = effects;
+		if (
+			clip &&
+			cursorPosition !== undefined &&
+			((typeof clip.x1 === 'number' &&
+				typeof clip.x2 === 'number' &&
+				(cursorPosition.x < clip.x1 || cursorPosition.x >= clip.x2)) ||
+				(typeof clip.y1 === 'number' &&
+					typeof clip.y2 === 'number' &&
+					(cursorPosition.y < clip.y1 || cursorPosition.y >= clip.y2)))
+		) {
+			effects.cursorPosition = undefined;
+		}
+
 		if (
 			y + lineCount <= 0 ||
 			y >= output.length ||
@@ -297,14 +313,6 @@ export default class Output {
 			if (shouldClipHorizontally) {
 				const width = this.caches.getWidestLine(text);
 
-				const {cursorPosition} = effects;
-				if (
-					cursorPosition !== undefined &&
-					(cursorPosition.x < clip.x1! || cursorPosition.x >= clip.x2!)
-				) {
-					effects.cursorPosition = undefined;
-				}
-
 				if (x + width < clip.x1! || x > clip.x2!) {
 					return;
 				}
@@ -328,14 +336,6 @@ export default class Output {
 				const from = y < clip.y1! ? clip.y1! - y : 0;
 				const height = lines.length;
 				const to = y + height > clip.y2! ? clip.y2! - y : height;
-
-				const {cursorPosition} = effects;
-				if (
-					cursorPosition !== undefined &&
-					(cursorPosition.y < clip.y1! || cursorPosition.y >= clip.y2!)
-				) {
-					effects.cursorPosition = undefined;
-				}
 
 				lines = lines.slice(from, to);
 
