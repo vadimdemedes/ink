@@ -244,7 +244,9 @@ export class InlineCursorHelper {
 		}
 
 		const expectedToken = getAnsiCursorToken(cursorSequence);
-		for (const {index, token} of iterateAnsiGraphemes(withCursor)) {
+		for (const {index, token} of iterateAnsiGraphemes(
+			withoutEmptyMarkers(withCursor, expectedToken),
+		)) {
 			if (token.value === expectedToken) {
 				return index;
 			}
@@ -317,12 +319,17 @@ export class InlineCursorHelper {
 		// sequence carries our ink://cursor emblem.
 		const valueToFind = getAnsiCursorToken(cursorSequence);
 		const {x, y, found} = getPositionWhen(
-			withCursor,
+			withoutEmptyMarkers(withCursor, valueToFind),
 			token => token.value === valueToFind,
 		);
 		return found ? {x, y} : undefined;
 	}
 }
+
+// A glyph wider than its box leaves the wrapper reopening the link at the end
+// of the previous row with nothing inside it.
+const withoutEmptyMarkers = (text: string, markerOpen: string) =>
+	text.replaceAll(markerOpen + cursorMarkerClose, '');
 
 const getPositionWhen = (
 	text: string,

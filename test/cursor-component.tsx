@@ -1870,3 +1870,18 @@ test('<Cursor /> past the end of a fixed-height frame is hidden', async (t: Test
 		},
 	);
 });
+
+test('<Cursor /> before a glyph wider than its box lands on the glyph row', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box width={1}>
+			<Text>
+				😀
+				<Cursor />m
+			</Text>
+		</Box>,
+		{stdoutColumns: 10},
+		({getLastCursor}) => {
+			t.assert.deepStrictEqual(getLastCursor(), {x: 0, y: 1});
+		},
+	);
+});
