@@ -54,10 +54,13 @@ const squashTextNodes = (node: DOMElement): SquashedOutput => {
 				typeof childNode.internal_transform === 'function'
 			) {
 				const transform = childNode.internal_transform;
-				nodeText = nodeText
-					.split('\n')
-					.map((line, lineIndex) => transform(line, lineIndex))
-					.join('\n');
+				const transformLines = (toTransform: string) =>
+					toTransform
+						.split('\n')
+						.map((line, lineIndex) => transform(line, lineIndex))
+						.join('\n');
+				nodeText = transformLines(nodeText);
+				nodeCursor?.transformContent(transformLines);
 			}
 		}
 

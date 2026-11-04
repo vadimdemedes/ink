@@ -255,6 +255,49 @@ export class InlineCursorHelper {
 		return undefined;
 	}
 
+	// Runs `handler` over the text with the cursor marker in it. Returns the
+	// cursor's index in `transformed` if exactly one marker survived and removing
+	// it yields `transformed`, or `undefined` if the transform didn't preserve it.
+	private transformMarkedCursorIndex(
+		handler: (text: string) => string,
+		cursorIndex: number,
+		transformed: string,
+	) {
+		const marked = wrapNextGrapheme(this.text, cursorIndex);
+		if (marked === undefined) {
+			return undefined;
+		}
+
+		const output = handler(marked.wrapped);
+		const openIndex = output.indexOf(cursorMarkerOpen);
+		if (openIndex === -1 || output.includes(cursorMarkerOpen, openIndex + 1)) {
+			return undefined;
+		}
+
+		const contentIndex = openIndex + cursorMarkerOpen.length;
+		const closeIndex = output.indexOf(cursorMarkerClose, contentIndex);
+		if (closeIndex === -1) {
+			return undefined;
+		}
+
+		const withoutMarker =
+			output.slice(0, openIndex) +
+			output.slice(contentIndex, closeIndex) +
+			output.slice(closeIndex + cursorMarkerClose.length);
+		return withoutMarker === transformed ? openIndex : undefined;
+	}
+
+	// Fallback for transforms that don't preserve the marker: place the cursor
+	// on the grapheme following those `handler` produces for the text before it.
+	private countTransformedCursorIndex(
+		handler: (text: string) => string,
+		cursorIndex: number,
+		transformed: string,
+	) {
+		const transformedBefore = handler(this.text.slice(0, cursorIndex));
+		return findGraphemeIndex(transformed, countGraphemes(transformedBefore));
+	}
+
 	public get hasCursor() {
 		return this.cursorAtEnd || this.cursorIndex !== undefined;
 	}
@@ -297,6 +340,27 @@ export class InlineCursorHelper {
 		}
 
 		this.text = handler(this.text);
+	}
+
+	/**
+	Apply a transform that may rewrite content, like `<Transform>`. Transforms are expected to preserve ANSI sequences, so the cursor marker is passed through the transform and located in its output. A transform that doesn't preserve the marker (for example, one that masks every character) falls back to placing the cursor on the grapheme following those the transform produces for the text before the cursor.
+	*/
+	public transformContent(handler: (text: string) => string) {
+		const transformed = handler(this.text);
+
+		const cursorIndex = this.cursorAtEnd
+			? undefined
+			: this.resolveCursorIndex();
+		if (cursorIndex !== undefined) {
+			this.cursorIndex =
+				this.transformMarkedCursorIndex(handler, cursorIndex, transformed) ??
+				this.countTransformedCursorIndex(handler, cursorIndex, transformed);
+			this.cursorAtEnd = this.cursorIndex === undefined;
+		}
+
+		this.text = transformed;
+		this.textWithCursor = undefined;
+		this.cursorSequence = undefined;
 	}
 
 	public setCursorPosition() {
@@ -356,6 +420,34 @@ const getPositionWhen = (
 	}
 
 	return {x, y, found: false};
+};
+
+const countGraphemes = (text: string) => {
+	let count = 0;
+	for (const {token} of iterateAnsiGraphemes(text)) {
+		if (token.type === 'grapheme') {
+			++count;
+		}
+	}
+
+	return count;
+};
+
+const findGraphemeIndex = (text: string, graphemeNumber: number) => {
+	let count = 0;
+	for (const {index, token} of iterateAnsiGraphemes(text)) {
+		if (token.type !== 'grapheme') {
+			continue;
+		}
+
+		if (count === graphemeNumber) {
+			return index;
+		}
+
+		++count;
+	}
+
+	return undefined;
 };
 
 const getAnsiCursorToken = (linkString: string) => {

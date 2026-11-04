@@ -1949,3 +1949,68 @@ test('<Cursor /> reports onCursorUpdated once across rerenders', async (t: TestC
 	t.assert.deepStrictEqual(updates, [{x: 2, y: 0}]);
 	unmount();
 });
+test('<Cursor /> inside a nested content-replacing <Transform /> tracks the transformed text', async (t: TestContext) => {
+	const mask = (s: string) => s.replaceAll(/./g, '*');
+
+	await withInteractiveRender(
+		<Box width={6}>
+			<Text>
+				<Transform transform={mask}>
+					<Text>
+						my pass word
+						<Cursor />x
+					</Text>
+				</Transform>
+			</Text>
+		</Box>,
+		{stdoutColumns: 100},
+		({getLastCursor, getLastTrimmedRender}) => {
+			t.assert.strictEqual(getLastTrimmedRender(), '******\n******\n*');
+			t.assert.deepStrictEqual(getLastCursor(), {x: 0, y: 2});
+		},
+	);
+});
+
+test('<Cursor /> inside a nested space-preserving <Transform /> tracks the transformed text', async (t: TestContext) => {
+	const mask = (s: string) => s.replaceAll(/[^ ]/g, '*');
+
+	await withInteractiveRender(
+		<Box width={6}>
+			<Text>
+				<Transform transform={mask}>
+					<Text>
+						my pass word
+						<Cursor />x
+					</Text>
+				</Transform>
+			</Text>
+		</Box>,
+		{stdoutColumns: 100},
+		({getLastCursor, getLastTrimmedRender}) => {
+			t.assert.strictEqual(getLastTrimmedRender(), '**\n****\n*****');
+			t.assert.deepStrictEqual(getLastCursor(), {x: 4, y: 2});
+		},
+	);
+});
+
+test('<Cursor /> inside a nested suffix-adding <Transform /> stays on its grapheme', async (t: TestContext) => {
+	const bracket = (s: string) => `[${s}]`;
+
+	await withInteractiveRender(
+		<Box>
+			<Text>
+				<Transform transform={bracket}>
+					<Text>
+						ab
+						<Cursor />c
+					</Text>
+				</Transform>
+			</Text>
+		</Box>,
+		{stdoutColumns: 20},
+		({getLastCursor, getLastTrimmedRender}) => {
+			t.assert.strictEqual(getLastTrimmedRender(), '[abc]');
+			t.assert.deepStrictEqual(getLastCursor(), {x: 3, y: 0});
+		},
+	);
+});
