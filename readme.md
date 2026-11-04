@@ -2746,7 +2746,7 @@ This functionality is powered by [patch-console](https://github.com/vadimdemedes
 
 ###### onCursorUpdated
 
-Type: `({cursorPosition: CursorPosition | undefined}) => void`\
+Type: `(cursorPosition: CursorPosition | undefined) => void`\
 Default: `undefined`
 
 Runs the given callback after the cursor's position has been updated by either `useCursor` or `<Cursor />`.

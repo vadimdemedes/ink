@@ -320,8 +320,11 @@ export default class Ink {
 	};
 
 	setCursorPositionFromHook = (position: CursorPosition | undefined): void => {
+		// Only record it: `useCursor` clears and re-sets its position on every
+		// commit, so the effective position is resolved once per frame in
+		// `onRender`, where those intermediate values can't leak to
+		// `onCursorUpdated`.
 		this.hookCursorPosition = position;
-		this.updateCursorPosition();
 	};
 
 	registerCursorElement = (): (() => void) => {
@@ -738,11 +741,9 @@ export default class Ink {
 		this.writeBestEffort(this.options.stdout, hideCursorEscape);
 	}
 
+	// Called once per frame from `onRender`, after the commit has settled.
 	private updateCursorPosition(): void {
-		// Prefer the hook: in the commit that swaps a `<Cursor />` for
-		// `useCursor`, the hook updates before the frame is rendered, so
-		// `componentCursorPosition` still holds the previous frame's position
-		// until then. Both being set in the same frame is otherwise reported by
+		// Prefer the hook. Both being set in the same frame is reported by
 		// `assertSingleCursorMode`.
 		const position = this.hookCursorPosition ?? this.componentCursorPosition;
 		if (!cursorPositionChanged(this.cursorPosition, position)) {

@@ -1885,3 +1885,67 @@ test('<Cursor /> before a glyph wider than its box lands on the glyph row', asyn
 		},
 	);
 });
+
+function HookCursor({tick}: {readonly tick: number}) {
+	const {setCursorPosition} = useCursor();
+	setCursorPosition({x: 2, y: 0});
+	return <Text>tick {tick}</Text>;
+}
+
+test('useCursor with a stable position reports onCursorUpdated once across rerenders', async (t: TestContext) => {
+	const updates: Array<CursorPosition | undefined> = [];
+	const {rerender, unmount, waitUntilRenderFlush} = render(
+		<HookCursor tick={0} />,
+		{
+			stdout: createStdout(20),
+			stdin: createStdin(),
+			interactive: true,
+			onCursorUpdated(cursor) {
+				updates.push(cursor);
+			},
+		},
+	);
+	await waitUntilRenderFlush();
+
+	for (let tick = 1; tick <= 5; tick++) {
+		rerender(<HookCursor tick={tick} />);
+		// eslint-disable-next-line no-await-in-loop
+		await waitUntilRenderFlush();
+	}
+
+	t.assert.deepStrictEqual(updates, [{x: 2, y: 0}]);
+	unmount();
+});
+
+test('<Cursor /> reports onCursorUpdated once across rerenders', async (t: TestContext) => {
+	const updates: Array<CursorPosition | undefined> = [];
+	const {rerender, unmount, waitUntilRenderFlush} = render(
+		<Text>
+			ab
+			<Cursor />
+		</Text>,
+		{
+			stdout: createStdout(20),
+			stdin: createStdin(),
+			interactive: true,
+			onCursorUpdated(cursor) {
+				updates.push(cursor);
+			},
+		},
+	);
+	await waitUntilRenderFlush();
+
+	for (let tick = 1; tick <= 3; tick++) {
+		rerender(
+			<Text>
+				ab
+				<Cursor />
+			</Text>,
+		);
+		// eslint-disable-next-line no-await-in-loop
+		await waitUntilRenderFlush();
+	}
+
+	t.assert.deepStrictEqual(updates, [{x: 2, y: 0}]);
+	unmount();
+});
