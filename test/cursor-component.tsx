@@ -24,8 +24,6 @@ import createStdout, {type FakeStdout} from './helpers/create-stdout.js';
 import {act} from './helpers/act.js';
 import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 
-const IS_ELLIPSIZE_CURSOR = true;
-
 const showCursorEscape = '\u{1B}[?25h';
 const hideCursorEscape = '\u{1B}[?25l';
 
@@ -1078,7 +1076,7 @@ for (const {wrap, expected, cursorOnEllipsis} of [
 			async ({getLastCursor, getLastTrimmedRender}) => {
 				t.assert.strictEqual(getLastTrimmedRender(), expected);
 
-				if (IS_ELLIPSIZE_CURSOR && cursorOnEllipsis === true) {
+				if (cursorOnEllipsis === true) {
 					t.assert.strictEqual(getLastCursor(), undefined);
 				} else {
 					t.assert.deepStrictEqual(getLastCursor(), {x: 0, y: 0});
@@ -1109,7 +1107,7 @@ for (const {wrap, expected} of [
 	});
 }
 
-test('truncate-middle with truncated <Cursor /> renders on the ellipsis', async (t: TestContext) => {
+test('truncate-middle with truncated <Cursor /> hides the cursor', async (t: TestContext) => {
 	await withInteractiveRender(
 		<Box width={5}>
 			<Text wrap="truncate-middle">
@@ -1119,11 +1117,7 @@ test('truncate-middle with truncated <Cursor /> renders on the ellipsis', async 
 			</Text>
 		</Box>,
 		async ({getLastCursor}) => {
-			if (IS_ELLIPSIZE_CURSOR) {
-				t.assert.strictEqual(getLastCursor(), undefined);
-			} else {
-				t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 0});
-			}
+			t.assert.strictEqual(getLastCursor(), undefined);
 		},
 	);
 });
@@ -1172,11 +1166,7 @@ test('wrap=truncate-middle - multiline with cursor on second line', async (t: Te
 		</Box>,
 		async ({getLastCursor, getLastTrimmedRender}) => {
 			t.assert.strictEqual(getLastTrimmedRender(), 'fi…ne\nHe…ld');
-			if (IS_ELLIPSIZE_CURSOR) {
-				t.assert.strictEqual(getLastCursor(), undefined);
-			} else {
-				t.assert.deepStrictEqual(getLastCursor(), {x: 2, y: 1});
-			}
+			t.assert.strictEqual(getLastCursor(), undefined);
 		},
 	);
 });

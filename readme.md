@@ -1736,7 +1736,6 @@ This is essential for IME (Input Method Editor) support, where the composing cha
 ```jsx
 import {useState} from 'react';
 import {Box, Cursor, Text} from 'ink';
-import stringWidth from 'string-width';
 
 const TextInput = () => {
 	const [text, setText] = useState('');

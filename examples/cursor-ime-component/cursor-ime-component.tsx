@@ -1,3 +1,4 @@
+import {stripVTControlCharacters} from 'node:util';
 import React from 'react';
 import {
 	render,
@@ -7,10 +8,30 @@ import {
 	Cursor,
 	type CursorPosition,
 } from '../../src/index.js';
-import {
-	countNonAnsiGraphemes,
-	graphemeOffsetToByteOffset,
-} from '../../src/string-utils.js';
+import {lengthOf, take} from '../../src/iterable-utils.js';
+import {iterateGraphemeSegments} from '../../src/string-utils.js';
+
+const countNonAnsiGraphemes = (text: string) =>
+	lengthOf(iterateGraphemeSegments(stripVTControlCharacters(text)));
+
+const graphemeOffsetToByteOffset = (text: string, graphemeOffset: number) => {
+	if (graphemeOffset === 0) {
+		return 0;
+	}
+
+	let byteOffset = 0;
+	let consumed = 0;
+	for (const {segment} of take(iterateGraphemeSegments(text), graphemeOffset)) {
+		++consumed;
+		byteOffset += segment.length;
+	}
+
+	return consumed < graphemeOffset
+		? // The offset does not exist in `text`
+			// {graphemeOffsetsSeen: consumed - 1}
+			undefined
+		: byteOffset;
+};
 
 let handleCursorUpdated: (pos: CursorPosition | undefined) => void;
 

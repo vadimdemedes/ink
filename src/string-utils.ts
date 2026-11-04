@@ -1,5 +1,3 @@
-import {stripVTControlCharacters} from 'node:util';
-import {lengthOf, take} from './iterable-utils.js';
 import {tokenizeAnsi} from './ansi-tokenizer.js';
 
 const segmenter = new Intl.Segmenter('en', {granularity: 'grapheme'});
@@ -9,31 +7,6 @@ const segmenter = new Intl.Segmenter('en', {granularity: 'grapheme'});
  */
 export const iterateGraphemeSegments = (text: string) =>
 	segmenter.segment(text);
-
-export const countNonAnsiGraphemes = (text: string) =>
-	lengthOf(iterateGraphemeSegments(stripVTControlCharacters(text)));
-
-export const graphemeOffsetToByteOffset = (
-	text: string,
-	graphemeOffset: number,
-) => {
-	if (graphemeOffset === 0) {
-		return 0;
-	}
-
-	let byteOffset = 0;
-	let consumed = 0;
-	for (const {segment} of take(iterateGraphemeSegments(text), graphemeOffset)) {
-		++consumed;
-		byteOffset += segment.length;
-	}
-
-	return consumed < graphemeOffset
-		? // The offset does not exist in `text`
-			// {graphemeOffsetsSeen: consumed - 1}
-			undefined
-		: byteOffset;
-};
 
 export function* iterateAnsiGraphemes(text: string) {
 	let offset = 0;
