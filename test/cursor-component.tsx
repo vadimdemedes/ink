@@ -1855,3 +1855,18 @@ test('<Cursor /> in hidden content should not show up', async (t: TestContext) =
 		},
 	);
 });
+
+test('<Cursor /> past the end of a fixed-height frame is hidden', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box height={1}>
+			<Text>
+				{'one\ntwo\nthree'}
+				<Cursor />x
+			</Text>
+		</Box>,
+		{stdoutColumns: 10},
+		({getLastCursor}) => {
+			t.assert.strictEqual(getLastCursor(), undefined);
+		},
+	);
+});

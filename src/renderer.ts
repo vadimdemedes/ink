@@ -83,6 +83,14 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 
 		const {output: generatedOutput, height: outputHeight} = output.get();
 
+		const cursor = effects?.cursorPosition;
+		const isCursorInFrame =
+			cursor !== undefined &&
+			cursor.x >= 0 &&
+			cursor.x <= output.width &&
+			cursor.y >= 0 &&
+			(cursor.y < outputHeight || (outputHeight === 0 && cursor.y === 0));
+
 		return {
 			output: generatedOutput,
 			outputHeight,
@@ -92,7 +100,7 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 				staticOutput && staticOutput.height > 0
 					? `${staticOutput.get().output}\n`
 					: '',
-			cursorPosition: effects?.cursorPosition,
+			cursorPosition: isCursorInFrame ? cursor : undefined,
 		};
 	}
 
