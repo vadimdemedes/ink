@@ -1961,6 +1961,23 @@ test('<Cursor /> inside a nested content-replacing <Transform /> tracks the tran
 	);
 });
 
+test('<Cursor /> past the right edge of the frame is hidden', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box width={3}>
+			<Box width={16} flexShrink={0}>
+				<Text>
+					abcd
+					<Cursor />
+				</Text>
+			</Box>
+		</Box>,
+		{stdoutColumns: 3},
+		({getLastCursor}) => {
+			t.assert.strictEqual(getLastCursor(), undefined);
+		},
+	);
+});
+
 test('<Cursor /> inside a nested space-preserving <Transform /> tracks the transformed text', async (t: TestContext) => {
 	const mask = (s: string) => s.replaceAll(/[^ ]/g, '*');
 
@@ -2001,6 +2018,24 @@ test('<Cursor /> inside a nested suffix-adding <Transform /> stays on its graphe
 		({getLastCursor, getLastTrimmedRender}) => {
 			t.assert.strictEqual(getLastTrimmedRender(), '[abc]');
 			t.assert.deepStrictEqual(getLastCursor(), {x: 3, y: 0});
+		},
+	);
+});
+
+test('<Cursor /> above the top of the frame is hidden', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box flexDirection="column">
+			<Box marginTop={-1}>
+				<Text>
+					a
+					<Cursor />
+				</Text>
+			</Box>
+			<Text>b</Text>
+		</Box>,
+		{stdoutColumns: 5},
+		({getLastCursor}) => {
+			t.assert.strictEqual(getLastCursor(), undefined);
 		},
 	);
 });
