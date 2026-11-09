@@ -428,10 +428,11 @@ export default class Output {
 			return '';
 		}
 
+		const characters = this.caches.getStyledChars(line);
 		const result: StyledChar[] = [];
 		let column = 0;
 
-		for (const character of this.caches.getStyledChars(line)) {
+		for (const character of characters) {
 			const width = this.caches.getStringWidth(character.value);
 			const start = column;
 			column += width;
@@ -450,6 +451,14 @@ export default class Output {
 			} else {
 				result.push(character);
 			}
+		}
+
+		if (
+			result.length === characters.length &&
+			(result.length === 0 ||
+				(result[0] === characters[0] && result.at(-1) === characters.at(-1)))
+		) {
+			return line;
 		}
 
 		return styledCharsToString(result);
