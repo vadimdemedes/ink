@@ -417,7 +417,14 @@ export default class Ink {
 		);
 
 		const renderTime = performance.now() - startTime;
-		this.renderFrame(output, outputHeight, staticOutput);
+		// `exit()` from an effect unmounts before `<Static>` has dropped the children it just rendered, so the final frame would write them a second time.
+		const isStaticOutputAlreadyWritten =
+			this.isUnmounting && this.hasRenderedStaticOutput;
+		this.renderFrame(
+			output,
+			outputHeight,
+			isStaticOutputAlreadyWritten ? '' : staticOutput,
+		);
 		this.options.onRender?.({renderTime});
 	};
 
@@ -571,11 +578,13 @@ export default class Ink {
 	): void {
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput !== '';
+		if (hasStaticOutput) {
+			this.hasRenderedStaticOutput = true;
+		}
 
 		if (this.options.debug) {
 			if (hasStaticOutput) {
 				this.fullStaticOutput += staticOutput;
-				this.hasRenderedStaticOutput = true;
 			}
 
 			this.lastOutput = output;
@@ -656,12 +665,8 @@ export default class Ink {
 			return;
 		}
 
-		if (hasStaticOutput) {
-			this.hasRenderedStaticOutput = true;
-
-			if (this.alternateScreen) {
-				this.fullStaticOutput += staticOutput;
-			}
+		if (hasStaticOutput && this.alternateScreen) {
+			this.fullStaticOutput += staticOutput;
 		}
 
 		this.renderInteractiveFrame(
