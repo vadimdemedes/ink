@@ -415,3 +415,45 @@ test('suspendTerminal rolls back so a later suspend works if handover throws', a
 	t.assert.ok(wasFirstRejected);
 	t.assert.ok(didSecondSucceed);
 });
+
+for (const isAlternateScreen of [false, true]) {
+	const screen = isAlternateScreen ? 'alternate' : 'primary';
+
+	test(`unmounting while suspended leaves the terminal to the child process (${screen} screen)`, async (t: TestContext) => {
+		const stdout = createStdout();
+		const stdin = createStdin();
+		const {promise: suspended, resolve: onSuspended} =
+			Promise.withResolvers<void>();
+
+		function Example() {
+			const {suspendTerminal} = useApp();
+			useInput(() => {});
+
+			useEffect(() => {
+				void (async () => {
+					await suspendTerminal();
+					onSuspended();
+				})();
+			}, [suspendTerminal]);
+
+			return <Text>hello</Text>;
+		}
+
+		const {unmount, waitUntilExit} = render(<Example />, {
+			stdout,
+			stdin,
+			alternateScreen: isAlternateScreen,
+			interactive: true,
+		});
+		await suspended;
+		const writesAtHandoff = stdout.getWrites().length;
+		unmount();
+		await waitUntilExit();
+
+		// The handoff already erased the frame, showed the cursor and left the alternate screen. Only `App` shows the cursor once more, which is the state the child was given.
+		t.assert.deepStrictEqual(stdout.getWrites().slice(writesAtHandoff), [
+			`\u{1B}${showCursor}`,
+			'',
+		]);
+	});
+}
