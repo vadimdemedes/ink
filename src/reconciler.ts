@@ -238,6 +238,30 @@ type HostConfig = ReconcilerHostConfig<
 	// React 19.3 adds fragment refs before the DefinitelyTyped host config exposes them.
 	// eslint-disable-next-line @typescript-eslint/no-restricted-types -- React uses null for unsupported fragment refs.
 	createFragmentInstance: () => null;
+	// React 19.3 adds view transitions before the DefinitelyTyped host config exposes them.
+	measureInstance: () => undefined;
+	wasInstanceInViewport: () => boolean;
+	hasInstanceChanged: () => boolean;
+	hasInstanceAffectedParent: () => boolean;
+	applyViewTransitionName: () => void;
+	restoreViewTransitionName: () => void;
+	cancelViewTransitionName: () => void;
+	cancelRootViewTransitionName: () => void;
+	restoreRootViewTransitionName: () => void;
+	startViewTransition: (
+		...arguments_: [
+			suspendedState: unknown,
+			rootContainer: unknown,
+			transitionTypes: unknown,
+			mutationCallback: () => void,
+			layoutCallback: () => void,
+			afterMutationCallback: () => void,
+			spawnedWorkCallback: () => void,
+			...rest: unknown[],
+		]
+		// eslint-disable-next-line @typescript-eslint/no-restricted-types -- React uses null for a view transition that did not start.
+	) => null;
+	createViewTransitionInstance: (name: string) => {name: string};
 };
 
 const hostConfig: HostConfig = {
@@ -494,6 +518,26 @@ const hostConfig: HostConfig = {
 	suspendInstance() {},
 	// Called for every transition-lane render since React 19.3. Ink has no view transitions, so there is never anything to wait for.
 	suspendOnActiveViewTransition() {},
+	// React calls these for a `<ViewTransition>` in any transition-lane commit. Ink has nothing to animate, so no instance is measured or named and the commit runs right away, the way React DOM does in a browser without view transitions.
+	measureInstance: () => undefined,
+	wasInstanceInViewport: () => false,
+	hasInstanceChanged: () => false,
+	hasInstanceAffectedParent: () => false,
+	applyViewTransitionName() {},
+	restoreViewTransitionName() {},
+	cancelViewTransitionName() {},
+	cancelRootViewTransitionName() {},
+	restoreRootViewTransitionName() {},
+	startViewTransition(...arguments_) {
+		const mutationCallback = arguments_[3];
+		const layoutCallback = arguments_[4];
+		const spawnedWorkCallback = arguments_[6];
+		mutationCallback();
+		layoutCallback();
+		spawnedWorkCallback();
+		return null;
+	},
+	createViewTransitionInstance: name => ({name}),
 	waitForCommitToBeReady() {
 		return null;
 	},
