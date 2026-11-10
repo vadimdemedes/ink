@@ -11,6 +11,7 @@ import {
 	render,
 	useStdout,
 	useStderr,
+	useIsScreenReaderEnabled,
 } from '../src/index.js';
 import {bsu, esu} from '../src/write-synchronized.js';
 import {renderToString} from './helpers/render-to-string.js';
@@ -633,4 +634,33 @@ test('screen-reader output ends with a newline so the next line starts below it'
 	});
 	t.assert.ok(output.includes('Hello World\r\n'));
 	t.assert.ok(!output.includes('Worldexited'));
+});
+
+test('rerender() does not re-render memoized components that read the screen reader state', (t: TestContext) => {
+	let renderCount = 0;
+	const Label = React.memo(() => {
+		renderCount++;
+		return <Text>{useIsScreenReaderEnabled() ? 'on' : 'off'}</Text>;
+	});
+
+	function Example({count}: {readonly count: number}) {
+		return (
+			<Box>
+				<Label />
+				<Text>{count}</Text>
+			</Box>
+		);
+	}
+
+	const stdout = createStdout();
+	const {rerender, unmount} = render(<Example count={0} />, {
+		stdout,
+		debug: true,
+		isScreenReaderEnabled: false,
+	});
+	t.after(unmount);
+	rerender(<Example count={1} />);
+
+	t.assert.strictEqual(stdout.getWrites().at(-1), 'off1');
+	t.assert.strictEqual(renderCount, 1);
 });
