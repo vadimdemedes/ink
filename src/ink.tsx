@@ -1035,7 +1035,7 @@ export default class Ink {
 	}
 
 	render(node: ReactNode): void {
-		// The container was already cleared. Mounting a new tree into it would run effects (such as enabling raw mode) that `unmount()` can no longer clean up.
+		// Mounting a tree into an unmounted instance would run effects (such as enabling raw mode) that `unmount()` can no longer clean up.
 		if (this.isUnmounted || this.isUnmounting) {
 			return;
 		}

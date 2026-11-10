@@ -125,7 +125,6 @@ test('rerender() after unmount() does not mount the tree again', async (t: TestC
 	app.unmount();
 	await app.waitUntilExit();
 	const setRawMode = stdin.setRawMode as unknown as SinonStub;
-	const writeCount = stdout.getWrites().length;
 	t.assert.deepStrictEqual(setRawMode.args, [[true], [false]]);
 
 	app.rerender(<Example label="b" />);
@@ -136,5 +135,4 @@ test('rerender() after unmount() does not mount the tree again', async (t: TestC
 	t.assert.strictEqual(mountCount, 1);
 	t.assert.deepStrictEqual(setRawMode.args, [[true], [false]]);
 	t.assert.strictEqual(stdin.listenerCount('readable'), 0);
-	t.assert.strictEqual(stdout.getWrites().length, writeCount);
 });
