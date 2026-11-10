@@ -656,6 +656,7 @@ test('rerender() does not re-render memoized components that read the screen rea
 	const {rerender, unmount} = render(<Example count={0} />, {
 		stdout,
 		debug: true,
+		isScreenReaderEnabled: false,
 	});
 	t.after(unmount);
 	rerender(<Example count={1} />);
