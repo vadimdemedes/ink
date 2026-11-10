@@ -150,6 +150,35 @@ test('changing one row of a multiline block does not retain parsed characters fo
 	);
 });
 
+test('a screen of rows with a color per cell reuses its tokenization on the next frame', (t: TestContext) => {
+	const rows = Array.from(
+		{length: 40},
+		(_, row) =>
+			Array.from(
+				{length: 80},
+				(_cell, column) => `\u{1B}[38;2;${row};${column};0mx`,
+			).join('') + '\u{1B}[39m',
+	);
+	const frame = () => {
+		const output = new Output({width: 80, height: rows.length});
+		for (const [y, row] of rows.entries()) {
+			output.write(0, y, row, {transformers: []});
+		}
+
+		return output.get().output;
+	};
+
+	const firstFrame = frame();
+	const segment = t.mock.method(Intl.Segmenter.prototype, 'segment');
+	t.assert.strictEqual(frame(), firstFrame);
+	t.assert.deepStrictEqual(
+		segment.mock.calls
+			.map(call => call.arguments[0])
+			.filter(text => rows.includes(text)),
+		[],
+	);
+});
+
 // Zero-width characters at the clip edges are dropped. The cell writer gives each one a column, so keeping them would push text that fills the clip exactly past its edge.
 for (const text of ['\u{301}abc', 'abc\u{7}', '\u{7}abc\u{7}']) {
 	test(`text that fills the clip exactly stays inside it: ${JSON.stringify(text)}`, (t: TestContext) => {

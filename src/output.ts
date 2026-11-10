@@ -154,7 +154,7 @@ class OutputCaches {
 	// Sized by UTF-16 code units. Most entries are single characters, so real text stays under about 2 MB.
 	widths = new SizedCache<string, number>(2 ** 18);
 
-	// Sized by UTF-16 code units, but each unit is a styled character object of about 140 bytes, so this holds up to about 9 MB. Only single lines are kept, since whole blocks would multiply that. A smaller budget re-tokenizes noticeably more.
+	// Sized by characters, each a styled character object of about 140 bytes, plus the key at 2 bytes per code unit. Escape codes only count as part of the key, otherwise a screen with a color per cell would not fit and would be parsed again on every frame. This holds about 9 MB of plain text, more when the characters carry styles. Only single lines are kept, since whole blocks would multiply that. A smaller budget re-tokenizes noticeably more.
 	styledChars = new SizedCache<string, StyledChar[]>(2 ** 16);
 	sanitizedLines = new SizedCache<string, string>(2 ** 18);
 	lines = new SizedCache<string, string[]>(2 ** 20);
@@ -202,7 +202,7 @@ class OutputCaches {
 		if (cached === undefined) {
 			cached = parseStyledChars(line);
 			if (!line.includes('\n')) {
-				this.styledChars.set(line, cached, line.length);
+				this.styledChars.set(line, cached, cached.length + line.length / 70);
 			}
 		}
 
