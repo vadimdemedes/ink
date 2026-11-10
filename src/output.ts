@@ -8,7 +8,7 @@ import {
 } from '@alcalzone/ansi-tokenize';
 import measureText from './measure-text.js';
 import {type OutputTransformer} from './render-node-to-output.js';
-import sanitizeAnsi from './sanitize-ansi.js';
+import sanitizeAnsi, {normalizeC1Controls} from './sanitize-ansi.js';
 import SizedCache from './sized-cache.js';
 
 const isSameStyle = (
@@ -190,7 +190,7 @@ class OutputCaches {
 	getSanitizedLine(line: string): string {
 		let cached = this.sanitizedLines.get(line);
 		if (cached === undefined) {
-			cached = sanitizeAnsi(line);
+			cached = normalizeC1Controls(sanitizeAnsi(line));
 			this.sanitizedLines.set(line, cached, line.length);
 		}
 
