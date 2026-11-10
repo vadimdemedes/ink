@@ -101,4 +101,11 @@ const sanitizeAnsi = (text: string): string => {
 	return output + pendingStyles;
 };
 
+// Measurement and styling dependencies understand the ESC forms of these C1 controls.
+export const normalizeC1Controls = (text: string): string =>
+	text
+		.replaceAll('\u{9B}', '\u{1B}[')
+		.replaceAll('\u{9D}', '\u{1B}]')
+		.replaceAll('\u{9C}', '\u{1B}\\');
+
 export default sanitizeAnsi;
