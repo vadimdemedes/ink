@@ -1035,6 +1035,11 @@ export default class Ink {
 	}
 
 	render(node: ReactNode): void {
+		// Mounting a tree into an unmounted instance would run effects (such as enabling raw mode) that `unmount()` can no longer clean up.
+		if (this.isUnmounted || this.isUnmounting) {
+			return;
+		}
+
 		const tree = (
 			<AccessibilityContext
 				value={{isScreenReaderEnabled: this.isScreenReaderEnabled}}

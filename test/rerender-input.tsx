@@ -1,6 +1,7 @@
 import test, {type TestContext} from 'node:test';
 import React from 'react';
 import FakeTimers from '@sinonjs/fake-timers';
+import {type SinonStub} from 'sinon';
 import {render, useInput, usePaste, Text} from '../src/index.js';
 import createStdout from './helpers/create-stdout.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
@@ -106,4 +107,32 @@ test('rerender() does not detach and reattach the stdin readable listener', (t: 
 	});
 	app.rerender(<Example label="b" />);
 	t.assert.strictEqual(removed, 0);
+});
+
+test('rerender() after unmount() does not mount the tree again', async (t: TestContext) => {
+	const stdin = createStdin();
+	const stdout = createStdout();
+	let mountCount = 0;
+	function Example({label}: {readonly label: string}) {
+		useInput(() => {});
+		React.useEffect(() => {
+			mountCount++;
+		}, []);
+		return <Text>{label}</Text>;
+	}
+
+	const app = render(<Example label="a" />, {stdin, stdout, interactive: true});
+	app.unmount();
+	await app.waitUntilExit();
+	const setRawMode = stdin.setRawMode as unknown as SinonStub;
+	t.assert.deepStrictEqual(setRawMode.args, [[true], [false]]);
+
+	app.rerender(<Example label="b" />);
+	await new Promise(resolve => {
+		setImmediate(resolve);
+	});
+
+	t.assert.strictEqual(mountCount, 1);
+	t.assert.deepStrictEqual(setRawMode.args, [[true], [false]]);
+	t.assert.strictEqual(stdin.listenerCount('readable'), 0);
 });
