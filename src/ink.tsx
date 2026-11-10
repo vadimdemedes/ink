@@ -944,12 +944,13 @@ export default class Ink {
 			);
 		}
 
-		this.finishKittyDetection?.(false);
-		this.isSuspended = true;
-
-		if (!this.interactive || this.isUnmounted || this.isUnmounting) {
+		// Nothing is handed over once unmount has started, so don't mark the terminal as suspended: unmount skips its terminal cleanup while suspended.
+		if (this.isUnmounted || this.isUnmounting) {
 			return;
 		}
+
+		this.finishKittyDetection?.(false);
+		this.isSuspended = true;
 
 		try {
 			const {stdout} = this.options;

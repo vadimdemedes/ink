@@ -5,6 +5,7 @@ import {
 	render,
 	useApp,
 	useInput,
+	usePaste,
 	useStdout,
 	Static,
 	Text,
@@ -417,43 +418,86 @@ test('suspendTerminal rolls back so a later suspend works if handover throws', a
 });
 
 for (const isAlternateScreen of [false, true]) {
-	const screen = isAlternateScreen ? 'alternate' : 'primary';
+	for (const exitMethod of ['unmount', 'exit'] as const) {
+		const screen = isAlternateScreen ? 'alternate' : 'primary';
 
-	test(`unmounting while suspended leaves the terminal to the child process (${screen} screen)`, async (t: TestContext) => {
-		const stdout = createStdout();
-		const stdin = createStdin();
-		const {promise: suspended, resolve: onSuspended} =
-			Promise.withResolvers<void>();
+		test(`${exitMethod}() while suspended writes nothing to the terminal (${screen} screen)`, async (t: TestContext) => {
+			const stdout = createStdout();
+			const stdin = createStdin();
+			const {promise: suspended, resolve: onSuspended} =
+				Promise.withResolvers<() => void>();
 
-		function Example() {
-			const {suspendTerminal} = useApp();
-			useInput(() => {});
+			function Example() {
+				const {suspendTerminal, exit} = useApp();
+				useInput(() => {});
+				usePaste(() => {});
 
-			useEffect(() => {
-				void (async () => {
-					await suspendTerminal();
-					onSuspended();
-				})();
-			}, [suspendTerminal]);
+				useEffect(() => {
+					void (async () => {
+						await suspendTerminal();
+						onSuspended(exit);
+					})();
+				}, [suspendTerminal, exit]);
 
-			return <Text>hello</Text>;
-		}
+				return <Text>hello</Text>;
+			}
 
-		const {unmount, waitUntilExit} = render(<Example />, {
-			stdout,
-			stdin,
-			alternateScreen: isAlternateScreen,
-			interactive: true,
+			const {unmount, waitUntilExit} = render(<Example />, {
+				stdout,
+				stdin,
+				alternateScreen: isAlternateScreen,
+				interactive: true,
+			});
+			const exit = await suspended;
+			const writesAtHandoff = stdout.getWrites().length;
+
+			if (exitMethod === 'exit') {
+				exit();
+			} else {
+				unmount();
+			}
+
+			await waitUntilExit();
+
+			// The handoff already erased the frame, showed the cursor, turned bracketed paste off and left the alternate screen. Only the empty write that `waitUntilExit()` waits on remains.
+			t.assert.deepStrictEqual(stdout.getWrites().slice(writesAtHandoff), ['']);
 		});
-		await suspended;
-		const writesAtHandoff = stdout.getWrites().length;
-		unmount();
-		await waitUntilExit();
-
-		// The handoff already erased the frame, showed the cursor and left the alternate screen. Only `App` shows the cursor once more, which is the state the child was given.
-		t.assert.deepStrictEqual(stdout.getWrites().slice(writesAtHandoff), [
-			`\u{1B}${showCursor}`,
-			'',
-		]);
-	});
+	}
 }
+
+test('suspendTerminal() from an effect cleanup during unmount does not skip the terminal cleanup', async (t: TestContext) => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+
+	function Example() {
+		const {suspendTerminal} = useApp();
+
+		useEffect(
+			() => () => {
+				void suspendTerminal();
+			},
+			[suspendTerminal],
+		);
+
+		return <Text>hello</Text>;
+	}
+
+	const {unmount, waitUntilExit} = render(<Example />, {
+		stdout,
+		stdin,
+		alternateScreen: true,
+		interactive: true,
+	});
+	await delay(0);
+	const writesBeforeUnmount = stdout.getWrites().length;
+	unmount();
+	await waitUntilExit();
+
+	t.assert.deepStrictEqual(stdout.getWrites().slice(writesBeforeUnmount), [
+		`\u{1B}${showCursor}`,
+		`\u{1B}${showCursor}`,
+		`\u{1B}${exitAltScreen}`,
+		`\u{1B}${showCursor}`,
+		'',
+	]);
+});
