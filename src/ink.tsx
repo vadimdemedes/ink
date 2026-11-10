@@ -419,7 +419,14 @@ export default class Ink {
 		);
 
 		const renderTime = performance.now() - startTime;
-		this.renderFrame(output, outputHeight, staticOutput);
+		// `exit()` from an effect unmounts before `<Static>` has dropped the children it just rendered, so the final frame would write them a second time. Static changes that have not been rendered yet are still marked dirty.
+		const isStaticOutputAlreadyWritten =
+			this.isUnmounting && !this.rootNode.isStaticDirty;
+		this.renderFrame(
+			output,
+			outputHeight,
+			isStaticOutputAlreadyWritten ? '' : staticOutput,
+		);
 		this.options.onRender?.({renderTime});
 	};
 
