@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference -- React 19.3 exports `ViewTransition`, but only the experimental types declare it.
-/// <reference types="react/experimental" />
 import test, {type TestContext} from 'node:test';
 import React, {useState, startTransition, ViewTransition} from 'react';
 import {render, Box, Text} from '../src/index.js';
@@ -33,6 +31,22 @@ const renderExample = async (
 
 for (const isConcurrent of [false, true]) {
 	const mode = isConcurrent ? 'concurrent' : 'legacy';
+
+	test(`<ViewTransition> with a ref renders (${mode})`, async (t: TestContext) => {
+		const ref = React.createRef<{name: string}>();
+		const stdout = await renderExample(
+			t,
+			<Box>
+				<ViewTransition ref={ref} name="title">
+					<Text>title</Text>
+				</ViewTransition>
+			</Box>,
+			isConcurrent,
+		);
+
+		t.assert.strictEqual(stdout.get(), 'title');
+		t.assert.deepStrictEqual(ref.current, {name: 'title'});
+	});
 
 	test(`update inside <ViewTransition> in a transition renders (${mode})`, async (t: TestContext) => {
 		let update = (_count: number) => {};

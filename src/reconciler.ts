@@ -261,10 +261,6 @@ type HostConfig = ReconcilerHostConfig<
 		]
 		// eslint-disable-next-line @typescript-eslint/no-restricted-types -- React uses null for a view transition that did not start.
 	) => null;
-	addViewTransitionFinishedListener: (
-		transition: unknown,
-		callback: () => void,
-	) => void;
 	createViewTransitionInstance: (name: string) => {name: string};
 };
 
@@ -540,9 +536,6 @@ const hostConfig: HostConfig = {
 		layoutCallback();
 		spawnedWorkCallback();
 		return null;
-	},
-	addViewTransitionFinishedListener(_transition, callback) {
-		callback();
 	},
 	createViewTransitionInstance: name => ({name}),
 	waitForCommitToBeReady() {
