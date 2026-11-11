@@ -699,9 +699,7 @@ test('incremental example keeps its selection visible after resize', async (t: T
 	ps.output = '';
 	ps.resize(100, 30);
 	await ps.waitForOutput('System Services Monitor (10 of 30 services)');
-	t.assert.ok(
-		stripAnsi(ps.output).includes('Selected: WebSocket Connection Manager'),
-	);
+	await ps.waitForOutput('Selected: WebSocket Connection Manager');
 
 	ps.output = '';
 	ps.write('\u{1B}[B');
