@@ -5,6 +5,7 @@ import {
 	render,
 	useApp,
 	useInput,
+	usePaste,
 	useStdout,
 	Static,
 	Text,
@@ -414,4 +415,89 @@ test('suspendTerminal rolls back so a later suspend works if handover throws', a
 
 	t.assert.ok(wasFirstRejected);
 	t.assert.ok(didSecondSucceed);
+});
+
+for (const isAlternateScreen of [false, true]) {
+	for (const exitMethod of ['unmount', 'exit'] as const) {
+		const screen = isAlternateScreen ? 'alternate' : 'primary';
+
+		test(`${exitMethod}() while suspended writes nothing to the terminal (${screen} screen)`, async (t: TestContext) => {
+			const stdout = createStdout();
+			const stdin = createStdin();
+			const {promise: suspended, resolve: onSuspended} =
+				Promise.withResolvers<() => void>();
+
+			function Example() {
+				const {suspendTerminal, exit} = useApp();
+				useInput(() => {});
+				usePaste(() => {});
+
+				useEffect(() => {
+					void (async () => {
+						await suspendTerminal();
+						onSuspended(exit);
+					})();
+				}, [suspendTerminal, exit]);
+
+				return <Text>hello</Text>;
+			}
+
+			const {unmount, waitUntilExit} = render(<Example />, {
+				stdout,
+				stdin,
+				alternateScreen: isAlternateScreen,
+				interactive: true,
+			});
+			const exit = await suspended;
+			const writesAtHandoff = stdout.getWrites().length;
+
+			if (exitMethod === 'exit') {
+				exit();
+			} else {
+				unmount();
+			}
+
+			await waitUntilExit();
+
+			// The handoff already erased the frame, showed the cursor, turned bracketed paste off and left the alternate screen. Only the empty write that `waitUntilExit()` waits on remains.
+			t.assert.deepStrictEqual(stdout.getWrites().slice(writesAtHandoff), ['']);
+		});
+	}
+}
+
+test('suspendTerminal() from an effect cleanup during unmount does not skip the terminal cleanup', async (t: TestContext) => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+
+	function Example() {
+		const {suspendTerminal} = useApp();
+
+		useEffect(
+			() => () => {
+				void suspendTerminal();
+			},
+			[suspendTerminal],
+		);
+
+		return <Text>hello</Text>;
+	}
+
+	const {unmount, waitUntilExit} = render(<Example />, {
+		stdout,
+		stdin,
+		alternateScreen: true,
+		interactive: true,
+	});
+	await delay(0);
+	const writesBeforeUnmount = stdout.getWrites().length;
+	unmount();
+	await waitUntilExit();
+
+	t.assert.deepStrictEqual(stdout.getWrites().slice(writesBeforeUnmount), [
+		`\u{1B}${showCursor}`,
+		`\u{1B}${showCursor}`,
+		`\u{1B}${exitAltScreen}`,
+		`\u{1B}${showCursor}`,
+		'',
+	]);
 });

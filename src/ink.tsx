@@ -944,12 +944,13 @@ export default class Ink {
 			);
 		}
 
-		this.finishKittyDetection?.(false);
-		this.isSuspended = true;
-
-		if (!this.interactive || this.isUnmounted || this.isUnmounting) {
+		// Nothing is handed over once unmount has started, so don't mark the terminal as suspended: unmount skips its terminal cleanup while suspended.
+		if (this.isUnmounted || this.isUnmounting) {
 			return;
 		}
+
+		this.finishKittyDetection?.(false);
+		this.isSuspended = true;
 
 		try {
 			const {stdout} = this.options;
@@ -1221,7 +1222,8 @@ export default class Ink {
 					this.kittyProtocolEnabled = false;
 				}
 
-				if (this.interactive && !this.options.debug) {
+				// While suspended, the frame is already erased, the cursor is shown and the alternate screen is exited. The terminal belongs to the child process, so leave it alone.
+				if (this.interactive && !this.options.debug && !this.isSuspended) {
 					this.log.done();
 				}
 
@@ -1232,11 +1234,14 @@ export default class Ink {
 				// buffer switch adds fragile lifecycle-specific behavior, so Ink keeps
 				// alternate-screen teardown intentionally simple and best-effort.
 				if (this.alternateScreen) {
-					this.writeBestEffort(
-						this.options.stdout,
-						ansiEscapes.exitAlternativeScreen,
-					);
-					this.writeBestEffort(this.options.stdout, showCursorEscape);
+					if (!this.isSuspended) {
+						this.writeBestEffort(
+							this.options.stdout,
+							ansiEscapes.exitAlternativeScreen,
+						);
+						this.writeBestEffort(this.options.stdout, showCursorEscape);
+					}
+
 					this.alternateScreen = false;
 				}
 

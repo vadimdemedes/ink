@@ -708,7 +708,9 @@ function App({
 	// Handle cursor visibility, raw mode, and bracketed paste mode cleanup on unmount
 	useEffect(
 		() => () => {
-			const canWriteToStdout = !stdout.destroyed && !stdout.writableEnded;
+			// While suspended, the cursor is already shown and bracketed paste is already off. The terminal belongs to the child process, so don't write to it.
+			const canWriteToStdout =
+				!stdout.destroyed && !stdout.writableEnded && !isInputPausedRef.current;
 
 			if (interactive && canWriteToStdout) {
 				cliCursor.show(stdout);
