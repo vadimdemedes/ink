@@ -293,7 +293,10 @@ const createIncremental = (
 				// Don't move past the last line when there's no trailing newline,
 				// otherwise the cursor overshoots the rendered block.
 				if (!isLastLine || hasTrailingNewline) {
-					buffer.push(ansiEscapes.cursorNextLine);
+					// `cursorNextLine` stops at the terminal bottom instead of scrolling, so the step off the row the previous frame ended on, which can be the terminal's last row, is a line feed.
+					buffer.push(
+						i < previousLines.length - 1 ? ansiEscapes.cursorNextLine : '\n',
+					);
 				}
 
 				continue;

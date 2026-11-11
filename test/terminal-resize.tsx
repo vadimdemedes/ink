@@ -709,12 +709,108 @@ for (const isIncrementalRendering of [false, true]) {
 		stdout.emit('resize');
 		await waitUntilRenderFlush();
 
+		// The frame gains its trailing newline while every line stays the same. A terminal that brings lines back from scrollback as it grows keeps the frame's last line on its last row, so both renderers have to end on a line feed, which scrolls there. `cursorNextLine` does not.
 		t.assert.strictEqual(
 			getWriteContents(stdout).slice(writesBefore).join(''),
-			isIncrementalRendering
+			(isIncrementalRendering
 				? ansiEscapes.cursorUp(lines.length - 1) +
-						ansiEscapes.cursorNextLine.repeat(lines.length)
-				: ansiEscapes.eraseLines(lines.length) + frame + '\n',
+					ansiEscapes.cursorNextLine.repeat(lines.length - 1)
+				: ansiEscapes.eraseLines(lines.length) + frame) + '\n',
 		);
 	});
+
+	function CursorLines({
+		frameLines,
+		cursorRow,
+	}: {
+		readonly frameLines: string[];
+		readonly cursorRow: number | undefined;
+	}) {
+		const {setCursorPosition} = useCursor();
+		setCursorPosition(
+			cursorRow === undefined ? undefined : {x: 0, y: cursorRow},
+		);
+		return (
+			<Box flexDirection="column">
+				{frameLines.map(line => (
+					<Text key={line}>{line}</Text>
+				))}
+			</Box>
+		);
+	}
+
+	for (const {frameRows, cursorRow, description} of [
+		{frameRows: 6, cursorRow: undefined, description: 'a frame of 6 lines'},
+		{frameRows: 8, cursorRow: undefined, description: 'a frame of 8 lines'},
+		{
+			frameRows: 6,
+			cursorRow: 5,
+			description: 'a frame of 6 lines with a custom cursor on its last line',
+		},
+	]) {
+		test(`${name} rendering - keeps ${description} in place when the terminal height grows from 6 to 8 rows and brings lines back from scrollback`, async (t: TestContext) => {
+			const stdout = createStdout(40);
+			stdout.rows = 6;
+			const linesOf = (count: number, firstLine = 'line 0') => [
+				firstLine,
+				...Array.from({length: count - 1}, (_, index) => `line ${index + 1}`),
+			];
+			const frameOf = (frameLines: string[]) => (
+				<CursorLines frameLines={frameLines} cursorRow={cursorRow} />
+			);
+
+			const {rerender, unmount, waitUntilRenderFlush} = render(
+				frameOf(linesOf(6)),
+				{
+					stdout,
+					interactive: true,
+					incrementalRendering: isIncrementalRendering,
+				},
+			);
+			t.after(() => {
+				unmount();
+			});
+			await waitUntilRenderFlush();
+
+			// The 6-line frame gains its trailing newline. The 8-line frame is what an app that sizes its frame from its own resize listener commits before Ink handles the resize: it fills the terminal again, so no trailing newline comes or goes and its new lines follow unchanged ones.
+			const writesBeforeResize = stdout.getWrites().length;
+			stdout.rows = 8;
+			rerender(frameOf(linesOf(frameRows)));
+			stdout.emit('resize');
+			await waitUntilRenderFlush();
+
+			// The frame filled the 6-row terminal, so the shell lines above it are in scrollback and two of them come back when it grows to 8 rows.
+			const screen = (): string[] => {
+				const writes = stdout
+					.getWrites()
+					.map(write => write.replaceAll('\n', '\r\n'));
+				const visibleLines = reconstructTerminalLines(
+					[
+						'shell 0\r\nshell 1\r\nshell 2\r\n',
+						...writes.slice(0, writesBeforeResize),
+						{rows: 8},
+						...writes.slice(writesBeforeResize),
+					],
+					6,
+				);
+
+				while (visibleLines.at(-1) === '') {
+					visibleLines.pop();
+				}
+
+				return visibleLines;
+			};
+
+			t.assert.deepStrictEqual(screen(), [...shell, ...linesOf(frameRows)]);
+
+			// A one-line update lands one row too high if the cursor is not where log-update believes it is.
+			rerender(frameOf(linesOf(frameRows, 'updated')));
+			await waitUntilRenderFlush();
+
+			t.assert.deepStrictEqual(screen(), [
+				...shell,
+				...linesOf(frameRows, 'updated'),
+			]);
+		});
+	}
 }
