@@ -567,12 +567,10 @@ test('incremental rendering - growing a single line without trailing newline sta
 	render('First');
 	render('First\nSecond');
 
+	// The previous frame left the cursor on "First", which may be the terminal's last row, so the step past it is a line feed.
 	t.assert.strictEqual(
 		(stdout.write as any).secondCall.args[0],
-		ansiEscapes.cursorNextLine +
-			ansiEscapes.cursorTo(0) +
-			ansiEscapes.eraseEndLine +
-			'Second',
+		'\n' + ansiEscapes.cursorTo(0) + ansiEscapes.eraseEndLine + 'Second',
 	);
 });
 
@@ -591,6 +589,64 @@ test('incremental rendering - no trailing newline: trailing to no-trailing trans
 	// The key is that the cursor does NOT overshoot past line B.
 	t.assert.ok(secondCall.includes(ansiEscapes.cursorNextLine)); // Skip unchanged A
 	t.assert.strictEqual(secondCall.endsWith('\n'), false); // No trailing newline in output
+});
+
+test('incremental rendering - no trailing newline: no-trailing to trailing transition', (t: TestContext) => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {
+		showCursor: true,
+		incremental: true,
+	});
+
+	render('A\nB');
+	render('A\nB\n');
+
+	// Both lines are unchanged. The previous frame left the cursor on B, which may be the terminal's last row, so the step past B is a line feed: `cursorNextLine` would stop there instead of scrolling.
+	t.assert.strictEqual(
+		(stdout.write as any).secondCall.args[0],
+		ansiEscapes.cursorUp(1) + ansiEscapes.cursorNextLine + '\n',
+	);
+});
+
+test('incremental rendering - unchanged last line with trailing newline steps onto the row below it', (t: TestContext) => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {
+		showCursor: true,
+		incremental: true,
+	});
+
+	render('A\nB\n');
+	render('X\nB\n');
+
+	// The previous frame left the cursor on the row below B, so that row is on screen and `cursorNextLine` reaches it.
+	t.assert.strictEqual(
+		(stdout.write as any).secondCall.args[0],
+		ansiEscapes.cursorUp(2) +
+			ansiEscapes.cursorTo(0) +
+			ansiEscapes.eraseEndLine +
+			'X\n' +
+			ansiEscapes.cursorNextLine,
+	);
+});
+
+test('incremental rendering - no trailing newline: unchanged last line gets no cursor step', (t: TestContext) => {
+	const stdout = createStdout();
+	const render = logUpdate.create(stdout, {
+		showCursor: true,
+		incremental: true,
+	});
+
+	render('A\nB\nC');
+	render('A\nX\nC');
+
+	t.assert.strictEqual(
+		(stdout.write as any).secondCall.args[0],
+		ansiEscapes.cursorUp(2) +
+			ansiEscapes.cursorNextLine +
+			ansiEscapes.cursorTo(0) +
+			ansiEscapes.eraseEndLine +
+			'X\n',
+	);
 });
 
 test('incremental rendering - no trailing newline: no-trailing to no-trailing update', (t: TestContext) => {
@@ -761,6 +817,75 @@ for (const {name, incremental} of renderingModes) {
 			),
 		);
 	});
+}
+
+// A terminal that gains rows brings lines back from scrollback while the cursor is on its last row, so a frame that ended there is still there and the row below it does not exist until something scrolls.
+for (const {name, incremental} of renderingModes) {
+	for (const {description, previous, next} of [
+		{
+			description: 'an unchanged frame gains a trailing newline',
+			previous: 'A\nB',
+			next: 'A\nB\n',
+		},
+		{
+			description: 'lines are added below unchanged lines',
+			previous: 'A\nB',
+			next: 'A\nB\nC',
+		},
+		{
+			description: 'lines and a trailing newline are added',
+			previous: 'A\nB',
+			next: 'A\nB\nC\n',
+		},
+		{
+			description: 'the last line is unchanged without a trailing newline',
+			previous: 'A\nB',
+			next: 'X\nB',
+		},
+		{
+			description: 'the last line is unchanged with a trailing newline',
+			previous: 'A\nB\n',
+			next: 'X\nB\n',
+		},
+		{
+			description: 'an unchanged frame loses its trailing newline',
+			previous: 'A\nB\n',
+			next: 'A\nB',
+		},
+	]) {
+		test(`${name} - stays in place after the terminal grows when ${description}`, (t: TestContext) => {
+			const {stdout, render} = createRenderForMode(incremental);
+			const history = ['history 1', 'history 2', 'history 3'];
+			// The previous frame and the cursor fill the terminal, so the history above them is in scrollback when it grows.
+			const rows = previous.split('\n').length;
+			const screen = (): string[] => {
+				const [first, ...rest] = stdout
+					.getWrites()
+					.map(write => write.replaceAll('\n', '\r\n'));
+				const lines = reconstructTerminalLines(
+					[history.join('\r\n') + '\r\n', first!, {rows: rows + 2}, ...rest],
+					rows,
+				);
+
+				while (lines.at(-1) === '') {
+					lines.pop();
+				}
+
+				return lines;
+			};
+
+			render(previous);
+			render(next);
+			t.assert.deepStrictEqual(screen(), [
+				...history,
+				...next.trimEnd().split('\n'),
+			]);
+
+			// The following frame is drawn from where log-update believes the cursor is.
+			render('Y\nZ\n');
+			t.assert.deepStrictEqual(screen(), [...history, 'Y', 'Z']);
+		});
+	}
 }
 
 test('incremental rendering - render to empty string (full clear vs early exit)', (t: TestContext) => {
