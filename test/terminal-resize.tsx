@@ -719,8 +719,36 @@ for (const isIncrementalRendering of [false, true]) {
 		);
 	});
 
-	for (const frameRows of [6, 8]) {
-		test(`${name} rendering - keeps a frame of ${frameRows} lines in place when the terminal height grows from 6 to 8 rows and brings lines back from scrollback`, async (t: TestContext) => {
+	function CursorLines({
+		frameLines,
+		cursorRow,
+	}: {
+		readonly frameLines: string[];
+		readonly cursorRow: number | undefined;
+	}) {
+		const {setCursorPosition} = useCursor();
+		setCursorPosition(
+			cursorRow === undefined ? undefined : {x: 0, y: cursorRow},
+		);
+		return (
+			<Box flexDirection="column">
+				{frameLines.map(line => (
+					<Text key={line}>{line}</Text>
+				))}
+			</Box>
+		);
+	}
+
+	for (const {frameRows, cursorRow, description} of [
+		{frameRows: 6, cursorRow: undefined, description: 'a frame of 6 lines'},
+		{frameRows: 8, cursorRow: undefined, description: 'a frame of 8 lines'},
+		{
+			frameRows: 6,
+			cursorRow: 5,
+			description: 'a frame of 6 lines with a custom cursor on its last line',
+		},
+	]) {
+		test(`${name} rendering - keeps ${description} in place when the terminal height grows from 6 to 8 rows and brings lines back from scrollback`, async (t: TestContext) => {
 			const stdout = createStdout(40);
 			stdout.rows = 6;
 			const linesOf = (count: number, firstLine = 'line 0') => [
@@ -728,11 +756,7 @@ for (const isIncrementalRendering of [false, true]) {
 				...Array.from({length: count - 1}, (_, index) => `line ${index + 1}`),
 			];
 			const frameOf = (frameLines: string[]) => (
-				<Box flexDirection="column">
-					{frameLines.map(line => (
-						<Text key={line}>{line}</Text>
-					))}
-				</Box>
+				<CursorLines frameLines={frameLines} cursorRow={cursorRow} />
 			);
 
 			const {rerender, unmount, waitUntilRenderFlush} = render(
