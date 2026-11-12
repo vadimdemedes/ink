@@ -333,7 +333,7 @@ export default class Ink {
 		this.confirmKittySupport(flags);
 	};
 
-	// Same stability requirement as `handleKittyQueryResponse`. App calls this right before it turns raw mode off, and suspending and unmounting use it too.
+	// Same stability requirement as `handleKittyQueryResponse`. App calls this right before it turns raw mode off.
 	disableKittyProtocol = (): void => {
 		if (
 			!this.kittyProtocolEnabled ||
@@ -950,16 +950,17 @@ export default class Ink {
 		if (
 			!this.kittyFlags ||
 			this.kittyProtocolEnabled ||
+			this.isUnmounted ||
 			!getWritableStreamState(this.options.stdout).canWriteToStdout
 		) {
 			return;
 		}
 
-		this.writeBestEffort(
-			this.options.stdout,
-			`\u{1B}[>${resolveFlags(this.kittyFlags)}u`,
-		);
-		this.kittyProtocolEnabled = true;
+		// Best effort, like the pop. The flags only count as pushed once the write went through, so a failed push is never popped.
+		try {
+			this.options.stdout.write(`\u{1B}[>${resolveFlags(this.kittyFlags)}u`);
+			this.kittyProtocolEnabled = true;
+		} catch {}
 	}
 
 	private beginSuspend(): void {
@@ -995,7 +996,10 @@ export default class Ink {
 				this.log.clear();
 				this.log.done();
 
-				this.disableKittyProtocol();
+				if (this.kittyProtocolEnabled) {
+					this.writeBestEffort(this.options.stdout, '\u{1B}[<u');
+					this.kittyProtocolEnabled = false;
+				}
 
 				if (this.alternateScreen) {
 					this.writeBestEffort(
@@ -1234,7 +1238,10 @@ export default class Ink {
 			this.finishKittyDetection?.(false);
 
 			if (canWriteToStdout) {
-				this.disableKittyProtocol();
+				if (this.kittyProtocolEnabled) {
+					this.writeBestEffort(this.options.stdout, '\u{1B}[<u');
+					this.kittyProtocolEnabled = false;
+				}
 
 				// While suspended, the frame is already erased, the cursor is shown and the alternate screen is exited. The terminal belongs to the child process, so leave it alone.
 				if (this.interactive && !this.options.debug && !this.isSuspended) {

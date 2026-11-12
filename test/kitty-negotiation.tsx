@@ -209,7 +209,7 @@ test('auto detection queries the terminal only once raw mode is enabled', async 
 			setIsInputShown(true);
 		};
 
-		return isInputShown ? <ToggledInput /> : null;
+		return isInputShown ? <Input /> : null;
 	}
 
 	const app = render(<Example />, {
