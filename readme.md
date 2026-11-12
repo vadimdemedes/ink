@@ -2027,7 +2027,7 @@ Type: `Function`
 
 Temporarily hands the terminal over to a child process (such as `$EDITOR`, `less`, or `fzf`), then restores Ink's terminal state and forces a full redraw.
 
-While suspended, Ink stops writing output, stops consuming input, and restores the terminal modes the child expects (raw mode off, cursor visible, bracketed paste off, alternate screen exited, kitty keyboard protocol off). When the suspension ends, Ink reapplies its own terminal state and repaints from scratch.
+While suspended, Ink stops writing output, stops consuming input, and restores the terminal modes the child expects (raw mode off, cursor visible, bracketed paste off, alternate screen exited, kitty keyboard protocol off). When the suspension ends, Ink reapplies its own terminal state and repaints from scratch. `<Static>` items added while suspended are written at that point.
 
 ##### callback
 
