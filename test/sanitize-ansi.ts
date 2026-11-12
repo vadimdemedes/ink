@@ -162,6 +162,42 @@ for (const [name, payload] of [
 	});
 }
 
+for (const [name, opener] of [
+	['a line feed in the URI', '\u{1B}]8;;https://example.com/\npath\u{7}'],
+	['a carriage return in the URI', '\u{1B}]8;;https://example.com/\rpath\u{7}'],
+	['a tab in the URI', '\u{1B}]8;;https://example.com/\tpath\u{7}'],
+	['DEL in the URI', '\u{1B}]8;;https://example.com/\u{7F}path\u{7}'],
+	['NUL in the URI', '\u{1B}]8;;https://example.com/\u{0}path\u{7}'],
+	[
+		'a C0 control in the parameters',
+		'\u{1B}]8;id=a\u{1F}b;https://example.com\u{7}',
+	],
+	[
+		'a line feed in the URI of a C1 hyperlink',
+		'\u{9D}8;;https://example.com/\npath\u{9C}',
+	],
+]) {
+	test(`strip OSC hyperlinks with ${name}`, (t: TestContext) => {
+		const output = sanitizeAnsi(`${opener}link\u{1B}]8;;\u{7}`);
+
+		t.assert.strictEqual(output, 'link\u{1B}]8;;\u{7}');
+	});
+}
+
+for (const [name, opener] of [
+	[
+		'a printable ASCII payload',
+		'\u{1B}]8;id=a b:c=~;https://example.com/a b~\u{7}',
+	],
+	['a non-ASCII URI', '\u{1B}]8;;https://example.com/\u{A0}é/日本語/🔗\u{7}'],
+]) {
+	test(`preserve OSC hyperlinks with ${name}`, (t: TestContext) => {
+		const input = `${opener}link\u{1B}]8;;\u{7}`;
+
+		t.assert.strictEqual(sanitizeAnsi(input), input);
+	});
+}
+
 test('strip OSC sequences other than hyperlinks', (t: TestContext) => {
 	const output = sanitizeAnsi('A\u{1B}]0;title\u{7}B\u{9D}52;c;SGVsbG8=\u{7}C');
 
