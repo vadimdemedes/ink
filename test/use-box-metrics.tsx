@@ -300,6 +300,58 @@ test('does not trigger extra re-renders when layout is unchanged', async (t: Tes
 	t.assert.ok(renderCount <= 3);
 });
 
+test('settles for an element added inside a hidden ancestor', async (t: TestContext) => {
+	const stdout = createStdout(100);
+	let renderCount = 0;
+	let metrics: ReturnType<typeof useBoxMetrics> | undefined;
+
+	function Measured() {
+		const ref = useRef<DOMElement>(null);
+		metrics = useBoxMetrics(ref);
+		renderCount++;
+		return (
+			<Box ref={ref}>
+				<Text>Hello</Text>
+			</Box>
+		);
+	}
+
+	function Test({isShown}: {readonly isShown: boolean}) {
+		return (
+			<Box display="none">
+				<Box>
+					{isShown && (
+						<Box>
+							<Measured />
+						</Box>
+					)}
+				</Box>
+			</Box>
+		);
+	}
+
+	const {rerender, waitUntilRenderFlush} = render(<Test isShown={false} />, {
+		stdout,
+		debug: true,
+	});
+	await waitUntilRenderFlush();
+	rerender(<Test isShown />);
+	await waitUntilRenderFlush();
+	await delay(100);
+
+	// Yoga never laid the element out. Its `NaN` size used to count as a change on every render, which ended in "Maximum update depth exceeded".
+	t.assert.ok(renderCount <= 3, `Rendered ${renderCount} times`);
+	t.assert.deepStrictEqual(metrics, {
+		width: 0,
+		height: 0,
+		left: 0,
+		top: 0,
+		clientWidth: 0,
+		clientHeight: 0,
+		hasMeasured: true,
+	});
+});
+
 function SimpleBox() {
 	const ref = useRef<DOMElement>(null);
 	useBoxMetrics(ref);

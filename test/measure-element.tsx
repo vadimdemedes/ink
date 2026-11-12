@@ -366,6 +366,58 @@ test('measure element returns zeros for node without yoga', (t: TestContext) => 
 	});
 });
 
+test('measure element returns zeros for an element added inside a hidden ancestor', async (t: TestContext) => {
+	const stdout = createStdout();
+	let metrics: ReturnType<typeof measureElement> | undefined;
+
+	function Measured() {
+		const ref = useRef<DOMElement>(null);
+
+		useEffect(() => {
+			metrics = measureElement(ref.current!);
+		}, []);
+
+		return (
+			<Box ref={ref} borderStyle="single">
+				<Text>Hello</Text>
+			</Box>
+		);
+	}
+
+	function Test({isShown}: {readonly isShown: boolean}) {
+		return (
+			<Box display="none">
+				<Box>
+					{isShown && (
+						<Box>
+							<Measured />
+						</Box>
+					)}
+				</Box>
+			</Box>
+		);
+	}
+
+	const {rerender, waitUntilRenderFlush} = render(<Test isShown={false} />, {
+		stdout,
+		debug: true,
+	});
+	await waitUntilRenderFlush();
+	rerender(<Test isShown />);
+	await waitUntilRenderFlush();
+	await delay(50);
+
+	// Yoga never laid the element out, so without the check every size is `NaN`.
+	t.assert.deepStrictEqual(metrics, {
+		x: 0,
+		y: 0,
+		width: 0,
+		height: 0,
+		clientWidth: 0,
+		clientHeight: 0,
+	});
+});
+
 test('calculate layout while rendering is throttled', async (t: TestContext) => {
 	const stdout = createStdout();
 
