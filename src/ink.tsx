@@ -255,6 +255,8 @@ export default class Ink {
 	private isSuspended = false;
 	// <Static> output rendered while suspended, written with the first frame after resume.
 	private suspendedStaticOutput = '';
+	// Set for the redraw that ends a suspension.
+	private isResumeRedraw = false;
 	// Input pause/resume hooks registered by the App component, which owns raw
 	// mode and bracketed paste state.
 	private pauseInput?: () => void;
@@ -439,12 +441,12 @@ export default class Ink {
 
 		const renderTime = performance.now() - startTime;
 		// `exit()` from an effect unmounts before `<Static>` has dropped the children it just rendered, so the final frame would write them a second time. Static changes that have not been rendered yet are still marked dirty.
-		// Resuming from an effect has the same timing, and there the children were already collected while suspended.
-		const {suspendedStaticOutput} = this;
+		// The redraw on resume can find them in the tree too, when an effect of the commit that added them resumes. If they are not marked dirty they were already written or collected while suspended, and if they are, that commit is still running and renders them right after.
+		const {suspendedStaticOutput, isResumeRedraw} = this;
 		this.suspendedStaticOutput = '';
+		this.isResumeRedraw = false;
 		const isStaticOutputAlreadyWritten =
-			(this.isUnmounting || suspendedStaticOutput !== '') &&
-			!this.rootNode.isStaticDirty;
+			isResumeRedraw || (this.isUnmounting && !this.rootNode.isStaticDirty);
 		this.renderFrame(
 			output,
 			outputHeight,
@@ -1066,6 +1068,7 @@ export default class Ink {
 
 		try {
 			this.calculateLayout();
+			this.isResumeRedraw = true;
 			this.onRender();
 			await this.waitUntilRenderFlush();
 		} catch {}

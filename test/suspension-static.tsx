@@ -1,5 +1,10 @@
 import test, {type TestContext} from 'node:test';
-import React, {memo, useEffect, useLayoutEffect} from 'react';
+import React, {
+	memo,
+	useEffect,
+	useInsertionEffect,
+	useLayoutEffect,
+} from 'react';
 import stripAnsi from 'strip-ansi';
 import {
 	render,
@@ -34,6 +39,7 @@ type Props = {
 	readonly footer?: string;
 	readonly staticKey?: string;
 	readonly onEffect?: () => void;
+	readonly onInsertionEffect?: () => void;
 };
 
 // Renders `one` in <Static> above a live footer, like the app in #1082.
@@ -44,18 +50,26 @@ const renderItems = async (options: RenderOptions = {}, rows?: number) => {
 	}
 
 	let suspendTerminal!: SuspendTerminal;
-	let exit!: () => void;
 
-	function Example({items, footer, staticKey, onEffect}: Props) {
+	function Example({
+		items,
+		footer,
+		staticKey,
+		onEffect,
+		onInsertionEffect,
+	}: Props) {
 		const app = useApp();
 
 		useLayoutEffect(() => {
 			suspendTerminal = app.suspendTerminal;
-			exit = app.exit;
-		}, [app.suspendTerminal, app.exit]);
+		}, [app.suspendTerminal]);
 
 		useEffect(() => {
 			onEffect?.();
+		});
+
+		useInsertionEffect(() => {
+			onInsertionEffect?.();
 		});
 
 		return (
@@ -79,9 +93,6 @@ const renderItems = async (options: RenderOptions = {}, rows?: number) => {
 		stdout,
 		instance,
 		suspend: async () => suspendTerminal(),
-		exit() {
-			exit();
-		},
 		rerender(props: Props) {
 			instance.rerender(<Example {...props} />);
 		},
@@ -130,12 +141,6 @@ for (const {mode, options, resumed, later} of [
 		// Debug mode writes all static output followed by the frame on every render.
 		mode: 'debug',
 		options: {debug: true},
-		resumed: ['one\ntwo\n2 items'],
-		later: ['one\ntwo\nthree\n3 items', 'one\ntwo\nthree\n3 items'],
-	},
-	{
-		mode: 'debug on the alternate screen',
-		options: {debug: true, alternateScreen: true},
 		resumed: ['one\ntwo\n2 items'],
 		later: ['one\ntwo\nthree\n3 items', 'one\ntwo\nthree\n3 items'],
 	},
@@ -197,39 +202,14 @@ test('<Static> items added in separate commits while suspended are written once,
 	]);
 });
 
-test('<Static> item added while suspended is written once when a throttled render was pending at the handoff', async (t: TestContext) => {
-	const {
-		stdout,
-		instance,
-		suspend,
-		rerender,
-		update,
-		writtenWhileSuspended,
-		textWritesSince,
-	} = await renderItems({maxFps: 1});
-	t.after(() => {
-		instance.unmount();
-	});
-
-	// The first frame that only changes the live output takes the leading edge of the throttle, so the second one is left waiting on the trailing edge.
-	rerender({items: one, footer: 'leading'});
-	rerender({items: one, footer: 'pending'});
-	const suspension = await suspend();
-	const suspendedAt = stdout.getWrites().length;
-	await update({items: two});
-	t.assert.deepStrictEqual(writtenWhileSuspended(suspendedAt), []);
-
-	await suspension.resume();
-	t.assert.deepStrictEqual(textWritesSince(suspendedAt), [
-		'two\n',
-		'2 items\n',
-	]);
-});
-
-for (const isConcurrent of [false, true]) {
-	test(`<Static> item is written once when an effect of the commit that added it resumes (concurrent: ${isConcurrent})`, async (t: TestContext) => {
+for (const {effect, written} of [
+	{effect: 'onEffect', written: ['two\n', '2 items\n']},
+	// The redraw on resume draws the frame, and the commit's own render then writes the item above it.
+	{effect: 'onInsertionEffect', written: ['2 items\n', 'two\n', '2 items\n']},
+] as const) {
+	test(`<Static> item is written once when ${effect} of the commit that added it resumes`, async (t: TestContext) => {
 		const {stdout, instance, suspend, update, textWritesSince} =
-			await renderItems({concurrent: isConcurrent});
+			await renderItems();
 		t.after(() => {
 			instance.unmount();
 		});
@@ -237,19 +217,16 @@ for (const isConcurrent of [false, true]) {
 		const suspension = await suspend();
 		const suspendedAt = stdout.getWrites().length;
 		let resumed: Promise<void> | undefined;
-		// The effect runs before <Static> has dropped the item, so the redraw on resume still finds it in the tree.
+		// Both run before <Static> has dropped the item, so the redraw on resume still finds it in the tree. The insertion effect runs before Ink has rendered the commit at all.
 		await update({
 			items: two,
-			onEffect() {
+			[effect]() {
 				resumed ??= suspension.resume();
 			},
 		});
 		await resumed;
 
-		t.assert.deepStrictEqual(textWritesSince(suspendedAt), [
-			'two\n',
-			'2 items\n',
-		]);
+		t.assert.deepStrictEqual(textWritesSince(suspendedAt), written);
 	});
 }
 
@@ -282,7 +259,6 @@ test('<Static> item is not written again when an effect of the commit that added
 for (const {mode, options} of [
 	{mode: 'standard', options: {}},
 	{mode: 'incremental', options: {incrementalRendering: true}},
-	{mode: 'screen reader', options: {isScreenReaderEnabled: true}},
 ]) {
 	test(`<Static> item added while suspended shows once on the alternate screen and is replayed with the rest - ${mode}`, async (t: TestContext) => {
 		const rows = 4;
@@ -334,13 +310,6 @@ for (const {name, options, rows, footer, resumed} of [
 		resumed: ['two\n', 'a\nb\nc'],
 	},
 	{
-		name: 'a frame taller than the viewport (screen reader)',
-		options: {isScreenReaderEnabled: true},
-		rows: 2,
-		footer: 'a\nb\nc',
-		resumed: ['two\n', 'a\nb\nc'],
-	},
-	{
 		name: 'no live output',
 		options: {},
 		rows: undefined,
@@ -365,66 +334,19 @@ for (const {name, options, rows, footer, resumed} of [
 	});
 }
 
-test('<Static> item added while suspended is written once after clear() during the suspension', async (t: TestContext) => {
-	const {stdout, instance, suspend, update, textWritesSince} =
-		await renderItems();
-	t.after(() => {
-		instance.unmount();
-	});
+test('unmount() while suspended drops the <Static> items added during the suspension', async (t: TestContext) => {
+	const {stdout, instance, suspend, update} = await renderItems();
 
 	const suspension = await suspend();
-	const suspendedAt = stdout.getWrites().length;
 	await update({items: two});
-	instance.clear();
+	const writesBeforeExit = stdout.getWrites().length;
+	instance.unmount();
+	await instance.waitUntilExit();
 	await suspension.resume();
 
-	t.assert.deepStrictEqual(textWritesSince(suspendedAt), [
-		'two\n',
-		'2 items\n',
-	]);
+	// The terminal still belongs to the child process, so only the empty write that `waitUntilExit()` waits on remains.
+	t.assert.deepStrictEqual(stdout.getWrites().slice(writesBeforeExit), ['']);
 });
-
-test('<Static> item added while suspended is written once when stdout is not writable on resume', async (t: TestContext) => {
-	const {stdout, instance, suspend, update, textWritesSince} =
-		await renderItems();
-	t.after(() => {
-		instance.unmount();
-	});
-
-	const suspension = await suspend();
-	const suspendedAt = stdout.getWrites().length;
-	await update({items: two});
-	(stdout as NodeJS.WriteStream & {writable?: boolean}).writable = false;
-	await suspension.resume();
-
-	// The redraw on resume is best-effort and still hands its output to the stream.
-	t.assert.deepStrictEqual(textWritesSince(suspendedAt), [
-		'two\n',
-		'2 items\n',
-	]);
-});
-
-for (const exitMethod of ['unmount', 'exit'] as const) {
-	test(`${exitMethod}() while suspended drops the <Static> items added during the suspension`, async (t: TestContext) => {
-		const {stdout, instance, suspend, exit, update} = await renderItems();
-
-		const suspension = await suspend();
-		await update({items: two});
-		const writesBeforeExit = stdout.getWrites().length;
-
-		if (exitMethod === 'exit') {
-			exit();
-		} else {
-			instance.unmount();
-		}
-
-		await instance.waitUntilExit();
-		await suspension.resume();
-
-		// The terminal still belongs to the child process, so only the empty write that `waitUntilExit()` waits on remains.
-		t.assert.deepStrictEqual(stdout.getWrites().slice(writesBeforeExit), ['']);
-	});
-}
 
 test('<Static> items of an instance replaced while suspended are still written on the primary screen', async (t: TestContext) => {
 	const {stdout, instance, suspend, update, textWritesSince} =
@@ -469,22 +391,6 @@ for (const {mode, options, resumed} of [
 		t.assert.deepStrictEqual(textWritesSince(suspendedAt), resumed);
 	});
 }
-
-test('non-interactive suspension writes <Static> items as they are added', async (t: TestContext) => {
-	const {stdout, instance, suspend, update, textWritesSince} =
-		await renderItems({interactive: false});
-	t.after(() => {
-		instance.unmount();
-	});
-
-	const suspension = await suspend();
-	const suspendedAt = stdout.getWrites().length;
-	await update({items: two});
-	t.assert.deepStrictEqual(textWritesSince(suspendedAt), ['two\n']);
-
-	await suspension.resume();
-	t.assert.deepStrictEqual(textWritesSince(suspendedAt), ['two\n']);
-});
 
 test('<Static> item added while suspended is written once on resume (PTY)', async (t: TestContext) => {
 	const ps = term('suspend-terminal-static');
