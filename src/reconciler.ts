@@ -337,11 +337,6 @@ const hostConfig: HostConfig = {
 
 			if (key === 'style') {
 				setStyle(node, value as Styles);
-
-				if (node.yogaNode) {
-					applyStyles(node.yogaNode, value as Styles);
-				}
-
 				continue;
 			}
 
