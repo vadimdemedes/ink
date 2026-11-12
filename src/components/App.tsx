@@ -47,6 +47,7 @@ type Props = {
 	readonly onSuspendTerminal: SuspendTerminal;
 	readonly onKittyQueryResponse: () => void;
 	readonly onInputReady: () => void;
+	readonly onRawModeDisable: () => void;
 	readonly onRegisterInputControl: (
 		pauseInput: () => void,
 		resumeInput: () => void,
@@ -91,6 +92,7 @@ function App({
 	onSuspendTerminal,
 	onKittyQueryResponse,
 	onInputReady,
+	onRawModeDisable,
 	onRegisterInputControl,
 	setCursorPosition,
 	interactive,
@@ -248,11 +250,13 @@ function App({
 		}
 
 		pendingDisableRawModeRef.current = false;
+		// Ink pops the kitty keyboard protocol here, while the tty is still raw. In a cooked tty nothing reads the key sequences, and Ctrl+C sent as one never raises `SIGINT`.
+		onRawModeDisable();
 		rawModeStdin.setRawMode(false);
 		rawModeStdin.unref?.();
 		rawModeEnabledCountRef.current = 0;
 		clearInputState();
-	}, [rawModeStdin, clearInputState]);
+	}, [rawModeStdin, clearInputState, onRawModeDisable]);
 
 	const handleExit = useCallback(
 		(errorOrResult?: unknown): void => {

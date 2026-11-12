@@ -46,8 +46,10 @@ export const kittyModifiers = {
 export type KittyKeyboardOptions = {
 	// Mode for kitty keyboard protocol support.
 	// - 'auto': Query interactive TTYs for support through the normal input handler once an input hook enables raw mode, with a 200ms timeout (default). Suspending the terminal cancels pending detection.
-	// - 'enabled': Force enable the protocol
+	// - 'enabled': Force enable the protocol without querying for support
 	// - 'disabled': Never enable the protocol
+	//
+	// The protocol is only active while raw mode is on, which means while a `useInput`, `usePaste` or `useFocus` hook is active or after `setRawMode(true)` from `useStdin`. Ink pushes the flags when raw mode is enabled and pops them when it is disabled, in `'enabled'` mode too. Without raw mode nothing reads the key sequences, and a terminal with the protocol active sends `Ctrl+C` as an escape sequence instead of raising `SIGINT`. Raw mode that is set on stdin directly, without Ink's `setRawMode`, does not activate the protocol.
 	mode?: 'auto' | 'enabled' | 'disabled';
 
 	// Protocol flags to request from the terminal.

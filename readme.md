@@ -2847,8 +2847,10 @@ Type: `'auto' | 'enabled' | 'disabled'`\
 Default: `'auto'`
 
 - `'auto'`: Query interactive TTY terminals for support (`CSI ? u`) once an input hook such as `useInput` enables raw mode, so the reply is read by Ink instead of echoed. The protocol is enabled when Ink's input handler receives a response within 200 milliseconds. Pending detection is canceled when the terminal is suspended.
-- `'enabled'`: Force enable the protocol. Both stdin and stdout must be TTYs.
+- `'enabled'`: Force enable the protocol without querying for support. Both stdin and stdout must be TTYs.
 - `'disabled'`: Never enable the protocol.
+
+The protocol is only active while raw mode is on, which means while a [`useInput`](#useinputinputhandler-options), [`usePaste`](#usepastehandler-options) or [`useFocus`](#usefocusoptions) hook is active or after `setRawMode(true)` from [`useStdin`](#usestdin). Ink pushes the flags when raw mode is enabled and pops them when it is disabled, in `'enabled'` mode too. Without raw mode nothing reads the key sequences, and a terminal with the protocol active sends `Ctrl+C` as an escape sequence instead of raising `SIGINT`. Raw mode that is set on stdin directly, without Ink's `setRawMode`, does not activate the protocol.
 
 **kittyKeyboard.flags**
 
