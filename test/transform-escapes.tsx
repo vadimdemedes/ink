@@ -75,6 +75,19 @@ test('root transform output does not write the payload of a C1 hyperlink as text
 	t.assert.strictEqual(output, '');
 });
 
+test('root transform output drops a hyperlink with a line feed in its url', (t: TestContext) => {
+	const link = (text: string) =>
+		`\u{1B}]8;;https://example.com/\n\u{7}${text}\u{1B}]8;;\u{7}`;
+	const root = renderToString(<Transform transform={link}>link</Transform>);
+	const nested = renderToString(
+		<Text>
+			<Transform transform={link}>link</Transform>
+		</Text>,
+	);
+	t.assert.strictEqual(root, nested);
+	t.assert.strictEqual(root, 'link');
+});
+
 test('hyperlink transform with a C1 hyperlink in the url cannot leave an ESC for the next text to complete', (t: TestContext) => {
 	const url = 'https://example.com/\u{7}\u{1B}]8;;\u{7}\u{9D}8;\u{1B}\\';
 	const link = (text: string) => `\u{1B}]8;;${url}\u{7}${text}\u{1B}]8;;\u{7}`;

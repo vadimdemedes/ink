@@ -1,10 +1,10 @@
 import {hasAnsiControlCharacters, tokenizeAnsi} from './ansi-tokenizer.js';
 
 const sgrParametersRegex = /^[\d:;]*$/;
-// ESC, CAN, SUB or a C1 control inside the parameters or URI ends the OSC in the terminal, so whatever follows would run as its own escape sequence.
+// ESC, CAN, SUB or a C1 control inside the parameters or URI ends the OSC in the terminal, so whatever follows would run as its own escape sequence. The other C0 controls and DEL do not end it, but Ink counts a line feed in the URI as a row, a tab in it is expanded into spaces, `wrap-ansi` wraps through a hyperlink that contains any other of them, and the incremental writer splits the frame at a line feed inside it. So a hyperlink with any control character in its parameters or URI is dropped and its text is kept.
 const hyperlinkRegex =
 	// eslint-disable-next-line no-control-regex, regexp/no-control-character -- OSC introducers and terminators are control characters.
-	/^(?:\u{1B}\]|\u{9D})8;[^\u{18}\u{1A}\u{1B}\u{80}-\u{9F}]*(?:\u{7}|\u{1B}\\|\u{9C})$/u;
+	/^(?:\u{1B}\]|\u{9D})8;\P{Control}*(?:\u{7}|\u{1B}\\|\u{9C})$/u;
 // Terminals print nothing for C0 controls and DEL, so strip them; tabs and newlines carry layout. ESC and C1 never reach text tokens, the tokenizer owns them.
 const controlCharactersRegex = /(?![\t\n])\p{Control}/gu;
 const leadingMarksRegex = /^\p{Mark}+/u;
@@ -45,7 +45,7 @@ const normalizeParameter = (parameter: string): string | undefined => {
 
 // Strip ANSI escape sequences that would conflict with Ink's layout.
 // Preserved: SGR sequences (colors, bold, etc. - end with 'm') and
-// OSC 8 hyperlinks (ESC ] or C1 OSC) whose payload cannot end the sequence early.
+// OSC 8 hyperlinks (ESC ] or C1 OSC) whose payload has no control characters.
 // Stripped: cursor movement, screen clearing, and other control sequences.
 // Combining marks share their base character's cell, so SGR sequences are deferred until after the marks. Otherwise ANSI tokenization consumes the marks as part of the escape sequence.
 const sanitizeAnsi = (text: string): string => {
