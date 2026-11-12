@@ -14,6 +14,7 @@ import {
 	insertBeforeNode,
 	removeChildNode,
 	freeYogaSubtree,
+	validateStyle,
 	emitLayoutListeners,
 	setTransform,
 	setStyle,
@@ -337,6 +338,7 @@ const hostConfig: HostConfig = {
 
 			if (key === 'style') {
 				setStyle(node, value as Styles);
+				validateStyle(value as Styles);
 				continue;
 			}
 

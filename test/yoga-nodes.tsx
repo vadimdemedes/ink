@@ -57,41 +57,63 @@ for (const isConcurrent of [false, true]) {
 	});
 }
 
-test('render caught by an error boundary does not leak Yoga nodes', (t: TestContext) => {
-	class ErrorBoundary extends Component<{children?: React.ReactNode}> {
-		static getDerivedStateFromError() {
-			return {hasError: true};
-		}
-
-		override state = {hasError: false};
-
-		override render(): React.ReactNode {
-			return this.state.hasError ? <Text>Failed</Text> : this.props.children;
-		}
+class ErrorBoundary extends Component<{children?: React.ReactNode}> {
+	static getDerivedStateFromError() {
+		return {hasError: true};
 	}
 
-	function Thrower(): React.ReactNode {
-		throw new Error('Oh no');
-	}
+	override state = {hasError: false};
 
+	override render(): React.ReactNode {
+		return this.state.hasError ? <Text>Failed</Text> : this.props.children;
+	}
+}
+
+function Thrower(): React.ReactNode {
+	throw new Error('Oh no');
+}
+
+for (const isConcurrent of [false, true]) {
+	test(`render caught by an error boundary does not leak Yoga nodes (concurrent: ${isConcurrent})`, async (t: TestContext) => {
+		const stdout = createStdout();
+		const yogaNodesBefore = countYogaNodes();
+		let unmount!: () => void;
+		await act(async () => {
+			({unmount} = render(
+				<ErrorBoundary>
+					<Box>
+						<Text>Row</Text>
+					</Box>
+					<Thrower />
+				</ErrorBoundary>,
+				{stdout, debug: true, patchConsole: false, concurrent: isConcurrent},
+			));
+		});
+
+		t.assert.strictEqual(stdout.get(), 'Failed');
+		t.assert.strictEqual(countYogaNodes() - yogaNodesBefore, 2);
+
+		await act(async () => {
+			unmount();
+		});
+
+		t.assert.strictEqual(countYogaNodes() - yogaNodesBefore, 0);
+	});
+}
+
+test('style value that Yoga rejects is caught by an error boundary mounted in the same commit', (t: TestContext) => {
 	const stdout = createStdout();
-	const yogaNodesBefore = countYogaNodes();
 	const {unmount} = render(
 		<ErrorBoundary>
-			<Box>
+			<Box marginLeft={false as unknown as number}>
 				<Text>Row</Text>
 			</Box>
-			<Thrower />
 		</ErrorBoundary>,
 		{stdout, debug: true, patchConsole: false},
 	);
+	t.after(unmount);
 
 	t.assert.strictEqual(stdout.get(), 'Failed');
-	t.assert.strictEqual(countYogaNodes() - yogaNodesBefore, 2);
-
-	unmount();
-
-	t.assert.strictEqual(countYogaNodes() - yogaNodesBefore, 0);
 });
 
 test('content that React hides before attaching it stays hidden', async (t: TestContext) => {
@@ -101,7 +123,9 @@ test('content that React hides before attaching it stays hidden', async (t: Test
 			<Text>Visible</Text>
 			<Activity mode="hidden">
 				<Activity mode="hidden">
-					<Text>Hidden</Text>
+					<Box display="flex">
+						<Text>Hidden</Text>
+					</Box>
 				</Activity>
 			</Activity>
 		</Box>,

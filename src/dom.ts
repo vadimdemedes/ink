@@ -106,6 +106,15 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 	return node;
 };
 
+const styleValidationNode = Yoga.Node.create();
+
+/**
+Yoga throws for a style value it can't use. A node has no Yoga node yet while React renders, so its style is applied to a spare one there, which keeps that error in the render phase, where error boundaries catch it.
+*/
+export const validateStyle = (style: Styles): void => {
+	applyStyles(styleValidationNode, style);
+};
+
 /**
 Create the Yoga nodes of a subtree that is being attached to a tree that has them.
 
