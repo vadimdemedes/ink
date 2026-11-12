@@ -586,11 +586,17 @@ const createFakeStdin = () => {
 const getWrittenStrings = (write: ReturnType<typeof spy>): string[] =>
 	(write.args as string[][]).map(args => args[0]!);
 
-test('kitty protocol - writes enable sequence on init when mode is enabled', (t: TestContext) => {
+// The protocol is only pushed while raw mode is on, so these apps need an input hook.
+function InputExample() {
+	useInput(() => {});
+	return <Text>Hello</Text>;
+}
+
+test('kitty protocol - writes enable sequence once raw mode is on when mode is enabled', (t: TestContext) => {
 	const {stdout, write} = createFakeStdout();
 	const stdin = createFakeStdin();
 
-	const {unmount} = render(<Text>Hello</Text>, {
+	const {unmount} = render(<InputExample />, {
 		stdout,
 		stdin,
 		kittyKeyboard: {mode: 'enabled'},
@@ -606,7 +612,7 @@ test('kitty protocol - writes disable sequence on unmount', (t: TestContext) => 
 	const {stdout, write} = createFakeStdout();
 	const stdin = createFakeStdin();
 
-	const {unmount} = render(<Text>Hello</Text>, {
+	const {unmount} = render(<InputExample />, {
 		stdout,
 		stdin,
 		kittyKeyboard: {mode: 'enabled'},
@@ -639,7 +645,7 @@ test('kitty protocol - not enabled when stdout is not a TTY', (t: TestContext) =
 	stdout.isTTY = false;
 	const stdin = createFakeStdin();
 
-	const {unmount} = render(<Text>Hello</Text>, {
+	const {unmount} = render(<InputExample />, {
 		stdout,
 		stdin,
 		kittyKeyboard: {mode: 'enabled'},
