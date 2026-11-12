@@ -140,8 +140,7 @@ const settleThrottle = (
 // Mounted instances share one `exit` listener, added with the first and removed with the last, so that many instances do not add up to a `MaxListenersExceededWarning`.
 const mountedInstances = new Set<Ink>();
 
-// eslint-disable-next-line @typescript-eslint/no-restricted-types
-const unmountMountedInstances = (code: number | null): void => {
+const unmountMountedInstances = (code: number): void => {
 	// Iterate over a copy, so an instance that is rendered while these unmount is left alone, as it was when every instance had its own listener.
 	for (const instance of new Set(mountedInstances)) {
 		instance.unmount(code);
@@ -569,11 +568,10 @@ export default class Ink {
 
 		// Unmount when process exits. The plain `exit` listener covers the case where another copy of `signal-exit` (for example v4 next to Ink's v3) replaced `process.emit` after Ink registered, which drops Ink's `signal-exit` handler from the chain. `unmount` is idempotent, so running from both is fine.
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
-		if (mountedInstances.size === 0) {
+		mountedInstances.add(this);
+		if (mountedInstances.size === 1) {
 			process.on('exit', unmountMountedInstances);
 		}
-
-		mountedInstances.add(this);
 
 		this.setAlternateScreen(Boolean(options.alternateScreen));
 
