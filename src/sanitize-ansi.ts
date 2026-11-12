@@ -1,7 +1,7 @@
 import {hasAnsiControlCharacters, tokenizeAnsi} from './ansi-tokenizer.js';
 
 const sgrParametersRegex = /^[\d:;]*$/;
-// ESC, CAN, SUB or a C1 control inside the parameters or URI ends the OSC in the terminal, so whatever follows would run as its own escape sequence. Terminals ignore the other C0 controls and DEL there, but Ink counts a line feed in the URI as a row, `wrap-ansi` wraps through a hyperlink that contains any of them, and the incremental writer splits the frame inside it. So a hyperlink with any control character in its parameters or URI is dropped and its text is kept.
+// ESC, CAN, SUB or a C1 control inside the parameters or URI ends the OSC in the terminal, so whatever follows would run as its own escape sequence. The other C0 controls and DEL do not end it, but Ink counts a line feed in the URI as a row, a tab in it is expanded into spaces, `wrap-ansi` wraps through a hyperlink that contains any other of them, and the incremental writer splits the frame at a line feed inside it. So a hyperlink with any control character in its parameters or URI is dropped and its text is kept.
 const hyperlinkRegex =
 	// eslint-disable-next-line no-control-regex, regexp/no-control-character -- OSC introducers and terminators are control characters.
 	/^(?:\u{1B}\]|\u{9D})8;\P{Control}*(?:\u{7}|\u{1B}\\|\u{9C})$/u;
