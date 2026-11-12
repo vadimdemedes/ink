@@ -5,6 +5,7 @@ import {render, useInput, useApp} from '../../src/index.js';
 function UserInput({test}: {readonly test: string | undefined}) {
 	const {exit} = useApp();
 	const rapidDownArrowCountRef = React.useRef(0);
+	const batchedReturnCountRef = React.useRef(0);
 
 	React.useEffect(() => {
 		if (test !== 'rapidArrowsEnter') {
@@ -65,6 +66,15 @@ function UserInput({test}: {readonly test: string | undefined}) {
 
 		if (test === 'uppercase' && input === '\r' && !key.shift) {
 			exit();
+			return;
+		}
+
+		if (test === 'batchedReturns' && input === '\r' && key.return) {
+			batchedReturnCountRef.current++;
+			if (batchedReturnCountRef.current === 2) {
+				exit();
+			}
+
 			return;
 		}
 

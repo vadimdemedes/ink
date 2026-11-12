@@ -353,6 +353,51 @@ const backspaceAndDeleteCases = [
 		chunks: ['\ttest'],
 		events: ['\ttest'],
 	},
+	{
+		title: 'splits batched carriage returns into individual events',
+		chunks: ['\r\r'],
+		events: ['\r', '\r'],
+	},
+	{
+		title: 'splits batched tabs into individual events',
+		chunks: ['\t\t'],
+		events: ['\t', '\t'],
+	},
+	{
+		title: 'splits a run of different control characters',
+		chunks: ['\r\t\n\u{0}\u{1}\u{1F}\u{7F}\r'],
+		events: ['\r', '\t', '\n', '\u{0}', '\u{1}', '\u{1F}', '\u{7F}', '\r'],
+	},
+	{
+		title: 'splits batched carriage returns around escape sequences',
+		chunks: ['\r\r\u{1B}[A\t\t\u{1B}[B\r\r'],
+		events: ['\r', '\r', '\u{1B}[A', '\t', '\t', '\u{1B}[B', '\r', '\r'],
+	},
+	{
+		title: 'does not split pasted blank line from text',
+		chunks: ['line1\r\rline2'],
+		events: ['line1\r\rline2'],
+	},
+	{
+		title: 'does not split pasted leading carriage returns from text',
+		chunks: ['\r\rtest'],
+		events: ['\r\rtest'],
+	},
+	{
+		title: 'does not split pasted trailing carriage returns from text',
+		chunks: ['test\r\r'],
+		events: ['test\r\r'],
+	},
+	{
+		title: 'does not split carriage returns from non-ASCII text',
+		chunks: ['\r\r\u{1F600}'],
+		events: ['\r\r\u{1F600}'],
+	},
+	{
+		title: 'does not split carriage returns from a space',
+		chunks: ['\r\r '],
+		events: ['\r\r '],
+	},
 ] as const;
 
 for (const testCase of backspaceAndDeleteCases) {
@@ -360,6 +405,14 @@ for (const testCase of backspaceAndDeleteCases) {
 		t.assert.deepStrictEqual(parseChunks(testCase.chunks), testCase.events);
 	});
 }
+
+test('splits batched carriage returns ahead of a pending escape', (t: TestContext) => {
+	const parser = createInputParser();
+
+	t.assert.deepStrictEqual(parser.push('\r\r\u{1B}'), ['\r', '\r']);
+	t.assert.ok(parser.hasPendingEscape());
+	t.assert.deepStrictEqual(parser.push('[A\r\r'), ['\u{1B}[A', '\r', '\r']);
+});
 
 test('assembles CSI sequence from single-byte chunks', (t: TestContext) => {
 	const parser = createInputParser();
@@ -515,6 +568,12 @@ test('paste event delivers backspace chars verbatim without splitting', (t: Test
 		parseChunks(['\u{1B}[200~\u{7F}\u{8}\u{7F}\u{1B}[201~']),
 		[{paste: '\u{7F}\u{8}\u{7F}'}],
 	);
+});
+
+test('paste event delivers carriage returns verbatim without splitting', (t: TestContext) => {
+	t.assert.deepStrictEqual(parseChunks(['\u{1B}[200~\r\r\u{1B}[201~']), [
+		{paste: '\r\r'},
+	]);
 });
 
 test('isCompleteControlSequence accepts every complete CSI and SS3 form the parser emits', (t: TestContext) => {

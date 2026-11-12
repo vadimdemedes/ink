@@ -210,14 +210,19 @@ const parseEscapeSequence = (
 /**
 Split a chunk of non-escape text so that backspace bytes (`0x7F` and `0x08`) and Ctrl+C (`0x03`) become individual events. Ctrl+C must be recognized even when buffered with ordinary text. When a user holds the backspace key, the terminal sends repeated bytes in a single stdin chunk. Without splitting, `parseKeypress` receives the multi-byte string and fails to recognize it as a key event, corrupting the input state.
 
-Other control characters like `\r` and `\t` are NOT split because they can legitimately appear inside pasted text.
+Other control characters like `\r` and `\t` are NOT split from text because they can legitimately appear inside pasted text. A chunk made up of nothing but control characters (`0x00` to `0x1F` and `0x7F`) has no text in it, so it is a run of key presses, such as a held Enter or Tab, and every byte becomes an individual event.
 */
 const splitControlBytes = (text: string, events: InputEvent[]): void => {
+	// eslint-disable-next-line no-control-regex, regexp/no-control-character -- Anything outside the C0 control characters and DEL is text.
+	const isOnlyControlBytes = !/[^\u{0}-\u{1F}\u{7F}]/u.test(text);
 	let textSegmentStart = 0;
 
 	for (let index = 0; index < text.length; index++) {
 		const character = text[index]!;
-		if (!['\u{7F}', '\u{8}', '\u{3}'].includes(character)) {
+		if (
+			!isOnlyControlBytes &&
+			!['\u{7F}', '\u{8}', '\u{3}'].includes(character)
+		) {
 			continue;
 		}
 
