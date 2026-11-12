@@ -398,6 +398,21 @@ const backspaceAndDeleteCases = [
 		chunks: ['\r\r '],
 		events: ['\r\r '],
 	},
+	{
+		title: 'does not split carriage returns from a C1 control character',
+		chunks: ['\r\r\u{85}'],
+		events: ['\r\r\u{85}'],
+	},
+	{
+		title: 'splits batched carriage returns after text and a backspace',
+		chunks: ['abc\u{7F}\r\r'],
+		events: ['abc', '\u{7F}', '\r', '\r'],
+	},
+	{
+		title: 'splits batched carriage returns before a backspace and text',
+		chunks: ['\r\r\u{7F}abc'],
+		events: ['\r', '\r', '\u{7F}', 'abc'],
+	},
 ] as const;
 
 for (const testCase of backspaceAndDeleteCases) {

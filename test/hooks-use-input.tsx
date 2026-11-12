@@ -302,6 +302,14 @@ for (const [name, chunk, expectedEvents] of [
 			{input: '', return: false, tab: true},
 		],
 	],
+	[
+		'return and line feed',
+		'\r\n',
+		[
+			{input: '\r', return: true, tab: false},
+			{input: '\n', return: false, tab: false},
+		],
+	],
 ] as const) {
 	test(`useInput - receives control characters read in one chunk as individual keys: ${name}`, async (t: TestContext) => {
 		const stdin = createStdin();
