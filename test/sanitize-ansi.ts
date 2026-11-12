@@ -185,10 +185,24 @@ for (const [name, opener] of [
 }
 
 for (const [name, opener] of [
+	['only parameters', '\u{1B}]8;id=a\u{7}'],
+	['nothing after the first separator', '\u{1B}]8;\u{7}'],
+	['only parameters in a C1 hyperlink', '\u{9D}8;id=a\u{9C}'],
+]) {
+	test(`strip OSC hyperlinks with ${name}`, (t: TestContext) => {
+		const output = sanitizeAnsi(`${opener}link\u{1B}]8;;\u{7}`);
+
+		t.assert.strictEqual(output, 'link\u{1B}]8;;\u{7}');
+	});
+}
+
+for (const [name, opener] of [
 	[
 		'a printable ASCII payload',
 		'\u{1B}]8;id=a b:c=~;https://example.com/a b~\u{7}',
 	],
+	['semicolons in the URI', '\u{1B}]8;;https://example.com/a;b;c\u{7}'],
+	['parameters and an empty URI', '\u{1B}]8;id=a;\u{7}'],
 	['a non-ASCII URI', '\u{1B}]8;;https://example.com/\u{A0}é/日本語/🔗\u{7}'],
 ]) {
 	test(`preserve OSC hyperlinks with ${name}`, (t: TestContext) => {

@@ -107,5 +107,5 @@ test('hyperlink transform with a C1 hyperlink in the url cannot leave an ESC for
 	);
 	t.assert.ok(!root.includes('\u{1B}[2J'));
 	t.assert.strictEqual(root, nested);
-	t.assert.strictEqual(root, '    [2J');
+	t.assert.strictEqual(root, 'link[2J');
 });
