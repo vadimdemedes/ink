@@ -247,6 +247,7 @@ export default class Ink {
 	private readonly throttledOnRender?: DebouncedFunc<() => void>;
 	private hasPendingThrottledRender = false;
 	private kittyProtocolEnabled = false;
+	// The flags to push whenever raw mode is on: set up front in `enabled` mode and by a positive detection in `auto` mode.
 	private kittyFlags: KittyFlagName[] | undefined;
 	private pendingKittyFlags: KittyFlagName[] | undefined;
 	private finishKittyDetection?: (isSupported: boolean) => void;
@@ -323,12 +324,26 @@ export default class Ink {
 	// Same stability requirement as `handleKittyQueryResponse`.
 	handleInputReady = (): void => {
 		if (!this.pendingKittyFlags) {
+			this.enableKittyProtocol();
 			return;
 		}
 
 		const flags = this.pendingKittyFlags;
 		this.pendingKittyFlags = undefined;
 		this.confirmKittySupport(flags);
+	};
+
+	// Same stability requirement as `handleKittyQueryResponse`. App calls this right before it turns raw mode off, and suspending and unmounting use it too.
+	disableKittyProtocol = (): void => {
+		if (
+			!this.kittyProtocolEnabled ||
+			!getWritableStreamState(this.options.stdout).canWriteToStdout
+		) {
+			return;
+		}
+
+		this.writeBestEffort(this.options.stdout, '\u{1B}[<u');
+		this.kittyProtocolEnabled = false;
 	};
 
 	restoreLastOutput = (): void => {
@@ -882,9 +897,10 @@ export default class Ink {
 
 		// 'enabled' force-enables the protocol as long as both streams are TTYs,
 		// regardless of the interactive setting (e.g. even in CI).
+		// The flags are pushed once raw mode is on: in a cooked tty nothing reads the key sequences, and Ctrl+C sent as one never raises `SIGINT`.
 		if (mode === 'enabled') {
 			if (isTty(this.options.stdin) && this.options.stdout.isTTY) {
-				this.enableKittyProtocol(flags);
+				this.kittyFlags = flags;
 			}
 
 			return;
@@ -912,9 +928,13 @@ export default class Ink {
 		const finish = (isSupported: boolean): void => {
 			this.finishKittyDetection = undefined;
 			clearTimeout(timer);
-			if (isSupported && !this.isUnmounted) {
-				this.enableKittyProtocol(flags);
+			if (!isSupported || this.isUnmounted) {
+				return;
 			}
+
+			// A response is only read while raw mode is on, so the flags can be pushed right away.
+			this.kittyFlags = flags;
+			this.enableKittyProtocol();
 		};
 
 		// Register before writing the query so immediate responses are not missed.
@@ -925,12 +945,21 @@ export default class Ink {
 		this.options.stdout.write('\u{1B}[?u');
 	}
 
-	private enableKittyProtocol(flags: KittyFlagName[]): void {
-		this.options.stdout.write(`\u{1B}[>${resolveFlags(flags)}u`);
+	// Only called while raw mode is on. `disableKittyProtocol` pops the flags before raw mode goes off.
+	private enableKittyProtocol(): void {
+		if (
+			!this.kittyFlags ||
+			this.kittyProtocolEnabled ||
+			!getWritableStreamState(this.options.stdout).canWriteToStdout
+		) {
+			return;
+		}
+
+		this.writeBestEffort(
+			this.options.stdout,
+			`\u{1B}[>${resolveFlags(this.kittyFlags)}u`,
+		);
 		this.kittyProtocolEnabled = true;
-		// Remember the flags so suspendTerminal() can re-enable the same protocol
-		// after a child process has had the terminal.
-		this.kittyFlags = flags;
 	}
 
 	private beginSuspend(): void {
@@ -966,10 +995,7 @@ export default class Ink {
 				this.log.clear();
 				this.log.done();
 
-				if (this.kittyProtocolEnabled) {
-					this.writeBestEffort(this.options.stdout, '\u{1B}[<u');
-					this.kittyProtocolEnabled = false;
-				}
+				this.disableKittyProtocol();
 
 				if (this.alternateScreen) {
 					this.writeBestEffort(
@@ -1006,30 +1032,20 @@ export default class Ink {
 			return;
 		}
 
-		// Reclaim input only while the app still owns the terminal. After unmount, App cleanup has already restored raw mode, so resuming must not re-enable it.
-		this.resumeInput?.();
-
 		const {stdout} = this.options;
 		const {canWriteToStdout} = getWritableStreamState(stdout);
 
-		if (canWriteToStdout) {
-			if (this.alternateScreen) {
-				// Re-entering the alternate screen gives an empty buffer with no scrollback behind it, and the forced redraw below only carries new <Static> items. Replay the accumulated static output ahead of it, as the full-clear path does, so the rows the child process's turn erased come back. The debug redraw writes fullStaticOutput itself, so skip the replay there.
-				this.writeBestEffort(
-					this.options.stdout,
-					ansiEscapes.enterAlternativeScreen +
-						(this.options.debug ? '' : this.fullStaticOutput),
-				);
-			}
-
-			if (this.kittyFlags) {
-				this.writeBestEffort(
-					this.options.stdout,
-					`\u{1B}[>${resolveFlags(this.kittyFlags)}u`,
-				);
-				this.kittyProtocolEnabled = true;
-			}
+		if (canWriteToStdout && this.alternateScreen) {
+			// Re-entering the alternate screen gives an empty buffer with no scrollback behind it, and the forced redraw below only carries new <Static> items. Replay the accumulated static output ahead of it, as the full-clear path does, so the rows the child process's turn erased come back. The debug redraw writes fullStaticOutput itself, so skip the replay there.
+			this.writeBestEffort(
+				this.options.stdout,
+				ansiEscapes.enterAlternativeScreen +
+					(this.options.debug ? '' : this.fullStaticOutput),
+			);
 		}
+
+		// Reclaim input only while the app still owns the terminal. After unmount, App cleanup has already restored raw mode, so resuming must not re-enable it. If raw mode comes back on, `handleInputReady` pushes the kitty keyboard protocol again. That has to follow the alternate screen switch, because each screen has its own keyboard mode stack.
+		this.resumeInput?.();
 
 		// Force a full redraw instead of diffing against the stale pre-suspension
 		// frame, which the child process may have overwritten. A redraw failure here
@@ -1071,6 +1087,7 @@ export default class Ink {
 					onRegisterInputControl={this.registerInputControl}
 					onKittyQueryResponse={this.handleKittyQueryResponse}
 					onInputReady={this.handleInputReady}
+					onRawModeDisable={this.disableKittyProtocol}
 				>
 					<RootNodeContext value={this.rootNode}>{node}</RootNodeContext>
 				</App>
@@ -1217,10 +1234,7 @@ export default class Ink {
 			this.finishKittyDetection?.(false);
 
 			if (canWriteToStdout) {
-				if (this.kittyProtocolEnabled) {
-					this.writeBestEffort(this.options.stdout, '\u{1B}[<u');
-					this.kittyProtocolEnabled = false;
-				}
+				this.disableKittyProtocol();
 
 				// While suspended, the frame is already erased, the cursor is shown and the alternate screen is exited. The terminal belongs to the child process, so leave it alone.
 				if (this.interactive && !this.options.debug && !this.isSuspended) {
