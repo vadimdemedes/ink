@@ -86,6 +86,13 @@ test('useInput - \\r should not count as an uppercase character', async (t: Test
 	t.assert.ok(ps.output.includes('exited'));
 });
 
+test('useInput - handles two returns in one chunk', async (t: TestContext) => {
+	const ps = term('use-input', ['batchedReturns']);
+	ps.write('\r\r');
+	await ps.waitForExit();
+	t.assert.ok(ps.output.includes('exited'));
+});
+
 test('useInput - pasted carriage return', async (t: TestContext) => {
 	const ps = term('use-input', ['pastedCarriageReturn']);
 	ps.write('\rtest');
@@ -267,6 +274,69 @@ for (const [name, sequence] of [
 		});
 
 		t.assert.deepStrictEqual(events, [{input: 'q', escape: false}]);
+	});
+}
+
+for (const [name, chunk, expectedEvents] of [
+	[
+		'returns',
+		'\r\r',
+		[
+			{input: '\r', return: true, tab: false},
+			{input: '\r', return: true, tab: false},
+		],
+	],
+	[
+		'tabs',
+		'\t\t',
+		[
+			{input: '', return: false, tab: true},
+			{input: '', return: false, tab: true},
+		],
+	],
+	[
+		'return and tab',
+		'\r\t',
+		[
+			{input: '\r', return: true, tab: false},
+			{input: '', return: false, tab: true},
+		],
+	],
+	[
+		'return and line feed',
+		'\r\n',
+		[
+			{input: '\r', return: true, tab: false},
+			{input: '\n', return: false, tab: false},
+		],
+	],
+] as const) {
+	test(`useInput - receives control characters read in one chunk as individual keys: ${name}`, async (t: TestContext) => {
+		const stdin = createStdin();
+		const events: Array<{input: string; return: boolean; tab: boolean}> = [];
+		function Example() {
+			useInput((input, key) => {
+				events.push({input, return: key.return, tab: key.tab});
+			});
+			return null;
+		}
+
+		let instance!: ReturnType<typeof render>;
+		await act(async () => {
+			instance = render(<Example />, {
+				stdin,
+				stdout: createStdout(),
+				patchConsole: false,
+			});
+		});
+		t.after(() => {
+			instance.unmount();
+		});
+		await act(async () => {
+			emitReadable(stdin, chunk);
+		});
+
+		t.assert.deepStrictEqual(events, expectedEvents);
 	});
 }
 

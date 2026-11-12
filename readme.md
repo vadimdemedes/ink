@@ -1733,6 +1733,7 @@ A React hook that returns `void` and handles user input.
 It's a more convenient alternative to using `useStdin` and listening for `data` events.
 The callback you pass to `useInput` is called for each character when the user enters any input.
 However, if the user pastes text and it's more than one character, the callback will be called only once, and the whole string will be passed as `input`.
+A paste that contains only control characters, such as line breaks or tabs, can't be told apart from key presses, so the callback is called once for each character.
 You can find a full example of using `useInput` at [examples/use-input](examples/use-input/use-input.tsx).
 
 Terminal replies and mouse reports that don't map to a key are not passed to the callback. Legacy mouse reports (mouse tracking without SGR mode) are only dropped on a best-effort basis, because their raw coordinate bytes can decode ambiguously. If your app enables mouse tracking, enable SGR mode (`\u001B[?1006h`) as well.
