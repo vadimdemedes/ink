@@ -109,6 +109,18 @@ test('renders named native stack frames as raw lines', (t: TestContext) => {
 	t.assert.strictEqual(output.includes('undefined'), false);
 });
 
+test('renders a raw stack line without trailing characters', (t: TestContext) => {
+	const output = stripAnsi(
+		renderToString(
+			<ErrorOverview
+				error={createErrorWithStack('Error: Oh no\n    at native')}
+			/>,
+		),
+	);
+
+	t.assert.strictEqual(output, '\n  ERROR  Oh no\n\n -     at native\n');
+});
+
 test('does not emit duplicate key warnings for repeated stack lines', (t: TestContext) => {
 	const consoleErrors: string[] = [];
 	const originalConsoleError = console.error;
