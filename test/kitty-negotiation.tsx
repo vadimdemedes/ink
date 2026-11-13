@@ -478,3 +478,94 @@ test('auto detection is not repeated when raw mode comes back on after a timeout
 	});
 	t.assert.deepStrictEqual(events, ['raw on']);
 });
+
+test('auto detection is the default mode', (t: TestContext) => {
+	const {stdin, stdout, events} = createTerminal();
+	const app = render(<ToggledInput />, {
+		stdin,
+		stdout,
+		interactive: true,
+		kittyKeyboard: {},
+	});
+	t.after(() => {
+		app.unmount();
+	});
+	t.assert.deepStrictEqual(events, ['raw on', queryKeyboard]);
+});
+
+test('`disabled` mode never writes keyboard protocol sequences', (t: TestContext) => {
+	const {stdin, stdout, events} = createTerminal();
+	const app = render(<ToggledInput />, {
+		stdin,
+		stdout,
+		interactive: true,
+		kittyKeyboard: {mode: 'disabled'},
+	});
+	app.unmount();
+	t.assert.deepStrictEqual(events, ['raw on', 'raw off']);
+});
+
+test('auto detection does not query the terminal when the app is not interactive', (t: TestContext) => {
+	const {stdin, stdout, events} = createTerminal();
+	const app = render(<ToggledInput />, {
+		stdin,
+		stdout,
+		interactive: false,
+		kittyKeyboard: {mode: 'auto'},
+	});
+	app.unmount();
+	t.assert.deepStrictEqual(events, ['raw on', 'raw off']);
+});
+
+test('auto detection does not query the terminal when stdout is not a TTY', (t: TestContext) => {
+	const {stdin, stdout, events} = createTerminal();
+	stdout.isTTY = false;
+	const app = render(<ToggledInput />, {
+		stdin,
+		stdout,
+		interactive: true,
+		kittyKeyboard: {mode: 'auto'},
+	});
+	app.unmount();
+	t.assert.deepStrictEqual(events, ['raw on', 'raw off']);
+});
+
+test('auto detection enables the protocol for a response 199 ms after the query', (t: TestContext) => {
+	const clock = FakeTimers.install({toFake: ['setTimeout', 'clearTimeout']});
+	const {stdin, stdout, events} = createTerminal();
+	const app = render(<ToggledInput />, {
+		stdin,
+		stdout,
+		interactive: true,
+		kittyKeyboard: {mode: 'auto'},
+	});
+	t.after(() => {
+		app.unmount();
+		clock.uninstall();
+	});
+	t.assert.deepStrictEqual(events.splice(0), ['raw on', queryKeyboard]);
+
+	clock.tick(199);
+	emitReadable(stdin, '\u{1B}[?0u');
+	t.assert.deepStrictEqual(events, [pushKeyboard]);
+});
+
+test('auto detection ignores a response 200 ms after the query', (t: TestContext) => {
+	const clock = FakeTimers.install({toFake: ['setTimeout', 'clearTimeout']});
+	const {stdin, stdout, events} = createTerminal();
+	const app = render(<ToggledInput />, {
+		stdin,
+		stdout,
+		interactive: true,
+		kittyKeyboard: {mode: 'auto'},
+	});
+	t.after(() => {
+		app.unmount();
+		clock.uninstall();
+	});
+	t.assert.deepStrictEqual(events.splice(0), ['raw on', queryKeyboard]);
+
+	clock.tick(200);
+	emitReadable(stdin, '\u{1B}[?0u');
+	t.assert.deepStrictEqual(events, []);
+});
