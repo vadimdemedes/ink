@@ -1,6 +1,13 @@
 import wrapAnsi from 'wrap-ansi';
 import {type DOMElement} from './dom.js';
 import sanitizeAnsi, {normalizeC1Controls} from './sanitize-ansi.js';
+import {InlineCursorHelper} from './cursor-helpers.js';
+
+type SquashedOutput = {
+	text: string;
+
+	cursor?: InlineCursorHelper;
+};
 
 // Squashing text nodes allows to combine multiple text nodes into one and write
 // to `Output` instance only once. For example, <Text>hello{' '}world</Text>
@@ -8,11 +15,13 @@ import sanitizeAnsi, {normalizeC1Controls} from './sanitize-ansi.js';
 //
 // Also, this is necessary for libraries like ink-link (https://github.com/sindresorhus/ink-link),
 // which need to wrap all children at once, instead of wrapping 3 text nodes separately.
-const squashTextNodes = (node: DOMElement): string => {
+const squashTextNodes = (node: DOMElement): SquashedOutput => {
+	let cursorHelper: InlineCursorHelper | undefined;
 	let text = '';
 
 	for (const childNode of node.childNodes) {
 		let nodeText = '';
+		let nodeCursor: InlineCursorHelper | undefined;
 
 		if (childNode.nodeName === '#text') {
 			nodeText = childNode.nodeValue;
@@ -25,7 +34,17 @@ const squashTextNodes = (node: DOMElement): string => {
 				childNode.nodeName === 'ink-text' ||
 				childNode.nodeName === 'ink-virtual-text'
 			) {
-				nodeText = squashTextNodes(childNode);
+				const {text: childNodeText, cursor: childNodeCursor} =
+					squashTextNodes(childNode);
+				nodeText = childNodeText;
+
+				if (childNode.internal_cursorOffset !== undefined) {
+					// Outer Cursor elements override inner ones
+					// NOTE: We don't support explicit offsets, yet
+					cursorHelper = InlineCursorHelper.withCursorAtEndOfText(text);
+				} else if (childNodeCursor !== undefined) {
+					nodeCursor = childNodeCursor;
+				}
 			}
 
 			// Since these text nodes are being concatenated, `Output` instance won't be able to
@@ -35,16 +54,47 @@ const squashTextNodes = (node: DOMElement): string => {
 				typeof childNode.internal_transform === 'function'
 			) {
 				const transform = childNode.internal_transform;
-				nodeText = nodeText
-					.split('\n')
-					.map((line, lineIndex) => transform(line, lineIndex))
-					.join('\n');
+				const transformLines = (toTransform: string) =>
+					toTransform
+						.split('\n')
+						.map((line, lineIndex) => transform(line, lineIndex))
+						.join('\n');
+				nodeText = transformLines(nodeText);
+				nodeCursor?.transformContent(transformLines);
 			}
+		}
+
+		if (nodeCursor === undefined) {
+			cursorHelper?.append(nodeText);
+		} else {
+			const helper = cursorHelper ?? InlineCursorHelper.withText(text);
+			helper.appendHelper(nodeCursor);
+			cursorHelper = helper;
 		}
 
 		text += nodeText;
 	}
 
+	if (
+		node.childNodes.length === 0 &&
+		node.nodeName === 'ink-text' &&
+		node.internal_cursorOffset !== undefined
+	) {
+		cursorHelper = InlineCursorHelper.withCursorAtEndOfText(text);
+	}
+
+	text = sanitizeSquashedText(node, text);
+	cursorHelper?.transform(toTransform =>
+		sanitizeSquashedText(node, toTransform),
+	);
+
+	return {
+		text,
+		cursor: cursorHelper?.hasCursor === true ? cursorHelper : undefined,
+	};
+};
+
+const sanitizeSquashedText = (node: DOMElement, text: string) => {
 	text = sanitizeAnsi(text.replaceAll('\r\n', '\n'));
 
 	text = normalizeC1Controls(text);

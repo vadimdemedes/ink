@@ -15,7 +15,11 @@ import {getWindowSize} from './utils.js';
 import reconciler, {connectToDevTools} from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
-import {hideCursorEscape, showCursorEscape} from './cursor-helpers.js';
+import {
+	cursorPositionChanged,
+	hideCursorEscape,
+	showCursorEscape,
+} from './cursor-helpers.js';
 import logUpdate, {type LogUpdate, type CursorPosition} from './log-update.js';
 import {bsu, esu, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
@@ -197,6 +201,7 @@ export type Options = {
 	exitOnCtrlC: boolean;
 	patchConsole: boolean;
 	onRender?: (metrics: RenderMetrics) => void;
+	onCursorUpdated?: (cursor: CursorPosition | undefined) => void;
 	isScreenReaderEnabled?: boolean;
 	waitUntilExit?: () => Promise<unknown>;
 	maxFps?: number;
@@ -256,6 +261,13 @@ export type Options = {
 export default class Ink {
 	private readonly options: Options;
 	private readonly log: LogUpdate;
+	// Set by `useCursor`. Persists across frames until the hook changes it.
+	private hookCursorPosition: CursorPosition | undefined;
+	// Where the last rendered frame placed a `<Cursor />`, if any.
+	private componentCursorPosition: CursorPosition | undefined;
+	// How many `<Cursor />` elements are mounted, for detecting mixed modes.
+	private cursorElementCount = 0;
+	// The effective cursor position.
 	private cursorPosition: CursorPosition | undefined;
 	private readonly throttledLog:
 		LogUpdate | DebouncedFunc<(output: string) => void>;
@@ -353,9 +365,36 @@ export default class Ink {
 		this.unmount();
 	};
 
-	setCursorPosition = (position: CursorPosition | undefined): void => {
-		this.cursorPosition = position;
-		this.log.setCursorPosition(position);
+	setCursorPositionFromHook = (position: CursorPosition | undefined): void => {
+		// Only record it: `useCursor` clears and re-sets its position on every
+		// commit, so the effective position is resolved once per frame in
+		// `onRender`, where those intermediate values can't leak to
+		// `onCursorUpdated`.
+		this.hookCursorPosition = position;
+	};
+
+	registerCursorElement = (): (() => void) => {
+		this.cursorElementCount++;
+
+		let isRegistered = true;
+		return () => {
+			if (!isRegistered) {
+				return;
+			}
+
+			isRegistered = false;
+			this.cursorElementCount--;
+		};
+	};
+
+	// Must be called from a layout effect, after the commit phase when
+	// Cursor/useCursor register their existence/clean up for unmount
+	assertSingleCursorMode = (): void => {
+		if (this.cursorElementCount > 0 && this.hookCursorPosition !== undefined) {
+			throw new Error(
+				'Mixing cursor modes: `useCursor` and `<Cursor />` cannot control the cursor at the same time. Pass `undefined` to `setCursorPosition` while a `<Cursor />` is rendered.',
+			);
+		}
 	};
 
 	// Must stay referentially stable across `render()` calls: it feeds into App's
@@ -490,11 +529,13 @@ export default class Ink {
 		}
 
 		const startTime = performance.now();
-		const {output, outputHeight, staticOutput} = render(
+		const {output, outputHeight, staticOutput, cursorPosition} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
 		);
 
+		this.componentCursorPosition = cursorPosition;
+		this.updateCursorPosition();
 		const renderTime = performance.now() - startTime;
 		// `exit()` from an effect unmounts before `<Static>` has dropped the children it just rendered, so the final frame would write them a second time. Static changes that have not been rendered yet are still marked dirty.
 		// The redraw on resume can find them in the tree too, when an effect of the commit that added them resumes. If they are not marked dirty they were already written or collected while suspended, and if they are, that commit is still running and renders them right after.
@@ -798,6 +839,20 @@ export default class Ink {
 			ansiEscapes.enterAlternativeScreen,
 		);
 		this.writeBestEffort(this.options.stdout, hideCursorEscape);
+	}
+
+	// Called once per frame from `onRender`, after the commit has settled.
+	private updateCursorPosition(): void {
+		// Prefer the hook. Both being set in the same frame is reported by
+		// `assertSingleCursorMode`.
+		const position = this.hookCursorPosition ?? this.componentCursorPosition;
+		if (!cursorPositionChanged(this.cursorPosition, position)) {
+			return;
+		}
+
+		this.options.onCursorUpdated?.(position);
+		this.cursorPosition = position;
+		this.log.setCursorPosition(position);
 	}
 
 	private resolveInteractiveOption(interactive: boolean | undefined): boolean {
@@ -1172,7 +1227,9 @@ export default class Ink {
 					renderThrottleMs={this.renderThrottleMs}
 					writeToStdout={this.writeToStdout}
 					writeToStderr={this.writeToStderr}
-					setCursorPosition={this.setCursorPosition}
+					setCursorPosition={this.setCursorPositionFromHook}
+					registerCursorElement={this.registerCursorElement}
+					assertSingleCursorMode={this.assertSingleCursorMode}
 					onExit={this.handleAppExit}
 					onWaitUntilRenderFlush={this.waitUntilRenderFlush}
 					onSuspendTerminal={this.suspendTerminal}

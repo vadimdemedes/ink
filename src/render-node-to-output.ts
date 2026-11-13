@@ -8,6 +8,7 @@ import renderBorder from './render-border.js';
 import renderBackground from './render-background.js';
 import {type DOMElement} from './dom.js';
 import type Output from './output.js';
+import {type CursorPosition} from './cursor-helpers.js';
 
 // If parent container is `<Box>`, text nodes will be treated as separate nodes in
 // the tree and will have their own coordinates in the layout.
@@ -50,7 +51,7 @@ export const renderNodeToScreenReaderOutput = (
 	let output = '';
 
 	if (node.nodeName === 'ink-text') {
-		output = squashTextNodes(node);
+		output = squashTextNodes(node).text;
 	} else if (node.nodeName === 'ink-box' || node.nodeName === 'ink-root') {
 		const separator =
 			node.style.flexDirection === 'row' ||
@@ -99,6 +100,10 @@ export const renderNodeToScreenReaderOutput = (
 	return output;
 };
 
+export type RenderEffects = {
+	cursorPosition?: CursorPosition;
+};
+
 // After nodes are laid out, render each to output object, which later gets rendered to terminal
 const renderNodeToOutput = (
 	node: DOMElement,
@@ -109,7 +114,7 @@ const renderNodeToOutput = (
 		transformers?: OutputTransformer[];
 		skipStaticElements: boolean;
 	},
-) => {
+): RenderEffects | undefined => {
 	const {
 		offsetX = 0,
 		offsetY = 0,
@@ -139,23 +144,51 @@ const renderNodeToOutput = (
 			: transformers;
 
 	if (node.nodeName === 'ink-text') {
-		let text = squashTextNodes(node);
+		let {text, cursor} = squashTextNodes(node);
+		let effects: RenderEffects | undefined;
 
 		if (text.length > 0) {
 			const currentWidth = measureText(text).width;
 			const maxWidth = getMaxWidth(yogaNode);
 
+			const textWrap = node.style.textWrap ?? 'wrap';
 			if (currentWidth > maxWidth) {
-				const textWrap = node.style.textWrap ?? 'wrap';
 				text = wrapText(text, maxWidth, textWrap);
+				cursor?.transform(toTransform =>
+					wrapText(toTransform, maxWidth, textWrap),
+				);
+			}
+
+			const position = cursor?.locateCursorPosition();
+			if (position !== undefined) {
+				const {x: newX, y: newY} = position;
+				effects = {
+					cursorPosition: {x: x + newX, y: y + newY},
+				};
 			}
 
 			text = applyPaddingToText(node, text);
 
-			output.write(x, y, text, {transformers: newTransformers});
+			output.write(x, y, text, {
+				transformers: newTransformers,
+				effects,
+			});
+		} else if (cursor?.hasCursor === true) {
+			// If there's no text, we've encountered
+			// a bare Cursor
+			effects = {
+				cursorPosition: {x, y},
+			};
+			// We still go ahead and write an empty
+			// string with the Effects in case clipping
+			// is at play
+			output.write(x, y, '', {
+				transformers: [],
+				effects,
+			});
 		}
 
-		return;
+		return effects;
 	}
 
 	let isClipped = false;
@@ -199,18 +232,25 @@ const renderNodeToOutput = (
 		return;
 	}
 
+	let resultEffects: RenderEffects | undefined;
 	for (const childNode of node.childNodes) {
-		renderNodeToOutput(childNode as DOMElement, output, {
+		const effects = renderNodeToOutput(childNode as DOMElement, output, {
 			offsetX: x - normalizeContentOffset(node.style.contentOffsetX),
 			offsetY: y - normalizeContentOffset(node.style.contentOffsetY),
 			transformers: newTransformers,
 			skipStaticElements,
 		});
+
+		if (effects !== undefined) {
+			resultEffects = effects;
+		}
 	}
 
 	if (isClipped) {
 		output.unclip();
 	}
+
+	return resultEffects;
 };
 
 export default renderNodeToOutput;

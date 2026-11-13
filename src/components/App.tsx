@@ -53,6 +53,8 @@ type Props = {
 		resumeInput: () => void,
 	) => void;
 	readonly setCursorPosition: (position: CursorPosition | undefined) => void;
+	readonly registerCursorElement: () => () => void;
+	readonly assertSingleCursorMode: () => void;
 	readonly interactive: boolean;
 	readonly renderThrottleMs: number;
 };
@@ -95,6 +97,8 @@ function App({
 	onRawModeDisable,
 	onRegisterInputControl,
 	setCursorPosition,
+	registerCursorElement,
+	assertSingleCursorMode,
 	interactive,
 	renderThrottleMs,
 }: Props): React.ReactNode {
@@ -789,8 +793,10 @@ function App({
 	const cursorContextValue = useMemo(
 		() => ({
 			setCursorPosition,
+			registerCursorElement,
+			assertSingleCursorMode,
 		}),
-		[setCursorPosition],
+		[setCursorPosition, registerCursorElement, assertSingleCursorMode],
 	);
 
 	const focusContextValue = useMemo(

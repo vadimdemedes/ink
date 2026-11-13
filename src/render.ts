@@ -4,6 +4,7 @@ import type {ReactNode} from 'react';
 import Ink, {type Options as InkOptions, type RenderMetrics} from './ink.js';
 import instances from './instances.js';
 import {type KittyKeyboardOptions} from './kitty-keyboard.js';
+import {type CursorPosition} from './cursor-helpers.js';
 
 export type RenderOptions = {
 	/**
@@ -56,6 +57,11 @@ export type RenderOptions = {
 	To run code after output is flushed, use `waitUntilRenderFlush()`.
 	*/
 	onRender?: (metrics: RenderMetrics) => void;
+
+	/**
+	Runs the given callback after each cursor update.
+	*/
+	onCursorUpdated?: (cursorPosition: CursorPosition | undefined) => void;
 
 	/**
 	Enable screen reader support. See https://github.com/vadimdemedes/ink/blob/master/readme.md#screen-reader-support
