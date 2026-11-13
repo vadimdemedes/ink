@@ -17,6 +17,7 @@ import {bsu, esu} from '../src/write-synchronized.js';
 import {renderToString} from './helpers/render-to-string.js';
 import {run} from './helpers/run.js';
 import createStdout from './helpers/create-stdout.js';
+import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 
 test('omit Static content inside a hidden ancestor from screen-reader output', (t: TestContext) => {
 	const output = renderToString(
@@ -663,4 +664,100 @@ test('rerender() does not re-render memoized components that read the screen rea
 
 	t.assert.strictEqual(stdout.getWrites().at(-1), 'off1');
 	t.assert.strictEqual(renderCount, 1);
+});
+
+const sixLines = Array.from({length: 6}, (_, index) => `line ${index}`);
+
+function Lines({lines}: {readonly lines: string[]}) {
+	return (
+		<Box flexDirection="column">
+			{lines.map(line => (
+				<Text key={line}>{line}</Text>
+			))}
+		</Box>
+	);
+}
+
+for (const grownRows of [5, 6, 8]) {
+	test(`redraw a screen-reader frame that was taller than the alternate screen when the terminal height grows from 4 to ${grownRows} rows`, async (t: TestContext) => {
+		const stdout = createStdout(40);
+		stdout.rows = 4;
+
+		const {rerender, unmount, waitUntilRenderFlush} = render(
+			<Lines lines={sixLines} />,
+			{
+				stdout,
+				interactive: true,
+				alternateScreen: true,
+				isScreenReaderEnabled: true,
+			},
+		);
+		t.after(() => {
+			unmount();
+		});
+		await waitUntilRenderFlush();
+
+		const writesBeforeResize = stdout.getWrites().length;
+		stdout.rows = grownRows;
+		stdout.emit('resize');
+		await waitUntilRenderFlush();
+
+		// The alternate screen has no scrollback, so the two lines that scrolled off the 4-row terminal do not come back when it grows. The reducer would bring them back, so carry only its viewport over the resize and read only its viewport afterwards.
+		const screen = (): string[] => {
+			const writes = stdout
+				.getWrites()
+				.map(write => write.replaceAll('\n', '\r\n'));
+			const viewport = reconstructTerminalLines(
+				writes.slice(0, writesBeforeResize),
+				4,
+			).slice(-4);
+
+			return reconstructTerminalLines(
+				[
+					viewport.join('\r\n'),
+					{rows: grownRows},
+					...writes.slice(writesBeforeResize),
+				],
+				4,
+			)
+				.slice(-grownRows)
+				.filter(line => line !== '');
+		};
+
+		t.assert.deepStrictEqual(screen(), sixLines.slice(-grownRows));
+
+		rerender(<Lines lines={[...sixLines.slice(0, 5), 'updated']} />);
+		await waitUntilRenderFlush();
+
+		t.assert.deepStrictEqual(
+			screen(),
+			[...sixLines.slice(0, 5), 'updated'].slice(-grownRows),
+		);
+	});
+}
+
+test('leave a screen-reader frame that was taller than the primary screen alone when the terminal height grows', async (t: TestContext) => {
+	const stdout = createStdout(40);
+	stdout.rows = 4;
+
+	const {unmount, waitUntilRenderFlush} = render(<Lines lines={sixLines} />, {
+		stdout,
+		interactive: true,
+		isScreenReaderEnabled: true,
+	});
+	t.after(() => {
+		unmount();
+	});
+	await waitUntilRenderFlush();
+
+	const writesBeforeResize = contentWrites(stdout).length;
+	stdout.rows = 6;
+	stdout.emit('resize');
+	await waitUntilRenderFlush();
+
+	// The terminal brings the two lines back from scrollback itself, so there is nothing to draw again.
+	t.assert.deepStrictEqual(contentWrites(stdout).slice(writesBeforeResize), [
+		bsu,
+		esu,
+	]);
 });
