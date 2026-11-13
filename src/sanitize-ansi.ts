@@ -48,7 +48,7 @@ const normalizeParameter = (parameter: string): string | undefined => {
 // Preserved: SGR sequences (colors, bold, etc. - end with 'm') and
 // OSC 8 hyperlinks (ESC ] or C1 OSC) that have both separators and no control characters in their payload.
 // Stripped: cursor movement, screen clearing, and other control sequences.
-// Combining marks share their base character's cell, so SGR sequences are deferred until after the marks. Otherwise ANSI tokenization consumes the marks as part of the escape sequence.
+// Combining marks share their base character's cell, so SGR sequences and hyperlinks are deferred until after the marks. Otherwise ANSI tokenization reads the marks as part of the escape sequence, or as a character of their own that takes up a cell.
 const sanitizeAnsi = (text: string): string => {
 	if (!hasAnsiControlCharacters(text)) {
 		return text.replaceAll(controlCharactersRegex, '');
@@ -73,8 +73,7 @@ const sanitizeAnsi = (text: string): string => {
 
 		if (token.type === 'osc') {
 			if (hyperlinkRegex.test(token.value)) {
-				output += pendingStyles + token.value;
-				pendingStyles = '';
+				pendingStyles += token.value;
 			}
 
 			continue;

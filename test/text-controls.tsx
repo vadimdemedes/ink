@@ -126,6 +126,54 @@ test('a hyperlink without a URI separator keeps its text', (t: TestContext) => {
 	t.assert.strictEqual(output, 'link text');
 });
 
+for (const [wrap, expected] of [
+	[
+		'truncate',
+		'│a\u{301}\u{1B}]8;;https://example.com\u{7}bcde\u{1B}]8;;\u{7}…│',
+	],
+	[
+		'wrap',
+		'│\u{E1}\u{1B}]8;;https://example.com\u{7}bcdef\u{1B}]8;;\u{7}│\n│\u{1B}]8;;https://example.com\u{7}ghij\u{1B}]8;;\u{7}  │',
+	],
+] as const) {
+	test(`a combining mark after a hyperlink sequence stays in the cell of its base character with wrap="${wrap}"`, (t: TestContext) => {
+		const output = renderToString(
+			<Box width={8} borderStyle="single">
+				<Text wrap={wrap}>
+					{'a\u{1B}]8;;https://example.com\u{7}\u{301}bcdefghij\u{1B}]8;;\u{7}'}
+				</Text>
+			</Box>,
+		);
+
+		// Behind the hyperlink sequence the mark takes a cell of its own, so the row is a column wider than measured and the right border is lost.
+		t.assert.strictEqual(output, `┌──────┐\n${expected}\n└──────┘`);
+	});
+}
+
+test('a combining mark after a closing hyperlink sequence stays in the hyperlink', (t: TestContext) => {
+	const output = renderToString(
+		<Text>
+			{'\u{1B}]8;;https://example.com\u{7}that\u{1B}]8;;\u{7}\u{301} around'}
+		</Text>,
+	);
+
+	t.assert.strictEqual(
+		output,
+		'\u{1B}]8;;https://example.com\u{7}that\u{301}\u{1B}]8;;\u{7} around',
+	);
+});
+
+test('a combining mark after a closing hyperlink sequence terminated by ST is kept', (t: TestContext) => {
+	const output = renderToString(
+		<Box width={8} borderStyle="single">
+			<Text>{'that\u{1B}]8;;\u{1B}\\\u{301}ab'}</Text>
+		</Box>,
+	);
+
+	// Directly after `ESC \` the mark is read as part of the sequence and lost.
+	t.assert.strictEqual(output, '┌──────┐\n│that\u{301}ab│\n└──────┘');
+});
+
 test('text does not let an OSC hyperlink smuggle escape sequences to the terminal', (t: TestContext) => {
 	const output = renderToString(
 		<Text>
