@@ -813,4 +813,62 @@ for (const isIncrementalRendering of [false, true]) {
 			]);
 		});
 	}
+
+	const sixLinesFrame = (firstLine: string) => (
+		<CursorLines frameLines={[firstLine, ...lines.slice(1)]} />
+	);
+
+	for (const grownRows of [6, 8]) {
+		test(`${name} rendering - repaints a frame that was taller than the alternate screen when the terminal height grows from 4 to ${grownRows} rows`, async (t: TestContext) => {
+			const stdout = createStdout(40);
+			stdout.rows = 4;
+
+			const {rerender, unmount, waitUntilRenderFlush} = render(
+				sixLinesFrame('line 0'),
+				{
+					stdout,
+					interactive: true,
+					alternateScreen: true,
+					incrementalRendering: isIncrementalRendering,
+				},
+			);
+			t.after(() => {
+				unmount();
+			});
+			await waitUntilRenderFlush();
+
+			const writesBeforeResize = stdout.getWrites().length;
+			stdout.rows = grownRows;
+			stdout.emit('resize');
+			await waitUntilRenderFlush();
+
+			// The alternate screen has no scrollback, so the two lines that scrolled off the 4-row terminal do not come back when it grows. The reducer would bring them back, so carry only its viewport over the resize.
+			const screen = (): string[] => {
+				const writes = stdout
+					.getWrites()
+					.map(write => write.replaceAll('\n', '\r\n'));
+				const viewport = reconstructTerminalLines(
+					writes.slice(0, writesBeforeResize),
+					4,
+				).slice(-4);
+
+				return reconstructTerminalLines(
+					[
+						viewport.join('\r\n'),
+						{rows: grownRows},
+						...writes.slice(writesBeforeResize),
+					],
+					4,
+				).filter(line => line !== '');
+			};
+
+			t.assert.deepStrictEqual(screen(), lines);
+
+			// A one-line update lands on the wrong row if the frame is not where log-update believes it is.
+			rerender(sixLinesFrame('updated'));
+			await waitUntilRenderFlush();
+
+			t.assert.deepStrictEqual(screen(), ['updated', ...lines.slice(1)]);
+		});
+	}
 }
