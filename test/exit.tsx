@@ -21,6 +21,17 @@ test('exit normally without unmount() or exit()', async (t: TestContext) => {
 	t.assert.ok(output.includes('exited'));
 });
 
+test('exit normally with two instances waiting for exit', async (t: TestContext) => {
+	const output = await run('exit-normally-two-instances');
+	t.assert.ok(output.includes('exited'));
+});
+
+test('keep an instance that starts waiting for exit during beforeExit mounted until the next beforeExit', async (t: TestContext) => {
+	const output = await run('exit-normally-render-on-before-exit');
+	t.assert.ok(output.includes('late work done'));
+	t.assert.ok(output.includes('exited'));
+});
+
 test('exit on unmount()', async (t: TestContext) => {
 	const output = await run('exit-on-unmount');
 	t.assert.ok(output.includes('exited'));
@@ -192,4 +203,47 @@ test('instances share one exit listener', (t: TestContext) => {
 
 	instances[0]!.unmount();
 	t.assert.strictEqual(process.listenerCount('exit'), exitListenerCount);
+});
+
+test('instances waiting for exit share one beforeExit listener', async (t: TestContext) => {
+	const beforeExitListenerCount = process.listenerCount('beforeExit');
+	const instances = Array.from({length: 11}, () =>
+		render(<Text>Hello World</Text>, {
+			stdout: createStdout(),
+			patchConsole: false,
+		}),
+	);
+
+	t.assert.strictEqual(
+		process.listenerCount('beforeExit'),
+		beforeExitListenerCount,
+	);
+
+	for (const instance of instances) {
+		void instance.waitUntilExit();
+		void instance.waitUntilExit();
+	}
+
+	t.assert.strictEqual(
+		process.listenerCount('beforeExit'),
+		beforeExitListenerCount + 1,
+	);
+
+	for (const instance of instances.slice(1)) {
+		instance.unmount();
+	}
+
+	await Promise.all(
+		instances.slice(1).map(async instance => instance.waitUntilExit()),
+	);
+	t.assert.strictEqual(
+		process.listenerCount('beforeExit'),
+		beforeExitListenerCount + 1,
+	);
+
+	instances[0]!.unmount();
+	t.assert.strictEqual(
+		process.listenerCount('beforeExit'),
+		beforeExitListenerCount,
+	);
 });
