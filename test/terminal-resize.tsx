@@ -621,6 +621,96 @@ for (const isIncrementalRendering of [false, true]) {
 		});
 	}
 
+	test(`rows shrink with a cursor shown and a frame that clears the cursor committed before the resize event keeps lines above the frame${mode}`, async (t: TestContext) => {
+		const stdout = createStdout(100);
+		stdout.rows = 10;
+
+		const {rerender, unmount, waitUntilRenderFlush} = render(
+			<Frame cursorY={0} />,
+			{
+				stdout,
+				incrementalRendering: isIncrementalRendering,
+				interactive: true,
+			},
+		);
+		t.after(() => {
+			unmount();
+		});
+		await waitUntilRenderFlush();
+
+		// The cursor that matters is the one on screen, which the previous frame put there, not the one this frame asks for.
+		const writesBeforeResize = stdout.getWrites().length;
+		stdout.rows = 8;
+		rerender(<Frame suffix="!" cursorY={undefined} />);
+		await waitUntilRenderFlush();
+
+		t.assert.deepStrictEqual(screenAfterShrink(stdout, writesBeforeResize, 8), [
+			...shell,
+			...letters.map(letter => letter + '!'),
+		]);
+	});
+
+	test(`a changed frame with a cursor shown is not erased from the top when the terminal height has not changed${mode}`, async (t: TestContext) => {
+		const stdout = createStdout(100);
+		stdout.rows = 10;
+
+		const {rerender, unmount, waitUntilRenderFlush} = render(
+			<Frame cursorY={0} />,
+			{
+				stdout,
+				incrementalRendering: isIncrementalRendering,
+				interactive: true,
+			},
+		);
+		t.after(() => {
+			unmount();
+		});
+		await waitUntilRenderFlush();
+
+		const writesBeforeUpdate = stdout.getWrites().length;
+		rerender(<Frame suffix="!" cursorY={0} />);
+		await waitUntilRenderFlush();
+
+		t.assert.ok(
+			!stdout
+				.getWrites()
+				.slice(writesBeforeUpdate)
+				.join('')
+				.includes(ansiEscapes.eraseDown),
+		);
+	});
+
+	test(`rows shrink with a cursor shown and a frame committed before the resize event redraws the alternate screen${mode}`, async (t: TestContext) => {
+		const stdout = createStdout(100);
+		stdout.rows = 10;
+
+		const {rerender, unmount, waitUntilRenderFlush} = render(
+			<Frame cursorY={0} />,
+			{
+				stdout,
+				incrementalRendering: isIncrementalRendering,
+				interactive: true,
+				alternateScreen: true,
+			},
+		);
+		t.after(() => {
+			unmount();
+		});
+		await waitUntilRenderFlush();
+
+		const writesBeforeResize = stdout.getWrites().length;
+		stdout.rows = 8;
+		rerender(<Frame suffix="!" cursorY={0} />);
+		await waitUntilRenderFlush();
+
+		// Every row of the alternate screen is Ink's, so the frame is redrawn from the top of the screen there.
+		const written = stdout.getWrites().slice(writesBeforeResize).join('');
+		t.assert.ok(written.includes(homeAndEraseDown));
+		t.assert.ok(
+			written.includes(letters.map(letter => letter + '!').join('\n')),
+		);
+	});
+
 	test(`rows shrink with a cursor shown and <Static> output committed before the resize event keeps lines above the frame${mode}`, async (t: TestContext) => {
 		const stdout = createStdout(100);
 		stdout.rows = 10;
