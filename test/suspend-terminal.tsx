@@ -1,16 +1,19 @@
 import test, {type TestContext} from 'node:test';
 import React, {useEffect} from 'react';
 import stripAnsi from 'strip-ansi';
+import ansiEscapes from 'ansi-escapes';
 import {
 	render,
 	useApp,
 	useInput,
 	usePaste,
 	useStdout,
+	useStderr,
 	Static,
 	Text,
 } from '../src/index.js';
 import {type SuspendTerminal} from '../src/components/AppContext.js';
+import {bsu, esu} from '../src/write-synchronized.js';
 import createStdout, {type FakeStdout} from './helpers/create-stdout.js';
 import {createStdin} from './helpers/create-stdin.js';
 import term from './helpers/term.js';
@@ -93,6 +96,51 @@ test('suspendTerminal hands the terminal to the callback, then restores Ink', as
 	t.assert.ok(stdout.getWrites().some(write => write.includes(showCursor)));
 	t.assert.ok(stdout.getWrites().some(write => write.includes(hideCursor)));
 });
+
+for (const hasPasteHook of [false, true]) {
+	test(`suspendTerminal erases the frame and shows the cursor before the callback runs, then redraws on resume (paste hook: ${hasPasteHook})`, async (t: TestContext) => {
+		const stdout = createStdout();
+		let suspendTerminal!: SuspendTerminal;
+
+		function Example() {
+			suspendTerminal = useApp().suspendTerminal;
+			useInput(() => {});
+			usePaste(() => {}, {isActive: hasPasteHook});
+			return <Text>hello</Text>;
+		}
+
+		const {unmount} = render(<Example />, {
+			stdout,
+			stdin: createStdin(),
+			interactive: true,
+		});
+		t.after(() => {
+			unmount();
+		});
+		const writesAtMount = stdout.getWrites().length;
+		const suspension = await suspendTerminal();
+		const writesAtHandoff = stdout.getWrites().length;
+
+		// Bracketed paste is only turned off when a paste hook had turned it on.
+		t.assert.deepStrictEqual(stdout.getWrites().slice(writesAtMount), [
+			ansiEscapes.eraseLines(2),
+			`\u{1B}${showCursor}`,
+			...(hasPasteHook ? ['\u{1B}[?2004l'] : []),
+		]);
+
+		await suspension.resume();
+
+		// The empty write is the one `resume()` waits on, so the redraw has reached the terminal by the time it resolves.
+		t.assert.deepStrictEqual(stdout.getWrites().slice(writesAtHandoff), [
+			...(hasPasteHook ? ['\u{1B}[?2004h'] : []),
+			bsu,
+			`\u{1B}${hideCursor}`,
+			'hello\n',
+			esu,
+			'',
+		]);
+	});
+}
 
 test('suspendTerminal restores the terminal even if the callback throws', async (t: TestContext) => {
 	let didThrow = false;
@@ -183,6 +231,36 @@ test('suspendTerminal keeps Ink off the terminal while suspended', async (t: Tes
 	unmount();
 
 	t.assert.strictEqual(writesDuringSuspend, 0);
+});
+
+test('suspendTerminal keeps stderr writes off the terminal while suspended', async (t: TestContext) => {
+	const stdout = createStdout();
+	const stderr = createStdout();
+	let suspendTerminal!: SuspendTerminal;
+	let write!: (data: string) => void;
+
+	function Example() {
+		suspendTerminal = useApp().suspendTerminal;
+		write = useStderr().write;
+		return <Text>hello</Text>;
+	}
+
+	const {unmount} = render(<Example />, {
+		stdout,
+		stderr,
+		stdin: createStdin(),
+		interactive: true,
+	});
+	t.after(() => {
+		unmount();
+	});
+	await suspendTerminal();
+	const writesAtHandoff = stdout.getWrites().length;
+	write('output while suspended');
+
+	// The write is dropped, and Ink does not repaint its frame around it either.
+	t.assert.deepStrictEqual(stderr.getWrites(), []);
+	t.assert.deepStrictEqual(stdout.getWrites().slice(writesAtHandoff), []);
 });
 
 test('suspendTerminal runs the callback but skips the handoff when not interactive', async (t: TestContext) => {
@@ -383,6 +461,7 @@ for (const [mode, options] of Object.entries({
 test('suspendTerminal rolls back so a later suspend works if handover throws', async (t: TestContext) => {
 	let wasFirstRejected = false;
 	let didSecondSucceed = false;
+	const rawModeCalls: boolean[] = [];
 
 	await renderWithSuspend(async (suspendTerminal, stdin) => {
 		const rawModeController = stdin as unknown as {
@@ -391,6 +470,7 @@ test('suspendTerminal rolls back so a later suspend works if handover throws', a
 		const originalSetRawMode = rawModeController.setRawMode;
 		// Force the pause's setRawMode(false) to throw so beginSuspend's rollback runs.
 		rawModeController.setRawMode = (isEnabled: boolean) => {
+			rawModeCalls.push(isEnabled);
 			if (!isEnabled) {
 				throw new Error('handover boom');
 			}
@@ -414,6 +494,8 @@ test('suspendTerminal rolls back so a later suspend works if handover throws', a
 	});
 
 	t.assert.ok(wasFirstRejected);
+	// The rollback took input back after the failed handover.
+	t.assert.deepStrictEqual(rawModeCalls, [false, true]);
 	t.assert.ok(didSecondSucceed);
 });
 
