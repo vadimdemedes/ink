@@ -55,6 +55,7 @@ export const homeAndEraseDown =
 
 const shouldClearTerminalForFrame = ({
 	isStdoutTty,
+	isAlternateScreen,
 	viewportRows,
 	previousViewportRows,
 	previousOutputHeight,
@@ -62,6 +63,7 @@ const shouldClearTerminalForFrame = ({
 	isUnmounting,
 }: {
 	isStdoutTty: boolean;
+	isAlternateScreen: boolean;
 	viewportRows: number;
 	previousViewportRows: number;
 	previousOutputHeight: number;
@@ -80,9 +82,10 @@ const shouldClearTerminalForFrame = ({
 	}
 
 	const hadPreviousFrame = previousOutputHeight > 0;
-	// A frame taller than the viewport it was drawn into had its top rows scroll off, and a terminal that gains rows does not always bring them back, so the frame stays cut off until it is redrawn.
-	const wasOverflowing =
-		previousOutputHeight > Math.min(viewportRows, previousViewportRows);
+	// A frame taller than the alternate screen it was drawn into lost its top rows, and with no scrollback a terminal that gains rows cannot bring them back, so the frame stays cut off until it is redrawn. On the primary screen the terminal restores them from scrollback, and a clear at that point could erase a line above the frame.
+	const wasCutOff =
+		isAlternateScreen && previousOutputHeight > previousViewportRows;
+	const wasOverflowing = previousOutputHeight > viewportRows || wasCutOff;
 	const isOverflowing = nextOutputHeight > viewportRows;
 	const isLeavingFullscreen = wasFullscreen && nextOutputHeight < viewportRows;
 	const isViewportShrinking = viewportRows < previousViewportRows;
@@ -788,6 +791,7 @@ export default class Ink {
 		const previousViewportRows = this.lastTerminalHeight;
 		const shouldClearTerminal = shouldClearTerminalForFrame({
 			isStdoutTty,
+			isAlternateScreen: this.alternateScreen,
 			viewportRows,
 			previousViewportRows,
 			previousOutputHeight: this.lastOutputHeight,
