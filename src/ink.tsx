@@ -152,6 +152,18 @@ const unmountMountedInstances = (code: number): void => {
 	}
 };
 
+// Instances with a pending `waitUntilExit()` share one `beforeExit` listener for the same reason, added when the first starts waiting and removed when the last unmounts.
+const instancesAwaitingExit = new Map<Ink, boolean>();
+
+const unmountInstancesAwaitingExit = (): void => {
+	// An instance that started waiting in this tick is left for the next `beforeExit`. During an emit that is one that started waiting in an earlier `beforeExit` listener, which is left alone as it was when every instance had its own listener.
+	for (const [instance, wasWaitingBeforeThisTick] of instancesAwaitingExit) {
+		if (wasWaitingBeforeThisTick) {
+			instance.unmount();
+		}
+	}
+};
+
 /**
 Performance metrics for a render operation.
 */
@@ -256,7 +268,6 @@ export default class Ink {
 	private hasRenderedStaticOutput: boolean;
 	private readonly exitPromise!: Promise<unknown>;
 	private exitResult: unknown;
-	private beforeExitHandler?: () => void;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
 	private readonly throttledOnRender?: DebouncedFunc<() => void>;
@@ -1231,9 +1242,9 @@ export default class Ink {
 
 		this.isUnmounting = true;
 
-		if (this.beforeExitHandler) {
-			process.off('beforeExit', this.beforeExitHandler);
-			this.beforeExitHandler = undefined;
+		instancesAwaitingExit.delete(this);
+		if (instancesAwaitingExit.size === 0) {
+			process.off('beforeExit', unmountInstancesAwaitingExit);
 		}
 
 		const {stdout} = this.options;
@@ -1381,12 +1392,17 @@ export default class Ink {
 	}
 
 	async waitUntilExit(): Promise<unknown> {
-		if (!this.isUnmounting && !this.beforeExitHandler) {
-			this.beforeExitHandler = () => {
-				this.unmount();
-			};
+		if (!this.isUnmounting && !instancesAwaitingExit.has(this)) {
+			instancesAwaitingExit.set(this, false);
+			if (instancesAwaitingExit.size === 1) {
+				process.on('beforeExit', unmountInstancesAwaitingExit);
+			}
 
-			process.once('beforeExit', this.beforeExitHandler);
+			queueMicrotask(() => {
+				if (instancesAwaitingExit.has(this)) {
+					instancesAwaitingExit.set(this, true);
+				}
+			});
 		}
 
 		return this.exitPromise;
