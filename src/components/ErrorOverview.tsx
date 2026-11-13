@@ -136,7 +136,6 @@ export default function ErrorOverview({error}: Props) {
 									<Text dimColor>- </Text>
 									<Text dimColor bold>
 										{line}
-										\t{' '}
 									</Text>
 								</Box>
 							);
