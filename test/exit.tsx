@@ -3,8 +3,11 @@ import * as path from 'node:path';
 import url from 'node:url';
 import {createRequire} from 'node:module';
 import test, {type TestContext} from 'node:test';
+import React from 'react';
 import stripAnsi from 'strip-ansi';
+import {Text, render} from '../src/index.js';
 import {run} from './helpers/run.js';
+import createStdout from './helpers/create-stdout.js';
 
 const require = createRequire(import.meta.url);
 
@@ -162,4 +165,31 @@ test('unmount on process.exit() after a dependency using signal-exit 4 registere
 	const output = await run('exit-after-signal-exit-v4-user');
 	t.assert.ok(output.includes('Hello World'));
 	t.assert.ok(output.includes('unmounted'), 'Ink did not unmount on exit');
+});
+
+test('unmount every instance on process.exit() after a dependency using signal-exit 4 registered an exit handler', async (t: TestContext) => {
+	const output = await run('exit-two-instances-after-signal-exit-v4-user');
+	t.assert.ok(output.includes('unmounted first'));
+	t.assert.ok(output.includes('unmounted second'));
+});
+
+test('instances share one exit listener', (t: TestContext) => {
+	const exitListenerCount = process.listenerCount('exit');
+	const instances = Array.from({length: 11}, () =>
+		render(<Text>Hello World</Text>, {
+			stdout: createStdout(),
+			patchConsole: false,
+		}),
+	);
+
+	t.assert.strictEqual(process.listenerCount('exit'), exitListenerCount + 1);
+
+	for (const instance of instances.slice(1)) {
+		instance.unmount();
+	}
+
+	t.assert.strictEqual(process.listenerCount('exit'), exitListenerCount + 1);
+
+	instances[0]!.unmount();
+	t.assert.strictEqual(process.listenerCount('exit'), exitListenerCount);
 });
