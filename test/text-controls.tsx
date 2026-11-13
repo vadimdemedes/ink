@@ -117,6 +117,15 @@ test('a hyperlink with DEL in its URI wraps as plain text', (t: TestContext) => 
 	t.assert.strictEqual(output, 'visible text\n that has to\n wrap around');
 });
 
+test('a hyperlink without a URI separator keeps its text', (t: TestContext) => {
+	const output = renderToString(
+		<Text>{'\u{1B}]8;id=1\u{7}link text\u{1B}]8;;\u{7}'}</Text>,
+	);
+
+	// With the hyperlink kept, the text is read as part of its sequence and nothing is rendered.
+	t.assert.strictEqual(output, 'link text');
+});
+
 test('text does not let an OSC hyperlink smuggle escape sequences to the terminal', (t: TestContext) => {
 	const output = renderToString(
 		<Text>
