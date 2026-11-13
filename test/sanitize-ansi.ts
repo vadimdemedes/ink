@@ -91,6 +91,31 @@ test('keep deferred SGR sequences before a following hyperlink', (t: TestContext
 	);
 });
 
+test('defer hyperlinks until after combining marks', (t: TestContext) => {
+	t.assert.strictEqual(
+		sanitizeAnsi(
+			'e\u{1B}]8;;https://example.com\u{7}\u{301}\u{302}X\u{1B}]8;;\u{7}\u{301}Y',
+		),
+		'e\u{301}\u{302}\u{1B}]8;;https://example.com\u{7}X\u{301}\u{1B}]8;;\u{7}Y',
+	);
+});
+
+test('defer a trailing hyperlink past a combining mark', (t: TestContext) => {
+	t.assert.strictEqual(
+		sanitizeAnsi('e\u{1B}]8;;https://example.com\u{7}\u{301}'),
+		'e\u{301}\u{1B}]8;;https://example.com\u{7}',
+	);
+});
+
+test('keep deferred SGR sequences and hyperlinks in order', (t: TestContext) => {
+	t.assert.strictEqual(
+		sanitizeAnsi(
+			'e\u{1B}[31m\u{1B}]8;;https://example.com\u{7}\u{1B}[1m\u{301}X',
+		),
+		'e\u{301}\u{1B}[31m\u{1B}]8;;https://example.com\u{7}\u{1B}[1mX',
+	);
+});
+
 test('strip cursor controls before checking for combining marks', (t: TestContext) => {
 	t.assert.strictEqual(
 		sanitizeAnsi('e\u{1B}[31m\r\u{301}X'),
