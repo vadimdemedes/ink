@@ -6,7 +6,7 @@ function Late() {
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			process.stdout.write('late work done\n');
-		}, 100);
+		}, 0);
 
 		return () => {
 			clearTimeout(timer);

@@ -156,7 +156,7 @@ const unmountMountedInstances = (code: number): void => {
 const instancesAwaitingExit = new Map<Ink, boolean>();
 
 const unmountInstancesAwaitingExit = (): void => {
-	// An instance that started waiting in this tick did so while `beforeExit` was being emitted, and is left for the next `beforeExit`, as it was when every instance had its own listener.
+	// An instance that started waiting in this tick is left for the next `beforeExit`. During an emit that is one that started waiting in an earlier `beforeExit` listener, which is left alone as it was when every instance had its own listener.
 	for (const [instance, wasWaitingBeforeThisTick] of instancesAwaitingExit) {
 		if (wasWaitingBeforeThisTick) {
 			instance.unmount();

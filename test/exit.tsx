@@ -23,7 +23,8 @@ test('exit normally without unmount() or exit()', async (t: TestContext) => {
 
 test('exit normally with two instances waiting for exit', async (t: TestContext) => {
 	const output = await run('exit-normally-two-instances');
-	t.assert.ok(output.includes('exited'));
+	// One `beforeExit` has to unmount both of them.
+	t.assert.ok(output.includes('exited after 1 beforeExit'));
 });
 
 test('keep an instance that starts waiting for exit during beforeExit mounted until the next beforeExit', async (t: TestContext) => {
