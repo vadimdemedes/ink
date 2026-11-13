@@ -85,7 +85,7 @@ export default function ErrorOverview({error}: Props) {
 				<Box marginTop={1} flexDirection="column">
 					{excerpt.map(({line, value}) => (
 						<Box key={line}>
-							<Box width={lineWidth + 1}>
+							<Box width={lineWidth + 1} flexShrink={0}>
 								<Text
 									dimColor={line !== origin.line}
 									backgroundColor={line === origin.line ? 'red' : undefined}
