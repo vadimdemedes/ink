@@ -71,6 +71,7 @@ const shouldClearTerminalForFrame = ({
 	previousViewportRows,
 	previousOutputHeight,
 	nextOutputHeight,
+	isCursorShown,
 	isUnmounting,
 }: {
 	isStdoutTty: boolean;
@@ -79,6 +80,7 @@ const shouldClearTerminalForFrame = ({
 	previousViewportRows: number;
 	previousOutputHeight: number;
 	nextOutputHeight: number;
+	isCursorShown: boolean;
 	isUnmounting: boolean;
 }): boolean => {
 	if (!isStdoutTty) {
@@ -110,8 +112,8 @@ const shouldClearTerminalForFrame = ({
 		(isOverflowing && hadPreviousFrame) ||
 		// Clear when shrinking from fullscreen to non-fullscreen output.
 		isLeavingFullscreen ||
-		// A terminal that loses rows scrolls only as far as it must to keep the cursor on screen, so the frame is cut only when it fills the new viewport. Then the cursor-relative diff no longer lines up with what is on screen.
-		(isViewportShrinking && wasFullscreen) ||
+		// A terminal that loses rows scrolls only as far as it must to keep the cursor on screen, so the frame is cut only when it fills the new viewport. Then the cursor-relative diff no longer lines up with what is on screen. A useCursor() position leaves the cursor inside the frame, so the terminal drops the frame rows below it first, even when the frame still fits. `resized` repaints that case itself, but a frame committed before the resize event gets here first.
+		(isViewportShrinking && (wasFullscreen || isCursorShown)) ||
 		// Preserve legacy unmount behavior for fullscreen frames: final teardown
 		// render should clear once to avoid leaving a scrolled viewport state.
 		shouldClearOnUnmount
@@ -874,6 +876,7 @@ export default class Ink {
 			previousViewportRows,
 			previousOutputHeight: this.lastOutputHeight,
 			nextOutputHeight: outputHeight,
+			isCursorShown: this.log.getCursorPosition() !== undefined,
 			isUnmounting: this.isUnmounting,
 		});
 		this.lastTerminalHeight = viewportRows;

@@ -4,7 +4,14 @@ import ansiEscapes from 'ansi-escapes';
 import delay from 'delay';
 import stripAnsi from 'strip-ansi';
 import React, {useLayoutEffect} from 'react';
-import {render, Box, Text, useWindowSize, useCursor} from '../src/index.js';
+import {
+	render,
+	Box,
+	Static,
+	Text,
+	useWindowSize,
+	useCursor,
+} from '../src/index.js';
 import {homeAndEraseDown} from '../src/ink.js';
 import {bsu} from '../src/write-synchronized.js';
 import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
@@ -448,6 +455,15 @@ function Frame({
 	);
 }
 
+function StaticFrame({items}: {readonly items: string[]}) {
+	return (
+		<>
+			<Static items={items}>{item => <Text key={item}>{item}</Text>}</Static>
+			<Frame cursorY={0} />
+		</>
+	);
+}
+
 const lines = Array.from({length: 6}, (_, index) => `line ${index}`);
 const frame = lines.join('\n');
 
@@ -557,6 +573,168 @@ for (const isIncrementalRendering of [false, true]) {
 
 		t.assert.deepStrictEqual(screenAfterShrink(stdout, writesBeforeResize, 8), [
 			...shell,
+			...letters,
+		]);
+	});
+
+	for (const {description, suffix} of [
+		{description: 'a changed frame', suffix: '!'},
+		// An unchanged frame writes nothing by itself, but it must not use up the shrink before the resize event arrives.
+		{description: 'an unchanged frame', suffix: ''},
+	]) {
+		test(`rows shrink with a cursor shown and ${description} committed before the resize event keeps lines above the frame${mode}`, async (t: TestContext) => {
+			const stdout = createStdout(100);
+			stdout.rows = 10;
+
+			const {rerender, unmount, waitUntilRenderFlush} = render(
+				<Frame cursorY={0} />,
+				{
+					stdout,
+					incrementalRendering: isIncrementalRendering,
+					interactive: true,
+				},
+			);
+			t.after(() => {
+				unmount();
+			});
+			await waitUntilRenderFlush();
+
+			// A resize listener added before `render()` runs ahead of Ink's own, so a frame it commits is written while Ink has not handled the event yet.
+			const writesBeforeResize = stdout.getWrites().length;
+			stdout.rows = 8;
+			rerender(<Frame suffix={suffix} cursorY={0} />);
+			await waitUntilRenderFlush();
+
+			t.assert.deepStrictEqual(
+				screenAfterShrink(stdout, writesBeforeResize, 8),
+				[...shell, ...letters.map(letter => letter + suffix)],
+			);
+
+			stdout.emit('resize');
+			rerender(<Frame suffix="?" cursorY={0} />);
+			await waitUntilRenderFlush();
+
+			t.assert.deepStrictEqual(
+				screenAfterShrink(stdout, writesBeforeResize, 8),
+				[...shell, ...letters.map(letter => letter + '?')],
+			);
+		});
+	}
+
+	test(`rows shrink with a cursor shown and a frame that clears the cursor committed before the resize event keeps lines above the frame${mode}`, async (t: TestContext) => {
+		const stdout = createStdout(100);
+		stdout.rows = 10;
+
+		const {rerender, unmount, waitUntilRenderFlush} = render(
+			<Frame cursorY={0} />,
+			{
+				stdout,
+				incrementalRendering: isIncrementalRendering,
+				interactive: true,
+			},
+		);
+		t.after(() => {
+			unmount();
+		});
+		await waitUntilRenderFlush();
+
+		// The cursor that matters is the one on screen, which the previous frame put there, not the one this frame asks for.
+		const writesBeforeResize = stdout.getWrites().length;
+		stdout.rows = 8;
+		rerender(<Frame suffix="!" cursorY={undefined} />);
+		await waitUntilRenderFlush();
+
+		t.assert.deepStrictEqual(screenAfterShrink(stdout, writesBeforeResize, 8), [
+			...shell,
+			...letters.map(letter => letter + '!'),
+		]);
+	});
+
+	test(`a changed frame with a cursor shown is not erased from the top when the terminal height has not changed${mode}`, async (t: TestContext) => {
+		const stdout = createStdout(100);
+		stdout.rows = 10;
+
+		const {rerender, unmount, waitUntilRenderFlush} = render(
+			<Frame cursorY={0} />,
+			{
+				stdout,
+				incrementalRendering: isIncrementalRendering,
+				interactive: true,
+			},
+		);
+		t.after(() => {
+			unmount();
+		});
+		await waitUntilRenderFlush();
+
+		const writesBeforeUpdate = stdout.getWrites().length;
+		rerender(<Frame suffix="!" cursorY={0} />);
+		await waitUntilRenderFlush();
+
+		t.assert.ok(
+			!stdout
+				.getWrites()
+				.slice(writesBeforeUpdate)
+				.join('')
+				.includes(ansiEscapes.eraseDown),
+		);
+	});
+
+	test(`rows shrink with a cursor shown and a frame committed before the resize event redraws the alternate screen${mode}`, async (t: TestContext) => {
+		const stdout = createStdout(100);
+		stdout.rows = 10;
+
+		const {rerender, unmount, waitUntilRenderFlush} = render(
+			<Frame cursorY={0} />,
+			{
+				stdout,
+				incrementalRendering: isIncrementalRendering,
+				interactive: true,
+				alternateScreen: true,
+			},
+		);
+		t.after(() => {
+			unmount();
+		});
+		await waitUntilRenderFlush();
+
+		const writesBeforeResize = stdout.getWrites().length;
+		stdout.rows = 8;
+		rerender(<Frame suffix="!" cursorY={0} />);
+		await waitUntilRenderFlush();
+
+		// Every row of the alternate screen is Ink's, so the frame is redrawn from the top of the screen there.
+		const written = stdout.getWrites().slice(writesBeforeResize).join('');
+		t.assert.ok(written.includes(homeAndEraseDown));
+		t.assert.ok(
+			written.includes(letters.map(letter => letter + '!').join('\n')),
+		);
+	});
+
+	test(`rows shrink with a cursor shown and <Static> output committed before the resize event keeps lines above the frame${mode}`, async (t: TestContext) => {
+		const stdout = createStdout(100);
+		stdout.rows = 10;
+
+		const {rerender, unmount, waitUntilRenderFlush} = render(
+			<StaticFrame items={['static 0']} />,
+			{stdout, incrementalRendering: isIncrementalRendering, interactive: true},
+		);
+		t.after(() => {
+			unmount();
+		});
+		await waitUntilRenderFlush();
+
+		const writesBeforeResize = stdout.getWrites().length;
+		stdout.rows = 8;
+		rerender(<StaticFrame items={['static 0', 'static 1']} />);
+		await waitUntilRenderFlush();
+		stdout.emit('resize');
+		await waitUntilRenderFlush();
+
+		t.assert.deepStrictEqual(screenAfterShrink(stdout, writesBeforeResize, 8), [
+			...shell,
+			'static 0',
+			'static 1',
 			...letters,
 		]);
 	});
