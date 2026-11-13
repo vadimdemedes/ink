@@ -80,7 +80,9 @@ const shouldClearTerminalForFrame = ({
 	}
 
 	const hadPreviousFrame = previousOutputHeight > 0;
-	const wasOverflowing = previousOutputHeight > viewportRows;
+	// A frame taller than the viewport it was drawn into had its top rows scroll off, and a terminal that gains rows does not always bring them back, so the frame stays cut off until it is redrawn.
+	const wasOverflowing =
+		previousOutputHeight > Math.min(viewportRows, previousViewportRows);
 	const isOverflowing = nextOutputHeight > viewportRows;
 	const isLeavingFullscreen = wasFullscreen && nextOutputHeight < viewportRows;
 	const isViewportShrinking = viewportRows < previousViewportRows;
