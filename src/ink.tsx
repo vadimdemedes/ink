@@ -254,6 +254,10 @@ export default class Ink {
 	private nextRenderCommit?: PromiseWithResolvers<void>;
 	// Set while suspendTerminal() has handed the terminal to a child process.
 	private isSuspended = false;
+	// <Static> output rendered while suspended, written with the first frame after resume.
+	private suspendedStaticOutput = '';
+	// Set for the redraw that ends a suspension.
+	private isResumeRedraw = false;
 	// Input pause/resume hooks registered by the App component, which owns raw
 	// mode and bracketed paste state.
 	private pauseInput?: () => void;
@@ -392,6 +396,23 @@ export default class Ink {
 	handleStaticChange = (): void => {
 		this.fullStaticOutput = '';
 		this.hasRenderedStaticOutput = false;
+
+		// Output collected while suspended goes with it. On the primary screen it stays, because without the suspension those items would already be in the scrollback.
+		if (this.options.debug || this.alternateScreen) {
+			this.suspendedStaticOutput = '';
+		}
+	};
+
+	// <Static> drops the children it just rendered right after the commit, so this render is the only chance to capture them. While suspended nothing is written, so keep their output for the redraw on resume.
+	onImmediateRender = (): void => {
+		if (this.isSuspended) {
+			this.suspendedStaticOutput += render(
+				this.rootNode,
+				this.isScreenReaderEnabled,
+			).staticOutput;
+		}
+
+		this.onRender();
 	};
 
 	onRender: () => void = () => {
@@ -435,12 +456,17 @@ export default class Ink {
 
 		const renderTime = performance.now() - startTime;
 		// `exit()` from an effect unmounts before `<Static>` has dropped the children it just rendered, so the final frame would write them a second time. Static changes that have not been rendered yet are still marked dirty.
+		// The redraw on resume can find them in the tree too, when an effect of the commit that added them resumes. If they are not marked dirty they were already written or collected while suspended, and if they are, that commit is still running and renders them right after.
+		const {suspendedStaticOutput, isResumeRedraw} = this;
+		this.suspendedStaticOutput = '';
+		this.isResumeRedraw = false;
 		const isStaticOutputAlreadyWritten =
-			this.isUnmounting && !this.rootNode.isStaticDirty;
+			isResumeRedraw || (this.isUnmounting && !this.rootNode.isStaticDirty);
 		this.renderFrame(
 			output,
 			outputHeight,
-			isStaticOutputAlreadyWritten ? '' : staticOutput,
+			suspendedStaticOutput +
+				(isStaticOutputAlreadyWritten ? '' : staticOutput),
 		);
 		this.options.onRender?.({renderTime});
 	};
@@ -491,7 +517,7 @@ export default class Ink {
 			this.throttledOnRender = throttled;
 		}
 
-		this.rootNode.onImmediateRender = this.onRender;
+		this.rootNode.onImmediateRender = this.onImmediateRender;
 		this.rootNode.onStaticChange = this.handleStaticChange;
 		this.log = logUpdate.create(options.stdout, {
 			incremental: options.incrementalRendering,
@@ -1062,6 +1088,7 @@ export default class Ink {
 
 		try {
 			this.calculateLayout();
+			this.isResumeRedraw = true;
 			this.onRender();
 			await this.waitUntilRenderFlush();
 		} catch {}
