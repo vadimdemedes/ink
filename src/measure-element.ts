@@ -77,7 +77,7 @@ const measureElement = (node: DOMElement): Output => {
 
 	// Yoga may never lay out a node that is added inside a subtree hidden with `display: none`, and its computed size is then still `NaN`.
 	if (Number.isNaN(width)) {
-		return emptyOutput;
+		return {...emptyOutput, x, y};
 	}
 
 	const height = yogaNode.getComputedHeight();

@@ -339,7 +339,7 @@ test('settles for an element added inside a hidden ancestor', async (t: TestCont
 	await waitUntilRenderFlush();
 	await delay(100);
 
-	// Yoga never laid the element out. Its `NaN` size used to count as a change on every render, which ended in "Maximum update depth exceeded".
+	// Yoga never laid the element out. Its `NaN` size used to count as a change on every render, so the component rendered again without end.
 	t.assert.ok(renderCount <= 3, `Rendered ${renderCount} times`);
 	t.assert.deepStrictEqual(metrics, {
 		width: 0,
