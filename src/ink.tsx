@@ -53,6 +53,17 @@ const isWindowsConsole = process.platform === 'win32';
 export const homeAndEraseDown =
 	ansiEscapes.cursorTo(0, 0) + ansiEscapes.eraseDown;
 
+// A frame taller than the alternate screen it was drawn into lost its top rows, and with no scrollback a terminal that gains rows cannot bring them back, so the frame stays cut off until it is drawn again. On the primary screen the terminal restores them from scrollback, and drawing the frame again there could erase a line above it or push another copy of its top rows into scrollback.
+const wasFrameCutOff = ({
+	isAlternateScreen,
+	previousOutputHeight,
+	previousViewportRows,
+}: {
+	isAlternateScreen: boolean;
+	previousOutputHeight: number;
+	previousViewportRows: number;
+}): boolean => isAlternateScreen && previousOutputHeight > previousViewportRows;
+
 const shouldClearTerminalForFrame = ({
 	isStdoutTty,
 	isAlternateScreen,
@@ -82,9 +93,11 @@ const shouldClearTerminalForFrame = ({
 	}
 
 	const hadPreviousFrame = previousOutputHeight > 0;
-	// A frame taller than the alternate screen it was drawn into lost its top rows, and with no scrollback a terminal that gains rows cannot bring them back, so the frame stays cut off until it is redrawn. On the primary screen the terminal restores them from scrollback, and a clear at that point could erase a line above the frame.
-	const wasCutOff =
-		isAlternateScreen && previousOutputHeight > previousViewportRows;
+	const wasCutOff = wasFrameCutOff({
+		isAlternateScreen,
+		previousOutputHeight,
+		previousViewportRows,
+	});
 	const wasOverflowing = previousOutputHeight > viewportRows || wasCutOff;
 	const isOverflowing = nextOutputHeight > viewportRows;
 	const isLeavingFullscreen = wasFullscreen && nextOutputHeight < viewportRows;
@@ -689,13 +702,16 @@ export default class Ink {
 					? wrappedOutput
 					: wrappedOutput + '\n';
 
-			// A frame taller than the alternate screen lost its top rows, and with no scrollback a terminal that gains rows cannot bring them back, so draw the frame again even though it has not changed. On the primary screen the terminal restores them from scrollback, and drawing a frame again that still overflows would push another copy of its top rows into scrollback.
+			// This writer skips a frame that has not changed, so a cut-off frame is drawn again here when the terminal gains rows.
 			const previousViewportRows = this.lastTerminalHeight;
 			this.lastTerminalHeight = viewportRows;
 			const shouldRedrawCutOffFrame =
-				this.alternateScreen &&
-				this.lastOutputHeight > previousViewportRows &&
-				viewportRows > previousViewportRows;
+				viewportRows > previousViewportRows &&
+				wasFrameCutOff({
+					isAlternateScreen: this.alternateScreen,
+					previousOutputHeight: this.lastOutputHeight,
+					previousViewportRows,
+				});
 
 			if (
 				!hasStaticOutput &&
