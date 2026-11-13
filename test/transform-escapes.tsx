@@ -89,7 +89,7 @@ test('root transform output drops a hyperlink with a line feed in its url', (t: 
 });
 
 test('hyperlink transform with a C1 hyperlink in the url cannot leave an ESC for the next text to complete', (t: TestContext) => {
-	const url = 'https://example.com/\u{7}\u{1B}]8;;\u{7}\u{9D}8;\u{1B}\\';
+	const url = 'https://example.com/\u{7}\u{1B}]8;;\u{7}\u{9D}8;;\u{1B}\\';
 	const link = (text: string) => `\u{1B}]8;;${url}\u{7}${text}\u{1B}]8;;\u{7}`;
 	const root = renderToString(
 		<Box>
