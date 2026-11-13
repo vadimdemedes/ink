@@ -1410,10 +1410,10 @@ test('#450: non-TTY full-height rerenders should never clear terminal', (t: Test
 	unmount();
 });
 
-test('#450: non-TTY overflow transitions should never clear terminal', (t: TestContext) => {
-	const rows = 3;
-	const stdout = createStdout();
-	stdout.rows = rows;
+test('#450: non-TTY overflow transitions should never clear terminal', async (t: TestContext) => {
+	// Ink assumes 24 rows when stdout is not a TTY.
+	const rows = 24;
+	const stdout = createStdout(100, false);
 	const writes = captureWrites(stdout);
 
 	function NonTtyOverflowTransitionTestComponent({
@@ -1429,14 +1429,23 @@ test('#450: non-TTY overflow transitions should never clear terminal', (t: TestC
 		return <Box flexDirection="column">{lines}</Box>;
 	}
 
-	const {rerender, unmount} = render(
-		<NonTtyOverflowTransitionTestComponent lineCount={2} />,
-		{stdout},
+	const {rerender, unmount, waitUntilRenderFlush} = render(
+		<NonTtyOverflowTransitionTestComponent lineCount={rows - 1} />,
+		{stdout, interactive: true},
 	);
+	await waitUntilRenderFlush();
 
-	rerender(<NonTtyOverflowTransitionTestComponent lineCount={4} />);
+	rerender(<NonTtyOverflowTransitionTestComponent lineCount={rows + 1} />);
+	await waitUntilRenderFlush();
+	rerender(<NonTtyOverflowTransitionTestComponent lineCount={rows - 1} />);
+	await waitUntilRenderFlush();
 
-	const {fullClearCount} = getIssue450ControlSequenceCounts(writes.join(''));
+	const output = writes.join('');
+	t.assert.ok(
+		output.includes(`line ${rows + 1}`),
+		'Expected the overflowing frame to be written',
+	);
+	const {fullClearCount} = getIssue450ControlSequenceCounts(output);
 	t.assert.strictEqual(fullClearCount, 0);
 
 	unmount();
@@ -1705,6 +1714,48 @@ for (const mode of ['standard', 'incremental']) {
 			'live 3 tick 1',
 			'live 4 tick 1',
 		]);
+	});
+
+	test(`shrinking from an overflowing frame to one that fills the viewport erases the viewport once - ${mode}`, async (t: TestContext) => {
+		const rows = 4;
+		const stdout = createStdout();
+		stdout.rows = rows;
+		stdout.write('History\n');
+		const instance = render(
+			<StaticHistoryApp liveLines={rows + 2} tick={0} />,
+			{
+				stdout,
+				interactive: true,
+				patchConsole: false,
+				incrementalRendering: mode === 'incremental',
+			},
+		);
+		t.after(() => {
+			instance.unmount();
+		});
+		await instance.waitUntilRenderFlush();
+		const writesBeforeRerender = stdout.getWrites().length;
+
+		// The tick stays the same, so each row of the new frame equals the row at the same index of the overflowing frame. The viewport shows that frame from its third row on, so writing only the rows that differ would leave its third and fourth rows at the top.
+		instance.rerender(<StaticHistoryApp liveLines={rows} tick={0} />);
+		await instance.waitUntilRenderFlush();
+
+		t.assert.strictEqual(
+			countOccurrences(
+				stdout.getWrites().slice(writesBeforeRerender).join(''),
+				homeAndEraseDown,
+			),
+			1,
+		);
+
+		t.assert.deepStrictEqual(
+			reconstructTerminalLines(
+				stdout.getWrites().join('').replaceAll('\n', '\r\n'),
+				rows,
+			).slice(-rows),
+			['live 0 tick 0', 'live 1 tick 0', 'live 2 tick 0', 'live 3 tick 0'],
+			'Expected the viewport to hold the new frame only',
+		);
 	});
 
 	test(`<Static> items added while the frame overflows are written once - ${mode}`, async (t: TestContext) => {
