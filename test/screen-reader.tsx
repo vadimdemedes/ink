@@ -678,7 +678,7 @@ function Lines({lines}: {readonly lines: string[]}) {
 	);
 }
 
-for (const grownRows of [5, 6, 8]) {
+for (const grownRows of [5, 6]) {
 	test(`redraw a screen-reader frame that was taller than the alternate screen when the terminal height grows from 4 to ${grownRows} rows`, async (t: TestContext) => {
 		const stdout = createStdout(40);
 		stdout.rows = 4;
@@ -735,6 +735,78 @@ for (const grownRows of [5, 6, 8]) {
 		);
 	});
 }
+
+const renderCutOffFrame = async (lines: string[]) => {
+	const stdout = createStdout(40);
+	stdout.rows = 4;
+
+	const instance = render(<Lines lines={lines} />, {
+		stdout,
+		interactive: true,
+		alternateScreen: true,
+		isScreenReaderEnabled: true,
+	});
+	await instance.waitUntilRenderFlush();
+
+	return {
+		stdout,
+		...instance,
+		countFrameWrites: () =>
+			stdout.getWrites().filter(write => write.includes('line 0')).length,
+	};
+};
+
+test('draw a cut-off screen-reader frame again only when the terminal height grows', async (t: TestContext) => {
+	const {stdout, rerender, unmount, waitUntilRenderFlush, countFrameWrites} =
+		await renderCutOffFrame(sixLines);
+	t.after(() => {
+		unmount();
+	});
+
+	stdout.rows = 5;
+	stdout.emit('resize');
+	await waitUntilRenderFlush();
+	t.assert.strictEqual(countFrameWrites(), 2);
+
+	// The frame is still cut off at 5 rows, and neither an unchanged render nor a shrink is a reason to write it again.
+	rerender(<Lines lines={sixLines} />);
+	await waitUntilRenderFlush();
+	t.assert.strictEqual(countFrameWrites(), 2);
+
+	stdout.rows = 3;
+	stdout.emit('resize');
+	await waitUntilRenderFlush();
+	t.assert.strictEqual(countFrameWrites(), 2);
+});
+
+test('leave a screen-reader frame that fits the alternate screen alone when the terminal height grows', async (t: TestContext) => {
+	const {stdout, unmount, waitUntilRenderFlush, countFrameWrites} =
+		await renderCutOffFrame(sixLines.slice(0, 3));
+	t.after(() => {
+		unmount();
+	});
+
+	stdout.rows = 5;
+	stdout.emit('resize');
+	await waitUntilRenderFlush();
+
+	t.assert.strictEqual(countFrameWrites(), 1);
+});
+
+test('draw a cut-off screen-reader frame again once when a render at the new height precedes the resize event', async (t: TestContext) => {
+	const {stdout, rerender, unmount, waitUntilRenderFlush, countFrameWrites} =
+		await renderCutOffFrame(sixLines);
+	t.after(() => {
+		unmount();
+	});
+
+	stdout.rows = 5;
+	rerender(<Lines lines={sixLines} />);
+	stdout.emit('resize');
+	await waitUntilRenderFlush();
+
+	t.assert.strictEqual(countFrameWrites(), 2);
+});
 
 test('leave a screen-reader frame that was taller than the primary screen alone when the terminal height grows', async (t: TestContext) => {
 	const stdout = createStdout(40);

@@ -689,7 +689,7 @@ export default class Ink {
 					? wrappedOutput
 					: wrappedOutput + '\n';
 
-			// A frame taller than the alternate screen it was drawn into lost its top rows, and with no scrollback a terminal that gains rows cannot bring them back, so draw the frame again even though it has not changed. On the primary screen the terminal restores them from scrollback, and drawing a frame again that still overflows would push another copy of its top rows into scrollback.
+			// A frame taller than the alternate screen lost its top rows, and with no scrollback a terminal that gains rows cannot bring them back, so draw the frame again even though it has not changed. On the primary screen the terminal restores them from scrollback, and drawing a frame again that still overflows would push another copy of its top rows into scrollback.
 			const previousViewportRows = this.lastTerminalHeight;
 			this.lastTerminalHeight = viewportRows;
 			const shouldRedrawCutOffFrame =
