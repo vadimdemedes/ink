@@ -200,3 +200,23 @@ test('drops zero-width characters with the columns a clip cuts from either end',
 
 	t.assert.deepStrictEqual(output.get(), {output: '   bc', height: 1});
 });
+
+test('separately styled Jamo does not overflow horizontal clip into adjacent cell', (t: TestContext) => {
+	const output = new Output({width: 5, height: 1});
+	output.write(2, 0, '|', {transformers: []});
+	output.clip({x1: 0, x2: 2, y1: undefined, y2: undefined});
+	output.write(
+		0,
+		0,
+		'\u{1B}[31m\u{1100}\u{1B}[39m\u{1B}[32m\u{1161}\u{1B}[39m',
+		{
+			transformers: [],
+		},
+	);
+	output.unclip();
+
+	t.assert.deepStrictEqual(output.get(), {
+		output: '\u{1B}[31m\u{1100}\u{1B}[39m|',
+		height: 1,
+	});
+});
