@@ -1060,12 +1060,14 @@ test('overflowX - single text node inside overflow container with <Cursor />', (
 	t.assert.strictEqual(stripAnsi(output), 'Hello');
 });
 
-for (const {wrap, expected, cursorOnEllipsis} of [
-	{wrap: 'truncate-end', expected: 'Hell…'},
-	{wrap: 'truncate-middle', expected: 'He…ld'},
-	{wrap: 'truncate-start', expected: '…orld', cursorOnEllipsis: true},
+for (const {wrap, expected, expectedCursor} of [
+	{wrap: 'truncate-end', expected: 'Hell…', expectedCursor: {x: 0, y: 0}},
+	{wrap: 'truncate-middle', expected: 'He…ld', expectedCursor: {x: 0, y: 0}},
+	// The start is truncated away, taking the cursor with it
+	{wrap: 'truncate-start', expected: '…orld', expectedCursor: undefined},
 ] as const) {
-	test(`wrap=${wrap} - single text node wrapping with <Cursor /> at start`, async (t: TestContext) => {
+	const outcome = expectedCursor ? 'is kept' : 'is hidden';
+	test(`wrap=${wrap} - single text node wrapping with <Cursor /> at start ${outcome}`, async (t: TestContext) => {
 		await withInteractiveRender(
 			<Box width={5}>
 				<Text wrap={wrap}>
@@ -1075,12 +1077,7 @@ for (const {wrap, expected, cursorOnEllipsis} of [
 			</Box>,
 			async ({getLastCursor, getLastTrimmedRender}) => {
 				t.assert.strictEqual(getLastTrimmedRender(), expected);
-
-				if (cursorOnEllipsis === true) {
-					t.assert.strictEqual(getLastCursor(), undefined);
-				} else {
-					t.assert.deepStrictEqual(getLastCursor(), {x: 0, y: 0});
-				}
+				t.assert.deepStrictEqual(getLastCursor(), expectedCursor);
 			},
 		);
 	});
@@ -1153,7 +1150,7 @@ test('wrap=truncate-middle - cursor within retained suffix', async (t: TestConte
 	);
 });
 
-test('wrap=truncate-middle - multiline with cursor on second line', async (t: TestContext) => {
+test('wrap=truncate-middle - multiline with truncated <Cursor /> on second line is hidden', async (t: TestContext) => {
 	await withInteractiveRender(
 		<Box width={5}>
 			<Text wrap="truncate-middle">
@@ -1167,6 +1164,24 @@ test('wrap=truncate-middle - multiline with cursor on second line', async (t: Te
 		async ({getLastCursor, getLastTrimmedRender}) => {
 			t.assert.strictEqual(getLastTrimmedRender(), 'fi…ne\nHe…ld');
 			t.assert.strictEqual(getLastCursor(), undefined);
+		},
+	);
+});
+
+test('wrap=truncate-middle - multiline with <Cursor /> in retained suffix on second line', async (t: TestContext) => {
+	await withInteractiveRender(
+		<Box width={5}>
+			<Text wrap="truncate-middle">
+				first long line
+				{'\n'}
+				HelloWor
+				<Cursor />
+				ld
+			</Text>
+		</Box>,
+		async ({getLastCursor, getLastTrimmedRender}) => {
+			t.assert.strictEqual(getLastTrimmedRender(), 'fi…ne\nHe…ld');
+			t.assert.deepStrictEqual(getLastCursor(), {x: 3, y: 1});
 		},
 	);
 });
@@ -1861,7 +1876,7 @@ test('<Cursor /> past the end of a fixed-height frame is hidden', async (t: Test
 	);
 });
 
-test('<Cursor /> before a glyph wider than its box lands on the glyph row', async (t: TestContext) => {
+test('<Cursor /> after a glyph wider than its box lands on the next row', async (t: TestContext) => {
 	await withInteractiveRender(
 		<Box width={1}>
 			<Text>
