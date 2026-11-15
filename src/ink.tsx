@@ -160,12 +160,21 @@ const settleThrottle = (
 // Mounted instances share one `exit` listener, added with the first and removed with the last, so that many instances do not add up to a `MaxListenersExceededWarning`.
 const mountedInstances = new Set<Ink>();
 
-const unmountMountedInstances = (code: number): void => {
+const unmountMountedInstances = (code?: number): void => {
 	// Iterate over a copy, so an instance that is rendered while these unmount is left alone, as it was when every instance had its own listener.
 	for (const instance of new Set(mountedInstances)) {
 		instance.unmount(code);
 	}
 };
+
+// Register a single `signal-exit` v3 handler at module load and never unsubscribe it. Subscribing on render and unsubscribing on last unmount causes `signal-exit` v3 to overwrite or restore `process.emit`, dropping handlers registered via `signal-exit` v4 (such as `execa` cleanup).
+// eslint-disable-next-line unicorn/no-top-level-side-effects
+signalExit(
+	code => {
+		unmountMountedInstances(code ?? undefined);
+	},
+	{alwaysLast: false},
+);
 
 // Instances with a pending `waitUntilExit()` share one `beforeExit` listener for the same reason, added when the first starts waiting and removed when the last unmounts.
 const instancesAwaitingExit = new Map<Ink, boolean>();
@@ -336,7 +345,6 @@ export default class Ink {
 
 	resolveExitPromise: (result?: unknown) => void = () => {};
 	rejectExitPromise: (reason?: Error) => void = () => {};
-	unsubscribeExit: () => void = () => {};
 	disconnectFromDevTools: () => void = () => {};
 
 	handleAppExit = (errorOrResult?: unknown): void => {
@@ -624,7 +632,6 @@ export default class Ink {
 		);
 
 		// Unmount when process exits. The plain `exit` listener covers the case where another copy of `signal-exit` (for example v4 next to Ink's v3) replaced `process.emit` after Ink registered, which drops Ink's `signal-exit` handler from the chain. `unmount` is idempotent, so running from both is fine.
-		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
 		mountedInstances.add(this);
 		if (mountedInstances.size === 1) {
 			process.on('exit', unmountMountedInstances);
@@ -1303,7 +1310,6 @@ export default class Ink {
 		// that could re-enter exit() via synchronous write callbacks.
 		this.isUnmounted = true;
 
-		this.unsubscribeExit();
 		mountedInstances.delete(this);
 		if (mountedInstances.size === 0) {
 			process.off('exit', unmountMountedInstances);
