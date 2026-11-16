@@ -14,6 +14,7 @@ import {
 } from '../src/index.js';
 import {type SuspendTerminal} from '../src/components/AppContext.js';
 import {bsu, esu} from '../src/write-synchronized.js';
+import {enterAlternativeScreenAtHome} from '../src/ink.js';
 import createStdout, {type FakeStdout} from './helpers/create-stdout.js';
 import {createStdin} from './helpers/create-stdin.js';
 import term from './helpers/term.js';
@@ -372,7 +373,7 @@ test('suspendTerminal exits and re-enters the alternate screen', async (t: TestC
 						.getWrites()
 						.slice(writesAtCallbackEnd)
 						.join('')
-						.includes(enterAltScreen + ansiEscapes.cursorTo(0, 0));
+						.includes(enterAlternativeScreenAtHome);
 				} finally {
 					finished();
 				}

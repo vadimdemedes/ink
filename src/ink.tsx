@@ -53,6 +53,10 @@ const isWindowsConsole = process.platform === 'win32';
 export const homeAndEraseDown =
 	ansiEscapes.cursorTo(0, 0) + ansiEscapes.eraseDown;
 
+// Terminals keep the cursor position when they switch buffers, so without the home the first frame draws from wherever the shell prompt was. Exported so tests assert against the real sequence.
+export const enterAlternativeScreenAtHome =
+	ansiEscapes.enterAlternativeScreen + ansiEscapes.cursorTo(0, 0);
+
 // A frame taller than the alternate screen it was drawn into lost its top rows, and with no scrollback a terminal that gains rows cannot bring them back, so the frame stays cut off until it is drawn again. On the primary screen the terminal restores them from scrollback, and drawing the frame again there could erase a line above it or push another copy of its top rows into scrollback.
 const wasFrameCutOff = ({
 	isAlternateScreen,
@@ -793,12 +797,7 @@ export default class Ink {
 			return;
 		}
 
-		// Terminals keep the cursor's row when they switch buffers, so home it or the first frame draws from wherever the shell prompt was.
-		this.writeBestEffort(
-			this.options.stdout,
-			ansiEscapes.enterAlternativeScreen,
-		);
-		this.writeBestEffort(this.options.stdout, ansiEscapes.cursorTo(0, 0));
+		this.writeBestEffort(this.options.stdout, enterAlternativeScreenAtHome);
 		this.writeBestEffort(this.options.stdout, hideCursorEscape);
 	}
 
@@ -1132,11 +1131,7 @@ export default class Ink {
 			// Re-entering the alternate screen gives an empty buffer with no scrollback behind it, and the forced redraw below only carries new <Static> items. Replay the accumulated static output ahead of it, as the full-clear path does, so the rows the child process's turn erased come back. The debug redraw writes fullStaticOutput itself, so skip the replay there.
 			this.writeBestEffort(
 				this.options.stdout,
-				ansiEscapes.enterAlternativeScreen,
-			);
-			this.writeBestEffort(
-				this.options.stdout,
-				ansiEscapes.cursorTo(0, 0) +
+				enterAlternativeScreenAtHome +
 					(this.options.debug ? '' : this.fullStaticOutput),
 			);
 		}

@@ -31,8 +31,14 @@ const trackedSequences = new Set([
 	enterAlternateScreen,
 	exitAlternateScreen,
 ]);
+const trackedSequencePattern = new RegExp(
+	[...trackedSequences]
+		.map(sequence => sequence.replaceAll(/[?[]/g, String.raw`\$&`))
+		.join('|'),
+	'g',
+);
 
-// Records raw mode changes together with the keyboard protocol and alternate screen sequences, in the order they reach the terminal.
+// Records raw mode changes together with the keyboard protocol and alternate screen sequences, in the order they reach the terminal. A sequence counts wherever it sits inside a write, since Ink sends some of them together with other escapes.
 const createTerminal = () => {
 	const events: string[] = [];
 	const stdin = createSyncStdin();
@@ -47,8 +53,10 @@ const createTerminal = () => {
 	) => boolean;
 	stdout.write = (...arguments_: unknown[]) => {
 		const [data] = arguments_;
-		if (typeof data === 'string' && trackedSequences.has(data)) {
-			events.push(data);
+		if (typeof data === 'string') {
+			for (const [sequence] of data.matchAll(trackedSequencePattern)) {
+				events.push(sequence);
+			}
 		}
 
 		return write(...arguments_);

@@ -20,6 +20,7 @@ import {
 	useInput,
 	useStdin,
 } from '../src/index.js';
+import {enterAlternativeScreenAtHome} from '../src/ink.js';
 import createStdout from './helpers/create-stdout.js';
 import {emitReadable} from './helpers/create-stdin.js';
 import {
@@ -1768,15 +1769,7 @@ test('alternate screen - homes the cursor after entering on mount', async (t: Te
 	unmount();
 	await waitUntilExit();
 
-	// Terminals keep the cursor's row when they switch buffers, so without the home the first frame starts on the row the shell prompt was on.
-	t.assert.ok(
-		stdout
-			.getWrites()
-			.join('')
-			.startsWith(
-				ansiEscapes.enterAlternativeScreen + ansiEscapes.cursorTo(0, 0),
-			),
-	);
+	t.assert.strictEqual(stdout.getWrites()[0], enterAlternativeScreenAtHome);
 });
 
 test('primary screen - cleanup console output follows the native console during unmount', async (t: TestContext) => {
