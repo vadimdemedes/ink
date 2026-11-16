@@ -1756,6 +1756,29 @@ test('alternate screen - enters on mount and exits on unmount', async (t: TestCo
 	);
 });
 
+test('alternate screen - homes the cursor after entering on mount', async (t: TestContext) => {
+	const stdout = createStdout(100, true);
+
+	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
+		stdout,
+		alternateScreen: true,
+		interactive: true,
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	// Terminals keep the cursor's row when they switch buffers, so without the home the first frame starts on the row the shell prompt was on.
+	t.assert.ok(
+		stdout
+			.getWrites()
+			.join('')
+			.startsWith(
+				ansiEscapes.enterAlternativeScreen + ansiEscapes.cursorTo(0, 0),
+			),
+	);
+});
+
 test('primary screen - cleanup console output follows the native console during unmount', async (t: TestContext) => {
 	const stdout = createStdout(100, true);
 	const processStdoutWriteStub = stub(process.stdout, 'write').callsFake(

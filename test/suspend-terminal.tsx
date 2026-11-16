@@ -346,6 +346,7 @@ test('suspendTerminal exits and re-enters the alternate screen', async (t: TestC
 
 	let exitedAltDuringSuspend: boolean | undefined;
 	let reEnteredAltAfterResume: boolean | undefined;
+	let homedAfterResume: boolean | undefined;
 
 	const {promise: done, resolve: finished} = Promise.withResolvers<void>();
 
@@ -367,6 +368,11 @@ test('suspendTerminal exits and re-enters the alternate screen', async (t: TestC
 						.getWrites()
 						.slice(writesAtCallbackEnd)
 						.some(write => write.includes(enterAltScreen));
+					homedAfterResume = stdout
+						.getWrites()
+						.slice(writesAtCallbackEnd)
+						.join('')
+						.includes(enterAltScreen + ansiEscapes.cursorTo(0, 0));
 				} finally {
 					finished();
 				}
@@ -388,6 +394,10 @@ test('suspendTerminal exits and re-enters the alternate screen', async (t: TestC
 
 	t.assert.ok(exitedAltDuringSuspend);
 	t.assert.ok(reEnteredAltAfterResume);
+	t.assert.ok(
+		homedAfterResume,
+		'Expected the cursor to move home right after re-entering the alternate screen',
+	);
 });
 
 for (const [mode, options] of Object.entries({

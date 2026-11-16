@@ -793,10 +793,12 @@ export default class Ink {
 			return;
 		}
 
+		// Terminals keep the cursor's row when they switch buffers, so home it or the first frame draws from wherever the shell prompt was.
 		this.writeBestEffort(
 			this.options.stdout,
 			ansiEscapes.enterAlternativeScreen,
 		);
+		this.writeBestEffort(this.options.stdout, ansiEscapes.cursorTo(0, 0));
 		this.writeBestEffort(this.options.stdout, hideCursorEscape);
 	}
 
@@ -1130,7 +1132,11 @@ export default class Ink {
 			// Re-entering the alternate screen gives an empty buffer with no scrollback behind it, and the forced redraw below only carries new <Static> items. Replay the accumulated static output ahead of it, as the full-clear path does, so the rows the child process's turn erased come back. The debug redraw writes fullStaticOutput itself, so skip the replay there.
 			this.writeBestEffort(
 				this.options.stdout,
-				ansiEscapes.enterAlternativeScreen +
+				ansiEscapes.enterAlternativeScreen,
+			);
+			this.writeBestEffort(
+				this.options.stdout,
+				ansiEscapes.cursorTo(0, 0) +
 					(this.options.debug ? '' : this.fullStaticOutput),
 			);
 		}
