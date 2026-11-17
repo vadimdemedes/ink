@@ -1772,6 +1772,13 @@ test('alternate screen - homes the cursor after entering on mount', async (t: Te
 	t.assert.strictEqual(stdout.getWrites()[0], enterAlternativeScreenAtHome);
 });
 
+test('alternate screen - enter sequence switches buffers, then homes the cursor', (t: TestContext) => {
+	t.assert.strictEqual(
+		enterAlternativeScreenAtHome,
+		'\u{1B}[?1049h\u{1B}[1;1H',
+	);
+});
+
 test('primary screen - cleanup console output follows the native console during unmount', async (t: TestContext) => {
 	const stdout = createStdout(100, true);
 	const processStdoutWriteStub = stub(process.stdout, 'write').callsFake(
