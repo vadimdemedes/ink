@@ -251,6 +251,7 @@ test('instances waiting for exit share one beforeExit listener', async (t: TestC
 
 test('signal-exit v4 handler registered before render() runs on process.exit()', async (t: TestContext) => {
 	const output = await run('exit-signal-exit-v4-before-render');
+	t.assert.ok(output.includes('Hello World'));
 	t.assert.ok(output.includes('signal-exit-v4-ran'));
 });
 
