@@ -106,7 +106,9 @@ const createStandard = (
 			);
 			stream.write(
 				returnPrefix +
-					ansiEscapes.eraseLines(previousLineCount) +
+					ansiEscapes.eraseLines(
+						Math.min(previousLineCount, getViewportRows(stream)),
+					) +
 					text +
 					cursorSuffix,
 			);
@@ -269,15 +271,25 @@ const createIncremental = (
 			previousCursorPosition,
 		);
 
-		if (text === '\n' || previousOutput.length === 0) {
+		const viewportRows = getViewportRows(stream);
+		// Diffing walks up `previousLines.length - 1` rows to the top of the previous frame. When that is past the top of the viewport, those rows are in scrollback, so erase what is visible and write the whole frame instead.
+		const isPreviousFrameAboveViewport = previousLines.length > viewportRows;
+
+		if (
+			text === '\n' ||
+			previousOutput.length === 0 ||
+			isPreviousFrameAboveViewport
+		) {
 			const cursorSuffix = buildCursorSuffix(
 				nextLines.length - 1,
 				activeCursor,
-				getViewportRows(stream),
+				viewportRows,
 			);
 			stream.write(
 				returnPrefix +
-					ansiEscapes.eraseLines(previousLines.length) +
+					ansiEscapes.eraseLines(
+						Math.min(previousLines.length, viewportRows),
+					) +
 					text +
 					cursorSuffix,
 			);

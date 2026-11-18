@@ -4,6 +4,34 @@ import logUpdate from '../src/log-update.js';
 import createStdout from './helpers/create-stdout.js';
 import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 
+const esc = '\u{1B}';
+const cursorMovement = new RegExp(`${esc}\\[(\\d*)([AB])|\\n`, 'g');
+
+// Follows the cursor row through the writes, starting at the top row of an empty terminal with `rows` rows, and fails on any cursor-up that would go past the top row. Real terminals clamp it there, but some jump into scrollback.
+const assertCursorStaysInViewport = (
+	t: TestContext,
+	writes: string[],
+	rows: number,
+): void => {
+	let row = 0;
+	for (const write of writes) {
+		for (const [sequence, count, direction] of write.matchAll(cursorMovement)) {
+			if (sequence === '\n') {
+				row = Math.min(row + 1, rows - 1);
+				continue;
+			}
+
+			const amount = count === '' ? 1 : Number(count);
+			if (direction === 'A') {
+				t.assert.ok(amount <= row, `cursor-up past the top in ${JSON.stringify(write)}`);
+				row = Math.max(row - amount, 0);
+			} else {
+				row = Math.min(row + amount, rows - 1);
+			}
+		}
+	}
+};
+
 test('standard rendering - renders and updates output', (t: TestContext) => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout, {showCursor: true});
@@ -845,17 +873,9 @@ for (const {name, incremental} of renderingModes) {
 		t.assert.strictEqual(writes.length, 4);
 		for (const write of writes) {
 			t.assert.ok(write.endsWith(clampedSuffix));
-			for (let rows = 5; rows <= 20; rows++) {
-				t.assert.strictEqual(
-					write.includes(
-						ansiEscapes.cursorUp(rows) +
-							ansiEscapes.cursorTo(0) +
-							showCursorEscape,
-					),
-					false,
-				);
-			}
 		}
+
+		assertCursorStaysInViewport(t, writes, 5);
 
 		// Erasing walks up from the cursor to the frame's top row, which is capped the same way.
 		render.setCursorPosition({x: 0, y: 15});
@@ -871,6 +891,7 @@ for (const {name, incremental} of renderingModes) {
 						ansiEscapes.eraseDown,
 				),
 		);
+		assertCursorStaysInViewport(t, stdout.getWrites(), 5);
 	});
 
 	test(`${name} - clearing without a cursor erases only the rows in the viewport`, (t: TestContext) => {
