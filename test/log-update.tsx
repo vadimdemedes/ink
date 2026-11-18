@@ -5,7 +5,8 @@ import createStdout from './helpers/create-stdout.js';
 import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 
 const esc = '\u{1B}';
-const cursorMovement = new RegExp(`${esc}\\[(\\d*)([AB])|\\n`, 'g');
+// Matched against the text after an escape character.
+const cursorMovement = /^\[(?<count>\d*)(?<direction>[AB])/;
 
 // Follows the cursor row through the writes, starting at the top row of an empty terminal with `rows` rows, and fails on any cursor-up that would go past the top row. Real terminals clamp it there, but some jump into scrollback.
 const assertCursorStaysInViewport = (
@@ -14,20 +15,31 @@ const assertCursorStaysInViewport = (
 	rows: number,
 ): void => {
 	let row = 0;
+	const moveCursor = (part: string, write: string): void => {
+		const movement = cursorMovement.exec(part)?.groups;
+		if (!movement) {
+			return;
+		}
+
+		const amount = movement['count'] === '' ? 1 : Number(movement['count']);
+		if (movement['direction'] === 'A') {
+			t.assert.ok(
+				amount <= row,
+				`cursor-up past the top in ${JSON.stringify(write)}`,
+			);
+			row = Math.max(row - amount, 0);
+		} else {
+			row = Math.min(row + amount, rows - 1);
+		}
+	};
+
 	for (const write of writes) {
-		for (const [sequence, count, direction] of write.matchAll(cursorMovement)) {
-			if (sequence === '\n') {
-				row = Math.min(row + 1, rows - 1);
-				continue;
+		for (const [index, part] of write.split(esc).entries()) {
+			if (index > 0) {
+				moveCursor(part, write);
 			}
 
-			const amount = count === '' ? 1 : Number(count);
-			if (direction === 'A') {
-				t.assert.ok(amount <= row, `cursor-up past the top in ${JSON.stringify(write)}`);
-				row = Math.max(row - amount, 0);
-			} else {
-				row = Math.min(row + amount, rows - 1);
-			}
+			row = Math.min(row + part.split('\n').length - 1, rows - 1);
 		}
 	}
 };
@@ -880,9 +892,11 @@ for (const {name, incremental} of renderingModes) {
 		render(output('!'));
 		render.clear();
 		const erase = stdout.getWrites().at(-1)!;
-		t.assert.ok(erase.endsWith(ansiEscapes.cursorTo(0) + ansiEscapes.eraseDown));
 		t.assert.ok(
-			!erase.split(esc).some(part => /^\[\d*A/.test(part)),
+			erase.endsWith(ansiEscapes.cursorTo(0) + ansiEscapes.eraseDown),
+		);
+		t.assert.ok(
+			erase.split(esc).every(part => !/^\[\d*A/.test(part)),
 			JSON.stringify(erase),
 		);
 		// `sync` records a frame that Ink wrote itself, so put that frame back in ahead of the cursor write that follows it.

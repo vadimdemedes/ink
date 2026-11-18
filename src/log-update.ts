@@ -104,13 +104,10 @@ const createStandard = (
 				previousLineCount,
 				previousCursorPosition,
 			);
+			// Rows above the viewport are in scrollback and can't be erased.
+			const eraseCount = Math.min(previousLineCount, getViewportRows(stream));
 			stream.write(
-				returnPrefix +
-					ansiEscapes.eraseLines(
-						Math.min(previousLineCount, getViewportRows(stream)),
-					) +
-					text +
-					cursorSuffix,
+				returnPrefix + ansiEscapes.eraseLines(eraseCount) + text + cursorSuffix,
 			);
 			previousLineCount = lines.length;
 		}
@@ -276,22 +273,18 @@ const createIncremental = (
 		const isPreviousFrameAboveViewport = previousLines.length > viewportRows;
 
 		if (
+			isPreviousFrameAboveViewport ||
 			text === '\n' ||
-			previousOutput.length === 0 ||
-			isPreviousFrameAboveViewport
+			previousOutput.length === 0
 		) {
 			const cursorSuffix = buildCursorSuffix(
 				nextLines.length - 1,
 				activeCursor,
 				viewportRows,
 			);
+			const eraseCount = Math.min(previousLines.length, viewportRows);
 			stream.write(
-				returnPrefix +
-					ansiEscapes.eraseLines(
-						Math.min(previousLines.length, viewportRows),
-					) +
-					text +
-					cursorSuffix,
+				returnPrefix + ansiEscapes.eraseLines(eraseCount) + text + cursorSuffix,
 			);
 			wasCursorShown = activeCursor !== undefined;
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
