@@ -47,6 +47,7 @@ type Props = {
 	readonly onSuspendTerminal: SuspendTerminal;
 	readonly onKittyQueryResponse: () => void;
 	readonly onInputReady: () => void;
+	readonly onRawModeDisable: () => void;
 	readonly onRegisterInputControl: (
 		pauseInput: () => void,
 		resumeInput: () => void,
@@ -91,6 +92,7 @@ function App({
 	onSuspendTerminal,
 	onKittyQueryResponse,
 	onInputReady,
+	onRawModeDisable,
 	onRegisterInputControl,
 	setCursorPosition,
 	interactive,
@@ -248,11 +250,13 @@ function App({
 		}
 
 		pendingDisableRawModeRef.current = false;
+		// Ink pops the kitty keyboard protocol here, while the tty is still raw. In a cooked tty nothing reads the key sequences, and Ctrl+C sent as one never raises `SIGINT`.
+		onRawModeDisable();
 		rawModeStdin.setRawMode(false);
 		rawModeStdin.unref?.();
 		rawModeEnabledCountRef.current = 0;
 		clearInputState();
-	}, [rawModeStdin, clearInputState]);
+	}, [rawModeStdin, clearInputState, onRawModeDisable]);
 
 	const handleExit = useCallback(
 		(errorOrResult?: unknown): void => {
@@ -708,7 +712,9 @@ function App({
 	// Handle cursor visibility, raw mode, and bracketed paste mode cleanup on unmount
 	useEffect(
 		() => () => {
-			const canWriteToStdout = !stdout.destroyed && !stdout.writableEnded;
+			// While suspended, the cursor is already shown and bracketed paste is already off. The terminal belongs to the child process, so don't write to it.
+			const canWriteToStdout =
+				!stdout.destroyed && !stdout.writableEnded && !isInputPausedRef.current;
 
 			if (interactive && canWriteToStdout) {
 				cliCursor.show(stdout);

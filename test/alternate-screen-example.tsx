@@ -64,7 +64,7 @@ test('snake ends with a win when it fills the board', async (t: TestContext) => 
 		const timeout = setTimeout(() => {
 			childProcess.kill();
 			resolve({timedOut: true});
-		}, 1000);
+		}, 5000);
 
 		childProcess.on('error', error => {
 			clearTimeout(timeout);

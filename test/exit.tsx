@@ -3,8 +3,11 @@ import * as path from 'node:path';
 import url from 'node:url';
 import {createRequire} from 'node:module';
 import test, {type TestContext} from 'node:test';
+import React from 'react';
 import stripAnsi from 'strip-ansi';
+import {Text, render} from '../src/index.js';
 import {run} from './helpers/run.js';
+import createStdout from './helpers/create-stdout.js';
 
 const require = createRequire(import.meta.url);
 
@@ -15,6 +18,18 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 test('exit normally without unmount() or exit()', async (t: TestContext) => {
 	const output = await run('exit-normally');
+	t.assert.ok(output.includes('exited'));
+});
+
+test('exit normally with two instances waiting for exit', async (t: TestContext) => {
+	const output = await run('exit-normally-two-instances');
+	// One `beforeExit` has to unmount both of them.
+	t.assert.ok(output.includes('exited after 1 beforeExit'));
+});
+
+test('keep an instance that starts waiting for exit during beforeExit mounted until the next beforeExit', async (t: TestContext) => {
+	const output = await run('exit-normally-render-on-before-exit');
+	t.assert.ok(output.includes('late work done'));
 	t.assert.ok(output.includes('exited'));
 });
 
@@ -91,6 +106,7 @@ test('don’t exit while raw mode is active', async (t: TestContext) => {
 			],
 			{
 				name: 'xterm-color',
+				useConptyDll: true,
 				cols: 100,
 				cwd: __dirname,
 				env,
@@ -161,4 +177,74 @@ test('unmount on process.exit() after a dependency using signal-exit 4 registere
 	const output = await run('exit-after-signal-exit-v4-user');
 	t.assert.ok(output.includes('Hello World'));
 	t.assert.ok(output.includes('unmounted'), 'Ink did not unmount on exit');
+});
+
+test('unmount every instance on process.exit() after a dependency using signal-exit 4 registered an exit handler', async (t: TestContext) => {
+	const output = await run('exit-two-instances-after-signal-exit-v4-user');
+	t.assert.ok(output.includes('unmounted first'));
+	t.assert.ok(output.includes('unmounted second'));
+});
+
+test('instances share one exit listener', (t: TestContext) => {
+	const exitListenerCount = process.listenerCount('exit');
+	const instances = Array.from({length: 11}, () =>
+		render(<Text>Hello World</Text>, {
+			stdout: createStdout(),
+			patchConsole: false,
+		}),
+	);
+
+	t.assert.strictEqual(process.listenerCount('exit'), exitListenerCount + 1);
+
+	for (const instance of instances.slice(1)) {
+		instance.unmount();
+	}
+
+	t.assert.strictEqual(process.listenerCount('exit'), exitListenerCount + 1);
+
+	instances[0]!.unmount();
+	t.assert.strictEqual(process.listenerCount('exit'), exitListenerCount);
+});
+
+test('instances waiting for exit share one beforeExit listener', async (t: TestContext) => {
+	const beforeExitListenerCount = process.listenerCount('beforeExit');
+	const instances = Array.from({length: 11}, () =>
+		render(<Text>Hello World</Text>, {
+			stdout: createStdout(),
+			patchConsole: false,
+		}),
+	);
+
+	t.assert.strictEqual(
+		process.listenerCount('beforeExit'),
+		beforeExitListenerCount,
+	);
+
+	for (const instance of instances) {
+		void instance.waitUntilExit();
+		void instance.waitUntilExit();
+	}
+
+	t.assert.strictEqual(
+		process.listenerCount('beforeExit'),
+		beforeExitListenerCount + 1,
+	);
+
+	for (const instance of instances.slice(1)) {
+		instance.unmount();
+	}
+
+	await Promise.all(
+		instances.slice(1).map(async instance => instance.waitUntilExit()),
+	);
+	t.assert.strictEqual(
+		process.listenerCount('beforeExit'),
+		beforeExitListenerCount + 1,
+	);
+
+	instances[0]!.unmount();
+	t.assert.strictEqual(
+		process.listenerCount('beforeExit'),
+		beforeExitListenerCount,
+	);
 });

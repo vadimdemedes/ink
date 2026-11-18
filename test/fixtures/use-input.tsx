@@ -68,6 +68,11 @@ function UserInput({test}: {readonly test: string | undefined}) {
 			return;
 		}
 
+		if (test === 'batchedReturns' && input === '\r' && key.return) {
+			exit();
+			return;
+		}
+
 		if (test === 'pastedCarriageReturn' && input === '\rtest') {
 			exit();
 			return;

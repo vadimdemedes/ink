@@ -24,6 +24,28 @@ test('renders source excerpts for file URLs containing spaces', (t: TestContext)
 	t.assert.ok(output.includes('error source.txt:1:1'));
 });
 
+test('keeps the line number column intact next to a long source line', (t: TestContext) => {
+	const sourceUrl = new URL('fixtures/error-long-line.txt', import.meta.url);
+	const error = createErrorWithStack(
+		`Error: Oh no\n    at ${sourceUrl.href}:1:1`,
+	);
+	const lines = stripAnsi(renderToString(<ErrorOverview error={error} />))
+		.split('\n')
+		.map(line => line.trimEnd());
+	const firstExcerptLine = lines.findIndex(line => line.startsWith(' 1: '));
+
+	// The long line used to squeeze the column, which put the line number and its colon on separate rows.
+	t.assert.deepStrictEqual(
+		lines.slice(firstExcerptLine, firstExcerptLine + 4),
+		[
+			' 1: await run({code: 0}, {code: 1}, {code: 2}, {code: 3}, {code: 4}, {code: 5},',
+			'    {code: 6}, {code: 7}, {code: 8}, {code: 9}, {code: 10}, {code: 11}, {code:',
+			'   12}, {code: 13});',
+			' 2:',
+		],
+	);
+});
+
 test('renders the original error when its source path cannot be read', (t: TestContext) => {
 	const sourceUrl = new URL('fixtures/', import.meta.url);
 	const error = createErrorWithStack(
@@ -107,6 +129,18 @@ test('renders named native stack frames as raw lines', (t: TestContext) => {
 	t.assert.ok(output.includes(' -     at foo (native)'));
 	t.assert.strictEqual(output.includes('foo (::)'), false);
 	t.assert.strictEqual(output.includes('undefined'), false);
+});
+
+test('renders a raw stack line without trailing characters', (t: TestContext) => {
+	const output = stripAnsi(
+		renderToString(
+			<ErrorOverview
+				error={createErrorWithStack('Error: Oh no\n    at native')}
+			/>,
+		),
+	);
+
+	t.assert.strictEqual(output, '\n  ERROR  Oh no\n\n -     at native\n');
 });
 
 test('does not emit duplicate key warnings for repeated stack lines', (t: TestContext) => {

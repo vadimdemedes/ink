@@ -102,6 +102,8 @@ export type RenderOptions = {
 	Enables additional modifiers (super, hyper, capsLock, numLock) and
 	disambiguated key events in terminals that support the protocol.
 
+	The protocol is only active while raw mode is on, which means while a `useInput`, `usePaste` or `useFocus` hook is active or after `setRawMode(true)` from `useStdin`.
+
 	@see https://sw.kovidgoyal.net/kitty/keyboard-protocol/
 	*/
 	kittyKeyboard?: KittyKeyboardOptions;
@@ -117,7 +119,7 @@ export type RenderOptions = {
 
 	Note: Reusing the same stdout across multiple `render()` calls without unmounting is unsupported. Call `unmount()` first if you need to change this option or create a fresh instance.
 
-	@default true (false if in CI or `stdout.isTTY` is falsy)
+	Default: `true` (`false` if in CI or `stdout.isTTY` is falsy)
 	*/
 	interactive?: boolean;
 

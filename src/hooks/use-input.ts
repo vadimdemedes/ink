@@ -136,7 +136,7 @@ type Options = {
 
 /**
 A React hook that returns `void` and handles user input.
-It's a more convenient alternative to using `StdinContext` and listening for `data` events. The callback you pass to `useInput` is called for each character when the user enters any input. However, if the user pastes text and it's more than one character, the callback will be called only once, and the whole string will be passed as `input`.
+It's a more convenient alternative to using `StdinContext` and listening for `data` events. The callback you pass to `useInput` is called for each character when the user enters any input. However, if the user pastes text and it's more than one character, the callback will be called only once, and the whole string will be passed as `input`. A paste that contains only control characters, such as line breaks or tabs, can't be told apart from key presses, so the callback is called once for each character.
 
 ```
 import {useInput} from 'ink';

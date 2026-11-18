@@ -1,6 +1,6 @@
 import Yoga, {type Node as YogaNode, type MeasureMode} from 'yoga-layout';
 import measureText from './measure-text.js';
-import {type Styles} from './styles.js';
+import applyStyles, {type Styles} from './styles.js';
 import wrapText from './wrap-text.js';
 import squashTextNodes from './squash-text-nodes.js';
 import {type OutputTransformer} from './render-node-to-output.js';
@@ -97,16 +97,58 @@ export const createNode = (nodeName: ElementNames): DOMElement => {
 		attributes: {},
 		childNodes: [],
 		parentNode: undefined,
-		yogaNode: nodeName === 'ink-virtual-text' ? undefined : Yoga.Node.create(),
+		// Only the root is created outside React's render phase. Every other node gets its Yoga node in `createYogaSubtree` when it is attached.
+		yogaNode: nodeName === 'ink-root' ? Yoga.Node.create() : undefined,
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		internal_accessibility: {},
 	};
 
-	if (nodeName === 'ink-text') {
-		node.yogaNode?.setMeasureFunc(measureTextNode.bind(null, node));
+	return node;
+};
+
+const styleValidationNode = Yoga.Node.create();
+
+/**
+Yoga throws for a style value it can't use. A node has no Yoga node yet while React renders, so its style is applied to a spare one there, which keeps that error in the render phase, where error boundaries catch it.
+*/
+export const validateStyle = (style: Styles): void => {
+	applyStyles(styleValidationNode, style);
+};
+
+/**
+Create the Yoga nodes of a subtree that is being attached to a tree that has them.
+
+React creates host nodes in the render phase and drops them without notice when it throws that render away (a sibling suspended, an error boundary caught an error, a transition was interrupted). Yoga nodes are WASM memory that is only freed when a committed node is removed, so they are created here, in the commit phase, from what the DOM nodes already store.
+*/
+const createYogaSubtree = (node: DOMNode): void => {
+	if (
+		node.yogaNode !== undefined ||
+		node.nodeName === '#text' ||
+		node.nodeName === 'ink-virtual-text'
+	) {
+		return;
 	}
 
-	return node;
+	const yogaNode = Yoga.Node.create();
+	node.yogaNode = yogaNode;
+	applyStyles(yogaNode, node.style);
+
+	// React hides the content of a hidden `<Activity>` before the subtree around it is attached.
+	if (node.isHidden) {
+		yogaNode.setDisplay(Yoga.DISPLAY_NONE);
+	}
+
+	if (node.nodeName === 'ink-text') {
+		yogaNode.setMeasureFunc(measureTextNode.bind(null, node));
+	}
+
+	for (const childNode of node.childNodes) {
+		createYogaSubtree(childNode);
+
+		if (childNode.yogaNode) {
+			yogaNode.insertChild(childNode.yogaNode, yogaNode.getChildCount());
+		}
+	}
 };
 
 export const appendChildNode = (
@@ -119,6 +161,10 @@ export const appendChildNode = (
 
 	childNode.parentNode = node;
 	node.childNodes.push(childNode);
+
+	if (node.yogaNode) {
+		createYogaSubtree(childNode);
+	}
 
 	if (childNode.yogaNode) {
 		node.yogaNode?.insertChild(
@@ -142,6 +188,10 @@ export const insertBeforeNode = (
 	}
 
 	newChildNode.parentNode = node;
+
+	if (node.yogaNode) {
+		createYogaSubtree(newChildNode);
+	}
 
 	const index = node.childNodes.indexOf(beforeChildNode);
 	if (index >= 0) {

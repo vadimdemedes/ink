@@ -1,7 +1,9 @@
 import test, {type TestContext} from 'node:test';
 import React from 'react';
-import {Box, Text, renderToString} from '../src/index.js';
+import ansiEscapes from 'ansi-escapes';
+import {Box, Text, render, renderToString} from '../src/index.js';
 import sanitizeAnsi from '../src/sanitize-ansi.js';
+import createStdout from './helpers/create-stdout.js';
 
 for (const control of ['\r', '\b', '\v', '\f']) {
 	test(`text removes cursor control ${JSON.stringify(control)}`, (t: TestContext) => {
@@ -58,12 +60,118 @@ test('sanitizing cursor controls preserves tabs, newlines, and styles', (t: Test
 	);
 });
 
-test('cursor controls inside OSC payloads remain untouched', (t: TestContext) => {
+test('a hyperlink with a cursor control in its URI is dropped', (t: TestContext) => {
 	const hyperlink = ']8;;https://example.com/\rpath';
-	t.assert.strictEqual(
-		sanitizeAnsi(`${hyperlink}a\rb]8;;`),
-		`${hyperlink}ab]8;;`,
+	t.assert.strictEqual(sanitizeAnsi(`${hyperlink}a\rb]8;;`), 'ab]8;;');
+});
+
+const lineFeedHyperlink =
+	'\u{1B}]8;;https://example.com/\n\u{7}link\u{1B}]8;;\u{7}';
+
+for (const [name, incrementalRendering, update] of [
+	['standard', false, ansiEscapes.eraseLines(2) + 'link 1\n'],
+	[
+		'incremental',
+		true,
+		ansiEscapes.cursorUp(1) +
+			ansiEscapes.cursorTo(5) +
+			ansiEscapes.eraseEndLine +
+			'1\n',
+	],
+] as const) {
+	test(`a hyperlink with a line feed in its URI takes one row in ${name} rendering`, async (t: TestContext) => {
+		const stdout = createStdout(40, true);
+		const instance = render(<Text>{lineFeedHyperlink} 0</Text>, {
+			stdout,
+			interactive: true,
+			incrementalRendering,
+			patchConsole: false,
+		});
+		t.after(() => {
+			instance.unmount();
+		});
+		await instance.waitUntilRenderFlush();
+		instance.rerender(<Text>{lineFeedHyperlink} 1</Text>);
+		await instance.waitUntilRenderFlush();
+
+		// The terminal ignores the line feed, so with the hyperlink kept Ink would count two rows and erase the row above its output.
+		t.assert.deepStrictEqual(
+			stdout.getWrites().filter(write => write.endsWith('\n')),
+			['link 0\n', update],
+		);
+	});
+}
+
+test('a hyperlink with DEL in its URI wraps as plain text', (t: TestContext) => {
+	const output = renderToString(
+		<Box width={12}>
+			<Text>
+				{
+					'\u{1B}]8;;AAAAAAAA\u{7F}\u{7}visible text that has to wrap around\u{1B}]8;;\u{7}'
+				}
+			</Text>
+		</Box>,
 	);
+
+	// `wrap-ansi` does not see a hyperlink with DEL in it as a sequence, so it would wrap inside the URI.
+	t.assert.strictEqual(output, 'visible text\n that has to\n wrap around');
+});
+
+test('a hyperlink without a URI separator keeps its text', (t: TestContext) => {
+	const output = renderToString(
+		<Text>{'\u{1B}]8;id=1\u{7}link text\u{1B}]8;;\u{7}'}</Text>,
+	);
+
+	// With the hyperlink kept, the text is read as part of its sequence and nothing is rendered.
+	t.assert.strictEqual(output, 'link text');
+});
+
+for (const [wrap, expected] of [
+	[
+		'truncate',
+		'│a\u{301}\u{1B}]8;;https://example.com\u{7}bcde\u{1B}]8;;\u{7}…│',
+	],
+	[
+		'wrap',
+		'│\u{E1}\u{1B}]8;;https://example.com\u{7}bcdef\u{1B}]8;;\u{7}│\n│\u{1B}]8;;https://example.com\u{7}ghij\u{1B}]8;;\u{7}  │',
+	],
+] as const) {
+	test(`a combining mark after a hyperlink sequence stays in the cell of its base character with wrap="${wrap}"`, (t: TestContext) => {
+		const output = renderToString(
+			<Box width={8} borderStyle="single">
+				<Text wrap={wrap}>
+					{'a\u{1B}]8;;https://example.com\u{7}\u{301}bcdefghij\u{1B}]8;;\u{7}'}
+				</Text>
+			</Box>,
+		);
+
+		// Behind the hyperlink sequence the mark takes a cell of its own, so the row is a column wider than measured and the right border is lost.
+		t.assert.strictEqual(output, `┌──────┐\n${expected}\n└──────┘`);
+	});
+}
+
+test('a combining mark after a closing hyperlink sequence stays in the hyperlink', (t: TestContext) => {
+	const output = renderToString(
+		<Text>
+			{'\u{1B}]8;;https://example.com\u{7}that\u{1B}]8;;\u{7}\u{301} around'}
+		</Text>,
+	);
+
+	t.assert.strictEqual(
+		output,
+		'\u{1B}]8;;https://example.com\u{7}that\u{301}\u{1B}]8;;\u{7} around',
+	);
+});
+
+test('a combining mark after a closing hyperlink sequence terminated by ST is kept', (t: TestContext) => {
+	const output = renderToString(
+		<Box width={8} borderStyle="single">
+			<Text>{'that\u{1B}]8;;\u{1B}\\\u{301}ab'}</Text>
+		</Box>,
+	);
+
+	// Directly after `ESC \` the mark is read as part of the sequence and lost.
+	t.assert.strictEqual(output, '┌──────┐\n│that\u{301}ab│\n└──────┘');
 });
 
 test('text does not let an OSC hyperlink smuggle escape sequences to the terminal', (t: TestContext) => {

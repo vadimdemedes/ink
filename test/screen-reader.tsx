@@ -1,3 +1,4 @@
+import process from 'node:process';
 import test, {type TestContext} from 'node:test';
 import React from 'react';
 import chalk from 'chalk';
@@ -10,10 +11,13 @@ import {
 	render,
 	useStdout,
 	useStderr,
+	useIsScreenReaderEnabled,
 } from '../src/index.js';
 import {bsu, esu} from '../src/write-synchronized.js';
 import {renderToString} from './helpers/render-to-string.js';
+import {run} from './helpers/run.js';
 import createStdout from './helpers/create-stdout.js';
+import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 
 test('omit Static content inside a hidden ancestor from screen-reader output', (t: TestContext) => {
 	const output = renderToString(
@@ -104,6 +108,43 @@ test('render text for screen readers', (t: TestContext) => {
 	);
 
 	t.assert.strictEqual(output, 'Hello World');
+});
+
+test('INK_SCREEN_READER=true enables screen-reader output unless the option disables it', (t: TestContext) => {
+	const previousValue = process.env['INK_SCREEN_READER'];
+	t.after(() => {
+		if (previousValue === undefined) {
+			delete process.env['INK_SCREEN_READER'];
+		} else {
+			process.env['INK_SCREEN_READER'] = previousValue;
+		}
+	});
+
+	// eslint-disable-next-line node-test/no-process-env-mutation -- Restored in `t.after()`.
+	process.env['INK_SCREEN_READER'] = 'true';
+
+	const element = (
+		<Box aria-label="Hello World">
+			<Text>Not visible to screen readers</Text>
+		</Box>
+	);
+
+	t.assert.strictEqual(renderToString(element), 'Hello World');
+	t.assert.strictEqual(
+		renderToString(element, {isScreenReaderEnabled: false}),
+		'Not visible to screen readers',
+	);
+
+	// eslint-disable-next-line node-test/no-process-env-mutation -- Restored in `t.after()`.
+	process.env['INK_SCREEN_READER'] = 'false';
+	t.assert.strictEqual(
+		renderToString(element),
+		'Not visible to screen readers',
+	);
+	t.assert.strictEqual(
+		renderToString(element, {isScreenReaderEnabled: true}),
+		'Hello World',
+	);
 });
 
 test('render text for screen readers with aria-hidden', (t: TestContext) => {
@@ -504,15 +545,15 @@ test('restore screen-reader output after stdout writes without touching the curs
 		instance.unmount();
 	});
 	await instance.waitUntilRenderFlush();
-	t.assert.deepStrictEqual(contentWrites(stdout), [bsu, 'Hello', esu]);
+	t.assert.deepStrictEqual(contentWrites(stdout), [bsu, 'Hello\n', esu]);
 
 	write('External\n');
 
 	t.assert.deepStrictEqual(contentWrites(stdout).slice(3), [
 		bsu,
-		ansiEscapes.eraseLines(1),
+		ansiEscapes.eraseLines(2),
 		'External\n',
-		'Hello',
+		'Hello\n',
 		esu,
 	]);
 });
@@ -543,8 +584,8 @@ test('restore screen-reader output after stderr writes without touching the curs
 	t.assert.deepStrictEqual(contentWrites(stderr), ['External\n']);
 	t.assert.deepStrictEqual(contentWrites(stdout).slice(3), [
 		bsu,
-		ansiEscapes.eraseLines(1),
-		'Hello',
+		ansiEscapes.eraseLines(2),
+		'Hello\n',
 		esu,
 	]);
 });
@@ -565,9 +606,230 @@ test('restore screen-reader output after console.log without touching the cursor
 
 	t.assert.deepStrictEqual(contentWrites(stdout).slice(3), [
 		bsu,
-		ansiEscapes.eraseLines(1),
+		ansiEscapes.eraseLines(2),
 		'External\n',
-		'Hello',
+		'Hello\n',
+		esu,
+	]);
+});
+
+test('screen-reader output ends with a newline so the next line starts below it', async (t: TestContext) => {
+	const stdout = createStdout(40, true);
+	const instance = render(<Text>Hello</Text>, {
+		stdout,
+		interactive: true,
+		isScreenReaderEnabled: true,
+	});
+	await instance.waitUntilRenderFlush();
+	instance.unmount();
+
+	t.assert.deepStrictEqual(contentWrites(stdout).slice(0, 3), [
+		bsu,
+		'Hello\n',
+		esu,
+	]);
+
+	const output = await run('exit-normally', {
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		env: {INK_SCREEN_READER: 'true'},
+	});
+	t.assert.ok(output.includes('Hello World\r\n'));
+	t.assert.ok(!output.includes('Worldexited'));
+});
+
+test('rerender() does not re-render memoized components that read the screen reader state', (t: TestContext) => {
+	let renderCount = 0;
+	const Label = React.memo(() => {
+		renderCount++;
+		return <Text>{useIsScreenReaderEnabled() ? 'on' : 'off'}</Text>;
+	});
+
+	function Example({count}: {readonly count: number}) {
+		return (
+			<Box>
+				<Label />
+				<Text>{count}</Text>
+			</Box>
+		);
+	}
+
+	const stdout = createStdout();
+	const {rerender, unmount} = render(<Example count={0} />, {
+		stdout,
+		debug: true,
+		isScreenReaderEnabled: false,
+	});
+	t.after(unmount);
+	rerender(<Example count={1} />);
+
+	t.assert.strictEqual(stdout.getWrites().at(-1), 'off1');
+	t.assert.strictEqual(renderCount, 1);
+});
+
+const sixLines = Array.from({length: 6}, (_, index) => `line ${index}`);
+
+function Lines({lines}: {readonly lines: string[]}) {
+	return (
+		<Box flexDirection="column">
+			{lines.map(line => (
+				<Text key={line}>{line}</Text>
+			))}
+		</Box>
+	);
+}
+
+for (const grownRows of [5, 6]) {
+	test(`redraw a screen-reader frame that was taller than the alternate screen when the terminal height grows from 4 to ${grownRows} rows`, async (t: TestContext) => {
+		const stdout = createStdout(40);
+		stdout.rows = 4;
+
+		const {rerender, unmount, waitUntilRenderFlush} = render(
+			<Lines lines={sixLines} />,
+			{
+				stdout,
+				interactive: true,
+				alternateScreen: true,
+				isScreenReaderEnabled: true,
+			},
+		);
+		t.after(() => {
+			unmount();
+		});
+		await waitUntilRenderFlush();
+
+		const writesBeforeResize = stdout.getWrites().length;
+		stdout.rows = grownRows;
+		stdout.emit('resize');
+		await waitUntilRenderFlush();
+
+		// The alternate screen has no scrollback, so the two lines that scrolled off the 4-row terminal do not come back when it grows. The reducer would bring them back, so carry only its viewport over the resize and read only its viewport afterwards.
+		const screen = (): string[] => {
+			const writes = stdout
+				.getWrites()
+				.map(write => write.replaceAll('\n', '\r\n'));
+			const viewport = reconstructTerminalLines(
+				writes.slice(0, writesBeforeResize),
+				4,
+			).slice(-4);
+
+			return reconstructTerminalLines(
+				[
+					viewport.join('\r\n'),
+					{rows: grownRows},
+					...writes.slice(writesBeforeResize),
+				],
+				4,
+			)
+				.slice(-grownRows)
+				.filter(line => line !== '');
+		};
+
+		t.assert.deepStrictEqual(screen(), sixLines.slice(-grownRows));
+
+		rerender(<Lines lines={[...sixLines.slice(0, 5), 'updated']} />);
+		await waitUntilRenderFlush();
+
+		t.assert.deepStrictEqual(
+			screen(),
+			[...sixLines.slice(0, 5), 'updated'].slice(-grownRows),
+		);
+	});
+}
+
+const renderCutOffFrame = async (lines: string[]) => {
+	const stdout = createStdout(40);
+	stdout.rows = 4;
+
+	const instance = render(<Lines lines={lines} />, {
+		stdout,
+		interactive: true,
+		alternateScreen: true,
+		isScreenReaderEnabled: true,
+	});
+	await instance.waitUntilRenderFlush();
+
+	return {
+		stdout,
+		...instance,
+		countFrameWrites: () =>
+			stdout.getWrites().filter(write => write.includes('line 0')).length,
+	};
+};
+
+test('draw a cut-off screen-reader frame again only when the terminal height grows', async (t: TestContext) => {
+	const {stdout, rerender, unmount, waitUntilRenderFlush, countFrameWrites} =
+		await renderCutOffFrame(sixLines);
+	t.after(() => {
+		unmount();
+	});
+
+	stdout.rows = 5;
+	stdout.emit('resize');
+	await waitUntilRenderFlush();
+	t.assert.strictEqual(countFrameWrites(), 2);
+
+	// The frame is still cut off at 5 rows, and neither an unchanged render nor a shrink is a reason to write it again.
+	rerender(<Lines lines={sixLines} />);
+	await waitUntilRenderFlush();
+	t.assert.strictEqual(countFrameWrites(), 2);
+
+	stdout.rows = 3;
+	stdout.emit('resize');
+	await waitUntilRenderFlush();
+	t.assert.strictEqual(countFrameWrites(), 2);
+});
+
+test('leave a screen-reader frame that fits the alternate screen alone when the terminal height grows', async (t: TestContext) => {
+	const {stdout, unmount, waitUntilRenderFlush, countFrameWrites} =
+		await renderCutOffFrame(sixLines.slice(0, 3));
+	t.after(() => {
+		unmount();
+	});
+
+	stdout.rows = 5;
+	stdout.emit('resize');
+	await waitUntilRenderFlush();
+
+	t.assert.strictEqual(countFrameWrites(), 1);
+});
+
+test('draw a cut-off screen-reader frame again once when a render at the new height precedes the resize event', async (t: TestContext) => {
+	const {stdout, rerender, unmount, waitUntilRenderFlush, countFrameWrites} =
+		await renderCutOffFrame(sixLines);
+	t.after(() => {
+		unmount();
+	});
+
+	stdout.rows = 5;
+	rerender(<Lines lines={sixLines} />);
+	stdout.emit('resize');
+	await waitUntilRenderFlush();
+
+	t.assert.strictEqual(countFrameWrites(), 2);
+});
+
+test('leave a screen-reader frame that was taller than the primary screen alone when the terminal height grows', async (t: TestContext) => {
+	const stdout = createStdout(40);
+	stdout.rows = 4;
+
+	const {unmount, waitUntilRenderFlush} = render(<Lines lines={sixLines} />, {
+		stdout,
+		interactive: true,
+		isScreenReaderEnabled: true,
+	});
+	t.after(() => {
+		unmount();
+	});
+	await waitUntilRenderFlush();
+
+	const writesBeforeResize = contentWrites(stdout).length;
+	stdout.rows = 6;
+	stdout.emit('resize');
+	await waitUntilRenderFlush();
+
+	// The terminal brings the two lines back from scrollback itself, so there is nothing to draw again.
+	t.assert.deepStrictEqual(contentWrites(stdout).slice(writesBeforeResize), [
+		bsu,
 		esu,
 	]);
 });

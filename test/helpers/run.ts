@@ -31,6 +31,7 @@ export const run: Run = async (fixture, props) => {
 			['--import=tsx', path.join(__dirname, `/../fixtures/${fixture}.tsx`)],
 			{
 				name: 'xterm-color',
+				useConptyDll: true,
 				cols: typeof props?.columns === 'number' ? props.columns : 100,
 				cwd: __dirname,
 				env,

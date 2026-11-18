@@ -292,6 +292,25 @@ test('switch focus to the next component on Tab', async (t: TestContext) => {
 	);
 });
 
+test('switch focus to the next component when two Tabs arrive in one chunk', async (t: TestContext) => {
+	const stdout = createStdout();
+	const stdin = createStdin();
+	render(<Test />, {
+		stdout,
+		stdin,
+		debug: true,
+	});
+
+	await delay(50);
+	emitReadable(stdin, '\t\t');
+	await delay(50);
+
+	t.assert.strictEqual(
+		(stdout.write as any).lastCall.args[0],
+		['First', 'Second ✔', 'Third'].join('\n'),
+	);
+});
+
 test('switch focus to the first component if currently focused component is the last one on Tab', async (t: TestContext) => {
 	const stdout = createStdout();
 	const stdin = createStdin();

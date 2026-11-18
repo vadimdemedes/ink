@@ -1733,6 +1733,7 @@ A React hook that returns `void` and handles user input.
 It's a more convenient alternative to using `useStdin` and listening for `data` events.
 The callback you pass to `useInput` is called for each character when the user enters any input.
 However, if the user pastes text and it's more than one character, the callback will be called only once, and the whole string will be passed as `input`.
+A paste that contains only control characters, such as line breaks or tabs, can't be told apart from key presses, so the callback is called once for each character.
 You can find a full example of using `useInput` at [examples/use-input](examples/use-input/use-input.tsx).
 
 Terminal replies and mouse reports that don't map to a key are not passed to the callback. Legacy mouse reports (mouse tracking without SGR mode) are only dropped on a best-effort basis, because their raw coordinate bytes can decode ambiguously. If your app enables mouse tracking, enable SGR mode (`\u001B[?1006h`) as well.
@@ -2027,7 +2028,7 @@ Type: `Function`
 
 Temporarily hands the terminal over to a child process (such as `$EDITOR`, `less`, or `fzf`), then restores Ink's terminal state and forces a full redraw.
 
-While suspended, Ink stops writing output, stops consuming input, and restores the terminal modes the child expects (raw mode off, cursor visible, bracketed paste off, alternate screen exited, kitty keyboard protocol off). When the suspension ends, Ink reapplies its own terminal state and repaints from scratch.
+While suspended, Ink stops writing output, stops consuming input, and restores the terminal modes the child expects (raw mode off, cursor visible, bracketed paste off, alternate screen exited, kitty keyboard protocol off). When the suspension ends, Ink reapplies its own terminal state and repaints from scratch. `<Static>` items added while suspended are written at that point.
 
 ##### callback
 
@@ -2847,8 +2848,10 @@ Type: `'auto' | 'enabled' | 'disabled'`\
 Default: `'auto'`
 
 - `'auto'`: Query interactive TTY terminals for support (`CSI ? u`) once an input hook such as `useInput` enables raw mode, so the reply is read by Ink instead of echoed. The protocol is enabled when Ink's input handler receives a response within 200 milliseconds. Pending detection is canceled when the terminal is suspended.
-- `'enabled'`: Force enable the protocol. Both stdin and stdout must be TTYs.
+- `'enabled'`: Force enable the protocol without querying for support. Both stdin and stdout must be TTYs.
 - `'disabled'`: Never enable the protocol.
+
+The protocol is only active while raw mode is on, which means while a [`useInput`](#useinputinputhandler-options), [`usePaste`](#usepastehandler-options) or [`useFocus`](#usefocusoptions) hook is active or after `setRawMode(true)` from [`useStdin`](#usestdin). Ink pushes the flags when raw mode is enabled and pops them when it is disabled, in `'enabled'` mode too. Without raw mode nothing reads the key sequences, and a terminal with the protocol active sends `Ctrl+C` as an escape sequence instead of raising `SIGINT`. Raw mode that is set on stdin directly, without Ink's `setRawMode`, does not activate the protocol.
 
 **kittyKeyboard.flags**
 

@@ -28,6 +28,7 @@ const term = (fixture: string, args: string[] = []) => {
 		['--import=tsx', path.join(fixturesDir, `${fixture}.tsx`), ...args],
 		{
 			name: 'xterm-color',
+			useConptyDll: true,
 			cols: 100,
 			cwd: fixturesDir,
 			env,

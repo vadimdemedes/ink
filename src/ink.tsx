@@ -53,19 +53,34 @@ const isWindowsConsole = process.platform === 'win32';
 export const homeAndEraseDown =
 	ansiEscapes.cursorTo(0, 0) + ansiEscapes.eraseDown;
 
+// A frame taller than the alternate screen it was drawn into lost its top rows, and with no scrollback a terminal that gains rows cannot bring them back, so the frame stays cut off until it is drawn again. On the primary screen the terminal restores them from scrollback, and drawing the frame again there could erase a line above it or push another copy of its top rows into scrollback.
+const wasFrameCutOff = ({
+	isAlternateScreen,
+	previousOutputHeight,
+	previousViewportRows,
+}: {
+	isAlternateScreen: boolean;
+	previousOutputHeight: number;
+	previousViewportRows: number;
+}): boolean => isAlternateScreen && previousOutputHeight > previousViewportRows;
+
 const shouldClearTerminalForFrame = ({
 	isStdoutTty,
+	isAlternateScreen,
 	viewportRows,
 	previousViewportRows,
 	previousOutputHeight,
 	nextOutputHeight,
+	isCursorShown,
 	isUnmounting,
 }: {
 	isStdoutTty: boolean;
+	isAlternateScreen: boolean;
 	viewportRows: number;
 	previousViewportRows: number;
 	previousOutputHeight: number;
 	nextOutputHeight: number;
+	isCursorShown: boolean;
 	isUnmounting: boolean;
 }): boolean => {
 	if (!isStdoutTty) {
@@ -80,7 +95,12 @@ const shouldClearTerminalForFrame = ({
 	}
 
 	const hadPreviousFrame = previousOutputHeight > 0;
-	const wasOverflowing = previousOutputHeight > viewportRows;
+	const wasCutOff = wasFrameCutOff({
+		isAlternateScreen,
+		previousOutputHeight,
+		previousViewportRows,
+	});
+	const wasOverflowing = previousOutputHeight > viewportRows || wasCutOff;
 	const isOverflowing = nextOutputHeight > viewportRows;
 	const isLeavingFullscreen = wasFullscreen && nextOutputHeight < viewportRows;
 	const isViewportShrinking = viewportRows < previousViewportRows;
@@ -92,8 +112,8 @@ const shouldClearTerminalForFrame = ({
 		(isOverflowing && hadPreviousFrame) ||
 		// Clear when shrinking from fullscreen to non-fullscreen output.
 		isLeavingFullscreen ||
-		// A terminal that loses rows scrolls only as far as it must to keep the cursor on screen, so the frame is cut only when it fills the new viewport. Then the cursor-relative diff no longer lines up with what is on screen.
-		(isViewportShrinking && wasFullscreen) ||
+		// A terminal that loses rows scrolls only as far as it must to keep the cursor on screen, so the frame is cut only when it fills the new viewport. Then the cursor-relative diff no longer lines up with what is on screen. A useCursor() position leaves the cursor inside the frame, so the terminal drops the frame rows below it first, even when the frame still fits. `resized` repaints that case itself, but a frame committed before the resize event gets here first.
+		(isViewportShrinking && (wasFullscreen || isCursorShown)) ||
 		// Preserve legacy unmount behavior for fullscreen frames: final teardown
 		// render should clear once to avoid leaving a scrolled viewport state.
 		shouldClearOnUnmount
@@ -134,6 +154,28 @@ const settleThrottle = (
 		throttledValue.flush();
 	} else if (typeof throttledValue.cancel === 'function') {
 		throttledValue.cancel();
+	}
+};
+
+// Mounted instances share one `exit` listener, added with the first and removed with the last, so that many instances do not add up to a `MaxListenersExceededWarning`.
+const mountedInstances = new Set<Ink>();
+
+const unmountMountedInstances = (code: number): void => {
+	// Iterate over a copy, so an instance that is rendered while these unmount is left alone, as it was when every instance had its own listener.
+	for (const instance of new Set(mountedInstances)) {
+		instance.unmount(code);
+	}
+};
+
+// Instances with a pending `waitUntilExit()` share one `beforeExit` listener for the same reason, added when the first starts waiting and removed when the last unmounts.
+const instancesAwaitingExit = new Map<Ink, boolean>();
+
+const unmountInstancesAwaitingExit = (): void => {
+	// An instance that started waiting in this tick is left for the next `beforeExit`. During an emit that is one that started waiting in an earlier `beforeExit` listener, which is left alone as it was when every instance had its own listener.
+	for (const [instance, wasWaitingBeforeThisTick] of instancesAwaitingExit) {
+		if (wasWaitingBeforeThisTick) {
+			instance.unmount();
+		}
 	}
 };
 
@@ -187,7 +229,7 @@ export type Options = {
 
 	Note: Reusing the same stdout across multiple `render()` calls without unmounting is unsupported. Call `unmount()` first if you need to change this option or create a fresh instance.
 
-	@default true (false if in CI or `stdout.isTTY` is falsy)
+	Default: `true` (`false` if in CI or `stdout.isTTY` is falsy)
 
 	@see {@link RenderOptions.interactive}
 	*/
@@ -219,6 +261,8 @@ export default class Ink {
 		LogUpdate | DebouncedFunc<(output: string) => void>;
 
 	private readonly isScreenReaderEnabled: boolean;
+	// Created once so `rerender()` does not hand every `Box`, `Text` and `Transform` a new context value.
+	private readonly accessibilityContextValue: {isScreenReaderEnabled: boolean};
 	private readonly interactive: boolean;
 	private readonly renderThrottleMs: number;
 	private alternateScreen: boolean;
@@ -239,18 +283,22 @@ export default class Ink {
 	private hasRenderedStaticOutput: boolean;
 	private readonly exitPromise!: Promise<unknown>;
 	private exitResult: unknown;
-	private beforeExitHandler?: () => void;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
 	private readonly throttledOnRender?: DebouncedFunc<() => void>;
 	private hasPendingThrottledRender = false;
 	private kittyProtocolEnabled = false;
+	// The flags to push whenever raw mode is on: set up front in `enabled` mode and by a positive detection in `auto` mode.
 	private kittyFlags: KittyFlagName[] | undefined;
 	private pendingKittyFlags: KittyFlagName[] | undefined;
 	private finishKittyDetection?: (isSupported: boolean) => void;
 	private nextRenderCommit?: PromiseWithResolvers<void>;
 	// Set while suspendTerminal() has handed the terminal to a child process.
 	private isSuspended = false;
+	// <Static> output rendered while suspended, written with the first frame after resume.
+	private suspendedStaticOutput = '';
+	// Set for the redraw that ends a suspension.
+	private isResumeRedraw = false;
 	// Input pause/resume hooks registered by the App component, which owns raw
 	// mode and bracketed paste state.
 	private pauseInput?: () => void;
@@ -321,12 +369,26 @@ export default class Ink {
 	// Same stability requirement as `handleKittyQueryResponse`.
 	handleInputReady = (): void => {
 		if (!this.pendingKittyFlags) {
+			this.enableKittyProtocol();
 			return;
 		}
 
 		const flags = this.pendingKittyFlags;
 		this.pendingKittyFlags = undefined;
 		this.confirmKittySupport(flags);
+	};
+
+	// Same stability requirement as `handleKittyQueryResponse`. App calls this right before it turns raw mode off.
+	disableKittyProtocol = (): void => {
+		if (
+			!this.kittyProtocolEnabled ||
+			!getWritableStreamState(this.options.stdout).canWriteToStdout
+		) {
+			return;
+		}
+
+		this.writeBestEffort(this.options.stdout, '\u{1B}[<u');
+		this.kittyProtocolEnabled = false;
 	};
 
 	restoreLastOutput = (): void => {
@@ -375,6 +437,23 @@ export default class Ink {
 	handleStaticChange = (): void => {
 		this.fullStaticOutput = '';
 		this.hasRenderedStaticOutput = false;
+
+		// Output collected while suspended goes with it. On the primary screen it stays, because without the suspension those items would already be in the scrollback.
+		if (this.options.debug || this.alternateScreen) {
+			this.suspendedStaticOutput = '';
+		}
+	};
+
+	// <Static> drops the children it just rendered right after the commit, so this render is the only chance to capture them. While suspended nothing is written, so keep their output for the redraw on resume.
+	onImmediateRender = (): void => {
+		if (this.isSuspended) {
+			this.suspendedStaticOutput += render(
+				this.rootNode,
+				this.isScreenReaderEnabled,
+			).staticOutput;
+		}
+
+		this.onRender();
 	};
 
 	onRender: () => void = () => {
@@ -417,7 +496,19 @@ export default class Ink {
 		);
 
 		const renderTime = performance.now() - startTime;
-		this.renderFrame(output, outputHeight, staticOutput);
+		// `exit()` from an effect unmounts before `<Static>` has dropped the children it just rendered, so the final frame would write them a second time. Static changes that have not been rendered yet are still marked dirty.
+		// The redraw on resume can find them in the tree too, when an effect of the commit that added them resumes. If they are not marked dirty they were already written or collected while suspended, and if they are, that commit is still running and renders them right after.
+		const {suspendedStaticOutput, isResumeRedraw} = this;
+		this.suspendedStaticOutput = '';
+		this.isResumeRedraw = false;
+		const isStaticOutputAlreadyWritten =
+			isResumeRedraw || (this.isUnmounting && !this.rootNode.isStaticDirty);
+		this.renderFrame(
+			output,
+			outputHeight,
+			suspendedStaticOutput +
+				(isStaticOutputAlreadyWritten ? '' : staticOutput),
+		);
 		this.options.onRender?.({renderTime});
 	};
 
@@ -431,6 +522,9 @@ export default class Ink {
 		this.isScreenReaderEnabled =
 			options.isScreenReaderEnabled ??
 			process.env['INK_SCREEN_READER'] === 'true';
+		this.accessibilityContextValue = {
+			isScreenReaderEnabled: this.isScreenReaderEnabled,
+		};
 
 		// CI detection takes precedence: even a TTY stdout in CI defaults to non-interactive.
 		// Using Boolean(isTTY) (rather than an 'in' guard) correctly handles piped streams
@@ -464,7 +558,7 @@ export default class Ink {
 			this.throttledOnRender = throttled;
 		}
 
-		this.rootNode.onImmediateRender = this.onRender;
+		this.rootNode.onImmediateRender = this.onImmediateRender;
 		this.rootNode.onStaticChange = this.handleStaticChange;
 		this.log = logUpdate.create(options.stdout, {
 			incremental: options.incrementalRendering,
@@ -531,7 +625,10 @@ export default class Ink {
 
 		// Unmount when process exits. The plain `exit` listener covers the case where another copy of `signal-exit` (for example v4 next to Ink's v3) replaced `process.emit` after Ink registered, which drops Ink's `signal-exit` handler from the chain. `unmount` is idempotent, so running from both is fine.
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
-		process.on('exit', this.unmount);
+		mountedInstances.add(this);
+		if (mountedInstances.size === 1) {
+			process.on('exit', unmountMountedInstances);
+		}
 
 		this.setAlternateScreen(Boolean(options.alternateScreen));
 
@@ -602,13 +699,38 @@ export default class Ink {
 				this.options.stdout.write(bsu);
 			}
 
-			const terminalWidth = getWindowSize(this.options.stdout).columns;
+			const {columns: terminalWidth, rows: viewportRows} = getWindowSize(
+				this.options.stdout,
+			);
 			const wrappedOutput = wrapAnsi(output, terminalWidth, {
 				trim: false,
 				hard: true,
 			});
+			// End the frame with a newline like the interactive path does, so the cursor rests on its own row and the shell prompt or output written after exit starts there. Fullscreen frames keep the cursor on the last row.
+			const isFullscreen =
+				Boolean(this.options.stdout.isTTY) &&
+				wrappedOutput.split('\n').length >= viewportRows;
+			const outputToRender =
+				isFullscreen || wrappedOutput === ''
+					? wrappedOutput
+					: wrappedOutput + '\n';
 
-			if (!hasStaticOutput && wrappedOutput === this.lastOutputToRender) {
+			// This writer skips a frame that has not changed, so a cut-off frame is drawn again here when the terminal gains rows.
+			const previousViewportRows = this.lastTerminalHeight;
+			this.lastTerminalHeight = viewportRows;
+			const shouldRedrawCutOffFrame =
+				viewportRows > previousViewportRows &&
+				wasFrameCutOff({
+					isAlternateScreen: this.alternateScreen,
+					previousOutputHeight: this.lastOutputHeight,
+					previousViewportRows,
+				});
+
+			if (
+				!hasStaticOutput &&
+				!shouldRedrawCutOffFrame &&
+				outputToRender === this.lastOutputToRender
+			) {
 				if (shouldSync) {
 					this.options.stdout.write(esu);
 				}
@@ -629,15 +751,15 @@ export default class Ink {
 				}
 			}
 
-			this.options.stdout.write(wrappedOutput);
+			this.options.stdout.write(outputToRender);
 
 			this.lastOutput = output;
-			this.lastOutputToRender = wrappedOutput;
+			this.lastOutputToRender = outputToRender;
 			this.lastOutputHeight =
-				wrappedOutput === '' ? 0 : wrappedOutput.split('\n').length;
+				wrappedOutput === '' ? 0 : outputToRender.split('\n').length;
 			// Screen-reader output uses its own cursor placement.
 			this.log.setCursorPosition(undefined);
-			this.log.sync(wrappedOutput);
+			this.log.sync(outputToRender);
 
 			if (shouldSync) {
 				this.options.stdout.write(esu);
@@ -749,10 +871,12 @@ export default class Ink {
 		const previousViewportRows = this.lastTerminalHeight;
 		const shouldClearTerminal = shouldClearTerminalForFrame({
 			isStdoutTty,
+			isAlternateScreen: this.alternateScreen,
 			viewportRows,
 			previousViewportRows,
 			previousOutputHeight: this.lastOutputHeight,
 			nextOutputHeight: outputHeight,
+			isCursorShown: this.log.getCursorPosition() !== undefined,
 			isUnmounting: this.isUnmounting,
 		});
 		this.lastTerminalHeight = viewportRows;
@@ -859,9 +983,10 @@ export default class Ink {
 
 		// 'enabled' force-enables the protocol as long as both streams are TTYs,
 		// regardless of the interactive setting (e.g. even in CI).
+		// The flags are pushed once raw mode is on: in a cooked tty nothing reads the key sequences, and Ctrl+C sent as one never raises `SIGINT`.
 		if (mode === 'enabled') {
 			if (isTty(this.options.stdin) && this.options.stdout.isTTY) {
-				this.enableKittyProtocol(flags);
+				this.kittyFlags = flags;
 			}
 
 			return;
@@ -889,9 +1014,13 @@ export default class Ink {
 		const finish = (isSupported: boolean): void => {
 			this.finishKittyDetection = undefined;
 			clearTimeout(timer);
-			if (isSupported && !this.isUnmounted) {
-				this.enableKittyProtocol(flags);
+			if (!isSupported || this.isUnmounted) {
+				return;
 			}
+
+			// A response is only read while raw mode is on, so the flags can be pushed right away.
+			this.kittyFlags = flags;
+			this.enableKittyProtocol();
 		};
 
 		// Register before writing the query so immediate responses are not missed.
@@ -902,12 +1031,22 @@ export default class Ink {
 		this.options.stdout.write('\u{1B}[?u');
 	}
 
-	private enableKittyProtocol(flags: KittyFlagName[]): void {
-		this.options.stdout.write(`\u{1B}[>${resolveFlags(flags)}u`);
-		this.kittyProtocolEnabled = true;
-		// Remember the flags so suspendTerminal() can re-enable the same protocol
-		// after a child process has had the terminal.
-		this.kittyFlags = flags;
+	// Only called while raw mode is on. `disableKittyProtocol` pops the flags before raw mode goes off.
+	private enableKittyProtocol(): void {
+		if (
+			!this.kittyFlags ||
+			this.kittyProtocolEnabled ||
+			this.isUnmounted ||
+			!getWritableStreamState(this.options.stdout).canWriteToStdout
+		) {
+			return;
+		}
+
+		// Best effort, like the pop. The flags only count as pushed once the write went through, so a failed push is never popped.
+		try {
+			this.options.stdout.write(`\u{1B}[>${resolveFlags(this.kittyFlags)}u`);
+			this.kittyProtocolEnabled = true;
+		} catch {}
 	}
 
 	private beginSuspend(): void {
@@ -921,12 +1060,13 @@ export default class Ink {
 			);
 		}
 
-		this.finishKittyDetection?.(false);
-		this.isSuspended = true;
-
-		if (!this.interactive || this.isUnmounted || this.isUnmounting) {
+		// Nothing is handed over once unmount has started, so don't mark the terminal as suspended: unmount skips its terminal cleanup while suspended.
+		if (this.isUnmounted || this.isUnmounting) {
 			return;
 		}
+
+		this.finishKittyDetection?.(false);
+		this.isSuspended = true;
 
 		try {
 			const {stdout} = this.options;
@@ -982,30 +1122,20 @@ export default class Ink {
 			return;
 		}
 
-		// Reclaim input only while the app still owns the terminal. After unmount, App cleanup has already restored raw mode, so resuming must not re-enable it.
-		this.resumeInput?.();
-
 		const {stdout} = this.options;
 		const {canWriteToStdout} = getWritableStreamState(stdout);
 
-		if (canWriteToStdout) {
-			if (this.alternateScreen) {
-				// Re-entering the alternate screen gives an empty buffer with no scrollback behind it, and the forced redraw below only carries new <Static> items. Replay the accumulated static output ahead of it, as the full-clear path does, so the rows the child process's turn erased come back. The debug redraw writes fullStaticOutput itself, so skip the replay there.
-				this.writeBestEffort(
-					this.options.stdout,
-					ansiEscapes.enterAlternativeScreen +
-						(this.options.debug ? '' : this.fullStaticOutput),
-				);
-			}
-
-			if (this.kittyFlags) {
-				this.writeBestEffort(
-					this.options.stdout,
-					`\u{1B}[>${resolveFlags(this.kittyFlags)}u`,
-				);
-				this.kittyProtocolEnabled = true;
-			}
+		if (canWriteToStdout && this.alternateScreen) {
+			// Re-entering the alternate screen gives an empty buffer with no scrollback behind it, and the forced redraw below only carries new <Static> items. Replay the accumulated static output ahead of it, as the full-clear path does, so the rows the child process's turn erased come back. The debug redraw writes fullStaticOutput itself, so skip the replay there.
+			this.writeBestEffort(
+				this.options.stdout,
+				ansiEscapes.enterAlternativeScreen +
+					(this.options.debug ? '' : this.fullStaticOutput),
+			);
 		}
+
+		// Reclaim input only while the app still owns the terminal. After unmount, App cleanup has already restored raw mode, so resuming must not re-enable it. If raw mode comes back on, `handleInputReady` pushes the kitty keyboard protocol again. That has to follow the alternate screen switch, because each screen has its own keyboard mode stack.
+		this.resumeInput?.();
 
 		// Force a full redraw instead of diffing against the stale pre-suspension
 		// frame, which the child process may have overwritten. A redraw failure here
@@ -1018,16 +1148,20 @@ export default class Ink {
 
 		try {
 			this.calculateLayout();
+			this.isResumeRedraw = true;
 			this.onRender();
 			await this.waitUntilRenderFlush();
 		} catch {}
 	}
 
 	render(node: ReactNode): void {
+		// Mounting a tree into an unmounted instance would run effects (such as enabling raw mode) that `unmount()` can no longer clean up.
+		if (this.isUnmounted || this.isUnmounting) {
+			return;
+		}
+
 		const tree = (
-			<AccessibilityContext
-				value={{isScreenReaderEnabled: this.isScreenReaderEnabled}}
-			>
+			<AccessibilityContext value={this.accessibilityContextValue}>
 				<App
 					stdin={this.options.stdin}
 					stdout={this.options.stdout}
@@ -1044,6 +1178,7 @@ export default class Ink {
 					onRegisterInputControl={this.registerInputControl}
 					onKittyQueryResponse={this.handleKittyQueryResponse}
 					onInputReady={this.handleInputReady}
+					onRawModeDisable={this.disableKittyProtocol}
 				>
 					<RootNodeContext value={this.rootNode}>{node}</RootNodeContext>
 				</App>
@@ -1137,9 +1272,9 @@ export default class Ink {
 
 		this.isUnmounting = true;
 
-		if (this.beforeExitHandler) {
-			process.off('beforeExit', this.beforeExitHandler);
-			this.beforeExitHandler = undefined;
+		instancesAwaitingExit.delete(this);
+		if (instancesAwaitingExit.size === 0) {
+			process.off('beforeExit', unmountInstancesAwaitingExit);
 		}
 
 		const {stdout} = this.options;
@@ -1168,7 +1303,10 @@ export default class Ink {
 		this.isUnmounted = true;
 
 		this.unsubscribeExit();
-		process.off('exit', this.unmount);
+		mountedInstances.delete(this);
+		if (mountedInstances.size === 0) {
+			process.off('exit', unmountMountedInstances);
+		}
 
 		// Flush any pending throttled log writes if possible, otherwise cancel to
 		// prevent delayed callbacks from writing to a closed stream.
@@ -1195,7 +1333,8 @@ export default class Ink {
 					this.kittyProtocolEnabled = false;
 				}
 
-				if (this.interactive && !this.options.debug) {
+				// While suspended, the frame is already erased, the cursor is shown and the alternate screen is exited. The terminal belongs to the child process, so leave it alone.
+				if (this.interactive && !this.options.debug && !this.isSuspended) {
 					this.log.done();
 				}
 
@@ -1206,11 +1345,14 @@ export default class Ink {
 				// buffer switch adds fragile lifecycle-specific behavior, so Ink keeps
 				// alternate-screen teardown intentionally simple and best-effort.
 				if (this.alternateScreen) {
-					this.writeBestEffort(
-						this.options.stdout,
-						ansiEscapes.exitAlternativeScreen,
-					);
-					this.writeBestEffort(this.options.stdout, showCursorEscape);
+					if (!this.isSuspended) {
+						this.writeBestEffort(
+							this.options.stdout,
+							ansiEscapes.exitAlternativeScreen,
+						);
+						this.writeBestEffort(this.options.stdout, showCursorEscape);
+					}
+
 					this.alternateScreen = false;
 				}
 
@@ -1280,12 +1422,17 @@ export default class Ink {
 	}
 
 	async waitUntilExit(): Promise<unknown> {
-		if (!this.isUnmounting && !this.beforeExitHandler) {
-			this.beforeExitHandler = () => {
-				this.unmount();
-			};
+		if (!this.isUnmounting && !instancesAwaitingExit.has(this)) {
+			instancesAwaitingExit.set(this, false);
+			if (instancesAwaitingExit.size === 1) {
+				process.on('beforeExit', unmountInstancesAwaitingExit);
+			}
 
-			process.once('beforeExit', this.beforeExitHandler);
+			queueMicrotask(() => {
+				if (instancesAwaitingExit.has(this)) {
+					instancesAwaitingExit.set(this, true);
+				}
+			});
 		}
 
 		return this.exitPromise;

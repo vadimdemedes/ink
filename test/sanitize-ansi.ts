@@ -91,6 +91,31 @@ test('keep deferred SGR sequences before a following hyperlink', (t: TestContext
 	);
 });
 
+test('defer hyperlinks until after combining marks', (t: TestContext) => {
+	t.assert.strictEqual(
+		sanitizeAnsi(
+			'e\u{1B}]8;;https://example.com\u{7}\u{301}\u{302}X\u{1B}]8;;\u{7}\u{301}Y',
+		),
+		'e\u{301}\u{302}\u{1B}]8;;https://example.com\u{7}X\u{301}\u{1B}]8;;\u{7}Y',
+	);
+});
+
+test('defer a trailing hyperlink past a combining mark', (t: TestContext) => {
+	t.assert.strictEqual(
+		sanitizeAnsi('e\u{1B}]8;;https://example.com\u{7}\u{301}'),
+		'e\u{301}\u{1B}]8;;https://example.com\u{7}',
+	);
+});
+
+test('keep deferred SGR sequences and hyperlinks in order', (t: TestContext) => {
+	t.assert.strictEqual(
+		sanitizeAnsi(
+			'e\u{1B}[31m\u{1B}]8;;https://example.com\u{7}\u{1B}[1m\u{301}X',
+		),
+		'e\u{301}\u{1B}[31m\u{1B}]8;;https://example.com\u{7}\u{1B}[1mX',
+	);
+});
+
 test('strip cursor controls before checking for combining marks', (t: TestContext) => {
 	t.assert.strictEqual(
 		sanitizeAnsi('e\u{1B}[31m\r\u{301}X'),
@@ -159,6 +184,56 @@ for (const [name, payload] of [
 		const output = sanitizeAnsi(`\u{1B}]8;;${payload}\u{7}link\u{1B}]8;;\u{7}`);
 
 		t.assert.strictEqual(output, 'link\u{1B}]8;;\u{7}');
+	});
+}
+
+for (const [name, opener] of [
+	['a line feed in the URI', '\u{1B}]8;;https://example.com/\npath\u{7}'],
+	['a carriage return in the URI', '\u{1B}]8;;https://example.com/\rpath\u{7}'],
+	['a tab in the URI', '\u{1B}]8;;https://example.com/\tpath\u{7}'],
+	['DEL in the URI', '\u{1B}]8;;https://example.com/\u{7F}path\u{7}'],
+	['NUL in the URI', '\u{1B}]8;;https://example.com/\u{0}path\u{7}'],
+	[
+		'a C0 control in the parameters',
+		'\u{1B}]8;id=a\u{1F}b;https://example.com\u{7}',
+	],
+	[
+		'a line feed in the URI of a C1 hyperlink',
+		'\u{9D}8;;https://example.com/\npath\u{9C}',
+	],
+]) {
+	test(`strip OSC hyperlinks with ${name}`, (t: TestContext) => {
+		const output = sanitizeAnsi(`${opener}link\u{1B}]8;;\u{7}`);
+
+		t.assert.strictEqual(output, 'link\u{1B}]8;;\u{7}');
+	});
+}
+
+for (const [name, opener] of [
+	['only parameters', '\u{1B}]8;id=a\u{7}'],
+	['nothing after the first separator', '\u{1B}]8;\u{7}'],
+	['only parameters in a C1 hyperlink', '\u{9D}8;id=a\u{9C}'],
+]) {
+	test(`strip OSC hyperlinks with ${name}`, (t: TestContext) => {
+		const output = sanitizeAnsi(`${opener}link\u{1B}]8;;\u{7}`);
+
+		t.assert.strictEqual(output, 'link\u{1B}]8;;\u{7}');
+	});
+}
+
+for (const [name, opener] of [
+	[
+		'a printable ASCII payload',
+		'\u{1B}]8;id=a b:c=~;https://example.com/a b~\u{7}',
+	],
+	['semicolons in the URI', '\u{1B}]8;;https://example.com/a;b;c\u{7}'],
+	['parameters and an empty URI', '\u{1B}]8;id=a;\u{7}'],
+	['a non-ASCII URI', '\u{1B}]8;;https://example.com/\u{A0}é/日本語/🔗\u{7}'],
+]) {
+	test(`preserve OSC hyperlinks with ${name}`, (t: TestContext) => {
+		const input = `${opener}link\u{1B}]8;;\u{7}`;
+
+		t.assert.strictEqual(sanitizeAnsi(input), input);
 	});
 }
 
