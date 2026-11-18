@@ -7,6 +7,19 @@ import createStdout from './helpers/create-stdout.js';
 import mockTimerCalls from './helpers/mock-timer-calls.js';
 import {act} from './helpers/act.js';
 
+// React's scheduler keeps the `performance` object and the `setImmediate` it found at import. Since `@sinonjs/fake-timers` 15.5.0, faking `performance.now()` also fakes it on that object, and React's commit for the last tick can land on a real `setImmediate` after `tickAsync()` resolves. One real turn lets it finish before the output is read.
+const realSetImmediate = globalThis.setImmediate;
+
+const tickAndFlush = async (
+	clock: FakeTimers.InstalledClock,
+	milliseconds: number,
+): Promise<void> => {
+	await clock.tickAsync(milliseconds);
+	await new Promise<void>(resolve => {
+		realSetImmediate(resolve);
+	});
+};
+
 function AnimatedCounter({interval}: {readonly interval?: number}) {
 	const {frame} = useAnimation({interval});
 	return <Text>{String(frame)}</Text>;
@@ -726,7 +739,7 @@ test('clamps zero interval to 1ms', async (t: TestContext) => {
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(5);
+		await tickAndFlush(clock, 5);
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '5');
 
@@ -749,7 +762,7 @@ test('clamps negative interval to 1ms', async (t: TestContext) => {
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(5);
+		await tickAndFlush(clock, 5);
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '5');
 
@@ -772,7 +785,7 @@ test('maxFps does not speed up animation state', async (t: TestContext) => {
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(25);
+		await tickAndFlush(clock, 25);
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '3');
 
@@ -829,7 +842,7 @@ test('maxFps 0 does not affect animation cadence', async (t: TestContext) => {
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(25);
+		await tickAndFlush(clock, 25);
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '3');
 
@@ -885,7 +898,7 @@ test('pausing animation stops ticks before the next frame', async (t: TestContex
 			},
 		);
 
-		await clock.tickAsync(25);
+		await tickAndFlush(clock, 25);
 
 		const pausedFrame = Number(
 			(stdout.write as any).lastCall.args[0] as string,
@@ -899,7 +912,7 @@ test('pausing animation stops ticks before the next frame', async (t: TestContex
 			String(pausedFrame),
 		);
 
-		await clock.tickAsync(25);
+		await tickAndFlush(clock, 25);
 
 		t.assert.strictEqual(
 			(stdout.write as any).lastCall.args[0],
@@ -1236,7 +1249,7 @@ test('reset() resets frame, time, and delta to 0', async (t: TestContext) => {
 			maxFps: 120,
 		});
 
-		await clock.tickAsync(200);
+		await tickAndFlush(clock, 200);
 		const [frameBefore, timeBefore] = (
 			(stdout.write as any).lastCall.args[0] as string
 		)
@@ -1248,11 +1261,11 @@ test('reset() resets frame, time, and delta to 0', async (t: TestContext) => {
 		resetAnimation();
 
 		// Let React flush the state update from reset()
-		await clock.tickAsync(1);
+		await tickAndFlush(clock, 1);
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0,0,0');
 
 		// Confirm it advances again after reset
-		await clock.tickAsync(100);
+		await tickAndFlush(clock, 100);
 		const [frameAfter, timeAfter, deltaAfter] = (
 			(stdout.write as any).lastCall.args[0] as string
 		)
