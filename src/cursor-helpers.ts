@@ -53,6 +53,20 @@ export const buildCursorSuffix = (
 };
 
 /**
+The viewport row, counted from the top, that `buildCursorSuffix` leaves the cursor on when the frame's bottom row is the last row of the viewport, as it is once a frame fills or overflows the viewport.
+
+A frame that fits the viewport gives a row of at least `cursorPosition.y`, so taking the smaller of the two only changes moves in frames whose top has scrolled away.
+*/
+export const getCursorViewportRow = (
+	bottomLine: number,
+	cursorPosition: CursorPosition,
+	viewportRows: number,
+): number =>
+	viewportRows -
+	1 -
+	Math.min(Math.max(bottomLine - cursorPosition.y, 0), viewportRows - 1);
+
+/**
 Build escape sequence to move cursor from previousCursorPosition back to the bottom of output.
 This must be done before eraseLines or any operation that assumes cursor is at the bottom.
 */
@@ -138,10 +152,11 @@ export const buildEraseFrame = (
 	}
 
 	// `buildCursorSuffix` never moves below the bottom row, so a cursor set past the output sits on that row.
+	const bottomLine = previousLineCount - 1;
 	const rowsBelowTop = Math.min(
 		previousCursorPosition.y,
-		previousLineCount - 1,
-		viewportRows - 1,
+		bottomLine,
+		getCursorViewportRow(bottomLine, previousCursorPosition, viewportRows),
 	);
 	return (
 		hideCursorEscape +

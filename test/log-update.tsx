@@ -875,23 +875,23 @@ for (const {name, incremental} of renderingModes) {
 			t.assert.ok(write.endsWith(clampedSuffix));
 		}
 
-		assertCursorStaysInViewport(t, writes, 5);
-
-		// Erasing walks up from the cursor to the frame's top row, which is capped the same way.
+		// Erasing walks up from the cursor to the frame's top row, but only as far as the top of the viewport. Line 15 of the 21-row frame is on the top row here, so the erase starts where the cursor is.
 		render.setCursorPosition({x: 0, y: 15});
 		render(output('!'));
 		render.clear();
+		const erase = stdout.getWrites().at(-1)!;
+		t.assert.ok(erase.endsWith(ansiEscapes.cursorTo(0) + ansiEscapes.eraseDown));
 		t.assert.ok(
-			stdout
-				.getWrites()
-				.at(-1)!
-				.endsWith(
-					ansiEscapes.cursorUp(4) +
-						ansiEscapes.cursorTo(0) +
-						ansiEscapes.eraseDown,
-				),
+			!erase.split(esc).some(part => /^\[\d*A/.test(part)),
+			JSON.stringify(erase),
 		);
-		assertCursorStaysInViewport(t, stdout.getWrites(), 5);
+		// `sync` records a frame that Ink wrote itself, so put that frame back in ahead of the cursor write that follows it.
+		const allWrites = stdout.getWrites();
+		assertCursorStaysInViewport(
+			t,
+			[...allWrites.slice(0, 3), output('!'), ...allWrites.slice(3)],
+			5,
+		);
 	});
 
 	test(`${name} - clearing without a cursor erases only the rows in the viewport`, (t: TestContext) => {
