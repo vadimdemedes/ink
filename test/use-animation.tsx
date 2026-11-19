@@ -7,6 +7,19 @@ import createStdout from './helpers/create-stdout.js';
 import mockTimerCalls from './helpers/mock-timer-calls.js';
 import {act} from './helpers/act.js';
 
+// React's scheduler keeps the `performance` object and the `setImmediate` it found at import. Since `@sinonjs/fake-timers` 15.5.0, faking `performance.now()` also fakes it on that object, and React's commit for the last tick can land on a real `setImmediate` after `tickAsync()` resolves. One real turn lets it finish before the output is read.
+const realSetImmediate = setImmediate;
+
+const tickAndFlush = async (
+	clock: ReturnType<typeof FakeTimers.install>,
+	milliseconds: number,
+): Promise<void> => {
+	await clock.tickAsync(milliseconds);
+	await new Promise<void>(resolve => {
+		realSetImmediate(resolve);
+	});
+};
+
 function AnimatedCounter({interval}: {readonly interval?: number}) {
 	const {frame} = useAnimation({interval});
 	return <Text>{String(frame)}</Text>;
@@ -111,7 +124,7 @@ test('multiple animations with the same interval share one timer', async (t: Tes
 		t.assert.ok(mocks.setTimeoutCallCount >= 1);
 		t.assert.ok(mocks.timeoutDelays.every(timeoutDelay => timeoutDelay === 50));
 
-		await clock.tickAsync(100);
+		await tickAndFlush(clock, 100);
 		const output = (stdout.write as any).lastCall.args[0] as string;
 		const [frame1, frame2] = output.split(',').map(Number);
 		t.assert.strictEqual(frame1, frame2);
@@ -147,7 +160,7 @@ test('animations with different intervals still use the shared timer', async (t:
 
 		t.assert.ok(mocks.timeoutDelays.every(timeoutDelay => timeoutDelay >= 50));
 
-		await clock.tickAsync(170);
+		await tickAndFlush(clock, 170);
 		const output = (stdout.write as any).lastCall.args[0] as string;
 		const [fastFrame, slowFrame] = output.split(',').map(Number);
 		t.assert.ok(fastFrame! > slowFrame!);
@@ -182,7 +195,7 @@ test('shared timer is cleaned up and recreated after the last animation unmounts
 
 		t.assert.strictEqual(mocks.setTimeoutCallCount, 2);
 
-		await clock.tickAsync(120);
+		await tickAndFlush(clock, 120);
 		t.assert.ok(Number((stdout.write as any).lastCall.args[0] as string) >= 1);
 
 		secondRender.unmount();
@@ -221,7 +234,7 @@ test('shared timer stays alive while another same-interval animation remains mou
 
 		t.assert.ok(mocks.setTimeoutCallCount >= 1);
 
-		await clock.tickAsync(120);
+		await tickAndFlush(clock, 120);
 		const frameBeforeUnmount = Number(
 			((stdout.write as any).lastCall.args[0] as string).split(',', 1)[0]!,
 		);
@@ -232,7 +245,7 @@ test('shared timer stays alive while another same-interval animation remains mou
 		t.assert.ok(mocks.setTimeoutCallCount >= 1);
 		t.assert.ok(mocks.clearTimeoutCallCount >= 1);
 
-		await clock.tickAsync(120);
+		await tickAndFlush(clock, 120);
 		const frameAfterUnmount = Number(
 			(stdout.write as any).lastCall.args[0] as string,
 		);
@@ -274,7 +287,7 @@ test('shared timer stays alive while another different-interval animation remain
 
 		t.assert.ok(mocks.setTimeoutCallCount >= 1);
 
-		await clock.tickAsync(120);
+		await tickAndFlush(clock, 120);
 		const frameBeforeUnmount = Number(
 			((stdout.write as any).lastCall.args[0] as string).split(',', 1)[0]!,
 		);
@@ -285,7 +298,7 @@ test('shared timer stays alive while another different-interval animation remain
 		t.assert.ok(mocks.setTimeoutCallCount >= 1);
 		t.assert.ok(mocks.clearTimeoutCallCount >= 1);
 
-		await clock.tickAsync(120);
+		await tickAndFlush(clock, 120);
 		const frameAfterUnmount = Number(
 			(stdout.write as any).lastCall.args[0] as string,
 		);
@@ -338,14 +351,14 @@ test('inactive animations do not start the shared timer until one becomes active
 
 		t.assert.strictEqual(mocks.setTimeoutCallCount, 0);
 
-		await clock.tickAsync(100);
+		await tickAndFlush(clock, 100);
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0,0');
 
 		rerender(<MaybeActiveAnimations isFirstActive isSecondActive={false} />);
 
 		t.assert.strictEqual(mocks.setTimeoutCallCount, 1);
 
-		await clock.tickAsync(120);
+		await tickAndFlush(clock, 120);
 		const [firstFrame, secondFrame] = (
 			(stdout.write as any).lastCall.args[0] as string
 		)
@@ -400,7 +413,7 @@ test('no timer leak when all animations are inactive', async (t: TestContext) =>
 		rerender(<ConditionalAnimation isActive interval={50} />);
 		t.assert.strictEqual(mocks.setTimeoutCallCount, 1);
 
-		await clock.tickAsync(120);
+		await tickAndFlush(clock, 120);
 		t.assert.ok(Number((stdout.write as any).lastCall.args[0] as string) >= 1);
 
 		// Deactivate — subscriber unsubscribes, timer should be cleaned up
@@ -426,7 +439,7 @@ test('frame catches up when the shared timer is delayed', async (t: TestContext)
 			debug: true,
 		});
 
-		await clock.tickAsync(220);
+		await tickAndFlush(clock, 220);
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '4');
 
 		unmount();
@@ -507,7 +520,7 @@ test('time and delta reset to 0 when interval changes', async (t: TestContext) =
 			maxFps: 120,
 		});
 
-		await clock.tickAsync(200);
+		await tickAndFlush(clock, 200);
 		const [frameBefore, timeBefore] = (
 			(stdout.write as any).lastCall.args[0] as string
 		)
@@ -546,7 +559,7 @@ test('time and delta reset to 0 when animation is resumed', async (t: TestContex
 			maxFps: 120,
 		});
 
-		await clock.tickAsync(200);
+		await tickAndFlush(clock, 200);
 		const [frameBefore, timeBefore] = (
 			(stdout.write as any).lastCall.args[0] as string
 		)
@@ -608,7 +621,7 @@ test('defaults to 100ms interval', async (t: TestContext) => {
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(250);
+		await tickAndFlush(clock, 250);
 
 		t.assert.ok(Number((stdout.write as any).lastCall.args[0] as string) >= 1);
 
@@ -631,7 +644,7 @@ test('treats NaN interval as the default interval', async (t: TestContext) => {
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(250);
+		await tickAndFlush(clock, 250);
 
 		t.assert.ok(Number((stdout.write as any).lastCall.args[0] as string) >= 1);
 
@@ -654,7 +667,7 @@ test('treats Infinity interval as the default interval', async (t: TestContext) 
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(250);
+		await tickAndFlush(clock, 250);
 
 		t.assert.ok(Number((stdout.write as any).lastCall.args[0] as string) >= 1);
 
@@ -677,7 +690,7 @@ test('treats negative Infinity interval as the default interval', async (t: Test
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(250);
+		await tickAndFlush(clock, 250);
 
 		t.assert.ok(Number((stdout.write as any).lastCall.args[0] as string) >= 1);
 
@@ -703,7 +716,7 @@ test('clamps oversized finite interval to the timer maximum', async (t: TestCont
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(1000);
+		await tickAndFlush(clock, 1000);
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
@@ -726,7 +739,7 @@ test('clamps zero interval to 1ms', async (t: TestContext) => {
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(5);
+		await tickAndFlush(clock, 5);
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '5');
 
@@ -749,7 +762,7 @@ test('clamps negative interval to 1ms', async (t: TestContext) => {
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(5);
+		await tickAndFlush(clock, 5);
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '5');
 
@@ -772,7 +785,7 @@ test('maxFps does not speed up animation state', async (t: TestContext) => {
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(25);
+		await tickAndFlush(clock, 25);
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '3');
 
@@ -802,11 +815,11 @@ test('low maxFps caps animation rerenders', async (t: TestContext) => {
 
 		t.assert.strictEqual(renderCount, 1);
 
-		await clock.tickAsync(35);
+		await tickAndFlush(clock, 35);
 
 		t.assert.strictEqual(renderCount, 1);
 
-		await clock.tickAsync(1000);
+		await tickAndFlush(clock, 1000);
 
 		t.assert.ok(renderCount >= 2);
 
@@ -829,7 +842,7 @@ test('maxFps 0 does not affect animation cadence', async (t: TestContext) => {
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(25);
+		await tickAndFlush(clock, 25);
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '3');
 
@@ -885,7 +898,7 @@ test('pausing animation stops ticks before the next frame', async (t: TestContex
 			},
 		);
 
-		await clock.tickAsync(25);
+		await tickAndFlush(clock, 25);
 
 		const pausedFrame = Number(
 			(stdout.write as any).lastCall.args[0] as string,
@@ -899,7 +912,7 @@ test('pausing animation stops ticks before the next frame', async (t: TestContex
 			String(pausedFrame),
 		);
 
-		await clock.tickAsync(25);
+		await tickAndFlush(clock, 25);
 
 		t.assert.strictEqual(
 			(stdout.write as any).lastCall.args[0],
@@ -928,14 +941,14 @@ test('changing interval unsubscribes stale ticks before reset', async (t: TestCo
 			maxFps: 120,
 		});
 
-		await clock.tickAsync(25);
+		await tickAndFlush(clock, 25);
 		t.assert.ok(Number((stdout.write as any).lastCall.args[0] as string) >= 1);
 
 		rerender(<DynamicInterval interval={200} />);
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(17);
+		await tickAndFlush(clock, 17);
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
@@ -960,7 +973,7 @@ test('wall clock changes do not move animations backwards', async (t: TestContex
 		});
 
 		wallClockTime = 1024;
-		await clock.tickAsync(25);
+		await tickAndFlush(clock, 25);
 
 		const frameBeforeClockJump = Number(
 			(stdout.write as any).lastCall.args[0] as string,
@@ -968,7 +981,7 @@ test('wall clock changes do not move animations backwards', async (t: TestContex
 		t.assert.ok(frameBeforeClockJump >= 1);
 
 		wallClockTime = 900;
-		await clock.tickAsync(25);
+		await tickAndFlush(clock, 25);
 
 		t.assert.ok(
 			Number((stdout.write as any).lastCall.args[0] as string) >=
@@ -996,7 +1009,7 @@ test('animations advance in debug mode when interactive is false', async (t: Tes
 
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(25);
+		await tickAndFlush(clock, 25);
 
 		t.assert.ok(Number((stdout.write as any).lastCall.args[0] as string) >= 1);
 
@@ -1046,11 +1059,11 @@ test('newly mounted animations do not inherit elapsed time', async (t: TestConte
 		const getOutput = () =>
 			((stdout.write as any).lastCall.args[0] as string).replaceAll('\n', '');
 
-		await clock.tickAsync(25);
+		await tickAndFlush(clock, 25);
 
 		t.assert.strictEqual(getOutput(), '1,0');
 
-		await clock.tickAsync(40);
+		await tickAndFlush(clock, 40);
 
 		const [firstFrame, secondFrame] = getOutput().split(',').map(Number);
 		t.assert.ok(firstFrame >= 2);
@@ -1109,11 +1122,11 @@ test('newly activated animations do not inherit elapsed time', async (t: TestCon
 		const getOutput = () =>
 			((stdout.write as any).lastCall.args[0] as string).replaceAll('\n', '');
 
-		await clock.tickAsync(25);
+		await tickAndFlush(clock, 25);
 
 		t.assert.strictEqual(getOutput(), '1,0');
 
-		await clock.tickAsync(40);
+		await tickAndFlush(clock, 40);
 
 		const [firstFrame, secondFrame] = getOutput().split(',').map(Number);
 		t.assert.ok(firstFrame >= 2);
@@ -1142,7 +1155,7 @@ test('rerendering with the same interval does not reset the frame', async (t: Te
 			maxFps: 120,
 		});
 
-		await clock.tickAsync(50);
+		await tickAndFlush(clock, 50);
 
 		const frameBeforeRerender = Number(
 			(stdout.write as any).lastCall.args[0] as string,
@@ -1236,7 +1249,7 @@ test('reset() resets frame, time, and delta to 0', async (t: TestContext) => {
 			maxFps: 120,
 		});
 
-		await clock.tickAsync(200);
+		await tickAndFlush(clock, 200);
 		const [frameBefore, timeBefore] = (
 			(stdout.write as any).lastCall.args[0] as string
 		)
@@ -1248,11 +1261,11 @@ test('reset() resets frame, time, and delta to 0', async (t: TestContext) => {
 		resetAnimation();
 
 		// Let React flush the state update from reset()
-		await clock.tickAsync(1);
+		await tickAndFlush(clock, 1);
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0,0,0');
 
 		// Confirm it advances again after reset
-		await clock.tickAsync(100);
+		await tickAndFlush(clock, 100);
 		const [frameAfter, timeAfter, deltaAfter] = (
 			(stdout.write as any).lastCall.args[0] as string
 		)
@@ -1317,7 +1330,7 @@ test('reset() clears paused animation values without resuming', async (t: TestCo
 		});
 
 		// Let a few frames accumulate
-		await clock.tickAsync(200);
+		await tickAndFlush(clock, 200);
 		t.assert.ok(
 			stdout
 				.get()
@@ -1331,9 +1344,9 @@ test('reset() clears paused animation values without resuming', async (t: TestCo
 
 		// Reset all values while paused without restarting the animation.
 		resetAnimation();
-		await clock.tickAsync(1);
+		await tickAndFlush(clock, 1);
 		t.assert.strictEqual(stdout.get(), '0,0,0');
-		await clock.tickAsync(100);
+		await tickAndFlush(clock, 100);
 		t.assert.strictEqual(stdout.get(), '0,0,0');
 
 		// Resume with all values still at zero.
@@ -1341,7 +1354,7 @@ test('reset() clears paused animation values without resuming', async (t: TestCo
 		t.assert.strictEqual(stdout.get(), '0,0,0');
 
 		// And then advance again to confirm animation restarts cleanly
-		await clock.tickAsync(100);
+		await tickAndFlush(clock, 100);
 		t.assert.ok(
 			stdout
 				.get()
@@ -1445,7 +1458,7 @@ test('unmount before first tick cleans up without error', async (t: TestContext)
 		// Confirm no animation ticks fire after unmount (Ink may write cursor
 		// codes on unmount, so compare call counts rather than output value).
 		const writeCountAfterUnmount = (stdout.write as any).callCount as number;
-		await clock.tickAsync(200);
+		await tickAndFlush(clock, 200);
 		t.assert.strictEqual(
 			(stdout.write as any).callCount,
 			writeCountAfterUnmount,
@@ -1467,21 +1480,21 @@ test('frame resets to 0 on each resume across multiple cycles', async (t: TestCo
 		);
 
 		// Cycle 1
-		await clock.tickAsync(120);
+		await tickAndFlush(clock, 120);
 		t.assert.ok(Number((stdout.write as any).lastCall.args[0] as string) >= 1);
 		rerender(<ConditionalAnimation isActive={false} interval={50} />);
 		rerender(<ConditionalAnimation isActive interval={50} />);
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
 		// Cycle 2
-		await clock.tickAsync(120);
+		await tickAndFlush(clock, 120);
 		t.assert.ok(Number((stdout.write as any).lastCall.args[0] as string) >= 1);
 		rerender(<ConditionalAnimation isActive={false} interval={50} />);
 		rerender(<ConditionalAnimation isActive interval={50} />);
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
 		// Cycle 3
-		await clock.tickAsync(120);
+		await tickAndFlush(clock, 120);
 		t.assert.ok(Number((stdout.write as any).lastCall.args[0] as string) >= 1);
 		rerender(<ConditionalAnimation isActive={false} interval={50} />);
 		rerender(<ConditionalAnimation isActive interval={50} />);
@@ -1507,7 +1520,7 @@ test('isActive false from mount never starts a timer or advances the frame', asy
 		t.assert.strictEqual(mocks.setTimeoutCallCount, 0);
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
 
-		await clock.tickAsync(500);
+		await tickAndFlush(clock, 500);
 
 		t.assert.strictEqual(mocks.setTimeoutCallCount, 0);
 		t.assert.strictEqual((stdout.write as any).lastCall.args[0], '0');
