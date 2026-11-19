@@ -879,3 +879,96 @@ for (const {name, incremental} of inkRenderingModes) {
 		unmount();
 	});
 }
+
+for (const {name, incremental} of inkRenderingModes) {
+	test(`${name} - cursor in a frame taller than the viewport never moves above it`, async (t: TestContext) => {
+		const stdout = createStdout();
+		(stdout as any).rows = 5;
+		const writesSince = (start: number) =>
+			getWriteCalls(stdout).slice(start).join('');
+		const assertNoCursorUpFrom = (
+			output: string,
+			fromRows: number,
+			label: string,
+		) => {
+			for (let rows = fromRows; rows <= 20; rows++) {
+				t.assert.strictEqual(
+					output.includes(ansiEscapes.cursorUp(rows)),
+					false,
+					`no cursorUp(${rows}) ${label}`,
+				);
+			}
+		};
+
+		const {rerender, unmount, waitUntilRenderFlush} = render(
+			<FullscreenCursorApp lineCount={20} cursorY={0} marker="" />,
+			{stdout, incrementalRendering: incremental, interactive: true},
+		);
+		await waitUntilRenderFlush();
+		rerender(<FullscreenCursorApp lineCount={20} cursorY={0} marker="!" />);
+		await waitUntilRenderFlush();
+		rerender(<FullscreenCursorApp lineCount={20} cursorY={15} marker="!" />);
+		await waitUntilRenderFlush();
+
+		const onFiveRows = writesSince(0);
+		t.assert.ok(
+			onFiveRows.includes(
+				ansiEscapes.cursorUp(4) + ansiEscapes.cursorTo(3) + showCursorEscape,
+			),
+		);
+		assertNoCursorUpFrom(onFiveRows, 5, 'on 5 rows');
+
+		// The resize handler erases the frame by walking up from the cursor.
+		let start = (stdout.write as any).callCount as number;
+		(stdout as any).rows = 3;
+		stdout.emit('resize');
+		await waitUntilRenderFlush();
+		assertNoCursorUpFrom(writesSince(start), 3, 'after a resize to 3 rows');
+
+		// Rows shrinking without a resize event reach the full-clear branch instead.
+		start = (stdout.write as any).callCount as number;
+		(stdout as any).rows = 2;
+		rerender(<FullscreenCursorApp lineCount={20} cursorY={15} marker="?" />);
+		await waitUntilRenderFlush();
+		assertNoCursorUpFrom(
+			writesSince(start),
+			2,
+			'after rows shrink to 2 without a resize event',
+		);
+
+		unmount();
+	});
+}
+
+for (const {name, incremental} of inkRenderingModes) {
+	test(`${name} - erasing a frame taller than the viewport without a cursor stays in the viewport`, async (t: TestContext) => {
+		const stdout = createStdout();
+		(stdout as any).rows = 5;
+		(stdout as any).columns = 100;
+
+		const {unmount, waitUntilRenderFlush} = render(
+			<Box flexDirection="column">
+				{fullscreenLines(20, '').map(line => (
+					<Text key={line}>{line}</Text>
+				))}
+			</Box>,
+			{stdout, incrementalRendering: incremental, interactive: true},
+		);
+		await waitUntilRenderFlush();
+
+		// Narrowing the terminal erases the frame through `clear()`, like console writes do.
+		const start = (stdout.write as any).callCount as number;
+		(stdout as any).columns = 50;
+		stdout.emit('resize');
+		await waitUntilRenderFlush();
+
+		const afterResize = getWriteCalls(stdout).slice(start).join('');
+		t.assert.ok(afterResize.includes(ansiEscapes.eraseLines(5)));
+		t.assert.strictEqual(
+			afterResize.split(ansiEscapes.cursorUp(1)).length - 1,
+			4,
+		);
+
+		unmount();
+	});
+}

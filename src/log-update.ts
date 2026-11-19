@@ -33,8 +33,12 @@ export type LogUpdate = {
 const visibleLineCount = (lines: string[], text: string): number =>
 	text.endsWith('\n') ? lines.length - 1 : lines.length;
 
+// Non-TTY streams have no rows (and some report 0), so the cursor is never clamped there.
+const getViewportRows = ({rows}: OutputStream): number =>
+	rows !== undefined && rows > 0 ? rows : Infinity;
+
 const createStandard = (
-	stream: NodeJS.WritableStream,
+	stream: OutputStream,
 	{showCursor = false} = {},
 ): LogUpdate => {
 	let previousLineCount = 0;
@@ -77,7 +81,11 @@ const createStandard = (
 		}
 
 		const lines = text.split('\n');
-		const cursorSuffix = buildCursorSuffix(lines.length - 1, activeCursor);
+		const cursorSuffix = buildCursorSuffix(
+			lines.length - 1,
+			activeCursor,
+			getViewportRows(stream),
+		);
 
 		if (text === previousOutput && hasCursorChanged) {
 			stream.write(
@@ -86,6 +94,7 @@ const createStandard = (
 					previousLineCount,
 					previousCursorPosition,
 					cursorPosition: activeCursor,
+					viewportRows: getViewportRows(stream),
 				}),
 			);
 		} else {
@@ -95,11 +104,10 @@ const createStandard = (
 				previousLineCount,
 				previousCursorPosition,
 			);
+			// Rows above the viewport are in scrollback and can't be erased.
+			const eraseCount = Math.min(previousLineCount, getViewportRows(stream));
 			stream.write(
-				returnPrefix +
-					ansiEscapes.eraseLines(previousLineCount) +
-					text +
-					cursorSuffix,
+				returnPrefix + ansiEscapes.eraseLines(eraseCount) + text + cursorSuffix,
 			);
 			previousLineCount = lines.length;
 		}
@@ -110,7 +118,13 @@ const createStandard = (
 	};
 
 	render.clear = () => {
-		stream.write(buildEraseFrame(previousLineCount, previousCursorPosition));
+		stream.write(
+			buildEraseFrame(
+				previousLineCount,
+				previousCursorPosition,
+				getViewportRows(stream),
+			),
+		);
 		previousOutput = '';
 		previousLineCount = 0;
 		previousCursorPosition = undefined;
@@ -158,7 +172,13 @@ const createStandard = (
 		}
 
 		if (activeCursor) {
-			stream.write(buildCursorSuffix(lines.length - 1, activeCursor));
+			stream.write(
+				buildCursorSuffix(
+					lines.length - 1,
+					activeCursor,
+					getViewportRows(stream),
+				),
+			);
 		}
 
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
@@ -234,6 +254,7 @@ const createIncremental = (
 					previousLineCount: previousLines.length,
 					previousCursorPosition,
 					cursorPosition: activeCursor,
+					viewportRows: getViewportRows(stream),
 				}),
 			);
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
@@ -247,16 +268,23 @@ const createIncremental = (
 			previousCursorPosition,
 		);
 
-		if (text === '\n' || previousOutput.length === 0) {
+		const viewportRows = getViewportRows(stream);
+		// Diffing walks up `previousLines.length - 1` rows to the top of the previous frame. When that is past the top of the viewport, those rows are in scrollback, so erase what is visible and write the whole frame instead.
+		const isPreviousFrameAboveViewport = previousLines.length > viewportRows;
+
+		if (
+			isPreviousFrameAboveViewport ||
+			text === '\n' ||
+			previousOutput.length === 0
+		) {
 			const cursorSuffix = buildCursorSuffix(
 				nextLines.length - 1,
 				activeCursor,
+				viewportRows,
 			);
+			const eraseCount = Math.min(previousLines.length, viewportRows);
 			stream.write(
-				returnPrefix +
-					ansiEscapes.eraseLines(previousLines.length) +
-					text +
-					cursorSuffix,
+				returnPrefix + ansiEscapes.eraseLines(eraseCount) + text + cursorSuffix,
 			);
 			wasCursorShown = activeCursor !== undefined;
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
@@ -316,7 +344,11 @@ const createIncremental = (
 			);
 		}
 
-		const cursorSuffix = buildCursorSuffix(nextLines.length - 1, activeCursor);
+		const cursorSuffix = buildCursorSuffix(
+			nextLines.length - 1,
+			activeCursor,
+			getViewportRows(stream),
+		);
 		buffer.push(cursorSuffix);
 
 		stream.write(buffer.join(''));
@@ -329,7 +361,13 @@ const createIncremental = (
 	};
 
 	render.clear = () => {
-		stream.write(buildEraseFrame(previousLines.length, previousCursorPosition));
+		stream.write(
+			buildEraseFrame(
+				previousLines.length,
+				previousCursorPosition,
+				getViewportRows(stream),
+			),
+		);
 		previousOutput = '';
 		previousLines = [];
 		previousCursorPosition = undefined;
@@ -378,7 +416,13 @@ const createIncremental = (
 		}
 
 		if (activeCursor) {
-			stream.write(buildCursorSuffix(lines.length - 1, activeCursor));
+			stream.write(
+				buildCursorSuffix(
+					lines.length - 1,
+					activeCursor,
+					getViewportRows(stream),
+				),
+			);
 		}
 
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;

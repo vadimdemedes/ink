@@ -15,7 +15,11 @@ import {getWindowSize} from './utils.js';
 import reconciler, {connectToDevTools} from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
-import {hideCursorEscape, showCursorEscape} from './cursor-helpers.js';
+import {
+	getCursorViewportRow,
+	hideCursorEscape,
+	showCursorEscape,
+} from './cursor-helpers.js';
 import logUpdate, {type LogUpdate, type CursorPosition} from './log-update.js';
 import {bsu, esu, shouldSynchronize} from './write-synchronized.js';
 import instances from './instances.js';
@@ -917,10 +921,18 @@ export default class Ink {
 					previousCursor &&
 					viewportRows < previousViewportRows
 				) {
+					// The cursor stays on its row while the rows below it are dropped, unless that row is gone too.
+					const cursorRow = Math.min(
+						getCursorViewportRow(
+							this.lastOutputToRender.split('\n').length - 1,
+							previousCursor,
+							previousViewportRows,
+						),
+						viewportRows - 1,
+					);
+					const rowsAboveCursor = Math.min(previousCursor.y, cursorRow);
 					erasePrefix =
-						(previousCursor.y > 0
-							? ansiEscapes.cursorUp(previousCursor.y)
-							: '') +
+						(rowsAboveCursor > 0 ? ansiEscapes.cursorUp(rowsAboveCursor) : '') +
 						ansiEscapes.cursorTo(0) +
 						ansiEscapes.eraseDown;
 				}

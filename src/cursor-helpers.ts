@@ -32,22 +32,39 @@ with a newline:
   line instead of moving past it — which is also `lines.length - 1`.
 
 This is the same row basis `buildReturnToBottom` measures from, so the two stay in step.
+
+`viewportRows` caps the move at the top row of the viewport. Rows above it have scrolled into scrollback, and a larger cursor-up makes some terminals jump there.
 */
 export const buildCursorSuffix = (
 	bottomLine: number,
 	cursorPosition: CursorPosition | undefined,
+	viewportRows = Infinity,
 ): string => {
 	if (!cursorPosition) {
 		return '';
 	}
 
-	const moveUp = bottomLine - cursorPosition.y;
+	const moveUp = Math.min(bottomLine - cursorPosition.y, viewportRows - 1);
 	return (
 		(moveUp > 0 ? ansiEscapes.cursorUp(moveUp) : '') +
 		ansiEscapes.cursorTo(cursorPosition.x) +
 		showCursorEscape
 	);
 };
+
+/**
+The viewport row, counted from the top, that `buildCursorSuffix` leaves the cursor on when the frame's bottom row is the last row of the viewport, as it is once a frame fills or overflows the viewport.
+
+A frame that fits the viewport gives a row of at least `cursorPosition.y`, so taking the smaller of the two only changes moves in frames whose top has scrolled away.
+*/
+export const getCursorViewportRow = (
+	bottomLine: number,
+	cursorPosition: CursorPosition,
+	viewportRows: number,
+): number =>
+	viewportRows -
+	1 -
+	Math.min(Math.max(bottomLine - cursorPosition.y, 0), viewportRows - 1);
 
 /**
 Build escape sequence to move cursor from previousCursorPosition back to the bottom of output.
@@ -75,6 +92,7 @@ export type CursorOnlyInput = {
 	previousLineCount: number;
 	previousCursorPosition: CursorPosition | undefined;
 	cursorPosition: CursorPosition | undefined;
+	viewportRows?: number;
 };
 
 /**
@@ -93,6 +111,7 @@ export const buildCursorOnlySequence = (input: CursorOnlyInput): string => {
 	const cursorSuffix = buildCursorSuffix(
 		input.previousLineCount - 1,
 		input.cursorPosition,
+		input.viewportRows,
 	);
 	return hidePrefix + returnToBottom + cursorSuffix;
 };
@@ -120,19 +139,24 @@ export const buildReturnToBottomPrefix = (
 Build the sequence that erases the previous frame, as `clear` does before other output is written.
 
 With a cursor shown, the frame's top row is found relative to the cursor instead of returning to the bottom first. A terminal shrinking its rows drops the rows below the cursor before scrolling anything, so the frame's bottom rows may be gone: moving down clamps at the last row and erasing upward from there reaches into the content above the frame.
+
+`viewportRows` caps the erase at the top row of the viewport, as in `buildCursorSuffix`.
 */
 export const buildEraseFrame = (
 	previousLineCount: number,
 	previousCursorPosition: CursorPosition | undefined,
+	viewportRows = Infinity,
 ): string => {
 	if (!previousCursorPosition) {
-		return ansiEscapes.eraseLines(previousLineCount);
+		return ansiEscapes.eraseLines(Math.min(previousLineCount, viewportRows));
 	}
 
 	// `buildCursorSuffix` never moves below the bottom row, so a cursor set past the output sits on that row.
+	const bottomLine = previousLineCount - 1;
 	const rowsBelowTop = Math.min(
 		previousCursorPosition.y,
-		previousLineCount - 1,
+		bottomLine,
+		getCursorViewportRow(bottomLine, previousCursorPosition, viewportRows),
 	);
 	return (
 		hideCursorEscape +
