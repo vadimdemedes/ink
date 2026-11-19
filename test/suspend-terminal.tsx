@@ -14,6 +14,7 @@ import {
 } from '../src/index.js';
 import {type SuspendTerminal} from '../src/components/AppContext.js';
 import {bsu, esu} from '../src/write-synchronized.js';
+import {enterAlternativeScreenAtHome} from '../src/ink.js';
 import createStdout, {type FakeStdout} from './helpers/create-stdout.js';
 import {createStdin} from './helpers/create-stdin.js';
 import term from './helpers/term.js';
@@ -346,6 +347,7 @@ test('suspendTerminal exits and re-enters the alternate screen', async (t: TestC
 
 	let exitedAltDuringSuspend: boolean | undefined;
 	let reEnteredAltAfterResume: boolean | undefined;
+	let homedAfterResume: boolean | undefined;
 
 	const {promise: done, resolve: finished} = Promise.withResolvers<void>();
 
@@ -367,6 +369,11 @@ test('suspendTerminal exits and re-enters the alternate screen', async (t: TestC
 						.getWrites()
 						.slice(writesAtCallbackEnd)
 						.some(write => write.includes(enterAltScreen));
+					homedAfterResume = stdout
+						.getWrites()
+						.slice(writesAtCallbackEnd)
+						.join('')
+						.includes(enterAlternativeScreenAtHome);
 				} finally {
 					finished();
 				}
@@ -388,6 +395,10 @@ test('suspendTerminal exits and re-enters the alternate screen', async (t: TestC
 
 	t.assert.ok(exitedAltDuringSuspend);
 	t.assert.ok(reEnteredAltAfterResume);
+	t.assert.ok(
+		homedAfterResume,
+		'Expected the cursor to move home right after re-entering the alternate screen',
+	);
 });
 
 for (const [mode, options] of Object.entries({

@@ -20,6 +20,7 @@ import {
 	useInput,
 	useStdin,
 } from '../src/index.js';
+import {enterAlternativeScreenAtHome} from '../src/ink.js';
 import createStdout from './helpers/create-stdout.js';
 import {emitReadable} from './helpers/create-stdin.js';
 import {
@@ -1753,6 +1754,28 @@ test('alternate screen - enters on mount and exits on unmount', async (t: TestCo
 		enterIndex,
 		0,
 		'enterAlternativeScreen should be the first write',
+	);
+});
+
+test('alternate screen - homes the cursor after entering on mount', async (t: TestContext) => {
+	const stdout = createStdout(100, true);
+
+	const {unmount, waitUntilExit} = render(<Text>Hello</Text>, {
+		stdout,
+		alternateScreen: true,
+		interactive: true,
+	});
+
+	unmount();
+	await waitUntilExit();
+
+	t.assert.strictEqual(stdout.getWrites()[0], enterAlternativeScreenAtHome);
+});
+
+test('alternate screen - enter sequence switches buffers, then homes the cursor', (t: TestContext) => {
+	t.assert.strictEqual(
+		enterAlternativeScreenAtHome,
+		'\u{1B}[?1049h\u{1B}[1;1H',
 	);
 });
 
