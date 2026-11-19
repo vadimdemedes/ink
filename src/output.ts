@@ -7,7 +7,10 @@ import {
 	tokenize,
 } from '@alcalzone/ansi-tokenize';
 import measureText from './measure-text.js';
-import {type OutputTransformer} from './render-node-to-output.js';
+import {
+	type RenderEffects,
+	type OutputTransformer,
+} from './render-node-to-output.js';
 import sanitizeAnsi, {normalizeC1Controls} from './sanitize-ansi.js';
 import SizedCache from './sized-cache.js';
 
@@ -81,6 +84,7 @@ type WriteOperation = {
 	y: number;
 	text: string;
 	transformers: OutputTransformer[];
+	effects?: RenderEffects;
 };
 
 type ClipOperation = {
@@ -261,10 +265,27 @@ export default class Output {
 		output: StyledChar[][],
 		operation: WriteOperation,
 		clip: Clip | undefined,
+		effects: RenderEffects,
 	): void {
 		const {text, transformers} = operation;
 		let {x, y} = operation;
 		const lineCount = countLines(text);
+
+		// Cursor visibility depends only on the cursor's own cell, not on the extent of the text carrying it, so decide it before any early return below.
+		const {cursorPosition} = effects;
+		if (
+			clip &&
+			cursorPosition !== undefined &&
+			((typeof clip.x1 === 'number' &&
+				typeof clip.x2 === 'number' &&
+				(cursorPosition.x < clip.x1 || cursorPosition.x >= clip.x2)) ||
+				(typeof clip.y1 === 'number' &&
+					typeof clip.y2 === 'number' &&
+					(cursorPosition.y < clip.y1 || cursorPosition.y >= clip.y2)))
+		) {
+			effects.cursorPosition = undefined;
+		}
+
 		if (
 			y + lineCount <= 0 ||
 			y >= output.length ||
@@ -399,11 +420,11 @@ export default class Output {
 		x: number,
 		y: number,
 		text: string,
-		options: {transformers: OutputTransformer[]},
+		options: {transformers: OutputTransformer[]; effects?: RenderEffects},
 	): void {
-		const {transformers} = options;
+		const {effects, transformers} = options;
 
-		if (text === '') {
+		if (text === '' && effects === undefined) {
 			return;
 		}
 
@@ -413,6 +434,7 @@ export default class Output {
 			y,
 			text,
 			transformers,
+			effects,
 		});
 	}
 
@@ -485,7 +507,12 @@ export default class Output {
 			} else if (operation.type === 'unclip') {
 				clips.pop();
 			} else {
-				this.applyWriteOperation(output, operation, clips.at(-1));
+				this.applyWriteOperation(
+					output,
+					operation,
+					clips.at(-1),
+					operation.effects ?? {},
+				);
 			}
 		}
 

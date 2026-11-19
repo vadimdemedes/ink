@@ -1,4 +1,8 @@
+import {randomBytes} from 'node:crypto';
 import ansiEscapes from 'ansi-escapes';
+import stringWidth from 'string-width';
+import {iterateAnsiGraphemes} from './string-utils.js';
+import {type AnsiToken} from './ansi-tokenizer.js';
 
 export type CursorPosition = {
 	x: number;
@@ -140,4 +144,326 @@ export const buildEraseFrame = (
 		ansiEscapes.cursorTo(0) +
 		ansiEscapes.eraseDown
 	);
+};
+
+// The OSC 8 hyperlink used to mark the grapheme under an inline <Cursor />.
+// This is built by hand rather than with `ansiEscapes.link()` because that
+// wraps the sequence in a tmux DCS passthrough when running under tmux or
+// screen, which `sanitizeAnsi()` strips, losing the cursor entirely. The
+// marker only ever lives in the parallel string used to locate the cursor and
+// is never written to the terminal, so it does not need passthrough.
+let cursorMarkerOpen: string | undefined;
+const getCursorMarkerOpen = () => {
+	// A random per-process scheme keeps user links from matching the marker.
+	// Built lazily to avoid potentially unnecessary overhead on startup
+	cursorMarkerOpen ??= `\u{1B}]8;;ink+${randomBytes(8).toString('hex').toUpperCase()}://cursor\u{7}`;
+	return cursorMarkerOpen;
+};
+
+const cursorMarkerClose = '\u{1B}]8;;\u{7}';
+
+const wrapNextGrapheme = (
+	text: string,
+	atIndex: number,
+): {wrapped: string; sequence: string} | undefined => {
+	const afterCursor = text.slice(atIndex);
+	let wrapped = text.slice(0, atIndex);
+	for (const {index, token} of iterateAnsiGraphemes(afterCursor)) {
+		if (token.type === 'grapheme') {
+			const sequence = getCursorMarkerOpen() + token.value + cursorMarkerClose;
+			return {
+				wrapped:
+					wrapped + sequence + text.slice(atIndex + index + token.value.length),
+				sequence,
+			};
+		}
+
+		wrapped += token.value;
+	}
+
+	// If we got here, there was no grapheme after the cursor
+	// for us to wrap
+	return undefined;
+};
+
+export class InlineCursorHelper {
+	public static withText(text: string) {
+		const helper = new InlineCursorHelper();
+		helper.text = text;
+		return helper;
+	}
+
+	public static withCursorAtEndOfText(text: string) {
+		const helper = new InlineCursorHelper();
+		helper.text = text;
+		helper.setCursorPosition();
+		return helper;
+	}
+
+	private text = '';
+	private cursorIndex: number | undefined;
+	private cursorAtEnd = false;
+
+	private isTransformed = false;
+	private textWithCursor: string | undefined;
+	private cursorSequence: string | undefined;
+
+	private ensureTextWithCursor() {
+		if (this.textWithCursor !== undefined) {
+			return this.textWithCursor;
+		}
+
+		let withCursor: string;
+		if (this.cursorAtEnd) {
+			withCursor = this.text;
+		} else if (this.cursorIndex === undefined) {
+			// No cursor
+			return;
+		} else {
+			const wrapped = wrapNextGrapheme(this.text, this.cursorIndex);
+			if (wrapped === undefined) {
+				// None next
+				this.cursorAtEnd = true;
+				return this.text;
+			}
+
+			const {wrapped: wrapResult, sequence} = wrapped;
+			withCursor = wrapResult;
+			this.cursorSequence = sequence;
+		}
+
+		this.textWithCursor = withCursor;
+		return withCursor;
+	}
+
+	private resolveCursorIndex() {
+		const withCursor = this.textWithCursor;
+		if (withCursor === undefined) {
+			// Easy case; no transform applied, our index is canonical
+			return this.cursorIndex;
+		}
+
+		// A transform (especially, sanitizing) may have moved
+		// the cursor from our index
+		const {cursorSequence} = this;
+		if (cursorSequence === undefined) {
+			// The cursor must have been at the end of the sanitized text
+			return this.text.length;
+		}
+
+		const expectedToken = getAnsiCursorToken(cursorSequence);
+		for (const {index, token} of iterateAnsiGraphemes(
+			withoutEmptyMarkers(withCursor, expectedToken),
+		)) {
+			if (token.value === expectedToken) {
+				return index;
+			}
+		}
+
+		return undefined;
+	}
+
+	// Runs `handler` over the text with the cursor marker in it. Returns the
+	// cursor's index in `transformed` if exactly one marker survived and removing
+	// it yields `transformed`, or `undefined` if the transform didn't preserve it.
+	private transformMarkedCursorIndex(
+		handler: (text: string) => string,
+		cursorIndex: number,
+		transformed: string,
+	) {
+		const marked = wrapNextGrapheme(this.text, cursorIndex);
+		if (marked === undefined) {
+			return undefined;
+		}
+
+		const markerOpen = getCursorMarkerOpen();
+		const output = handler(marked.wrapped);
+		const openIndex = output.indexOf(markerOpen);
+		if (openIndex === -1 || output.includes(markerOpen, openIndex + 1)) {
+			return undefined;
+		}
+
+		const contentIndex = openIndex + markerOpen.length;
+		const closeIndex = output.indexOf(cursorMarkerClose, contentIndex);
+		if (closeIndex === -1) {
+			return undefined;
+		}
+
+		const withoutMarker =
+			output.slice(0, openIndex) +
+			output.slice(contentIndex, closeIndex) +
+			output.slice(closeIndex + cursorMarkerClose.length);
+		return withoutMarker === transformed ? openIndex : undefined;
+	}
+
+	// Fallback for transforms that don't preserve the marker: place the cursor
+	// on the grapheme following those `handler` produces for the text before it.
+	private countTransformedCursorIndex(
+		handler: (text: string) => string,
+		cursorIndex: number,
+		transformed: string,
+	) {
+		const transformedBefore = handler(this.text.slice(0, cursorIndex));
+		return findGraphemeIndex(transformed, countGraphemes(transformedBefore));
+	}
+
+	public get hasCursor() {
+		return this.cursorAtEnd || this.cursorIndex !== undefined;
+	}
+
+	public append(text: string) {
+		if (this.isTransformed) {
+			throw new Error('Appending after transform is illegal?');
+		}
+
+		if (this.cursorAtEnd) {
+			this.cursorIndex = this.text.length;
+			this.cursorAtEnd = false;
+		}
+
+		this.text += text;
+	}
+
+	public appendHelper(other: InlineCursorHelper) {
+		if (this.isTransformed) {
+			throw new Error('Appending after transform is illegal?');
+		}
+
+		if (other.cursorAtEnd) {
+			this.cursorAtEnd = true;
+		} else {
+			const resolved = other.resolveCursorIndex();
+			if (resolved !== undefined) {
+				this.cursorIndex = this.text.length + resolved;
+			}
+		}
+
+		this.text += other.text;
+	}
+
+	public transform(handler: (text: string) => string) {
+		this.isTransformed = true;
+		const withCursor = this.ensureTextWithCursor();
+		if (withCursor !== undefined) {
+			this.textWithCursor = handler(withCursor);
+		}
+
+		this.text = handler(this.text);
+	}
+
+	/**
+	Apply a transform that may rewrite content, like `<Transform>`. Transforms are expected to preserve ANSI sequences, so the cursor marker is passed through the transform and located in its output. A transform that doesn't preserve the marker (for example, one that masks every character) falls back to placing the cursor on the grapheme following those the transform produces for the text before the cursor.
+	*/
+	public transformContent(handler: (text: string) => string) {
+		const transformed = handler(this.text);
+
+		const cursorIndex = this.cursorAtEnd
+			? undefined
+			: this.resolveCursorIndex();
+		if (cursorIndex !== undefined) {
+			this.cursorIndex =
+				this.transformMarkedCursorIndex(handler, cursorIndex, transformed) ??
+				this.countTransformedCursorIndex(handler, cursorIndex, transformed);
+			this.cursorAtEnd = this.cursorIndex === undefined;
+		}
+
+		this.text = transformed;
+		this.textWithCursor = undefined;
+		this.cursorSequence = undefined;
+	}
+
+	public setCursorPosition() {
+		this.cursorIndex = undefined;
+		this.cursorAtEnd = true;
+	}
+
+	public locateCursorPosition(): CursorPosition | undefined {
+		if (this.cursorAtEnd) {
+			return getPositionWhen(this.text, () => false);
+		}
+
+		const withCursor = this.ensureTextWithCursor();
+		const {cursorSequence} = this;
+		if (withCursor === undefined || cursorSequence === undefined) {
+			return undefined;
+		}
+
+		// NOTE: This works because the first chunk of the ansi
+		// sequence carries our ink+<HEX>://cursor emblem.
+		const valueToFind = getAnsiCursorToken(cursorSequence);
+		const {x, y, found} = getPositionWhen(
+			withoutEmptyMarkers(withCursor, valueToFind),
+			token => token.value === valueToFind,
+		);
+		return found ? {x, y} : undefined;
+	}
+}
+
+// A glyph wider than its box leaves the wrapper reopening the link at the end
+// of the previous row with nothing inside it.
+const withoutEmptyMarkers = (text: string, markerOpen: string) =>
+	text.replaceAll(markerOpen + cursorMarkerClose, '');
+
+const getPositionWhen = (
+	text: string,
+	isTokenMatched: (
+		token: AnsiToken | {type: 'grapheme'; value: string},
+	) => boolean,
+) => {
+	let x = 0;
+	let y = 0;
+	for (const {token} of iterateAnsiGraphemes(text)) {
+		if (isTokenMatched(token)) {
+			return {x, y, found: true};
+		}
+
+		if (token.value === '\n') {
+			x = 0;
+			++y;
+			continue;
+		}
+
+		if (token.type === 'grapheme') {
+			x += stringWidth(token.value);
+		}
+	}
+
+	return {x, y, found: false};
+};
+
+const countGraphemes = (text: string) => {
+	let count = 0;
+	for (const {token} of iterateAnsiGraphemes(text)) {
+		if (token.type === 'grapheme') {
+			++count;
+		}
+	}
+
+	return count;
+};
+
+const findGraphemeIndex = (text: string, graphemeNumber: number) => {
+	let count = 0;
+	for (const {index, token} of iterateAnsiGraphemes(text)) {
+		if (token.type !== 'grapheme') {
+			continue;
+		}
+
+		if (count === graphemeNumber) {
+			return index;
+		}
+
+		++count;
+	}
+
+	return undefined;
+};
+
+const getAnsiCursorToken = (linkString: string) => {
+	const firstItem = iterateAnsiGraphemes(linkString).next();
+	if (firstItem.done === true) {
+		throw new Error('No ansi found in link string?');
+	}
+
+	return firstItem.value.token.value;
 };
