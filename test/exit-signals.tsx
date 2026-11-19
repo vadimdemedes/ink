@@ -67,3 +67,59 @@ for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) {
 		},
 	);
 }
+
+test(
+	'unmount multiple instances and run external signal-exit cleanup on SIGTERM',
+	// eslint-disable-next-line node-test/no-skip-test -- Windows terminates the process without delivering the signal.
+	{skip: process.platform === 'win32'},
+	async (t: TestContext) => {
+		const term = spawn(
+			process.execPath,
+			[
+				'--import=tsx',
+				path.join(
+					__dirname,
+					'./fixtures/exit-two-instances-on-signal-with-v4-cleanup.tsx',
+				),
+			],
+			{
+				name: 'xterm-color',
+				cols: 100,
+				cwd: __dirname,
+				env: {
+					...process.env,
+					// eslint-disable-next-line @typescript-eslint/naming-convention
+					CI: 'false',
+					// eslint-disable-next-line @typescript-eslint/naming-convention
+					NODE_NO_WARNINGS: '1',
+				},
+			},
+		);
+
+		let output = '';
+		let isSignalSent = false;
+
+		term.onData(data => {
+			output += data;
+
+			if (isSignalSent || !output.includes('__READY__')) {
+				return;
+			}
+
+			isSignalSent = true;
+			term.kill('SIGTERM');
+		});
+
+		const exit = await new Promise<{exitCode: number; signal?: number}>(
+			resolve => {
+				term.onExit(resolve);
+			},
+		);
+
+		const outputAfterSignal = output.slice(output.indexOf('__READY__'));
+		t.assert.ok(outputAfterSignal.includes('unmounted first'));
+		t.assert.ok(outputAfterSignal.includes('unmounted second'));
+		t.assert.ok(outputAfterSignal.includes('signal-exit-v4-ran'));
+		t.assert.strictEqual(exit.signal, os.constants.signals.SIGTERM);
+	},
+);

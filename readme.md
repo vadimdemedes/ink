@@ -250,6 +250,9 @@ await waitUntilExit();
 console.log('App exited');
 ```
 
+> [!NOTE]
+> Ink uses `signal-exit` v4 to clean up on process exit and signals. If another dependency in the same process uses `signal-exit` v3, its `process.emit` patching can still interfere with `signal-exit` v4 signal handlers (normal `exit` cleanup still runs via Ink's `exit` fallback).
+
 ## Components
 
 ### `<Text>`
