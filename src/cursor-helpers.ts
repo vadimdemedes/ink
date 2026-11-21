@@ -135,21 +135,12 @@ export const buildReturnToBottomPrefix = (
 	);
 };
 
-// Full-clear path (see `shouldClearTerminalForFrame`). It must clear only
-// what is visible: `ansiEscapes.clearTerminal` emits CSI 3J, which erases the
-// terminal's scrollback, and both it and `ansiEscapes.clearViewport` emit
-// CSI 2J, which VS Code and Windows Terminal handle by pushing the viewport
-// into scrollback first (#935). Exported so tests assert against the real
-// sequence rather than a copy.
-export const homeAndEraseDown =
-	ansiEscapes.cursorTo(0, 0) + ansiEscapes.eraseDown;
-
 /**
 Build the sequence that walks up from the cursor to the frame's top row and erases from there down.
 
-The cursor's row is found in the `previousViewportRows` the frame was drawn in, and the move stops at the top row of the viewport. A terminal shrinking its rows drops the rows below the cursor before scrolling anything, so the cursor keeps that row unless the row is gone too, and then it is on the last row of `viewportRows`. When the terminal has shrunk since the frame was drawn and the frame's top row is above the cursor's row, the frame covers the top row of the viewport, so the viewport is erased from there instead.
+The move stops at the top row of the viewport, since the rows above it are in scrollback. The cursor's row is found in the larger of `previousViewportRows`, the height the frame was drawn in, and `viewportRows`. A terminal shrinking its rows drops the rows below the cursor before scrolling anything, so the cursor keeps that row unless the row is gone too, and then it is on the last row of `viewportRows`. A terminal that grows can bring rows back from scrollback and move the cursor down, which the larger height accounts for.
 
-A terminal that grows can bring rows back from scrollback and move the cursor down, so the row is found in the larger of the two heights, and the viewport is never erased from its top row then. Neither can tell a terminal that shrank and grew back to the same height between two writes, which brings back rows above the frame. The relative move then leaves the frame's top rows behind instead of erasing those rows.
+A terminal that shrinks and grows back between two writes, to the same or a smaller height, brings back rows from scrollback that nothing written shows. The cursor is then lower than its row here, so the move stops short and a few rows of the old frame are left behind instead of erasing the lines above it.
 */
 export const buildEraseFromCursor = (
 	bottomLine: number,
@@ -167,13 +158,8 @@ export const buildEraseFromCursor = (
 		),
 		viewportRows - 1,
 	);
-	const moveUp = Math.min(rowsBelowTop, cursorRow);
-	if (moveUp < rowsBelowTop && viewportRows < previousViewportRows) {
-		return homeAndEraseDown;
-	}
-
 	return (
-		ansiEscapes.cursorMove(0, -moveUp) +
+		ansiEscapes.cursorMove(0, -Math.min(rowsBelowTop, cursorRow)) +
 		ansiEscapes.cursorTo(0) +
 		ansiEscapes.eraseDown
 	);
