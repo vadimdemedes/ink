@@ -524,6 +524,41 @@ for (const isIncrementalRendering of [false, true]) {
 		});
 	}
 
+	test(`rows shrink below a cursor leaves no stale frame rows in scrollback${mode}`, async (t: TestContext) => {
+		const stdout = createStdout(100);
+		stdout.rows = 8;
+
+		const {unmount, waitUntilRenderFlush} = render(<Frame cursorY={4} />, {
+			stdout,
+			incrementalRendering: isIncrementalRendering,
+			interactive: true,
+		});
+		t.after(() => {
+			unmount();
+		});
+		await waitUntilRenderFlush();
+
+		const writesBeforeResize = stdout.getWrites().length;
+		stdout.rows = 5;
+		stdout.emit('resize');
+		await waitUntilRenderFlush();
+
+		// The shrink drops the rows below the cursor, which keeps its row and leaves the frame's top row on the top row. The erase has to reach that row, or the redraw pushes the rows it left behind into scrollback. The redrawn frame is one row taller than the viewport, so only its top row scrolls there.
+		const writes = stdout
+			.getWrites()
+			.map(write => write.replaceAll('\n', '\r\n'));
+		const terminalLines = reconstructTerminalLines(
+			[
+				...writes.slice(0, writesBeforeResize),
+				{rows: 5},
+				...writes.slice(writesBeforeResize),
+			],
+			8,
+		);
+		t.assert.deepStrictEqual(terminalLines.slice(0, -5), ['A']);
+		t.assert.deepStrictEqual(terminalLines.slice(-5), letters.slice(1));
+	});
+
 	test(`width and height shrinking together keeps lines above the frame${mode}`, async (t: TestContext) => {
 		const stdout = createStdout(100);
 		stdout.rows = 10;

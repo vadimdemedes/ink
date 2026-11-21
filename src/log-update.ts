@@ -47,6 +47,8 @@ const createStandard = (
 	let cursorPosition: CursorPosition | undefined;
 	let isCursorDirty = false;
 	let previousCursorPosition: CursorPosition | undefined;
+	// The rows the cursor was last placed in, which `clear` finds its row in after the terminal resizes.
+	let previousViewportRows = Infinity;
 	let wasCursorShown = false;
 
 	const getActiveCursor = () => (isCursorDirty ? cursorPosition : undefined);
@@ -113,6 +115,7 @@ const createStandard = (
 		}
 
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+		previousViewportRows = getViewportRows(stream);
 		wasCursorShown = activeCursor !== undefined;
 		return true;
 	};
@@ -122,6 +125,7 @@ const createStandard = (
 			buildEraseFrame(
 				previousLineCount,
 				previousCursorPosition,
+				previousViewportRows,
 				getViewportRows(stream),
 			),
 		);
@@ -182,6 +186,7 @@ const createStandard = (
 		}
 
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+		previousViewportRows = getViewportRows(stream);
 		wasCursorShown = activeCursor !== undefined;
 	};
 
@@ -208,6 +213,8 @@ const createIncremental = (
 	let cursorPosition: CursorPosition | undefined;
 	let isCursorDirty = false;
 	let previousCursorPosition: CursorPosition | undefined;
+	// The rows the cursor was last placed in, which `clear` finds its row in after the terminal resizes.
+	let previousViewportRows = Infinity;
 	let wasCursorShown = false;
 
 	const getActiveCursor = () => (isCursorDirty ? cursorPosition : undefined);
@@ -258,6 +265,7 @@ const createIncremental = (
 				}),
 			);
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+			previousViewportRows = getViewportRows(stream);
 			wasCursorShown = activeCursor !== undefined;
 			return true;
 		}
@@ -288,6 +296,7 @@ const createIncremental = (
 			);
 			wasCursorShown = activeCursor !== undefined;
 			previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+			previousViewportRows = getViewportRows(stream);
 			previousOutput = text;
 			previousLines = nextLines;
 			return true;
@@ -355,6 +364,7 @@ const createIncremental = (
 
 		wasCursorShown = activeCursor !== undefined;
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+		previousViewportRows = getViewportRows(stream);
 		previousOutput = text;
 		previousLines = nextLines;
 		return true;
@@ -365,6 +375,7 @@ const createIncremental = (
 			buildEraseFrame(
 				previousLines.length,
 				previousCursorPosition,
+				previousViewportRows,
 				getViewportRows(stream),
 			),
 		);
@@ -426,6 +437,7 @@ const createIncremental = (
 		}
 
 		previousCursorPosition = activeCursor ? {...activeCursor} : undefined;
+		previousViewportRows = getViewportRows(stream);
 		wasCursorShown = activeCursor !== undefined;
 	};
 

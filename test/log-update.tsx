@@ -1,6 +1,7 @@
 import test, {type TestContext} from 'node:test';
 import ansiEscapes from 'ansi-escapes';
 import logUpdate from '../src/log-update.js';
+import {homeAndEraseDown} from '../src/cursor-helpers.js';
 import createStdout from './helpers/create-stdout.js';
 import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 
@@ -887,14 +888,12 @@ for (const {name, incremental} of renderingModes) {
 			t.assert.ok(write.endsWith(clampedSuffix));
 		}
 
-		// Erasing walks up from the cursor to the frame's top row, but only as far as the top of the viewport. Line 15 of the 21-row frame is on the top row here, so the erase starts where the cursor is.
+		// Erasing walks up from the cursor to the frame's top row, but only as far as the top of the viewport. Line 15 of the 21-row frame is on the top row here, so the frame covers the viewport and the erase starts from its top row.
 		render.setCursorPosition({x: 0, y: 15});
 		render(output('!'));
 		render.clear();
 		const erase = stdout.getWrites().at(-1)!;
-		t.assert.ok(
-			erase.endsWith(ansiEscapes.cursorTo(0) + ansiEscapes.eraseDown),
-		);
+		t.assert.ok(erase.endsWith(homeAndEraseDown));
 		t.assert.ok(
 			erase.split(esc).every(part => !/^\[\d*A/.test(part)),
 			JSON.stringify(erase),
@@ -906,6 +905,36 @@ for (const {name, incremental} of renderingModes) {
 			[...allWrites.slice(0, 3), output('!'), ...allWrites.slice(3)],
 			5,
 		);
+	});
+
+	test(`${name} - clearing after the terminal grows keeps the lines above the frame`, (t: TestContext) => {
+		const {stdout, render} = createRenderForMode(incremental);
+		stdout.rows = 5;
+
+		render.setCursorPosition({x: 0, y: 6});
+		render(Array.from({length: 7}, (_, index) => `Line ${index}`).join('\n'));
+		const writesBeforeResize = stdout.getWrites().length;
+		stdout.rows = 10;
+		render.clear();
+
+		// The cursor was on the last row, so growing brings the shell lines and the frame's top rows back from scrollback and moves the cursor down with them.
+		const writes = stdout
+			.getWrites()
+			.map(write => write.replaceAll('\n', '\r\n'));
+		const lines = reconstructTerminalLines(
+			[
+				'shell 0\r\nshell 1\r\nshell 2\r\n',
+				...writes.slice(0, writesBeforeResize),
+				{rows: 10},
+				...writes.slice(writesBeforeResize),
+			],
+			5,
+		);
+		t.assert.deepStrictEqual(lines.filter(Boolean), [
+			'shell 0',
+			'shell 1',
+			'shell 2',
+		]);
 	});
 
 	test(`${name} - clearing without a cursor erases only the rows in the viewport`, (t: TestContext) => {

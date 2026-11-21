@@ -16,8 +16,9 @@ import reconciler, {connectToDevTools} from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
 import {
-	getCursorViewportRow,
+	buildEraseFromCursor,
 	hideCursorEscape,
+	homeAndEraseDown,
 	showCursorEscape,
 } from './cursor-helpers.js';
 import logUpdate, {type LogUpdate, type CursorPosition} from './log-update.js';
@@ -48,14 +49,7 @@ const yieldImmediate = async () =>
 // pre-7.0 behavior of fully clearing between fullscreen frames there.
 const isWindowsConsole = process.platform === 'win32';
 
-// Full-clear path (see `shouldClearTerminalForFrame`). It must clear only
-// what is visible: `ansiEscapes.clearTerminal` emits CSI 3J, which erases the
-// terminal's scrollback, and both it and `ansiEscapes.clearViewport` emit
-// CSI 2J, which VS Code and Windows Terminal handle by pushing the viewport
-// into scrollback first (#935). Exported so tests assert against the real
-// sequence rather than a copy.
-export const homeAndEraseDown =
-	ansiEscapes.cursorTo(0, 0) + ansiEscapes.eraseDown;
+export {homeAndEraseDown} from './cursor-helpers.js';
 
 // Terminals keep the cursor position when they switch buffers, so without the home the first frame draws from wherever the shell prompt was. Exported so tests assert against the real sequence.
 export const enterAlternativeScreenAtHome =
@@ -921,20 +915,12 @@ export default class Ink {
 					previousCursor &&
 					viewportRows < previousViewportRows
 				) {
-					// The cursor stays on its row while the rows below it are dropped, unless that row is gone too.
-					const cursorRow = Math.min(
-						getCursorViewportRow(
-							this.lastOutputToRender.split('\n').length - 1,
-							previousCursor,
-							previousViewportRows,
-						),
-						viewportRows - 1,
+					erasePrefix = buildEraseFromCursor(
+						this.lastOutputToRender.split('\n').length - 1,
+						previousCursor,
+						previousViewportRows,
+						viewportRows,
 					);
-					const rowsAboveCursor = Math.min(previousCursor.y, cursorRow);
-					erasePrefix =
-						(rowsAboveCursor > 0 ? ansiEscapes.cursorUp(rowsAboveCursor) : '') +
-						ansiEscapes.cursorTo(0) +
-						ansiEscapes.eraseDown;
 				}
 
 				this.options.stdout.write(erasePrefix + staticOutput + outputToRender);

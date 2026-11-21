@@ -57,7 +57,7 @@ The viewport row, counted from the top, that `buildCursorSuffix` leaves the curs
 
 A frame that fits the viewport gives a row of at least `cursorPosition.y`, so taking the smaller of the two only changes moves in frames whose top has scrolled away.
 */
-export const getCursorViewportRow = (
+const getCursorViewportRow = (
 	bottomLine: number,
 	cursorPosition: CursorPosition,
 	viewportRows: number,
@@ -135,33 +135,73 @@ export const buildReturnToBottomPrefix = (
 	);
 };
 
+// Full-clear path (see `shouldClearTerminalForFrame`). It must clear only
+// what is visible: `ansiEscapes.clearTerminal` emits CSI 3J, which erases the
+// terminal's scrollback, and both it and `ansiEscapes.clearViewport` emit
+// CSI 2J, which VS Code and Windows Terminal handle by pushing the viewport
+// into scrollback first (#935). Exported so tests assert against the real
+// sequence rather than a copy.
+export const homeAndEraseDown =
+	ansiEscapes.cursorTo(0, 0) + ansiEscapes.eraseDown;
+
+/**
+Build the sequence that walks up from the cursor to the frame's top row and erases from there down.
+
+The cursor's row is found in the `previousViewportRows` the frame was drawn in. A terminal shrinking its rows drops the rows below the cursor before scrolling anything, so the cursor keeps that row unless the row is gone too, and then it is on the last row of `viewportRows`. When the frame's top row is above the cursor's row, the frame covers the top row of the viewport, so the viewport is erased from there instead.
+
+A terminal that grows can bring rows back from scrollback and move the cursor down, so the row is found in the larger of the two heights. That never puts the cursor above its real row, so the erase never reaches above the frame.
+*/
+export const buildEraseFromCursor = (
+	bottomLine: number,
+	cursorPosition: CursorPosition,
+	previousViewportRows: number,
+	viewportRows: number,
+): string => {
+	// `buildCursorSuffix` never moves below the bottom row, so a cursor set past the output sits on that row.
+	const rowsBelowTop = Math.min(cursorPosition.y, bottomLine);
+	const cursorRow = Math.min(
+		getCursorViewportRow(
+			bottomLine,
+			cursorPosition,
+			Math.max(previousViewportRows, viewportRows),
+		),
+		viewportRows - 1,
+	);
+	if (cursorRow < rowsBelowTop) {
+		return homeAndEraseDown;
+	}
+
+	return (
+		ansiEscapes.cursorMove(0, -rowsBelowTop) +
+		ansiEscapes.cursorTo(0) +
+		ansiEscapes.eraseDown
+	);
+};
+
 /**
 Build the sequence that erases the previous frame, as `clear` does before other output is written.
 
 With a cursor shown, the frame's top row is found relative to the cursor instead of returning to the bottom first. A terminal shrinking its rows drops the rows below the cursor before scrolling anything, so the frame's bottom rows may be gone: moving down clamps at the last row and erasing upward from there reaches into the content above the frame.
 
-`viewportRows` caps the erase at the top row of the viewport, as in `buildCursorSuffix`.
+`previousViewportRows` is the height the frame was drawn in and `viewportRows` the current one, as in `buildEraseFromCursor`.
 */
 export const buildEraseFrame = (
 	previousLineCount: number,
 	previousCursorPosition: CursorPosition | undefined,
-	viewportRows = Infinity,
+	previousViewportRows = Infinity,
+	viewportRows = previousViewportRows,
 ): string => {
 	if (!previousCursorPosition) {
 		return ansiEscapes.eraseLines(Math.min(previousLineCount, viewportRows));
 	}
 
-	// `buildCursorSuffix` never moves below the bottom row, so a cursor set past the output sits on that row.
-	const bottomLine = previousLineCount - 1;
-	const rowsBelowTop = Math.min(
-		previousCursorPosition.y,
-		bottomLine,
-		getCursorViewportRow(bottomLine, previousCursorPosition, viewportRows),
-	);
 	return (
 		hideCursorEscape +
-		ansiEscapes.cursorMove(0, -rowsBelowTop) +
-		ansiEscapes.cursorTo(0) +
-		ansiEscapes.eraseDown
+		buildEraseFromCursor(
+			previousLineCount - 1,
+			previousCursorPosition,
+			previousViewportRows,
+			viewportRows,
+		)
 	);
 };
