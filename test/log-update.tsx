@@ -4,6 +4,46 @@ import logUpdate from '../src/log-update.js';
 import createStdout from './helpers/create-stdout.js';
 import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
 
+const esc = '\u{1B}';
+// Matched against the text after an escape character.
+const cursorMovement = /^\[(?<count>\d*)(?<direction>[AB])/;
+
+// Follows the cursor row through the writes, starting at the top row of an empty terminal with `rows` rows, and fails on any cursor-up that would go past the top row. Real terminals clamp it there, but some jump into scrollback.
+const assertCursorStaysInViewport = (
+	t: TestContext,
+	writes: string[],
+	rows: number,
+): void => {
+	let row = 0;
+	const moveCursor = (part: string, write: string): void => {
+		const movement = cursorMovement.exec(part)?.groups;
+		if (!movement) {
+			return;
+		}
+
+		const amount = movement['count'] === '' ? 1 : Number(movement['count']);
+		if (movement['direction'] === 'A') {
+			t.assert.ok(
+				amount <= row,
+				`cursor-up past the top in ${JSON.stringify(write)}`,
+			);
+			row = Math.max(row - amount, 0);
+		} else {
+			row = Math.min(row + amount, rows - 1);
+		}
+	};
+
+	for (const write of writes) {
+		for (const [index, part] of write.split(esc).entries()) {
+			if (index > 0) {
+				moveCursor(part, write);
+			}
+
+			row = Math.min(row + part.split('\n').length - 1, rows - 1);
+		}
+	}
+};
+
 test('standard rendering - renders and updates output', (t: TestContext) => {
 	const stdout = createStdout();
 	const render = logUpdate.create(stdout, {showCursor: true});
@@ -815,6 +855,153 @@ for (const {name, incremental} of renderingModes) {
 			secondCall.endsWith(
 				ansiEscapes.cursorUp(3) + ansiEscapes.cursorTo(5) + showCursorEscape,
 			),
+		);
+	});
+}
+
+for (const {name, incremental} of renderingModes) {
+	test(`${name} - cursor never moves above the top of the viewport`, (t: TestContext) => {
+		const {stdout, render} = createRenderForMode(incremental);
+		stdout.rows = 5;
+		const output = (marker: string) =>
+			Array.from({length: 20}, (_, index) => `Line ${index + 1}${marker}`).join(
+				'\n',
+			) + '\n';
+		const clampedSuffix =
+			ansiEscapes.cursorUp(4) + ansiEscapes.cursorTo(0) + showCursorEscape;
+
+		render.setCursorPosition({x: 0, y: 0});
+		render(output(''));
+		// Same output, cursor moves only: takes the buildCursorOnlySequence path.
+		render.setCursorPosition({x: 0, y: 1});
+		render(output(''));
+		// Changed output: rewrites the frame (the line diff in incremental mode).
+		render.setCursorPosition({x: 0, y: 0});
+		render(output('!'));
+		render.setCursorPosition({x: 0, y: 0});
+		render.sync(output('!'));
+
+		const writes = stdout.getWrites();
+		t.assert.strictEqual(writes.length, 4);
+		for (const write of writes) {
+			t.assert.ok(write.endsWith(clampedSuffix));
+		}
+
+		// Erasing walks up from the cursor to the frame's top row, but only as far as the top of the viewport. Line 15 of the 21-row frame is on the top row here, so the erase starts where the cursor is.
+		render.setCursorPosition({x: 0, y: 15});
+		render(output('!'));
+		render.clear();
+		const erase = stdout.getWrites().at(-1)!;
+		t.assert.ok(
+			erase.endsWith(ansiEscapes.cursorTo(0) + ansiEscapes.eraseDown),
+		);
+		t.assert.ok(
+			erase.split(esc).every(part => !/^\[\d*A/.test(part)),
+			JSON.stringify(erase),
+		);
+		// `sync` records a frame that Ink wrote itself, so put that frame back in ahead of the cursor write that follows it.
+		const allWrites = stdout.getWrites();
+		assertCursorStaysInViewport(
+			t,
+			[...allWrites.slice(0, 3), output('!'), ...allWrites.slice(3)],
+			5,
+		);
+	});
+
+	test(`${name} - clearing after the terminal grows keeps the lines above the frame`, (t: TestContext) => {
+		const {stdout, render} = createRenderForMode(incremental);
+		stdout.rows = 5;
+
+		render.setCursorPosition({x: 0, y: 6});
+		render(Array.from({length: 7}, (_, index) => `Line ${index}`).join('\n'));
+		const writesBeforeResize = stdout.getWrites().length;
+		stdout.rows = 10;
+		render.clear();
+
+		// The cursor was on the last row, so growing brings the shell lines and the frame's top rows back from scrollback and moves the cursor down with them.
+		const writes = stdout
+			.getWrites()
+			.map(write => write.replaceAll('\n', '\r\n'));
+		const lines = reconstructTerminalLines(
+			[
+				'shell 0\r\nshell 1\r\nshell 2\r\n',
+				...writes.slice(0, writesBeforeResize),
+				{rows: 10},
+				...writes.slice(writesBeforeResize),
+			],
+			5,
+		);
+		t.assert.deepStrictEqual(lines.filter(Boolean), [
+			'shell 0',
+			'shell 1',
+			'shell 2',
+		]);
+	});
+
+	for (const {shrunkRows, grownRows} of [
+		{shrunkRows: 4, grownRows: 10},
+		{shrunkRows: 2, grownRows: 9},
+	]) {
+		test(`${name} - clearing after the terminal shrinks to ${shrunkRows} rows and grows back to ${grownRows} keeps the lines above the frame`, (t: TestContext) => {
+			const {stdout, render} = createRenderForMode(incremental);
+			stdout.rows = 10;
+
+			render.setCursorPosition({x: 0, y: 5});
+			render(
+				Array.from({length: 12}, (_, index) => `Line ${index}`).join('\n'),
+			);
+			const writesBeforeResize = stdout.getWrites().length;
+			stdout.rows = grownRows;
+			render.clear();
+
+			// Growing back brings the shell lines and the frame's top rows back from scrollback, so the frame no longer covers the top row, and nothing written in between shows the resize.
+			const writes = stdout
+				.getWrites()
+				.map(write => write.replaceAll('\n', '\r\n'));
+			const lines = reconstructTerminalLines(
+				[
+					Array.from({length: 8}, (_, index) => `shell ${index}\r\n`).join(''),
+					...writes.slice(0, writesBeforeResize),
+					{rows: shrunkRows},
+					{rows: grownRows},
+					...writes.slice(writesBeforeResize),
+				],
+				10,
+			);
+			t.assert.deepStrictEqual(
+				lines.filter(line => line.startsWith('shell')),
+				Array.from({length: 8}, (_, index) => `shell ${index}`),
+			);
+		});
+	}
+
+	test(`${name} - clearing without a cursor erases only the rows in the viewport`, (t: TestContext) => {
+		const {stdout, render} = createRenderForMode(incremental);
+		stdout.rows = 5;
+
+		render(
+			Array.from({length: 20}, (_, index) => `Line ${index + 1}`).join('\n') +
+				'\n',
+		);
+		render.clear();
+
+		t.assert.strictEqual(stdout.getWrites().at(-1), ansiEscapes.eraseLines(5));
+	});
+
+	test(`${name} - cursor is not clamped when the stream reports 0 rows`, (t: TestContext) => {
+		const {stdout, render} = createRenderForMode(incremental);
+		stdout.rows = 0;
+
+		render.setCursorPosition({x: 0, y: 0});
+		render('Line 1\nLine 2\nLine 3');
+
+		t.assert.ok(
+			stdout
+				.getWrites()
+				.at(-1)!
+				.endsWith(
+					ansiEscapes.cursorUp(2) + ansiEscapes.cursorTo(0) + showCursorEscape,
+				),
 		);
 	});
 }
