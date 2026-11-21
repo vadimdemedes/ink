@@ -147,9 +147,9 @@ export const homeAndEraseDown =
 /**
 Build the sequence that walks up from the cursor to the frame's top row and erases from there down.
 
-The cursor's row is found in the `previousViewportRows` the frame was drawn in. A terminal shrinking its rows drops the rows below the cursor before scrolling anything, so the cursor keeps that row unless the row is gone too, and then it is on the last row of `viewportRows`. When the frame's top row is above the cursor's row, the frame covers the top row of the viewport, so the viewport is erased from there instead.
+The cursor's row is found in the `previousViewportRows` the frame was drawn in, and the move stops at the top row of the viewport. A terminal shrinking its rows drops the rows below the cursor before scrolling anything, so the cursor keeps that row unless the row is gone too, and then it is on the last row of `viewportRows`. When the terminal has shrunk since the frame was drawn and the frame's top row is above the cursor's row, the frame covers the top row of the viewport, so the viewport is erased from there instead.
 
-A terminal that grows can bring rows back from scrollback and move the cursor down, so the row is found in the larger of the two heights. That never puts the cursor above its real row, so the erase never reaches above the frame.
+A terminal that grows can bring rows back from scrollback and move the cursor down, so the row is found in the larger of the two heights, and the viewport is never erased from its top row then. Neither can tell a terminal that shrank and grew back to the same height between two writes, which brings back rows above the frame. The relative move then leaves the frame's top rows behind instead of erasing those rows.
 */
 export const buildEraseFromCursor = (
 	bottomLine: number,
@@ -167,12 +167,13 @@ export const buildEraseFromCursor = (
 		),
 		viewportRows - 1,
 	);
-	if (cursorRow < rowsBelowTop) {
+	const moveUp = Math.min(rowsBelowTop, cursorRow);
+	if (moveUp < rowsBelowTop && viewportRows < previousViewportRows) {
 		return homeAndEraseDown;
 	}
 
 	return (
-		ansiEscapes.cursorMove(0, -rowsBelowTop) +
+		ansiEscapes.cursorMove(0, -moveUp) +
 		ansiEscapes.cursorTo(0) +
 		ansiEscapes.eraseDown
 	);
