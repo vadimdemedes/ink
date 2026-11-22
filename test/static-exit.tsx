@@ -110,7 +110,8 @@ for (const {name, options, expected} of [
 	{
 		name: 'screen reader',
 		options: {interactive: true, isScreenReaderEnabled: true},
-		expected: ['static A\n', 'static B\n'],
+		// The effect that adds B runs before the mount is painted, so both items are written with the final frame.
+		expected: ['static A\nstatic B\n'],
 	},
 	{
 		name: 'debug',
