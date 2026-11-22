@@ -346,6 +346,7 @@ test('IME example places the cursor after wrapped input', async (t: TestContext)
 });
 
 const leftArrow = '\u{1B}[D';
+const rightArrow = '\u{1B}[C';
 const backspace = '\u{7F}';
 const forwardDelete = '\u{1B}[3~';
 
@@ -353,7 +354,7 @@ const forwardDelete = '\u{1B}[3~';
 const imeCursor = (rowsUp: number, column: number): string =>
 	ansiEscapes.cursorUp(rowsUp) + ansiEscapes.cursorTo(column) + '\u{1B}[?25h';
 
-// Each step writes its input in one chunk, so the keys in it arrive before the next render, and then waits for the output that input must produce. The first step is plain text: until it is echoed, the terminal may not be in raw mode yet and would handle control keys itself.
+// Each step writes its input in one chunk, so the keys in it normally arrive before the next render, and then waits for the output that input must produce. The first step is plain text: until it is echoed, the terminal may not be in raw mode yet and would handle control keys itself.
 const imeEditingCases: Array<{
 	title: string;
 	columns?: number;
@@ -362,14 +363,40 @@ const imeEditingCases: Array<{
 	{
 		title: 'applies keys read in one chunk in order',
 		steps: [
-			['ab', '> ab\r\n'],
+			['ab', `> ab\r\n${imeCursor(1, 4)}`],
 			[`${leftArrow}x${leftArrow}${backspace}y`, `> yxb\r\n${imeCursor(1, 3)}`],
+		],
+	},
+	{
+		title: 'moves right one grapheme at a time and stops at the end',
+		steps: [
+			['a한b', `> a한b\r\n${imeCursor(1, 6)}`],
+			[leftArrow.repeat(3), imeCursor(1, 2)],
+			[rightArrow.repeat(2), imeCursor(1, 5)],
+			[rightArrow.repeat(5), imeCursor(1, 6)],
+		],
+	},
+	{
+		title: 'ignores left arrow and backspace at the start of the input',
+		steps: [
+			['ab', `> ab\r\n${imeCursor(1, 4)}`],
+			[`${leftArrow.repeat(5)}${backspace}x`, `> xab\r\n${imeCursor(1, 3)}`],
+		],
+	},
+	{
+		// `🇰` typed before `🇷` joins it into one flag, so the cursor moves past the flag and `x` lands after it.
+		title: 'keeps the cursor on a grapheme boundary after inserting',
+		steps: [
+			['🇷', `> 🇷\r\n${imeCursor(1, 3)}`],
+			[leftArrow, imeCursor(1, 2)],
+			['🇰', `> 🇰🇷\r\n${imeCursor(1, 4)}`],
+			['x', `> 🇰🇷x\r\n${imeCursor(1, 5)}`],
 		],
 	},
 	{
 		title: 'counts wide characters before the cursor',
 		steps: [
-			['한글', '> 한글\r\n'],
+			['한글', `> 한글\r\n${imeCursor(1, 6)}`],
 			[leftArrow, imeCursor(1, 4)],
 		],
 	},
@@ -378,7 +405,7 @@ const imeEditingCases: Array<{
 		title: 'wraps the text after the cursor to find its row',
 		columns: 10,
 		steps: [
-			['hello world', '> hello\r\nworld\r\n'],
+			['hello world', `> hello\r\nworld\r\n${imeCursor(1, 5)}`],
 			[leftArrow.repeat(3), imeCursor(1, 2)],
 		],
 	},
@@ -386,7 +413,7 @@ const imeEditingCases: Array<{
 		title: 'moves the cursor up to an earlier row of wrapped input',
 		columns: 10,
 		steps: [
-			['hello world', '> hello\r\nworld\r\n'],
+			['hello world', `> hello\r\nworld\r\n${imeCursor(1, 5)}`],
 			[leftArrow.repeat(6), imeCursor(2, 7)],
 		],
 	},
@@ -394,14 +421,14 @@ const imeEditingCases: Array<{
 		// Removing `x` joins the two regional indicators into one flag, so the next backspace removes both.
 		title: 'keeps the cursor on a grapheme boundary after backspace',
 		steps: [
-			['🇰x🇷', '> 🇰x🇷\r\n'],
+			['🇰x🇷', `> 🇰x🇷\r\n${imeCursor(1, 5)}`],
 			[`${leftArrow}${backspace}${backspace}`, `>\r\n${imeCursor(1, 2)}`],
 		],
 	},
 	{
 		title: 'drops pasted control characters',
 		steps: [
-			['a', '> a\r\n'],
+			['a', `> a\r\n${imeCursor(1, 3)}`],
 			['b\tc\r\nd', `> abcd\r\n${imeCursor(1, 6)}`],
 			[leftArrow, imeCursor(1, 5)],
 		],
@@ -409,7 +436,7 @@ const imeEditingCases: Array<{
 	{
 		title: 'does not erase backwards with the Delete key',
 		steps: [
-			['ab', '> ab\r\n'],
+			['ab', `> ab\r\n${imeCursor(1, 4)}`],
 			[`${leftArrow}${forwardDelete}x`, `> axb\r\n${imeCursor(1, 4)}`],
 		],
 	},
@@ -433,7 +460,8 @@ for (const {title, columns, steps} of imeEditingCases) {
 			ps.write(input);
 			// eslint-disable-next-line no-await-in-loop -- Terminal input and output must be processed sequentially.
 			await ps.waitForOutput(output);
-			t.assert.ok(ps.output.includes(output));
+			// Nothing is written after the expected output, so it is the final frame and cursor position for this step.
+			t.assert.ok(ps.output.endsWith(output), JSON.stringify(ps.output));
 		}
 	});
 }

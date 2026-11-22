@@ -24,11 +24,15 @@ const boundaryAtOrAfter = (text: string, index: number): number => {
 		: grapheme.index + grapheme.segment.length;
 };
 
-// Finds the row and column where the first character of `after` is rendered. For text without control characters, `wrapAnsi` normalizes it and otherwise only inserts newlines, so walking the normalized text alongside the wrapped text finds that character.
+// Wraps text the way Ink wraps `<Text>`.
+const wrap = (text: string, columns: number): string =>
+	wrapAnsi(text, columns, {trim: false, hard: true});
+
+// Finds the row and column where the first character of `after` is rendered. For a single line without control characters, wrapping normalizes the text and otherwise only inserts newlines, so walking the normalized text alongside the wrapped text finds that character.
 const wrappedPosition = (before: string, after: string, columns: number) => {
 	const text = (before + after).normalize();
 	const index = before.normalize().length;
-	const wrapped = wrapAnsi(text, columns, {trim: false, hard: true});
+	const wrapped = wrap(text, columns);
 	let textIndex = 0;
 	let wrappedIndex = 0;
 
@@ -90,10 +94,10 @@ function App() {
 			return;
 		}
 
-		// Pasted text can contain tabs and newlines, which this single-line input does not render.
+		// Pasted text can contain tabs and newlines. Wrapping rewrites them, which would break the cursor lookup, so this single-line input drops them. That also drops Enter.
 		const printable = input.replaceAll(/\p{Control}/gu, '');
 
-		if (printable !== '' && !key.ctrl && !key.meta && !key.return) {
+		if (printable !== '' && !key.ctrl && !key.meta) {
 			setState(previous => {
 				const nextText =
 					previous.text.slice(0, previous.cursor) +
@@ -111,16 +115,17 @@ function App() {
 		}
 	});
 
-	const heading = 'Type Korean, arrow keys move the cursor (Ctrl+C to exit):';
+	const heading =
+		'Type Korean, left/right arrows move the cursor (Ctrl+C to exit):';
 	const prompt = '> ';
+	const headingRows = wrap(heading, columns).split('\n').length;
 	// Include a cursor cell so a cursor at the end of input that fills the row is placed on the next row.
-	setCursorPosition(
-		wrappedPosition(
-			`${heading}\n${prompt}${text.slice(0, cursor)}`,
-			`${text.slice(cursor)} `,
-			columns,
-		),
+	const position = wrappedPosition(
+		`${prompt}${text.slice(0, cursor)}`,
+		`${text.slice(cursor)} `,
+		columns,
 	);
+	setCursorPosition({x: position.x, y: headingRows + position.y});
 
 	return (
 		<Box flexDirection="column">
