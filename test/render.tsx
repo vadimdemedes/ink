@@ -353,7 +353,7 @@ const forwardDelete = '\u{1B}[3~';
 const imeCursor = (rowsUp: number, column: number): string =>
 	ansiEscapes.cursorUp(rowsUp) + ansiEscapes.cursorTo(column) + '\u{1B}[?25h';
 
-// Each step writes its input in one chunk, so the keys in it arrive before the next render, and then waits for the output that input must produce.
+// Each step writes its input in one chunk, so the keys in it arrive before the next render, and then waits for the output that input must produce. The first step is plain text: until it is echoed, the terminal may not be in raw mode yet and would handle control keys itself.
 const imeEditingCases: Array<{
 	title: string;
 	columns?: number;
@@ -362,10 +362,8 @@ const imeEditingCases: Array<{
 	{
 		title: 'applies keys read in one chunk in order',
 		steps: [
-			[
-				`ab${leftArrow}x${leftArrow}${backspace}y`,
-				`> yxb\r\n${imeCursor(1, 3)}`,
-			],
+			['ab', '> ab\r\n'],
+			[`${leftArrow}x${leftArrow}${backspace}y`, `> yxb\r\n${imeCursor(1, 3)}`],
 		],
 	},
 	{
@@ -403,8 +401,9 @@ const imeEditingCases: Array<{
 	{
 		title: 'drops pasted control characters',
 		steps: [
-			['a\tb\r\nc', `> abc\r\n${imeCursor(1, 5)}`],
-			[leftArrow, imeCursor(1, 4)],
+			['a', '> a\r\n'],
+			['b\tc\r\nd', `> abcd\r\n${imeCursor(1, 6)}`],
+			[leftArrow, imeCursor(1, 5)],
 		],
 	},
 	{
