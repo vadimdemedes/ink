@@ -73,6 +73,7 @@ const assertMountUseEffectUpdateRendersInitialFrame = async (
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout: options.stdout,
+		interactive: true,
 		concurrent: options.concurrent,
 	});
 
@@ -117,6 +118,7 @@ const assertMountLayoutAndUseEffectCoalesceToLatestOutput = async (
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout: options.stdout,
+		interactive: true,
 		concurrent: options.concurrent,
 	});
 
@@ -154,6 +156,7 @@ const assertMountUseEffectUpdateRendersInitialFrameWhenRenderingIsThrottled =
 
 		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 			stdout: options.stdout,
+			interactive: true,
 			maxFps: 1,
 			concurrent: options.concurrent,
 		});
@@ -202,6 +205,7 @@ const assertMountUseEffectStaticOutputIsNotDuplicated = async (
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout: options.stdout,
+		interactive: true,
 		concurrent: options.concurrent,
 	});
 
@@ -240,6 +244,7 @@ const assertWaitUntilRenderFlushIncludesFirstFrameLayoutEffectUpdateWhenRenderin
 
 		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 			stdout: options.stdout,
+			interactive: true,
 			maxFps: 1,
 			concurrent: options.concurrent,
 		});
@@ -288,6 +293,7 @@ const assertThrottledMountLayoutAndUseEffectCoalescingPreservesStaticOutput =
 
 		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 			stdout: options.stdout,
+			interactive: true,
 			maxFps: 1,
 			concurrent: options.concurrent,
 		});
@@ -328,6 +334,7 @@ const assertDeferredLayoutCoalescingStillWorksAfterLaterEmptyOutput = async (
 		<Test isVisible text="first" />,
 		{
 			stdout: options.stdout,
+			interactive: true,
 			maxFps: 0,
 			concurrent: options.concurrent,
 		},
@@ -375,6 +382,7 @@ const assertSubsequentMountLayoutEffectUpdatesDoNotRenderIntermediateFrames =
 			<Test key={1} value={1} />,
 			{
 				stdout: options.stdout,
+				interactive: true,
 				maxFps: 0,
 				concurrent: options.concurrent,
 			},
@@ -426,6 +434,7 @@ const assertStaticOutputFromEarlyDeferredPassSurvivesLaterPassesWithoutNewStatic
 
 		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 			stdout: options.stdout,
+			interactive: true,
 			concurrent: options.concurrent,
 		});
 
@@ -470,6 +479,7 @@ const assertStaticOutputSurvivesWhenFirstPassHasNoInteractiveOutput = async (
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout: options.stdout,
+		interactive: true,
 		concurrent: options.concurrent,
 	});
 
@@ -509,6 +519,7 @@ const assertMultipleWaitUntilRenderFlushWaitersResolveOnInitialDeferredLayoutCom
 
 		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 			stdout: options.stdout,
+			interactive: true,
 			maxFps: 1,
 			concurrent: options.concurrent,
 		});
@@ -556,6 +567,7 @@ const assertThrottledMountUseEffectWithStaticAvoidsStaticDuplication = async (
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout: options.stdout,
+		interactive: true,
 		maxFps: 1,
 		concurrent: options.concurrent,
 	});
@@ -596,6 +608,7 @@ const assertThrottledMountUseEffectMultipleQueuedUpdatesKeepsFirstFrameAndFinalV
 
 		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 			stdout: options.stdout,
+			interactive: true,
 			maxFps: 1,
 			concurrent: options.concurrent,
 		});
@@ -652,6 +665,7 @@ const assertThrottledMountUseEffectQueuedStaticGrowthPreservesStaticOutputAndFin
 
 		const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 			stdout: options.stdout,
+			interactive: true,
 			maxFps: 1,
 			concurrent: options.concurrent,
 		});
@@ -734,6 +748,7 @@ const defineIssue773MatrixTests = ({
 				const {stdout, writes} = streamVariant.createCapturedWritable();
 				await assertTest(t, {
 					stdout,
+					interactive: true,
 					writes,
 					concurrent: concurrentVariant.concurrent,
 				});
@@ -847,6 +862,7 @@ test('issue 773: useLayoutEffect should not render an intermediate frame', async
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout,
+		interactive: true,
 	});
 
 	t.after(async () => {
@@ -877,6 +893,7 @@ test('issue 773: useLayoutEffect should not render an intermediate frame in conc
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout,
+		interactive: true,
 		concurrent: true,
 	});
 
@@ -915,6 +932,7 @@ test('issue 773: useLayoutEffect coalescing should preserve Static output', asyn
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout,
+		interactive: true,
 		concurrent: true,
 	});
 
@@ -948,6 +966,7 @@ test('issue 773: useLayoutEffect should only render the final value when multipl
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout,
+		interactive: true,
 	});
 
 	t.after(async () => {
@@ -991,6 +1010,7 @@ test('issue 773: useLayoutEffect coalescing should preserve all Static output ac
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout,
+		interactive: true,
 		concurrent: true,
 	});
 
@@ -1038,6 +1058,7 @@ test('issue 773: useLayoutEffect coalescing should preserve all Static output ac
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout,
+		interactive: true,
 	});
 
 	t.after(async () => {
@@ -1087,6 +1108,7 @@ test('issue 773: nested layout effect updates should not render intermediate fra
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout,
+		interactive: true,
 	});
 
 	t.after(async () => {
@@ -1134,6 +1156,7 @@ test('issue 773: nested layout effect updates should not render intermediate fra
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout,
+		interactive: true,
 		concurrent: true,
 	});
 
@@ -1189,6 +1212,7 @@ test('issue 773: nested layout updates with static coalescing should preserve st
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout,
+		interactive: true,
 		concurrent: true,
 	});
 
@@ -1236,6 +1260,7 @@ test('issue 773: useStdout.write during mount should preserve static output and 
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout,
+		interactive: true,
 	});
 
 	t.after(async () => {
@@ -1290,6 +1315,7 @@ test('issue 773: useStderr.write during mount should preserve static output and 
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout,
+		interactive: true,
 		stderr,
 	});
 
@@ -1357,6 +1383,7 @@ test('issue 773: throttled mount useEffect update should not suppress first fram
 
 	const {unmount, waitUntilExit, waitUntilRenderFlush} = render(<Test />, {
 		stdout,
+		interactive: true,
 		maxFps: 1,
 	});
 
