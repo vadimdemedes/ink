@@ -269,7 +269,10 @@ const hostConfig: HostConfig = {
 	getRootHostContext: () => ({
 		isInsideText: false,
 	}),
-	prepareForCommit: () => null,
+	prepareForCommit(rootNode) {
+		rootNode.isCommitInProgress = true;
+		return null;
+	},
 	preparePortalMount: () => null,
 	clearContainer: () => false,
 	resetAfterCommit(rootNode) {
@@ -283,6 +286,8 @@ const hostConfig: HostConfig = {
 		if (typeof rootNode.onComputeLayout === 'function') {
 			rootNode.onComputeLayout();
 		}
+
+		rootNode.isCommitInProgress = false;
 
 		emitLayoutListeners(rootNode);
 

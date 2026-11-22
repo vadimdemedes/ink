@@ -65,8 +65,7 @@ export const renderStaticOutput = (
 		skipStaticElements: false,
 	});
 
-	// Newline at the end is needed, because static output doesn't have one, so
-	// interactive output will override last line of static output
+	// Newline at the end is needed, because static output doesn't have one, so interactive output will override last line of static output
 	return staticOutput.height > 0 ? `${staticOutput.get().output}\n` : '';
 };
 

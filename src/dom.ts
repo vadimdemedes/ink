@@ -63,6 +63,8 @@ export type DOMElement = {
 	// Internal properties
 	isHidden?: boolean;
 	isStaticDirty?: boolean;
+	// Set while React is mutating the tree for a commit. The tree and its layout do not match until the commit is done, so nothing may render it.
+	isCommitInProgress?: boolean;
 	staticNode?: DOMElement;
 	// Tracks the previous commit's `staticNode` so the reconciler can detect identity changes (mount, unmount, key-driven remount) and reset the accumulated static output.
 	previousStaticNode?: DOMElement;

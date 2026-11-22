@@ -6,6 +6,7 @@ import stripAnsi from 'strip-ansi';
 import FakeTimers from '@sinonjs/fake-timers';
 import {
 	render,
+	Box,
 	Static,
 	Text,
 	useInput,
@@ -1473,9 +1474,10 @@ for (const {name, hook, chunk} of [
 				const startedAt = stdout.getWrites().length;
 
 				emitReadable(stdin, chunk);
-				// React flushes the update in a microtask and Ink paints in the next one.
-				await Promise.resolve();
-				await Promise.resolve();
+				// React flushes the update in a microtask and Ink paints after it.
+				await new Promise(resolve => {
+					realSetImmediate(resolve);
+				});
 
 				t.assert.deepStrictEqual(frameWritesSince(stdout, startedAt), [
 					'count=1 measured=1\n',
@@ -1573,7 +1575,7 @@ test('issue 773: the frame is on stdout when render() and rerender() return', as
 	});
 });
 
-test('issue 773: frames are written in order when render(), rerender() and unmount() run in one tick', (t: TestContext) => {
+test('frames are written in order when render(), rerender() and unmount() run in one tick', (t: TestContext) => {
 	const stdout = createStdout();
 	const {unmount, rerender} = render(<Text>A</Text>, {
 		stdout,
@@ -1586,7 +1588,7 @@ test('issue 773: frames are written in order when render(), rerender() and unmou
 	t.assert.deepStrictEqual(frameWritesSince(stdout, 0), ['A\n', 'B\n']);
 });
 
-test('issue 773: a direct stdout write after render() lands after the frame', (t: TestContext) => {
+test('a direct stdout write after render() lands after the frame', (t: TestContext) => {
 	const stdout = createStdout();
 	const {unmount} = render(<Text>frame</Text>, {stdout, interactive: true});
 	t.after(() => {
@@ -1639,7 +1641,7 @@ test('issue 773: two instances each paint only their settled frame to their own 
 	]);
 });
 
-test('issue 773: clear() from an effect erases the frame of the commit that ran the effect', async (t: TestContext) => {
+test('clear() from an effect erases the frame of the commit that ran the effect', async (t: TestContext) => {
 	await withFakeClock(clock => {
 		const stdout = createStdout();
 		let clear = () => {};
@@ -1682,7 +1684,7 @@ const StaticItems = React.memo(
 	),
 );
 
-test('issue 773: a <Static> item added by a layout effect is written when rerender() returns, inside the throttle window', async (t: TestContext) => {
+test('a <Static> item added by a layout effect is written when rerender() returns, inside the throttle window', async (t: TestContext) => {
 	await withFakeClock(() => {
 		const stdout = createStdout();
 
@@ -1726,6 +1728,142 @@ test('issue 773: a <Static> item added by a layout effect is written when rerend
 			]);
 		} finally {
 			unmount();
+		}
+	});
+});
+
+test('a write from a layout effect cleanup does not paint the tree in the middle of the commit', (t: TestContext) => {
+	const stdout = createStdout();
+
+	function Child() {
+		const {write} = useStdout();
+
+		useLayoutEffect(
+			() => () => {
+				write('cleanup\n');
+			},
+			[write],
+		);
+
+		return <Text>child</Text>;
+	}
+
+	function Test() {
+		const [isDone, setIsDone] = useState(false);
+
+		useLayoutEffect(() => {
+			setIsDone(true);
+		}, []);
+
+		return (
+			<>
+				<Static items={isDone ? ['A', 'B'] : ['A']}>
+					{item => <Text key={item}>static {item}</Text>}
+				</Static>
+				<Text>done={String(isDone)}</Text>
+				{/* Removed after React has updated the nodes above, so the cleanup runs on a half-updated tree. */}
+				<Box>{!isDone && <Child />}</Box>
+			</>
+		);
+	}
+
+	const {unmount} = render(<Test />, {
+		stdout,
+		interactive: true,
+		patchConsole: false,
+	});
+	t.after(() => {
+		unmount();
+	});
+
+	t.assert.deepStrictEqual(frameWritesSince(stdout, 0), [
+		'cleanup\n',
+		'static A\nstatic B\n',
+		'done=true\n',
+	]);
+});
+
+for (const {name, options} of [
+	{name: 'primary screen', options: {}},
+	{name: 'alternate screen', options: {alternateScreen: true}},
+]) {
+	test(`items of a <Static> that a layout effect replaces are still written - ${name}`, (t: TestContext) => {
+		const stdout = createStdout();
+
+		function Test() {
+			const [isReplaced, setIsReplaced] = useState(false);
+
+			useLayoutEffect(() => {
+				setIsReplaced(true);
+			}, []);
+
+			return (
+				<>
+					{isReplaced ? (
+						<Static key="second" items={['second']}>
+							{item => <Text key={item}>{item}</Text>}
+						</Static>
+					) : (
+						<Static key="first" items={['first']}>
+							{item => <Text key={item}>{item}</Text>}
+						</Static>
+					)}
+					<Text>replaced={String(isReplaced)}</Text>
+				</>
+			);
+		}
+
+		const {unmount} = render(<Test />, {
+			stdout,
+			interactive: true,
+			...options,
+		});
+		t.after(() => {
+			unmount();
+		});
+
+		t.assert.deepStrictEqual(frameWritesSince(stdout, 0), [
+			'first\n',
+			'second\n',
+			'replaced=true\n',
+		]);
+	});
+}
+
+test('a rerender() from inside a stdout write is painted after the frame being written', async (t: TestContext) => {
+	await withFakeClock(async clock => {
+		const stdout = createStdout();
+		const {write} = stdout;
+		let rerender: (node: React.ReactNode) => void = () => {};
+		let hasRerendered = false;
+
+		(stdout as {write: unknown}).write = (...arguments_: unknown[]) => {
+			const isResult = Reflect.apply(write, stdout, arguments_) as boolean;
+			if (!hasRerendered && String(arguments_[0]).includes('second')) {
+				hasRerendered = true;
+				rerender(<Text>third</Text>);
+			}
+
+			return isResult;
+		};
+
+		const instance = render(<Text>first</Text>, {stdout, interactive: true});
+		rerender = instance.rerender;
+		try {
+			clock.tick(1000);
+			instance.rerender(<Text>second</Text>);
+			await new Promise(resolve => {
+				realSetImmediate(resolve);
+			});
+			clock.tick(1000);
+
+			t.assert.deepStrictEqual(frameWritesSince(stdout, 0), [
+				'first\n',
+				'second\n',
+				'third\n',
+			]);
+		} finally {
+			instance.unmount();
 		}
 	});
 });
