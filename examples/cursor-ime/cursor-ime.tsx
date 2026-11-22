@@ -24,7 +24,7 @@ const boundaryAtOrAfter = (text: string, index: number): number => {
 		: grapheme.index + grapheme.segment.length;
 };
 
-// Finds the row and column where the first character of `after` is rendered. `wrapAnsi` normalizes the text and otherwise only inserts newlines, so walking the normalized text alongside the wrapped text finds that character.
+// Finds the row and column where the first character of `after` is rendered. For text without control characters, `wrapAnsi` normalizes it and otherwise only inserts newlines, so walking the normalized text alongside the wrapped text finds that character.
 const wrappedPosition = (before: string, after: string, columns: number) => {
 	const text = (before + after).normalize();
 	const index = before.normalize().length;
@@ -76,29 +76,36 @@ function App() {
 			return;
 		}
 
-		if (key.backspace || key.delete) {
+		if (key.backspace) {
 			setState(previous => {
 				const start = previousBoundary(previous.text, previous.cursor);
+				const nextText =
+					previous.text.slice(0, start) + previous.text.slice(previous.cursor);
 				return {
-					text:
-						previous.text.slice(0, start) +
-						previous.text.slice(previous.cursor),
-					cursor: start,
+					text: nextText,
+					// Removing a grapheme can join the ones around it, for example a letter between an emoji and a skin tone modifier.
+					cursor: boundaryAtOrAfter(nextText, start),
 				};
 			});
 			return;
 		}
 
-		if (input !== '' && !key.ctrl && !key.meta && !key.return) {
+		// Pasted text can contain tabs and newlines, which this single-line input does not render.
+		const printable = input.replaceAll(/\p{Control}/gu, '');
+
+		if (printable !== '' && !key.ctrl && !key.meta && !key.return) {
 			setState(previous => {
 				const nextText =
 					previous.text.slice(0, previous.cursor) +
-					input +
+					printable +
 					previous.text.slice(previous.cursor);
 				return {
 					text: nextText,
-					// The input can join the grapheme after it, for example a zero-width joiner typed before an emoji.
-					cursor: boundaryAtOrAfter(nextText, previous.cursor + input.length),
+					// The input can join the grapheme after it, for example a regional indicator typed before another one.
+					cursor: boundaryAtOrAfter(
+						nextText,
+						previous.cursor + printable.length,
+					),
 				};
 			});
 		}
