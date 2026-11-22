@@ -1781,6 +1781,8 @@ test('a write from a layout effect cleanup does not paint the tree in the middle
 		'static A\nstatic B\n',
 		'done=true\n',
 	]);
+	// Nothing was on screen when the cleanup wrote, so no empty frame is restored below its output.
+	t.assert.ok(stdout.getWrites().every(write => stripAnsi(write) !== '\n'));
 });
 
 for (const {name, options} of [

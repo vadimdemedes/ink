@@ -1411,8 +1411,6 @@ export default class Ink {
 			}
 		}
 
-		this.deferredRender = undefined;
-
 		// Mark as unmounted after the final render but before stdout writes
 		// that could re-enter exit() via synchronous write callbacks.
 		this.isUnmounted = true;
