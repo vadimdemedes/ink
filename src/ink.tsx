@@ -462,11 +462,13 @@ export default class Ink {
 		) {
 			const {pendingStaticOutput} = this;
 			this.pendingStaticOutput = '';
-			this.renderFrame(
-				this.lastOutput,
-				this.lastOutputHeight,
-				pendingStaticOutput,
-			);
+			this.paint(() => {
+				this.renderFrame(
+					this.lastOutput,
+					this.lastOutputHeight,
+					pendingStaticOutput,
+				);
+			});
 		}
 
 		this.fullStaticOutput = '';
@@ -561,8 +563,7 @@ export default class Ink {
 			isResumeRedraw ||
 			((this.isUnmounting || this.usesDeferredPaint()) &&
 				!this.rootNode.isStaticDirty);
-		this.isPainting = true;
-		try {
+		this.paint(() => {
 			this.renderFrame(
 				output,
 				outputHeight,
@@ -570,9 +571,7 @@ export default class Ink {
 					(isStaticOutputAlreadyWritten ? '' : staticOutput),
 			);
 			this.options.onRender?.({renderTime});
-		} finally {
-			this.isPainting = false;
-		}
+		});
 	};
 
 	constructor(options: Options) {
@@ -734,6 +733,17 @@ export default class Ink {
 
 	private shouldDeferRender(): boolean {
 		return this.usesDeferredPaint() && !this.isUnmounting && !this.isSuspended;
+	}
+
+	// Marks `write` as a paint, so a paint requested from inside it, for example by a `rerender()` in a stdout write, waits until it is done.
+	private paint(write: () => void): void {
+		const wasPainting = this.isPainting;
+		this.isPainting = true;
+		try {
+			write();
+		} finally {
+			this.isPainting = wasPainting;
+		}
 	}
 
 	private runRender(kind: 'throttled' | 'immediate'): void {

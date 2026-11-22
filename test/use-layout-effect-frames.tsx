@@ -1869,3 +1869,104 @@ test('a rerender() from inside a stdout write is painted after the frame being w
 		}
 	});
 });
+
+// Calls `onWrite` after every stdout write, the way a stream that reacts to its own output would.
+const hookWrites = (stdout: FakeStdout, onWrite: (data: string) => void) => {
+	const {write} = stdout;
+
+	(stdout as {write: unknown}).write = (...arguments_: unknown[]) => {
+		const isResult = Reflect.apply(write, stdout, arguments_) as boolean;
+		onWrite(String(arguments_[0]));
+		return isResult;
+	};
+};
+
+test('a resize and a rerender() from inside a stdout write are both painted', async (t: TestContext) => {
+	await withFakeClock(async clock => {
+		const stdout = createStdout(80);
+		let rerender: (node: React.ReactNode) => void = () => {};
+		let hasRerendered = false;
+
+		hookWrites(stdout, data => {
+			if (hasRerendered || !data.includes('second')) {
+				return;
+			}
+
+			hasRerendered = true;
+			stdout.columns = 40;
+			stdout.emit('resize');
+			rerender(<Text>third</Text>);
+		});
+
+		const instance = render(<Text>first</Text>, {stdout, interactive: true});
+		rerender = instance.rerender;
+		try {
+			clock.tick(1000);
+			instance.rerender(<Text>second</Text>);
+			await new Promise(resolve => {
+				realSetImmediate(resolve);
+			});
+			clock.tick(1000);
+
+			t.assert.strictEqual(frameWritesSince(stdout, 0).at(-1), 'third\n');
+		} finally {
+			instance.unmount();
+		}
+	});
+});
+
+test('clear() from inside the write of a replaced <Static> does not write the new items twice', (t: TestContext) => {
+	const stdout = createStdout();
+	let clear = () => {};
+	let hasCleared = false;
+
+	hookWrites(stdout, data => {
+		if (hasCleared || !data.includes('first')) {
+			return;
+		}
+
+		hasCleared = true;
+		clear();
+	});
+
+	function Test({isStarted}: {readonly isStarted: boolean}) {
+		const [isReplaced, setIsReplaced] = useState(false);
+
+		useLayoutEffect(() => {
+			if (isStarted) {
+				setIsReplaced(true);
+			}
+		}, [isStarted]);
+
+		return (
+			<>
+				{isReplaced ? (
+					<Static key="second" items={['second']}>
+						{item => <Text key={item}>{item}</Text>}
+					</Static>
+				) : (
+					<Static key="first" items={isStarted ? ['first'] : []}>
+						{item => <Text key={item}>{item}</Text>}
+					</Static>
+				)}
+				<Text>live</Text>
+			</>
+		);
+	}
+
+	const instance = render(<Test isStarted={false} />, {
+		stdout,
+		interactive: true,
+	});
+	clear = instance.clear;
+	t.after(() => {
+		instance.unmount();
+	});
+
+	instance.rerender(<Test isStarted />);
+
+	const output = stripAnsi(stdout.getWrites().join(''));
+	t.assert.strictEqual(hasCleared, true);
+	t.assert.strictEqual(countOccurrences(output, 'first\n'), 1);
+	t.assert.strictEqual(countOccurrences(output, 'second\n'), 1);
+});
