@@ -345,6 +345,100 @@ test('IME example places the cursor after wrapped input', async (t: TestContext)
 	t.assert.ok(ps.output.includes(ansiEscapes.cursorTo(0) + '\u{1B}[?25h'));
 });
 
+const leftArrow = '\u{1B}[D';
+const backspace = '\u{7F}';
+const forwardDelete = '\u{1B}[3~';
+
+// The cursor is moved up from the line below the frame, so the last row of input is one row up.
+const imeCursor = (rowsUp: number, column: number): string =>
+	ansiEscapes.cursorUp(rowsUp) + ansiEscapes.cursorTo(column) + '\u{1B}[?25h';
+
+// Each step writes its input in one chunk, so the keys in it arrive before the next render, and then waits for the output that input must produce.
+const imeEditingCases: Array<{
+	title: string;
+	columns?: number;
+	steps: Array<[input: string, output: string]>;
+}> = [
+	{
+		title: 'applies keys read in one chunk in order',
+		steps: [
+			[
+				`ab${leftArrow}x${leftArrow}${backspace}y`,
+				`> yxb\r\n${imeCursor(1, 3)}`,
+			],
+		],
+	},
+	{
+		title: 'counts wide characters before the cursor',
+		steps: [
+			['한글', '> 한글\r\n'],
+			[leftArrow, imeCursor(1, 4)],
+		],
+	},
+	{
+		// `> hello wo` fits in ten columns on its own. The row breaks before `world` only because of the text after the cursor.
+		title: 'wraps the text after the cursor to find its row',
+		columns: 10,
+		steps: [
+			['hello world', '> hello\r\nworld\r\n'],
+			[leftArrow.repeat(3), imeCursor(1, 2)],
+		],
+	},
+	{
+		title: 'moves the cursor up to an earlier row of wrapped input',
+		columns: 10,
+		steps: [
+			['hello world', '> hello\r\nworld\r\n'],
+			[leftArrow.repeat(6), imeCursor(2, 7)],
+		],
+	},
+	{
+		// Removing `x` joins the two regional indicators into one flag, so the next backspace removes both.
+		title: 'keeps the cursor on a grapheme boundary after backspace',
+		steps: [
+			['🇰x🇷', '> 🇰x🇷\r\n'],
+			[`${leftArrow}${backspace}${backspace}`, `>\r\n${imeCursor(1, 2)}`],
+		],
+	},
+	{
+		title: 'drops pasted control characters',
+		steps: [
+			['a\tb\r\nc', `> abc\r\n${imeCursor(1, 5)}`],
+			[leftArrow, imeCursor(1, 4)],
+		],
+	},
+	{
+		title: 'does not erase backwards with the Delete key',
+		steps: [
+			['ab', '> ab\r\n'],
+			[`${leftArrow}${forwardDelete}x`, `> axb\r\n${imeCursor(1, 4)}`],
+		],
+	},
+];
+
+for (const {title, columns, steps} of imeEditingCases) {
+	test(`IME example ${title}`, async (t: TestContext) => {
+		const ps = term('../../examples/cursor-ime/cursor-ime', [], {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			env: {CI: 'false'},
+			columns,
+		});
+		t.after(async () => {
+			ps.write('\u{3}');
+			await ps.waitForExit();
+		});
+
+		await ps.waitForOutput('>');
+		for (const [input, output] of steps) {
+			ps.output = '';
+			ps.write(input);
+			// eslint-disable-next-line no-await-in-loop -- Terminal input and output must be processed sequentially.
+			await ps.waitForOutput(output);
+			t.assert.ok(ps.output.includes(output));
+		}
+	});
+}
+
 test('table example keeps all columns visible in narrow terminals', async (t: TestContext) => {
 	const ps = term('../../examples/table/table', [], {
 		columns: 40,
