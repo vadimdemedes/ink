@@ -358,6 +358,7 @@ const imeCursor = (rowsUp: number, column: number): string =>
 const imeEditingCases: Array<{
 	title: string;
 	columns?: number;
+	rows?: number;
 	steps: Array<[input: string, output: string]>;
 }> = [
 	{
@@ -374,6 +375,7 @@ const imeEditingCases: Array<{
 			[leftArrow.repeat(3), imeCursor(1, 2)],
 			[rightArrow.repeat(2), imeCursor(1, 5)],
 			[rightArrow.repeat(5), imeCursor(1, 6)],
+			[leftArrow, imeCursor(1, 5)],
 		],
 	},
 	{
@@ -418,6 +420,20 @@ const imeEditingCases: Array<{
 		],
 	},
 	{
+		// The heading takes two rows, so the input row is the last row of the screen and the cursor's row makes the frame taller than the screen.
+		title:
+			'gives the cursor its own row when the input fills the last row of the screen',
+		columns: 40,
+		rows: 3,
+		steps: [
+			[
+				'a'.repeat(38),
+				`> ${'a'.repeat(38)}\r\n${ansiEscapes.cursorTo(0)}\u{1B}[?25h`,
+			],
+			[leftArrow, `> ${'a'.repeat(38)}\r\n${imeCursor(1, 39)}`],
+		],
+	},
+	{
 		// Removing `x` joins the two regional indicators into one flag, so the next backspace removes both.
 		title: 'keeps the cursor on a grapheme boundary after backspace',
 		steps: [
@@ -442,12 +458,13 @@ const imeEditingCases: Array<{
 	},
 ];
 
-for (const {title, columns, steps} of imeEditingCases) {
+for (const {title, columns, rows, steps} of imeEditingCases) {
 	test(`IME example ${title}`, async (t: TestContext) => {
 		const ps = term('../../examples/cursor-ime/cursor-ime', [], {
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			env: {CI: 'false'},
 			columns,
+			rows,
 		});
 		t.after(async () => {
 			ps.write('\u{3}');

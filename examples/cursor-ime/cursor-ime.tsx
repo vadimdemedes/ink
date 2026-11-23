@@ -28,28 +28,18 @@ const boundaryAtOrAfter = (text: string, index: number): number => {
 const wrap = (text: string, columns: number): string =>
 	wrapAnsi(text, columns, {trim: false, hard: true});
 
-// Finds the row and column where the first character of `after` is rendered. For a single line without control characters, wrapping normalizes the text and otherwise only inserts newlines, so walking the normalized text alongside the wrapped text finds that character.
-const wrappedPosition = (before: string, after: string, columns: number) => {
-	const text = (before + after).normalize();
-	const index = before.normalize().length;
-	const wrapped = wrap(text, columns);
-	let textIndex = 0;
-	let wrappedIndex = 0;
+// Finds the row and column where the character at `offset` in `text` is rendered. For a single line without control characters, wrapping normalizes the text and otherwise only inserts newlines, so the rows hold the normalized text in order.
+const wrappedPosition = (text: string, offset: number, columns: number) => {
+	const rows = wrap(text, columns).split('\n');
+	let y = 0;
+	let rowOffset = offset;
 
-	for (; wrappedIndex < wrapped.length; wrappedIndex++) {
-		if (wrapped[wrappedIndex] !== text[textIndex]) {
-			continue;
-		}
-
-		if (textIndex === index) {
-			break;
-		}
-
-		textIndex++;
+	while (y < rows.length - 1 && rowOffset >= rows[y]!.length) {
+		rowOffset -= rows[y]!.length;
+		y++;
 	}
 
-	const rows = wrapped.slice(0, wrappedIndex).split('\n');
-	return {x: stringWidth(rows.at(-1)!), y: rows.length - 1};
+	return {x: stringWidth(rows[y]!.slice(0, rowOffset)), y};
 };
 
 function App() {
@@ -119,10 +109,11 @@ function App() {
 		'Type Korean, left/right arrows move the cursor (Ctrl+C to exit):';
 	const prompt = '> ';
 	const headingRows = wrap(heading, columns).split('\n').length;
-	// Include a cursor cell so a cursor at the end of input that fills the row is placed on the next row.
+	// The trailing space is a cell for the cursor, so a cursor at the end of input that fills the row gets a row of its own. It is rendered as well, so the frame is as tall as the rows the cursor is placed in.
+	const line = `${prompt}${text} `;
 	const position = wrappedPosition(
-		`${prompt}${text.slice(0, cursor)}`,
-		`${text.slice(cursor)} `,
+		line,
+		`${prompt}${text.slice(0, cursor)}`.normalize().length,
 		columns,
 	);
 	setCursorPosition({x: position.x, y: headingRows + position.y});
@@ -130,10 +121,7 @@ function App() {
 	return (
 		<Box flexDirection="column">
 			<Text>{heading}</Text>
-			<Text>
-				{prompt}
-				{text}
-			</Text>
+			<Text>{line}</Text>
 		</Box>
 	);
 }
