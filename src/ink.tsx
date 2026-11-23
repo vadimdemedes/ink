@@ -469,12 +469,7 @@ export default class Ink {
 	onImmediateRender = (): void => {
 		const shouldDefer = this.shouldDeferRender();
 		if (shouldDefer || this.isSuspended) {
-			const startTime = performance.now();
-			this.pendingStaticOutput += renderStaticOutput(
-				this.rootNode,
-				this.isScreenReaderEnabled,
-			);
-			this.pendingStaticRenderTime += performance.now() - startTime;
+			this.collectStaticOutput();
 		}
 
 		if (shouldDefer) {
@@ -603,6 +598,10 @@ export default class Ink {
 
 		if (isUnthrottled) {
 			this.rootNode.onRender = () => {
+				if (this.shouldDeferRender()) {
+					this.collectStaticOutput();
+				}
+
 				this.requestRender('throttled');
 			};
 
@@ -614,6 +613,10 @@ export default class Ink {
 			});
 			this.rootNode.onRender = () => {
 				this.hasPendingThrottledRender = true;
+				if (this.shouldDeferRender()) {
+					this.collectStaticOutput();
+				}
+
 				this.requestRender('throttled');
 			};
 
@@ -732,6 +735,16 @@ export default class Ink {
 		return this.usesDeferredPaint() && !this.isUnmounting && !this.isSuspended;
 	}
 
+	// React can reveal <Static> children without marking them dirty (an <Activity> going visible), and their layout effect drops them before the paint. So every deferred commit collects the visible rows.
+	private collectStaticOutput(): void {
+		const startTime = performance.now();
+		this.pendingStaticOutput += renderStaticOutput(
+			this.rootNode,
+			this.isScreenReaderEnabled,
+		);
+		this.pendingStaticRenderTime += performance.now() - startTime;
+	}
+
 	private runRender(kind: 'throttled' | 'immediate'): void {
 		if (kind === 'throttled' && this.throttledOnRender) {
 			this.throttledOnRender();
@@ -843,11 +856,12 @@ export default class Ink {
 			// After erasing, the last output is gone, so reset its height until the new frame is written.
 			this.lastOutputHeight = 0;
 			if (hasStaticOutput) {
-				this.options.stdout.write(staticOutput);
-
+				// Record the history first: the write can replace <Static>, which clears it.
 				if (this.alternateScreen) {
 					this.fullStaticOutput += staticOutput;
 				}
+
+				this.options.stdout.write(staticOutput);
 			}
 
 			this.options.stdout.write(outputToRender);
@@ -1389,7 +1403,11 @@ export default class Ink {
 
 		// Clear any pending throttled render timer on unmount. When stdout is writable,
 		// flush so the final frame is emitted; otherwise cancel to avoid delayed callbacks.
-		settleThrottle(this.throttledOnRender, canWriteToStdout);
+		// A deferred paint means the final frame below renders the same tree, so drop the trailing throttled call instead of painting it too.
+		settleThrottle(
+			this.throttledOnRender,
+			canWriteToStdout && this.deferredRender === undefined,
+		);
 
 		if (canWriteToStdout) {
 			// If throttling is enabled and there is already a pending render, flushing above

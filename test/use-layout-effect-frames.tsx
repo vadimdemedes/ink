@@ -1,7 +1,7 @@
 import {Buffer} from 'node:buffer';
 import {Writable} from 'node:stream';
 import test, {type TestContext} from 'node:test';
-import React, {useEffect, useLayoutEffect, useState} from 'react';
+import React, {Activity, useEffect, useLayoutEffect, useState} from 'react';
 import stripAnsi from 'strip-ansi';
 import FakeTimers from '@sinonjs/fake-timers';
 import {
@@ -10,11 +10,13 @@ import {
 	Static,
 	Text,
 	Transform,
+	useApp,
 	useInput,
 	usePaste,
 	useStderr,
 	useStdout,
 } from '../src/index.js';
+import {type SuspendTerminal} from '../src/components/AppContext.js';
 import createStdout, {type FakeStdout} from './helpers/create-stdout.js';
 import {createStdin, emitReadable} from './helpers/create-stdin.js';
 import {reconstructTerminalLines} from './helpers/reconstruct-terminal.js';
@@ -1958,6 +1960,57 @@ for (const {name, options, trigger, firstCount} of [
 	});
 }
 
+test('a <Static> replaced from inside the write of its item does not come back after resume - screen reader on the alternate screen', async (t: TestContext) => {
+	const stdout = createStdout();
+	let suspendTerminal!: SuspendTerminal;
+	let rerender: (node: React.ReactNode) => void = () => {};
+	let hasReplaced = false;
+
+	function Test({name}: {readonly name: string}) {
+		suspendTerminal = useApp().suspendTerminal;
+
+		return (
+			<>
+				<Static key={name} items={[name]}>
+					{item => <Text key={item}>{item}</Text>}
+				</Static>
+				<Text>live {name}</Text>
+			</>
+		);
+	}
+
+	hookWrites(stdout, data => {
+		if (hasReplaced || !data.includes('first')) {
+			return;
+		}
+
+		hasReplaced = true;
+		rerender(<Test name="second" />);
+	});
+
+	const instance = render(<Test name="initial" />, {
+		stdout,
+		interactive: true,
+		alternateScreen: true,
+		isScreenReaderEnabled: true,
+	});
+	rerender = instance.rerender;
+	t.after(() => {
+		instance.unmount();
+	});
+	instance.rerender(<Test name="first" />);
+	await instance.waitUntilRenderFlush();
+
+	const startedAt = stdout.getWrites().length;
+	await suspendTerminal(() => {});
+
+	t.assert.strictEqual(hasReplaced, true);
+	t.assert.deepStrictEqual(frameWritesSince(stdout, startedAt), [
+		'second\n',
+		'live second\n',
+	]);
+});
+
 test('renderTime includes the time spent rendering <Static> output', (t: TestContext) => {
 	const stdout = createStdout();
 	const renderTimes: number[] = [];
@@ -2036,4 +2089,119 @@ test('a stdout write from a layout effect does not render <Static> output a seco
 	});
 
 	t.assert.strictEqual(transformCalls, 1);
+});
+
+for (const {name, options} of [
+	{name: '', options: {}},
+	{name: ' - screen reader', options: {isScreenReaderEnabled: true}},
+]) {
+	test(`<Static> items prerendered in a hidden <Activity> are written when it is revealed${name}`, async (t: TestContext) => {
+		await withFakeClock(async clock => {
+			const stdout = createStdout();
+			let reveal: () => void = () => {};
+			// Created once, so React reveals it without rendering <Static> again.
+			const staticItems = (
+				<Static items={['item']}>
+					{item => <Text key={item}>{item}</Text>}
+				</Static>
+			);
+
+			function Test() {
+				const [isVisible, setIsVisible] = useState(false);
+				reveal = () => {
+					setIsVisible(true);
+				};
+
+				return (
+					<>
+						<Activity mode={isVisible ? 'visible' : 'hidden'}>
+							{staticItems}
+						</Activity>
+						<Text>live</Text>
+					</>
+				);
+			}
+
+			const {unmount} = render(<Test />, {
+				stdout,
+				interactive: true,
+				...options,
+			});
+			try {
+				// React prerenders the hidden subtree in a scheduler task after the first frame.
+				await new Promise(resolve => {
+					realSetImmediate(resolve);
+				});
+				// Leave the throttle window of the first frame.
+				clock.tick(1000);
+
+				reveal();
+				await new Promise(resolve => {
+					realSetImmediate(resolve);
+				});
+
+				t.assert.deepStrictEqual(frameWritesSince(stdout, 0), [
+					'live\n',
+					'item\n',
+					'live\n',
+				]);
+			} finally {
+				unmount();
+			}
+		});
+	});
+}
+
+test('exit() from a layout effect with a trailing throttled paint pending writes the final frame once', async (t: TestContext) => {
+	await withFakeClock(async clock => {
+		// The final frame fills the terminal, so it is written even when unchanged.
+		const stdout = createStdout();
+		stdout.rows = 3;
+		let renderCount = 0;
+		// Created once, so the rerenders below leave <Static> alone and only ask for throttled paints.
+		const staticItems = (
+			<Static items={['item']}>{item => <Text key={item}>{item}</Text>}</Static>
+		);
+
+		function Test({count}: {readonly count: number}) {
+			const {exit} = useApp();
+
+			useLayoutEffect(() => {
+				if (count === 3) {
+					exit();
+				}
+			}, [count, exit]);
+
+			return (
+				<>
+					{staticItems}
+					<Text>{`count=${count}\nline\nline`}</Text>
+				</>
+			);
+		}
+
+		const {rerender} = render(<Test count={0} />, {
+			stdout,
+			interactive: true,
+			onRender() {
+				renderCount++;
+			},
+		});
+		// The first rerender uses the leading edge of the throttle, so the second one leaves a trailing paint pending.
+		rerender(<Test count={1} />);
+		rerender(<Test count={2} />);
+		const startedAt = stdout.getWrites().length;
+		const renderCountBefore = renderCount;
+
+		rerender(<Test count={3} />);
+		await new Promise(resolve => {
+			realSetImmediate(resolve);
+		});
+		clock.tick(1000);
+
+		t.assert.strictEqual(renderCount - renderCountBefore, 1);
+		t.assert.deepStrictEqual(frameWritesSince(stdout, startedAt), [
+			'count=3\nline\nline',
+		]);
+	});
 });
