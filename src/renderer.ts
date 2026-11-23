@@ -69,7 +69,11 @@ export const renderStaticOutput = (
 	return staticOutput.height > 0 ? `${staticOutput.get().output}\n` : '';
 };
 
-const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
+const renderer = (
+	node: DOMElement,
+	isScreenReaderEnabled: boolean,
+	shouldRenderStatic = true,
+): Result => {
 	if (node.yogaNode) {
 		if (isScreenReaderEnabled) {
 			const output = renderNodeToScreenReaderOutput(node, {
@@ -81,7 +85,9 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			return {
 				output,
 				outputHeight,
-				staticOutput: renderStaticOutput(node, isScreenReaderEnabled),
+				staticOutput: shouldRenderStatic
+					? renderStaticOutput(node, isScreenReaderEnabled)
+					: '',
 			};
 		}
 
@@ -94,7 +100,9 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			skipStaticElements: true,
 		});
 
-		const staticOutput = renderStaticOutput(node, isScreenReaderEnabled);
+		const staticOutput = shouldRenderStatic
+			? renderStaticOutput(node, isScreenReaderEnabled)
+			: '';
 		const {output: generatedOutput, height: outputHeight} = output.get();
 
 		return {

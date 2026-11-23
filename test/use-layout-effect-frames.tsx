@@ -9,6 +9,7 @@ import {
 	Box,
 	Static,
 	Text,
+	Transform,
 	useInput,
 	usePaste,
 	useStderr,
@@ -1785,37 +1786,45 @@ test('a write from a layout effect cleanup does not paint the tree in the middle
 	t.assert.ok(stdout.getWrites().every(write => stripAnsi(write) !== '\n'));
 });
 
-for (const {name, options} of [
-	{name: 'primary screen', options: {}},
-	{name: 'alternate screen', options: {alternateScreen: true}},
+// Replaces its <Static> from a layout effect, before the first one's item was painted.
+function ReplacedStatic() {
+	const [isReplaced, setIsReplaced] = useState(false);
+
+	useLayoutEffect(() => {
+		setIsReplaced(true);
+	}, []);
+
+	return (
+		<>
+			{isReplaced ? (
+				<Static key="second" items={['second']}>
+					{item => <Text key={item}>{item}</Text>}
+				</Static>
+			) : (
+				<Static key="first" items={['first']}>
+					{item => <Text key={item}>{item}</Text>}
+				</Static>
+			)}
+			<Text>replaced={String(isReplaced)}</Text>
+		</>
+	);
+}
+
+for (const {name, options, expected} of [
+	{
+		name: 'are written with the next paint on the primary screen',
+		options: {},
+		expected: ['first\nsecond\n', 'replaced=true\n'],
+	},
+	{
+		name: 'are dropped on the alternate screen',
+		options: {alternateScreen: true},
+		expected: ['second\n', 'replaced=true\n'],
+	},
 ]) {
-	test(`items of a <Static> that a layout effect replaces are still written - ${name}`, (t: TestContext) => {
+	test(`items of a <Static> that is replaced before they were painted ${name}`, (t: TestContext) => {
 		const stdout = createStdout();
-
-		function Test() {
-			const [isReplaced, setIsReplaced] = useState(false);
-
-			useLayoutEffect(() => {
-				setIsReplaced(true);
-			}, []);
-
-			return (
-				<>
-					{isReplaced ? (
-						<Static key="second" items={['second']}>
-							{item => <Text key={item}>{item}</Text>}
-						</Static>
-					) : (
-						<Static key="first" items={['first']}>
-							{item => <Text key={item}>{item}</Text>}
-						</Static>
-					)}
-					<Text>replaced={String(isReplaced)}</Text>
-				</>
-			);
-		}
-
-		const {unmount} = render(<Test />, {
+		const {unmount} = render(<ReplacedStatic />, {
 			stdout,
 			interactive: true,
 			...options,
@@ -1824,11 +1833,7 @@ for (const {name, options} of [
 			unmount();
 		});
 
-		t.assert.deepStrictEqual(frameWritesSince(stdout, 0), [
-			'first\n',
-			'second\n',
-			'replaced=true\n',
-		]);
+		t.assert.deepStrictEqual(frameWritesSince(stdout, 0), expected);
 	});
 }
 
@@ -1915,58 +1920,118 @@ test('a resize and a rerender() from inside a stdout write are both painted', as
 	});
 });
 
-test('clear() from inside the write of a replaced <Static> does not write the new items twice', (t: TestContext) => {
-	const stdout = createStdout();
-	let clear = () => {};
-	let hasCleared = false;
+for (const {name, options, trigger} of [
+	{name: 'primary screen', options: {}, trigger: 'first'},
+	{
+		name: 'alternate screen',
+		options: {alternateScreen: true},
+		trigger: 'second',
+	},
+]) {
+	test(`a resize from inside the write of <Static> items does not write the items of a replacing <Static> twice - ${name}`, (t: TestContext) => {
+		const stdout = createStdout();
+		let hasResized = false;
 
-	hookWrites(stdout, data => {
-		if (hasCleared || !data.includes('first')) {
-			return;
+		hookWrites(stdout, data => {
+			if (hasResized || !data.includes(trigger)) {
+				return;
+			}
+
+			hasResized = true;
+			stdout.emit('resize');
+		});
+
+		const {unmount} = render(<ReplacedStatic />, {
+			stdout,
+			interactive: true,
+			...options,
+		});
+		t.after(() => {
+			unmount();
+		});
+
+		const output = stripAnsi(stdout.getWrites().join(''));
+		t.assert.strictEqual(hasResized, true);
+		t.assert.strictEqual(countOccurrences(output, 'second\n'), 1);
+	});
+}
+
+test('renderTime includes the time spent rendering <Static> output', (t: TestContext) => {
+	const stdout = createStdout();
+	const renderTimes: number[] = [];
+	const slowTransform = (text: string) => {
+		const end = performance.now() + 20;
+		let spins = 0;
+		while (performance.now() < end) {
+			spins++;
 		}
 
-		hasCleared = true;
-		clear();
+		return spins > 0 ? text : '';
+	};
+
+	const {unmount} = render(
+		<>
+			<Static items={['item']}>
+				{item => (
+					<Transform key={item} transform={slowTransform}>
+						<Text>{item}</Text>
+					</Transform>
+				)}
+			</Static>
+			<Text>live</Text>
+		</>,
+		{
+			stdout,
+			interactive: true,
+			onRender({renderTime}) {
+				renderTimes.push(renderTime);
+			},
+		},
+	);
+	t.after(() => {
+		unmount();
 	});
 
-	function Test({isStarted}: {readonly isStarted: boolean}) {
-		const [isReplaced, setIsReplaced] = useState(false);
+	t.assert.ok(Math.max(...renderTimes) >= 20);
+});
+
+test('a stdout write from a layout effect does not render <Static> output a second time', (t: TestContext) => {
+	const stdout = createStdout();
+	let transformCalls = 0;
+	const countingTransform = (text: string) => {
+		transformCalls++;
+		return text;
+	};
+
+	function Test() {
+		const {write} = useStdout();
 
 		useLayoutEffect(() => {
-			if (isStarted) {
-				setIsReplaced(true);
-			}
-		}, [isStarted]);
+			write('log\n');
+		}, [write]);
 
 		return (
 			<>
-				{isReplaced ? (
-					<Static key="second" items={['second']}>
-						{item => <Text key={item}>{item}</Text>}
-					</Static>
-				) : (
-					<Static key="first" items={isStarted ? ['first'] : []}>
-						{item => <Text key={item}>{item}</Text>}
-					</Static>
-				)}
+				<Static items={['item']}>
+					{item => (
+						<Transform key={item} transform={countingTransform}>
+							<Text>{item}</Text>
+						</Transform>
+					)}
+				</Static>
 				<Text>live</Text>
 			</>
 		);
 	}
 
-	const instance = render(<Test isStarted={false} />, {
+	const {unmount} = render(<Test />, {
 		stdout,
 		interactive: true,
+		patchConsole: false,
 	});
-	clear = instance.clear;
 	t.after(() => {
-		instance.unmount();
+		unmount();
 	});
 
-	instance.rerender(<Test isStarted />);
-
-	const output = stripAnsi(stdout.getWrites().join(''));
-	t.assert.strictEqual(hasCleared, true);
-	t.assert.strictEqual(countOccurrences(output, 'first\n'), 1);
-	t.assert.strictEqual(countOccurrences(output, 'second\n'), 1);
+	t.assert.strictEqual(transformCalls, 1);
 });
