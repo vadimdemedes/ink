@@ -345,6 +345,144 @@ test('IME example places the cursor after wrapped input', async (t: TestContext)
 	t.assert.ok(ps.output.includes(ansiEscapes.cursorTo(0) + '\u{1B}[?25h'));
 });
 
+const leftArrow = '\u{1B}[D';
+const rightArrow = '\u{1B}[C';
+const backspace = '\u{7F}';
+const forwardDelete = '\u{1B}[3~';
+
+// The cursor is moved up from the line below the frame, so the last row of input is one row up.
+const imeCursor = (rowsUp: number, column: number): string =>
+	ansiEscapes.cursorUp(rowsUp) + ansiEscapes.cursorTo(column) + '\u{1B}[?25h';
+
+// Each step writes its input in one chunk, so the keys in it normally arrive before the next render, and then waits for the output that input must produce. The first step is plain text: until it is echoed, the terminal may not be in raw mode yet and would handle control keys itself.
+const imeEditingCases: Array<{
+	title: string;
+	columns?: number;
+	rows?: number;
+	steps: Array<[input: string, output: string]>;
+}> = [
+	{
+		title: 'applies keys read in one chunk in order',
+		steps: [
+			['ab', `> ab\r\n${imeCursor(1, 4)}`],
+			[`${leftArrow}x${leftArrow}${backspace}y`, `> yxb\r\n${imeCursor(1, 3)}`],
+		],
+	},
+	{
+		title: 'moves right one grapheme at a time and stops at the end',
+		steps: [
+			['a한b', `> a한b\r\n${imeCursor(1, 6)}`],
+			[leftArrow.repeat(3), imeCursor(1, 2)],
+			[rightArrow.repeat(2), imeCursor(1, 5)],
+			[rightArrow.repeat(5), imeCursor(1, 6)],
+			[leftArrow, imeCursor(1, 5)],
+		],
+	},
+	{
+		title: 'ignores left arrow and backspace at the start of the input',
+		steps: [
+			['ab', `> ab\r\n${imeCursor(1, 4)}`],
+			[`${leftArrow.repeat(5)}${backspace}x`, `> xab\r\n${imeCursor(1, 3)}`],
+		],
+	},
+	{
+		// `🇰` typed before `🇷` joins it into one flag, so the cursor moves past the flag and `x` lands after it.
+		title: 'keeps the cursor on a grapheme boundary after inserting',
+		steps: [
+			['🇷', `> 🇷\r\n${imeCursor(1, 3)}`],
+			[leftArrow, imeCursor(1, 2)],
+			['🇰', `> 🇰🇷\r\n${imeCursor(1, 4)}`],
+			['x', `> 🇰🇷x\r\n${imeCursor(1, 5)}`],
+		],
+	},
+	{
+		title: 'counts wide characters before the cursor',
+		steps: [
+			['한글', `> 한글\r\n${imeCursor(1, 6)}`],
+			[leftArrow, imeCursor(1, 4)],
+		],
+	},
+	{
+		// `> hello wo` fits in ten columns on its own. The row breaks before `world` only because of the text after the cursor.
+		title: 'wraps the text after the cursor to find its row',
+		columns: 10,
+		steps: [
+			['hello world', `> hello\r\nworld\r\n${imeCursor(1, 5)}`],
+			[leftArrow.repeat(3), imeCursor(1, 2)],
+		],
+	},
+	{
+		title: 'moves the cursor up to an earlier row of wrapped input',
+		columns: 10,
+		steps: [
+			['hello world', `> hello\r\nworld\r\n${imeCursor(1, 5)}`],
+			[leftArrow.repeat(6), imeCursor(2, 7)],
+		],
+	},
+	{
+		// The heading takes two rows, so the input row is the last row of the screen and the cursor's row makes the frame taller than the screen.
+		title:
+			'gives the cursor its own row when the input fills the last row of the screen',
+		columns: 40,
+		rows: 3,
+		steps: [
+			[
+				'a'.repeat(38),
+				`> ${'a'.repeat(38)}\r\n${ansiEscapes.cursorTo(0)}\u{1B}[?25h`,
+			],
+			[leftArrow, `> ${'a'.repeat(38)}\r\n${imeCursor(1, 39)}`],
+		],
+	},
+	{
+		// Removing `x` joins the two regional indicators into one flag, so the next backspace removes both.
+		title: 'keeps the cursor on a grapheme boundary after backspace',
+		steps: [
+			['🇰x🇷', `> 🇰x🇷\r\n${imeCursor(1, 5)}`],
+			[`${leftArrow}${backspace}${backspace}`, `>\r\n${imeCursor(1, 2)}`],
+		],
+	},
+	{
+		title: 'drops pasted control characters',
+		steps: [
+			['a', `> a\r\n${imeCursor(1, 3)}`],
+			['b\tc\r\nd', `> abcd\r\n${imeCursor(1, 6)}`],
+			[leftArrow, imeCursor(1, 5)],
+		],
+	},
+	{
+		title: 'does not erase backwards with the Delete key',
+		steps: [
+			['ab', `> ab\r\n${imeCursor(1, 4)}`],
+			[`${leftArrow}${forwardDelete}x`, `> axb\r\n${imeCursor(1, 4)}`],
+		],
+	},
+];
+
+for (const {title, columns, rows, steps} of imeEditingCases) {
+	test(`IME example ${title}`, async (t: TestContext) => {
+		const ps = term('../../examples/cursor-ime/cursor-ime', [], {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			env: {CI: 'false'},
+			columns,
+			rows,
+		});
+		t.after(async () => {
+			ps.write('\u{3}');
+			await ps.waitForExit();
+		});
+
+		await ps.waitForOutput('>');
+		for (const [input, output] of steps) {
+			ps.output = '';
+			ps.write(input);
+			// eslint-disable-next-line no-await-in-loop -- Terminal input and output must be processed sequentially.
+			await ps.waitForOutput(output);
+			// Nothing is written after the expected output, so it is the final frame and cursor position for this step.
+			t.assert.ok(ps.output.endsWith(output), JSON.stringify(ps.output));
+		}
+	});
+}
+
 test('table example keeps all columns visible in narrow terminals', async (t: TestContext) => {
 	const ps = term('../../examples/table/table', [], {
 		columns: 40,
