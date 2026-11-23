@@ -1920,12 +1920,13 @@ test('a resize and a rerender() from inside a stdout write are both painted', as
 	});
 });
 
-for (const {name, options, trigger} of [
-	{name: 'primary screen', options: {}, trigger: 'first'},
+for (const {name, options, trigger, firstCount} of [
+	{name: 'primary screen', options: {}, trigger: 'first', firstCount: 1},
 	{
 		name: 'alternate screen',
 		options: {alternateScreen: true},
 		trigger: 'second',
+		firstCount: 0,
 	},
 ]) {
 	test(`a resize from inside the write of <Static> items does not write the items of a replacing <Static> twice - ${name}`, (t: TestContext) => {
@@ -1952,6 +1953,7 @@ for (const {name, options, trigger} of [
 
 		const output = stripAnsi(stdout.getWrites().join(''));
 		t.assert.strictEqual(hasResized, true);
+		t.assert.strictEqual(countOccurrences(output, 'first\n'), firstCount);
 		t.assert.strictEqual(countOccurrences(output, 'second\n'), 1);
 	});
 }
