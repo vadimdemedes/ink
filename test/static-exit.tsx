@@ -110,7 +110,8 @@ for (const {name, options, expected} of [
 	{
 		name: 'screen reader',
 		options: {interactive: true, isScreenReaderEnabled: true},
-		expected: ['static A\n', 'static B\n'],
+		// Both items are committed before the mount is painted, so they are written together.
+		expected: ['static A\nstatic B\n'],
 	},
 	{
 		name: 'debug',

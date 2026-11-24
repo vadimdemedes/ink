@@ -13,7 +13,7 @@ import Yoga from 'yoga-layout';
 import wrapAnsi from 'wrap-ansi';
 import {getWindowSize} from './utils.js';
 import reconciler, {connectToDevTools} from './reconciler.js';
-import render from './renderer.js';
+import render, {renderStaticOutput} from './renderer.js';
 import * as dom from './dom.js';
 import {
 	buildEraseFromCursor,
@@ -35,6 +35,9 @@ import {
 import {isTty, type OutputStream} from './stream.js';
 
 const noop = () => {};
+
+// Captured at load, so a fake clock installed later does not hold back a paint.
+const scheduleMicrotask = queueMicrotask;
 
 const yieldImmediate = async () =>
 	new Promise<void>(resolve => {
@@ -295,6 +298,10 @@ export default class Ink {
 	private readonly unsubscribeResize?: () => void;
 	private readonly throttledOnRender?: DebouncedFunc<() => void>;
 	private hasPendingThrottledRender = false;
+	// Set when a commit asked for a paint that has not run yet. The paint waits until React has flushed the updates scheduled by that commit's layout effects, so the frame from before those updates is never written. It renders whatever the tree holds by then.
+	private deferredRender?: 'throttled' | 'immediate';
+	// Set while a frame is being written.
+	private isPainting = false;
 	private kittyProtocolEnabled = false;
 	// The flags to push whenever raw mode is on: set up front in `enabled` mode and by a positive detection in `auto` mode.
 	private kittyFlags: KittyFlagName[] | undefined;
@@ -303,8 +310,10 @@ export default class Ink {
 	private nextRenderCommit?: PromiseWithResolvers<void>;
 	// Set while suspendTerminal() has handed the terminal to a child process.
 	private isSuspended = false;
-	// <Static> output rendered while suspended, written with the first frame after resume.
-	private suspendedStaticOutput = '';
+	// <Static> output collected at commit time and written with the next paint. While suspended, that paint is the redraw on resume.
+	private pendingStaticOutput = '';
+	// Time spent collecting `pendingStaticOutput`, reported with the frame that writes it.
+	private pendingStaticRenderTime = 0;
 	// Set for the redraw that ends a suspension.
 	private isResumeRedraw = false;
 	// Input pause/resume hooks registered by the App component, which owns raw
@@ -401,9 +410,13 @@ export default class Ink {
 
 	restoreLastOutput = (): void => {
 		// After clear(), the frame is off screen until the next render, so console output must not repaint it.
+		// Before the first frame, while its paint is still pending, there is nothing to restore either.
 		if (
 			!this.interactive ||
-			(this.lastOutputHeight === 0 && this.lastOutput !== '')
+			(this.lastOutputHeight === 0 && this.lastOutput !== '') ||
+			(this.deferredRender !== undefined &&
+				this.lastOutput === '' &&
+				this.lastOutputToRender === '')
 		) {
 			return;
 		}
@@ -446,22 +459,40 @@ export default class Ink {
 		this.fullStaticOutput = '';
 		this.hasRenderedStaticOutput = false;
 
-		// Output collected while suspended goes with it. On the primary screen it stays, because without the suspension those items would already be in the scrollback.
+		// Output that still waits for a paint goes with it. On the primary screen it stays and is written with the next paint, because those items belong in the scrollback.
 		if (this.options.debug || this.alternateScreen) {
-			this.suspendedStaticOutput = '';
+			this.pendingStaticOutput = '';
 		}
 	};
 
-	// <Static> drops the children it just rendered right after the commit, so this render is the only chance to capture them. While suspended nothing is written, so keep their output for the redraw on resume.
+	// <Static> drops the children it just rendered right after the commit, so this is the only chance to capture them. Their output is kept for the next paint, which is the redraw on resume while suspended.
 	onImmediateRender = (): void => {
-		if (this.isSuspended) {
-			this.suspendedStaticOutput += render(
-				this.rootNode,
-				this.isScreenReaderEnabled,
-			).staticOutput;
+		const shouldDefer = this.shouldDeferRender();
+		if (shouldDefer || this.isSuspended) {
+			this.collectStaticOutput();
+		}
+
+		if (shouldDefer) {
+			this.requestRender('immediate');
+			return;
 		}
 
 		this.onRender();
+	};
+
+	flushDeferredRender = (): void => {
+		const kind = this.deferredRender;
+		// A write or `clear()` from a layout effect cleanup arrives in the middle of a commit, and a `rerender()` from a stdout write arrives in the middle of a paint. The paint stays pending until both are done.
+		if (
+			kind === undefined ||
+			this.rootNode.isCommitInProgress === true ||
+			this.isPainting
+		) {
+			return;
+		}
+
+		this.deferredRender = undefined;
+		this.runRender(kind);
 	};
 
 	onRender: () => void = () => {
@@ -497,27 +528,42 @@ export default class Ink {
 			this.lastOutputToRender = '';
 		}
 
+		// `exit()` from an effect unmounts before `<Static>` has dropped the children it just rendered, so the final frame would write them a second time. Static changes that have not been rendered yet are still marked dirty.
+		// The redraw on resume can find them in the tree too, when an effect of the commit that added them resumes. If they are not marked dirty they were already written or collected while suspended, and if they are, that commit is still running and renders them right after.
+		const {pendingStaticOutput, isResumeRedraw} = this;
+		this.pendingStaticOutput = '';
+		this.isResumeRedraw = false;
+		// With deferred paints, <Static> output is collected at commit time, so children still in the tree here were collected already.
+		const isStaticOutputAlreadyWritten =
+			isResumeRedraw ||
+			((this.isUnmounting || this.usesDeferredPaint()) &&
+				!this.rootNode.isStaticDirty);
+
 		const startTime = performance.now();
 		const {output, outputHeight, staticOutput} = render(
 			this.rootNode,
 			this.isScreenReaderEnabled,
+			!isStaticOutputAlreadyWritten,
 		);
 
-		const renderTime = performance.now() - startTime;
-		// `exit()` from an effect unmounts before `<Static>` has dropped the children it just rendered, so the final frame would write them a second time. Static changes that have not been rendered yet are still marked dirty.
-		// The redraw on resume can find them in the tree too, when an effect of the commit that added them resumes. If they are not marked dirty they were already written or collected while suspended, and if they are, that commit is still running and renders them right after.
-		const {suspendedStaticOutput, isResumeRedraw} = this;
-		this.suspendedStaticOutput = '';
-		this.isResumeRedraw = false;
-		const isStaticOutputAlreadyWritten =
-			isResumeRedraw || (this.isUnmounting && !this.rootNode.isStaticDirty);
-		this.renderFrame(
-			output,
-			outputHeight,
-			suspendedStaticOutput +
-				(isStaticOutputAlreadyWritten ? '' : staticOutput),
-		);
-		this.options.onRender?.({renderTime});
+		// The time it took to collect the pending <Static> output belongs to the frame that writes it.
+		const renderTime =
+			performance.now() - startTime + this.pendingStaticRenderTime;
+		this.pendingStaticRenderTime = 0;
+
+		// A paint requested from inside this one, for example by a `rerender()` in a stdout write, waits until it is done.
+		const wasPainting = this.isPainting;
+		this.isPainting = true;
+		try {
+			this.renderFrame(
+				output,
+				outputHeight,
+				pendingStaticOutput + staticOutput,
+			);
+			this.options.onRender?.({renderTime});
+		} finally {
+			this.isPainting = wasPainting;
+		}
 	};
 
 	constructor(options: Options) {
@@ -551,7 +597,14 @@ export default class Ink {
 		this.renderThrottleMs = isUnthrottled ? 0 : renderThrottleMs;
 
 		if (isUnthrottled) {
-			this.rootNode.onRender = this.onRender;
+			this.rootNode.onRender = () => {
+				if (this.shouldDeferRender() || this.isSuspended) {
+					this.collectStaticOutput();
+				}
+
+				this.requestRender('throttled');
+			};
+
 			this.throttledOnRender = undefined;
 		} else {
 			const throttled = throttle(this.onRender, renderThrottleMs, {
@@ -560,7 +613,11 @@ export default class Ink {
 			});
 			this.rootNode.onRender = () => {
 				this.hasPendingThrottledRender = true;
-				throttled();
+				if (this.shouldDeferRender() || this.isSuspended) {
+					this.collectStaticOutput();
+				}
+
+				this.requestRender('throttled');
 			};
 
 			this.throttledOnRender = throttled;
@@ -669,6 +726,53 @@ export default class Ink {
 		void this.exitPromise.catch(noop);
 	}
 
+	// Debug mode keeps writing every commit as its own frame, which is what tests that read frames synchronously rely on.
+	private usesDeferredPaint(): boolean {
+		return this.interactive && !this.options.debug;
+	}
+
+	private shouldDeferRender(): boolean {
+		return this.usesDeferredPaint() && !this.isUnmounting && !this.isSuspended;
+	}
+
+	// React can reveal <Static> children without marking them dirty (an <Activity> going visible), and their layout effect drops them before the paint. So every commit whose paint is deferred or held back by a suspension collects the visible rows.
+	private collectStaticOutput(): void {
+		const startTime = performance.now();
+		this.pendingStaticOutput += renderStaticOutput(
+			this.rootNode,
+			this.isScreenReaderEnabled,
+		);
+		this.pendingStaticRenderTime += performance.now() - startTime;
+	}
+
+	private runRender(kind: 'throttled' | 'immediate'): void {
+		if (kind === 'throttled' && this.throttledOnRender) {
+			this.throttledOnRender();
+			return;
+		}
+
+		this.onRender();
+	}
+
+	private requestRender(kind: 'throttled' | 'immediate'): void {
+		if (!this.shouldDeferRender()) {
+			this.runRender(kind);
+			return;
+		}
+
+		const isScheduled = this.deferredRender !== undefined;
+		if (kind === 'immediate' || !isScheduled) {
+			this.deferredRender = kind;
+		}
+
+		if (isScheduled) {
+			return;
+		}
+
+		// Paint in a microtask, after React has flushed the updates scheduled by this commit's layout effects. In legacy mode `render()` paints sooner, as soon as React returns to it.
+		scheduleMicrotask(this.flushDeferredRender);
+	}
+
 	private renderFrame(
 		output: string,
 		outputHeight: number,
@@ -752,11 +856,12 @@ export default class Ink {
 			// After erasing, the last output is gone, so reset its height until the new frame is written.
 			this.lastOutputHeight = 0;
 			if (hasStaticOutput) {
-				this.options.stdout.write(staticOutput);
-
+				// Record the history first: the write can replace <Static>, which clears it.
 				if (this.alternateScreen) {
 					this.fullStaticOutput += staticOutput;
 				}
+
+				this.options.stdout.write(staticOutput);
 			}
 
 			this.options.stdout.write(outputToRender);
@@ -1072,6 +1177,7 @@ export default class Ink {
 		}
 
 		this.finishKittyDetection?.(false);
+		this.flushDeferredRender();
 		this.isSuspended = true;
 
 		try {
@@ -1196,8 +1302,13 @@ export default class Ink {
 			reconciler.updateContainer(tree, this.container, null, noop);
 		} else {
 			// Legacy mode: use updateContainerSync + flushSyncWork (sync)
-			reconciler.updateContainerSync(tree, this.container, null, noop);
-			reconciler.flushSyncWork();
+			try {
+				reconciler.updateContainerSync(tree, this.container, null, noop);
+				reconciler.flushSyncWork();
+			} finally {
+				// Paint now, so the frame is on stdout when `render()` returns.
+				this.flushDeferredRender();
+			}
 		}
 	}
 
@@ -1221,6 +1332,8 @@ export default class Ink {
 			this.options.stdout.write(data);
 			return;
 		}
+
+		this.flushDeferredRender();
 
 		const shouldSync = this.shouldSync();
 		if (shouldSync) {
@@ -1256,6 +1369,8 @@ export default class Ink {
 			return;
 		}
 
+		this.flushDeferredRender();
+
 		const shouldSync = this.shouldSync();
 		if (shouldSync) {
 			this.options.stdout.write(bsu);
@@ -1288,14 +1403,20 @@ export default class Ink {
 
 		// Clear any pending throttled render timer on unmount. When stdout is writable,
 		// flush so the final frame is emitted; otherwise cancel to avoid delayed callbacks.
-		settleThrottle(this.throttledOnRender, canWriteToStdout);
+		// A deferred paint means the final frame below renders the same tree, so drop the trailing throttled call instead of painting it too.
+		settleThrottle(
+			this.throttledOnRender,
+			canWriteToStdout && this.deferredRender === undefined,
+		);
 
 		if (canWriteToStdout) {
 			// If throttling is enabled and there is already a pending render, flushing above
 			// is sufficient. Also avoid calling onRender() again when static output already
 			// exists, as that can duplicate <Static> children output on exit (see issue #397).
+			// A deferred paint that has not run yet is replaced by the final frame, so the tree is rendered once.
 			const shouldRenderFinalFrame =
 				!this.throttledOnRender ||
+				this.deferredRender !== undefined ||
 				(!this.hasPendingThrottledRender && !this.hasRenderedStaticOutput);
 
 			if (shouldRenderFinalFrame) {
@@ -1497,6 +1618,7 @@ export default class Ink {
 			return;
 		}
 
+		this.flushDeferredRender();
 		this.log.clear();
 		// Keep lastOutput so that unmount's final onRender sees it as unchanged, but no rows remain on screen.
 		this.lastOutputHeight = 0;

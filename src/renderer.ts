@@ -24,10 +24,57 @@ const getVisibleStaticNode = (
 	return node;
 };
 
-const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
-	if (node.yogaNode) {
-		const staticNode = getVisibleStaticNode(node.staticNode);
+// Renders only the `<Static>` output, so it can be collected without rendering the frame.
+export const renderStaticOutput = (
+	node: DOMElement,
+	isScreenReaderEnabled: boolean,
+): string => {
+	const staticNode = node.yogaNode
+		? getVisibleStaticNode(node.staticNode)
+		: undefined;
 
+	if (!staticNode) {
+		return '';
+	}
+
+	if (isScreenReaderEnabled) {
+		const staticOutput = renderNodeToScreenReaderOutput(staticNode, {
+			skipStaticElements: false,
+		});
+
+		return staticOutput === '' ? '' : `${staticOutput}\n`;
+	}
+
+	const {yogaNode} = staticNode;
+	if (!yogaNode) {
+		return '';
+	}
+
+	const staticOutput = new Output({
+		width:
+			yogaNode.getComputedLeft() +
+			yogaNode.getComputedWidth() +
+			yogaNode.getComputedMargin(Yoga.EDGE_RIGHT),
+		height:
+			yogaNode.getComputedTop() +
+			yogaNode.getComputedHeight() +
+			yogaNode.getComputedMargin(Yoga.EDGE_BOTTOM),
+	});
+
+	renderNodeToOutput(staticNode, staticOutput, {
+		skipStaticElements: false,
+	});
+
+	// Newline at the end is needed, because static output doesn't have one, so interactive output will override last line of static output
+	return staticOutput.height > 0 ? `${staticOutput.get().output}\n` : '';
+};
+
+const renderer = (
+	node: DOMElement,
+	isScreenReaderEnabled: boolean,
+	shouldRenderStatic = true,
+): Result => {
+	if (node.yogaNode) {
 		if (isScreenReaderEnabled) {
 			const output = renderNodeToScreenReaderOutput(node, {
 				skipStaticElements: true,
@@ -35,18 +82,12 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 
 			const outputHeight = output === '' ? 0 : output.split('\n').length;
 
-			let staticOutput = '';
-
-			if (staticNode) {
-				staticOutput = renderNodeToScreenReaderOutput(staticNode, {
-					skipStaticElements: false,
-				});
-			}
-
 			return {
 				output,
 				outputHeight,
-				staticOutput: staticOutput === '' ? '' : `${staticOutput}\n`,
+				staticOutput: shouldRenderStatic
+					? renderStaticOutput(node, isScreenReaderEnabled)
+					: '',
 			};
 		}
 
@@ -59,37 +100,15 @@ const renderer = (node: DOMElement, isScreenReaderEnabled: boolean): Result => {
 			skipStaticElements: true,
 		});
 
-		let staticOutput;
-
-		if (staticNode?.yogaNode) {
-			const {yogaNode} = staticNode;
-			staticOutput = new Output({
-				width:
-					yogaNode.getComputedLeft() +
-					yogaNode.getComputedWidth() +
-					yogaNode.getComputedMargin(Yoga.EDGE_RIGHT),
-				height:
-					yogaNode.getComputedTop() +
-					yogaNode.getComputedHeight() +
-					yogaNode.getComputedMargin(Yoga.EDGE_BOTTOM),
-			});
-
-			renderNodeToOutput(staticNode, staticOutput, {
-				skipStaticElements: false,
-			});
-		}
-
+		const staticOutput = shouldRenderStatic
+			? renderStaticOutput(node, isScreenReaderEnabled)
+			: '';
 		const {output: generatedOutput, height: outputHeight} = output.get();
 
 		return {
 			output: generatedOutput,
 			outputHeight,
-			// Newline at the end is needed, because static output doesn't have one, so
-			// interactive output will override last line of static output
-			staticOutput:
-				staticOutput && staticOutput.height > 0
-					? `${staticOutput.get().output}\n`
-					: '',
+			staticOutput,
 		};
 	}
 
