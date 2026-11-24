@@ -2152,6 +2152,56 @@ for (const {name, options} of [
 	});
 }
 
+test('<Static> items prerendered in a hidden <Activity> that is revealed while suspended are written on resume', async (t: TestContext) => {
+	const stdout = createStdout();
+	let suspendTerminal!: SuspendTerminal;
+	let reveal: () => void = () => {};
+	// Created once, so React reveals it without rendering <Static> again.
+	const staticItems = (
+		<Static items={['item']}>{item => <Text key={item}>{item}</Text>}</Static>
+	);
+
+	function Test() {
+		const [isVisible, setIsVisible] = useState(false);
+		suspendTerminal = useApp().suspendTerminal;
+		reveal = () => {
+			setIsVisible(true);
+		};
+
+		return (
+			<>
+				<Activity mode={isVisible ? 'visible' : 'hidden'}>
+					{staticItems}
+				</Activity>
+				<Text>live</Text>
+			</>
+		);
+	}
+
+	const {unmount, waitUntilRenderFlush} = render(<Test />, {
+		stdout,
+		stdin: createStdin(),
+		interactive: true,
+	});
+	t.after(() => {
+		unmount();
+	});
+
+	// React prerenders the hidden subtree in a scheduler task after the first frame.
+	await waitUntilRenderFlush();
+
+	const suspension = await suspendTerminal();
+	reveal();
+	await waitUntilRenderFlush();
+	const resumedAt = stdout.getWrites().length;
+	await suspension.resume();
+
+	t.assert.deepStrictEqual(frameWritesSince(stdout, resumedAt), [
+		'item\n',
+		'live\n',
+	]);
+});
+
 test('exit() from a layout effect with a trailing throttled paint pending writes the final frame once', async (t: TestContext) => {
 	await withFakeClock(async clock => {
 		// The final frame fills the terminal, so it is written even when unchanged.

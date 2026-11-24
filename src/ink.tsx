@@ -598,7 +598,7 @@ export default class Ink {
 
 		if (isUnthrottled) {
 			this.rootNode.onRender = () => {
-				if (this.shouldDeferRender()) {
+				if (this.shouldDeferRender() || this.isSuspended) {
 					this.collectStaticOutput();
 				}
 
@@ -613,7 +613,7 @@ export default class Ink {
 			});
 			this.rootNode.onRender = () => {
 				this.hasPendingThrottledRender = true;
-				if (this.shouldDeferRender()) {
+				if (this.shouldDeferRender() || this.isSuspended) {
 					this.collectStaticOutput();
 				}
 
@@ -735,7 +735,7 @@ export default class Ink {
 		return this.usesDeferredPaint() && !this.isUnmounting && !this.isSuspended;
 	}
 
-	// React can reveal <Static> children without marking them dirty (an <Activity> going visible), and their layout effect drops them before the paint. So every deferred commit collects the visible rows.
+	// React can reveal <Static> children without marking them dirty (an <Activity> going visible), and their layout effect drops them before the paint. So every commit whose paint is deferred or held back by a suspension collects the visible rows.
 	private collectStaticOutput(): void {
 		const startTime = performance.now();
 		this.pendingStaticOutput += renderStaticOutput(
